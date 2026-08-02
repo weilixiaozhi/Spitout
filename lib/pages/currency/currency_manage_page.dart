@@ -210,14 +210,20 @@ class _CurrencyManageRow extends ConsumerWidget {
         ),
         child: Row(
           children: [
-            Text(
-              getCurrencySymbol(info.code),
+            // 与币种选择弹窗、欢迎页币种列表同一布局：固定宽度符号列
+            // (kCurrencySymbolColumnWidth)。币种符号长短不一（如 ¥ 与 HK$），
+            // 若按内容自适应宽度，各行名称起始 x 会随符号宽度漂移，列表参差不齐。
+            // 固定列宽后，名称列在所有行中对齐到同一 x 位置，UI 口径全局一致。
+            currencySymbolColumn(
+              info.code,
               style: TextStyle(
                 fontSize: 16,
                 color: SpitoutTokens.textSecondary(context),
               ),
             ),
-            const SizedBox(width: 12.0),
+            // 与弹窗 ListTile 的 horizontalTitleGap=16 保持一致，
+            // 保证符号列到名称列的间距与各处选择列表相同。
+            const SizedBox(width: 16.0),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,

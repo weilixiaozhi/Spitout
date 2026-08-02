@@ -224,15 +224,27 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         ),
                         const SizedBox(width: 12),
 
-                        // 全局统一「ISO + (符号)」展示，由 currencyFlagLabel
-                        // 拼装为单一文本。用 Expanded 提供有界宽度，配合内部 flexible
-                        // 的省略号，避免行内容过长溢出。
+                        // 与币种选择弹窗同一布局：固定宽度符号列 + 名称 (ISO) 左对齐。
+                        // 符号长短不一（¥ 与 HK$），固定列宽保证名称列
+                        // 在所有行中对齐到同一 x 位置。
+                        currencySymbolColumn(
+                          currency.code,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: SpitoutTokens.textSecondary(context),
+                          ),
+                        ),
+                        // 与弹窗 ListTile 的图标-文字间距（horizontalTitleGap=16）一致
+                        const SizedBox(width: 16),
+
+                        // 「名称 (ISO)」展示，例：人民币 (CNY)。
+                        // 用 Expanded 提供有界宽度，溢出以省略号收尾。
                         Expanded(
-                          child: currencyFlagLabel(
-                            context,
-                            currency.code,
-                            flexible: true,
-                            textStyle: TextStyle(
+                          child: Text(
+                            '${currency.name} (${currency.code})',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
                               color: SpitoutTokens.textPrimary(context),
                               fontSize: 16,
                               fontWeight: isSelected

@@ -6,6 +6,7 @@ import 'package:spitout/providers/providers.dart';
 import '../theme/colors.dart';
 import '../utils/currency/currencies.dart';
 import '../theme/icons/app_icons.dart';
+import 'currency_flag.dart';
 
 /// 币种选择 bottom sheet(搜索 + 币种符号 + 汇率 + 选中勾)。返回选中的 code,取消返回 null。
 ///
@@ -159,8 +160,12 @@ Future<String?> showCurrencyPickerSheet(
                           }
                         }
                         return ListTile(
-                          leading: Text(
-                            getCurrencySymbol(c.code),
+                          // 符号列固定宽度（kCurrencySymbolColumnWidth），
+                          // 符号长短不一（¥ 与 HK$），不定宽会导致各行名称
+                          // 起始 x 随符号宽度漂移；固定列宽 + ListTile 默认
+                          // horizontalTitleGap 后「名称 (ISO)」整列左对齐。
+                          leading: currencySymbolColumn(
+                            c.code,
                             style: TextStyle(
                               fontSize: 16,
                               color: SpitoutTokens.textSecondary(cctx),
