@@ -1,0 +1,86 @@
+# ============================================================
+# Spitout 项目 .gitignore
+# 规则按类别分组，便于维护与排查。
+# 注意：git 的 .gitignore 不支持行内注释，所有说明均独占一行。
+# ============================================================
+
+# ---------- 1. 操作系统 / 通用杂项 ----------
+# 各操作系统、编辑器、构建工具产生的临时与缓存文件，与项目代码无关
+.DS_Store
+*.swp
+*.class
+*.pyc
+*.log
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# ---------- 2. IDE / AI 编程助手 ----------
+# 本地 IDE 配置与 AI 工具工作目录：含本机路径与对话上下文，不应入库
+.idea/
+*.iml
+*.ipr
+*.iws
+.ai/*
+.claude/
+.codebuddy/
+#.vscode/
+
+# ---------- 3. Flutter / Dart / Pub ----------
+# Dart/Flutter 的依赖缓存与构建产物，均可由 pub get 重新生成
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+build/
+**/build/
+**/doc/api/
+**/ios/Flutter/.last_build_id
+
+# ---------- 4. Android ----------
+# 构建产物与签名文件：keystore / key.properties 含密钥信息，严禁入库
+/android/app/debug
+/android/app/profile
+/android/app/release
+android/key.properties
+android/*.keystore
+android/app/*.keystore
+# 根目录层级的签名文件兜底（android/.gitstore 仅覆盖 android/ 内部，**/*.keystore 同理）
+# 任意位置的 .keystore / .jks 均属敏感密钥，一律忽略
+*.keystore
+*.jks
+
+# ---------- 5. 符号化 / 混淆产物 ----------
+app.*.symbols
+app.*.map.json
+
+# ---------- 6. 临时文件 / 工具产物 ----------
+tmp
+.playwright-mcp/
+# 分类图标审计测试运行时生成的报告文件（test/theme/theme_architecture_test.dart）
+.icon_audit_report.txt
+
+# ---------- 7. FVM 版本管理 ----------
+.fvm/
+
+# ---------- 8. Secrets / 环境变量 ----------
+# 含 API Key、数据库密码、Supabase 密钥等敏感信息，任何情况下不得入库
+# 例外：.env.example 作为模板可入库，便于协作者复制为 .env 后填写真实值
+.env
+.env.*
+!.env.example
+
+# ---------- 9. 测试覆盖率 ----------
+# flutter test --coverage 生成的覆盖率报告，可由测试重新生成
+coverage/
+
+# ---------- 10. 发布安装包产物 ----------
+# flutter build 直接产出的安装包，体积大且可由构建重新生成
+*.apk
+*.aab
+*.ipa

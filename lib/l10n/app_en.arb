@@ -1,0 +1,1756 @@
+{
+    "@@locale": "en",
+    "appTitle": "Spitout",
+    "@appTitle": {
+        "description": "The application title"
+    },
+    "tabHome": "Home",
+    "tabAnalytics": "Statistics",
+    "tabCalendar": "Calendar",
+    "tabMine": "Mine",
+    "commonCancel": "Cancel",
+    "commonConfirm": "Confirm",
+    "commonSave": "Save",
+    "commonDelete": "Delete",
+    "commonAdd": "Add",
+    "commonOk": "OK",
+    "commonDone": "Done",
+    "homeSelectBillMonth": "Select month",
+    "homePickerHint": "Swipe up or down to pick",
+    "homeBackToCurrentMonth": "Back to current month",
+    "homeTodayExpense": "Today",
+    "homeWeekExpense": "This week",
+    "homeMonthExpense": "This month",
+    "homeDetailCategory": "Category",
+    "homeDetailDate": "Date",
+    "homeDetailAmount": "Amount",
+    "homeDetailCurrency": "Currency",
+    "homeDetailNativeAmount": "In base currency",
+    "homeDetailMembers": "Members",
+    "homeDetailCreator": "Created by",
+    "homeDetailLastEditor": "Last edited by",
+    "homeDetailEditHistory": "Edit history",
+    "homeDetailEditHistoryHint": "View only",
+    "homeDetailEditButton": "Edit",
+    "homeDetailNoHistory": "No edit history",
+    "homeDeleteDetailTitle": "Delete this entry?",
+    "homeDeleteDetailMessage": "This will delete the \"{name}\" record. This action cannot be undone.",
+    "commonEmpty": "No data",
+    "commonError": "Error",
+    "commonFailed": "Failed",
+    "commonBack": "Back",
+    "commonNext": "Next",
+    "commonFinish": "Finish",
+    "commonOther": "Other",
+    "commonSearch": "Search",
+    "commonNoteHint": "Note...",
+    "commonSettings": "Settings",
+    "commonCurrent": "Current",
+    "commonTutorial": "Tutorial",
+    "commonConfigure": "Configure",
+    "commonPressAgainToExit": "Press again to exit",
+    "commonWeekdayMonday": "Monday",
+    "commonWeekdayTuesday": "Tuesday",
+    "commonWeekdayWednesday": "Wednesday",
+    "commonWeekdayThursday": "Thursday",
+    "commonWeekdayFriday": "Friday",
+    "commonWeekdaySaturday": "Saturday",
+    "commonWeekdaySunday": "Sunday",
+    "homeExpense": "Expense",
+    "homeNoRecords": "No records yet",
+    "homeSelectDate": "Select date",
+    "homeYear": "{year}",
+    "@homeYear": {
+        "placeholders": {
+            "year": {
+                "type": "int"
+            }
+        }
+    },
+    "homeMonth": "{month}M",
+    "@homeMonth": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
+    "homeMonthExpenseOf": "Month {month}",
+    "@homeMonthExpenseOf": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
+    "homeNoRecordsSubtext": "Tap the plus button at the bottom to add a record",
+    "homeBaseCurrencyNeedLedger": "Please create a ledger first",
+    "homeBaseCurrencySwitched": "Base currency switched to {code}",
+    "@homeBaseCurrencySwitched": {
+        "placeholders": {
+            "code": {
+                "type": "String"
+            }
+        }
+    },
+    "homePullCloudSuccess": "Synced cloud ledger data",
+    "homePullCloudFailed": "Refresh failed, please try again later",
+    "homePullLocalSuccess": "Refreshed local ledger data & config",
+    "homePullCloudFailedButLocalOk": "Cloud sync failed; refreshed local data (rates/config)",
+    "homePullCloudHealed": "Auto-recovered and synced {count} cloud records",
+    "@homePullCloudHealed": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "homePullCloudGap": "Some cloud history could not be auto-restored. Please use 'Restore from cloud' on the sync page",
+    "homeSyncing": "Syncing ledger data",
+    "homeSwitchMonthHint": "Swipe the list left/right to switch months",
+    "analyticsMonth": "Month",
+    "analyticsYear": "Year",
+    "analyticsAll": "All",
+    "analyticsWeek": "Week",
+    "analyticsSwipePeriodHint": "Swipe left/right on the list to switch {period}",
+    "@analyticsSwipePeriodHint": {
+        "description": "Hint shown on the analytics page to swipe the list left/right to switch the period (week/month/year).",
+        "placeholders": {
+            "period": {}
+        }
+    },
+    "analyticsTrend": "Expense Trend",
+    "analyticsTotalExpenseLabel": "Total Expense",
+    "analyticsDailyExpense": "Daily Expense",
+    "analyticsMoMLastWeek": "vs Last Week",
+    "analyticsMoMLastMonth": "vs Last Month",
+    "analyticsMoMLastYear": "vs Last Year",
+    "analyticsCategoryLabel": "Category",
+    "analyticsExpenseRatio": "Expense Ratio",
+    "analyticsThisWeek": "This Week",
+    "analyticsBackToThisWeek": "Back to This Week",
+    "analyticsBackToThisMonth": "Back to This Month",
+    "analyticsBackToThisYear": "Back to This Year",
+    "analyticsWeekN": "Week {week}",
+    "@analyticsWeekN": {
+        "placeholders": {
+            "week": {
+                "type": "int"
+            }
+        }
+    },
+    "analyticsSelectWeek": "Select week",
+    "ledgersTitle": "Ledger Management",
+    "ledgersNew": "New Ledger",
+    "ledgersClear": "Clear Ledger",
+    "ledgersClearMessage": "Are you sure to clear all transactions in ledger \"{name}\"? This action cannot be undone.\\nThe ledger will be kept, only transaction data will be deleted.",
+    "ledgerDefaultName": "Default Ledger",
+    "ledgersEdit": "Edit Ledger",
+    "ledgersDelete": "Delete Ledger",
+    "ledgersDeleteConfirm": "Delete Ledger",
+    "ledgersDeleteMessage": "Are you sure you want to delete this ledger and all its records? This action cannot be undone.\\nIf there is a backup in the cloud, it will also be deleted.",
+    "ledgersDeleted": "Deleted",
+    "ledgersDeleteFailed": "Delete Failed",
+    "ledgersClearTitle": "Clear Ledger",
+    "ledgersClearSuccess": "Ledger cleared",
+    "ledgersCreateSuccess": "Ledger created",
+    "ledgerNameLabel": "Ledger Name",
+    "ledgerNameHint": "Please enter the ledger name",
+    "ledgersDefaultLedgerName": "Default Ledger",
+    "ledgersCurrency": "Currency",
+    "ledgersMonthStartDay": "Month start day",
+    "ledgersMonthStartDayHint": "Statistics and budgets use this day (1-28) as the start of each monthly period",
+    "ledgersMonthStartDayNatural": "1st (calendar month)",
+    "ledgersMonthStartDayValue": "Day {day} of each month",
+    "@ledgersMonthStartDayValue": {
+        "placeholders": {
+            "day": {
+                "type": "int"
+            }
+        }
+    },
+    "ledgersSearchCurrency": "Search: Chinese or code",
+    "ledgersCreate": "Create",
+    "ledgersRecords": "Records: {count}",
+    "@ledgersRecords": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersExpense": "Expense: {expense}",
+    "@ledgersExpense": {
+        "placeholders": {
+            "expense": {
+                "type": "String"
+            }
+        }
+    },
+    "@ledgersBalance": {
+        "placeholders": {
+            "balance": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersEmpty": "No ledgers",
+    "ledgersSectionLocal": "Local ledgers",
+    "ledgersSectionCloud": "Spitout Cloud ledgers",
+    "ledgersSectionLocalEmpty": "No local ledgers. Local ledgers stay on this device only.",
+    "ledgersSectionCloudEmpty": "No cloud ledgers. Cloud ledgers sync across your devices.",
+    "ledgersSectionCloudSignInHint": "Sign in to Spitout Cloud to use cloud ledgers",
+    "ledgersStorageLocation": "Storage location",
+    "ledgersStorageLocalHint": "Stored on this device only, never uploaded",
+    "ledgersStorageCloudHint": "Uploaded to Spitout Cloud and synced across your devices",
+    "ledgersActionMoveToCloud": "Move to Spitout Cloud",
+    "ledgersActionMoveToLocal": "Move to local",
+    "ledgersActionCopyToLocal": "Copy to local",
+    "ledgersMoveToCloudMessage": "Ledger \"{name}\" will be uploaded to Spitout Cloud and synced across your devices.",
+    "@ledgersMoveToCloudMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToLocalMessage": "Ledger \"{name}\" will be deleted from Spitout Cloud and kept on this device only. Other devices will no longer see it.",
+    "@ledgersMoveToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersCopyToLocalMessage": "A local copy of ledger \"{name}\" will be created. The cloud ledger stays unchanged.",
+    "@ledgersCopyToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToCloudSuccess": "Moved to Spitout Cloud",
+    "ledgersMoveToLocalSuccess": "Moved to local",
+    "ledgersCopyToLocalSuccess": "Copied to local",
+    "ledgersSwitched": "Switched to ledger \"{name}\"",
+    "@ledgersSwitched": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "categoryTitle": "Category Management",
+    "categoryExpense": "Expense",
+    "categoryEmpty": "No categories",
+    "categoryLoadFailed": "Load failed: {error}",
+    "@categoryLoadFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "importReading": "Reading file…",
+    "importPreparing": "Preparing…",
+    "importColumnNumber": "Column {number}",
+    "importConfirmMapping": "Confirm Mapping",
+    "importCategoryMapping": "Category Mapping",
+    "importNoDataParsed": "No data parsed. Please return to previous page to check CSV content or separator.",
+    "importFieldDate": "Date",
+    "importFieldType": "Type",
+    "importFieldAmount": "Amount",
+    "importFieldCategory": "Category",
+    "importFieldNote": "Note",
+    "importPreview": "Data Preview",
+    "importPreviewLimit": "Showing first {shown} of {total} records",
+    "importCategoryNotSelected": "Category not selected",
+    "importCategoryMappingDescription": "Please select corresponding local categories for each category name:",
+    "importKeepOriginalName": "Keep original name",
+    "importProgress": "Importing, success: {ok}, failed: {fail}",
+    "importCancelImport": "Cancel Import",
+    "importCompleteTitle": "Import Complete",
+    "importSelectCategoryFirst": "Please select category mapping first",
+    "importNextStep": "Next Step",
+    "importPreviousStep": "Previous Step",
+    "importStartImport": "Start Import",
+    "importAutoDetect": "Auto Detect",
+    "importInProgress": "Import in Progress",
+    "importProgressDetail": "Imported {done} / {total} records, success {ok}, failed {fail}",
+    "importBackgroundImport": "Background Import",
+    "importCancelled": "Import Cancelled",
+    "importCompleted": "Import Completed{cancelled}, success {ok}, failed {fail}",
+    "importSkippedNonTransactionTypes": "Skipped {count} non-transaction records (debts, etc.)",
+    "importTransactionFailed": "Import failed, all changes have been rolled back: {error}",
+    "importFileOpenError": "Unable to open file picker: {error}",
+    "@importFileOpenError": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "mineTitle": "Mine",
+    "mineLanguageSettings": "App Language",
+    "languageTitle": "Language Settings",
+    "languageChinese": "中文",
+    "languageEnglish": "English",
+    "languageSystemDefault": "Follow System",
+    "mineSlogan": "Set your nickname",
+    "mineDisplayNameEditTitle": "Set nickname",
+    "mineDisplayNameHint": "Enter a nickname",
+    "mineDisplayNameSaved": "Nickname updated",
+    "mineGreetingMorning": "Good morning",
+    "mineGreetingNoon": "Good noon",
+    "mineGreetingAfternoon": "Good afternoon",
+    "mineGreetingEvening": "Good evening",
+    "mineGreetingNight": "Good night",
+    "mineGreetingNamed": "{greeting}, {name}",
+    "@mineGreetingNamed": {
+        "placeholders": {
+            "greeting": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "mineAvatarDelete": "Delete Avatar",
+    "mineAvatarUploadNew": "Upload New Avatar",
+    "mineCloudService": "Cloud Service",
+    "mineCloudServiceLoading": "Loading...",
+    "mineSyncTitle": "Sync",
+    "mineSyncNotLoggedIn": "Not logged in",
+    "mineSyncNotConfigured": "Cloud not configured",
+    "mineSyncNoRemote": "No cloud data",
+    "mineSyncInSync": "Synced (local {count} records)",
+    "mineSyncLocalNewer": "Local updated ({count} records, upload recommended)",
+    "mineSyncCloudNewer": "Cloud updated (download to sync)",
+    "mineSyncDifferent": "Local and cloud differ, download to compare",
+    "mineSyncError": "Failed to get status",
+    "mineSyncDetailTitle": "Sync Status Details",
+    "mineSyncLocalRecords": "Local records: {count}",
+    "mineSyncCloudRecords": "Cloud records: {count}",
+    "mineSyncCloudLatest": "Cloud latest record time: {time}",
+    "mineSyncLocalFingerprint": "Local fingerprint: {fingerprint}",
+    "mineSyncCloudFingerprint": "Cloud fingerprint: {fingerprint}",
+    "mineSyncMessage": "Message: {message}",
+    "mineUploadTitle": "Upload",
+    "mineUploadNeedLogin": "Login required",
+    "mineUploadNeedCloudService": "Available in cloud service mode only",
+    "mineUploadInProgress": "Uploading...",
+    "mineUploadRefreshing": "Refreshing...",
+    "mineUploadSynced": "Synced",
+    "mineUploadSuccess": "Uploaded",
+    "mineUploadSuccessMessage": "Current ledger synced to cloud",
+    "mineDownloadTitle": "Download & Sync",
+    "mineDownloadNeedCloudService": "Available in cloud service mode only",
+    "mineDownloadComplete": "Sync Complete",
+    "mineDownloadResult": "Imported: {inserted} records",
+    "mineLoginTitle": "Login",
+    "mineLoginSubtitle": "Only needed for sync",
+    "cloudReloginTitle": "Re-login",
+    "cloudReloginSuccess": "Re-logged in",
+    "mineLoggedInEmail": "Logged in",
+    "mineLogoutSubtitle": "Tap to logout",
+    "mineLogoutConfirmTitle": "Logout",
+    "mineLogoutConfirmMessage": "Are you sure you want to logout?\nYou won't be able to use cloud sync after logout.",
+    "mineLogoutButton": "Logout",
+    "mineAutoSyncTitle": "Auto sync ledger",
+    "mineAutoSyncSubtitle": "Auto upload to cloud after recording",
+    "mineAutoSyncNeedLogin": "Login required to enable",
+    "mineCategoryManagement": "Category Management",
+    "mineCategoryManagementSubtitle": "Edit custom categories",
+    "mineRecurringTransactions": "Recurring Bills",
+    "mineRecurringTransactionsSubtitle": "Manage recurring bills",
+    "mineReminderSettings": "Reminder Settings",
+    "mineReminderSettingsSubtitle": "Set daily recording reminders",
+    "categoryEditTitle": "Edit Category",
+    "categoryNewTitle": "New Category",
+    "categoryDetailTooltip": "Category Summary",
+    "categoryDefaultTitle": "Default Category",
+    "categoryNameLabel": "Category Name",
+    "categoryNameHint": "Enter category name",
+    "categoryNameRequired": "Please enter category name",
+    "categoryNameTooLong": "Category name cannot exceed 4 characters",
+    "categoryNameDuplicate": "Category name already exists",
+    "categoryIconLabel": "Category Icon",
+    "categoryCurrentIcon": "Current Icon",
+    "categorySaveError": "Save failed",
+    "categoryUpdated": "Category \"{name}\" updated",
+    "categoryCreated": "Category \"{name}\" created",
+    "categoryCannotDelete": "Cannot delete",
+    "categoryClearUnused": "Clear Unused Categories",
+    "categoryClearUnusedTitle": "Clear Unused Categories",
+    "categoryClearUnusedMessage": "Are you sure you want to delete {count} unused categories? This action cannot be undone.",
+    "categoryClearUnusedListTitle": "Categories to be deleted:",
+    "categoryClearUnusedEmpty": "No unused categories",
+    "categoryClearUnusedSuccess": "Deleted {count} categories",
+    "categoryClearUnusedFailed": "Clear failed",
+    "categoryDeleteError": "Delete failed",
+    "categorySubCategoryCreated": "Subcategory added: {name}",
+    "categoryParentCategoryTitle": "Belongs To",
+    "categorySelectParentTitle": "Select Category",
+    "categoryHasSubCategories": "This category has subcategories and cannot be modified",
+    "categorySearchCategory": "Search categories",
+    "categoryTopLevelLabel": "Top-level",
+    "categorySecondLevelLabel": "Second-level",
+    "categoryExpenseList": "Dining-Transport-Shopping-Entertainment-Home-Family-Communication-Utilities-Housing-Medical-Education-Pets-Sports-Digital-Travel-Alcohol & Tobacco-Baby Care-Beauty-Repair-Social-Learning-Car-Taxi-Subway-Delivery-Property-Parking-Donation-Give Gift-Tax-Beverage-Clothing-Snacks-Send Red Packet-Fruit-Game-Books-Lover-Decoration-Daily Goods-Lottery-Stock-Social Security-Express-Work-Transfer-Other",
+    "categoryExpenseDining": "Dining-Breakfast-Lunch-Dinner-Meituan Delivery-Ele.me Delivery-JD Delivery-Restaurant-Food",
+    "categoryExpenseSnacks": "Snacks-Cookies-Chips-Candy-Chocolate-Nuts",
+    "categoryExpenseFruit": "Fruit-Apple-Banana-Orange-Grape-Watermelon-Other Fruits",
+    "categoryExpenseBeverage": "Beverage-Milk Tea-Coffee-Juice-Soda-Mineral Water",
+    "categoryExpensePastry": "Pastry-Cake-Bread-Dessert-Baked Goods",
+    "categoryExpenseCooking": "Cooking Ingredients-Vegetables-Meat-Seafood-Seasoning-Grain & Oil",
+    "categoryExpenseShopping": "Shopping-Supermarket-Daily Necessities-Clothing-Shoes-Bags",
+    "categoryExpensePets": "Pets-Pet Food-Pet Supplies-Pet Medical-Pet Grooming",
+    "categoryExpenseTransport": "Transport-Transit Card-Taxi-Parking Fee-Fuel",
+    "categoryExpenseCar": "Car-Car Maintenance-Car Repair-Car Insurance-Car Wash-Traffic Fine",
+    "categoryExpenseClothing": "Apparel-Top-Pants-Dress-Shoes-Apparel Accessories",
+    "categoryExpenseDailyGoods": "Daily Goods-Personal Care-Paper Products-Cleaning Supplies-Kitchen Supplies",
+    "categoryExpenseEducation": "Education-Tuition-Training Fee-Books-Stationery-Office Supplies-Learning",
+    "categoryExpenseInvestLoss": "Investment Loss-Stock Loss-Fund Loss-Other Investment Loss",
+    "categoryExpenseEntertainment": "Entertainment-Movie-KTV-Amusement Park-Bar-Other Entertainment",
+    "categoryExpenseGame": "Game-Game Top up-Game Equipment-Game Membership",
+    "categoryExpenseHealthProducts": "Health Products-Vitamins-Health Food-Nutritional Supplements",
+    "categoryExpenseSubscription": "Subscription-Video Membership-Music Membership-Cloud Storage-Other Subscription",
+    "categoryExpenseSports": "Sports-Gym-Sports Equipment-Sports Course-Outdoor Activity",
+    "categoryExpenseHousing": "Housing-Utilities-Property Fee-Rent-Mortgage-Renovation-Broadband",
+    "categoryExpenseHome": "Home-Furniture-Appliances-Decorations-Bedding",
+    "categoryExpenseBeauty": "Beauty-Skincare-Cosmetics-Haircut-Nail Care",
+    "categoryExpenseTransfer": "Transfer-Living Cost-Family-Parents-Lover-Borrow Money",
+    "appearanceThemeMode": "Dark Mode",
+    "appearanceThemeModeSystem": "Follow System",
+    "appearanceThemeModeLight": "Light Mode",
+    "appearanceThemeModeDark": "Dark Mode",
+    "appearanceExpenseColorScheme": "Expense Color",
+    "appearanceExpenseColorRed": "Red for expense",
+    "appearanceExpenseColorGreen": "Green for expense",
+    "appearanceExpenseColorApplied": "Color scheme updated",
+    "reminderTitle": "Recording Reminder",
+    "reminderSubtitle": "Set daily recording reminder time",
+    "reminderDailyTitle": "Daily Recording Reminder",
+    "reminderDailySubtitle": "When enabled, will remind you to record at specified time",
+    "reminderTimeTitle": "Reminder Time",
+    "commonSelectTime": "Select Time",
+    "reminderTestNotification": "Send Test Notification",
+    "reminderTestSent": "Test notification sent",
+    "reminderTestTitle": "Test Notification",
+    "reminderTestBody": "This is a test notification, tap to see the effect",
+    "reminderCheckBattery": "Check Battery Optimization Status",
+    "reminderBatteryStatus": "Battery Optimization Status",
+    "reminderManufacturer": "Manufacturer: {value}",
+    "reminderModel": "Model: {value}",
+    "reminderAndroidVersion": "Android Version: {value}",
+    "reminderBatteryIgnored": "Battery optimization: Ignored ✅",
+    "reminderBatteryNotIgnored": "Battery optimization: Not ignored ⚠️",
+    "reminderBatteryAdvice": "Recommend disabling battery optimization for proper notifications",
+    "reminderCheckChannel": "Check Notification Channel Settings",
+    "reminderChannelStatus": "Notification Channel Status",
+    "reminderChannelEnabled": "Channel enabled: Yes ✅",
+    "reminderChannelDisabled": "Channel enabled: No ❌",
+    "reminderChannelImportance": "Importance: {value}",
+    "reminderChannelSoundOn": "Sound: On 🔊",
+    "reminderChannelSoundOff": "Sound: Off 🔇",
+    "reminderChannelVibrationOn": "Vibration: On 📳",
+    "reminderChannelVibrationOff": "Vibration: Off",
+    "reminderChannelDndBypass": "Do Not Disturb: Can bypass",
+    "reminderChannelDndNoBypass": "Do Not Disturb: Cannot bypass",
+    "reminderChannelAdvice": "⚠️ Recommended settings:",
+    "reminderChannelAdviceImportance": "• Importance: Urgent or High",
+    "reminderChannelAdviceSound": "• Enable sound and vibration",
+    "reminderChannelAdviceBanner": "• Allow banner notifications",
+    "reminderChannelAdviceXiaomi": "• Xiaomi phones need individual channel setup",
+    "reminderChannelGood": "✅ Notification channel well configured",
+    "reminderOpenAppSettings": "Open App Settings",
+    "reminderAppSettingsMessage": "Please allow notifications and disable battery optimization in settings",
+    "reminderDescription": "Tip: When recording reminder is enabled, the system will send notifications at the specified time daily to remind you to record expenses.",
+    "reminderAndroidInstructions": "If notifications don't work properly, check:\n• App is allowed to send notifications\n• Disable battery optimization/power saving for app\n• Allow app to run in background and auto-start\n• Android 12+ needs exact alarm permission\n\n📱 Xiaomi phone special settings:\n• Settings > App Management > Spitout > Notification Management\n• Tap \"Recording Reminder\" channel\n• Set importance to \"Urgent\" or \"High\"\n• Enable \"Banner notifications\", \"Sound\", \"Vibration\"\n• Security Center > App Management > Permissions > Auto-start\n\n🔒 Lock background methods:\n• Find Spitout in recent tasks\n• Pull down app card to show lock icon\n• Tap lock icon to prevent cleanup",
+    "categoryDetailLoadFailed": "Load failed",
+    "categoryDetailSummaryTitle": "Category Summary",
+    "categoryDetailTotalCount": "Total Count",
+    "categoryDetailTotalAmount": "Total Amount",
+    "categoryDetailAverageAmount": "Average Amount",
+    "categoryDetailSortTitle": "Sort",
+    "categoryDetailSortTimeDesc": "Time ↓",
+    "categoryDetailSortTimeAsc": "Time ↑",
+    "categoryDetailSortAmountDesc": "Amount ↓",
+    "categoryDetailSortAmountAsc": "Amount ↑",
+    "categoryDetailNoTransactions": "No transactions",
+    "categoryDetailNoTransactionsSubtext": "No transactions in this category yet",
+    "categoryDetailDeleteFailed": "Delete failed",
+    "categoryMigrationTransactionLabel": "{count} records",
+    "@categoryMigrationTransactionLabel": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "categoryTemplateEntryFlat": "Flat Template",
+    "categoryTemplateEntryHierarchical": "Hierarchical Template",
+    "categoryTemplateFlatTitle": "Flat Category Template",
+    "categoryTemplateHierarchicalTitle": "Hierarchical Category Template",
+    "categoryTemplateSelectedCount": "{count} selected",
+    "@categoryTemplateSelectedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "categoryTemplateSelectAll": "Select all",
+    "categoryTemplateDeselectAll": "Deselect all",
+    "categoryTemplateConfirmTitle": "Add Categories",
+    "categoryTemplateConfirmMessage": "Add the selected {count} categories to your category list?",
+    "@categoryTemplateConfirmMessage": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "categoryTemplateAddSuccess": "Added {count} categories",
+    "@categoryTemplateAddSuccess": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "categoryTemplateAddFailed": "Failed to add: {error}",
+    "@categoryTemplateAddFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "categoryManageAdd": "Add Category",
+    "categoryManageDelete": "Delete Categories",
+    "categoryManageConfirmDelete": "Confirm Delete",
+    "categoryManageReorderHint": "Long press to reorder",
+    "categorySharedManageBannerOwner": "Shared ledger: category changes here sync to all members",
+    "categorySharedManageBannerEditor": "This shared ledger uses the owner's categories; edits here only affect your personal categories",
+    "categorySyncFailedBeforeInvite": "Couldn't sync categories before creating the invite. Check your network and try again",
+    "categorySortSaveFailed": "Failed to save order. Please try again",
+    "categoryDeleteOptionAll": "Delete categories and all data (incl. subcategories)",
+    "categoryDeleteOptionMigrate": "Delete and migrate all data to another category (incl. subcategories)",
+    "categoryDeleteOptionPromote": "Delete categories and data (excl. subcategories, subcategories become top-level)",
+    "categoryDeleteSelectedTitle": "Delete Selected Categories",
+    "categoryDeleteSelectedSubtitleWithSub": "Are you sure you want to delete {count} selected categories and clear their data? (including subcategories and data) This action cannot be undone.",
+    "categoryDeleteSelectedSubtitleWithoutSub": "Are you sure you want to delete {count} selected categories and clear their data? (excluding subcategories and data) This action cannot be undone.",
+    "categoryMigrateSelectTargetTitle": "Select Target Category",
+    "categoryMigrateConfirmButton": "Confirm (Migrate data and delete categories)",
+    "categoryMigrateChildLabel": "Sub · {parent}",
+    "@categoryMigrateChildLabel": {
+        "placeholders": {
+            "parent": {
+                "type": "Object"
+            }
+        }
+    },
+    "subcategoryEditParent": "Edit Parent Category",
+    "subcategoryAdd": "Add Subcategory",
+    "subcategoryDelete": "Delete Subcategories",
+    "subcategoryDeleteOptionAll": "Delete categories and all data under them",
+    "subcategoryDeleteOptionMigrate": "Delete categories and migrate all data to another category",
+    "subcategoryDeleteSelectedSubtitle": "Are you sure you want to delete {count} selected categories and clear their data? This action cannot be undone.",
+    "@subcategoryDeleteSelectedSubtitle": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "subcategoryEmpty": "No subcategories yet",
+    "@categoryDeleteSelectedSubtitleWithSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "@categoryDeleteSelectedSubtitleWithoutSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "cloudSupabaseUrlLabel": "Supabase URL",
+    "cloudSupabaseUrlHint": "https://xxx.supabase.co",
+    "cloudAnonKeyLabel": "Anon Key",
+    "cloudMultiDeviceWarningTitle": "Multi-Device Tips",
+    "cloudMultiDeviceWarningMessage": "Upload before switching devices, download on the new device before editing. Don't edit the same ledger on two devices at once. Tap for details →",
+    "cloudWebdavUrlLabel": "WebDAV Server URL",
+    "cloudWebdavUrlHint": "https://dav.jianguoyun.com/dav/",
+    "cloudWebdavUsernameLabel": "Username",
+    "cloudWebdavPasswordLabel": "Password",
+    "cloudWebdavPathHint": "/Spitout",
+    "cloudS3EndpointLabel": "Endpoint",
+    "cloudS3EndpointHint": "s3.amazonaws.com or custom endpoint",
+    "cloudS3RegionLabel": "Region",
+    "cloudS3RegionHint": "us-east-1 (leave blank for auto)",
+    "cloudS3AccessKeyLabel": "Access Key",
+    "cloudS3AccessKeyHint": "Your Access Key ID",
+    "cloudS3SecretKeyLabel": "Secret Key",
+    "cloudS3SecretKeyHint": "Your Secret Access Key",
+    "cloudS3BucketLabel": "Bucket Name",
+    "cloudS3BucketHint": "spitout-data",
+    "cloudS3UseSSLLabel": "Use HTTPS",
+    "cloudS3PortLabel": "Port (optional)",
+    "cloudS3PortHint": "Leave blank for default",
+    "cloudSupabaseBucketLabel": "Storage Bucket Name",
+    "cloudSupabaseBucketHint": "Leave blank for default: spitout-backups",
+    "authRememberAccount": "Remember account",
+    "authRememberAccountHint": "Auto-fill on next login (Supabase only)",
+    "cloudFirstSaveSwitchTitle": "Configuration Saved",
+    "cloudFirstSaveSwitchMessage": "Switch to this cloud service as the active sync configuration now?",
+    "cloudSaveOnlyNoSwitch": "Not Now",
+    "cloudSaveAndSwitch": "Switch Now",
+    "cloudClearConfig": "Clear configuration",
+    "cloudClearConfigConfirmTitle": "Clear cloud configuration",
+    "cloudClearConfigConfirmMessage": "Clear this cloud service configuration?\nBacked-up data on the cloud will not be deleted. You can reconfigure and restore anytime.",
+    "cloudClearConfigDone": "Configuration cleared",
+    "cloudPurgeFailed": "Failed to clear cloud ledgers, please try again later",
+    "authLogin": "Login",
+    "authEmail": "Email",
+    "authPassword": "Password",
+    "authInvalidEmail": "Please enter a valid email address",
+    "authErrorInvalidCredentials": "Email or password is incorrect.",
+    "authErrorEmailNotConfirmed": "Email not verified, please complete verification in your email before logging in.",
+    "authErrorRateLimit": "Too many attempts, please try again later.",
+    "authErrorNetworkIssue": "Network error, please check your connection and try again.",
+    "authErrorLoginFailed": "Login failed, please try again later.",
+    "exportCsvHeaderType": "Type",
+    "exportCsvHeaderCategory": "Category",
+    "exportCsvHeaderSubCategory": "Subcategory",
+    "exportCsvHeaderAmount": "Amount",
+    "exportCsvHeaderNote": "Note",
+    "exportCsvHeaderTime": "Time",
+    "exportSuccessTitle": "Export Successful",
+    "exportSuccessMessageAndroid": "Saved to:\n{path}",
+    "exportFailedTitle": "Export Failed",
+    "exportTypeExpense": "Expense",
+    "@exportSuccessMessageAndroid": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
+    "currencyCNY": "Chinese Yuan",
+    "currencyUSD": "US Dollar",
+    "currencyEUR": "Euro",
+    "currencyJPY": "Japanese Yen",
+    "currencyHKD": "Hong Kong Dollar",
+    "currencyTWD": "New Taiwan Dollar",
+    "currencyGBP": "British Pound",
+    "currencyAUD": "Australian Dollar",
+    "currencyCAD": "Canadian Dollar",
+    "currencyKRW": "South Korean Won",
+    "currencySGD": "Singapore Dollar",
+    "currencyMYR": "Malaysian Ringgit",
+    "currencyTHB": "Thai Baht",
+    "currencyIDR": "Indonesian Rupiah",
+    "currencyPHP": "Philippine Peso",
+    "currencyVND": "Vietnamese Dong",
+    "currencyINR": "Indian Rupee",
+    "currencyRUB": "Russian Ruble",
+    "currencyBYN": "Belarusian Ruble",
+    "currencyNZD": "New Zealand Dollar",
+    "currencyCHF": "Swiss Franc",
+    "currencySEK": "Swedish Krona",
+    "currencyNOK": "Norwegian Krone",
+    "currencyDKK": "Danish Krone",
+    "currencyBRL": "Brazilian Real",
+    "currencyMXN": "Mexican Peso",
+    "currencyTRY": "Turkish Lira",
+    "currencyZAR": "South African Rand",
+    "currencyAED": "UAE Dirham",
+    "currencySAR": "Saudi Riyal",
+    "currencyPLN": "Polish Zloty",
+    "currencyCZK": "Czech Koruna",
+    "currencyHUF": "Hungarian Forint",
+    "currencyARS": "Argentine Peso",
+    "currencyCLP": "Chilean Peso",
+    "currencyCOP": "Colombian Peso",
+    "currencyPEN": "Peruvian Sol",
+    "currencyEGP": "Egyptian Pound",
+    "currencyNGN": "Nigerian Naira",
+    "currencyKZT": "Kazakhstani Tenge",
+    "currencyUAH": "Ukrainian Hryvnia",
+    "currencyILS": "Israeli New Shekel",
+    "currencyPKR": "Pakistani Rupee",
+    "currencyBDT": "Bangladeshi Taka",
+    "currencyLKR": "Sri Lankan Rupee",
+    "currencyMMK": "Myanmar Kyat",
+    "webdavConfiguredTitle": "WebDAV Cloud Service Configured",
+    "webdavConfiguredMessage": "WebDAV cloud service uses the credentials provided during configuration, no additional login required.",
+    "recurringTransactionTitle": "Recurring Bills",
+    "recurringTransactionAdd": "Add Recurring Bill",
+    "recurringTransactionEdit": "Edit Recurring Bill",
+    "recurringTransactionFrequency": "Frequency",
+    "recurringTransactionDaily": "Daily",
+    "recurringTransactionWeekly": "Weekly",
+    "recurringTransactionMonthly": "Monthly",
+    "recurringTransactionYearly": "Yearly",
+    "recurringTransactionInterval": "Interval",
+    "recurringTransactionDayOfMonth": "Day of Month",
+    "recurringTransactionStartDate": "Start Date",
+    "recurringTransactionEndDate": "End Date",
+    "recurringTransactionNoEndDate": "Perpetual",
+    "recurringTransactionDeleteConfirm": "Are you sure you want to delete this recurring bill?",
+    "recurringTransactionEmpty": "No Recurring Bills",
+    "recurringTransactionEmptyHint": "Tap the + button in the top right corner to add",
+    "recurringTransactionEveryNDays": "Every {n} day(s)",
+    "@recurringTransactionEveryNDays": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNWeeks": "Every {n} week(s)",
+    "@recurringTransactionEveryNWeeks": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNMonths": "Every {n} month(s)",
+    "@recurringTransactionEveryNMonths": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNYears": "Every {n} year(s)",
+    "@recurringTransactionEveryNYears": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionUsageTitle": "Usage Guide",
+    "recurringTransactionUsageContent": "Recurring transactions are automatically scanned and generated when the app cold starts. After setting a date, the system will create corresponding bills on the first startup after that date. For example: if set to Nov 27, bills will be auto-recorded on the first launch after Nov 27.",
+    "ledgerSelectTitle": "Select Ledger",
+    "ledgerSelect": "Select Ledger",
+    "syncNotConfiguredMessage": "Cloud not configured",
+    "syncNotLoggedInMessage": "Not logged in",
+    "syncCloudBackupCorruptedMessage": "Cloud backup content is corrupted, possibly due to encoding issues from earlier versions. Please click 'Upload Current Ledger to Cloud' to overwrite and fix.",
+    "syncNoCloudBackupMessage": "No cloud backup",
+    "syncAccessDeniedMessage": "403 Access denied (check storage RLS policy and path)",
+    "cloudTestConnection": "Test Connection",
+    "cloudLastTestTime": "Last test time: {time}",
+    "@cloudLastTestTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudLocalStorageTitle": "Local Storage",
+    "cloudLocalStorageSubtitle": "Data is only saved on local device",
+    "localBackupPageTitle": "Local Storage",
+    "localBackupAutoTitle": "Auto Local Backup",
+    "localBackupAutoSubtitle": "Automatically back up a database snapshot on first launch each day",
+    "storagePermissionTitle": "Storage Permission Required",
+    "storagePermissionMessage": "Android 11+ requires \"All files access\" to save files to the public Download folder (visible in file managers, kept after uninstall).\n\nChoosing \"Continue Anyway\" saves to the app's private folder instead — invisible in file managers and deleted on uninstall.",
+    "storagePermissionGrant": "Grant Access",
+    "storagePermissionContinue": "Continue Anyway",
+    "exportStorageUnavailable": "External storage is unavailable. Check device storage status",
+    "localBackupNowTooltip": "Back up now",
+    "localBackupSuccess": "Backup completed",
+    "localBackupFailed": "Backup failed. Check storage space and permissions",
+    "localBackupListHint": "Select a backup to restore:",
+    "localBackupImportFromFile": "Import from file",
+    "localBackupImportInvalidFile": "Please select a .sqlite backup file",
+    "localBackupListEmpty": "No backups yet",
+    "localBackupRestoreTitle": "Restore Backup",
+    "localBackupRestoreMessage": "Restoring will overwrite all current data and cannot be undone. Continue?",
+    "localBackupRestoreSuccess": "Restore completed",
+    "localBackupRestoreFailed": "Restore failed",
+    "localBackupEmergencyFailed": "Could not create a safety copy of current data. Restore cancelled",
+    "localBackupIntegrityFailed": "Backup file is corrupted and cannot be restored",
+    "localBackupVersionTooNew": "This backup was created by a newer version of the app. Please update the app first",
+    "localBackupRestoring": "Restoring…",
+    "cloudCustomSupabaseTitle": "Custom Supabase",
+    "cloudCustomSupabaseSubtitle": "Click to configure self-hosted Supabase",
+    "cloudCustomWebdavTitle": "Custom WebDAV",
+    "cloudCustomWebdavSubtitle": "Click to configure Nutstore/Nextcloud etc.",
+    "cloudCustomS3Title": "S3 Protocol Storage",
+    "cloudCustomS3Subtitle": "AWS S3 / Cloudflare R2 / MinIO",
+    "cloudSpitoutCloudTitle": "Spitout Cloud",
+    "cloudSpitoutCloudSubtitle": "Self-hosted · Incremental sync · Multi-device",
+    "cloudConfigureSpitoutCloudTitle": "Configure Spitout Cloud",
+    "cloudSpitoutCloudUrlLabel": "Server URL",
+    "cloudSpitoutCloudUrlHint": "https://your-server.com",
+    "cloudSpitoutCloudEmailLabel": "Email",
+    "cloudSpitoutCloudEmailHint": "your@email.com",
+    "cloudSpitoutCloudPasswordLabel": "Password",
+    "cloudSpitoutCloudPasswordHint": "Enter password",
+    "cloudSpitoutCloudLoginSuccess": "Login successful",
+    "cloudSpitoutCloudLoginFailed": "Login failed",
+    "cloudTabOffline": "Offline",
+    "cloudTabBackup": "Backup",
+    "cloudTabBackupSubtitle": "Tap a card to switch backup methods. The first setup requires configuration.",
+    "cloudTabCloudSync": "Cloud Sync",
+    "cloudSupabaseHelpTitle": "Supabase Setup Guide",
+    "cloudSupabaseHelpIntro": "What is Supabase",
+    "cloudSupabaseHelpIntro1": "Supabase is an open-source backend-as-a-service platform",
+    "cloudSupabaseHelpIntro2": "Offers a free tier, sufficient for personal use",
+    "cloudSupabaseHelpIntro3": "You have full control over your data",
+    "cloudSupabaseHelpSteps": "Setup Steps",
+    "cloudSupabaseHelpStep1": "1. Visit supabase.com to create an account",
+    "cloudSupabaseHelpStep2": "2. Create a new project (select free tier)",
+    "cloudSupabaseHelpStep3": "3. Go to Project Settings > API",
+    "cloudSupabaseHelpStep4": "4. Copy Project URL and anon key",
+    "cloudSupabaseHelpStep5": "5. Paste them into the app configuration",
+    "cloudSupabaseHelpFaq": "FAQ",
+    "cloudSupabaseHelpFaq1": "Free tier includes 500MB storage",
+    "cloudSupabaseHelpFaq2": "Data is encrypted and secure",
+    "cloudSupabaseHelpFaq3": "Supports multi-device sync",
+    "cloudSupabaseHelpNote": "After configuration, you need to register/login to use sync",
+    "cloudWebdavHelpTitle": "WebDAV Setup Guide",
+    "cloudWebdavHelpIntro": "What is WebDAV",
+    "cloudWebdavHelpIntro1": "WebDAV is a network file protocol",
+    "cloudWebdavHelpIntro2": "Supported by many cloud storage and NAS devices",
+    "cloudWebdavHelpIntro3": "Data is stored on your own server",
+    "cloudWebdavHelpProviders": "Supported Providers",
+    "cloudWebdavHelpProvider1": "- Nutstore (recommended for China users)",
+    "cloudWebdavHelpProvider2": "- Nextcloud / ownCloud",
+    "cloudWebdavHelpProvider3": "- Synology / QNAP NAS",
+    "cloudWebdavHelpProvider4": "- Other WebDAV-compatible services",
+    "cloudWebdavHelpSteps": "Setup Steps (Nutstore example)",
+    "cloudWebdavHelpStep1": "1. Login to Nutstore web version",
+    "cloudWebdavHelpStep2": "2. Click account name > Account Info",
+    "cloudWebdavHelpStep3": "3. Select Security Options tab",
+    "cloudWebdavHelpStep4": "4. Add application password (for third-party apps)",
+    "cloudWebdavHelpStep5": "5. Copy server address, account, and app password",
+    "cloudWebdavHelpNote": "Use an app-specific password instead of your account password",
+    "cloudS3HelpTitle": "S3 Storage Setup Guide",
+    "cloudS3HelpIntro": "What is S3",
+    "cloudS3HelpIntro1": "S3 is a standard object storage protocol",
+    "cloudS3HelpIntro2": "Supported by many cloud providers",
+    "cloudS3HelpIntro3": "Data is stored on your chosen cloud service",
+    "cloudS3HelpProviders": "Supported Providers",
+    "cloudS3HelpProvider1": "- AWS S3 (Amazon Web Services)",
+    "cloudS3HelpProvider2": "- Cloudflare R2 (free 10GB/month)",
+    "cloudS3HelpProvider3": "- Backblaze B2 (free 10GB)",
+    "cloudS3HelpProvider4": "- MinIO (self-hosted)",
+    "cloudS3HelpProvider5": "- Alibaba Cloud OSS",
+    "cloudS3HelpProvider6": "- Tencent Cloud COS",
+    "cloudS3HelpProvider7": "- Qiniu Kodo",
+    "cloudS3HelpSteps": "Setup Steps (Cloudflare R2 example)",
+    "cloudS3HelpStep1": "1. Login to Cloudflare Dashboard",
+    "cloudS3HelpStep2": "2. Go to R2 > Create Bucket",
+    "cloudS3HelpStep3": "3. Go to R2 > Manage R2 API Tokens",
+    "cloudS3HelpStep4": "4. Create API Token and copy credentials",
+    "cloudS3HelpStep5": "5. Paste endpoint, access key, secret key, and bucket name",
+    "cloudS3HelpNote": "Recommended: Cloudflare R2 offers 10GB free storage without egress fees",
+    "cloudStatusNotTested": "Not tested",
+    "cloudStatusNormal": "Connection normal",
+    "cloudStatusFailed": "Connection failed",
+    "cloudErrorAuthFailed": "Authentication failed: Invalid API Key",
+    "cloudErrorServerStatus": "Server returned status code {code}",
+    "@cloudErrorServerStatus": {
+        "placeholders": {
+            "code": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudErrorWebdavNotSupported": "Server does not support WebDAV protocol",
+    "cloudErrorAuthFailedCredentials": "Authentication failed: Incorrect username or password",
+    "cloudErrorAccessDenied": "Access denied: Please check permissions",
+    "cloudErrorPathNotFound": "Server path not found: {path}",
+    "@cloudErrorPathNotFound": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudErrorNetwork": "Network error: {message}",
+    "@cloudErrorNetwork": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudTestSuccessMessage": "Connection normal, configuration valid",
+    "cloudTestFailedMessage": "Connection failed",
+    "cloudSwitchConfirmTitle": "Switch Cloud Service",
+    "cloudSwitchConfirmMessage": "Switching cloud service will log out current account. Confirm switch?",
+    "cloudSwitchFailedTitle": "Switch Failed",
+    "cloudSwitchFailedConfigMissing": "Please configure this cloud service first",
+    "cloudConfigInvalidMessage": "Please fill in complete information",
+    "cloudSaveFailed": "Save Failed",
+    "cloudSwitchedTo": "Switched to {type}",
+    "@cloudSwitchedTo": {
+        "placeholders": {
+            "type": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudConfigureSupabaseTitle": "Configure Supabase",
+    "cloudConfigureWebdavTitle": "Configure WebDAV",
+    "cloudConfigureS3Title": "Configure S3",
+    "cloudSupabaseAnonKeyHintLong": "Paste complete anon key",
+    "cloudWebdavRemotePathLabel": "Remote Path",
+    "cloudWebdavRemotePathHelperText": "Remote directory path for data storage",
+    "welcomeSelectCurrencyTitle": "Select Accounting Currency",
+    "welcomeCurrencyDescription": "Choose your preferred currency, you can change it anytime in settings",
+    "aiOcrNoLedger": "Ledger not found",
+    "cloudTutorialTitle": "Getting Started",
+    "cloudTutorialIntro": "Spitout Cloud is a self-hosted sync server that supports real-time multi-device collaboration. The flow is simple:",
+    "cloudTutorialStep1Title": "Step 1: Deploy or join a server",
+    "cloudTutorialStep1Desc": "Self-host with one Docker command (see the Docker guide in GitHub README). Or join an existing Spitout Cloud server run by a friend / team.",
+    "cloudTutorialStep2Title": "Step 2: Get an account",
+    "cloudTutorialStep2Desc": "Spitout Cloud does NOT offer self-registration (to prevent abuse on public servers). If you self-host: the first Docker boot prints a random admin email + password to the logs — use that. Joining someone else's server: ask the admin to create an account for you in Web → Users.",
+    "cloudTutorialStep3Title": "Step 3: Login + enable sync",
+    "cloudTutorialStep3Desc": "In the app, pick Spitout Cloud, enter the server URL and the account you got in step 2. First login uploads your entire local ledger; every subsequent edit is pushed in real time.",
+    "cloudTutorialStep4Title": "Step 4: Login from other devices",
+    "cloudTutorialStep4Desc": "Phone / tablet / Web — same account, instant shared state. Edits propagate within seconds.",
+    "cloudTutorialTipTitle": "Tip",
+    "cloudTutorialTipDesc": "The Web UI lives at the server URL. Open it in a browser to manage ledgers, members, and view logs.",
+    "cloudTutorialFeaturesTitle": "Features",
+    "cloudTutorialFeature1": "📱 Real-time multi-device: phone A + phone B + Web on one account, sub-second sync",
+    "cloudTutorialFeature2": "🌐 Web UI included: one Docker image ships server + Web, browser ready",
+    "cloudTutorialFeature3": "👥 Multi-user isolation: multiple users on one server, data fully separated",
+    "cloudTutorialFeature4": "🤝 Shared ledgers: invite family / team into one book with seconds-level sync",
+    "cloudTutorialGotIt": "Got it",
+    "cloudSyncHint": "Downloads automatically compare differences for selective preview. Not real-time — avoid editing the same ledger on multiple devices simultaneously. Sync scope covers ledger data (including associated accounts and categories).",
+    "appearanceSettings": "Preferences",
+    "appearanceSettingsDesc": "Theme, font, language, app lock, etc.",
+    "appearanceSettingsPageTitle": "Preferences",
+    "appearanceSettingsPageSubtitle": "Appearance, display, security and other app preferences",
+    "logCenterTitle": "Log Center",
+    "logCenterSubtitle": "View app runtime logs",
+    "logCenterSearchHint": "Search log content or tags...",
+    "logCenterFilterLevel": "Log Level",
+    "logCenterFilterPlatform": "Platform",
+    "logCenterTotal": "Total",
+    "logCenterFiltered": "Filtered",
+    "logCenterEmpty": "No logs",
+    "logCenterExport": "Export",
+    "logCenterClear": "Clear",
+    "logCenterExportFailed": "Export failed",
+    "logCenterClearConfirmTitle": "Clear Logs",
+    "logCenterClearConfirmMessage": "Are you sure you want to clear all logs? This action cannot be undone.",
+    "logCenterCleared": "Logs cleared",
+    "logCenterCopied": "Copied to clipboard",
+    "configImportExportTitle": "Config Import/Export",
+    "configImportExportSubtitle": "Backup and restore app configurations",
+    "configImportExportInfoTitle": "Feature Description",
+    "configImportExportInfoMessage": "Back up and restore app configurations for cross-device migration or settings recovery. Exports as YAML format, viewable and editable.\n\nOnly includes app configurations, not transaction records (use Detail Import/Export for transaction data).",
+    "configImportExportWarning": "The config file contains sensitive information such as cloud service keys and passwords. Keep it safe. Importing overwrites existing configurations with the same name—back up first.",
+    "configExportTitle": "Export Config",
+    "configExportSubtitle": "Export current config to YAML file",
+    "configExportShareSubject": "Spitout Config File",
+    "configExportSuccess": "Config exported successfully",
+    "configExportFailed": "Config export failed",
+    "configImportTitle": "Import Config",
+    "configImportSubtitle": "Restore config from YAML file",
+    "configImportNoFilePath": "No file selected",
+    "configImportConfirmTitle": "Confirm Import",
+    "configImportSuccess": "Config imported successfully",
+    "configImportFailed": "Config import failed",
+    "configImportRestartTitle": "Restart Required",
+    "configImportRestartMessage": "Config has been imported. Some settings will take effect after restarting the app.",
+    "configImportOverwriteWarning": "Importing will overwrite existing configurations. It is recommended to back up your current config first.",
+    "configImportExportIncludesTitle": "Included Configurations",
+    "configExportSavedTo": "Saved to: {path}",
+    "configExportViewContent": "View Content",
+    "configExportCopyContent": "Copy Content",
+    "configExportContentCopied": "Copied to clipboard",
+    "configExportReadFileFailed": "Failed to read file",
+    "@configExportSavedTo": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
+    "configIncludeLedgers": "Ledgers",
+    "configIncludeSupabase": "Supabase cloud service config",
+    "configIncludeWebdav": "WebDAV cloud service config",
+    "configIncludeS3": "S3 cloud service config",
+    "configIncludeSpitoutCloud": "Spitout Cloud service config",
+    "configIncludeAppSettings": "App settings (reminder, language, appearance, font, sync, etc.)",
+    "configIncludeRecurringTransactions": "Recurring transactions",
+    "configIncludeCategories": "Categories",
+    "configIncludeOtherSettings": "Other Settings",
+    "configIncludeOtherSettingsSubtitle": "Including cloud service configs and app settings",
+    "configExportSelectTitle": "Select Export Content",
+    "configExportPreviewTitle": "Export Preview",
+    "configExportConfirmTitle": "Confirm Export",
+    "configImportSelectTitle": "Select Import Content",
+    "configImportPreviewTitle": "Import Preview",
+    "ledgersConflictTitle": "Sync Conflict",
+    "ledgersConflictMessage": "Local and cloud ledger data are inconsistent, please choose an action:",
+    "ledgersConflictLocalInfo": "Local: {count} transactions",
+    "@ledgersConflictLocalInfo": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "ledgersConflictRemoteInfo": "Cloud: {count} transactions",
+    "@ledgersConflictRemoteInfo": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "ledgersConflictRemoteUpdated": "Cloud updated: {time}",
+    "@ledgersConflictRemoteUpdated": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictLocalFingerprint": "Local fingerprint: {fp}",
+    "@ledgersConflictLocalFingerprint": {
+        "placeholders": {
+            "fp": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictRemoteFingerprint": "Cloud fingerprint: {fp}",
+    "@ledgersConflictRemoteFingerprint": {
+        "placeholders": {
+            "fp": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictUpload": "Upload to Cloud",
+    "ledgersConflictDownload": "Download to Local",
+    "ledgersConflictUploading": "Uploading...",
+    "ledgersConflictDownloading": "Downloading...",
+    "ledgersConflictUploadSuccess": "Upload successful",
+    "ledgersConflictDownloadSuccess": "Download successful, merged {inserted} transactions",
+    "@ledgersConflictDownloadSuccess": {
+        "placeholders": {
+            "inserted": {
+                "type": "int"
+            }
+        }
+    },
+    "welcomeExistingUserTitle": "Existing User?",
+    "welcomeExistingUserButton": "Import Config",
+    "welcomeImportingConfig": "Importing configuration...",
+    "welcomeImportSuccess": "Configuration imported successfully",
+    "welcomeImportFailed": "Import failed: {error}",
+    "@welcomeImportFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "welcomeImportNoFile": "No file selected",
+
+    "calendarTitle": "Calendar",
+    "calendarToday": "Back to Today",
+    "calendarNoTransactions": "No transactions",
+    "calendarAddTransaction": "Add entry on this day",
+    "commonUncategorized": "Uncategorized",
+    "syncPreviewTitle": "Sync Preview",
+    "syncPreviewSelectAll": "Select All",
+    "syncPreviewDeselectAll": "Deselect All",
+    "syncPreviewAdded": "Added",
+    "syncPreviewModified": "Modified",
+    "syncPreviewDeleted": "Deleted",
+    "syncPreviewAddedCount": "{count} added",
+    "@syncPreviewAddedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "syncPreviewModifiedCount": "{count} modified",
+    "@syncPreviewModifiedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "syncPreviewDeletedCount": "{count} deleted",
+    "@syncPreviewDeletedCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "syncPreviewApply": "Apply {count} items",
+    "@syncPreviewApply": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "syncPreviewEmpty": "Cloud data matches local, no sync needed",
+    "syncPreviewOldFormat": "Old cloud format, full replace required",
+    "syncPreviewOldFormatMessage": "Cloud data does not contain sync IDs. Local data will be cleared and re-imported from cloud.",
+    "syncPreviewApplied": "Applied {count} changes",
+    "@syncPreviewApplied": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "cloudSyncGuideTitle": "Cloud Sync Guide",
+    "cloudSyncGuideGotIt": "Got it",
+    "cloudSyncGuideHowItWorks": "How it works",
+    "cloudSyncGuideHowItem1": "Upload: packages all current ledger data and uploads to cloud, replacing old cloud data",
+    "cloudSyncGuideHowItem2": "Download: fetches cloud data and compares with local records one by one — you choose which changes to apply",
+    "cloudSyncGuideHowItem3": "The cloud always stores only the last uploaded snapshot, no version history",
+    "cloudSyncGuideCorrect": "Correct usage",
+    "cloudSyncGuideCorrectItem1": "Edit on one device at a time, upload when done",
+    "cloudSyncGuideCorrectItem2": "Download on the new device before starting to edit",
+    "cloudSyncGuideCorrectItem3": "Review the preview carefully before applying changes",
+    "cloudSyncGuideCorrectItem4": "Follow the pattern: edit → upload → switch device → download → edit",
+    "cloudSyncGuideWrong": "What to avoid",
+    "cloudSyncGuideWrongItem1": "Editing the same ledger on two devices simultaneously — the later upload overwrites the earlier one",
+    "cloudSyncGuideWrongItem2": "Downloading immediately after upload — cloud services may have seconds to minutes of sync delay, wait a moment",
+    "cloudSyncGuideWrongItem3": "Going long periods without syncing then downloading many changes at once — easy to miss important differences",
+    "cloudSyncGuideLimitations": "Known limitations",
+    "cloudSyncGuideLimitItem1": "Not real-time: requires manually tapping upload and download",
+    "cloudSyncGuideLimitItem2": "No conflict merging: does not auto-merge edits from both sides — last upload wins",
+    "cloudSyncGuideLimitItem3": "Cloud service delay: uploaded files may take seconds to minutes before other devices can read them, depending on your cloud provider",
+
+    "appLockTitle": "Lock App",
+    "appLockDesc": "PIN & biometric to protect privacy",
+    "appLockEnable": "Enable App Lock",
+    "appLockEnableDesc": "Require authentication on launch and resume",
+    "appLockSetPin": "Set PIN",
+    "appLockChangePin": "Change PIN",
+    "appLockVerifyPin": "Verify PIN",
+    "appLockVerifyCurrentPin": "Enter current PIN",
+    "appLockSetNewPin": "Set new PIN",
+    "appLockConfirmPin": "Confirm PIN",
+    "appLockEnterPin": "Enter PIN",
+    "appLockPinSetSuccess": "PIN set successfully",
+    "appLockDisabled": "App Lock disabled",
+    "appLockBiometric": "Biometric Unlock",
+    "appLockBiometricDesc": "Use Face ID or fingerprint to unlock",
+    "appLockBiometricReason": "Verify identity to unlock Spitout",
+    "appLockTimeout": "Auto-lock Timeout",
+    "appLockTimeoutImmediate": "Immediately",
+    "appLockTimeout1Min": "After 1 minute",
+    "appLockTimeout5Min": "After 5 minutes",
+    "appLockTimeout15Min": "After 15 minutes",
+    "dayOfMonth": "{day}th of each month",
+    "@dayOfMonth": {
+        "placeholders": {
+            "day": {
+                "type": "int"
+            }
+        }
+    },
+    "syncHealthTitle": "Sync status",
+    "cloudSyncHelpTitle": "How sync works · Why it sometimes stalls",
+    "cloudSyncHelpModesTitle": "Three sync modes",
+    "cloudSyncHelpModesBody": "• Incremental (automatic, everyday): after you add or edit an entry, only that change is uploaded/downloaded automatically — fast, no manual action. This is what runs all the time.\n• Full upload: the first time you enable cloud sync, or when the cloud has no data for this ledger yet, all local data is pushed to the cloud at once.\n• Full download: on a new device, after a reinstall, or when local is empty, all data is pulled down from the cloud.",
+    "cloudSyncHelpWhenFullTitle": "When does a full sync happen?",
+    "cloudSyncHelpWhenFullBody": "A full sync only triggers automatically when one side is empty (first enabling cloud sync / new device / reinstall / after clearing local or cloud data). As long as both sides have data, sync stays incremental and never restarts on its own. To force a full re-sync, you must first clear the data on the corresponding side.",
+    "cloudSyncHelpStuckTitle": "Why sync sometimes stalls",
+    "cloudSyncHelpStuckBody": "• Full upload/download does NOT support resume: if the network drops or the app is killed in the background, it starts over from scratch instead of continuing. For large data, use a stable network (Wi-Fi recommended) and let it finish without switching away.\n• Incremental sync is resume-safe and unaffected in everyday use.",
+    "cloudSyncHelpTroubleshootTitle": "Troubleshooting",
+    "cloudSyncHelpTroubleshootBody": "• First, pull down on this page to run a Deep Check and compare local vs cloud.\n• Still stuck? Open the Log Center to view sync logs (including failure reasons) for reporting.",
+    "cloudSyncHelpOpenLogCenter": "Open Log Center",
+    "syncHealthCheckFailed": "Check failed: {msg}",
+    "@syncHealthCheckFailed": {
+        "placeholders": {
+            "msg": {
+                "type": "String"
+            }
+        }
+    },
+    "syncHealthRecovering": "Restoring sign-in status…",
+    "@syncHealthRecovering": {
+        "description": "Shown while cloud sign-in is silently recovering after a session loss; auto-retries after cooldown"
+    },
+    "syncHealthNeedsLogin": "Not signed in or session expired. Please sign in to cloud sync again.",
+    "@syncHealthNeedsLogin": {
+        "description": "Shown when silent recovery failed and the user must manually sign in to cloud sync"
+    },
+    "syncHealthHasDiff": "Diff detected; auto-synced",
+    "cloudSyncHealFailed": "Auto-restore failed; please restore from cloud manually",
+    "@cloudSyncHealFailed": {
+        "description": "Shown when the self-heal circuit breaker is open and the missing cloud data could not be restored automatically"
+    },
+    "syncHealthInSync": "Local matches cloud",
+    "syncHealthGroupCurrentLedger": "Current ledger",
+    "syncHealthGroupAll": "All ledgers",
+    "syncHealthRowTx": "Transactions",
+    "syncHealthRowCategory": "Categories",
+    "syncHealthRowUnpushed": "Unpushed changes",
+    "syncHealthValue": "Local {local} · Remote {remote}",
+    "@syncHealthValue": {
+        "description": "Per-item sync counts in the sync-status detail panel, local vs remote",
+        "placeholders": {
+            "local": { "type": "int" },
+            "remote": { "type": "int" }
+        }
+    },
+    "syncHealthValueRemoteMissing": "Local {local} · Remote —",
+    "@syncHealthValueRemoteMissing": {
+        "description": "Per-item sync count when the remote count cannot be fetched",
+        "placeholders": {
+            "local": { "type": "int" }
+        }
+    },
+    "twofaChallengeTitle": "Two-factor authentication",
+    "twofaMethodTotp": "Code",
+    "twofaMethodRecovery": "Recovery code",
+    "twofaTotpInputPlaceholder": "6-digit code",
+    "twofaRecoveryInputPlaceholder": "Recovery code",
+    "twofaVerifyButton": "Verify",
+    "twofaStatusTitle": "Two-factor authentication",
+    "twofaStatusEnabled": "Enabled ✓",
+    "twofaStatusDisabled": "Not enabled",
+    "twofaStatusEnabledAt": "Enabled on {date}",
+    "@twofaStatusEnabledAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedRoleOwner": "Owner",
+    "sharedRoleEditor": "Editor",
+    "commonCopied": "Copied",
+    "commonRemove": "Remove",
+    "sharedJoinPageTitle": "Join shared ledger",
+    "sharedJoinPageSubtitle": "Enter an invite code or tap a shared link",
+    "sharedJoinEnterCode": "Enter invite code",
+    "sharedJoinEnterCodeHint": "6 uppercase letters / digits. You can also tap a share link to skip this step.",
+    "sharedJoinPreviewButton": "Verify code",
+    "sharedJoinAcceptButton": "Join",
+    "sharedJoinInvitedBy": "{name} invited you to join",
+    "@sharedJoinInvitedBy": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedJoinRoleLine": "Role: {role}",
+    "@sharedJoinRoleLine": {
+        "placeholders": {
+            "role": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedJoinExpiresInMinutes": "Expires in {n} min",
+    "@sharedJoinExpiresInMinutes": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "sharedJoinExpiresInHours": "Expires in {n}h",
+    "@sharedJoinExpiresInHours": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "sharedJoinExpiresInDays": "Expires in {n}d",
+    "@sharedJoinExpiresInDays": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "sharedJoinSuccess": "Joined \"{name}\"",
+    "@sharedJoinSuccess": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedJoinCodeFormatError": "Invite code must be 6 letters/digits.",
+    "sharedJoinInvalidOrExpired": "Invite code is invalid or expired. Ask the inviter for a new one.",
+    "sharedJoinAlreadyMember": "You are already a member of this ledger.",
+    "sharedJoinMemberLimit": "This ledger has reached its member limit. Ask the owner.",
+    "sharedInviteFormRole": "Role",
+    "sharedInviteFormExpiry": "Valid for",
+    "sharedInviteExpiryHours": "{n} h",
+    "@sharedInviteExpiryHours": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "sharedInviteExpiryDays": "{n} day",
+    "@sharedInviteExpiryDays": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "sharedInviteGenerate": "Generate invite code",
+    "sharedInviteGenerateAnother": "Generate another code",
+    "sharedInviteCopyCode": "Copy code",
+    "sharedInviteCopyLink": "Copy link",
+    "sharedInviteShareLink": "Share link",
+    "sharedInviteExpiresAt": "Expires at {dt}",
+    "@sharedInviteExpiresAt": {
+        "placeholders": {
+            "dt": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedInviteWarning": "⚠️ Don't post invite codes to public groups / social. Anyone with the code can join. Revoke and regenerate from Members if leaked.",
+    "sharedInviteInstruction": "Send the code or short link to the other person. After they install Spitout, they can tap the link or enter the code from \"Me → Join shared ledger\".",
+    "sharedInviteShareText": "I'm inviting you to Spitout shared ledger \"{ledger}\".\n\nCode: {code}\nLink: {url}\n\nTap the link, or open Spitout → Me → Join shared ledger and enter this code.",
+    "@sharedInviteShareText": {
+        "placeholders": {
+            "ledger": {
+                "type": "String"
+            },
+            "code": {
+                "type": "String"
+            },
+            "url": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedMembersPageTitle": "Members",
+    "sharedMembersYou": "you",
+    "sharedMembersInviteCta": "Invite new member",
+    "ledgersLeaveAndDelete": "Leave and Delete",
+    "ledgersLeaveAndDeleteConfirm": "Leave and Delete Ledger",
+    "ledgersLeaveAndDeleteMessage": "Leave and delete the shared ledger \"{name}\"?\\nAfter leaving, the cloud removes your membership and all local data is cleared. You won't be able to access its transactions anymore.",
+    "@ledgersLeaveAndDeleteMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersLeaveAndDeleteSuccess": "Left and deleted the ledger",
+    "ledgersDeleteShared": "Delete Shared Ledger",
+    "ledgersDeleteSharedConfirm": "Delete Shared Ledger",
+    "ledgersDeleteSharedMessage": "Delete the shared ledger \"{name}\"?\\nThis also removes all collaborators and clears their local data. This cannot be undone.",
+    "@ledgersDeleteSharedMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersDeleteSharedSuccess": "Shared ledger deleted",
+    "sharedMembersRemoveTitle": "Remove member",
+    "sharedMembersRemoveCta": "Remove this member",
+    "sharedMembersRemoveConfirm": "Remove {name}? They will immediately lose access to this ledger.",
+    "@sharedMembersRemoveConfirm": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedMembersRemoved": "Member removed",
+    "sharedMembersSyncPending": "For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.",
+
+    "sharedTxCreatedBy": "Created by {name}",
+    "@sharedTxCreatedBy": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedTxEditedBy": "Last edited by {name}",
+    "@sharedTxEditedBy": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedTxCreatedAndEditedBy": "Created and edited by {name}",
+    "@sharedTxCreatedAndEditedBy": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "sharedRequiresCloudSync": "Please enable cloud sync first",
+    "sharedMembersStatsTitle": "Member expenses",
+    "sharedMembersStatsEmpty": "No transactions yet",
+    "sharedMembersStatsTxCount": "{count} tx",
+    "@sharedMembersStatsTxCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanCleanupTitle": "Data Cleanup",
+    "maintenanceOrphanCleanupSubtitle": "Detect and clean local orphan data",
+    "maintenanceOrphanRescan": "Rescan",
+    "maintenanceOrphanEmpty": "Local data is clean, no orphan data found",
+    "maintenanceOrphanGroupDb": "Database orphans",
+    "maintenanceOrphanGroupSync": "Sync state orphans",
+    "maintenanceOrphanSummary": "Found {count} issue(s)",
+    "@maintenanceOrphanSummary": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanSelectAll": "Select all",
+    "maintenanceOrphanDeselectAll": "Deselect all",
+    "maintenanceOrphanDeleteOne": "Delete this",
+    "maintenanceOrphanSelectedHint": "{count} selected",
+    "@maintenanceOrphanSelectedHint": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanCleanSelected": "Clean selected",
+    "maintenanceOrphanConfirmTitle": "Confirm cleanup",
+    "maintenanceOrphanConfirmDeleteOne": "Delete \"{title}\"? This cannot be undone.",
+    "@maintenanceOrphanConfirmDeleteOne": {
+        "placeholders": {
+            "title": {
+                "type": "String"
+            }
+        }
+    },
+    "maintenanceOrphanConfirmDeleteBatch": "Delete the {count} selected item(s)? This cannot be undone.",
+    "@maintenanceOrphanConfirmDeleteBatch": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanCleanSuccess": "Cleaned {count} item(s)",
+    "@maintenanceOrphanCleanSuccess": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanCleanPartial": "Cleaned {ok} item(s), {fail} failed",
+    "@maintenanceOrphanCleanPartial": {
+        "placeholders": {
+            "ok": {
+                "type": "int"
+            },
+            "fail": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanDeletedLedgerGroup": "Deleted ledger #{ledgerId} ({count} items)",
+    "@maintenanceOrphanDeletedLedgerGroup": {
+        "placeholders": {
+            "ledgerId": {
+                "type": "int"
+            },
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "maintenanceOrphanMoveSingle": "Move to ledger",
+    "maintenanceOrphanMoveToLedger": "Move to ledger",
+    "maintenanceOrphanMoveToLedgerSuccess": "Moved {count} item(s) to ledger",
+    "@maintenanceOrphanMoveToLedgerSuccess": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "exchangeRatePageTitle": "Exchange Rates",
+    "exchangeRateEntrySubtitle": "Auto-fetched rates with manual override",
+    "rateSourceAuto": "Auto",
+    "rateSourceManual": "Manual",
+    "rateUpdatedAt": "Updated {date}",
+    "@rateUpdatedAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
+    "rateNotFetched": "Not fetched",
+    "rateEditTitle": "Edit Rate",
+    "rateInverseHint": "Inverse: 1 {base} ≈ {rate} {quote}",
+    "@rateInverseHint": {
+        "placeholders": {
+            "base": {
+                "type": "String"
+            },
+            "rate": {
+                "type": "String"
+            },
+            "quote": {
+                "type": "String"
+            }
+        }
+    },
+    "rateResetToAuto": "Reset to auto",
+    "rateRefreshSuccess": "Rates updated",
+    "rateRefreshFailed": "Fetch failed, you can set rates manually",
+    "rateDisclaimer": "Source: open exchange-rate data, updated daily. Conversion is for reference only and may differ from bank rates.",
+    "txFlagExcludedTag": "Excluded",
+    "txRateLabel": "Rate",
+    "txRateMissingHint": "Please enter the rate for this entry before saving",
+    "ledgerBaseCurrencyLabel": "Primary currency",
+    "statsConvertedFootnote": "Includes foreign currency, converted to {currency} at entry-time rates",
+    "@statsConvertedFootnote": {
+        "placeholders": {
+            "currency": {}
+        }
+    },
+    "ledgerCurrencyChangeRecalcHint": "Changing the base currency will reconvert all history at current rates",
+    "ledgerCurrencyChangeRecalcWarning": "Converted amounts of all transactions in this ledger will be recalculated at the latest rates and overwritten; switching away and back cannot restore the original values",
+    "recalcForeignTxBanner": "Unconverted foreign-currency transactions detected in this ledger",
+    "recalcForeignTxAction": "Reconvert at current rates",
+    "recalcForeignTxDone": "Reconverted {count} foreign-currency transactions",
+    "@recalcForeignTxDone": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "txCurrencyPickerTitle": "Select currency",
+    "txAddEntryTitle": "New Entry",
+    "txDeleteLongPress": "Long press to clear",
+    "txSelectDateTimeTitle": "Select date & time",
+    "txSelectDateTimeHint": "Swipe up or down to pick a value",
+    "txEditCategory": "Edit categories",
+    "txEditCategoryReadOnly": "Edit categories (read-only in shared ledger)",
+    "txLedgerBaseCurrency": "Ledger base currency",
+    "recalcSyncCountHint": "{count} transactions will be reconverted and synced",
+    "@recalcSyncCountHint": {
+        "placeholders": {
+            "count": {}
+        }
+    },
+    "analyticsLoadFailed": "Failed to load data. Please check your network.",
+    "analyticsRetry": "Retry",
+    "exportCsvHeaderCurrency": "Currency",
+    "importFieldCurrency": "Currency",
+    "currencyMOP": "Macau Pataca",
+    "currencyMNT": "Mongolian Tughrik",
+    "currencyKPW": "North Korean Won",
+    "currencyKHR": "Cambodian Riel",
+    "currencyLAK": "Lao Kip",
+    "currencyBND": "Bruneian Dollar",
+    "currencyNPR": "Nepalese Rupee",
+    "currencyBTN": "Bhutanese Ngultrum",
+    "currencyMVR": "Maldivian Rufiyaa",
+    "currencyAFN": "Afghan Afghani",
+    "currencyUZS": "Uzbekistani Som",
+    "currencyTJS": "Tajikistani Somoni",
+    "currencyTMT": "Turkmenistani Manat",
+    "currencyKGS": "Kyrgyzstani Som",
+    "currencyQAR": "Qatari Riyal",
+    "currencyKWD": "Kuwaiti Dinar",
+    "currencyBHD": "Bahraini Dinar",
+    "currencyOMR": "Omani Rial",
+    "currencyJOD": "Jordanian Dinar",
+    "currencyLBP": "Lebanese Pound",
+    "currencyIQD": "Iraqi Dinar",
+    "currencyIRR": "Iranian Rial",
+    "currencyYER": "Yemeni Rial",
+    "currencySYP": "Syrian Pound",
+    "currencyGEL": "Georgian Lari",
+    "currencyAMD": "Armenian Dram",
+    "currencyAZN": "Azerbaijan Manat",
+    "currencyRON": "Romanian Leu",
+    "currencyBGN": "Bulgarian Lev",
+    "currencyRSD": "Serbian Dinar",
+    "currencyISK": "Icelandic Krona",
+    "currencyMDL": "Moldovan Leu",
+    "currencyALL": "Albanian Lek",
+    "currencyMKD": "Macedonian Denar",
+    "currencyBAM": "Bosnian Convertible Mark",
+    "currencyGIP": "Gibraltar Pound",
+    "currencyGTQ": "Guatemalan Quetzal",
+    "currencyHNL": "Honduran Lempira",
+    "currencyNIO": "Nicaraguan Cordoba",
+    "currencyCRC": "Costa Rican Colon",
+    "currencyPAB": "Panamanian Balboa",
+    "currencyDOP": "Dominican Peso",
+    "currencyCUP": "Cuban Peso",
+    "currencyJMD": "Jamaican Dollar",
+    "currencyTTD": "Trinidadian Dollar",
+    "currencyBSD": "Bahamian Dollar",
+    "currencyBBD": "Barbadian or Bajan Dollar",
+    "currencyBZD": "Belizean Dollar",
+    "currencyHTG": "Haitian Gourde",
+    "currencyKYD": "Caymanian Dollar",
+    "currencyAWG": "Aruban or Dutch Guilder",
+    "currencyBMD": "Bermudian Dollar",
+    "currencyUYU": "Uruguayan Peso",
+    "currencyPYG": "Paraguayan Guarani",
+    "currencyBOB": "Bolivian Bolíviano",
+    "currencyVES": "Venezuelan Bolívar",
+    "currencyGYD": "Guyanese Dollar",
+    "currencySRD": "Surinamese Dollar",
+    "currencyFJD": "Fijian Dollar",
+    "currencyPGK": "Papua New Guinean Kina",
+    "currencySBD": "Solomon Islander Dollar",
+    "currencyTOP": "Tongan Pa'anga",
+    "currencyVUV": "Ni-Vanuatu Vatu",
+    "currencyWST": "Samoan Tala",
+    "currencyKES": "Kenyan Shilling",
+    "currencyGHS": "Ghanaian Cedi",
+    "currencyMAD": "Moroccan Dirham",
+    "currencyDZD": "Algerian Dinar",
+    "currencyTND": "Tunisian Dinar",
+    "currencyLYD": "Libyan Dinar",
+    "currencyETB": "Ethiopian Birr",
+    "currencyUGX": "Ugandan Shilling",
+    "currencyTZS": "Tanzanian Shilling",
+    "currencyRWF": "Rwandan Franc",
+    "currencyMUR": "Mauritian Rupee",
+    "currencyBWP": "Botswana Pula",
+    "currencyNAD": "Namibian Dollar",
+    "currencyZMW": "Zambian Kwacha",
+    "currencyMWK": "Malawian Kwacha",
+    "currencyMZN": "Mozambican Metical",
+    "currencyAOA": "Angolan Kwanza",
+    "currencyCDF": "Congolese Franc",
+    "currencyGMD": "Gambian Dalasi",
+    "currencyGNF": "Guinean Franc",
+    "currencyLRD": "Liberian Dollar",
+    "currencySLE": "Sierra Leonean Leone",
+    "currencySDG": "Sudanese Pound",
+    "currencySSP": "South Sudanese Pound",
+    "currencySOS": "Somali Shilling",
+    "currencyDJF": "Djiboutian Franc",
+    "currencyERN": "Eritrean Nakfa",
+    "currencyBIF": "Burundian Franc",
+    "currencyCVE": "Cape Verdean Escudo",
+    "currencySTN": "Sao Tomean Dobra",
+    "currencySCR": "Seychellois Rupee",
+    "currencyKMF": "Comorian Franc",
+    "currencyLSL": "Basotho Loti",
+    "currencySZL": "Swazi Lilangeni",
+    "currencyMGA": "Malagasy Ariary",
+    "currencyMRU": "Mauritanian Ouguiya",
+    "detailImportExportTitle": "Detail Import/Export",
+    "detailImportExportSubtitle": "Expense CSV file",
+    "detailImportExportImportTitle": "Import Details",
+    "detailImportExportImportSubtitle": "Supports CSV/TSV/XLSX and Alipay/WeChat bills",
+    "detailImportExportExportTitle": "Export Details",
+    "detailImportExportExportSubtitle": "Export ledger details to a CSV file",
+    "detailImportExportImportPoint1": "Supports generic CSV, Alipay and WeChat bills in CSV/TSV/XLSX format",
+    "detailImportExportImportPoint2": "The difference lies only in file structure: generic CSV has a clean header row, while Alipay/WeChat bills contain descriptive preamble lines that the app skips automatically to locate the header",
+    "detailImportExportImportPoint3": "All three are recognized via the same column mapping (date, type, amount, currency, category, subcategory, note), with an identical import flow",
+    "detailImportExportExportPoint1": "Exports the selected ledger's transactions to a CSV file with UTF-8 BOM encoding, which Excel can open directly",
+    "detailImportExportExportPoint2": "Named spitout_timestamp.csv and saved to the Download/Spitout directory by default",
+    "detailImportExportExportPoint3": "Fields included:",
+    "detailExportLedgerLabel": "Export Ledger",
+    "detailExportSelectAllLabel": "All Data",
+    "detailExportSelectAllSubtitle": "Export all data under the selected ledger",
+    "detailExportStartDate": "Start Date",
+    "detailExportEndDate": "End Date",
+    "detailExportDateInvalid": "Start date cannot be later than end date",
+    "detailExportAction": "Export",
+    "exchangeRateCurrentLedger": "Current ledger: {name}",
+    "@exchangeRateCurrentLedger": {
+        "placeholders": {
+            "name": {}
+        }
+    },
+    "exchangeRateInfoTitle": "About Primary Currency",
+    "exchangeRateInfoMessage": "The primary currency is the base currency of the current ledger: foreign-currency transactions in this ledger are converted into it at exchange rates, so totals can be compared directly in statistics and asset overviews. Each ledger has its own primary currency and you can switch it at any time; switching recalculates converted amounts for all transactions in this ledger at the latest rates.\n\nRates are fetched automatically from public data sources on a daily basis. You can also tap \"Edit\" for any currency in the list below to set a manual rate — it overrides the automatic data and takes effect immediately.",
+    "rateEditLabel": "Edit",
+    "rateInvalidInput": "Please enter a valid rate (a number greater than 0)",
+    "currencyManageTitle": "Manage Displayed Currencies",
+    "currencyManageEntry": "Currency Management",
+    "currencyManageCount": "{count} currencies selected",
+    "currencyManageBaseLocked": "Ledger base currency (cannot be hidden)",
+    "currencyManageHint": "Hiding a currency does not affect existing transactions; you can re-enable it here at any time.",
+    "detailImportExportMigrateTitle": "Ledger Data Migration",
+    "detailImportExportMigrateTip": "Export the current ledger's data to a CSV file, then switch to the target ledger and import that file to migrate your data between ledgers seamlessly.",
+    "mineCheckUpdate": "Check for Updates",
+    "updateChecking": "Checking for updates…",
+    "updateAvailableTitle": "New version available",
+    "updateLatestVersion": "Latest: v{version}",
+    "@updateLatestVersion": {
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateAlreadyLatestTitle": "Up to date",
+    "updateAlreadyLatest": "You are on the latest version v{version}",
+    "@updateAlreadyLatest": {
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateGotoDownload": "Go to download",
+    "updateCurrentVersion": "Current version v{version}",
+    "@updateCurrentVersion": {
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateNewVersionHint": "New version v{version} available",
+    "@updateNewVersionHint": {
+        "placeholders": {
+            "version": {
+                "type": "String"
+            }
+        }
+    },
+    "updateLater": "Later",
+    "updateOk": "OK",
+    "updateCantAutoCheckTitle": "Can't check for updates automatically",
+    "updateCantAutoCheck": "Couldn't fetch version info. View the latest release on GitHub.",
+    "updateGoToGithub": "View on GitHub",
+    "mineUpdateNow": "Update",
+    "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings."
+}

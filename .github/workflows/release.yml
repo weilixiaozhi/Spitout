@@ -1,0 +1,185 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: "Release tag（如 v1.0.0）"
+        required: true
+        default: "v1.0.0"
+      prerelease:
+        description: "是否 Pre-release"
+        required: false
+        default: "false"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: write
+
+env:
+  FLUTTER_VERSION: "3.27.3"
+  APP_NAME: "Spitout"
+
+jobs:
+  android:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: 确定版本号
+        id: meta
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF:-}" == refs/tags/* ]]; then
+            TAG_NAME="${GITHUB_REF#refs/tags/}"
+          else
+            TAG_NAME="${{ github.event.inputs.tag_name }}"
+          fi
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
+          echo "版本号: $TAG_NAME"
+
+      - name: Setup Java 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: "zulu"
+          java-version: "17"
+
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: 安装 Android SDK 组件
+        run: |
+          sdkmanager --install "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 还原生产 keystore 并写入 key.properties
+        shell: bash
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${KEYSTORE_BASE64:-}" ]]; then
+            echo "::warning::未配置 KEYSTORE_BASE64，将使用临时 debug keystore 签名（产物不可用于正式分发）"
+            exit 0
+          fi
+          mkdir -p android/app
+          echo "${KEYSTORE_BASE64}" | base64 -d > android/app/release.keystore
+          # 逐行 >> 追加写 key.properties，避免 brace group 在 YAML 解析时的潜在歧义
+          echo "storeFile=release.keystore" > android/key.properties
+          echo "storePassword=${KEYSTORE_PASSWORD}" >> android/key.properties
+          echo "keyAlias=${KEY_ALIAS}" >> android/key.properties
+          echo "keyPassword=${KEY_PASSWORD}" >> android/key.properties
+          echo "已写入 android/key.properties，keystore 大小: $(stat -c%s android/app/release.keystore) 字节"
+
+      - name: 更新 pubspec.yaml 版本号
+        run: |
+          VERSION='${{ steps.meta.outputs.tag_name }}'
+          CLEAN_VERSION=${VERSION#v}
+          BUILD_NUMBER=${{ github.run_number }}
+          sed -i "s/^version: .*/version: ${CLEAN_VERSION}+${BUILD_NUMBER}/" pubspec.yaml
+          echo "更新后版本号:"
+          grep "^version:" pubspec.yaml
+
+      - name: 构建 Release APK
+        run: |
+          export CI_VERSION='${{ steps.meta.outputs.tag_name }}'
+          flutter build apk --release --flavor prod \
+            --dart-define=CI_VERSION="$CI_VERSION"
+
+      - name: 重命名 APK 产物
+        run: |
+          VERSION="${{ steps.meta.outputs.tag_name }}"
+          APK_DIR="build/app/outputs/apk/prod/release"
+
+          echo "=== 原始产物 ==="
+          ls -la "$APK_DIR"
+
+          for src in "$APK_DIR"/app-prod-*.apk; do
+            [ -f "$src" ] || continue
+            name="$(basename "$src")"
+            case "$name" in
+              app-prod-release-v*.apk)
+                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}.apk"
+                ;;
+              app-prod-armeabi-v7a-release-v*.apk)
+                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-armeabi-v7a.apk"
+                ;;
+              app-prod-x86_64-release-v*.apk)
+                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-x86_64.apk"
+                ;;
+              app-prod-universal-release-v*.apk)
+                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-universal.apk"
+                ;;
+              *)
+                echo "跳过: $name"
+                continue
+                ;;
+            esac
+            mv "$src" "$dest"
+            echo "重命名: $(basename "$dest")"
+          done
+
+          echo ""
+          echo "=== 最终产物 ==="
+          ls -la "$APK_DIR"/Spitout-* 2>/dev/null || true
+
+      - name: 上传产物（Actions Artifacts）
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apks
+          if-no-files-found: error
+          path: build/app/outputs/apk/prod/release/Spitout-*.apk
+
+      - name: 生成 Release Notes
+        id: notes
+        run: |
+          TAG="${{ steps.meta.outputs.tag_name }}"
+          PREV_TAG=$(git tag --list --sort=-version:refname | grep "^v" | grep -v "^${TAG}$" | head -n1)
+
+          if [ -n "$PREV_TAG" ]; then
+            COMMITS=$(git log --no-merges --pretty=format:"- %s (%an)" "$PREV_TAG"..HEAD)
+          else
+            COMMITS=$(git log --no-merges --pretty=format:"- %s (%an)")
+          fi
+
+          # 同样用花括号组 + echo，避免 YAML 缩进的 EOF 终结符让 bash 无法结束 heredoc。
+          {
+            echo "## 变更记录"
+            echo "$COMMITS"
+          } > RELEASE_NOTES.md
+          echo "notes_file=RELEASE_NOTES.md" >> $GITHUB_OUTPUT
+
+      - name: 创建 GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.meta.outputs.tag_name }}
+          name: ${{ steps.meta.outputs.tag_name }}
+          prerelease: ${{ github.event.inputs.prerelease == 'true' }}
+          body_path: RELEASE_NOTES.md
+          files: |
+            build/app/outputs/apk/prod/release/Spitout-*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

@@ -1,0 +1,142 @@
+// OrphanCleaner 契约测试 — 验证孤儿被清理 + tx 失主时只清 FK 不删 tx。
+
+import 'package:drift/drift.dart' as d;
+import 'package:drift/native.dart';
+import 'package:flutter_test/flutter_test.dart';
+import '../helpers/test_isolation.dart';
+
+import 'package:spitout/data/db.dart';
+import 'package:spitout/services/maintenance/orphan_cleaner.dart';
+import 'package:spitout/services/maintenance/orphan_record.dart';
+import 'package:spitout/services/maintenance/orphan_scanner.dart';
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+  // 每个用例前重置全局状态（prefs mock / 平台 TestValue / 通知单例），
+  // 防止跨用例残留导致的顺序依赖。详见 test/helpers/test_isolation.dart。
+  setUp(() => resetGlobalTestState());
+
+  late SpitoutDatabase db;
+  late OrphanScanner scanner;
+  late OrphanCleaner cleaner;
+
+  setUp(() async {
+    db = SpitoutDatabase.forTesting(NativeDatabase.memory());
+    scanner = OrphanScanner(db: db);
+    cleaner = OrphanCleaner(db: db);
+  });
+
+  tearDown(() async {
+    await db.close();
+  });
+
+  test('扫到 → 清理 → 重扫为空(A7)', () async {
+    // A7 — 孤儿二级分类
+    final parent = await db.into(db.categories).insert(
+          CategoriesCompanion.insert(name: 'food', kind: 'expense'),
+        );
+    await db.into(db.categories).insert(CategoriesCompanion.insert(
+          name: 'lunch',
+          kind: 'expense',
+          parentId: d.Value(parent),
+          level: const d.Value(2),
+        ));
+    await (db.delete(db.categories)..where((t) => t.id.equals(parent))).go();
+
+    final before = await scanner.scanAll();
+    expect(before.dbOrphans.length, 1);
+
+    final result = await cleaner.clean(before.dbOrphans);
+    expect(result.successCount, 1);
+    expect(result.failures, isEmpty);
+
+    final after = await scanner.scanAll();
+    expect(after.dbOrphans, isEmpty);
+  });
+
+  test('C1 local_changes 清理 — 删行', () async {
+    await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
+          entityType: 'transaction',
+          entityId: 999,
+          entitySyncId: 'ghost-tx',
+          ledgerId: 1,
+          action: 'update',
+        ));
+
+    final before = await scanner.scanAll();
+    expect(before.syncOrphans.length, 1);
+
+    final result = await cleaner.clean(before.syncOrphans);
+    expect(result.successCount, 1);
+
+    final after = await scanner.scanAll();
+    expect(after.syncOrphans, isEmpty);
+  });
+
+  test('空 records 调用 → empty result', () async {
+    final result = await cleaner.clean(const []);
+    expect(result.successCount, 0);
+    expect(result.failures, isEmpty);
+  });
+
+  group('A_dup syncId 重复交易清理 (P4)', () {
+    test('删多余行，保留最早一条；且绕过变更追踪避免误删云端真实记录', () async {
+      // 准备：同账本同 syncId 的 3 条重复交易
+      final lid = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(name: 'L', syncId: d.Value('ledger-1')));
+      final id1 = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: lid,
+              type: 'expense',
+              amount: 10.0,
+              syncId: const d.Value('dup-sync'),
+              happenedAt: d.Value(DateTime(2026, 7, 1)),
+            ),
+          );
+      final id2 = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: lid,
+              type: 'expense',
+              amount: 10.0,
+              syncId: const d.Value('dup-sync'),
+              happenedAt: d.Value(DateTime(2026, 7, 1)),
+            ),
+          );
+      final id3 = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: lid,
+              type: 'expense',
+              amount: 10.0,
+              syncId: const d.Value('dup-sync'),
+              happenedAt: d.Value(DateTime(2026, 7, 1)),
+            ),
+          );
+
+      // 扫描得到 2 条孤儿（保留 id1）
+      final before = await scanner.scanAll();
+      final dups = before.dbOrphans
+          .where((r) => r.type == OrphanType.txDuplicateSyncId)
+          .toList();
+      expect(dups, hasLength(2));
+      expect(dups.map((r) => r.localId).toList(), containsAll([id2, id3]));
+
+      // 清理
+      final result = await cleaner.clean(dups);
+      expect(result.successCount, 2);
+      expect(result.failures, isEmpty);
+
+      // 重新扫描：重复消失，仅保留 1 条（且是 id1）
+      final after = await scanner.scanAll();
+      expect(
+        after.dbOrphans
+            .where((r) => r.type == OrphanType.txDuplicateSyncId),
+        isEmpty,
+      );
+      final remaining = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(lid)))
+          .get();
+      expect(remaining, hasLength(1), reason: '应只保留最早插入的一条');
+      expect(remaining.first.id, id1);
+    });
+  });
+}

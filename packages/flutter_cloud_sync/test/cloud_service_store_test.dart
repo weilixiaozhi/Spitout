@@ -1,0 +1,119 @@
+/// CloudServiceStore.clearConfig 单元测试。
+///
+/// 覆盖:
+/// - 各云端后端配置可被清除,清除后 loadXxx 返回 null;
+/// - 清除当前激活后端后 loadActive() 自动回退本地存储;
+/// - clearConfig(local) 为 no-op,不影响激活状态。
+library;
+
+import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+CloudServiceConfig _webdavCfg() => const CloudServiceConfig(
+      type: CloudBackendType.webdav,
+      name: 'WebDAV',
+      webdavUrl: 'https://dav.example.com',
+      webdavUsername: 'u',
+      webdavPassword: 'p',
+    );
+
+CloudServiceConfig _supabaseCfg() => const CloudServiceConfig(
+      type: CloudBackendType.supabase,
+      name: 'Supabase',
+      supabaseUrl: 'https://xxx.supabase.co',
+      supabaseAnonKey: 'anon-key',
+    );
+
+CloudServiceConfig _s3Cfg() => const CloudServiceConfig(
+      type: CloudBackendType.s3,
+      name: 'S3',
+      s3Endpoint: 's3.example.com',
+      s3AccessKey: 'ak',
+      s3SecretKey: 'sk',
+      s3Bucket: 'bucket',
+    );
+
+CloudServiceConfig _spitoutCloudCfg() => const CloudServiceConfig(
+      type: CloudBackendType.spitoutCloud,
+      name: 'Spitout Cloud',
+      spitoutCloudBaseUrl: 'https://cloud.example.com',
+    );
+
+void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
+
+  group('clearConfig', () {
+    test('清除 WebDAV 配置后 loadWebdav 返回 null', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_webdavCfg());
+      expect(await store.loadWebdav(), isNotNull);
+
+      await store.clearConfig(CloudBackendType.webdav);
+      expect(await store.loadWebdav(), isNull);
+    });
+
+    test('清除 Supabase 配置后 loadSupabase 返回 null', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_supabaseCfg());
+      expect(await store.loadSupabase(), isNotNull);
+
+      await store.clearConfig(CloudBackendType.supabase);
+      expect(await store.loadSupabase(), isNull);
+    });
+
+    test('清除 S3 配置后 loadS3 返回 null', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_s3Cfg());
+      expect(await store.loadS3(), isNotNull);
+
+      await store.clearConfig(CloudBackendType.s3);
+      expect(await store.loadS3(), isNull);
+    });
+
+    test('清除 SpitoutCloud 配置后 loadSpitoutCloud 返回 null', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_spitoutCloudCfg());
+      expect(await store.loadSpitoutCloud(), isNotNull);
+
+      await store.clearConfig(CloudBackendType.spitoutCloud);
+      expect(await store.loadSpitoutCloud(), isNull);
+    });
+
+    test('清除激活中的后端后 loadActive 自动回退本地存储', () async {
+      final store = CloudServiceStore();
+      // saveAndActivate 同时写入配置并激活
+      await store.saveAndActivate(_webdavCfg());
+      expect((await store.loadActive()).type, CloudBackendType.webdav);
+
+      await store.clearConfig(CloudBackendType.webdav);
+      // 配置 key 缺失 → 回退 local
+      final active = await store.loadActive();
+      expect(active.type, CloudBackendType.local);
+    });
+
+    test('clearConfig(local) 为 no-op', () async {
+      final store = CloudServiceStore();
+      await store.saveAndActivate(_webdavCfg());
+
+      // 不应抛出,也不影响其他配置与激活状态
+      await store.clearConfig(CloudBackendType.local);
+      expect(await store.loadWebdav(), isNotNull);
+      expect((await store.loadActive()).type, CloudBackendType.webdav);
+    });
+
+    test('清除一个后端不影响其他后端配置', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_webdavCfg());
+      await store.saveOnly(_s3Cfg());
+
+      await store.clearConfig(CloudBackendType.webdav);
+      expect(await store.loadWebdav(), isNull);
+      expect(await store.loadS3(), isNotNull);
+    });
+  });
+}

@@ -1,0 +1,59 @@
+name: Test
+
+# 设计意图：在 CI 中以随机用例顺序运行全量测试，持续暴露"用例间顺序依赖"隐患。
+# 仅当用例彼此独立（不残留跨用例的全局状态）时，才能在任意排列下稳定通过；
+# 一旦出现顺序相关失败，说明存在需要在 setUp/tearDown 中隔离的全局状态，应就地修复。
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+env:
+  # 与 .fvmrc（Flutter 3.27.0）保持一致，避免 CI 与本地 SDK 版本漂移。
+  FLUTTER_VERSION: "3.27.0"
+
+jobs:
+  test:
+    name: Flutter Test (randomized order)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: "stable"
+          cache: true
+
+      - name: 安装依赖
+        run: flutter pub get
+
+      - name: 静态分析（仓库约定零告警）
+        run: flutter analyze --no-pub
+
+      - name: 架构门禁（全 lib/ 禁止直连 adapter 包，豁免门面与装配点）
+        run: |
+          # 全 lib/ 扫描，豁免门面（唯一 re-export 点）与 main.dart（Composition Root 装配点）。
+          # 其余任何文件（widgets/pages/providers/services/cloud-sync）直连新包即失败。
+          if rg --glob '!lib/cloud/spitout_cloud.dart' --glob '!lib/main.dart' \
+              "package:flutter_cloud_sync_spitout_cloud" lib; then
+            echo "❌ lib/ 下（除门面与 main.dart）不得直接 import flutter_cloud_sync_spitout_cloud，请改走 lib/cloud/spitout_cloud.dart 门面"
+            exit 1
+          fi
+          echo "✅ 架构门禁通过：全 lib/ 无直连 adapter 包（门面收敛）"
+
+      - name: 运行测试（随机顺序，持续暴露顺序依赖）
+        run: flutter test --test-randomize-ordering-seed=random
+
+      - name: Adapter 包自包含校验（fake 测试基建随包分发，须可独立跑测）
+        run: |
+          # fake 测试基建已迁入 lib/testing.dart（仿 package:http/testing.dart），
+          # 任何消费方拿到新包即可独立跑测，不依赖主仓 test/ 目录。
+          # CI 兜底：新包自身 test 必须独立通过，防止未来把测试基建悄悄回迁主仓。
+          cd packages/flutter_cloud_sync_spitout_cloud && flutter pub get && flutter analyze --no-pub && flutter test --no-pub

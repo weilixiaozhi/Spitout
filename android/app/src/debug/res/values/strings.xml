@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Debug 构建默认（非 zh/en/ko 语言）启动器名称：中文名 + Debug 标识，
+         与正式版默认 values/strings.xml「芝麻记」对应，仅追加标识以区分。 -->
+    <string name="app_name">芝麻记 Debug</string>
+</resources>

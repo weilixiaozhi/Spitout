@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 英文设备启动器显示 Spitout；其他语言回落到默认 values/strings.xml 的「芝麻记」 -->
+    <string name="app_name">Spitout</string>
+</resources>

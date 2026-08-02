@@ -1,0 +1,510 @@
+import 'package:flutter/cupertino.dart';
+import 'package:flutter/material.dart';
+import '../l10n/app_localizations.dart';
+import '../theme/colors.dart';
+import '../utils/date/week_math.dart'
+    show mondayOf, mondayOfWeek, weekNumber, weeksInYear;
+
+/// 滚轮选择模式：年 / 年-月 / 年-月-日 / 年-周（统计页周账期筛选）/ 年-月-日-时-分（记账页）。
+enum WheelDatePickerMode { y, ym, ymd, week, datetime }
+
+class WheelDatePicker extends StatefulWidget {
+  /// 初始选中时间。
+  final DateTime initial;
+
+  /// 选择粒度（年 / 年月 / 年月日 / 周年 / 完整日期时间）。
+  final WheelDatePickerMode mode;
+
+  /// 可选下限（含）。不传时按模式取默认（见 [_min] 注释）。
+  final DateTime? minDate;
+
+  /// 可选上限（含）。不传时按模式取默认（见 [_max] 注释）。
+  final DateTime? maxDate;
+
+  /// 居中标题（顶部）。不传则按模式取合理默认文案。
+  final String title;
+
+  /// 居中副标题（标题下方）。不传则不渲染副标题区。
+  final String? subtitle;
+
+  /// 底部主按钮文案（如「完成」）。不传则按模式取默认文案。
+  final String confirmLabel;
+
+  const WheelDatePicker({
+    super.key,
+    required this.initial,
+    this.mode = WheelDatePickerMode.ymd,
+    this.minDate,
+    this.maxDate,
+    required this.title,
+    this.subtitle,
+    required this.confirmLabel,
+  });
+
+  @override
+  State<WheelDatePicker> createState() => _WheelDatePickerState();
+}
+
+/// 统一日期/时间滚轮选择器。
+///
+/// 设计基准：首页 month_picker_sheet 的 AppSheet 视觉（居中标题 + 副标题 + 主色填充完成按钮），
+/// 并统一所有模式（年/年月/年月日/周年/日期时间）的滚轮观感：无列标签、选中高亮带
+/// primary/0.08 背景 + primary/0.3 上下描边、itemExtent 40。
+Future<DateTime?> showWheelDatePicker(
+  BuildContext context, {
+  required DateTime initial,
+  WheelDatePickerMode mode = WheelDatePickerMode.ymd,
+  DateTime? minDate,
+  DateTime? maxDate,
+  /// 标题（可选）。不传时按 [mode] 取合理默认文案。
+  String? title,
+  /// 副标题（可选）。不传则按 [mode] 取默认（多数模式无副标题）。
+  String? subtitle,
+  /// 底部主按钮文案（可选）。不传时按 [mode] 取默认（通常「完成」）。
+  String? confirmLabel,
+  // 子 sheet 挂载 navigator(false = 就近 / nested);默认 true 使用主 navigator
+  bool useRootNavigator = true,
+  // 子 sheet 遮罩色;记账页内调用传透明以不显示遮罩
+  Color? barrierColor,
+}) {
+  final l10n = AppLocalizations.of(context);
+  // 按模式解析标题/副标题/确认文案默认值，调用方传参可覆盖。
+  String resolvedTitle;
+  String? resolvedSubtitle;
+  String resolvedConfirm;
+  switch (mode) {
+    case WheelDatePickerMode.week:
+      resolvedTitle = title ?? l10n.analyticsSelectWeek;
+      resolvedSubtitle = subtitle;
+      resolvedConfirm = confirmLabel ?? l10n.commonDone;
+    case WheelDatePickerMode.datetime:
+      resolvedTitle = title ?? l10n.txSelectDateTimeTitle;
+      resolvedSubtitle = subtitle ?? l10n.txSelectDateTimeHint;
+      resolvedConfirm = confirmLabel ?? l10n.commonFinish;
+    case WheelDatePickerMode.ym:
+      resolvedTitle = title ?? l10n.homeSelectBillMonth;
+      resolvedSubtitle = subtitle ?? l10n.homePickerHint;
+      resolvedConfirm = confirmLabel ?? l10n.commonDone;
+    case WheelDatePickerMode.y:
+    case WheelDatePickerMode.ymd:
+      resolvedTitle = title ?? l10n.homeSelectDate;
+      resolvedSubtitle = subtitle;
+      resolvedConfirm = confirmLabel ?? l10n.commonDone;
+  }
+
+  return showModalBottomSheet<DateTime>(
+    context: context,
+    // 内层用 surfaceSheet 圆角容器承载内容,外层透明以便记账页子 Drawer 场景透传透明遮罩。
+    backgroundColor: Colors.transparent,
+    isScrollControlled: true,
+    useRootNavigator: useRootNavigator,
+    barrierColor: barrierColor,
+    builder: (_) => WheelDatePicker(
+      initial: initial,
+      mode: mode,
+      minDate: minDate,
+      maxDate: maxDate,
+      title: resolvedTitle,
+      subtitle: resolvedSubtitle,
+      confirmLabel: resolvedConfirm,
+    ),
+  );
+}
+
+class _WheelDatePickerState extends State<WheelDatePicker> {
+  Color _textPrimary(BuildContext context) => SpitoutTokens.textPrimary(context);
+  late int year;
+  late int month;
+  late int day;
+  // 时/分（仅 datetime 模式使用,但控制器始终创建以便统一释放）。
+  late int hour;
+  late int minute;
+  // week 模式：当前选中的「年内周序号」（1-based，口径见 weekNumber）
+  late int week;
+  late FixedExtentScrollController _yearCtrl;
+  FixedExtentScrollController? _monthCtrl;
+  FixedExtentScrollController? _dayCtrl;
+  FixedExtentScrollController? _weekCtrl;
+  late FixedExtentScrollController _hourCtrl;
+  late FixedExtentScrollController _minuteCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    final clamped = _clamp(widget.initial);
+    year = clamped.year;
+    month = clamped.month;
+    day = clamped.day;
+    hour = clamped.hour;
+    minute = clamped.minute;
+    // week 模式的「年」以周所在周一的年份为准（与子 Tab id 口径一致：
+    // 跨年周归属其周一所在年），避免年初/年末选错年份。
+    if (widget.mode == WheelDatePickerMode.week) {
+      final monday = mondayOf(clamped);
+      year = monday.year;
+      week = weekNumber(monday);
+    } else {
+      week = 1;
+    }
+    // 初始化滚动控制器（year 必选;时/分必选,其余按模式惰性创建）
+    final years = _yearList();
+    _yearCtrl = FixedExtentScrollController(initialItem: years.indexOf(year));
+    _hourCtrl = FixedExtentScrollController(initialItem: hour);
+    _minuteCtrl = FixedExtentScrollController(initialItem: minute);
+  }
+
+  @override
+  void dispose() {
+    _yearCtrl.dispose();
+    _monthCtrl?.dispose();
+    _dayCtrl?.dispose();
+    _weekCtrl?.dispose();
+    _hourCtrl.dispose();
+    _minuteCtrl.dispose();
+    super.dispose();
+  }
+
+  // 所有模式统一使用 2000/2100 作为默认边界，datetime 不锚定「今天」。
+  // 记账页无需显式传 maxDate 即可选到任意未来时间，统计/导出/循环记账范围也保持一致。
+  DateTime get _min => widget.minDate ?? DateTime(2000, 1, 1);
+  DateTime get _max => widget.maxDate ?? DateTime(2100, 12, 31);
+
+  // week 模式下 min/max 统一换算为「所在周的周一」：选择器的一切边界
+  // 都以周为单位对齐，保证可选项与统计页子 Tab 生成口径完全一致。
+  DateTime get _effectiveMin =>
+      widget.mode == WheelDatePickerMode.week ? mondayOf(_min) : _min;
+  DateTime get _effectiveMax =>
+      widget.mode == WheelDatePickerMode.week ? mondayOf(_max) : _max;
+
+  DateTime _clamp(DateTime d) {
+    if (d.isBefore(_min)) return _min;
+    if (d.isAfter(_max)) return _max;
+    return d;
+  }
+
+  List<int> _yearList() =>
+      [for (int y = _effectiveMin.year; y <= _effectiveMax.year; y++) y];
+
+  // 依据 [_min]/[_max] 裁出某年可选月份范围（边界年受 min/max 限制）。
+  List<int> _monthListForYear(int y) {
+    int start = 1, end = 12;
+    if (y == _min.year) start = _min.month;
+    if (y == _max.year) end = _max.month;
+    return [for (int m = start; m <= end; m++) m];
+  }
+
+  // 依据 [_min]/[_max] 裁出某年某月可选日范围（边界年/月受 min/max 限制）。
+  List<int> _dayListForYM(int y, int m) {
+    final last = DateTime(y, m + 1, 0).day;
+    int start = 1, end = last;
+    if (y == _min.year && m == _min.month) start = _min.day;
+    if (y == _max.year && m == _max.month) end = _max.day;
+    return [for (int d = start; d <= end; d++) d];
+  }
+
+  // 某年可选「年内周序号」范围（边界年受 [_effectiveMin]/[_effectiveMax] 限制）。
+  List<int> _weekListForYear(int y) {
+    int sw = 1, ew = weeksInYear(y);
+    if (y == _effectiveMin.year) sw = weekNumber(_effectiveMin);
+    if (y == _effectiveMax.year) ew = weekNumber(_effectiveMax);
+    if (ew < sw) ew = sw;
+    return [for (var w = sw; w <= ew; w++) w];
+  }
+
+  // ── 列变更回调：更新状态并把依赖列跳转到新索引（post-frame 避免 build 中跳变）──
+  void _onYearChanged(int index) {
+    setState(() {
+      year = _yearList()[index];
+      final months = _monthListForYear(year);
+      if (!months.contains(month)) month = months.last;
+      final days = _dayListForYM(year, month);
+      if (!days.contains(day)) day = days.last;
+      if (widget.mode == WheelDatePickerMode.week) {
+        final weeks = _weekListForYear(year);
+        if (!weeks.contains(week)) week = weeks.last;
+      }
+    });
+    final mi = _monthListForYear(year).indexOf(month);
+    if (_monthCtrl != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _monthCtrl!.jumpToItem(mi < 0 ? 0 : mi));
+    }
+    final di = _dayListForYM(year, month).indexOf(day);
+    if (_dayCtrl != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _dayCtrl!.jumpToItem(di < 0 ? 0 : di));
+    }
+    if (widget.mode == WheelDatePickerMode.week) {
+      final wi = _weekListForYear(year).indexOf(week);
+      if (_weekCtrl != null) {
+        WidgetsBinding.instance.addPostFrameCallback(
+            (_) => _weekCtrl!.jumpToItem(wi < 0 ? 0 : wi));
+      }
+    }
+  }
+
+  void _onMonthChanged(int index) {
+    setState(() {
+      month = _monthListForYear(year)[index];
+      final days = _dayListForYM(year, month);
+      if (!days.contains(day)) day = days.last;
+    });
+    final di = _dayListForYM(year, month).indexOf(day);
+    if (_dayCtrl != null) {
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _dayCtrl!.jumpToItem(di < 0 ? 0 : di));
+    }
+  }
+
+  void _onDayChanged(int index) =>
+      setState(() => day = _dayListForYM(year, month)[index]);
+
+  void _onWeekChanged(int index) =>
+      setState(() => week = _weekListForYear(year)[index]);
+
+  void _onHourChanged(int index) => setState(() => hour = index);
+  void _onMinuteChanged(int index) => setState(() => minute = index);
+
+  /// 组合当前各列得到最终 DateTime（按模式夹到有效边界内）。
+  DateTime _buildResult() {
+    switch (widget.mode) {
+      case WheelDatePickerMode.y:
+        return _clamp(DateTime(year, 1, 1));
+      case WheelDatePickerMode.ym:
+        return _clamp(DateTime(year, month, 1));
+      case WheelDatePickerMode.ymd:
+        return _clamp(DateTime(year, month, day));
+      case WheelDatePickerMode.week:
+        // 年 + 周序号 → 该周周一;防御性夹到有效边界内
+        var result = mondayOfWeek(year, week);
+        if (result.isBefore(_effectiveMin)) result = _effectiveMin;
+        if (result.isAfter(_effectiveMax)) result = _effectiveMax;
+        return result;
+      case WheelDatePickerMode.datetime:
+        // 时/分写死全量、不钳制;整体 DateTime 夹到 [_min]/[_max] 即可
+        // （maxDate 通常含 23:59,实际不会截断用户选择的时间）。
+        return _clamp(DateTime(year, month, day, hour, minute));
+    }
+  }
+
+  /// 顶部拖拽条(36x4),与 AppSheet 视觉一致。
+  Widget _grabHandle(BuildContext context) {
+    final color = SpitoutTokens.isDark(context)
+        ? Colors.white.withValues(alpha: 0.20)
+        : Colors.black.withValues(alpha: 0.15);
+    return Padding(
+      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      child: Center(
+        child: Container(
+          width: 36,
+          height: 4,
+          decoration: BoxDecoration(
+            color: color,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 无列标签的单滚轮（统一 itemExtent 40 + 选中高亮带 primary/0.08 + primary/0.3）。
+  Widget _buildPicker({
+    required List<int> items,
+    required FixedExtentScrollController? controller,
+    required ValueChanged<int> onChanged,
+    required String Function(int) formatter,
+    required Widget selectionOverlay,
+  }) {
+    return Expanded(
+      child: CupertinoPicker(
+        selectionOverlay: selectionOverlay,
+        itemExtent: 40,
+        scrollController: controller,
+        onSelectedItemChanged: onChanged,
+        children: [
+          for (final v in items)
+            Center(
+              child: Text(formatter(v),
+                  style: TextStyle(fontSize: 18, color: _textPrimary(context))),
+            ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    final mode = widget.mode;
+    // 统一选中高亮带:primary/0.08 背景 + primary/0.3 上下描边（所有列复用同一实例）。
+    final selectionOverlay = Container(
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.08),
+        border: Border(
+          top: BorderSide(color: primary.withValues(alpha: 0.3), width: 1),
+          bottom: BorderSide(color: primary.withValues(alpha: 0.3), width: 1),
+        ),
+      ),
+    );
+
+    // week 模式使用按周对齐后的边界（详见 _effectiveMin/_effectiveMax 注释）
+    final years = _yearList();
+    final months = _monthListForYear(year);
+    final days = _dayListForYM(year, month);
+
+    // 确保 month/day 控制器已创建并指向当前索引
+    _monthCtrl ??=
+        FixedExtentScrollController(initialItem: months.indexOf(month));
+    final dayIndex = days.indexOf(day);
+    _dayCtrl ??=
+        FixedExtentScrollController(initialItem: dayIndex < 0 ? 0 : dayIndex);
+
+    // 各列滚轮（无列标签）
+    final yearPicker = _buildPicker(
+      items: years,
+      controller: _yearCtrl,
+      onChanged: _onYearChanged,
+      formatter: (v) => '$v',
+      selectionOverlay: selectionOverlay,
+    );
+    final monthPicker = _buildPicker(
+      items: months,
+      controller: _monthCtrl,
+      onChanged: _onMonthChanged,
+      formatter: (v) => '$v',
+      selectionOverlay: selectionOverlay,
+    );
+    final dayPicker = _buildPicker(
+      items: days,
+      controller: _dayCtrl,
+      onChanged: _onDayChanged,
+      formatter: (v) => '$v',
+      selectionOverlay: selectionOverlay,
+    );
+
+    // 单组滚轮容器(固定 5 个可见项高度 40*5)
+    Widget group(List<Widget> pickers) =>
+        SizedBox(height: 200, child: Row(children: pickers));
+
+    Widget body;
+    switch (mode) {
+      case WheelDatePickerMode.y:
+        body = group([yearPicker]);
+      case WheelDatePickerMode.ym:
+        body = group([yearPicker, monthPicker]);
+      case WheelDatePickerMode.ymd:
+        body = group([yearPicker, monthPicker, dayPicker]);
+      case WheelDatePickerMode.week:
+        final weeks = _weekListForYear(year);
+        if (week < weeks.first) week = weeks.first;
+        if (week > weeks.last) week = weeks.last;
+        _weekCtrl ??=
+            FixedExtentScrollController(initialItem: weeks.indexOf(week));
+        final weekPicker = _buildPicker(
+          items: weeks,
+          controller: _weekCtrl,
+          onChanged: _onWeekChanged,
+          formatter: (v) => l10n.analyticsWeekN(v),
+          selectionOverlay: selectionOverlay,
+        );
+        body = group([yearPicker, weekPicker]);
+      case WheelDatePickerMode.datetime:
+        // 时/分写死全量,不钳制（保持被替换的 5 列选择器行为）。
+        final hours = [for (int h = 0; h < 24; h++) h];
+        final minutes = [for (int m = 0; m < 60; m++) m];
+        final hourPicker = _buildPicker(
+          items: hours,
+          controller: _hourCtrl,
+          onChanged: _onHourChanged,
+          formatter: (v) => v.toString().padLeft(2, '0'),
+          selectionOverlay: selectionOverlay,
+        );
+        final minutePicker = _buildPicker(
+          items: minutes,
+          controller: _minuteCtrl,
+          onChanged: _onMinuteChanged,
+          formatter: (v) => v.toString().padLeft(2, '0'),
+          selectionOverlay: selectionOverlay,
+        );
+        // 日期组 + 时间组(上下分组,贴近原 5 列视觉结构)。
+        body = Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            group([yearPicker, monthPicker, dayPicker]),
+            const SizedBox(height: 8),
+            group([hourPicker, minutePicker]),
+          ],
+        );
+    }
+
+    return Container(
+      decoration: BoxDecoration(
+        color: SpitoutTokens.surfaceSheet(context),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _grabHandle(context),
+            if (widget.title.isNotEmpty || widget.subtitle != null)
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _textPrimary(context),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (widget.subtitle != null) ...[
+                      const SizedBox(height: 4),
+                      Text(
+                        widget.subtitle!,
+                        style: TextStyle(
+                          fontSize: 13,
+                          color: SpitoutTokens.textSecondary(context),
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
+                  ],
+                ),
+              ),
+            body,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(_buildResult()),
+                  child: Text(
+                    widget.confirmLabel,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onPrimary,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

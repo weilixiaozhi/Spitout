@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 韩文 Debug 构建启动器名称：芝麻記 + Debug 标识（与正式版韩文名称一致） -->
+    <string name="app_name">芝麻記 Debug</string>
+</resources>

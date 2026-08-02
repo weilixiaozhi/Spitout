@@ -1,0 +1,27 @@
+name: flutter_cloud_sync
+description: A modular cloud sync framework for Flutter with pluggable backend providers
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+  flutter: '>=3.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  meta: ^1.9.0
+  shared_preferences: ^2.2.2
+  # 注意：核心包【禁止】依赖任何 adapter 包（flutter_cloud_sync_supabase /
+  # webdav / s3 / spitout_cloud）。adapter 通过 CloudProviderRegistry 自注册，
+  # 由主工程在 Composition Root（main.dart）显式装配，依赖方向保持 adapter → 核心 单向。
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+  mockito: ^5.4.0
+  build_runner: ^2.4.0
+
+flutter:
+  # This package is a pure Dart package

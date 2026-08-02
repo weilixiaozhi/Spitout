@@ -1,0 +1,428 @@
+import 'dart:io';
+
+import 'package:drift/drift.dart';
+import '../core/logging/logger_service.dart';
+import 'package:drift/native.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:path/path.dart' as p;
+
+part 'db.g.dart';
+
+// --- Tables ---
+
+class Ledgers extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get currency => text().withDefault(const Constant('CNY'))();
+  TextColumn get type => text().withDefault(const Constant('personal'))();  // personal / shared
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  // 跨设备同步唯一标识：跟 categories 的 syncId 同语义，
+  // 对齐 Spitout Cloud server 的 ledger.external_id。device B 首次登录
+  // 通过 readLedgers() 拉到的 ext_id 会写到这里，后续 push/pull 都用这个
+  // 做设备间的 ledger 匹配，而不是本地 autoIncrement id（A/B 本地 id 必然
+  // 不一致）。
+  TextColumn get syncId => text().nullable()();
+  // 共享账本字段：server 端 LedgerMember.role 同步下来
+  TextColumn get myRole => text().withDefault(const Constant('owner'))();  // owner / editor
+  IntColumn get memberCount => integer().withDefault(const Constant(1))();
+  BoolColumn get isShared => boolean().withDefault(const Constant(false))();
+  TextColumn get ownerUserId => text().nullable()();  // 当前 Owner 是谁
+  // 自定义每月起始日(1-28),统计/预算/小部件按 [当月N日, 次月N日) 聚合,
+  // 1=自然月。随 sync 跨设备(payload key `monthStartDay`,server 列
+  // ledgers.month_start_day)。
+  IntColumn get monthStartDay => integer().withDefault(const Constant(1))();
+
+  /// 账本归属(账本级"本地 / 云端"分离,由本字段决定,而非登录状态)。
+  /// 'local' = 纯本地账本,永不被被动同步推上云;'cloud' = Spitout Cloud 云端账本,
+  /// 走三路被动闸门(fullPush / triggerAutoSync / Phase2)。快照式备份
+  /// (supabase/webdav/s3)是整库文件级操作,不属于账本级同步,本地账本一律标 local。
+  /// 默认值 'local':新建账本默认本地归属,数据主权零风险。
+  TextColumn get storageMode => text().withDefault(const Constant('local'))();
+}
+
+/// 自动汇率本地缓存。日期键 append-only;可随时整表重建 → **不进同步**。
+/// 方向:1 quote = rate base(rate 为 decimal 字符串)。
+class ExchangeRates extends Table {
+  TextColumn get baseCurrency => text()();
+  TextColumn get quoteCurrency => text()();
+  TextColumn get rateDate => text()(); // 'YYYY-MM-DD',取源数据自带日期
+  TextColumn get rate => text()();
+  TextColumn get source => text()(); // 'server'|'fawazahmed0'|'frankfurter'
+  DateTimeColumn get fetchedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {baseCurrency, quoteCurrency, rateDate};
+}
+
+/// 手动汇率覆盖:固定生效直到删除。user-global 同步实体,
+/// 字段约定对齐 Categories(syncId UUID)。方向同 ExchangeRates:1 quote = rate base。
+/// 业务唯一键 (baseCurrency, quoteCurrency),唯一索引在 onCreate 中建立。
+class ExchangeRateOverrides extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get syncId => text().nullable()();
+  TextColumn get baseCurrency => text()();
+  TextColumn get quoteCurrency => text()();
+  TextColumn get rate => text()();
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+}
+
+class Categories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get name => text()();
+  TextColumn get kind => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get icon => text().nullable()();
+  IntColumn get sortOrder =>
+      integer().withDefault(const Constant(0))(); // 排序顺序，数字越小越靠前
+  IntColumn get parentId => integer().nullable()(); // 父分类ID，null 表示一级分类
+  IntColumn get level =>
+      integer().withDefault(const Constant(1))(); // 层级：1=一级，2=二级
+  // 分类图标统一走 Lucide 内置图标(icon 列)，不存自定义图片/云端图标。
+  TextColumn get syncId => text().nullable()(); // 跨设备同步唯一标识 (UUID)
+}
+
+class Transactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get ledgerId => integer()();
+  TextColumn get type => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  RealColumn get amount => real()();
+  IntColumn get categoryId => integer().nullable()();
+  DateTimeColumn get happenedAt => dateTime().withDefault(currentDateAndTime)();
+  TextColumn get note => text().nullable()();
+  IntColumn get recurringId => integer().nullable()(); // 关联到重复交易模板
+  TextColumn get syncId => text().nullable()(); // 跨设备同步唯一标识 (UUID)
+  // 共享账本"谁记的"显示
+  TextColumn get createdByUserId => text().nullable()();
+  TextColumn get lastEditedByUserId => text().nullable()();
+  // 共享账本 sync_id override
+  // Editor 在共享账本下记 tx 时,选 Owner 的 SharedLedgerCategories
+  // 行,但本地 Categories 主表没有对应 int id。此 override
+  // 字段直接存 Owner 的 syncId 字符串,categoryId 留 null;sync push
+  // 时序列化优先用 override(server LWW key 是 syncId,主表 syncId 也是 string)。
+  // Owner / 单人账本场景:override 字段为 null,走老路径(categoryId int 反查
+  // Categories.syncId)。
+  TextColumn get categorySyncIdOverride => text().nullable()();
+
+  /// 不计入支出统计:true 时从支出统计/图表/月年汇总剔除,但仍计入
+  /// 账单列表。
+  BoolColumn get excludeFromStats =>
+      boolean().withDefault(const Constant(false))();
+
+  /// 交易级多币种:交易币种(ISO 大写)。
+  /// 用户所选(L12,默认账本本位币)。显式存让交易自包含(同步/统计不必每次 join)。
+  TextColumn get currencyCode => text().nullable()();
+
+  /// 折算到账本本位币的金额快照(按记账时汇率,保存即定,不随汇率重算)。
+  /// 单币种/未折算 == amount(隐含汇率 1.0)。账本维度统计读本列(?? amount)。
+  RealColumn get nativeAmount => real().nullable()();
+
+  /// 编辑版本号。创建时为 1,每次 update +1。
+  /// 用于记录详情 Bottom Sheet 的编辑历史区块展示,以及并发编辑检测。
+  IntColumn get version =>
+      integer().withDefault(const Constant(1))();
+
+  /// 最后编辑时间。创建时为 null(以此区分"创建"与"编辑"),
+  /// 首次编辑后写入。列表项第二行的 HH:mm 与详情协作成员区块均读本字段
+  /// (非 happenedAt,后者是"记账日期"语义)。
+  DateTimeColumn get lastEditedAt => dateTime().nullable()();
+}
+
+/// 记录编辑历史。对应记录详情 Bottom Sheet 的"编辑记录(仅供查看)"区块，
+/// 每次交易被编辑(创建除外)时插入一条,
+/// 记录版本号、操作者、摘要与时间,便于回溯"谁在什么时候改了什么"。
+///
+/// 走现有 data→repository→provider 分层:Repository 在 updateTransaction
+/// 时 version+1 并写入本表;Provider 暴露 recordEditHistoryProvider(recordId)。
+class RecordEditHistories extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get recordId => integer()(); // 关联 transactions.id
+  IntColumn get version => integer()(); // 该次编辑后的版本号(从 2 起,1 为创建)
+  TextColumn get operatorUserId => text().nullable()(); // 操作者 userId(单人账本为 null)
+  TextColumn get summary => text()(); // 摘要:分类名 + 金额 + 日期的人类可读描述
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+}
+
+class RecurringTransactions extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get ledgerId => integer()();
+  TextColumn get type => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  RealColumn get amount => real()();
+  IntColumn get categoryId => integer().nullable()();
+  TextColumn get note => text().nullable()();
+
+  // 重复规则
+  TextColumn get frequency => text()(); // daily / weekly / monthly / yearly
+  IntColumn get interval =>
+      integer().withDefault(const Constant(1))(); // 间隔（每1天、每2周等）
+  IntColumn get dayOfMonth => integer().nullable()(); // 月的第几天（1-31）
+  IntColumn get dayOfWeek => integer().nullable()(); // 周几（1=周一, 7=周日）
+  IntColumn get monthOfYear => integer().nullable()(); // 哪个月（1-12，用于yearly）
+
+  // 时间范围
+  DateTimeColumn get startDate => dateTime()();
+  DateTimeColumn get endDate => dateTime().nullable()(); // 为空表示永久
+  DateTimeColumn get lastGeneratedDate =>
+      dateTime().nullable()(); // 最后一次生成交易的日期
+
+  // 状态
+  BoolColumn get enabled => boolean().withDefault(const Constant(true))();
+
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+}
+
+
+
+// 本地变更追踪表（用于增量同步）
+class LocalChanges extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get entityType => text()();       // transaction/category
+  IntColumn get entityId => integer()();       // 本地实体ID
+  TextColumn get entitySyncId => text()();     // 实体的 syncId (UUID)
+  IntColumn get ledgerId => integer()();       // 关联账本ID
+  TextColumn get action => text()();           // create/update/delete
+  TextColumn get payloadJson => text().nullable()(); // 变更后的完整 JSON
+  DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
+  DateTimeColumn get pushedAt => dateTime().nullable()(); // 非null表示已推送
+}
+
+// 同步状态表
+class SyncState extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  TextColumn get deviceId => text()();         // 设备唯一标识
+  TextColumn get providerType => text().withDefault(const Constant('spitout_cloud'))(); // 防止不同 provider 的 cursor 冲突
+  IntColumn get serverCursor => integer().withDefault(const Constant(0))(); // 服务端变更游标
+  DateTimeColumn get lastPushAt => dateTime().nullable()();
+  DateTimeColumn get lastPullAt => dateTime().nullable()();
+}
+
+
+
+
+
+// sync pull 时 server 端下发的 change 在本地 apply 抛错的持久化记录。
+// 健康用户这张表是空的;只在出错时写入,供 UI 暴露 + 用户重试/跳过 + 开发者
+// 远程诊断。
+class SyncPullErrors extends Table {
+  IntColumn get id => integer().autoIncrement()();
+  IntColumn get changeId => integer().unique()();      // server change_id,唯一
+  TextColumn get ledgerExternalId => text().nullable()(); // user-global change 可空
+  TextColumn get entityType => text()();
+  TextColumn get entitySyncId => text()();
+  TextColumn get action => text()();                   // upsert / delete
+  TextColumn get rawChangeJson => text()();            // 完整 change JSON,供诊断 + 复制给用户
+  TextColumn get errorClass => text().nullable()();    // Dart exception 类名
+  TextColumn get errorMessage => text().nullable()();  // exception.toString() 首行
+  TextColumn get stackTrace => text().nullable()();    // 截断到 ~2KB
+  DateTimeColumn get firstSeenAt => dateTime()();
+  DateTimeColumn get lastAttemptAt => dateTime()();
+  IntColumn get attemptCount => integer().withDefault(const Constant(1))();
+  TextColumn get userAction => text().nullable()();    // null / 'skip' / 'retry_requested'
+  DateTimeColumn get resolvedAt => dateTime().nullable()();
+}
+
+/// 快照型后端(webdav/s3/supabase)的脏账本信号表。
+///
+/// 为什么独立于 [LocalChanges] 表:
+/// - [LocalChanges] 是 Spitout Cloud 增量同步的待推送队列,按实体粒度记录,
+///   且 `entity_sync_id` 列为非空 —— 快照后端账本 syncId=null,根本无法写入。
+/// - 快照后端是整库文件级备份,只需知道"哪本账本脏了需要重传整本快照",
+///   用本表以账本 id 为粒度记录,语义完全不同,不能复用 [LocalChanges]。
+///
+/// 生命周期(规则4:同步由数据变更驱动,不由 UI 点击直接调 sync):
+///   1. createLedger 写入(数据层,同事务) —— 新建账本首快照信号;
+///   2. SnapshotSyncCoordinator 监听本表 → debounce → 受 auto_sync 闸门约束
+///      调 uploadCurrentLedger 上传整本快照;
+///   3. 上传成功后 DELETE 本行(消费完成)。
+///
+/// UPSERT 语义:同一账本多次标记只保留一行(用 INSERT OR IGNORE 实现,
+/// 保留首次 dirtyAt 便于诊断"脏了多久")。
+class SnapshotDirtyLedgers extends Table {
+  /// 脏账本的本地 id(对应 ledgers.id)。主键,同账本只留一行。
+  IntColumn get ledgerId => integer()();
+
+  /// 首次标记脏的时间,用于排序与诊断。重复标记不更新(INSERT OR IGNORE)。
+  DateTimeColumn get dirtyAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  Set<Column> get primaryKey => {ledgerId};
+}
+
+
+
+
+// ============================================================================
+// 共享账本
+// ============================================================================
+
+/// 账本成员镜像表。server `LedgerMember` 表的本地副本,用于"X 记的"显示 +
+/// 离线渲染。`GET /api/v1/ledgers/{id}/members` 拉来后写入;`member_change`
+/// WS 事件触发增量更新。
+class LedgerMembers extends Table {
+  TextColumn get ledgerSyncId => text()();        // ledger.syncId(全 user 唯一)
+  TextColumn get userId => text()();
+  TextColumn get email => text().nullable()();
+  TextColumn get displayName => text().nullable()();
+  TextColumn get avatarUrl => text().nullable()();
+  TextColumn get role => text()();                // owner / editor
+  DateTimeColumn get joinedAt => dateTime()();
+  DateTimeColumn get updatedAt => dateTime()();   // 本地更新时间,用于 cache 失效
+
+  @override
+  Set<Column> get primaryKey => {ledgerSyncId, userId};
+}
+
+/// 共享账本里 Owner 的 user-global 分类镜像。Editor 在共享账本下打开"选分类"
+/// 弹窗读这表(而非自己的 Categories)。`GET /api/v1/ledgers/{id}/shared-resources`
+/// 拉来落库;`shared_resource_change` WS 事件增量更新。
+class SharedLedgerCategories extends Table {
+  TextColumn get ledgerSyncId => text()();
+  TextColumn get syncId => text()();              // Owner 的 user-global category sync_id
+  TextColumn get name => text()();
+  TextColumn get kind => text()();                // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get icon => text().nullable()();
+  // 共享账本分类图标统一走 Lucide 内置图标(icon 列)。
+  TextColumn get color => text().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
+  IntColumn get level => integer().withDefault(const Constant(1))();
+  TextColumn get parentName => text().nullable()();
+  // 共享账本二级分类:parent 的 syncId,用于 picker 建稳定父子链
+  // (parent_name 兜底/显示,parent_sync_id 主)。
+  TextColumn get parentSyncId => text().nullable()();
+  DateTimeColumn get updatedAt => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {ledgerSyncId, syncId};
+}
+
+
+
+@DriftDatabase(tables: [
+  Ledgers,
+  Categories,
+  Transactions,
+  RecordEditHistories,
+  RecurringTransactions,
+  LocalChanges,
+  SyncState,
+  LedgerMembers,
+  SharedLedgerCategories,
+  SyncPullErrors,
+  ExchangeRates,
+  ExchangeRateOverrides,
+  SnapshotDirtyLedgers,
+])
+class SpitoutDatabase extends _$SpitoutDatabase {
+  SpitoutDatabase() : super(_openConnection());
+
+  /// 测试专用:直接注入 [QueryExecutor](通常是 NativeDatabase.memory()),
+  /// 跳过 [_openConnection] 的文件系统 / 平台副作用。test/ 下的 unit test
+  /// 用这个。
+  SpitoutDatabase.forTesting(super.executor);
+
+  /// 当前 schema 结构对应的数据库版本号 = 1。
+  ///
+  /// drift 不允许以 0 为起始版本（已知 bug，会破坏迁移），故基线从 1 起步；
+  /// 任何 schema 演进都从这里递增版本号。
+  ///
+  /// 演进纪律：任何 schema 演进都必须 ① bump 本版本号 ② 在 onUpgrade 追加
+  /// if (from < V) 迁移块（走 migration_helpers.dart 的幂等 helper）③ 重跑
+  /// schema dump 快照 + 补升级端到端测试。绝不允许 onUpgrade 回到空实现
+  /// （否则老用户升级即崩溃）。
+  @override
+  int get schemaVersion => 1;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        // 幂等迁移工具箱见 migration_helpers.dart（扩展方法，单测可直接覆盖）。
+        onUpgrade: (migrator, from, to) async {
+          // 入口日志：即使未来某个迁移块忘加起止日志，线上排查用户库
+          // 升级路径时也有这一行兜底。
+          logger.info('DBMigration', 'onUpgrade: from=$from to=$to');
+
+          // ── 迁移范式（必读）────────────────────────────────────────────
+          // 每次 schema 演进，bump schemaVersion 到新值 V（> 当前），
+          // 并在此追加一个块（块可累积，延续下方范式）：
+          //
+          //   if (from < V) {
+          //     // vV: 功能简述
+          //     logger.info('DBMigration', '开始迁移到 vV: 功能简述');
+          //     await addColumnIfMissing('table', 'col', 'ALTER TABLE ...');
+          //     await createTableIfMissing(migrator, 'new_table', newTable);
+          //     // 若需轻量回填（带 WHERE 守卫保证幂等重跑）：
+          //     // await customStatement(
+          //     //     'UPDATE table SET col = ... WHERE col IS NULL;');
+          //     logger.info('DBMigration', 'vV 迁移完成');
+          //   }
+          //
+          // 约束：
+          // 1. 所有 DDL 必须经 migration_helpers.dart 的幂等 helper，
+          //    不得直接 customStatement ALTER。
+          // 2. 数据回填 SQL 必须带 WHERE 守卫（如 col IS NULL），保证幂等。
+          // 3. 每个块都有 logger.info 起止日志。
+          // 4. 绝不允许回到空实现（否则老用户升级即崩溃）。
+          // 5. 需"按新规则转换旧数据 / 重建大表"的业务迁移走 Layer 2
+          //    独立 MigrationService，不要塞在这里。
+          // 6. 发版前必做（漏了等于没做迁移）：重跑 drift schema dump 生成
+          //    新版本快照 + 补"vN 旧库升级到当前版本"端到端测试，并同步补齐
+          //    分场景步骤与发布前清单。
+          // ─────────────────────────────────────────────────────────────
+        },
+
+        onCreate: (m) async {
+          await m.createAll();
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_override_pair '
+              'ON exchange_rate_overrides (base_currency, quote_currency);');
+        },
+      );
+
+  // 数据层不感知种子服务，seed 由 services 层 SeedService.ensureSeed 负责，
+  // 保持 data ← services 单向依赖。
+}
+
+LazyDatabase _openConnection() {
+  return LazyDatabase(() async {
+    final dir = await getApplicationDocumentsDirectory();
+    final file = File(p.join(dir.path, 'spitout.sqlite'));
+
+    // 开发环境：如果检测到锁文件，尝试删除（仅用于调试）
+    try {
+      final shmFile = File(p.join(dir.path, 'spitout.sqlite-shm'));
+      final walFile = File(p.join(dir.path, 'spitout.sqlite-wal'));
+
+      if (shmFile.existsSync() || walFile.existsSync()) {
+        logger.warning('db', '检测到 SQLite 临时文件，可能存在锁定');
+        // 注意：只在开发环境中记录，不自动删除，因为可能正在使用
+      }
+    } catch (e) {
+      logger.debug('db', '检查锁文件时出错: $e');
+    }
+
+    return NativeDatabase.createInBackground(file);
+  });
+}
+
+/// 开发工具：清除数据库锁文件（仅在应用完全关闭后使用）
+Future<void> clearDatabaseLockFiles() async {
+  try {
+    final dir = await getApplicationDocumentsDirectory();
+    final shmFile = File(p.join(dir.path, 'spitout.sqlite-shm'));
+    final walFile = File(p.join(dir.path, 'spitout.sqlite-wal'));
+
+    if (shmFile.existsSync()) {
+      await shmFile.delete();
+      logger.info('db', '已删除 .sqlite-shm 文件');
+    }
+
+    if (walFile.existsSync()) {
+      await walFile.delete();
+      logger.info('db', '已删除 .sqlite-wal 文件');
+    }
+
+    logger.info('db', '数据库锁文件清理完成');
+  } catch (e) {
+    logger.error('db', '清理锁文件失败', e);
+  }
+}

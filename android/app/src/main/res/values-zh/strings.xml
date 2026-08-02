@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- 简体中文启动器显示「芝麻记」 -->
+    <string name="app_name">芝麻记</string>
+</resources>
