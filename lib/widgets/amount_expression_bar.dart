@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
-import '../utils/currency/currencies.dart';
 import '../theme/icons/app_icons.dart';
 
 /// 金额栏行：[币种触发器] [金额 / 算式 / 预览结果] [删除键]。
@@ -126,11 +125,11 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     return r.isEmpty ? '0' : r;
   }
 
-  /// 币种触发器：仅展示币种名称，不显示币种符号与 ISO 代码。
+  /// 币种触发器：仅展示币种 ISO 代码（如 CNY / USD），不显示符号与名称。
   ///
-  /// 设计意图：记账页输入区空间紧张，符号与 ISO 在账本/汇率等入口已充分展示，
-  /// 此处只保留币种名称以压缩宽度，与数字键 1 列宽对齐；名称偏长时由
-  /// FittedBox 等比缩小兜底，保证不溢出窄列框。
+  /// 设计意图：ISO 代码定长 3 字符，在与数字键 1 列等宽的窄框内不会挤压；
+  /// 且与首页卡片账本徽章的币种展示口径一致，避免同一币种在不同页面
+  /// 出现「人民币 / ¥ / CNY」三种写法。
   Widget _buildCurrencyChip(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return InkWell(
@@ -143,12 +142,12 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
           color: SpitoutTokens.surfaceKeySecondary(context),
           borderRadius: BorderRadius.circular(12),
         ),
-        // 窄列宽下名称可能略超宽：FittedBox 等比缩小兜底，保证不溢出
+        // 长尾币种可能超过 3 字符：FittedBox 等比缩小兜底，保证不溢出
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
-              getCurrencyName(widget.txCurrency, context),
+              widget.txCurrency.toUpperCase(),
               maxLines: 1,
               style: text.bodyMedium?.copyWith(
                 color: SpitoutTokens.textPrimary(context),
