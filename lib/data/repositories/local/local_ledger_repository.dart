@@ -113,6 +113,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // 默认 'cloud' 以兼容现有调用方(均假设新建账本可上云);未登录用户由
     // Phase D UI 显式传 'local'。storage_mode 决定归属:local 永不分配 syncId。
     String storageMode = 'cloud',
+    // 账本所有者 userId:UI 新建路径传入(已登录=云 userId,未登录=localSelfId)。
+    // 同步路径(副本/导入)不传,保持 null 由云端数据回填。
+    String? ownerUserId,
   }) async {
     // storage_mode 决定云端归属:仅 cloud 模式分配跨设备 syncId;local 账本
     // syncId 为 null,从源头断开云端关联(配合三路闸门,local 账本永不上云)。
@@ -126,6 +129,9 @@ class LocalLedgerRepository implements LedgerRepository {
               currency: d.Value(currency),
               syncId: d.Value(syncId),
               storageMode: d.Value(storageMode),
+              ownerUserId: ownerUserId != null && ownerUserId.isNotEmpty
+                  ? d.Value(ownerUserId)
+                  : const d.Value.absent(),
             ),
           );
       // 仅云端账本登记 ledger:upsert 到 local_changes:

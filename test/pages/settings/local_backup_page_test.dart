@@ -48,6 +48,7 @@ class StubLocalBackupService extends LocalBackupService {
   Future<File> createBackup({
     required SpitoutDatabase db,
     String filePrefix = LocalBackupService.backupPrefix,
+    String? localSelfId,
   }) async {
     throw UnimplementedError('widget test 桩：不应在 UI 测试中写盘');
   }
@@ -56,6 +57,7 @@ class StubLocalBackupService extends LocalBackupService {
   Future<RestoreResult> restoreFromBackup({
     required SpitoutDatabase db,
     required File backupFile,
+    Future<void> Function(String localSelfId)? onRestoredLocalSelfId,
   }) async {
     throw UnimplementedError('widget test 桩：不应在 UI 测试中执行恢复');
   }

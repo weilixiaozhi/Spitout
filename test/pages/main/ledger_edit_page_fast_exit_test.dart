@@ -37,12 +37,14 @@ class _GatedRepo extends LocalRepository {
     required String name,
     String currency = 'CNY',
     String storageMode = 'cloud',
+    String? ownerUserId,
   }) async {
     if (createGate != null) await createGate!.future;
     return lastCreatedId = await super.createLedger(
       name: name,
       currency: currency,
       storageMode: storageMode,
+      ownerUserId: ownerUserId,
     );
   }
 

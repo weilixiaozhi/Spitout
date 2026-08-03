@@ -34,6 +34,7 @@ class _StubBackupService extends LocalBackupService {
   Future<RestoreResult> restoreFromBackup({
     required SpitoutDatabase db,
     required File backupFile,
+    Future<void> Function(String localSelfId)? onRestoredLocalSelfId,
   }) async {
     restoreCalls++;
     return RestoreResult(_status, error: 'stub');

@@ -27,7 +27,7 @@ import '../../services/settlement/aa_edit_models.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 
 /// 本地账本自我参与人的展示名:优先本地昵称(displayNameProvider),
-/// 否则回退 [fallback]。与交易详情页口径一致,禁止直接展示字面量 'me'。
+/// 否则回退 [fallback]。与交易详情页口径一致,localSelfId 统一解析为昵称/「我」。
 String _localSelfName(Ref ref, {String fallback = '我'}) {
   final nickname = ref.read(displayNameProvider).trim();
   return nickname.isNotEmpty ? nickname : fallback;
@@ -163,16 +163,17 @@ final aaParticipantOptionsProvider =
     // 单人/本地账本:无成员表,把 owner 自动纳入参与人名册,
     // 保证参与人选择器至少有一个可选项。
     // 优先取 ledger.ownerUserId;为空时回退当前登录用户 id;
-    // 两者都拿不到时用 'me' 占位,确保 UI 不空态(结算侧仍可正常兜底)。
+    // 两者都拿不到时用 localSelfId(设备身份 UUID)兜底,确保 UI 不空态。
     var ownerId = ledger?.ownerUserId;
     if (ownerId == null || ownerId.isEmpty) {
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
       ownerId = await TxAuthorService.currentUserId(cloud);
     }
-    // 真实 userId 直接作为参与人标识;拿不到时用 'me' 占位,保证名册非空。
+    // 真实 userId 直接作为参与人标识;拿不到时用 localSelfId 兜底,保证名册非空。
     // 展示名统一走本地昵称/「我」,与交易详情页口径一致。
+    final localSelfId = await ref.read(localSelfIdProvider.future);
     final finalId =
-        (ownerId != null && ownerId.isNotEmpty) ? ownerId : kLocalSelfUserId;
+        (ownerId != null && ownerId.isNotEmpty) ? ownerId : localSelfId;
     final ownerName = _localSelfName(ref, fallback: ownerId ?? '我');
     options.add(AaParticipantOption(
       id: finalId,
@@ -191,6 +192,110 @@ final aaParticipantOptionsProvider =
     ));
   }
   return options;
+});
+
+/// 账本成员支出统计项(按 paidByUserId 聚合)。
+///
+/// 设计意图:成员支出模块需要包含虚拟用户的支出,而云端 memberStats 仅含
+/// 真实成员。改为本地按交易 paidByUserId 聚合(支出人 = paidByUserId),
+/// 关联参与人名册(真实成员 + 虚拟用户)拿展示名,与 AA 分摊统计口径一致。
+class MemberExpenseStatItem {
+  const MemberExpenseStatItem({
+    required this.participantId,
+    required this.displayName,
+    required this.expenseTotal,
+    required this.txCount,
+  });
+
+  /// 参与人标识(userId 或虚拟用户 syncId)。
+  final String participantId;
+
+  /// 展示名(真实成员 displayName/email、虚拟用户 name)。
+  final String displayName;
+
+  /// 该成员作为支出人的支出金额合计。
+  final double expenseTotal;
+
+  /// 该成员作为支出人的支出笔数。
+  final int txCount;
+}
+
+/// 账本成员支出统计(按 paidByUserId 聚合,含虚拟用户)。
+///
+/// 数据源:账本全部支出交易(type='expense'),按 paidByUserId 分组聚合
+/// 金额与笔数;展示名取参与人名册(真实成员 + 虚拟用户),与 AA 分摊统计
+/// 口径一致。paidByUserId 为空的交易不计入(支出人未知,无法归属)。
+final memberExpenseStatsProvider = FutureProvider.autoDispose
+    .family<List<MemberExpenseStatItem>, int>((ref, ledgerId) async {
+  ref.watch(syncGenerationProvider);
+  ref.watch(sharedResourceRefreshProvider);
+
+  final repo = ref.read(repositoryProvider);
+  final ledger = await repo.getLedgerById(ledgerId);
+  if (ledger == null) return const [];
+
+  // 账本全部支出交易(只统计支出,与首页/统计口径一致)。
+  final allTx = await repo.getTransactionsByLedger(ledgerId);
+  final expenseTx = allTx.where((t) => t.type == 'expense').toList();
+
+  // 按 paidByUserId 聚合:金额合计 + 笔数。paidByUserId 为空跳过(无法归属)。
+  final amountMap = <String, double>{};
+  final countMap = <String, int>{};
+  for (final t in expenseTx) {
+    final pid = t.paidByUserId;
+    if (pid == null || pid.isEmpty) continue;
+    amountMap[pid] = (amountMap[pid] ?? 0) + t.amount;
+    countMap[pid] = (countMap[pid] ?? 0) + 1;
+  }
+
+  // 参与人名册 → 展示名映射(真实成员 + 虚拟用户),与 aaParticipantOptionsProvider 口径一致。
+  final displayNameMap = <String, String>{};
+  // 虚拟用户:syncId 作为参与人标识。
+  final virtualUsers = await repo.getByLedger(ledgerId);
+  for (final vu in virtualUsers) {
+    final pid = vu.syncId ?? 'vu_${vu.id}';
+    displayNameMap[pid] = vu.name;
+  }
+  // 真实成员:共享账本从 ledgerMembersProvider 取;单人/本地账本纳入 owner。
+  final syncId = ledger.syncId;
+  if (syncId != null && syncId.isNotEmpty) {
+    try {
+      final members = await ref.read(ledgerMembersProvider(syncId).future);
+      for (final m in members) {
+        final dn = m.displayName;
+        displayNameMap[m.userId] =
+            (dn != null && dn.isNotEmpty) ? dn : m.email;
+      }
+    } catch (e, st) {
+      logger.warning('AaSettlement',
+          '读取账本成员失败 ledger=$ledgerId,成员支出降级为仅虚拟用户', '$e\n$st');
+    }
+  } else {
+    var ownerId = ledger.ownerUserId;
+    if (ownerId == null || ownerId.isEmpty) {
+      final cloud = await ref.read(spitoutCloudProviderInstance.future);
+      ownerId = await TxAuthorService.currentUserId(cloud);
+    }
+    if (ownerId != null && ownerId.isNotEmpty) {
+      displayNameMap[ownerId] = _localSelfName(ref, fallback: ownerId);
+    } else {
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      displayNameMap[localSelfId] = _localSelfName(ref);
+    }
+  }
+
+  // 组装结果:仅保留有支出的参与人(amountMap 的 key),按金额降序。
+  final items = <MemberExpenseStatItem>[];
+  amountMap.forEach((pid, total) {
+    items.add(MemberExpenseStatItem(
+      participantId: pid,
+      displayName: displayNameMap[pid] ?? pid,
+      expenseTotal: total,
+      txCount: countMap[pid] ?? 0,
+    ));
+  });
+  items.sort((a, b) => b.expenseTotal.compareTo(a.expenseTotal));
+  return items;
 });
 
 /// 账本 AA 分摊汇总(纯计算,依赖交易+成员+虚拟用户)。
@@ -261,10 +366,11 @@ final aaSettlementProvider =
       participantIds.add(ownerId);
       displayNameMap[ownerId] = _localSelfName(ref, fallback: ownerId);
     } else {
-      // 未登录本地账本:用 'me' 占位参与人,保证结算侧参与人名册与
+      // 未登录本地账本:用 localSelfId 占位参与人,保证结算侧参与人名册与
       // 参与人选择器口径一致;展示名统一为本地昵称/「我」。
-      participantIds.add(kLocalSelfUserId);
-      displayNameMap[kLocalSelfUserId] = _localSelfName(ref);
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      participantIds.add(localSelfId);
+      displayNameMap[localSelfId] = _localSelfName(ref);
     }
   }
 

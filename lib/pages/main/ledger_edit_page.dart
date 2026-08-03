@@ -14,7 +14,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/core/identity/local_user_identity.dart';
-import 'package:spitout/services/data/tx_author_service.dart';
 import '../../data/models.dart';
 import '../../routes.dart';
 import '../../widgets/widgets.dart';
@@ -488,7 +487,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           // 无需跟随云端。模块自带标题与"分摊结算"入口（跟随 AA 开关显示）。
           const SizedBox(height: 16),
           MemberStatsSection(
-            ledgerExternalId: _syncId,
+            ledgerId: ledger?.id,
             aaEnabled: _aaEnabled,
             onOpenSettlement: () {
               // 从哪里进入就是哪个账本：编辑态传账本 id，新建态无账本
@@ -775,28 +774,16 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
         currency: _currency,
       );
     } else {
-      // 解析账本所有者身份:已登录取云 userId,未登录取 localSelfId。
-      // localSelfIdProvider 首次调用会生成并持久化 UUID,此后稳定不变。
-      // 仅 SpitoutCloud 后端才读 cloud userId;其他后端(webdav/s3/supabase)
-      // 无云身份概念,直接用 localSelfId,避免无谓的 provider 初始化报错。
+      // 账本所有者身份:一律用 localSelfId 作为初始 ownerUserId。
+      // cloud 归属账本的 ownerUserId 会在同步/转云端时由迁移服务
+      // (LocalIdentityMigrationService)改写为云 userId,此处不读取
+      // spitoutCloudProviderInstance,避免未初始化时报错阻断建账本。
       final localSelfId = await ref.read(localSelfIdProvider.future);
-      String? cloudUserId;
-      try {
-        final backendType = ref.read(currentCloudBackendTypeProvider);
-        if (backendType == CloudBackendType.spitoutCloud) {
-          final cloud = await ref.read(spitoutCloudProviderInstance.future);
-          cloudUserId = await TxAuthorService.currentUserId(cloud);
-        }
-      } catch (e) {
-        // cloud 不可用,降级 localSelfId(未登录建账本场景)。
-        cloudUserId = null;
-      }
-      final ownerUserId = cloudUserId ?? localSelfId;
       newLedgerId = await repo.createLedger(
         name: name,
         currency: _currency,
         storageMode: storageMode,
-        ownerUserId: ownerUserId,
+        ownerUserId: localSelfId,
       );
       _inviteCreatedLedgerId = newLedgerId;
     }

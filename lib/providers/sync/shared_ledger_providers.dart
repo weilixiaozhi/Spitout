@@ -23,6 +23,7 @@ import 'package:spitout/providers/core/refresh_ticks.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/services/data/tx_author_service.dart';
 
 // sharedResourceRefreshProvider 由叶子模块 refresh_ticks.dart 定义，
@@ -38,40 +39,6 @@ final ledgerMembersProvider = FutureProvider.autoDispose
   final cloud = await ref.watch(spitoutCloudProviderInstance.future);
   if (cloud == null) return const [];
   return cloud.listMembers(ledgerId: ledgerId);
-});
-
-/// 共享账本成员支出统计 query key — (ledgerId)。
-/// 统计范围固定为账本全部支出。
-class MemberStatsKey {
-  const MemberStatsKey({required this.ledgerId});
-
-  final String ledgerId;
-
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is MemberStatsKey && other.ledgerId == ledgerId);
-
-  @override
-  int get hashCode => ledgerId.hashCode;
-}
-
-/// 共享账本成员支出统计 provider。watch sharedResourceRefreshProvider 实现
-/// 实时跟随:当 WS sync_change / member_change 来时,bump tick → refetch。
-///
-/// 错误处理:cloud 不可用时返 null(单人 / 非 Cloud 后端场景),让 UI
-/// 自动隐藏。**其它异常一律向上抛**,让 AsyncValue.when error 分支展示
-/// 真实错误,而不是把 401/403/500/网络 等全部 swallow 成"无数据"。
-final memberStatsProvider = FutureProvider.autoDispose
-    .family<SpitoutCloudMemberStats?, MemberStatsKey>((ref, key) async {
-  ref.watch(sharedResourceRefreshProvider);
-  final cloud = await ref.watch(spitoutCloudProviderInstance.future);
-  if (cloud == null) return null;
-  return cloud.fetchMemberStats(
-    ledgerId: key.ledgerId,
-    scope: 'all',
-    tzOffsetMinutes: DateTime.now().timeZoneOffset.inMinutes,
-  );
 });
 
 /// 列出某账本"当前 active"邀请(仅 owner)。
@@ -358,27 +325,29 @@ Future<bool> purgeLocalCloudLedgersWithContainer(ProviderContainer container) =>
 /// 本地新建 tx 后回填「创建人 + 编辑人」（动作函数）。
 ///
 /// 设计意图：`TxAuthorService.markCreated` 的云实例读取 + 仓储解析
-/// 在 providers 层完成，widget 侧只传 txId，不直接 import
-/// tx_author_service.dart（保持 `pages/widgets → providers → services` 单向）。
+/// + localSelfId 读取在 providers 层完成，widget 侧只传 txId，不直接
+/// import tx_author_service.dart（保持 `pages/widgets → providers → services` 单向）。
 /// 失败静默（service 内部 swallow），本函数不抛错。
 ///
-/// paidByUserId 回填规则:cloud userId 可用时取操作者,不可用时用 'me' 兜底;
-/// 编辑器已显式写入的值(指定分摊)不覆盖。
+/// 身份解析:已登录写云 userId,未登录写 localSelfId(设备身份 UUID)。
+/// paidByUserId 回填规则:为空时取操作者,编辑器已显式写入的值(指定分摊)不覆盖。
 Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
-  await TxAuthorService.markCreated(cloud, repo, txId);
+  final localSelfId = await ref.read(localSelfIdProvider.future);
+  await TxAuthorService.markCreated(cloud, repo, txId, localSelfId: localSelfId);
 }
 
 /// 本地编辑 tx 后回填「编辑人」（动作函数）。
 ///
 /// 语义同 [markTxCreatedFromUi]：写 lastEditedByUserId（创建人
 /// first-write-wins 不变);paidByUserId 为空时回填操作者,非空视为
-/// 用户手改值保留。cloud 不可用时 paidByUserId 用 'me' 兜底。
+/// 用户手改值保留。身份解析同 [markTxCreatedFromUi]。
 Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
-  await TxAuthorService.markEdited(cloud, repo, txId);
+  final localSelfId = await ref.read(localSelfIdProvider.future);
+  await TxAuthorService.markEdited(cloud, repo, txId, localSelfId: localSelfId);
 }
 
 /// 读取当前登录用户 id（动作函数，供写编辑历史时作 operatorUserId）。

@@ -1,9 +1,9 @@
 // markTxAuthor 回填交易作者字段测试。
 //
 // 覆盖核心契约:
-//   1. 新建 + cloud userId 不可用 → paidByUserId 回填 'me' 兜底,
-//      createdByUserId / lastEditedByUserId 保持 null(头像非关键路径)
-//   2. 新建 + cloud userId 可用 → 三字段统一回填操作者
+//   1. 新建 + localSelfId(未登录) → paidByUserId/createdByUserId/lastEditedByUserId
+//      统一回填 localSelfId(不再有 'me' 占位,头像字段也写 localSelfId)
+//   2. 新建 + cloud userId(已登录) → 三字段统一回填操作者
 //   3. 新建 + 编辑器已显式写入 paidBy → paidBy 不被覆盖,作者字段照常回填
 //   4. 编辑 + 既有 paidBy 为空 → paidBy 回填操作者(与新建一致)
 //   5. 编辑 + 既有 paidBy 非空(用户手改) → paidBy 保留手改值,仅写 lastEditedBy
@@ -43,20 +43,21 @@ void main() {
   }
 
   group('markTxAuthor(isCreate=true)', () {
-    test('cloud userId 不可用时,paidBy 用 me 兜底,头像字段保持 null', () async {
+    test('未登录(localSelfId)时,三字段统一回填 localSelfId(不再用 me)', () async {
       final id = await createTx();
-      // userId 传空串 + fallbackUserId='me',模拟 cloud 不可用场景。
+      // userId 传 localSelfId,模拟未登录场景(TxAuthorService 解析后传入)。
+      const localSelfId = 'local-self-uuid-1234';
       await repo.markTxAuthor(
         txId: id,
-        userId: '',
+        userId: localSelfId,
         isCreate: true,
-        fallbackUserId: 'me',
       );
       final tx = await repo.getTransactionById(id);
       expect(tx, isNotNull);
-      expect(tx!.paidByUserId, 'me');
-      expect(tx.createdByUserId, isNull);
-      expect(tx.lastEditedByUserId, isNull);
+      expect(tx!.paidByUserId, localSelfId);
+      // 头像字段也写 localSelfId(不再保持 null),保证作者信息完整。
+      expect(tx.createdByUserId, localSelfId);
+      expect(tx.lastEditedByUserId, localSelfId);
     });
 
     test('cloud userId 可用时,三字段统一回填操作者', () async {
@@ -142,18 +143,18 @@ void main() {
       expect(tx.lastEditedByUserId, 'u-bob');
     });
 
-    test('cloud 不可用时,编辑路径 paidBy 为空则用 me 兜底', () async {
+    test('未登录(localSelfId)编辑路径,paidBy 为空则回填 localSelfId', () async {
       final id = await createTx();
+      const localSelfId = 'local-self-uuid-5678';
       await repo.markTxAuthor(
         txId: id,
-        userId: '',
+        userId: localSelfId,
         isCreate: false,
-        fallbackUserId: 'me',
       );
       final tx = await repo.getTransactionById(id);
       expect(tx, isNotNull);
-      expect(tx!.paidByUserId, 'me');
-      expect(tx.lastEditedByUserId, isNull);
+      expect(tx!.paidByUserId, localSelfId);
+      expect(tx.lastEditedByUserId, localSelfId);
     });
   });
 }

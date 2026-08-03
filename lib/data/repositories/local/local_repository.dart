@@ -110,11 +110,13 @@ class LocalRepository extends BaseRepository {
     required String name,
     String currency = 'CNY',
     String storageMode = 'cloud',
+    String? ownerUserId,
   }) =>
       _ledgerRepo.createLedger(
         name: name,
         currency: currency,
         storageMode: storageMode,
+        ownerUserId: ownerUserId,
       );
 
   @override
@@ -958,13 +960,11 @@ class LocalRepository extends BaseRepository {
     required int txId,
     required String userId,
     required bool isCreate,
-    String? fallbackUserId,
   }) =>
       _transactionRepo.markTxAuthor(
         txId: txId,
         userId: userId,
         isCreate: isCreate,
-        fallbackUserId: fallbackUserId,
       );
 
   // ==================== 日历功能相关 ====================

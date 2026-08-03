@@ -26,10 +26,13 @@ abstract class LedgerRepository {
   /// 创建账本。
   /// [storageMode] 归属模式:cloud 才分配跨设备 syncId;local 账本 syncId 为 null,
   /// 从源头断开云端关联。默认 'cloud' 以兼容现有调用方;未登录用户由 UI 显式传 'local'。
+  /// [ownerUserId] 账本所有者 userId(已登录为云 userId,未登录为 localSelfId);
+  /// 同步路径创建的账本不传(由云端数据回填),UI 新建路径应传入。
   Future<int> createLedger({
     required String name,
     String currency = 'CNY',
     String storageMode = 'cloud',
+    String? ownerUserId,
   });
 
   /// 更新账本归属模式(local / cloud),移动操作完成后调用。

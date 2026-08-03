@@ -1190,7 +1190,16 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
               localOwnerDisplayName: (ledger?.isShared ?? false)
                   ? null
                   : ref.read(displayNameProvider),
+              // 账本是否开启分摊决定底部按钮态(单/双)与右上角删除 icon 布局
+              aaEnabled: ledger?.aaEnabled ?? false,
               onEdit: () => widget.onEdit(tx, cat),
+              // 编辑分摊入口:仅开启分摊时使用,跳 AaEditPage 直接落库 AA 字段
+              onEditAa: () => TransactionAaEditUtils.editTransactionAa(
+                context,
+                ref,
+                tx,
+                cat,
+              ),
               onDelete: () => widget.onDelete(tx),
             );
           },

@@ -1,0 +1,116 @@
+import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' show CloudUser;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+
+import '../../core/identity/local_user_identity.dart';
+import '../../l10n/app_localizations.dart';
+import '../../providers/sync/cloud_client_providers.dart';
+import '../../providers/ui/theme_providers.dart';
+
+/// 用户展示名统一解析器。
+///
+/// 修复「同一账号在不同账本显示为 id / 邮箱 / 昵称混用」的问题。
+/// 根因:展示层只查 memberDisplayMap,查不到就裸展示 userId 字符串。
+/// 实际上 userId 可能是当前登录用户(本地账本无成员表)或 localSelfId,
+/// 这些都应解析为昵称/邮箱/「我」,而非裸 id。
+///
+/// 解析优先级:
+/// 1. 共享账本成员表(昵称 → 邮箱)
+/// 2. 当前登录用户(userId == cloudUserId → 邮箱,或本地昵称)
+/// 3. localSelfId(本地账本未登录的「我」→ 本地昵称/「我」)
+/// 4. 虚拟用户名(由调用方传入)
+/// 5. 本地昵称兜底(本地账本无成员表时,任何作者位都属于「我」,统一展示昵称)
+/// 6. 原始 id
+class UserDisplayNameResolver {
+  final Map<String, SpitoutCloudLedgerMember> memberDisplayMap;
+  final String? localOwnerDisplayName;
+  final String localSelfId;
+  final CloudUser? currentUser;
+  final Map<String, String> virtualNames;
+  final AppLocalizations l10n;
+
+  UserDisplayNameResolver({
+    required this.memberDisplayMap,
+    required this.localOwnerDisplayName,
+    required this.localSelfId,
+    required this.currentUser,
+    required this.virtualNames,
+    required this.l10n,
+  });
+
+  /// 解析 userId 为展示名。
+  ///
+  /// [userId] 待解析的用户标识(云 userId / localSelfId / 虚拟用户 syncId)。
+  /// 返回空串表示「无此人信息,调用方可自行决定是否展示」。
+  String resolve(String? userId) {
+    if (userId == null || userId.isEmpty) return '';
+
+    // 1. 共享账本成员表:昵称 → 邮箱
+    final member = memberDisplayMap[userId];
+    if (member != null) {
+      final dn = member.displayName?.trim() ?? '';
+      if (dn.isNotEmpty) return dn;
+      final email = member.email.trim();
+      if (email.isNotEmpty) return email;
+    }
+
+    // 2. 当前登录用户:userId == cloudUserId 时,用邮箱兜底(本地昵称由 3 覆盖)
+    if (currentUser != null && userId == currentUser!.id) {
+      final email = currentUser!.email?.trim() ?? '';
+      if (email.isNotEmpty) return email;
+      // 云 userId 命中但无邮箱:走本地昵称兜底
+      final localName = localOwnerDisplayName?.trim() ?? '';
+      if (localName.isNotEmpty) return localName;
+      return l10n.aaMe;
+    }
+
+    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「我」
+    if (userId == localSelfId) {
+      final localName = localOwnerDisplayName?.trim() ?? '';
+      return localName.isNotEmpty ? localName : l10n.aaMe;
+    }
+
+    // 4. 虚拟用户
+    final virtualName = virtualNames[userId];
+    if (virtualName != null && virtualName.isNotEmpty) return virtualName;
+
+    // 5. 本地昵称兜底:本地账本无成员表时,创建人/编辑人等作者位都属于「我」,
+    // 设置了本地昵称就展示昵称而非原始 id(与云端登录态无关)。
+    final localName = localOwnerDisplayName?.trim() ?? '';
+    if (localName.isNotEmpty) return localName;
+
+    // 6. 兜底原始 id
+    return userId;
+  }
+}
+
+/// 异步构建 [UserDisplayNameResolver]。
+///
+/// 读取 localSelfId、当前登录用户、本地昵称,组合为解析器实例。
+/// 调用方(ref.watch)在 build 中调用,数据变化时自动重建。
+Future<UserDisplayNameResolver> buildDisplayNameResolver(
+  Ref ref, {
+  required Map<String, SpitoutCloudLedgerMember> memberDisplayMap,
+  required AppLocalizations l10n,
+  Map<String, String> virtualNames = const {},
+  String? localOwnerDisplayName,
+}) async {
+  final localSelfId = await ref.read(localSelfIdProvider.future);
+  final userAsync = ref.read(cloudCurrentUserProvider);
+  CloudUser? currentUser;
+  try {
+    currentUser = userAsync.asData?.value;
+  } catch (_) {
+    currentUser = null;
+  }
+  // localOwnerDisplayName 未传入时,读 displayNameProvider(本地昵称)。
+  final localName = localOwnerDisplayName ?? ref.read(displayNameProvider);
+  return UserDisplayNameResolver(
+    memberDisplayMap: memberDisplayMap,
+    localOwnerDisplayName: localName,
+    localSelfId: localSelfId,
+    currentUser: currentUser,
+    virtualNames: virtualNames,
+    l10n: l10n,
+  );
+}

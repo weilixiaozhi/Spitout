@@ -433,50 +433,46 @@ class LocalTransactionRepository implements TransactionRepository {
   ///
   /// 本地写入路径(addTransaction / updateTransaction)无法感知当前操作者,
   /// 由 UI 层写完交易后调用本方法补齐作者字段。paidByUserId 的兜底规则:
-  /// - 新建:为空时回填操作者,编辑器已显式写入的值(指定分摊场景)不覆盖。
-  /// - 编辑:为空时同样回填操作者;非空则视为用户已手改,保留手改值。
+  /// - 新建:为空时回填操作者(默认支出人 = 创建人);编辑器已显式写入的值
+  ///   (指定分摊场景)不覆盖。
+  /// - 编辑:不再回填 paidByUserId。支出人一旦在新建时确定(创建人或手动值),
+  ///   后续编辑不随编辑人变化,保证支出人稳定。
+  ///   仅更新 lastEditedByUserId(createdByUserId 维持 first-write-wins)。
   ///
-  /// [userId] 为当前操作者(cloud 不可用时由 service 层传空串),[fallbackUserId]
-  /// 在 userId 为空时用于 paidByUserId 兜底(默认 'me',与参与人选择器口径一致)。
-  /// 头像字段(createdByUserId / lastEditedByUserId)仅在 userId 非空时写入,
-  /// cloud 不可用时保持现有值,避免把占位符 'me' 写进头像字段污染展示。
+  /// [userId] 为当前操作者(已登录为云 userId,未登录为 localSelfId,
+  /// 由 TxAuthorService 解析后传入,始终非空)。三字段统一写该值,
+  /// 不再用 'me' 占位,头像字段(createdByUserId / lastEditedByUserId)
+  /// 也会在未登录时写入 localSelfId,保证作者信息完整。
   Future<void> markTxAuthor({
     required int txId,
     required String userId,
     required bool isCreate,
-    String? fallbackUserId,
   }) async {
-    final hasUserId = userId.isNotEmpty;
-    final effectivePaidBy =
-        hasUserId ? userId : (fallbackUserId ?? 'me');
-
-    final existing = await getTransactionById(txId);
-    final shouldBackfillPaidBy = existing == null ||
-        existing.paidByUserId == null ||
-        existing.paidByUserId!.isEmpty;
-
-    // 头像字段仅在有真实 userId 时写入;cloud 不可用时跳过,
-    // 保持现有值(null 或 first-write-wins 的旧值),不污染展示。
-    final companion = isCreate
-        ? TransactionsCompanion(
-            createdByUserId:
-                hasUserId ? d.Value(userId) : const d.Value.absent(),
-            lastEditedByUserId:
-                hasUserId ? d.Value(userId) : const d.Value.absent(),
-            paidByUserId: shouldBackfillPaidBy
-                ? d.Value(effectivePaidBy)
-                : const d.Value.absent(),
-          )
-        : TransactionsCompanion(
-            lastEditedByUserId:
-                hasUserId ? d.Value(userId) : const d.Value.absent(),
-            paidByUserId: shouldBackfillPaidBy
-                ? d.Value(effectivePaidBy)
-                : const d.Value.absent(),
-          );
-
-    await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
-        .write(companion);
+    if (isCreate) {
+      // 新建:写 createdByUserId + lastEditedByUserId;
+      // paidByUserId 为空时回填操作者(默认支出人 = 创建人),已显式写入不覆盖。
+      final existing = await getTransactionById(txId);
+      final shouldBackfillPaidBy = existing == null ||
+          existing.paidByUserId == null ||
+          existing.paidByUserId!.isEmpty;
+      final companion = TransactionsCompanion(
+        createdByUserId: d.Value(userId),
+        lastEditedByUserId: d.Value(userId),
+        paidByUserId: shouldBackfillPaidBy
+            ? d.Value(userId)
+            : const d.Value.absent(),
+      );
+      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
+          .write(companion);
+    } else {
+      // 编辑:仅更新 lastEditedByUserId。
+      // 支出人不在编辑路径回填,保持新建时确定的值(创建人或手动值)不变。
+      final companion = TransactionsCompanion(
+        lastEditedByUserId: d.Value(userId),
+      );
+      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
+          .write(companion);
+    }
   }
 
   @override

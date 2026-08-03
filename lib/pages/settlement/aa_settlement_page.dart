@@ -7,6 +7,7 @@ import '../../providers/providers.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
+import '../../utils/category_utils.dart';
 import '../../widgets/widgets.dart';
 
 /// AA 分摊统计页。
@@ -70,7 +71,7 @@ class AaSettlementPage extends ConsumerWidget {
     WidgetRef ref,
     AppLocalizations l10n,
     AaLedgerSettlement settlement,
-    List<Transaction> excluded,
+    List<({Transaction t, Category? category})> excluded,
   ) {
     // 只展示有实际分摊活动的参与人(全零成员无信息量)。
     final active = settlement.participants
@@ -317,14 +318,19 @@ class AaSettlementPage extends ConsumerWidget {
     );
   }
 
-  /// 不计入详单卡:aaMode=1(不分摊)的交易,展示备注/分类 + 日期 + 金额。
+  /// 不计入详单卡:aaMode=1(不分摊)的交易,完全照搬首页列表项布局
+  /// (icon + 分类名 + 时间/备注 + 金额),保证两处视觉一致。
   ///
   /// 数据为空时展示空态提示,保证区块默认可见(需求要求)。
-  Widget _buildExcludedCard(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, List<Transaction> excluded) {
+  Widget _buildExcludedCard(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    List<({Transaction t, Category? category})> excluded,
+  ) {
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: excluded.isEmpty
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 12),
@@ -343,61 +349,36 @@ class AaSettlementPage extends ConsumerWidget {
                 for (var i = 0; i < excluded.length; i++) ...[
                   if (i > 0)
                     Divider(height: 1, color: SpitoutTokens.divider(context)),
-                  _buildExcludedRow(context, excluded[i]),
+                  _buildExcludedRow(context, ref, excluded[i]),
                 ],
               ],
             ),
     );
   }
 
-  Widget _buildExcludedRow(BuildContext context, Transaction tx) {
-    final d = tx.happenedAt.toLocal();
-    final dateText =
-        '${d.year}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  (tx.note != null && tx.note!.isNotEmpty)
-                      ? tx.note!
-                      : dateText,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (tx.note != null && tx.note!.isNotEmpty)
-                  Text(
-                    dateText,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                    ),
-                  ),
-              ],
-            ),
-          ),
-          AmountText(
-            value: tx.amount,
-            signed: false,
-            showCurrency: true,
-            currencyCode: tx.currencyCode,
-            decimals: 2,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: SpitoutTokens.textPrimary(context),
-            ),
-          ),
-        ],
-      ),
+  /// 单条不计入详单行:复用 [TransactionListItem],布局与首页列表完全一致
+  /// (icon + 分类名 + 时间/备注 + 金额)。
+  Widget _buildExcludedRow(
+    BuildContext context,
+    WidgetRef ref,
+    ({Transaction t, Category? category}) it,
+  ) {
+    final categoryName =
+        CategoryUtils.getDisplayName(it.category?.name, context);
+    return TransactionListItem(
+      icon: getCategoryIconData(category: it.category),
+      category: it.category,
+      title: it.t.note ?? '',
+      categoryName: categoryName,
+      amount: it.t.amount,
+      currencyCode: it.t.currencyCode,
+      nativeAmount: it.t.nativeAmount,
+      isExpense: it.t.type == 'expense',
+      happenedAt: it.t.happenedAt,
+      lastEditedAt: it.t.lastEditedAt,
+      // 不计入详单区块无需展示协作头像/选择模式/不计收支标签,
+      // 保持与首页列表一致的简洁双行布局。
+      isShared: false,
     );
   }
 
@@ -433,13 +414,15 @@ class AaSettlementPage extends ConsumerWidget {
 /// 不计入详单的交易(aaMode=1)查询。
 ///
 /// 统计页「不计入详单」区块数据源;[aaSettlementProvider] 只返回汇总结果,
-/// 详单行需要交易本体(备注 / 日期 / 金额),故在此单独查询。
+/// 详单行需要交易本体 + 分类(用于 icon / 分类名展示,与首页列表完全一致),
+/// 故在此单独查询带 category 的交易列表。
 final _aaExcludedTxProvider =
-    FutureProvider.autoDispose.family<List<Transaction>, int>(
-        (ref, ledgerId) async {
+    StreamProvider.autoDispose.family<List<({Transaction t, Category? category})>, int>(
+        (ref, ledgerId) {
   // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
   ref.watch(aaSettlementProvider(ledgerId));
   final repo = ref.read(repositoryProvider);
-  final all = await repo.getTransactionsByLedger(ledgerId);
-  return all.where((t) => t.aaMode == 1).toList();
+  // 复用首页列表同款带 category 的交易流,客户端过滤 aaMode=1。
+  return repo.transactionsWithCategoryAll(ledgerId: ledgerId).map(
+      (all) => all.where((it) => it.t.aaMode == 1).toList());
 });

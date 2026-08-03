@@ -15,10 +15,14 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 
+import 'package:spitout/core/identity/local_user_identity.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/ledger_list_providers.dart';
+import 'package:spitout/services/data/local_identity_migration_service.dart';
+import 'package:spitout/services/data/tx_author_service.dart';
 
 /// 拿到已登录的云端 provider,未登录直接抛出可读异常。
 ///
@@ -44,13 +48,45 @@ void _refreshAfterMove(WidgetRef ref) {
 ///
 /// 秒级翻 storage_mode='cloud' 后台推送:翻 mode 后 UI 立即显示云端态,数据推送
 /// 由 auto sync 异步完成;翻 mode 失败时账本保持本地不变。
+///
+/// 转云端前先把该账本的 localSelfId 作者字段改写为云 userId,避免云端
+/// 出现「幽灵成员」(云端成员表里没有 localSelfId,展示层无法解析)。
 Future<void> moveLedgerToCloudProvider(
   WidgetRef ref, {
   required int ledgerId,
 }) async {
   final cloud = await _requireCloud(ref);
+  // 转云端前迁移该账本的 localSelfId → cloudUserId,保证云端数据身份一致。
+  await _migrateLedgerIdentityBeforeCloudMove(ref, ledgerId, cloud);
   await ref.read(syncEngineProvider(cloud)).moveToCloud(ledgerId);
   _refreshAfterMove(ref);
+}
+
+/// 转云端前把指定账本内的 localSelfId 引用改写为云 userId。
+///
+/// 仅改写该账本下的交易/编辑历史,以及该账本行的 ownerUserId。
+/// 幂等:无 localSelfId 引用时 UPDATE 0 行,不报错。
+Future<void> _migrateLedgerIdentityBeforeCloudMove(
+  WidgetRef ref,
+  int ledgerId,
+  dynamic cloud,
+) async {
+  try {
+    final cloudUserId = await TxAuthorService.currentUserId(cloud);
+    if (cloudUserId == null || cloudUserId.isEmpty) return;
+    final localSelfId = await ref.read(localSelfIdProvider.future);
+    if (localSelfId.isEmpty || localSelfId == cloudUserId) return;
+    await LocalIdentityMigrationService.migrateLedgerToCloudUserId(
+      db: ref.read(databaseProvider),
+      ledgerId: ledgerId,
+      cloudUserId: cloudUserId,
+      localSelfId: localSelfId,
+    );
+  } catch (e, st) {
+    // 迁移失败不阻断转云端流程,云端仍可靠成员表兜底解析。
+    logger.warning('LedgerStorage',
+        '转云端前身份迁移失败(非阻断)', '$e\n$st');
+  }
 }
 
 /// 把云端账本移回本地。

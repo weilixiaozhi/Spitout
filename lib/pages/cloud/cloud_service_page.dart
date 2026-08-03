@@ -10,6 +10,9 @@ import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart'
     show purgeLocalCloudLedgersWithContainer;
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
+import 'package:spitout/services/data/tx_author_service.dart';
+import 'package:spitout/services/data/local_identity_migration_service.dart';
 import '../../core/logging/logger_service.dart';
 import '../settings/local_backup_page.dart';
 import 'cloud_sync_section.dart';
@@ -1417,6 +1420,13 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           if (!ok && mounted) {
             showToast(context, AppLocalizations.of(context).cloudPurgeFailed);
           }
+        } else {
+          // 登录 Spitout Cloud 后触发本地身份迁移(方案 B):
+          // 把库中所有 localSelfId 引用改写为云 userId,使本地账本「我」与
+          // 云身份统一。迁移幂等(标记位防重跑),失败仅记日志不阻塞 UI。
+          // 放在 invalidate 之后:spitoutCloudProviderInstance 已级联重建,
+          // 可读到当前登录用户的 cloud userId。
+          await _migrateLocalIdentityAfterLogin(container);
         }
       });
 
@@ -1427,6 +1437,30 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       if (mounted) {
         await AppDialog.error(context, title: AppLocalizations.of(context).cloudSwitchFailedTitle, message: '$e');
       }
+    }
+  }
+
+  /// 登录 Spitout Cloud 后迁移本地身份(方案 B)。
+  ///
+  /// 读取当前登录用户的云 userId 与设备 localSelfId,把库中所有 localSelfId
+  /// 引用改写为云 userId。迁移幂等(同一账号只跑一次),失败仅记日志不阻塞 UI。
+  /// 用 container 而非 ref,避免页面销毁后迁移被跳过。
+  Future<void> _migrateLocalIdentityAfterLogin(ProviderContainer container) async {
+    try {
+      final cloud = await container.read(spitoutCloudProviderInstance.future);
+      if (cloud == null) return;
+      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      if (cloudUserId == null || cloudUserId.isEmpty) return;
+      final localSelfId = await container.read(localSelfIdProvider.future);
+      final db = container.read(databaseProvider);
+      await LocalIdentityMigrationService.migrateToCloudUserId(
+        db: db,
+        cloudUserId: cloudUserId,
+        localSelfId: localSelfId,
+      );
+    } catch (e, st) {
+      logger.warning('CloudServicePage',
+          '登录后本地身份迁移失败(非阻塞,下次登录会重试)', '$e\n$st');
     }
   }
 

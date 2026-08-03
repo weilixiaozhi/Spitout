@@ -89,6 +89,10 @@ class LocalBackupService {
   final Directory? _backupDirOverride;
   final File? _dbFileOverride;
 
+  /// sidecar 元数据文件后缀，与备份 .sqlite 同目录、同 basename。
+  /// 内含 local_self_id，供跨设备恢复时回写 SharedPreferences。
+  static const String metaSuffix = '.meta.json';
+
   /// SharedPreferences key：自动备份开关（默认 true，零干预兜底）
   static const String prefsKeyAutoBackup = 'auto_backup';
 
@@ -214,6 +218,7 @@ class LocalBackupService {
   Future<File> createBackup({
     required SpitoutDatabase db,
     String filePrefix = backupPrefix,
+    String? localSelfId,
   }) async {
     if (_backupInProgress) {
       throw StateError('backup already in progress');
@@ -234,6 +239,18 @@ class LocalBackupService {
       final name = '$filePrefix${formatTimestamp(DateTime.now())}.sqlite';
       final target = File(p.join(dir.path, name));
       await _copyAtomic(dbFile, target);
+
+      // 写 sidecar 元数据（local_self_id），供跨设备恢复时回写 prefs。
+      // 失败仅降级（跨设备恢复时展示层兜底「我」），不阻断备份主流程。
+      if (localSelfId != null && localSelfId.isNotEmpty) {
+        try {
+          final metaFile = File('${target.path}$metaSuffix');
+          await metaFile.writeAsString('{"local_self_id":"$localSelfId"}');
+        } catch (e, st) {
+          logger.warning('LocalBackup', '写 sidecar 元数据失败（跨设备恢复将走兜底）: $e', st);
+        }
+      }
+
       logger.info('LocalBackup', '备份完成: ${target.path}');
       await pruneBackups();
       return target;
@@ -279,6 +296,7 @@ class LocalBackupService {
   Future<RestoreResult> restoreFromBackup({
     required SpitoutDatabase db,
     required File backupFile,
+    Future<void> Function(String localSelfId)? onRestoredLocalSelfId,
   }) async {
     if (_restoreInProgress) {
       return const RestoreResult(RestoreStatus.copyFailed,
@@ -319,6 +337,25 @@ class LocalBackupService {
       } catch (e, st) {
         logger.error('LocalBackup', '覆盖数据库文件失败', e, st);
         return RestoreResult(RestoreStatus.copyFailed, error: e);
+      }
+
+      // 5. 读 sidecar 元数据回写 localSelfId（跨设备恢复场景）。
+      //    sidecar 不存在或读取失败时降级（展示层兜底「我」），不阻断恢复。
+      if (onRestoredLocalSelfId != null) {
+        try {
+          final metaFile = File('${backupFile.path}$metaSuffix');
+          if (await metaFile.exists()) {
+            final raw = await metaFile.readAsString();
+            // 轻量解析（避免引入 dart:convert 仅为单字段）。
+            final m = RegExp(r'"local_self_id"\s*:\s*"([^"]+)"').firstMatch(raw);
+            final sid = m?.group(1);
+            if (sid != null && sid.isNotEmpty) {
+              await onRestoredLocalSelfId(sid);
+            }
+          }
+        } catch (e, st) {
+          logger.warning('LocalBackup', '读 sidecar 回写 localSelfId 失败（降级兜底）: $e', st);
+        }
       }
 
       logger.info('LocalBackup', '恢复完成: ${backupFile.path}');
@@ -374,6 +411,9 @@ class LocalBackupService {
       for (final old in files.skip(keep)) {
         try {
           await old.delete();
+          // 同步清理 sidecar 元数据文件（若存在）。
+          final meta = File('${old.path}$metaSuffix');
+          if (await meta.exists()) await meta.delete();
           logger.info('LocalBackup', '已清理旧备份: ${old.path}');
         } catch (e) {
           logger.warning('LocalBackup', '删除旧备份失败: ${old.path}: $e');

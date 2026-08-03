@@ -1005,66 +1005,78 @@ class _VirtualUserTile extends StatelessWidget {
       }
     }
 
-    return ListTile(
-      dense: true,
-      leading: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: SpitoutTokens.surfaceSecondary(context),
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          AppIcons.person,
-          size: 18,
-          color: SpitoutTokens.iconSecondary(context),
-        ),
-      ),
-      title: TextField(
-        controller: controller,
-        readOnly: isReadOnly,
-        decoration: InputDecoration(
-          isDense: true,
-          hintText: l10n.aaVirtualUserNameHint,
-          hintStyle: TextStyle(
-            color: SpitoutTokens.textTertiary(context),
+    // 自行布局而非用 ListTile:TextField 需限定宽度到「虚拟用户1」左右,
+    // ListTile 的 title 会 Expanded 铺满,色块过宽与全局编辑框视觉不一致。
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: SpitoutTokens.surfaceSecondary(context),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(
+              AppIcons.person,
+              size: 18,
+              color: SpitoutTokens.iconSecondary(context),
+            ),
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          // 与全局编辑框一致的色块样式(filled 背景 + 无描边圆角)
-          filled: true,
-          fillColor: SpitoutTokens.surfaceInput(context),
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
+          const SizedBox(width: 12),
+          // 固定宽度,仅容纳短昵称(如「虚拟用户1」),避免色块过宽。
+          SizedBox(
+            width: 140,
+            child: TextField(
+              controller: controller,
+              readOnly: isReadOnly,
+              decoration: InputDecoration(
+                isDense: true,
+                hintText: l10n.aaVirtualUserNameHint,
+                hintStyle: TextStyle(
+                  color: SpitoutTokens.textTertiary(context),
+                ),
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                // 与全局编辑框一致的色块样式(filled 背景 + 无描边圆角)
+                filled: true,
+                fillColor: SpitoutTokens.surfaceInput(context),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(8),
+                  borderSide: BorderSide.none,
+                ),
+              ),
+              style: TextStyle(
+                fontSize: 15,
+                color: SpitoutTokens.textPrimary(context),
+              ),
+              // 失焦时提交重命名(避免每次按键都写库)。
+              onTapOutside: (_) {
+                FocusScope.of(context).unfocus();
+                commit();
+              },
+              onSubmitted: (_) => commit(),
+            ),
           ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
+          const Spacer(),
+          IconButton(
+            icon: const Icon(AppIcons.personRemove, size: 20),
+            tooltip: l10n.commonDelete,
+            onPressed: isReadOnly ? null : onDelete,
+            style: IconButton.styleFrom(
+              foregroundColor: SpitoutTokens.error(context),
+            ),
           ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(8),
-            borderSide: BorderSide.none,
-          ),
-        ),
-        style: TextStyle(
-          fontSize: 15,
-          color: SpitoutTokens.textPrimary(context),
-        ),
-        // 失焦时提交重命名(避免每次按键都写库)。
-        onTapOutside: (_) {
-          FocusScope.of(context).unfocus();
-          commit();
-        },
-        onSubmitted: (_) => commit(),
-      ),
-      trailing: IconButton(
-        icon: const Icon(AppIcons.personRemove, size: 20),
-        tooltip: l10n.commonDelete,
-        onPressed: isReadOnly ? null : onDelete,
-        style: IconButton.styleFrom(
-          foregroundColor: SpitoutTokens.error(context),
-        ),
+        ],
       ),
     );
   }

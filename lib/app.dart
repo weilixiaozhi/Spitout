@@ -13,6 +13,7 @@ import 'package:spitout/providers/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'widgets/widgets.dart';
 import 'services/security/app_lock_service.dart';
+import 'services/data/me_placeholder_migration_service.dart';
 import 'theme/colors.dart';
 import 'theme/icons/app_icons.dart';
 
@@ -68,6 +69,11 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
     // resumed，无状态变化），若只挂 resumed 会漏掉"每天首次打开"这个最主要
     // 场景，故此处补挂一次；内部按天去重，与 resumed 触发天然幂等。
     Future.microtask(() => autoBackupOnLaunch(ref.read));
+
+    // 历史数据迁移：清理遗留的 'me' 占位符 → localSelfId。
+    // 早期版本未登录记账写 'me'，现已改用 localSelfId(UUID)，
+    // 需一次性把库中 'me' 改写为当前设备 localSelfId。幂等(标记位防重跑)。
+    Future.microtask(() => migrateMePlaceholderOnLaunch(ref.read));
   }
 
   @override

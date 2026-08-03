@@ -6,6 +6,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
 import '../../services/backup/local_backup_service.dart';
 import '../../core/logging/logger_service.dart';
 import '../../theme/colors.dart';
@@ -49,7 +50,10 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
     final l10n = AppLocalizations.of(context);
     try {
       final db = ref.read(databaseProvider);
-      await ref.read(localBackupServiceProvider).createBackup(db: db);
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      await ref
+          .read(localBackupServiceProvider)
+          .createBackup(db: db, localSelfId: localSelfId);
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(LocalBackupService.prefsKeyLastBackupDate,
           LocalBackupService.todayString());

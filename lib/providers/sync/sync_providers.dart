@@ -11,6 +11,8 @@ import '../../cloud/sync/sync_engine.dart';
 import '../../cloud/sync/transactions_sync_manager.dart';
 import '../../cloud/sync/snapshot_sync_coordinator.dart';
 import '../../core/logging/logger_service.dart';
+import '../../core/identity/local_user_identity.dart';
+import '../../services/data/local_identity_migration_service.dart';
 import '../../services/storage/avatar_storage.dart';
 import '../../services/backup/local_backup_service.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
@@ -594,11 +596,28 @@ Future<void> autoBackupOnLaunch(
       return;
     }
     final db = read(databaseProvider);
-    await read(localBackupServiceProvider).createBackup(db: db);
+    await read(localBackupServiceProvider).createBackup(
+      db: db,
+      localSelfId: await _readLocalSelfId(read),
+    );
     await prefs.setString(LocalBackupService.prefsKeyLastBackupDate, today);
     logger.info('LocalBackup', '自动本地备份完成');
   } catch (e, st) {
     logger.error('LocalBackup', '自动本地备份失败', e, st);
+  }
+}
+
+/// 读取 localSelfId（供备份写 sidecar）。
+///
+/// localSelfIdProvider 是 FutureProvider，首次读取可能异步；
+/// 极端情况下读取失败返回 null，备份不写 sidecar（跨设备恢复走展示层兜底）。
+Future<String?> _readLocalSelfId(
+  T Function<T>(ProviderListenable<T>) read,
+) async {
+  try {
+    return await read(localSelfIdProvider.future);
+  } catch (_) {
+    return null;
   }
 }
 
@@ -631,7 +650,11 @@ Future<RestoreResult> restoreBackupAndReconcile({
   required File backupFile,
 }) async {
   final result = await read(localBackupServiceProvider)
-      .restoreFromBackup(db: read(databaseProvider), backupFile: backupFile);
+      .restoreFromBackup(
+        db: read(databaseProvider),
+        backupFile: backupFile,
+        onRestoredLocalSelfId: (sid) => LocalIdentityMigrationService.restoreLocalSelfId(sid),
+      );
 
   // 失败态:库未被覆盖,直接把结果交回 UI,不触碰任何状态。
   if (result.status != RestoreStatus.success) return result;
