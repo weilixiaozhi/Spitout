@@ -152,7 +152,7 @@ final aaParticipantOptionsProvider =
     }
   } else {
     // 单人/本地账本:无成员表,把 owner 自动纳入参与人名册,
-    // 保证参与人选择器至少有一个可选项(需求 §5.2)。
+    // 保证参与人选择器至少有一个可选项。
     // 优先取 ledger.ownerUserId;为空时回退当前登录用户 id;
     // 两者都拿不到时用 'me' 占位,确保 UI 不空态(结算侧仍可正常兜底)。
     var ownerId = ledger?.ownerUserId;

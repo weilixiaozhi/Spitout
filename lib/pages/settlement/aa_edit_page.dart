@@ -313,7 +313,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                 setState(() {
                   _paidById = picked;
                   // 支出人必是参与人:新支出人若不在指定名单内,自动补入,
-                  // 避免出现「支出人不在参与人集合」的非法态(需求 §5.3)。
+                  // 避免出现「支出人不在参与人集合」的非法态。
                   // 仅在用户已切到指定名单模式(_participantIds 非 null)时介入,
                   // 全部成员模式(null)本身已覆盖新支出人,无需补。
                   if (_participantIds != null &&
