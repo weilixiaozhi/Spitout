@@ -12,6 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/router.dart';
 import 'package:spitout/routes.dart';
+import 'package:spitout/services/settlement/aa_edit_models.dart';
+import 'package:spitout/services/settlement/aa_settlement_service.dart';
 
 void main() {
   group('appRoute 路由解析', () {
@@ -23,6 +25,31 @@ void main() {
           reason: 'Route 应保留原 settings.name');
       expect(route, isA<MaterialPageRoute<dynamic>>(),
           reason: '应返回 MaterialPageRoute');
+    });
+
+    test('AA 结算页 / 分摊编辑页路由名可解析', () {
+      final settlement = appRoute(const RouteSettings(name: Routes.aaSettlement));
+      expect(settlement, isNotNull, reason: '分摊结算页路由必须注册');
+      expect(settlement, isA<MaterialPageRoute<dynamic>>());
+
+      // 分摊编辑页为压栈式全屏页面,必须携带 AaEditPageArgs 入参,
+      // 缺失参数视为非法跳转返回 null(由调用方走回退,避免白屏)。
+      final edit = appRoute(RouteSettings(
+        name: Routes.aaEdit,
+        arguments: AaEditPageArgs(
+          ledgerId: 1,
+          amount: 100,
+          currencyCode: 'CNY',
+          categoryName: '餐饮',
+          date: DateTime(2026, 8, 3),
+          mode: AaMode.custom,
+        ),
+      ));
+      expect(edit, isNotNull, reason: '携带合法入参的分摊编辑页路由必须解析');
+      expect(edit, isA<MaterialPageRoute<dynamic>>());
+
+      final editNoArgs = appRoute(const RouteSettings(name: Routes.aaEdit));
+      expect(editNoArgs, isNull, reason: '缺失入参的分摊编辑页路由应返回 null');
     });
 
     test('未知路由名返回 null（由 onGenerateRoute 回退默认分支）', () {

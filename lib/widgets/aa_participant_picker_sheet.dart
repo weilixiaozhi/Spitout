@@ -89,14 +89,37 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
     final l10n = AppLocalizations.of(context);
     return AppSheet(
       title: l10n.aaParticipants,
+      footer: SizedBox(
+        width: double.infinity,
+        child: FilledButton(
+          onPressed: () => Navigator.of(context).pop(
+            _all
+                ? const AaParticipantSelection(all: true, ids: [])
+                : AaParticipantSelection(
+                    all: false, ids: _selected.toList()),
+          ),
+          child: Text(l10n.commonFinish),
+        ),
+      ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 全部成员:选中后个人选择禁用,语义为运行时展开(aaParticipants=null)。
+          // 已选中时再次点击 → 切到指定成员模式并以全选起步,便于逐个反选,
+          // 否则全选态下永远无法进入指定成员模式。
           _AaSimpleRow(
             title: l10n.aaParticipantsAll,
             checked: _all,
-            onTap: () => setState(() => _all = true),
+            onTap: () => setState(() {
+              if (_all) {
+                _all = false;
+                _selected
+                  ..clear()
+                  ..addAll(widget.options.map((e) => e.id));
+              } else {
+                _all = true;
+              }
+            }),
           ),
           Divider(height: 1, color: SpitoutTokens.divider(context)),
           ConstrainedBox(
@@ -112,14 +135,7 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
                       checked: _all || _selected.contains(o.id),
                       enabled: !_all,
                       onTap: () => setState(() {
-                        // 取消全部后从"全选"状态起步,再点即反选,
-                        // 避免用户需要逐个点掉全部成员。
-                        if (_all) {
-                          _all = false;
-                          _selected
-                            ..clear()
-                            ..addAll(widget.options.map((e) => e.id));
-                        }
+                        // 行仅在指定成员模式下可点(enabled: !_all),直接切换选中态
                         if (!_selected.remove(o.id)) {
                           _selected.add(o.id);
                         }
@@ -130,18 +146,6 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
             ),
           ),
         ],
-      ),
-      footer: SizedBox(
-        width: double.infinity,
-        child: FilledButton(
-          onPressed: () => Navigator.of(context).pop(
-            _all
-                ? const AaParticipantSelection(all: true, ids: [])
-                : AaParticipantSelection(
-                    all: false, ids: _selected.toList()),
-          ),
-          child: Text(l10n.commonFinish),
-        ),
       ),
     );
   }
