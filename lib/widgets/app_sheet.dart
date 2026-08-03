@@ -29,6 +29,9 @@ class AppSheet extends StatelessWidget {
   final Widget? trailing;
 
   /// 内容区内边距。标题区与底部按钮区有各自固定内边距,这里只控制 child。
+  ///
+  /// 注意:标题区在 [title]/[subtitle] 均为空时仍会渲染(仅放 trailing),
+  /// 以保证无标题弹层的右上角操作位(如删除 icon)不丢失。
   final EdgeInsets contentPadding;
 
   /// 是否显示顶部拖拽条。默认 true。
@@ -52,7 +55,7 @@ class AppSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final header = (title != null || subtitle != null)
+    final header = (title != null || subtitle != null || trailing != null)
         ? Padding(
             // 顶部内边距 12(标题不贴边);底部 0:标题与首行内容间距收敛到 ~8px。
             // 删除图标按钮高度已收紧为 32px(见 cloud_service_page 的 IconButton

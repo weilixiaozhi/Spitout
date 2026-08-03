@@ -32,6 +32,7 @@ Future<void> _openSheet(
   required Transaction transaction,
   Map<String, SpitoutCloudLedgerMember> memberDisplayMap = const {},
   String? localOwnerDisplayName,
+  bool aaEnabled = false,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
@@ -57,7 +58,9 @@ Future<void> _openSheet(
                   category: null,
                   memberDisplayMap: memberDisplayMap,
                   localOwnerDisplayName: localOwnerDisplayName,
+                  aaEnabled: aaEnabled,
                   onEdit: () async {},
+                  onEditAa: () async {},
                   onDelete: () async {},
                 ),
                 child: const Text('打开详情'),
@@ -70,6 +73,9 @@ Future<void> _openSheet(
   );
   await tester.tap(find.text('打开详情'));
   await tester.pumpAndSettle();
+  // 触发日志服务的 2 秒节流保存定时器:sheet 读取 localSelfIdProvider 时
+  // 首次生成会写日志并调度 Timer,测试结束前不触发会报 !timersPending。
+  await tester.pump(const Duration(seconds: 3));
 }
 
 /// 构造带创建人/编辑人的交易。
@@ -184,5 +190,46 @@ void main() {
     );
 
     expect(find.text('本地昵称'), findsNothing);
+  });
+
+  testWidgets('未开启分摊:底部仅常驻「编辑记账」单按钮,右上角有删除 icon',
+      (tester) async {
+    await _openSheet(
+      tester,
+      transaction: _transaction(),
+      localOwnerDisplayName: '本地昵称',
+      aaEnabled: false,
+    );
+
+    // sheet 内容可能超出测试 viewport,滚动到底部让 footer(底部按钮)可见
+    await tester.drag(find.byType(SingleChildScrollView), const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    // 仅 1 个「编辑」按钮(底部 footer)
+    expect(find.text('编辑记账'), findsOneWidget);
+    // 「编辑分摊」按钮不出现(账本未开启分摊)
+    expect(find.text('编辑分摊'), findsNothing);
+    // 删除 icon 在右上角(trailing):IconButton 1 个。
+    expect(find.byType(IconButton), findsOneWidget);
+  });
+
+  testWidgets('开启分摊:底部常驻「编辑分摊(左)+ 编辑记账(右)」双按钮',
+      (tester) async {
+    await _openSheet(
+      tester,
+      transaction: _transaction(),
+      localOwnerDisplayName: '本地昵称',
+      aaEnabled: true,
+    );
+
+    // 滚动到底部让双按钮 footer 可见
+    await tester.drag(find.byType(Scrollable).first, const Offset(0, -500));
+    await tester.pumpAndSettle();
+
+    // 双按钮同时出现:左「编辑分摊」、右「编辑记账」
+    expect(find.text('编辑分摊'), findsOneWidget);
+    expect(find.text('编辑记账'), findsOneWidget);
+    // 删除 icon 仍在右上角(trailing):IconButton 1 个。
+    expect(find.byType(IconButton), findsOneWidget);
   });
 }

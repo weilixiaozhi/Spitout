@@ -155,7 +155,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   child: filteredTransactionsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Center(child: Text('${AppLocalizations.of(context).categoryDetailLoadFailed}: $error')),
-                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap, localOwnerName),
+                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap, localOwnerName, ledger?.aaEnabled ?? false),
                   ),
                 ),
               ],
@@ -318,6 +318,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
     Map<int, db.Category> categoryMap,
     Map<String, SpitoutCloudLedgerMember> memberMap,
     String? localOwnerName,
+    bool aaEnabled,
   ) {
     if (transactions.isEmpty) {
       return AppEmpty(
@@ -451,7 +452,16 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                 memberDisplayMap: memberMap,
                 // 本地账本无成员表:传本地昵称供详情页兜底展示(纯本地,不依赖云端登录态)
                 localOwnerDisplayName: localOwnerName,
+                // 账本是否开启分摊决定底部按钮态(单/双)与右上角删除 icon 布局
+                aaEnabled: aaEnabled,
                 onEdit: () => TransactionEditUtils.editTransaction(
+                  context,
+                  ref,
+                  transaction,
+                  cat,
+                ),
+                // 编辑分摊入口:仅开启分摊时使用,跳 AaEditPage 直接落库 AA 字段
+                onEditAa: () => TransactionAaEditUtils.editTransactionAa(
                   context,
                   ref,
                   transaction,

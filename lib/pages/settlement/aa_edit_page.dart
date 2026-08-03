@@ -378,8 +378,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             _infoRow(context, l10n.homeDetailCurrency, widget.args.currencyCode!),
           _cardDivider(context),
           // 分摊方式:标题 + 三态切换 toggle(可点击)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10),
+          // 固定行高避免切换 toggle 文本宽度变化时主体卡高度自适应跳动。
+          SizedBox(
+            height: 36,
             child: Row(
               children: [
                 Text(
@@ -416,18 +417,18 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: _cycleAaMode,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(5),
         child: Container(
-          width: 80,
-          height: 22,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          width: 64,
+          height: 18,
+          padding: const EdgeInsets.symmetric(horizontal: 3),
           decoration: BoxDecoration(
             border: Border.all(color: borderColor),
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(5),
           ),
           child: Row(
             children: [
-              Icon(AppIcons.chevronLeft, size: 10, color: arrowColor),
+              Icon(AppIcons.chevronLeft, size: 8, color: arrowColor),
               Expanded(
                 child: Text(
                   modeText,
@@ -435,13 +436,13 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 10,
                     fontWeight: FontWeight.w400,
                     color: SpitoutTokens.textTertiary(context),
                   ),
                 ),
               ),
-              Icon(AppIcons.chevronRight, size: 10, color: arrowColor),
+              Icon(AppIcons.chevronRight, size: 8, color: arrowColor),
             ],
           ),
         ),
