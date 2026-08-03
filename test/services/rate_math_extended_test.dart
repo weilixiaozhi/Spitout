@@ -128,7 +128,7 @@ void main() {
     test('同币种:直接返回 amount,不查表(rate=1)', () {
       expect(
         computeNativeAmount(
-            amount: 100, accountCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
+            amount: 100, txCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
         100,
       );
     });
@@ -136,12 +136,12 @@ void main() {
     test('同币种大小写不敏感', () {
       expect(
         computeNativeAmount(
-            amount: 50, accountCurrency: 'usd', ledgerBase: 'USD', rates: {}),
+            amount: 50, txCurrency: 'usd', ledgerBase: 'USD', rates: {}),
         50,
       );
       expect(
         computeNativeAmount(
-            amount: 50, accountCurrency: 'Usd', ledgerBase: 'uSd', rates: {}),
+            amount: 50, txCurrency: 'Usd', ledgerBase: 'uSd', rates: {}),
         50,
       );
     });
@@ -152,7 +152,7 @@ void main() {
       };
       expect(
         computeNativeAmount(
-            amount: 12, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+            amount: 12, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
         closeTo(86.4, 1e-9),
       );
     });
@@ -163,7 +163,7 @@ void main() {
       };
       expect(
         computeNativeAmount(
-            amount: 100, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+            amount: 100, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
         closeTo(750.0, 1e-9),
       );
     });
@@ -171,7 +171,7 @@ void main() {
     test('缺失汇率:返回 null(绝无 1.0 回落)', () {
       expect(
         computeNativeAmount(
-            amount: 12, accountCurrency: 'USD', ledgerBase: 'CNY', rates: {}),
+            amount: 12, txCurrency: 'USD', ledgerBase: 'CNY', rates: {}),
         isNull,
       );
     });
@@ -180,7 +180,7 @@ void main() {
       expect(
         computeNativeAmount(
             amount: 12,
-            accountCurrency: 'USD',
+            txCurrency: 'USD',
             ledgerBase: 'CNY',
             rates: {'USD': const EffectiveRate(rate: 'abc', manual: true)}),
         isNull,
@@ -191,7 +191,7 @@ void main() {
       expect(
         computeNativeAmount(
             amount: 12,
-            accountCurrency: 'USD',
+            txCurrency: 'USD',
             ledgerBase: 'CNY',
             rates: {'USD': const EffectiveRate(rate: '0', manual: true)}),
         isNull,
@@ -202,7 +202,7 @@ void main() {
       expect(
         computeNativeAmount(
             amount: 12,
-            accountCurrency: 'USD',
+            txCurrency: 'USD',
             ledgerBase: 'CNY',
             rates: {'USD': const EffectiveRate(rate: '-7.2', manual: true)}),
         isNull,
@@ -212,7 +212,7 @@ void main() {
     test('amount 为零:同币种返回 0,外币返回 0×rate=0', () {
       expect(
         computeNativeAmount(
-            amount: 0, accountCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
+            amount: 0, txCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
         0,
       );
       final rates = {
@@ -220,7 +220,7 @@ void main() {
       };
       expect(
         computeNativeAmount(
-            amount: 0, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+            amount: 0, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
         0,
       );
     });
@@ -231,7 +231,7 @@ void main() {
       };
       expect(
         computeNativeAmount(
-            amount: -50, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+            amount: -50, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
         closeTo(-360.0, 1e-9),
       );
     });
@@ -241,7 +241,7 @@ void main() {
         'USD': const EffectiveRate(rate: '7.2', manual: false, rateDate: '2026-07-20'),
       };
       final result = computeNativeAmount(
-          amount: 1e15, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates);
+          amount: 1e15, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates);
       expect(result, isNotNull);
       expect(result!, closeTo(7.2e15, 1e3));
     });
@@ -252,18 +252,18 @@ void main() {
       };
       expect(
         computeNativeAmount(
-            amount: 0.01, accountCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+            amount: 0.01, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
         closeTo(0.072, 1e-9),
       );
     });
 
-    test('大小写不敏感:accountCurrency 小写也能匹配大写 key', () {
+    test('大小写不敏感:txCurrency 小写也能匹配大写 key', () {
       final rates = {
         'USD': const EffectiveRate(rate: '7.2', manual: false, rateDate: '2026-07-20'),
       };
       expect(
         computeNativeAmount(
-            amount: 100, accountCurrency: 'usd', ledgerBase: 'CNY', rates: rates),
+            amount: 100, txCurrency: 'usd', ledgerBase: 'CNY', rates: rates),
         closeTo(720.0, 1e-9),
       );
     });

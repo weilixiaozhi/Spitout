@@ -589,7 +589,7 @@ class LocalRepository extends BaseRepository {
         final rates = await _effectiveRatesFor(base);
         na = computeNativeAmount(
                 amount: amount,
-                accountCurrency: cc,
+                txCurrency: cc,
                 ledgerBase: base,
                 rates: rates) ??
             amount;
@@ -641,7 +641,7 @@ class LocalRepository extends BaseRepository {
         }
         var na = computeNativeAmount(
             amount: t.amount,
-            accountCurrency: cc,
+            txCurrency: cc,
             ledgerBase: baseUp,
             rates: rates);
         if (na == null) {
@@ -870,7 +870,7 @@ class LocalRepository extends BaseRepository {
       final rates = await _effectiveRatesFor(base);
       na = computeNativeAmount(
               amount: tx.amount,
-              accountCurrency: cc,
+              txCurrency: cc,
               ledgerBase: base,
               rates: rates) ??
           tx.amount;

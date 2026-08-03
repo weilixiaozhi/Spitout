@@ -1,6 +1,6 @@
 /// 记账页手选币种的汇率拉取:
 /// 手选币种不在账本已落库的 quote 集合里,常规 refresh 拉回的组永远没有它
-/// —— refreshExchangeRates 的 extraQuotes 参数把它并入拉取集合。
+/// —— refreshExchangeRatesFromUi 的 extraQuotes 参数把它并入拉取集合。
 library;
 
 import 'package:drift/native.dart';
@@ -62,8 +62,9 @@ void main() {
     ]);
     addTearDown(container.dispose);
 
-    final ok = await refreshExchangeRates(
-      _RefLike(container),
+    final ok = await refreshExchangeRatesImpl(
+      read: <T>(p) => container.read(p),
+      readFuture: <T>(p) => container.read(p.future),
       force: true,
       extraQuotes: {'JPY'},
     );
@@ -77,17 +78,3 @@ void main() {
   });
 }
 
-/// refreshExchangeRates 需要 Ref;测试里用 ProviderContainer 适配出
-/// read / readFuture 两个能力(与 Ref 等价)。
-class _RefLike implements Ref {
-  @override
-  final ProviderContainer container;
-  _RefLike(this.container);
-
-  @override
-  T read<T>(ProviderListenable<T> provider) => container.read(provider);
-
-  @override
-  dynamic noSuchMethod(Invocation invocation) =>
-      super.noSuchMethod(invocation);
-}

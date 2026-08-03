@@ -553,7 +553,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String importSkippedNonTransactionTypes(Object count) {
-    return '跳过 $count 条非收支记录（债务等）';
+    return '跳过 $count 条非支出记录（债务等）';
   }
 
   @override
@@ -4083,7 +4083,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String importSkippedNonTransactionTypes(Object count) {
-    return '跳過 $count 條非收支記錄（債務等）';
+    return '跳過 $count 條非支出記錄（債務等）';
   }
 
   @override

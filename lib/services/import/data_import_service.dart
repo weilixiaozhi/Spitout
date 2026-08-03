@@ -388,7 +388,7 @@ class DataImportService {
               ? tx.amount
               : (computeNativeAmount(
                       amount: tx.amount,
-                      accountCurrency: txCurrency,
+                      txCurrency: txCurrency,
                       ledgerBase: ledgerBase,
                       rates: importRates) ??
                   tx.amount));

@@ -241,25 +241,10 @@ final ledgerForeignTxCountProvider = FutureProvider<int>((ref) async {
 
 
 
-/// 拉取协调:server 源(云模式)→ 公网链;倒数后只落「使用中币种」;成功 bump tick。
-/// force=false 时 24h 节流 + 多币种总闸。失败返回 false(资产页静默、汇率页 Toast)。
-///
-/// Ref 版入口当前无调用方,保留给后台/provider 语境的未来调用
-/// (如周期刷新、启动预拉);UI 层用 [refreshExchangeRatesFromUi]。
-Future<bool> refreshExchangeRates(Ref ref,
-        {bool force = false, Set<String>? extraQuotes}) =>
-    _refreshExchangeRatesImpl(
-      read: ref.read,
-      readFuture: <T>(p) => ref.read(p.future),
-      force: force,
-      extraQuotes: extraQuotes,
-    );
-
-/// UI 层薄封装:`WidgetRef` 与 `Ref` 的 read 能力等价,直接转发到同一实现。
-/// ConsumerState 里只有 `WidgetRef`,无法 cast 成 `Ref`,故单开此入口。
+/// UI 层入口:ConsumerState 里的 `WidgetRef` 转发到 [refreshExchangeRatesImpl]。
 Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
         {bool force = false, Set<String>? extraQuotes}) =>
-    _refreshExchangeRatesImpl(
+    refreshExchangeRatesImpl(
       read: ref.read,
       readFuture: <T>(p) => ref.read(p.future),
       force: force,
@@ -268,11 +253,14 @@ Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
 
 /// 真正的实现:只依赖 read / readFuture 两个能力,与 Ref / WidgetRef 解耦。
 ///
+/// 拉取协调:server 源(云模式)→ 公网链;倒数后只落「使用中币种」;成功 bump tick。
+/// force=false 时 24h 节流 + 多币种总闸。失败返回 false(资产页静默、汇率页 Toast)。
+///
 /// base 集合 = {各账本本位币}——折算基准 = 账本本位币,每个不同本位币的账本
 /// 都需要以它为 base 的汇率组;无账本时无折算需求,直接跳过拉取。
 /// [extraQuotes]:额外要拉的币种(记账页手选币种)——手选币种不在
 /// 已落库的 quote 集合里,不带上它拉回来的组里永远没有它。
-Future<bool> _refreshExchangeRatesImpl({
+Future<bool> refreshExchangeRatesImpl({
   required T Function<T>(ProviderListenable<T>) read,
   required Future<T> Function<T>(FutureProvider<T>) readFuture,
   required bool force,

@@ -434,7 +434,7 @@
     "importBackgroundImport": "后台导入",
     "importCancelled": "（已取消）",
     "importCompleted": "导入完成{cancelled}：成功 {ok} 条，失败 {fail} 条",
-    "importSkippedNonTransactionTypes": "跳过 {count} 条非收支记录（债务等）",
+    "importSkippedNonTransactionTypes": "跳过 {count} 条非支出记录（债务等）",
     "importTransactionFailed": "导入失败，已回滚所有更改：{error}",
     "cloudSupabaseUrlLabel": "Supabase URL",
     "cloudSupabaseUrlHint": "https://xxx.supabase.co",

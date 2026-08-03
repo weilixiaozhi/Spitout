@@ -625,7 +625,7 @@
     "importProgressDetail": "已完成：{done}/{total}，成功 {ok}，失敗 {fail}",
     "importReading": "讀取檔案中…",
     "importSelectCategoryFirst": "請先選擇\"分類\"列再繼續",
-    "importSkippedNonTransactionTypes": "跳過 {count} 條非收支記錄（債務等）",
+    "importSkippedNonTransactionTypes": "跳過 {count} 條非支出記錄（債務等）",
     "importStartImport": "開始匯入",
     "importTransactionFailed": "匯入失敗，已回滾所有更改：{error}",
     "languageChinese": "中文",
