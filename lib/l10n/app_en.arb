@@ -1842,7 +1842,7 @@
     "aaPerPersonAllMembers": "Split equally among all members",
     "ledgerAaEnabled": "AA Split",
     "ledgerAaEnabledHint": "Split expenses with members when enabled",
-    "ledgerAaSettlementEntry": "View settlement",
+    "ledgerAaSettlementEntry": "AA Statistics",
     "ledgerAaVirtualUsersEntry": "Manage virtual members",
     "aaNoParticipants": "Add participants first",
     "aaSplitAmountIncomplete": "Enter an amount for every participant"

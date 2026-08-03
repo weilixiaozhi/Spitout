@@ -1191,7 +1191,7 @@
     "aaPerPersonAllMembers": "균등 분담(모든 멤버)",
     "ledgerAaEnabled": "AA 분담",
     "ledgerAaEnabledHint": "활성화하면 지출을 멤버와 분담할 수 있습니다",
-    "ledgerAaSettlementEntry": "정산 보기",
+    "ledgerAaSettlementEntry": "AA 통계",
     "ledgerAaVirtualUsersEntry": "가상 사용자 관리",
     "aaNoParticipants": "참여자를 먼저 추가하세요",
     "aaSplitAmountIncomplete": "모든 참여자의 금액을 입력하세요"

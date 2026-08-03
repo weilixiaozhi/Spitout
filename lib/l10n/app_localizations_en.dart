@@ -3676,7 +3676,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerAaEnabledHint => 'Split expenses with members when enabled';
 
   @override
-  String get ledgerAaSettlementEntry => 'View settlement';
+  String get ledgerAaSettlementEntry => 'AA Statistics';
 
   @override
   String get ledgerAaVirtualUsersEntry => 'Manage virtual members';

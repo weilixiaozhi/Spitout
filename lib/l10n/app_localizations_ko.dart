@@ -3676,7 +3676,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgerAaEnabledHint => '활성화하면 지출을 멤버와 분담할 수 있습니다';
 
   @override
-  String get ledgerAaSettlementEntry => '정산 보기';
+  String get ledgerAaSettlementEntry => 'AA 통계';
 
   @override
   String get ledgerAaVirtualUsersEntry => '가상 사용자 관리';

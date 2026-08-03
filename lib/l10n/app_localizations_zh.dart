@@ -3676,7 +3676,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerAaEnabledHint => '开启后记账时可选择分摊方式';
 
   @override
-  String get ledgerAaSettlementEntry => '查看分摊结算';
+  String get ledgerAaSettlementEntry => '分摊统计';
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虚拟用户';
@@ -7362,7 +7362,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgerAaEnabledHint => '開啟後記帳時可選擇分攤方式';
 
   @override
-  String get ledgerAaSettlementEntry => '查看分攤結算';
+  String get ledgerAaSettlementEntry => '分攤統計';
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虛擬用戶';

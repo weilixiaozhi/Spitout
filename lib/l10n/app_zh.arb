@@ -1692,7 +1692,7 @@
     "aaPerPersonAllMembers": "人均分摊（全部成员）",
     "ledgerAaEnabled": "AA 分摊",
     "ledgerAaEnabledHint": "开启后记账时可选择分摊方式",
-    "ledgerAaSettlementEntry": "查看分摊结算",
+    "ledgerAaSettlementEntry": "分摊统计",
     "ledgerAaVirtualUsersEntry": "管理虚拟用户",
     "aaNoParticipants": "请先添加参与人",
     "aaSplitAmountIncomplete": "请填写全部参与人的金额"

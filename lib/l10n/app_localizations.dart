@@ -6947,7 +6947,7 @@ abstract class AppLocalizations {
   /// No description provided for @ledgerAaSettlementEntry.
   ///
   /// In en, this message translates to:
-  /// **'View settlement'**
+  /// **'AA Statistics'**
   String get ledgerAaSettlementEntry;
 
   /// No description provided for @ledgerAaVirtualUsersEntry.

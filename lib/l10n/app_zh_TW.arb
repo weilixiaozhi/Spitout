@@ -1621,7 +1621,7 @@
     "aaPerPersonAllMembers": "人均分攤（全部成員）",
     "ledgerAaEnabled": "AA 分攤",
     "ledgerAaEnabledHint": "開啟後記帳時可選擇分攤方式",
-    "ledgerAaSettlementEntry": "查看分攤結算",
+    "ledgerAaSettlementEntry": "分攤統計",
     "ledgerAaVirtualUsersEntry": "管理虛擬用戶",
     "aaNoParticipants": "請先新增參與人",
     "aaSplitAmountIncomplete": "請填寫全部參與人的金額"
