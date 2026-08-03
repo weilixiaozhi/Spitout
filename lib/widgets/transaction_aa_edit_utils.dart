@@ -75,7 +75,9 @@ class TransactionAaEditUtils {
 
     // 落库:仅更新 AA 字段,其他字段(amount/category/note 等)保持原值。
     // updateTransaction 的 aa* 参数 null = 不更新,故切换「指定 → 不分摊」时
-    // 需显式传空串清空旧值(由 _normalizeAaField 处理)。
+    // 需显式传空串清空旧 aaParticipants/aaSplits。
+    // 支出人(paidByUserId)属全局交易语义(非 AA 专属):未手选回传 null 不更新
+    // 保持原值,手选后恒写手选值,不受分摊方式切换影响。
     final repo = ref.read(repositoryProvider);
     final newVersion = await repo.updateTransaction(
       id: transaction.id,
@@ -91,7 +93,7 @@ class TransactionAaEditUtils {
       excludeFromStats: transaction.excludeFromStats,
       currencyCode: transaction.currencyCode,
       nativeAmount: transaction.nativeAmount,
-      paidByUserId: _normalizeAaField(result.paidByUserId, isPaidBy: true),
+      paidByUserId: result.paidByUserId,
       aaMode: result.aaMode,
       aaParticipants: result.aaParticipants == null
           ? ''
@@ -132,23 +134,6 @@ class TransactionAaEditUtils {
     if (context.mounted) {
       showToast(context, AppLocalizations.of(context).commonSave);
     }
-  }
-
-  /// 规范化 AA 落库字段:
-  /// - 不分摊(result.aaMode == 1)时,paidByUserId / aaParticipants / aaSplits
-  ///   均需显式传空串清空旧值(update 语义下 null = 不更新)。
-  /// - 人均/指定分摊时,paidByUserId 必有值(由 AaEditPage 保证非空),
-  ///   直接透传;aaParticipants 为 null 表示全部成员,落库为空串以与
-  ///   「全员参与」语义对齐(update 时空串 = 全部)。
-  static String? _normalizeAaField(String? value, {required bool isPaidBy}) {
-    // 不分摊:统一返回空串清空旧值。
-    // 人均/指定:paidBy 必非空透传;aaParticipants null(全部成员)→ 空串,
-    // 非 null → 由调用方 jsonEncode。
-    // 此处仅处理 paidByUserId(其余字段在调用处已 jsonEncode/空串化)。
-    if (isPaidBy) {
-      return (value == null || value.isEmpty) ? '' : value;
-    }
-    return value;
   }
 
   /// 解析 aaParticipants(JSON 数组字符串)为参与人标识列表;

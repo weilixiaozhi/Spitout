@@ -7,6 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import 'package:spitout/providers/currency/currency_providers.dart'
+    show currentLedgerCurrencyProvider;
 import 'package:spitout/providers/settlement/settlement_providers.dart'
     show memberExpenseStatsProvider, MemberExpenseStatItem;
 import 'package:spitout/providers/ui/theme_providers.dart'
@@ -108,7 +110,9 @@ class MemberStatsSection extends ConsumerWidget {
     AsyncValue<List<MemberExpenseStatItem>> statsAsync,
   ) {
     final primary = Theme.of(context).colorScheme.primary;
-    final amount = _totalExpenseText(statsAsync.valueOrNull);
+    // 总支出带账本币种符号展示,与成员条目金额口径一致。
+    final amount = _totalExpenseText(
+        statsAsync.valueOrNull, ref.watch(currentLedgerCurrencyProvider));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
@@ -154,11 +158,12 @@ class MemberStatsSection extends ConsumerWidget {
   }
 
   /// 账本总支出金额文本；统计无数据时返回 null。
-  String? _totalExpenseText(List<MemberExpenseStatItem>? stats) {
+  String? _totalExpenseText(
+      List<MemberExpenseStatItem>? stats, String currencyCode) {
     if (stats == null || stats.isEmpty) return null;
     final total =
         stats.fold<double>(0, (s, it) => s + it.expenseTotal);
-    return formatMoneyWithCurrency(total);
+    return formatMoneyWithCurrency(total, currencyCode: currencyCode);
   }
 
   /// 各成员支出条目列表。
@@ -236,7 +241,9 @@ class _MemberStatTile extends ConsumerWidget {
             const SizedBox(width: 4),
           ],
           Text(
-            formatMoneyWithCurrency(stat.expenseTotal),
+            // 成员支出金额:带账本币种符号,与标题总支出口径一致。
+            formatMoneyWithCurrency(stat.expenseTotal,
+                currencyCode: ref.watch(currentLedgerCurrencyProvider)),
             style: TextStyle(
               color: ref.watch(expenseColorSchemeProvider) == 'green'
                   ? SpitoutTokens.success(context)

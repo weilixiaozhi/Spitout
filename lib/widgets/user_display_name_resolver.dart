@@ -61,13 +61,15 @@ class UserDisplayNameResolver {
       // 云 userId 命中但无邮箱:走本地昵称兜底
       final localName = localOwnerDisplayName?.trim() ?? '';
       if (localName.isNotEmpty) return localName;
-      return l10n.aaMe;
+      // 无昵称兜底:复用「未设置昵称」+「(我)」组合,与成员管理页口径一致
+      return '${l10n.mineSlogan}(${l10n.aaMe})';
     }
 
-    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「我」
+    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「未设置昵称(我)」
     if (userId == localSelfId) {
       final localName = localOwnerDisplayName?.trim() ?? '';
-      return localName.isNotEmpty ? localName : l10n.aaMe;
+      // 无昵称兜底:复用「未设置昵称」+「(我)」组合
+      return localName.isNotEmpty ? localName : '${l10n.mineSlogan}(${l10n.aaMe})';
     }
 
     // 4. 虚拟用户

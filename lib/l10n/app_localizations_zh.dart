@@ -585,7 +585,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageSystemDefault => '跟随系统';
 
   @override
-  String get mineSlogan => '设置昵称';
+  String get mineSlogan => '未设置昵称';
 
   @override
   String get mineDisplayNameEditTitle => '设置昵称';
@@ -2805,9 +2805,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedMembersPageTitle => '成员管理';
 
   @override
-  String get sharedMembersYou => '你';
-
-  @override
   String get sharedMembersInviteCta => '邀请新成员';
 
   @override
@@ -3627,9 +3624,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaParticipantsUnit => '人';
 
   @override
-  String get aaSplitTotal => '合计';
-
-  @override
   String get aaVirtualUserTitle => '虚拟用户';
 
   @override
@@ -3667,9 +3661,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaMe => '我';
 
   @override
-  String get ledgerAaEnabled => 'AA 分摊';
-
-  @override
   String get ledgerAaEnabledHint => '开启后记账时可选择分摊方式';
 
   @override
@@ -3677,6 +3668,12 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虚拟用户';
+
+  @override
+  String get aaSwitchOnLabel => '开启AA分摊';
+
+  @override
+  String get aaSwitchOffLabel => '关闭AA分摊';
 
   @override
   String get aaNoParticipants => '请先添加参与人';
@@ -4268,7 +4265,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get languageSystemDefault => '跟隨系統';
 
   @override
-  String get mineSlogan => '设置昵称';
+  String get mineSlogan => '未設置暱稱';
 
   @override
   String get mineDisplayNameEditTitle => '設定暱稱';
@@ -6488,9 +6485,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get sharedMembersPageTitle => '成員管理';
 
   @override
-  String get sharedMembersYou => '你';
-
-  @override
   String get sharedMembersInviteCta => '邀請新成員';
 
   @override
@@ -7310,9 +7304,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaParticipantsUnit => '人';
 
   @override
-  String get aaSplitTotal => '合計';
-
-  @override
   String get aaVirtualUserTitle => '虛擬用戶';
 
   @override
@@ -7350,9 +7341,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaMe => '我';
 
   @override
-  String get ledgerAaEnabled => 'AA 分攤';
-
-  @override
   String get ledgerAaEnabledHint => '開啟後記帳時可選擇分攤方式';
 
   @override
@@ -7360,6 +7348,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虛擬用戶';
+
+  @override
+  String get aaSwitchOnLabel => '開啟AA分攤';
+
+  @override
+  String get aaSwitchOffLabel => '關閉AA分攤';
 
   @override
   String get aaNoParticipants => '請先新增參與人';

@@ -3,21 +3,25 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/identity/local_user_identity.dart';
+import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../services/data/tx_author_service.dart';
 import '../../services/settlement/aa_decimal_util.dart';
 import '../../services/settlement/aa_edit_models.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../utils/category_utils.dart';
+import '../../utils/currency/currencies.dart';
 import '../../widgets/widgets.dart';
 
 /// AA 分摊编辑页(纯选择器,不写库)。
 ///
 /// 职责:
 /// - 只读展示主体信息(金额 / 分类 / 日期 / 货币,不可改);
-/// - 主体卡内嵌分摊方式三态切换按钮(人均 / 不分摊 / 指定,与记账编辑器一致);
+/// - 分摊方式独立区块标题 + 三态切换按钮(人均 / 不分摊 / 指定,与记账编辑器一致);
 /// - 切换为人均/指定后在下方展示分摊配置:支出人(bottom sheet)+ 参与人(页内直接勾选);
 ///   人均:勾选项决定均摊人数,金额实时重算、输入框置灰不可改;
 ///   指定:每人金额可填,合计偏差按支出人兜底修正;
@@ -35,8 +39,18 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   /// 分摊方式(人均 / 指定 / 不分摊)。
   late AaMode _mode = widget.args.mode;
 
-  /// 支出人标识;null 时取参与人列表首个兜底。
+  /// 支出人标识;null = 未手动选择(新建默认创建人,编辑保持原值)。
+  ///
+  /// 未手选时由 [_resolveDefaultPayerId] 异步解析操作者 id 填充为「我」,
+  /// 使参与人行置灰锁定、防反选与顶部展示三处口径一致;
+  /// [_paidByManuallySet] 仍为 false,确认回传 null 由落库层回填操作者。
   String? _paidById;
+
+  /// 是否已手动选择/回填支出人。
+  ///
+  /// 区分「手选值」与「默认创建人」:未手选时确认回传 null,由落库层
+  /// markTxAuthor 回填操作者(新建)或保持原值(编辑);手选后恒写手选值。
+  bool _paidByManuallySet = false;
 
   /// 参与人勾选集合;null = 全部成员(运行时展开为 options 全集)。
   ///
@@ -64,9 +78,17 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   void _initOnce(List<AaParticipantOption> options) {
     if (_initialized || options.isEmpty) return;
     _initialized = true;
-    _paidById = widget.args.paidByUserId ?? options.first.id;
+    // 支出人初值:编辑回填视为已设定(编辑不覆盖);新建 null 保持未手选,
+    // 由落库层回填操作者(默认支出人 = 创建人)。
+    _paidById = widget.args.paidByUserId;
+    _paidByManuallySet = widget.args.paidByUserId != null;
     _participantIds = widget.args.participantIds?.toSet();
     _syncAmountControllers(options);
+    // 未手选时解析操作者 id 作为默认支出人(展示/锁定用,回传仍 null),
+    // 使「我」所在行置灰锁定,与 _toggleParticipant 防反选口径一致。
+    if (!_paidByManuallySet) {
+      _resolveDefaultPayerId(options);
+    }
     if (_mode == AaMode.noSplit) return;
     final hasSplits =
         widget.args.splits != null && widget.args.splits!.isNotEmpty;
@@ -78,6 +100,35 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       widget.args.splits?.forEach((id, amount) {
         _amountCtrls[id]?.text = amount;
       });
+    }
+  }
+
+  /// 未手选时解析操作者 id 作为默认支出人(仅用于展示与参与人锁定)。
+  ///
+  /// 设计意图:支出人必是参与人,未手选时落库层以操作者(markTxAuthor)
+  /// 回填支出人。若页内不解析操作者 id,参与人行的 isPayer 判断(_paidById)
+  /// 与防反选锁定(此前兜底参与人首个)会口径不一致。
+  /// 此处提前把操作者 id 填充到 [_paidById],使「我」所在行置灰锁定、
+  /// 防反选也锁定「我」;[_paidByManuallySet] 保持 false,确认回传仍 null
+  /// 由落库层回填,不改变落库口径。
+  ///
+  /// 操作者 id 不在名册(options)时放弃填充,_paidById 保持 null,
+  /// 无「我」所在行,不锁定任何参与人行(顶部展示回退「我」兜底)。
+  Future<void> _resolveDefaultPayerId(
+      List<AaParticipantOption> options) async {
+    try {
+      // 操作者 id 优先级与落库层一致:云 userId > localSelfId(设备身份)。
+      final cloud = await ref.read(spitoutCloudProviderInstance.future);
+      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      final operatorId =
+          (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;
+      if (operatorId.isEmpty || !mounted) return;
+      // 操作者不在名册中时放弃,避免锁定一个不存在的行。
+      if (!options.any((o) => o.id == operatorId)) return;
+      setState(() => _paidById = operatorId);
+    } catch (e, st) {
+      logger.warning('AaEditPage', '解析默认支出人失败,回退参与人首个兜底', '$e\n$st');
     }
   }
 
@@ -124,9 +175,16 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 切换某参与人勾选态;支出人锁定不可反选。
   void _toggleParticipant(String id) {
+    // 支出人锁定:直接按 _paidById 判断,与参与人行 isPayer 置灰口径一致。
+    // 未手选时 [_resolveDefaultPayerId] 已把操作者 id 填充进 _paidById,
+    // 锁定的就是「我」;操作者不在名册(解析放弃)时 _paidById 为 null,
+    // 无「我」所在行,不锁定任何参与人行(顶部展示也走「我」兜底)。
     if (id == _paidById) return;
     setState(() {
-      final selected = _participantIds ?? <String>{};
+      // 首次点击时 _participantIds 为 null(全选态),必须以全部成员为基线,
+      // 点击才表示「取消该行」;若用空集兜底会把初始全选误变成「仅该行」。
+      final selected =
+          _participantIds ?? _lastOptions.map((o) => o.id).toSet();
       if (!selected.remove(id)) {
         selected.add(id);
       }
@@ -206,11 +264,15 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       showToast(context, l10n.aaNoParticipants);
       return;
     }
+    // paidBy 仅用于页内计算(指定分摊合计偏差兜底/人均平分尾差归属);
+    // 回传时按 _paidByManuallySet 区分手选与否——未手选回传 null,
+    // 由落库层回填操作者(新建)或保持原值(编辑)。
     final paidBy = _paidById ?? participants.first;
+    final resultPaidBy = _paidByManuallySet ? _paidById : null;
 
     if (_mode == AaMode.perPerson) {
       Navigator.of(context).pop(AaEditResult(
-        paidByUserId: paidBy,
+        paidByUserId: resultPaidBy,
         aaMode: 0,
         // 全选(null)落 null,运行时展开;部分选落具体名单。
         aaParticipants: _participantIds == null ? null : participants,
@@ -253,7 +315,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     }
 
     Navigator.of(context).pop(AaEditResult(
-      paidByUserId: paidBy,
+      paidByUserId: resultPaidBy,
       aaMode: 2,
       aaParticipants: participants,
       aaSplits: {
@@ -291,6 +353,10 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                     padding: const EdgeInsets.all(16),
                     children: [
                       _buildSubjectCard(context, l10n, currencyCode),
+                      const SizedBox(height: 16),
+                      // 分摊方式:独立区块标题(与账单详情的 _SectionLabel 对齐),
+                      // 标题下方紧跟三态切换按钮,与主体卡分离。
+                      _buildSplitModeSection(context, l10n),
                       if (_mode != AaMode.noSplit) ...[
                         const SizedBox(height: 16),
                         _buildSplitCard(
@@ -305,10 +371,12 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     );
   }
 
-  /// 主体信息只读卡:icon + 类目 / 日期 / 金额 / 货币 / 分摊方式三态切换。
+  /// 主体信息只读卡:icon + 类目 / 日期 / 金额 / 货币。
   ///
-  /// 样式与记账详情头部模块对齐:顶部 icon+类目,分隔线,日期、金额、货币,
-  /// 最后一行「分摊方式」标题 + 三态切换 toggle(与记账编辑器一致,可点击切换)。
+  /// 排版完全照搬账单详情头部模块(字号/间距/字体颜色),不硬编码:
+  /// - 顶部:36x36 icon 容器(圆角12) + 类目(16px/w600/textPrimary);
+  /// - 12px 间距后接分隔线,再接日期/金额/货币信息行(14px,与详情 _InfoRow 一致)。
+  /// 分摊方式已拆为独立区块标题(见 [_buildSplitModeSection]),不再归属此卡。
   Widget _buildSubjectCard(
       BuildContext context, AppLocalizations l10n, String? currencyCode) {
     final d = widget.args.date.toLocal();
@@ -320,11 +388,11 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+      padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // 顶部:icon + 类目(只读)
+          // 顶部:icon + 类目(只读),与账单详情头部 Row 完全一致
           Row(
             children: [
               Container(
@@ -352,6 +420,8 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
               ),
             ],
           ),
+          // 与账单详情一致:icon 行后 12px 间距再接分隔线,避免 icon 压着分割线
+          const SizedBox(height: 12),
           _cardDivider(context),
           // 日期(只读)
           _infoRow(context, l10n.homeDetailDate, dateText),
@@ -363,7 +433,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             valueWidget: AmountText(
               value: widget.args.amount,
               signed: false,
-              showCurrency: false,
+              // 主体卡金额带币种符号:与合计行/只读金额统一口径。
+              showCurrency: true,
+              currencyCode: currencyCode,
               decimals: 2,
               style: TextStyle(
                 fontSize: 14,
@@ -376,25 +448,34 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           if (widget.args.currencyCode != null &&
               widget.args.currencyCode!.isNotEmpty)
             _infoRow(context, l10n.homeDetailCurrency, widget.args.currencyCode!),
-          _cardDivider(context),
-          // 分摊方式:标题 + 三态切换 toggle(可点击)
-          // 固定行高避免切换 toggle 文本宽度变化时主体卡高度自适应跳动。
-          SizedBox(
-            height: 36,
-            child: Row(
-              children: [
-                Text(
-                  l10n.aaSplitMode,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
-                ),
-                const Spacer(),
-                _buildAaModeToggle(context, l10n),
-              ],
+        ],
+      ),
+    );
+  }
+
+  /// 分摊方式独立区块:标题 + 三态切换按钮同行展示。
+  ///
+  /// 设计意图:分摊方式在账单详情中是独立区块标题(_SectionLabel:13px/w600/
+  /// textSecondary),编辑分摊页面对齐该结构——标题独立成块、不归属主体卡。
+  /// 标题与切换按钮放置在同一行(标题左、按钮右)并垂直居中对齐,避免上下
+  /// 堆叠造成的视觉错位。
+  Widget _buildSplitModeSection(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8),
+      child: Row(
+        children: [
+          // 独立区块标题:与账单详情 _SectionLabel 完全一致(13px/w600/textSecondary)
+          Text(
+            l10n.aaSplitMode,
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: SpitoutTokens.textSecondary(context),
             ),
           ),
+          const Spacer(),
+          // 三态切换按钮:标题已表达语义,不再重复左侧文案
+          _buildAaModeToggle(context, l10n),
         ],
       ),
     );
@@ -402,8 +483,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 分摊方式切换按钮:固定宽度,左右箭头 + 中间方式文本,单点循环切换。
   ///
-  /// 样式与记账编辑器 [TransactionEditorSheet._buildAaModeToggle] 完全一致,
-  /// 保证两处切换体验统一。
+  /// 尺寸与记账编辑器 [TransactionEditorSheet._buildAaModeToggle] 一致,
+  /// 保证两处切换体验统一。原尺寸(80x22 / 字号 11)偏小导致文案显示不全,
+  /// 已加大到 88x28 / 字号 12,完整容纳「人均分摊/指定分摊」等 4 字文案。
   Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
     final modeText = switch (_mode) {
       AaMode.perPerson => l10n.aaModePerPerson,
@@ -417,18 +499,19 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       color: Colors.transparent,
       child: InkWell(
         onTap: _cycleAaMode,
-        borderRadius: BorderRadius.circular(5),
+        borderRadius: BorderRadius.circular(6),
         child: Container(
-          width: 64,
-          height: 18,
-          padding: const EdgeInsets.symmetric(horizontal: 3),
+          // 与记账编辑器一致:宽 88 / 高 28,容纳完整文案
+          width: 88,
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             border: Border.all(color: borderColor),
-            borderRadius: BorderRadius.circular(5),
+            borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
             children: [
-              Icon(AppIcons.chevronLeft, size: 8, color: arrowColor),
+              Icon(AppIcons.chevronLeft, size: 12, color: arrowColor),
               Expanded(
                 child: Text(
                   modeText,
@@ -436,13 +519,13 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 10,
+                    fontSize: 12,
                     fontWeight: FontWeight.w400,
                     color: SpitoutTokens.textTertiary(context),
                   ),
                 ),
               ),
-              Icon(AppIcons.chevronRight, size: 8, color: arrowColor),
+              Icon(AppIcons.chevronRight, size: 12, color: arrowColor),
             ],
           ),
         ),
@@ -480,17 +563,17 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           // 支出人(bottom sheet 选择)
           _buildPayerRow(context, l10n, options),
           _cardDivider(context),
-          // 合计行(放在参与人列表最上方)
+          // 参与人标题行:文案「参与人」(原「合计」),不加粗,
+          // 与支出人 label 同字号同色(textSecondary),作为参与人列表的标题行。
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(
               children: [
                 Text(
-                  l10n.aaSplitTotal,
+                  l10n.aaParticipants,
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: SpitoutTokens.textPrimary(context),
+                    color: SpitoutTokens.textSecondary(context),
                   ),
                 ),
                 const Spacer(),
@@ -499,7 +582,6 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   ' / ${formatMoneyWithCurrency(total, currencyCode: currencyCode)}',
                   style: TextStyle(
                     fontSize: 14,
-                    fontWeight: FontWeight.w600,
                     color: _mode == AaMode.perPerson || balanced
                         ? SpitoutTokens.success(context)
                         : SpitoutTokens.warning(context),
@@ -521,10 +603,17 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   }
 
   /// 支出人导航行:点击弹 bottom sheet 选择。
+  ///
+  /// 字段值(支出人名)右对齐,与日期/金额/货币等信息行口径一致。
   Widget _buildPayerRow(BuildContext context, AppLocalizations l10n,
       List<AaParticipantOption> options) {
+    // 展示名:未手选时 [_resolveDefaultPayerId] 已把操作者 id 填入 _paidById,
+    // 此处反查名册即「我」(与参与人锁定行同名,三处口径一致);仅当操作者
+    // 不在名册(解析放弃)时回退本地昵称/「我」兜底展示。手选/编辑回填后
+    // 同样反查名册真实成员名。
+    final localName = ref.read(displayNameProvider).trim();
     final payerName = _paidById == null
-        ? l10n.aaUnknownUser
+        ? (localName.isNotEmpty ? localName : '${l10n.mineSlogan}(${l10n.aaMe})')
         : _optionName(options, _paidById!);
     return InkWell(
       onTap: () async {
@@ -536,6 +625,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         if (picked != null && picked != _paidById) {
           setState(() {
             _paidById = picked;
+            // 手选后标记手动选择:确认回传手选值(而非 null)。
+            // 未手选(新建)回传 null,由落库层回填操作者 = 默认支出人创建人。
+            _paidByManuallySet = true;
             // 支出人必是参与人:新支出人若不在已选名单内,自动补入。
             if (_participantIds != null &&
                 !_participantIds!.contains(picked)) {
@@ -552,27 +644,35 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             Text(
               l10n.aaPayer,
               style: TextStyle(
-                fontSize: 15,
-                color: SpitoutTokens.textPrimary(context),
+                fontSize: 14,
+                color: SpitoutTokens.textSecondary(context),
               ),
             ),
             const Spacer(),
+            // 支出人名右对齐,与其他信息行(日期/金额/货币)口径一致
             Flexible(
               child: Text(
                 payerName,
+                textAlign: TextAlign.right,
                 style: TextStyle(
                   fontSize: 14,
-                  color: SpitoutTokens.textSecondary(context),
+                  fontWeight: FontWeight.w500,
+                  color: SpitoutTokens.textPrimary(context),
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
               ),
             ),
             const SizedBox(width: 6),
-            Icon(
-              AppIcons.chevronRight,
-              size: 16,
-              color: SpitoutTokens.iconTertiary(context),
+            // 右缩进 10px,使 chevron 右边界与参与人金额列中金额文本右边界对齐
+            // (可编辑金额输入框 contentPadding 右侧 10px),避免选项按钮悬出金额列。
+            Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child: Icon(
+                AppIcons.chevronRight,
+                size: 16,
+                color: SpitoutTokens.iconTertiary(context),
+              ),
             ),
           ],
         ),
@@ -582,9 +682,11 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 单个参与人行:方框勾选 + 名称 + 右对齐金额输入框。
   ///
-  /// 支出人:置顶置灰(勾选锁定、icon 与名称置灰、金额输入框可填但不可取消勾选)。
-  /// 未勾选的参与人:金额输入框置灰不可操作。
-  /// 人均分摊:金额输入框置灰只读,值随勾选人数实时重算。
+  /// 只读态统一(参考编辑账本只读态):人均分摊金额、指定分摊未勾选/支出人
+  /// 锁定的金额,均以纯文字展示(无边框/无色块),可用态用 textPrimary,
+  /// 置灰态用 disabledColor,避免同页面出现两套只读色。
+  /// 复选按钮:支出人锁定时做置灰只读态(边框/勾用 disabledColor),而非
+  /// 仅禁用点击。
   Widget _buildParticipantRow(
     BuildContext context,
     List<AaParticipantOption> options,
@@ -596,33 +698,33 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         ? true
         : _participantIds!.contains(option.id);
     final primary = Theme.of(context).colorScheme.primary;
-    final tertiary = SpitoutTokens.textTertiary(context);
+    final disabledColor = Theme.of(context).disabledColor;
 
     // 人均分摊:按勾选人数实时均摊。
     final perPersonAmount = _mode == AaMode.perPerson
         ? _computePerPerson(options)
         : null;
 
-    // 名称颜色:支出人/未勾选 → 置灰;已勾选 → 一级色。
+    // 名称颜色:支出人/未勾选 → 置灰(disabledColor);已勾选 → 一级色。
     final nameColor = (isPayer || !selected)
-        ? tertiary
+        ? disabledColor
         : SpitoutTokens.textPrimary(context);
 
     // 金额输入框可用性:
     // - 支出人:可填(指定分摊);人均置灰展示
     // - 未勾选:置灰不可操作
     // - 人均:全部置灰只读
-    final amountEnabled = !isPayer &&
-        selected &&
-        _mode == AaMode.custom;
+    final amountEnabled = !isPayer && selected && _mode == AaMode.custom;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          // 方框勾选:支出人锁定不可反选
+          // 方框勾选:支出人锁定时置灰只读态(disabledColor),而非仅禁用点击;
+          // key 供测试定位该参与人的勾选框。
           _buildCheckbox(
             context,
+            key: ValueKey('aa-checkbox-${option.id}'),
             checked: selected,
             locked: isPayer,
             onTap: isPayer ? null : () => _toggleParticipant(option.id),
@@ -632,14 +734,14 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           Icon(
             AppIcons.person,
             size: 16,
-            color: (isPayer || !selected) ? tertiary : primary,
+            color: (isPayer || !selected) ? disabledColor : primary,
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               option.name,
               style: TextStyle(
-                fontSize: 15,
+                fontSize: 14,
                 color: nameColor,
               ),
               maxLines: 1,
@@ -647,18 +749,14 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             ),
           ),
           const SizedBox(width: 12),
-          // 金额输入框 / 展示
+          // 金额:可用态用 TextField;只读态(人均/未勾选/支出人锁定)用纯文字,
+          // 去掉色块与边框,统一 disabledColor 置灰,与编辑账本只读态一致。
           SizedBox(
             width: 120,
-            child: _mode == AaMode.perPerson
-                ? _readOnlyAmount(
-                    context,
-                    perPersonAmount ?? 0,
-                    dimmed: !selected,
-                  )
-                : TextField(
+            child: amountEnabled
+                ? TextField(
                     controller: _amountCtrls[option.id],
-                    enabled: amountEnabled,
+                    enabled: true,
                     keyboardType:
                         const TextInputType.numberWithOptions(decimal: true),
                     inputFormatters: [
@@ -667,28 +765,39 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                     ],
                     textAlign: TextAlign.right,
                     style: TextStyle(
-                      fontSize: 15,
+                      fontSize: 14,
                       fontWeight: FontWeight.w500,
-                      color: amountEnabled
-                          ? SpitoutTokens.textPrimary(context)
-                          : tertiary,
+                      color: SpitoutTokens.textPrimary(context),
                     ),
                     decoration: InputDecoration(
                       isDense: true,
+                      // 输入框前缀币种符号:输入时即可确认分摊金额币种,
+                      // 与展示金额带符号的视觉口径一致。
+                      prefixText: currencyCode == null
+                          ? null
+                          : '${getCurrencySymbol(currencyCode)} ',
                       hintText: '0.00',
-                      hintStyle: TextStyle(color: tertiary),
+                      hintStyle: TextStyle(color: disabledColor),
                       contentPadding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 8),
                       filled: true,
-                      fillColor: amountEnabled
-                          ? SpitoutTokens.surfaceInput(context)
-                          : SpitoutTokens.surfaceSecondary(context),
+                      fillColor: SpitoutTokens.surfaceInput(context),
                       border: OutlineInputBorder(
                         borderRadius: BorderRadius.circular(8),
                         borderSide: BorderSide.none,
                       ),
                     ),
                     onChanged: (_) => setState(() {}),
+                  )
+                : _readOnlyAmountText(
+                    context,
+                    _mode == AaMode.perPerson
+                        ? (perPersonAmount ?? 0)
+                        : (double.tryParse(
+                                _amountCtrls[option.id]?.text.trim() ?? '') ??
+                            0),
+                    dimmed: !amountEnabled,
+                    currencyCode: currencyCode,
                   ),
           ),
         ],
@@ -696,25 +805,35 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     );
   }
 
-  /// 方框勾选组件:未选空方框,选中实心带勾,锁定态不可点击但仍展示选中。
+  /// 方框勾选组件:未选空方框,选中实心带勾。
+  ///
+  /// 锁定态(支出人):做置灰只读态——边框与底色用 disabledColor,勾 icon
+  /// 用白色,视觉上明确「不可操作」而非「仅禁用点击」。
   Widget _buildCheckbox(
     BuildContext context, {
+    Key? key,
     required bool checked,
     bool locked = false,
     VoidCallback? onTap,
   }) {
     final primary = Theme.of(context).colorScheme.primary;
+    final disabledColor = Theme.of(context).disabledColor;
+    // 锁定态用 disabledColor,可用态用 primary
+    final activeColor = locked ? disabledColor : primary;
     final borderColor = checked
-        ? primary
-        : SpitoutTokens.textTertiary(context).withValues(alpha: 0.5);
+        ? activeColor
+        : (locked
+            ? disabledColor
+            : SpitoutTokens.textTertiary(context).withValues(alpha: 0.5));
     return InkWell(
+      key: key,
       onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Container(
         width: 20,
         height: 20,
         decoration: BoxDecoration(
-          color: checked ? primary : Colors.transparent,
+          color: checked ? activeColor : Colors.transparent,
           border: Border.all(color: borderColor, width: 1.5),
           borderRadius: BorderRadius.circular(4),
         ),
@@ -725,27 +844,36 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     );
   }
 
-  /// 人均分摊金额展示(只读,未勾选置灰)。
-  Widget _readOnlyAmount(
+  /// 只读金额展示(纯文字,无边框无色块)。
+  ///
+  /// 设计意图:统一只读态——人均分摊金额、指定分摊未勾选/支出人锁定的金额
+  /// 均用此组件,可用态 textPrimary、置灰态 disabledColor,与编辑账本只读态
+  /// 一致,避免同页面出现两套只读色(原 _readOnlyAmount 带 surfaceSecondary
+  /// 色块、TextField 带 fillColor 色块)。
+  ///
+  /// 右对齐基准:可编辑金额的 TextField 有 10px 水平 contentPadding,金额文本
+  /// 右边界比输入框(色块)右边界内缩 10px。只读态同样右缩 10px,保证两种状态
+  /// 的金额文本右边界对齐,而不是对齐到色块右边缘。
+  Widget _readOnlyAmountText(
     BuildContext context,
-    double value,
-    {required bool dimmed}
-  ) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-      alignment: Alignment.centerRight,
-      decoration: BoxDecoration(
-        color: SpitoutTokens.surfaceSecondary(context),
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Text(
-        value.toStringAsFixed(2),
-        style: TextStyle(
-          fontSize: 15,
-          fontWeight: FontWeight.w500,
-          color: dimmed
-              ? SpitoutTokens.textTertiary(context)
-              : SpitoutTokens.textPrimary(context),
+    double value, {
+    required bool dimmed,
+    required String? currencyCode,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.only(right: 10),
+      child: Align(
+        alignment: Alignment.centerRight,
+        child: Text(
+          // 只读金额带币种符号,与可输入金额的前缀符号口径一致。
+          formatMoneyWithCurrency(value, currencyCode: currencyCode),
+          style: TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: dimmed
+                ? Theme.of(context).disabledColor
+                : SpitoutTokens.textPrimary(context),
+          ),
         ),
       ),
     );

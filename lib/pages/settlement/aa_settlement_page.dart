@@ -191,6 +191,8 @@ class AaSettlementPage extends ConsumerWidget {
 
   Widget _buildPerPersonRow(BuildContext context, WidgetRef ref,
       AppLocalizations l10n, AaParticipantSummary p) {
+    // 实付/应摊/差额统一带账本币种符号,与汇总卡口径一致。
+    final currencyCode = ref.watch(currentLedgerCurrencyProvider);
     final net = p.net;
     final netColor = net.abs() < 0.005
         ? SpitoutTokens.textTertiary(context)
@@ -200,7 +202,7 @@ class AaSettlementPage extends ConsumerWidget {
     final netLabel = net.abs() < 0.005
         ? '—'
         : '${net > 0 ? l10n.aaSettlementNetReceive : l10n.aaSettlementNetPay} '
-            '${formatMoneyCompact(net.abs())}';
+            '${formatMoneyWithCurrency(net.abs(), currencyCode: currencyCode)}';
     final valueStyle = TextStyle(
       fontSize: 13,
       color: SpitoutTokens.textPrimary(context),
@@ -224,13 +226,19 @@ class AaSettlementPage extends ConsumerWidget {
           ),
           Expanded(
             flex: 3,
-            child: Text(formatMoneyCompact(p.totalPaid),
-                style: valueStyle, textAlign: TextAlign.right),
+            child: Text(
+                formatMoneyWithCurrency(p.totalPaid,
+                    currencyCode: currencyCode),
+                style: valueStyle,
+                textAlign: TextAlign.right),
           ),
           Expanded(
             flex: 3,
-            child: Text(formatMoneyCompact(p.totalShouldPay),
-                style: valueStyle, textAlign: TextAlign.right),
+            child: Text(
+                formatMoneyWithCurrency(p.totalShouldPay,
+                    currencyCode: currencyCode),
+                style: valueStyle,
+                textAlign: TextAlign.right),
           ),
           Expanded(
             flex: 3,

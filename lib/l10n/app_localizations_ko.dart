@@ -585,7 +585,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get languageSystemDefault => '시스템 따르기';
 
   @override
-  String get mineSlogan => '닉네임을 설정하세요.';
+  String get mineSlogan => '닉네임이 설정되지 않음';
 
   @override
   String get mineDisplayNameEditTitle => '닉네임 설정';
@@ -2805,9 +2805,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersPageTitle => '멤버';
 
   @override
-  String get sharedMembersYou => '나';
-
-  @override
   String get sharedMembersInviteCta => '새 멤버 초대';
 
   @override
@@ -3627,9 +3624,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaParticipantsUnit => '명';
 
   @override
-  String get aaSplitTotal => '합계';
-
-  @override
   String get aaVirtualUserTitle => '가상 사용자';
 
   @override
@@ -3667,9 +3661,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaMe => '나';
 
   @override
-  String get ledgerAaEnabled => 'AA 분담';
-
-  @override
   String get ledgerAaEnabledHint => '활성화하면 지출을 멤버와 분담할 수 있습니다';
 
   @override
@@ -3677,6 +3668,12 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ledgerAaVirtualUsersEntry => '가상 사용자 관리';
+
+  @override
+  String get aaSwitchOnLabel => 'AA 분담 켜기';
+
+  @override
+  String get aaSwitchOffLabel => 'AA 분담 끄기';
 
   @override
   String get aaNoParticipants => '참여자를 먼저 추가하세요';

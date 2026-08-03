@@ -21,6 +21,7 @@ import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/member_management_section.dart';
+import 'package:spitout/widgets/text_state_switch.dart';
 
 /// Mock SyncEngine：只 stub pushUserGlobalEntities 的成败行为。
 class _MockSyncEngine extends Mock implements SyncEngine {}
@@ -267,10 +268,12 @@ void main() {
     );
     await tester.pumpAndSettle();
 
-    // AA 分摊文案与开关均出现在标题行(与「成员管理」同处一行)
+    // AA 分摊开关与「成员管理」标题同处一行:开关内嵌状态文案
+    // (aaEnabled=false 显示「关闭AA分摊」),无独立的"AA 分摊"标题文本。
     expect(find.text('成员管理'), findsOneWidget);
-    expect(find.text('AA 分摊'), findsOneWidget);
-    expect(find.byType(Switch), findsOneWidget);
+    expect(find.text('关闭AA分摊'), findsOneWidget);
+    // 开关已是轨道内带状态文案的 TextStateSwitch,不再是系统 Switch
+    expect(find.byType(TextStateSwitch), findsOneWidget);
     // 不再使用 SwitchListTile(卡片内独立一行)
     expect(find.byType(SwitchListTile), findsNothing);
   });

@@ -285,7 +285,8 @@ void main() {
       expect(memberTitleTop - monthBottom, greaterThanOrEqualTo(16.0));
       expect(memberTitleTop - monthBottom, lessThan(32.0));
       // AA 开关与「成员管理」标题同处一行,AA 文案必然出现在成员管理区。
-      expect(find.text(l10n.ledgerAaEnabled), findsOneWidget);
+      // 账本 aaEnabled 默认 false,开关显示"关闭AA分摊"状态文案。
+      expect(find.text(l10n.aaSwitchOffLabel), findsOneWidget);
       // 归属区标题在成员管理区之后,其顶部间距 = 成员区内容高度 + 自带的 16px,
       // 故必大于 16px(仅验证方向,不绑定成员区内容高度)。
       final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);

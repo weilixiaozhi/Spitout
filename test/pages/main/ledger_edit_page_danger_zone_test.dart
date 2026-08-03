@@ -86,6 +86,9 @@ void main() {
       ),
     );
     await tester.pumpAndSettle();
+    // 编辑页读取 localSelfIdProvider 时首次生成会写日志并调度 2s 节流保存
+    // Timer，测试结束前推进虚拟时钟让 Timer 到期，避免 !timersPending 报错。
+    await tester.pump(const Duration(seconds: 3));
     return l10n;
   }
 

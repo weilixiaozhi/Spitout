@@ -16,6 +16,7 @@ import '../services/settlement/aa_edit_models.dart';
 import '../services/settlement/aa_settlement_service.dart' show AaMode;
 import '../theme/colors.dart';
 import '../utils/category_utils.dart';
+import 'app_route.dart';
 import 'currency_picker_sheet.dart';
 import 'toast.dart';
 import 'wheel_date_picker.dart';
@@ -69,7 +70,11 @@ class TransactionEditorSheet extends ConsumerStatefulWidget {
   /// AA 指定分摊金额初值(key=参与人标识,value=金额字符串)。
   final Map<String, String>? initialAaSplits;
 
-  /// AA 支出人初值;新建为 null,由落库层回填操作者。
+  /// 支出人初值;编辑模式回填,新建为 null。
+  ///
+  /// 设计意图:编辑器本身不提供支出人编辑,该值仅作为分摊编辑页
+  /// (AaEditPage)的支出人回显初值,保证编辑分摊时已保存的支出人不被
+  /// 误判为「默认创建人」。编辑器提交时支出人字段一律不直接写入。
   final String? initialPaidByUserId;
 
   const TransactionEditorSheet({
@@ -125,7 +130,15 @@ class _TransactionEditorSheetState
   late AaMode _aaMode; // 分摊方式;默认人均(不分摊不在编辑器提供入口)
   List<String>? _aaParticipantIds; // null = 全部成员(运行时展开)
   Map<String, String>? _aaSplits; // 指定分摊金额(编辑模式回填/AaEditPage 回传)
-  String? _aaPaidByUserId; // 支出人;新建为 null,落库层回填操作者
+
+  /// 本次提交是否跳转过 AaEditPage。
+  ///
+  /// 设计意图:AaEditPage 是在编辑器 sheet 之上 push 的全屏页,保存时
+  /// AaEditPage 先 pop(200ms 退出动画),编辑器随后 pop 收起 sheet。
+  /// 若两者几乎同时 pop,退出动画会重叠(sheet 与页面同时滑出,视觉混乱)。
+  /// 标记跳转过 AA 页后,在收起 sheet 前 await 一个转场时长,
+  /// 让 AA 页退出动画先完成,再收起 sheet,实现「先后收起」。
+  bool _aaPagePushed = false;
 
   @override
   void initState() {
@@ -156,7 +169,6 @@ class _TransactionEditorSheetState
     _aaMode = AaMode.fromDb(widget.initialAaMode);
     _aaParticipantIds = widget.initialAaParticipants;
     _aaSplits = widget.initialAaSplits;
-    _aaPaidByUserId = widget.initialPaidByUserId;
 
     _noteFocusNode.addListener(() {
       // 备注聚焦变化时触发重建，让分类区/键盘区在系统键盘拉起时正确让位
@@ -472,10 +484,15 @@ class _TransactionEditorSheetState
     });
   }
 
-  /// 组装 AA 落库字段。
+  /// 组装落库字段(AA 分摊 + 支出人)。
   ///
   /// 返回 null 表示用户取消(指定分摊跳 [AaEditPage] 后放弃)——
   /// 编辑器保持开启、内容保留、不落库。
+  ///
+  /// 支出人语义:编辑器不提供支出人编辑,paidByUserId 仅透传分摊编辑页
+  /// 的结果——人均/指定分摊时由 [AaEditPage] 决定(未手选返回 null,新建
+  /// 由落库层 markTxAuthor 回填操作者,编辑不更新保持原值);未开启 AA
+  /// 或不分摊时不写入(update 语义下 null = 不更新)。
   ///
   /// 清空语义:updateTransaction 的 aa* 参数 null = 不更新,故编辑模式下
   /// 「指定 → 人均」「部分参与人 → 全部成员」需显式传空串清空旧值。
@@ -483,10 +500,15 @@ class _TransactionEditorSheetState
       _resolveAaFields(double total, String txCurrency, Category c) async {
     final aaEnabled =
         ref.read(currentLedgerProvider).valueOrNull?.aaEnabled ?? false;
-    // 未开启 AA 的账本:aa* 恒 null。update 语义下 null = 不更新,
-    // 开关关闭后编辑历史交易不会清掉旧分摊数据,重开仍在。
+    // 未开启 AA 的账本:aa* 与 paidByUserId 恒 null。update 语义下 null =
+    // 不更新,开关关闭后编辑历史交易不会清掉旧分摊/支出人数据,重开仍在。
     if (!aaEnabled) {
-      return (aaMode: null, aaParticipants: null, aaSplits: null, paidByUserId: null);
+      return (
+        aaMode: null,
+        aaParticipants: null,
+        aaSplits: null,
+        paidByUserId: null,
+      );
     }
 
     final isEditing = widget.editingTransactionId != null;
@@ -494,6 +516,7 @@ class _TransactionEditorSheetState
     // 人均/指定分摊:提交时统一跳 AaEditPage 配置——人均可改参与人/支出人,
     // 指定再逐人填金额;跳页前不落库,AaEditPage 是纯选择器,pop 返回 result。
     if (_aaMode == AaMode.perPerson || _aaMode == AaMode.custom) {
+      _aaPagePushed = true;
       final result = await Navigator.of(context).pushNamed(
         Routes.aaEdit,
         arguments: AaEditPageArgs(
@@ -504,17 +527,18 @@ class _TransactionEditorSheetState
           categoryIconName: c.icon,
           date: _date,
           mode: _aaMode,
-          paidByUserId: _aaPaidByUserId,
+          // 支出人初值仅作分摊编辑页回显(编辑模式回填已保存值);编辑器本身
+          // 不维护支出人状态,最终是否写入由 AaEditPage 的结果决定。
+          paidByUserId: widget.initialPaidByUserId,
           participantIds: _aaParticipantIds,
           splits: _aaSplits,
         ),
       ) as AaEditResult?;
       if (result == null || !mounted) return null; // 取消:不落库
-      // 回传值同步到本地状态,编辑器再次打开时现场与已确认的分摊一致
+      // 回传值同步到本地状态,编辑器再次打开时现场与已确认的分摊一致。
       _aaMode = result.aaMode == 2 ? AaMode.custom : AaMode.perPerson;
       _aaParticipantIds = result.aaParticipants;
       _aaSplits = result.aaSplits;
-      _aaPaidByUserId = result.paidByUserId;
       return (
         aaMode: result.aaMode,
         aaParticipants:
@@ -523,17 +547,20 @@ class _TransactionEditorSheetState
         aaSplits: result.aaSplits != null
             ? jsonEncode(result.aaSplits)
             : (isEditing ? '' : null),
+        // 支出人透传分摊编辑页结果:未手选回传 null,新建由落库层回填
+        // 操作者(默认支出人 = 创建人),编辑不更新保持原值。
         paidByUserId: result.paidByUserId,
       );
     }
 
-    // 不分摊:不参与分摊算法,列入「不计入清单」;
-    // 无参与人/支出人/指定金额,编辑模式显式清空旧分摊数据。
+    // 不分摊:不参与分摊算法,列入「不计入清单」;无参与人/指定金额,
+    // 编辑模式显式清空旧分摊数据。支出人字段不写入(update 语义下 null =
+    // 不更新),不分摊交易的支出人由创建时落库层回填操作者决定。
     return (
       aaMode: 1,
       aaParticipants: isEditing ? '' : null,
       aaSplits: isEditing ? '' : null,
-      paidByUserId: isEditing ? '' : null,
+      paidByUserId: null,
     );
   }
 
@@ -660,9 +687,14 @@ class _TransactionEditorSheetState
     ref.invalidate(countsForLedgerProvider(_ledgerId));
     ref.read(statsRefreshProvider.notifier).state++;
 
-    // 提交成功后关闭主 Drawer
+    // 提交成功后关闭编辑器 sheet。
+    // 若本次提交跳转过 AaEditPage,需等 AA 页退出动画(一个转场时长)完成
+    // 后再收起 sheet,避免 AA 页与 sheet 同时滑出的重叠动画。
     if (mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
+      if (_aaPagePushed) {
+        await Future<void>.delayed(kAppTransitionDuration);
+      }
+      if (mounted) Navigator.of(context).pop();
     }
   }
 
@@ -982,6 +1014,8 @@ class _TransactionEditorSheetState
   /// - 左右箭头:直观暗示「可切换」(左/右箭头指向切换方向),
   ///   与边框一起构成明确的可点击提示;
   /// - 小圆角(6px)+ 弱色小字号:保持弱化,不抢标题与金额输入区焦点。
+  /// 尺寸与编辑分摊页 [AaEditPage._buildAaModeToggle] 一致(88x28 / 字号 12),
+  /// 保证两处切换体验统一、文案完整显示(不再过小截断)。
   Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
     final modeText = switch (_aaMode) {
       AaMode.perPerson => l10n.aaModePerPerson,
@@ -998,18 +1032,18 @@ class _TransactionEditorSheetState
         onTap: _cycleAaMode,
         borderRadius: BorderRadius.circular(6),
         child: Container(
-          // 固定宽度 80:容纳最长文案「人均分摊」(4 字 @11px ≈44px)
-          // + 左右箭头(20px) + 内边距,不随当前方式文字长度变化
-          width: 80,
-          height: 22,
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          // 固定宽度 88:容纳最长文案「人均分摊」(4 字 @12px ≈48px)
+          // + 左右箭头(24px) + 内边距,不随当前方式文字长度变化
+          width: 88,
+          height: 28,
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           decoration: BoxDecoration(
             border: Border.all(color: borderColor),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Row(
             children: [
-              Icon(AppIcons.chevronLeft, size: 10, color: arrowColor),
+              Icon(AppIcons.chevronLeft, size: 12, color: arrowColor),
               Expanded(
                 child: Text(
                   modeText,
@@ -1017,19 +1051,20 @@ class _TransactionEditorSheetState
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: TextStyle(
-                    fontSize: 11,
+                    fontSize: 12,
                     fontWeight: FontWeight.w400,
                     color: SpitoutTokens.textTertiary(context),
                   ),
                 ),
               ),
-              Icon(AppIcons.chevronRight, size: 10, color: arrowColor),
+              Icon(AppIcons.chevronRight, size: 12, color: arrowColor),
             ],
           ),
         ),
       ),
     );
   }
+
 }
 
 // =============================================================================

@@ -103,8 +103,9 @@ abstract class TransactionRepository {
   /// categoryId 留 null,改填 categorySyncIdOverride 字符串。
   /// Owner / 单人账本场景:走 categoryId int(老路径),override 留 null。
   ///
-  /// AA 分摊字段(paidByUserId/aaMode/aaParticipants/aaSplits)由调用方
-  /// 显式传入;非 AA 账本或非 AA 交易不传(null),子仓收"已定值"直写。
+  /// 支出人(paidByUserId)属全局交易语义,由调用方显式传入(null = 未手选,
+  /// 由 markTxAuthor 回填操作者);AA 分摊字段(aaMode/aaParticipants/aaSplits)
+  /// 同样显式传入,非 AA 账本或非 AA 交易不传(null),子仓收"已定值"直写。
   Future<int> addTransaction({
     required int ledgerId,
     required String type,
@@ -119,7 +120,7 @@ abstract class TransactionRepository {
     // nativeAmount 外币先按有效汇率折算,取不到才 =amount)。
     String? currencyCode,
     double? nativeAmount,
-    // AA 分摊:支出人 userId(运行时由调用方 ?? 操作者 userId 兜底)
+    // 支出人 userId(全局交易字段,非 AA 专属;null 由 markTxAuthor 回填操作者)
     String? paidByUserId,
     // AA 分摊模式:null/0=人均,1=不分摊,2=指定
     int? aaMode,
@@ -167,7 +168,8 @@ abstract class TransactionRepository {
   /// 编辑历史表里追加一条同版本号快照,从而让"更新交易"与"记录编辑历史"
   /// 形成闭环,避免详情页编辑记录区块永远为空。
   ///
-  /// AA 分摊字段:同 [addTransaction],null = 不更新保持原值。
+  /// AA 分摊字段:同 [addTransaction],null = 不更新保持原值;
+  /// 支出人(paidByUserId)同理,null = 不更新保持原值。
   Future<int> updateTransaction({
     required int id,
     required String type,
@@ -181,7 +183,7 @@ abstract class TransactionRepository {
     // 做折算兜底。
     String? currencyCode,
     double? nativeAmount,
-    // AA 分摊字段:null = 不更新保持原值
+    // 支出人/AA 分摊字段:null = 不更新保持原值
     String? paidByUserId,
     int? aaMode,
     String? aaParticipants,

@@ -297,7 +297,7 @@
     "languageChinese": "中文",
     "languageEnglish": "English",
     "languageSystemDefault": "Follow System",
-    "mineSlogan": "Set your nickname",
+    "mineSlogan": "No nickname set",
     "mineDisplayNameEditTitle": "Set nickname",
     "mineDisplayNameHint": "Enter a nickname",
     "mineDisplayNameSaved": "Nickname updated",
@@ -1348,7 +1348,6 @@
         }
     },
     "sharedMembersPageTitle": "Members",
-    "sharedMembersYou": "you",
     "sharedMembersInviteCta": "Invite new member",
     "ledgersLeaveAndDelete": "Leave and Delete",
     "ledgersLeaveAndDeleteConfirm": "Leave and Delete Ledger",
@@ -1813,7 +1812,6 @@
         }
     },
     "aaParticipantsUnit": "",
-    "aaSplitTotal": "Total",
     "aaVirtualUserTitle": "Virtual members",
     "aaVirtualUserAdd": "Add virtual member",
     "aaVirtualUserNameHint": "Enter a nickname",
@@ -1839,10 +1837,12 @@
     "aaAddVirtualUser": "Add virtual user",
     "aaUnknownUser": "Unknown",
     "aaMe": "Me",
-    "ledgerAaEnabled": "AA Split",
+
     "ledgerAaEnabledHint": "Split expenses with members when enabled",
     "ledgerAaSettlementEntry": "AA Statistics",
     "ledgerAaVirtualUsersEntry": "Manage virtual members",
+    "aaSwitchOnLabel": "Turn on AA Split",
+    "aaSwitchOffLabel": "Turn off AA Split",
     "aaNoParticipants": "Add participants first",
     "aaSplitAmountIncomplete": "Enter an amount for every participant"
 }

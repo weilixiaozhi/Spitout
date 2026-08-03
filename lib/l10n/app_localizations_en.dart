@@ -585,7 +585,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageSystemDefault => 'Follow System';
 
   @override
-  String get mineSlogan => 'Set your nickname';
+  String get mineSlogan => 'No nickname set';
 
   @override
   String get mineDisplayNameEditTitle => 'Set nickname';
@@ -2805,9 +2805,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMembersPageTitle => 'Members';
 
   @override
-  String get sharedMembersYou => 'you';
-
-  @override
   String get sharedMembersInviteCta => 'Invite new member';
 
   @override
@@ -3627,9 +3624,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaParticipantsUnit => '';
 
   @override
-  String get aaSplitTotal => 'Total';
-
-  @override
   String get aaVirtualUserTitle => 'Virtual members';
 
   @override
@@ -3667,9 +3661,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaMe => 'Me';
 
   @override
-  String get ledgerAaEnabled => 'AA Split';
-
-  @override
   String get ledgerAaEnabledHint => 'Split expenses with members when enabled';
 
   @override
@@ -3677,6 +3668,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ledgerAaVirtualUsersEntry => 'Manage virtual members';
+
+  @override
+  String get aaSwitchOnLabel => 'Turn on AA Split';
+
+  @override
+  String get aaSwitchOffLabel => 'Turn off AA Split';
 
   @override
   String get aaNoParticipants => 'Add participants first';

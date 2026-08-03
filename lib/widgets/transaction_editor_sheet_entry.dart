@@ -12,9 +12,11 @@ import 'transaction_editor_sheet.dart';
 /// [initialKind] 值固定为 'expense'（全局仅支出模式）。
 /// 传入 [editingTransactionId] 即为编辑模式,会按初始值回显。
 ///
-/// AA 分摊初值(initialAaMode/initialAaParticipants/initialAaSplits/
-/// initialPaidByUserId)仅编辑模式回填;新建交易传 null 即默认
-/// 人均分摊 / 全部成员,支出人由落库层回填操作者。
+/// AA 分摊初值(initialAaMode/initialAaParticipants/initialAaSplits)仅编辑
+/// 模式回填,新建交易传 null 即默认人均分摊 / 全部成员。
+/// 支出人(initialPaidByUserId)仅编辑模式回填:编辑器本身不提供支出人编辑,
+/// 该值仅作分摊编辑页(AaEditPage)的支出人回显初值;新建传 null,由落库层
+/// 回填操作者(默认支出人 = 创建人)。
 Future<void> showTransactionEditorSheet(
   BuildContext context, {
   String initialKind = 'expense',

@@ -155,7 +155,7 @@
     "languageChinese": "中文",
     "languageEnglish": "English",
     "languageSystemDefault": "跟随系统",
-    "mineSlogan": "设置昵称",
+    "mineSlogan": "未设置昵称",
     "mineDisplayNameEditTitle": "设置昵称",
     "mineDisplayNameHint": "输入昵称",
     "mineDisplayNameSaved": "昵称已更新",
@@ -1255,7 +1255,6 @@
         }
     },
     "sharedMembersPageTitle": "成员管理",
-    "sharedMembersYou": "你",
     "sharedMembersInviteCta": "邀请新成员",
     "ledgersLeaveAndDelete": "退出并删除",
     "ledgersLeaveAndDeleteConfirm": "退出并删除账本",
@@ -1677,7 +1676,6 @@
         }
     },
     "aaParticipantsUnit": "人",
-    "aaSplitTotal": "合计",
     "aaVirtualUserTitle": "虚拟用户",
     "aaVirtualUserAdd": "新建虚拟用户",
     "aaVirtualUserNameHint": "输入昵称",
@@ -1696,10 +1694,12 @@
     "aaAddVirtualUser": "添加虚拟用户",
     "aaUnknownUser": "未知",
     "aaMe": "我",
-    "ledgerAaEnabled": "AA 分摊",
+
     "ledgerAaEnabledHint": "开启后记账时可选择分摊方式",
     "ledgerAaSettlementEntry": "分摊统计",
     "ledgerAaVirtualUsersEntry": "管理虚拟用户",
+    "aaSwitchOnLabel": "开启AA分摊",
+    "aaSwitchOffLabel": "关闭AA分摊",
     "aaNoParticipants": "请先添加参与人",
     "aaSplitAmountIncomplete": "请填写全部参与人的金额"
 }

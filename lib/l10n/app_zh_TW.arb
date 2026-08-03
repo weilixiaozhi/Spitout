@@ -762,7 +762,7 @@
     "mineRecurringTransactionsSubtitle": "管理週期性帳單",
     "mineReminderSettings": "記帳提醒",
     "mineReminderSettingsSubtitle": "設定每日記帳提醒",
-    "mineSlogan": "设置昵称",
+    "mineSlogan": "未設置暱稱",
     "mineDisplayNameEditTitle": "設定暱稱",
     "mineDisplayNameHint": "輸入暱稱",
     "mineDisplayNameSaved": "暱稱已更新",
@@ -1170,7 +1170,6 @@
         }
     },
     "sharedMembersPageTitle": "成員管理",
-    "sharedMembersYou": "你",
     "sharedMembersInviteCta": "邀請新成員",
     "sharedMembersRemoveTitle": "移除成員",
     "sharedMembersRemoveCta": "移除該成員",
@@ -1599,7 +1598,6 @@
     "aaParticipantsAll": "全部成員",
     "aaParticipantsAllCount": "全部成員（{count}人）",
     "aaParticipantsUnit": "人",
-    "aaSplitTotal": "合計",
     "aaVirtualUserTitle": "虛擬用戶",
     "aaVirtualUserAdd": "新增虛擬用戶",
     "aaVirtualUserNameHint": "輸入暱稱",
@@ -1618,10 +1616,12 @@
     "aaAddVirtualUser": "新增虛擬用戶",
     "aaUnknownUser": "未知",
     "aaMe": "我",
-    "ledgerAaEnabled": "AA 分攤",
+
     "ledgerAaEnabledHint": "開啟後記帳時可選擇分攤方式",
     "ledgerAaSettlementEntry": "分攤統計",
     "ledgerAaVirtualUsersEntry": "管理虛擬用戶",
+    "aaSwitchOnLabel": "開啟AA分攤",
+    "aaSwitchOffLabel": "關閉AA分攤",
     "aaNoParticipants": "請先新增參與人",
     "aaSplitAmountIncomplete": "請填寫全部參與人的金額"
 }

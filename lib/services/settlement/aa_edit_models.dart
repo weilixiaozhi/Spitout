@@ -52,7 +52,8 @@ class AaEditPageArgs {
   /// 分摊方式初值(新建默认人均;编辑回填交易当前值)。
   final AaMode mode;
 
-  /// 支出人初值(参与人标识);null 时由页面取参与人列表首个兜底。
+  /// 支出人初值(参与人标识;全局交易字段,非 AA 专属)。
+  /// null = 未手动选择:新建默认创建人(落库层回填操作者),编辑保持原值。
   final String? paidByUserId;
 
   /// 参与人初值;null = 全部成员(运行时展开,不落具体名单)。
@@ -77,7 +78,9 @@ class AaEditPageArgs {
 
 /// AaEditPage pop 回传的结果;pop null 视为取消(编辑器保持开启、不落库)。
 class AaEditResult {
-  /// 支出人标识(userId 或虚拟用户 syncId)。
+  /// 支出人标识(userId 或虚拟用户 syncId;全局交易字段,非 AA 专属)。
+  /// null = 未手动选择:新建由落库层回填操作者(默认支出人 = 创建人),
+  /// 编辑不更新保持原值;非 null = 用户手选/编辑回填,恒写该值。
   final String? paidByUserId;
 
   /// 分摊方式数据库列值:0=人均,2=指定(与 Transactions.aaMode 对齐)。

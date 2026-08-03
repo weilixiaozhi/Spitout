@@ -435,8 +435,8 @@ class LocalTransactionRepository implements TransactionRepository {
   /// 由 UI 层写完交易后调用本方法补齐作者字段。paidByUserId 的兜底规则:
   /// - 新建:为空时回填操作者(默认支出人 = 创建人);编辑器已显式写入的值
   ///   (指定分摊场景)不覆盖。
-  /// - 编辑:不再回填 paidByUserId。支出人一旦在新建时确定(创建人或手动值),
-  ///   后续编辑不随编辑人变化,保证支出人稳定。
+  /// - 编辑:paidByUserId 为空时同样回填操作者(覆盖旧数据从未回填的极端场景,
+  ///   保证支出人全局必填);非空则视为用户手改值保留,支出人不随编辑人变化。
   ///   仅更新 lastEditedByUserId(createdByUserId 维持 first-write-wins)。
   ///
   /// [userId] 为当前操作者(已登录为云 userId,未登录为 localSelfId,
@@ -465,10 +465,17 @@ class LocalTransactionRepository implements TransactionRepository {
       await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
           .write(companion);
     } else {
-      // 编辑:仅更新 lastEditedByUserId。
-      // 支出人不在编辑路径回填,保持新建时确定的值(创建人或手动值)不变。
+      // 编辑:写 lastEditedByUserId;paidByUserId 为空时回填操作者
+      // (旧数据从未回填的极端场景,支出人全局必填),非空视为手改值保留。
+      final existing = await getTransactionById(txId);
+      final shouldBackfillPaidBy = existing == null ||
+          existing.paidByUserId == null ||
+          existing.paidByUserId!.isEmpty;
       final companion = TransactionsCompanion(
         lastEditedByUserId: d.Value(userId),
+        paidByUserId: shouldBackfillPaidBy
+            ? d.Value(userId)
+            : const d.Value.absent(),
       );
       await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
           .write(companion);

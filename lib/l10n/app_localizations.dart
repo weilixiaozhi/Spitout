@@ -1157,7 +1157,7 @@ abstract class AppLocalizations {
   /// No description provided for @mineSlogan.
   ///
   /// In en, this message translates to:
-  /// **'Set your nickname'**
+  /// **'No nickname set'**
   String get mineSlogan;
 
   /// No description provided for @mineDisplayNameEditTitle.
@@ -5330,12 +5330,6 @@ abstract class AppLocalizations {
   /// **'Members'**
   String get sharedMembersPageTitle;
 
-  /// No description provided for @sharedMembersYou.
-  ///
-  /// In en, this message translates to:
-  /// **'you'**
-  String get sharedMembersYou;
-
   /// No description provided for @sharedMembersInviteCta.
   ///
   /// In en, this message translates to:
@@ -6854,12 +6848,6 @@ abstract class AppLocalizations {
   /// **''**
   String get aaParticipantsUnit;
 
-  /// No description provided for @aaSplitTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get aaSplitTotal;
-
   /// No description provided for @aaVirtualUserTitle.
   ///
   /// In en, this message translates to:
@@ -6926,12 +6914,6 @@ abstract class AppLocalizations {
   /// **'Me'**
   String get aaMe;
 
-  /// No description provided for @ledgerAaEnabled.
-  ///
-  /// In en, this message translates to:
-  /// **'AA Split'**
-  String get ledgerAaEnabled;
-
   /// No description provided for @ledgerAaEnabledHint.
   ///
   /// In en, this message translates to:
@@ -6949,6 +6931,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Manage virtual members'**
   String get ledgerAaVirtualUsersEntry;
+
+  /// No description provided for @aaSwitchOnLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn on AA Split'**
+  String get aaSwitchOnLabel;
+
+  /// No description provided for @aaSwitchOffLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Turn off AA Split'**
+  String get aaSwitchOffLabel;
 
   /// No description provided for @aaNoParticipants.
   ///

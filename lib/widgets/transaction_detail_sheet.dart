@@ -264,14 +264,9 @@ class _TransactionDetailBody extends ConsumerWidget {
     final resolver = _buildResolver(ref, l10n, virtualNames);
 
     return AppSheet(
-      // 右上角常驻删除 icon:吸顶始终可见,与底部按钮(编辑分摊/编辑记账)分离,
-      // 避免底部双按钮挤压删除可用区域;图标色用 error token 与文案按钮保持一致语义。
-      trailing: _DeleteTrailingIcon(onTap: () async {
-        Navigator.pop(context);
-        await onDelete();
-      }),
-      // 底部按钮区:开启分摊 → 「编辑分摊(左) + 编辑记账(右)」;
-      // 未开启 → 仅「编辑记账」单按钮全宽常驻。删除已上移到 trailing,不再占底部。
+      // 删除 icon 内嵌到内容区分类标题行右侧(与分类标题同行对齐),
+      // 不再用 AppSheet.trailing,避免 trailing 单独成行撑高 header、
+      // 与分类标题错位。
       footer: aaOn
           ? Row(children: [
               Expanded(
@@ -303,16 +298,21 @@ class _TransactionDetailBody extends ConsumerWidget {
                 ),
               ),
             ])
-          : FilledButton(
-              onPressed: () async {
-                Navigator.pop(context);
-                await onEdit();
-              },
-              style: FilledButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12))),
-              child: Text(l10n.homeDetailEditButton),
+          // 未开启分摊时仅剩「编辑记账」一个按钮,需占满整行宽度,与
+          // 开启分摊时的双按钮布局(两个 Expanded)在视觉宽度上保持一致。
+          : SizedBox(
+              width: double.infinity,
+              child: FilledButton(
+                onPressed: () async {
+                  Navigator.pop(context);
+                  await onEdit();
+                },
+                style: FilledButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12))),
+                child: Text(l10n.homeDetailEditButton),
+              ),
             ),
       // 内容区:超出弹层可用高度时内部滚动,保证标题栏 trailing 与底部操作
       // 按钮始终常驻可见(账本开启分摊后内容行数更多,小屏/测试视口下可能放不下,
@@ -322,7 +322,7 @@ class _TransactionDetailBody extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // 1. 头部:分类图标 + 分类名 + 备注
+            // 1. 头部:分类图标 + 分类名 + 备注 + 右侧删除 icon
             Row(
               children: [
                 Container(
@@ -359,6 +359,11 @@ class _TransactionDetailBody extends ConsumerWidget {
                     ],
                   ),
                 ),
+                // 删除 icon:与分类标题同行右对齐,shrinkWrap 不撑高行
+                _DeleteTrailingIcon(onTap: () async {
+                  Navigator.pop(context);
+                  await onDelete();
+                }),
               ],
             ),
             const SizedBox(height: 12),
@@ -500,6 +505,13 @@ class _DeleteTrailingIcon extends StatelessWidget {
       // 不撑大标题栏高度。
       constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
       padding: EdgeInsets.zero,
+      // shrinkWrap 去除 Material 默认 8px 点击区域额外 padding,
+      // 避免 IconButton 实际渲染高度超过 32px 把标题栏顶高、与分类标题错位。
+      // materialTapTargetSize 非 IconButton 构造参数(Flutter 3.27 已移除),
+      // 通过 style 传递;未设置 style.padding,不影响下方显式 padding。
+      style: IconButton.styleFrom(
+        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+      ),
       tooltip: AppLocalizations.of(context).commonDelete,
     );
   }

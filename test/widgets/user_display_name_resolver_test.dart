@@ -90,11 +90,11 @@ void main() {
       expect(r.resolve('cloud-user-1'), '我的昵称');
     });
 
-    test('2c. 当前登录用户无邮箱无昵称时回退「我」', () {
+    test('2c. 当前登录用户无邮箱无昵称时回退「未设置昵称(我)」', () {
       final r = buildResolver(
         currentUser: const CloudUser(id: 'cloud-user-1'),
       );
-      expect(r.resolve('cloud-user-1'), l10n.aaMe);
+      expect(r.resolve('cloud-user-1'), '${l10n.mineSlogan}(${l10n.aaMe})');
     });
 
     test('3. localSelfId 映射为本地昵称', () {
@@ -105,9 +105,9 @@ void main() {
       expect(r.resolve('local-uuid'), '本地昵称');
     });
 
-    test('3b. localSelfId 无昵称时回退「我」', () {
+    test('3b. localSelfId 无昵称时回退「未设置昵称(我)」', () {
       final r = buildResolver(localSelfId: 'local-uuid');
-      expect(r.resolve('local-uuid'), l10n.aaMe);
+      expect(r.resolve('local-uuid'), '${l10n.mineSlogan}(${l10n.aaMe})');
     });
 
     test('4. 虚拟用户名', () {

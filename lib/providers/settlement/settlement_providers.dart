@@ -12,25 +12,33 @@
 /// - [aaSettlementProvider]:账本 AA 分摊汇总(纯计算,依赖交易+成员+虚拟用户)。
 library;
 
+import 'dart:ui' as ui;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../core/identity/local_user_identity.dart';
 import '../../core/logging/logger_service.dart';
 import '../../data/db.dart';
+import '../../l10n/app_localizations.dart';
 import '../../providers/core/database_providers.dart';
 import '../../providers/sync/cloud_client_providers.dart';
 import '../../providers/sync/shared_ledger_providers.dart';
 import '../../providers/sync/sync_state_providers.dart';
+import '../../providers/ui/language_provider.dart';
 import '../../providers/ui/theme_providers.dart';
 import '../../services/data/tx_author_service.dart';
 import '../../services/settlement/aa_edit_models.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 
 /// 本地账本自我参与人的展示名:优先本地昵称(displayNameProvider),
-/// 否则回退 [fallback]。与交易详情页口径一致,localSelfId 统一解析为昵称/「我」。
-String _localSelfName(Ref ref, {String fallback = '我'}) {
+/// 昵称为空时统一回退「未设置昵称(我)」,与「我的页」昵称占位文案保持一致。
+String _localSelfName(Ref ref) {
   final nickname = ref.read(displayNameProvider).trim();
-  return nickname.isNotEmpty ? nickname : fallback;
+  if (nickname.isNotEmpty) return nickname;
+  // 昵称为空:兜底展示「未设置昵称(我)」,不暴露原始 id。
+  final locale = ref.read(languageProvider) ?? ui.PlatformDispatcher.instance.locale;
+  final l10n = lookupAppLocalizations(locale);
+  return '${l10n.mineSlogan}(${l10n.aaMe})';
 }
 
 /// 当前账本的 AA 分摊开关(Stream,自动响应 ledger.aaEnabled 变更)。
@@ -170,11 +178,11 @@ final aaParticipantOptionsProvider =
       ownerId = await TxAuthorService.currentUserId(cloud);
     }
     // 真实 userId 直接作为参与人标识;拿不到时用 localSelfId 兜底,保证名册非空。
-    // 展示名统一走本地昵称/「我」,与交易详情页口径一致。
+    // 展示名统一走本地昵称/「未设置昵称(我)」,与交易详情页口径一致。
     final localSelfId = await ref.read(localSelfIdProvider.future);
     final finalId =
         (ownerId != null && ownerId.isNotEmpty) ? ownerId : localSelfId;
-    final ownerName = _localSelfName(ref, fallback: ownerId ?? '我');
+    final ownerName = _localSelfName(ref);
     options.add(AaParticipantOption(
       id: finalId,
       name: ownerName,
@@ -277,7 +285,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       ownerId = await TxAuthorService.currentUserId(cloud);
     }
     if (ownerId != null && ownerId.isNotEmpty) {
-      displayNameMap[ownerId] = _localSelfName(ref, fallback: ownerId);
+      displayNameMap[ownerId] = _localSelfName(ref);
     } else {
       final localSelfId = await ref.read(localSelfIdProvider.future);
       displayNameMap[localSelfId] = _localSelfName(ref);
@@ -364,10 +372,10 @@ final aaSettlementProvider =
     }
     if (ownerId != null && ownerId.isNotEmpty) {
       participantIds.add(ownerId);
-      displayNameMap[ownerId] = _localSelfName(ref, fallback: ownerId);
+      displayNameMap[ownerId] = _localSelfName(ref);
     } else {
       // 未登录本地账本:用 localSelfId 占位参与人,保证结算侧参与人名册与
-      // 参与人选择器口径一致;展示名统一为本地昵称/「我」。
+      // 参与人选择器口径一致;展示名统一为本地昵称/「未设置昵称(我)」。
       final localSelfId = await ref.read(localSelfIdProvider.future);
       participantIds.add(localSelfId);
       displayNameMap[localSelfId] = _localSelfName(ref);

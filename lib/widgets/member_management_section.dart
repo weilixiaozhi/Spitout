@@ -18,6 +18,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
+import 'text_state_switch.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show spitoutCloudProviderInstance, syncEventStreamProvider;
@@ -331,65 +332,67 @@ class _MemberManagementSectionState
     );
   }
 
-  /// 模块标题行:左侧色条 + "成员管理",右侧 AA 分摊开关(文字+开关),
+  /// 模块标题行:左侧色条 + "成员管理",右侧 AA 分摊开关(内部带状态文案),
   /// AA 开启后追加"添加虚拟用户"文字链。
   ///
-  /// AA 开关作为紧凑的文字+Switch 紧贴标题右侧,字号/icon 对齐标题
-  /// (titleSmall 14px),不占用成员列表空间;开关状态在父组件持有,
-  /// 跟随开关立即显示/隐藏虚拟用户列表与"添加虚拟用户"入口。
+  /// 标题行使用固定高度 44:开关(25)、色条与按钮高度各不相同,
+  /// 固定高度 + 垂直居中可以保证标题行不随内容变化上下跳动;
+  /// 开关状态在父组件持有,跟随开关立即显示/隐藏虚拟用户列表与
+  /// "添加虚拟用户"入口。
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
           fontWeight: FontWeight.w700,
           color: primary,
         );
-    final switchLabelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
-          color: widget.isReadOnly
-              ? Theme.of(context).disabledColor
-              : SpitoutTokens.textSecondary(context),
-        );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: Row(
-        children: [
-          Container(
-            width: 3,
-            height: 15,
-            decoration: BoxDecoration(
-              color: primary,
-              borderRadius: BorderRadius.circular(2),
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(l10n.sharedMembersPageTitle, style: titleStyle),
-          const SizedBox(width: 12),
-          // AA 分摊开关:紧凑的文字+Switch,紧贴标题右侧
-          Text(l10n.ledgerAaEnabled, style: switchLabelStyle),
-          const SizedBox(width: 4),
-          SizedBox(
-            // 紧凑开关,与标题字号视觉对齐
-            height: 24,
-            child: Switch(
-              value: widget.aaEnabled,
-              // 协作者只读:禁用开关(onChanged=null 灰化)
-              onChanged: widget.isReadOnly ? null : (v) => widget.onAaChanged(v),
-            ),
-          ),
-          const Spacer(),
-          if (widget.aaEnabled && !widget.isReadOnly)
-            TextButton.icon(
-              onPressed: _addVirtualUser,
-              icon: const Icon(AppIcons.personAdd, size: 14),
-              label: Text(l10n.aaAddVirtualUser,
-                  style: Theme.of(context).textTheme.labelSmall),
-              style: TextButton.styleFrom(
-                foregroundColor: primary,
-                visualDensity: VisualDensity.compact,
-                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                padding: const EdgeInsets.symmetric(horizontal: 8),
+      child: SizedBox(
+        // 固定标题行高度:让开关/色条/按钮垂直居中,防止模块上下移动
+        height: 44,
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Container(
+              width: 3,
+              height: 15,
+              decoration: BoxDecoration(
+                color: primary,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
-        ],
+            const SizedBox(width: 8),
+            Text(l10n.sharedMembersPageTitle, style: titleStyle),
+            const SizedBox(width: 12),
+            // AA 分摊开关:状态文案内嵌在开关内部(开启/关闭文案不同),
+            // 尺寸 100x30,宽度可容纳状态文案,高度与标题行紧凑对齐
+            TextStateSwitch(
+              width: 100,
+              height: 30,
+              value: widget.aaEnabled,
+              // 协作者只读:禁用开关(onChanged=null 灰化)
+              onChanged: widget.isReadOnly
+                  ? null
+                  : (v) => widget.onAaChanged(v),
+              onLabel: l10n.aaSwitchOnLabel,
+              offLabel: l10n.aaSwitchOffLabel,
+            ),
+            const Spacer(),
+            if (widget.aaEnabled && !widget.isReadOnly)
+              TextButton.icon(
+                onPressed: _addVirtualUser,
+                icon: const Icon(AppIcons.personAdd, size: 14),
+                label: Text(l10n.aaAddVirtualUser,
+                    style: Theme.of(context).textTheme.labelSmall),
+                style: TextButton.styleFrom(
+                  foregroundColor: primary,
+                  visualDensity: VisualDensity.compact,
+                  tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
@@ -499,22 +502,19 @@ class _MemberManagementSectionState
 
   /// 新建态/本地账本:构造"所有者(我)"行作为唯一成员。
   ///
-  /// 从 [_ownerDisplayName]/[_ownerEmail] 推导;加载中或失败时兜底"我"。
-  /// 仅在确有显示名时设置 displayName,否则让 _MemberTile 回退到 email
-  /// 作为标题且不渲染副标题,避免标题/副标题重复展示同一邮箱。
+  /// 从 [_ownerDisplayName]/[_ownerEmail] 推导;仅在确有显示名时设置
+  /// displayName,否则留空交给 _MemberTile 统一处理占位:
+  /// - 有 email:标题回退到 email,不渲染副标题,避免标题/副标题重复;
+/// - 无 email:标题展示「未设置昵称」占位,头像位展示 person 图标,
+///   不再回退"你",避免头像/昵称/括号三处重复展示。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
     final hasName = _ownerDisplayName?.isNotEmpty == true;
     final email = _ownerEmail ?? '';
-    // 无 email 时用兜底"我"作为标题(displayName 设为"我",email 留空);
-    // 有 email 但无显示名时 displayName 留空,_MemberTile 标题回退到 email。
-    final displayName = hasName
-        ? _ownerDisplayName
-        : (email.isEmpty ? AppLocalizations.of(context).sharedMembersYou : null);
     return [
       SpitoutCloudLedgerMember(
         userId: '',
         email: email,
-        displayName: displayName,
+        displayName: hasName ? _ownerDisplayName : null,
         role: 'owner',
         joinedAt: DateTime.now().toUtc(),
         isSelf: true,
@@ -871,13 +871,25 @@ class _MemberTile extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     // 标题优先用昵称;昵称为空时回退到邮箱,且此时不再展示 subtitle(避免邮箱重复)。
     final hasDisplayName = member.displayName?.isNotEmpty == true;
-    final displayName = hasDisplayName ? member.displayName! : member.email;
+    final hasEmail = member.email.isNotEmpty;
+    // 未配置昵称(无昵称也无邮箱):标题展示「未设置昵称」占位,不再回退"你",
+    // 头像位对应展示 person 图标,避免头像/昵称/括号三处重复。
+    final showNicknamePlaceholder = !hasDisplayName && !hasEmail;
+    final displayName = hasDisplayName
+        ? member.displayName!
+        : hasEmail
+            ? member.email
+            : l10n.mineSlogan;
     final isOwner = member.role == 'owner';
     // 有昵称时 subtitle 展示邮箱;昵称为空时标题已是邮箱,subtitle 留空避免重复。
     final subtitleEmail = hasDisplayName ? member.email : null;
     return ListTile(
       dense: true,
-      leading: _MemberAvatar(member: member, displayName: displayName),
+      leading: _MemberAvatar(
+        member: member,
+        displayName: displayName,
+        showPersonIcon: showNicknamePlaceholder,
+      ),
       title: Row(
         children: [
           Flexible(
@@ -889,7 +901,7 @@ class _MemberTile extends ConsumerWidget {
           if (member.isSelf) ...[
             const SizedBox(width: 4),
             Text(
-              ' (${l10n.sharedMembersYou})',
+              ' (${l10n.aaMe})',
               style: TextStyle(
                 color: SpitoutTokens.textTertiary(context),
                 fontSize: 12,
@@ -938,16 +950,39 @@ extension _FirstOrNull<E> on Iterable<E> {
 /// 共享账本成员头像 — server avatar_url 拼上 cloudProvider.baseUrl 用 NetworkImage,
 /// 缺失 / 加载失败 fallback 到首字母 CircleAvatar。
 class _MemberAvatar extends ConsumerWidget {
-  const _MemberAvatar({required this.member, required this.displayName});
+  const _MemberAvatar({
+    required this.member,
+    required this.displayName,
+    this.showPersonIcon = false,
+  });
 
   final SpitoutCloudLedgerMember member;
   final String displayName;
+  // 未配置昵称(占位行):头像位展示虚拟用户样式的 person 图标,不再用占位文案首字。
+  final bool showPersonIcon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final letter = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
     final relativeUrl = member.avatarUrl;
     if (relativeUrl == null || relativeUrl.isEmpty) {
+      // 未配置头像且未配置昵称:展示虚拟用户样式的 person 图标,避免首字
+      // 头像与占位标题重复;已配置昵称时仍展示昵称首字母头像。
+      if (showPersonIcon) {
+        return Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(
+            color: SpitoutTokens.surfaceSecondary(context),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(
+            AppIcons.person,
+            size: 18,
+            color: SpitoutTokens.iconSecondary(context),
+          ),
+        );
+      }
       return CircleAvatar(child: Text(letter));
     }
     final cloudAsync = ref.watch(spitoutCloudProviderInstance);
@@ -1007,8 +1042,10 @@ class _VirtualUserTile extends StatelessWidget {
 
     // 自行布局而非用 ListTile:TextField 需限定宽度到「虚拟用户1」左右,
     // ListTile 的 title 会 Expanded 铺满,色块过宽与全局编辑框视觉不一致。
+    // 左内边距取 12 与全局 ListTileTheme contentPadding 一致,
+    // 保证真实成员行(ListTile)与虚拟用户行(自定义 Row)的头像左缘对齐。
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
       child: Row(
         children: [
           Container(

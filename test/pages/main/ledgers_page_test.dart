@@ -390,6 +390,10 @@ void main() {
 
       expect(find.byType(LedgerEditPage), findsOneWidget,
           reason: '点击编辑入口应直接打开账本编辑页');
+
+      // 编辑页读取 localSelfIdProvider 时首次生成会写日志并调度 2s 节流保存
+      // Timer，测试结束前推进虚拟时钟让 Timer 到期，避免 !timersPending 报错。
+      await tester.pump(const Duration(seconds: 3));
     },
   );
 }
