@@ -10,6 +10,10 @@ import 'transaction_editor_sheet.dart';
 ///
 /// [initialKind] 值固定为 'expense'（全局仅支出模式）。
 /// 传入 [editingTransactionId] 即为编辑模式,会按初始值回显。
+///
+/// AA 分摊初值(initialAaMode/initialAaParticipants/initialAaSplits/
+/// initialPaidByUserId)仅编辑模式回填;新建交易传 null 即默认
+/// 人均分摊 / 全部成员,支出人由落库层回填操作者(需求 §2.2)。
 Future<void> showTransactionEditorSheet(
   BuildContext context, {
   String initialKind = 'expense',
@@ -20,6 +24,10 @@ Future<void> showTransactionEditorSheet(
   String? initialNote,
   String? initialCurrencyCode,
   double? initialNativeAmount,
+  int? initialAaMode,
+  List<String>? initialAaParticipants,
+  Map<String, String>? initialAaSplits,
+  String? initialPaidByUserId,
 }) {
   return showModalBottomSheet<void>(
     context: context,
@@ -50,6 +58,10 @@ Future<void> showTransactionEditorSheet(
       initialNote: initialNote,
       initialCurrencyCode: initialCurrencyCode,
       initialNativeAmount: initialNativeAmount,
+      initialAaMode: initialAaMode,
+      initialAaParticipants: initialAaParticipants,
+      initialAaSplits: initialAaSplits,
+      initialPaidByUserId: initialPaidByUserId,
     ),
   );
 }
