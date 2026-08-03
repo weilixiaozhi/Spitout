@@ -952,17 +952,19 @@ class LocalRepository extends BaseRepository {
     };
   }
 
-  /// 共享账本:本地 tx 写完后回填 createdByUserId / lastEditedByUserId。
+  /// 回填交易作者字段(createdByUserId / lastEditedByUserId / paidByUserId)。
   /// 详见 [LocalTransactionRepository.markTxAuthor]。
   Future<void> markTxAuthor({
     required int txId,
     required String userId,
     required bool isCreate,
+    String? fallbackUserId,
   }) =>
       _transactionRepo.markTxAuthor(
         txId: txId,
         userId: userId,
         isCreate: isCreate,
+        fallbackUserId: fallbackUserId,
       );
 
   // ==================== 日历功能相关 ====================

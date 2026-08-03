@@ -429,44 +429,54 @@ class LocalTransactionRepository implements TransactionRepository {
     return newVersion;
   }
 
-  /// 共享账本:在本地标记 tx 的创建人 / 编辑人,让 UI 能立即展示头像。
-  /// 服务端 push.py 已经会兜底注入 userId,但本地写入路径(addTransaction /
-  /// updateTransaction)不知道 currentUser 是谁,需要 UI 层在写完后调一下这个
-  /// 方法。
-  ///   - isCreate=true:同时写 createdByUserId + lastEditedByUserId;并按
-  ///     默认值逻辑回填 paidByUserId(仅当现有值为空时取操作者 userId,
-  ///     用户/编辑器已显式设置的值保留)。
-  ///   - isCreate=false:只写 lastEditedByUserId(createdByUserId 维持
-  ///     first-write-wins);paidByUserId 不覆盖(用户手改的值保留)。
+  /// 回填交易作者字段(createdByUserId / lastEditedByUserId / paidByUserId)。
+  ///
+  /// 本地写入路径(addTransaction / updateTransaction)无法感知当前操作者,
+  /// 由 UI 层写完交易后调用本方法补齐作者字段。paidByUserId 的兜底规则:
+  /// - 新建:为空时回填操作者,编辑器已显式写入的值(指定分摊场景)不覆盖。
+  /// - 编辑:为空时同样回填操作者;非空则视为用户已手改,保留手改值。
+  ///
+  /// [userId] 为当前操作者(cloud 不可用时由 service 层传空串),[fallbackUserId]
+  /// 在 userId 为空时用于 paidByUserId 兜底(默认 'me',与参与人选择器口径一致)。
+  /// 头像字段(createdByUserId / lastEditedByUserId)仅在 userId 非空时写入,
+  /// cloud 不可用时保持现有值,避免把占位符 'me' 写进头像字段污染展示。
   Future<void> markTxAuthor({
     required int txId,
     required String userId,
     required bool isCreate,
+    String? fallbackUserId,
   }) async {
-    if (isCreate) {
-      // 创建场景:仅当 paidByUserId 为空时回填操作者。
-      // 编辑器可能已在 addTransaction 时显式写入 paidByUserId
-      // (AaEditPage 返回 result 后一次性落库),此处不能覆盖。
-      final existing = await getTransactionById(txId);
-      final shouldBackfillPaidBy =
-          existing == null ||
-          existing.paidByUserId == null ||
-          existing.paidByUserId!.isEmpty;
-      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
-          .write(TransactionsCompanion(
-        createdByUserId: d.Value(userId),
-        lastEditedByUserId: d.Value(userId),
-        paidByUserId: shouldBackfillPaidBy
-            ? d.Value(userId)
-            : const d.Value.absent(),
-      ));
-    } else {
-      // 编辑场景:只写 lastEditedByUserId,paidByUserId 保持用户手改值。
-      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
-          .write(TransactionsCompanion(
-        lastEditedByUserId: d.Value(userId),
-      ));
-    }
+    final hasUserId = userId.isNotEmpty;
+    final effectivePaidBy =
+        hasUserId ? userId : (fallbackUserId ?? 'me');
+
+    final existing = await getTransactionById(txId);
+    final shouldBackfillPaidBy = existing == null ||
+        existing.paidByUserId == null ||
+        existing.paidByUserId!.isEmpty;
+
+    // 头像字段仅在有真实 userId 时写入;cloud 不可用时跳过,
+    // 保持现有值(null 或 first-write-wins 的旧值),不污染展示。
+    final companion = isCreate
+        ? TransactionsCompanion(
+            createdByUserId:
+                hasUserId ? d.Value(userId) : const d.Value.absent(),
+            lastEditedByUserId:
+                hasUserId ? d.Value(userId) : const d.Value.absent(),
+            paidByUserId: shouldBackfillPaidBy
+                ? d.Value(effectivePaidBy)
+                : const d.Value.absent(),
+          )
+        : TransactionsCompanion(
+            lastEditedByUserId:
+                hasUserId ? d.Value(userId) : const d.Value.absent(),
+            paidByUserId: shouldBackfillPaidBy
+                ? d.Value(effectivePaidBy)
+                : const d.Value.absent(),
+          );
+
+    await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
+        .write(companion);
   }
 
   @override

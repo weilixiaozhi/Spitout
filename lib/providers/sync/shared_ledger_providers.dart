@@ -362,10 +362,8 @@ Future<bool> purgeLocalCloudLedgersWithContainer(ProviderContainer container) =>
 /// tx_author_service.dart（保持 `pages/widgets → providers → services` 单向）。
 /// 失败静默（service 内部 swallow），本函数不抛错。
 ///
-/// AA 分摊 paidByUserId 回填:[markTxAuthor] 内部已实现
-/// "仅当现有值为空时取操作者 userId"的回填逻辑,编辑器在
-/// addTransaction 时已显式写入的 paidByUserId 不会被覆盖。故本函数
-/// 无需额外传 paidByUserId 参数 —— service 层 markTxAuthor 自洽。
+/// paidByUserId 回填规则:cloud userId 可用时取操作者,不可用时用 'me' 兜底;
+/// 编辑器已显式写入的值(指定分摊)不覆盖。
 Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
@@ -374,8 +372,9 @@ Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
 
 /// 本地编辑 tx 后回填「编辑人」（动作函数）。
 ///
-/// 语义同 [markTxCreatedFromUi]，只写 lastEditedByUserId（创建人
-/// first-write-wins 不变;paidByUserId 保持用户手改值不覆盖)。
+/// 语义同 [markTxCreatedFromUi]：写 lastEditedByUserId（创建人
+/// first-write-wins 不变);paidByUserId 为空时回填操作者,非空视为
+/// 用户手改值保留。cloud 不可用时 paidByUserId 用 'me' 兜底。
 Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
