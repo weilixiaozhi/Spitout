@@ -172,7 +172,7 @@ class _DetailImportExportPageState
                                 size: 20),
                             onTap: () {
                               Navigator.of(context).push(
-                                MaterialPageRoute(
+                                appPageRoute(
                                   builder: (_) => const DetailExportPage(),
                                 ),
                               );
@@ -320,7 +320,7 @@ class _DetailImportExportPageState
 
       // 直接进入映射页（默认首行即表头）
       await Navigator.of(context).push(
-        MaterialPageRoute(
+        appPageRoute(
           builder: (_) => ImportConfirmPage(
             csvText: csvText,
             hasHeader: true,

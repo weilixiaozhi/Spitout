@@ -2856,6 +2856,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedMembersSyncPending => '首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员';
 
   @override
+  String get sharedMembersSaveFirst => '请先保存账本';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name 创建';
   }
@@ -3532,7 +3535,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => '协作者无权修改账本信息';
 
   @override
-  String get aaSettlementTitle => '分摊结算';
+  String get aaSettlementTitle => '分摊统计';
 
   @override
   String get aaSettlementOverview => '汇总';
@@ -3546,7 +3549,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get aaSettlementPerPerson => '每人汇总';
+  String get aaSettlementPerPerson => '分摊详情';
 
   @override
   String get aaSettlementPaid => '实付';
@@ -3575,10 +3578,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaSettlementNoTransfers => '已结清，无需转账';
 
   @override
-  String get aaSettlementEmpty => '暂无参与分摊的交易';
+  String get aaSettlementExcluded => '不计入详单';
 
   @override
-  String get aaSettlementExcluded => '不计入分摊';
+  String aaSettlementParticipantCount(int count) {
+    return '分摊人数 $count 人';
+  }
+
+  @override
+  String get aaSettlementExcludedEmpty => '暂无不计入详单的交易';
 
   @override
   String get aaEditTitle => '分摊明细';
@@ -3645,7 +3653,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaVirtualUserInUse => '该虚拟用户名下有账，不可删除';
 
   @override
+  String aaVirtualUserDefaultName(int index) {
+    return '虚拟用户$index';
+  }
+
+  @override
+  String get aaAddVirtualUser => '添加虚拟用户';
+
+  @override
   String get aaUnknownUser => '未知';
+
+  @override
+  String get aaMe => '我';
 
   @override
   String get aaPerPersonAllMembers => '人均分摊（全部成员）';
@@ -6523,6 +6542,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get sharedMembersSyncPending => '首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員';
 
   @override
+  String get sharedMembersSaveFirst => '請先保存帳本';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name 建立';
   }
@@ -7199,7 +7221,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgerMetaReadOnlyToast => '協作者無權修改帳本資訊';
 
   @override
-  String get aaSettlementTitle => '分攤結算';
+  String get aaSettlementTitle => '分攤統計';
 
   @override
   String get aaSettlementOverview => '總覽';
@@ -7213,7 +7235,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
-  String get aaSettlementPerPerson => '每人總覽';
+  String get aaSettlementPerPerson => '分攤詳情';
 
   @override
   String get aaSettlementPaid => '實付';
@@ -7242,10 +7264,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaSettlementNoTransfers => '已結清，無需轉帳';
 
   @override
-  String get aaSettlementEmpty => '暫無參與分攤的交易';
+  String get aaSettlementExcluded => '不計入詳單';
 
   @override
-  String get aaSettlementExcluded => '不計入分攤';
+  String aaSettlementParticipantCount(int count) {
+    return '分攤人數 $count 人';
+  }
+
+  @override
+  String get aaSettlementExcludedEmpty => '暫無不計入詳單的交易';
 
   @override
   String get aaEditTitle => '分攤明細';
@@ -7312,7 +7339,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaVirtualUserInUse => '該虛擬用戶名下有帳，不可刪除';
 
   @override
+  String aaVirtualUserDefaultName(int index) {
+    return '虛擬用戶$index';
+  }
+
+  @override
+  String get aaAddVirtualUser => '新增虛擬用戶';
+
+  @override
   String get aaUnknownUser => '未知';
+
+  @override
+  String get aaMe => '我';
 
   @override
   String get aaPerPersonAllMembers => '人均分攤（全部成員）';

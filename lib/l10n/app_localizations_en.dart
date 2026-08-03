@@ -2856,6 +2856,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMembersSyncPending => 'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.';
 
   @override
+  String get sharedMembersSaveFirst => 'Please save the ledger first';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return 'Created by $name';
   }
@@ -3532,7 +3535,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => 'Collaborators cannot modify ledger settings.';
 
   @override
-  String get aaSettlementTitle => 'AA Settlement';
+  String get aaSettlementTitle => 'AA Statistics';
 
   @override
   String get aaSettlementOverview => 'Overview';
@@ -3546,7 +3549,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aaSettlementPerPerson => 'Per person';
+  String get aaSettlementPerPerson => 'Split details';
 
   @override
   String get aaSettlementPaid => 'Paid';
@@ -3575,10 +3578,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaSettlementNoTransfers => 'All settled up';
 
   @override
-  String get aaSettlementEmpty => 'No shared transactions yet';
+  String get aaSettlementExcluded => 'Excluded from details';
 
   @override
-  String get aaSettlementExcluded => 'Not included in split';
+  String aaSettlementParticipantCount(int count) {
+    return '$count participants';
+  }
+
+  @override
+  String get aaSettlementExcludedEmpty => 'No transactions excluded';
 
   @override
   String get aaEditTitle => 'Split details';
@@ -3645,7 +3653,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaVirtualUserInUse => 'Has related transactions and cannot be deleted';
 
   @override
+  String aaVirtualUserDefaultName(int index) {
+    return 'Virtual User $index';
+  }
+
+  @override
+  String get aaAddVirtualUser => 'Add virtual user';
+
+  @override
   String get aaUnknownUser => 'Unknown';
+
+  @override
+  String get aaMe => 'Me';
 
   @override
   String get aaPerPersonAllMembers => 'Split equally among all members';

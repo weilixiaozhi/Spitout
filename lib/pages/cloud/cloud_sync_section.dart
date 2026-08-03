@@ -506,7 +506,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     listen: false);
                                 if (user == null) {
                                   await Navigator.of(context).push(
-                                      MaterialPageRoute(
+                                      appPageRoute(
                                           builder: (_) =>
                                               const LoginPage()));
                                   ref

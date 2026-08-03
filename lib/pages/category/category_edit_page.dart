@@ -188,7 +188,7 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                       tooltip: l10n.categoryDetailTooltip,
                       onPressed: () {
                         Navigator.of(context).push(
-                          MaterialPageRoute(
+                          appPageRoute(
                             builder: (context) => CategoryDetailPage(
                               categoryId: widget.category!.id,
                               categoryName: widget.category!.name,

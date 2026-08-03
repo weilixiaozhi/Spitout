@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/identity/local_user_identity.dart';
 import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
@@ -68,8 +69,13 @@ class _TransactionDetailBody extends ConsumerWidget {
 
   /// 展示名四级兜底:共享账本成员表(昵称 → 完整邮箱) → 本地昵称 → 原始 id。
   /// 本地账本无成员表,靠 [localOwnerDisplayName] 展示昵称;未设置昵称时回退 id。
-  String _displayName(String? userId) {
+  String _displayName(String? userId, AppLocalizations l10n) {
     if (userId == null || userId.isEmpty) return '';
+    // 本地账本未登录云的自我占位:统一映射为本地昵称/「我」,禁止展示字面量 me。
+    if (userId == kLocalSelfUserId) {
+      final localName = localOwnerDisplayName?.trim() ?? '';
+      return localName.isNotEmpty ? localName : l10n.aaMe;
+    }
     final member = memberDisplayMap[userId];
     final memberName = member?.displayName?.trim() ?? '';
     if (memberName.isNotEmpty) return memberName;
@@ -92,6 +98,11 @@ class _TransactionDetailBody extends ConsumerWidget {
   String _aaNameOf(
       String? id, Map<String, String> virtualNames, AppLocalizations l10n) {
     if (id == null || id.isEmpty) return l10n.aaUnknownUser;
+    // 本地账本未登录云的自我占位:统一映射为本地昵称/「我」,禁止展示字面量 me。
+    if (id == kLocalSelfUserId) {
+      final localName = localOwnerDisplayName?.trim() ?? '';
+      return localName.isNotEmpty ? localName : l10n.aaMe;
+    }
     final m = memberDisplayMap[id];
     if (m != null) {
       final dn = m.displayName;
@@ -137,8 +148,9 @@ class _TransactionDetailBody extends ConsumerWidget {
       _InfoRow(label: l10n.aaPayer, value: _aaNameOf(t.paidByUserId, virtualNames, l10n)),
     ];
     if (mode == AaMode.noSplit) {
+      // 不分摊模式:分摊方式展示「不分摊」(与编辑页/列表页展示值保持一致)。
       widgets.add(_InfoRow(
-          label: l10n.aaSplitMode, value: l10n.aaSettlementExcluded));
+          label: l10n.aaSplitMode, value: l10n.aaModeNoSplit));
       return widgets;
     }
     widgets.add(_InfoRow(
@@ -288,11 +300,11 @@ class _TransactionDetailBody extends ConsumerWidget {
             if (t.createdByUserId != null)
               _MemberRow(
                   label: l10n.homeDetailCreator,
-                  name: _displayName(t.createdByUserId)),
+                  name: _displayName(t.createdByUserId, l10n)),
             if (t.lastEditedByUserId != null)
               _MemberRow(
                   label: l10n.homeDetailLastEditor,
-                  name: _displayName(t.lastEditedByUserId),
+                  name: _displayName(t.lastEditedByUserId, l10n),
                   subtext: t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
           ],
           // 4. 编辑记录(仅供查看)
@@ -317,7 +329,10 @@ class _TransactionDetailBody extends ConsumerWidget {
                             fontSize: 13,
                             color: SpitoutTokens.textTertiary(context))))
                 : Column(
-                    children: [for (final e in h) _HistoryRow(e, _displayName)]),
+                    children: [
+                      for (final e in h)
+                        _HistoryRow(e, (id) => _displayName(id, l10n))
+                    ]),
             loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
                 child: Center(

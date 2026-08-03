@@ -2856,6 +2856,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersSyncPending => 'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.';
 
   @override
+  String get sharedMembersSaveFirst => '먼저 가계부를 저장해 주세요';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name님이 생성함';
   }
@@ -3532,7 +3535,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => '공동 작업자는 가계부 정보를 수정할 수 없습니다.';
 
   @override
-  String get aaSettlementTitle => 'AA 정산';
+  String get aaSettlementTitle => 'AA 통계';
 
   @override
   String get aaSettlementOverview => '요약';
@@ -3546,7 +3549,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get aaSettlementPerPerson => '인별 합계';
+  String get aaSettlementPerPerson => '분담 상세';
 
   @override
   String get aaSettlementPaid => '지출';
@@ -3575,10 +3578,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaSettlementNoTransfers => '정산 완료, 송금이 필요 없습니다';
 
   @override
-  String get aaSettlementEmpty => '분담 거래가 없습니다';
+  String get aaSettlementExcluded => '상세 내역 미포함';
 
   @override
-  String get aaSettlementExcluded => '분담 제외';
+  String aaSettlementParticipantCount(int count) {
+    return '분담 인원 $count명';
+  }
+
+  @override
+  String get aaSettlementExcludedEmpty => '상세 내역 제외 거래가 없습니다';
 
   @override
   String get aaEditTitle => '분담 내역';
@@ -3645,7 +3653,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaVirtualUserInUse => '관련 거래가 있어 삭제할 수 없습니다';
 
   @override
+  String aaVirtualUserDefaultName(int index) {
+    return '가상 사용자$index';
+  }
+
+  @override
+  String get aaAddVirtualUser => '가상 사용자 추가';
+
+  @override
   String get aaUnknownUser => '알 수 없음';
+
+  @override
+  String get aaMe => '나';
 
   @override
   String get aaPerPersonAllMembers => '균등 분담(모든 멤버)';

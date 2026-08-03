@@ -155,7 +155,6 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
           ledger: ledger,
           selected: ledger.id == currentId,
           onTap: () => _handleLocalLedgerTap(ledger),
-          onLongPress: () => _openLedgerEditPage(ledger),
           onMore: () => _openLedgerEditPage(ledger),
         );
 
@@ -197,7 +196,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               label: Text(l10n.sharedJoinPageTitle),
               onPressed: () async {
                 await Navigator.of(context).push(
-                  MaterialPageRoute(
+                  appPageRoute(
                     builder: (_) => const JoinSharedLedgerPage(),
                   ),
                 );
@@ -315,7 +314,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
 
     if (!mounted) return;
     await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => LedgerEditPage(ledger: ledger)),
+      appPageRoute(builder: (_) => LedgerEditPage(ledger: ledger)),
     );
   }
 
@@ -324,7 +323,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   /// 打开新建账本二级页面
   void _showCreateLedgerDialog(BuildContext context) {
     Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const LedgerEditPage()),
+      appPageRoute(builder: (_) => const LedgerEditPage()),
     );
   }
 

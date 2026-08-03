@@ -10,6 +10,7 @@ import 'package:spitout/providers/ui/theme_providers.dart';
 import '../core/logging/logger_service.dart';
 import '../theme/typography.dart';
 import '../theme/icons/app_icons.dart';
+import 'app_route.dart';
 import 'avatar_preview_page.dart';
 import 'spitout_icon.dart';
 import 'toast.dart';
@@ -42,7 +43,7 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
     if (!mounted) return;
     final l10n = AppLocalizations.of(context);
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => AvatarPreviewPage(
           avatarPath: path,
           uploadLabel: l10n.mineAvatarUploadNew,

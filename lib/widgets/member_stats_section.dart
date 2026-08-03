@@ -12,6 +12,7 @@ import 'package:spitout/providers/sync/sync_providers.dart'
 import 'package:spitout/providers/ui/theme_providers.dart'
     show expenseColorSchemeProvider;
 import '../theme/colors.dart';
+import '../theme/icons/app_icons.dart';
 import 'format_money.dart';
 import 'section_card.dart';
 
@@ -20,26 +21,51 @@ import 'section_card.dart';
 /// 自带模块标题（色条 + "成员支出"，右侧为账本总支出金额副标题），
 /// 作为内容版块内嵌在编辑账本页中。卡片外边距与页面内 Material Card
 /// 默认 margin(all: 4) 对齐。
+///
+/// 常驻显示:新建态/本地账本(无 syncId)时数据默认归 0,
+/// 直接展示空态,不跟随云端。
 class MemberStatsSection extends ConsumerWidget {
   const MemberStatsSection({
     super.key,
     required this.ledgerExternalId,
+    required this.aaEnabled,
+    required this.onOpenSettlement,
   });
 
-  /// Server external_id(本地 syncId)。
-  final String ledgerExternalId;
+  /// Server external_id(本地 syncId);null/空 = 新建态或本地账本。
+  ///
+  /// 为空时不拉取云端统计,标题右侧不展示总支出金额,
+  /// 内容区直接展示"暂无记账"空态(数据默认归 0)。
+  final String? ledgerExternalId;
+
+  /// AA 分摊开关当前状态;开启时在标题下方显示分摊结算入口。
+  ///
+  /// 入口跟随开关立即显示/隐藏,不依赖保存按钮。
+  final bool aaEnabled;
+
+  /// 分摊结算入口点击回调(由父组件判断是否可跳转:仅编辑态当前账本可跳,
+  /// 否则提示先保存账本)。
+  final VoidCallback onOpenSettlement;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final statsAsync = ref.watch(
-      memberStatsProvider(MemberStatsKey(ledgerId: ledgerExternalId)),
-    );
+    final syncId = ledgerExternalId;
+    // 无 syncId(新建态/本地账本):不 watch 云端统计,直接归 0 空态。
+    final statsAsync = (syncId != null && syncId.isNotEmpty)
+        ? ref.watch(memberStatsProvider(MemberStatsKey(ledgerId: syncId)))
+        : const AsyncValue<SpitoutCloudMemberStats?>.data(null);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTitle(context, ref, l10n, statsAsync),
+        // 分摊结算入口:跟随 AA 开关立即显示(开启就显示),无需保存。
+        // 样式与"加入共享账本"入口一致(全宽 OutlinedButton)。
+        if (aaEnabled) ...[
+          const SizedBox(height: 8),
+          _buildSettlementEntry(context, l10n),
+        ],
         const SizedBox(height: 8),
         // 模块内嵌在页面滚动视图中,加载 / 错误态只需占位展示,不撑满全屏。
         statsAsync.when(
@@ -55,6 +81,22 @@ class MemberStatsSection extends ConsumerWidget {
           data: (stats) => _buildMemberList(context, stats, l10n),
         ),
       ],
+    );
+  }
+
+  /// 分摊结算入口(成员支出标题下方,AA 开关开启时显示)。
+  Widget _buildSettlementEntry(BuildContext context, AppLocalizations l10n) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: OutlinedButton.icon(
+        icon: const Icon(AppIcons.pieChart, size: 18),
+        label: Text(l10n.ledgerAaSettlementEntry),
+        onPressed: onOpenSettlement,
+        style: OutlinedButton.styleFrom(
+          minimumSize: const Size(double.infinity, 40.0),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ),
+      ),
     );
   }
 

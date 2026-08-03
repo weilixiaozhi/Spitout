@@ -41,7 +41,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       // 开启：跳转设置 PIN
       final result = await Navigator.push<bool>(
         context,
-        MaterialPageRoute(
+        appPageRoute(
           builder: (_) => const PinSetupPage(mode: PinSetupMode.create),
         ),
       );
@@ -64,7 +64,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
   Future<bool> _verifyCurrentPin() async {
     final result = await Navigator.push<bool>(
       context,
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => const _PinVerifyPage(),
       ),
     );
@@ -74,7 +74,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
   Future<void> _changePin() async {
     await Navigator.push(
       context,
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => const PinSetupPage(mode: PinSetupMode.change),
       ),
     );
@@ -110,6 +110,8 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+      sheetAnimationStyle: kSheetAnimationStyle,
       builder: (ctx) {
         return SafeArea(
           child: Column(

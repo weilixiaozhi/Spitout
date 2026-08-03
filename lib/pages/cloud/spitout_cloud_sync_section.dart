@@ -421,7 +421,7 @@ class SpitoutCloudSyncSectionState
       label = l10n.mineLoginTitle; // "登录"
       onPressed = () async {
         await Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const LoginPage()),
+          appPageRoute(builder: (_) => const LoginPage()),
         );
         ref.read(syncStatusRefreshProvider.notifier).state++;
       };
@@ -471,7 +471,7 @@ class SpitoutCloudSyncSectionState
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
               onPressed: () => Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const LogCenterPage()),
+                appPageRoute(builder: (_) => const LogCenterPage()),
               ),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.primary,

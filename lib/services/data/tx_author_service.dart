@@ -86,7 +86,7 @@ class TxAuthorService {
       // 否则保持现有值(first-write-wins / null)。
       await repo.markTxAuthor(
         txId: txId,
-        userId: hasUserId ? userId! : '',
+        userId: hasUserId ? userId : '',
         isCreate: isCreate,
         fallbackUserId: hasUserId ? null : 'me',
       );

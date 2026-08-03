@@ -32,7 +32,7 @@ void main() {
   tearDown(() => db.close());
 
   /// 插入一条无 paidBy 的交易,模拟本地账本新建后尚未回填作者的状态。
-  Future<int> _createTx({String? paidByUserId}) async {
+  Future<int> createTx({String? paidByUserId}) async {
     return repo.addTransaction(
       ledgerId: ledgerId,
       type: 'expense',
@@ -44,7 +44,7 @@ void main() {
 
   group('markTxAuthor(isCreate=true)', () {
     test('cloud userId 不可用时,paidBy 用 me 兜底,头像字段保持 null', () async {
-      final id = await _createTx();
+      final id = await createTx();
       // userId 传空串 + fallbackUserId='me',模拟 cloud 不可用场景。
       await repo.markTxAuthor(
         txId: id,
@@ -60,7 +60,7 @@ void main() {
     });
 
     test('cloud userId 可用时,三字段统一回填操作者', () async {
-      final id = await _createTx();
+      final id = await createTx();
       await repo.markTxAuthor(
         txId: id,
         userId: 'u-alice',
@@ -74,7 +74,7 @@ void main() {
     });
 
     test('编辑器已显式写入 paidBy 时,markTxAuthor 不覆盖', () async {
-      final id = await _createTx(paidByUserId: 'explicit-payer');
+      final id = await createTx(paidByUserId: 'explicit-payer');
       await repo.markTxAuthor(
         txId: id,
         userId: 'u-alice',
@@ -91,7 +91,7 @@ void main() {
 
   group('markTxAuthor(isCreate=false)', () {
     test('既有 paidBy 为空时,回填操作者 + 写 lastEditedBy', () async {
-      final id = await _createTx();
+      final id = await createTx();
       // 先模拟首次创建回填。
       await repo.markTxAuthor(
         txId: id,
@@ -115,7 +115,7 @@ void main() {
 
     test('既有 paidBy 为空(本地账本从未回填)时,编辑回填操作者', () async {
       // 极端场景:旧数据从未走 markTxAuthor,paidBy 为 null,直接编辑。
-      final id = await _createTx();
+      final id = await createTx();
       await repo.markTxAuthor(
         txId: id,
         userId: 'u-bob',
@@ -130,7 +130,7 @@ void main() {
     });
 
     test('既有 paidBy 为用户手改值时,编辑不覆盖', () async {
-      final id = await _createTx(paidByUserId: 'hand-picked');
+      final id = await createTx(paidByUserId: 'hand-picked');
       await repo.markTxAuthor(
         txId: id,
         userId: 'u-bob',
@@ -143,7 +143,7 @@ void main() {
     });
 
     test('cloud 不可用时,编辑路径 paidBy 为空则用 me 兜底', () async {
-      final id = await _createTx();
+      final id = await createTx();
       await repo.markTxAuthor(
         txId: id,
         userId: '',

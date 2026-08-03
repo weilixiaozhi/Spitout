@@ -54,8 +54,8 @@ Future<void> _pump(
         ledgerMembersProvider.overrideWith((ref, ledgerId) async => members),
         spitoutCloudProviderInstance.overrideWith((ref) async => null),
       ],
-      child: const MaterialApp(
-        locale: Locale('zh'),
+      child: MaterialApp(
+        locale: const Locale('zh'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
         home: Scaffold(
@@ -63,6 +63,12 @@ Future<void> _pump(
             child: MemberManagementSection(
               ledgerExternalId: 'ext-1',
               ledgerName: '测试账本',
+              ledgerId: null,
+              aaEnabled: false,
+              onAaChanged: (_) {},
+              isReadOnly: false,
+              pendingVirtualUsers: const [],
+              onPendingVirtualUsersChanged: (_) {},
             ),
           ),
         ),
@@ -145,8 +151,8 @@ void main() {
               .overrideWith((ref) async => FakeSpitoutCloudProvider()),
           syncEngineProvider.overrideWith((ref, arg) => engine),
         ],
-        child: const MaterialApp(
-          locale: Locale('zh'),
+        child: MaterialApp(
+          locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
           home: Scaffold(
@@ -154,6 +160,12 @@ void main() {
               child: MemberManagementSection(
                 ledgerExternalId: 'ext-1',
                 ledgerName: '测试账本',
+                ledgerId: null,
+                aaEnabled: false,
+                onAaChanged: (_) {},
+                isReadOnly: false,
+                pendingVirtualUsers: const [],
+                onPendingVirtualUsersChanged: (_) {},
               ),
             ),
           ),

@@ -116,7 +116,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                       // 齿轮「配置」入口：进入本地存储页（自动备份开关 / 快照恢复）。
                       // 复用卡片内置 onConfigure 浮层按钮，零改动卡片组件。
                       onConfigure: () => Navigator.of(context).push(
-                        MaterialPageRoute(
+                        appPageRoute(
                             builder: (_) => const LocalBackupPage()),
                       ),
                     ),

@@ -72,7 +72,7 @@ class MinePage extends ConsumerWidget {
                             size: 20),
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const ExchangeRatePage()),
                           );
@@ -91,7 +91,7 @@ class MinePage extends ConsumerWidget {
                             size: 20),
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const RecurringTransactionPage()),
                           );
@@ -110,7 +110,7 @@ class MinePage extends ConsumerWidget {
                             size: 20),
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const ReminderSettingsPage()),
                           );
@@ -129,7 +129,7 @@ class MinePage extends ConsumerWidget {
                             size: 20),
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const AppearanceSettingsPage()),
                           );
@@ -157,7 +157,7 @@ class MinePage extends ConsumerWidget {
                         CloudServiceEntryTile(
                           onTap: () async {
                             await Navigator.of(context).push(
-                              MaterialPageRoute(
+                              appPageRoute(
                                   builder: (_) => const CloudServicePage()),
                             );
                           },
@@ -178,7 +178,7 @@ class MinePage extends ConsumerWidget {
                               size: 20),
                           onTap: () async {
                             await Navigator.of(context).push(
-                              MaterialPageRoute(
+                              appPageRoute(
                                   builder: (_) =>
                                       const DetailImportExportPage()),
                             );
@@ -199,7 +199,7 @@ class MinePage extends ConsumerWidget {
                               size: 20),
                           onTap: () async {
                             await Navigator.of(context).push(
-                              MaterialPageRoute(
+                              appPageRoute(
                                   builder: (_) =>
                                       const ConfigImportExportPage()),
                             );
@@ -221,7 +221,7 @@ class MinePage extends ConsumerWidget {
                               size: 20),
                           onTap: () async {
                             await Navigator.of(context).push(
-                              MaterialPageRoute(
+                              appPageRoute(
                                   builder: (_) =>
                                       const OrphanCleanupPage()),
                             );

@@ -199,7 +199,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   }) {
     return OutlinedButton.icon(
       onPressed: () => Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => page),
+        appPageRoute(builder: (_) => page),
       ),
       icon: Icon(icon, size: 16),
       label: Text(label),
@@ -806,7 +806,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   /// 跳转到新增分类页面
   void _addCategory() async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => const CategoryEditPage(kind: 'expense'),
       ),
     );
@@ -1211,7 +1211,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   /// 跳转到分类编辑页
   Future<void> _onEditCategory(db.Category category) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => CategoryEditPage(
           category: category,
           kind: category.kind,
@@ -1223,7 +1223,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   /// 跳转到新增子分类页
   Future<void> _onAddSubCategory(db.Category parent) async {
     await Navigator.of(context).push(
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => CategoryEditPage(
           kind: parent.kind,
           parentCategory: parent,
@@ -1462,6 +1462,8 @@ Future<int?> showMigrateTargetSheet(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     builder: (sheetContext) {
       return _MigrateTargetSheet(availableCategories: availableCategories);
     },

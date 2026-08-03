@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'app_route.dart';
 import '../data/models.dart';
 import 'package:spitout/providers/providers.dart';
 import '../theme/colors.dart';
@@ -83,6 +84,8 @@ Future<Category?> showParentCategorySelector(
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     builder: (context) => _ParentCategorySelectorSheet(
       initialSelection: initialSelection,
       excludeIds: excludeIds,

@@ -932,7 +932,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     }
 
     Navigator.of(context).push(
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => CategoryDetailPage(
           categoryId: categoryId,
           categoryName: categoryName,

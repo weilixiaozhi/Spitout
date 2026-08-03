@@ -97,7 +97,7 @@ class RecurringTransactionPage extends ConsumerWidget {
 
   void _addRecurringTransaction(BuildContext context, WidgetRef ref) async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
+      appPageRoute<bool>(
         builder: (_) => const RecurringTransactionEditPage(),
       ),
     );
@@ -148,7 +148,7 @@ class _RecurringTransactionCard extends ConsumerWidget {
         child: InkWell(
           onTap: () async {
             final result = await Navigator.of(context).push<bool>(
-              MaterialPageRoute(
+              appPageRoute<bool>(
                 builder: (_) => RecurringTransactionEditPage(recurring: recurring),
               ),
             );

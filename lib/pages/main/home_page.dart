@@ -135,7 +135,7 @@ class _HomePageState extends ConsumerState<HomePage>
   void _onTapLedgerCapsule() {
     Navigator.push(
       context,
-      MaterialPageRoute(
+      appPageRoute(
         builder: (_) => const LedgersPage(),
       ),
     );
@@ -727,7 +727,7 @@ class _HomePageState extends ConsumerState<HomePage>
               ref.read(homeSwitchToStreamProvider.notifier).state++;
               if (!context.mounted) return;
               await Navigator.of(context).push(
-                MaterialPageRoute(
+                appPageRoute(
                   builder: (_) => CategoryDetailPage(
                     categoryId: cat.id,
                     categoryName: CategoryUtils.getDisplayName(cat.name, context),

@@ -10,6 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'app.dart';
 import 'router.dart';
+import 'widgets/app_route.dart';
 import 'widgets/login_2fa_challenge_view.dart';
 import 'theme/app_theme.dart';
 import 'package:spitout/providers/providers.dart';
@@ -262,7 +263,7 @@ class MainApp extends ConsumerWidget {
           if (named != null) return named;
           if (settings.name == Navigator.defaultRouteName ||
               settings.name == '/') {
-            return MaterialPageRoute(
+            return appPageRoute(
                 builder: (_) => _getHomePage(initState, ref),
                 settings: const RouteSettings(name: '/'));
           }

@@ -46,6 +46,17 @@ class SpitoutTheme {
       primaryColor: seedColor,
       scaffoldBackgroundColor: SpitoutColors.lightScaffold,
       textTheme: textTheme,
+      // 全局页面转场：左右滑动 + 线性曲线（无加速减速），全平台统一。
+      // 设计意图：取代 Material 默认的缩放/淡入，向小红书等大众 App 的平移切换看齐。
+      // 所有 MaterialPageRoute 自动走该配置，无需各调用点单独设置。
+      pageTransitionsTheme: const PageTransitionsTheme(builders: {
+        TargetPlatform.android: _SlidePageTransitionsBuilder(),
+        TargetPlatform.iOS: _SlidePageTransitionsBuilder(),
+        TargetPlatform.macOS: _SlidePageTransitionsBuilder(),
+        TargetPlatform.windows: _SlidePageTransitionsBuilder(),
+        TargetPlatform.linux: _SlidePageTransitionsBuilder(),
+        TargetPlatform.fuchsia: _SlidePageTransitionsBuilder(),
+      }),
       // 亮色分割线：极浅黑
       dividerColor: Colors.black.withValues(alpha: 0.06),
       appBarTheme: const AppBarTheme(
@@ -144,6 +155,15 @@ class SpitoutTheme {
       // shadcn/ui 暗色 token：background darkScaffold（深蓝灰，非纯黑）
       scaffoldBackgroundColor: SpitoutColors.darkScaffold,
       textTheme: textTheme,
+      // 全局页面转场：左右滑动 + 线性曲线（无加速减速），与亮色保持一致。
+      pageTransitionsTheme: const PageTransitionsTheme(builders: {
+        TargetPlatform.android: _SlidePageTransitionsBuilder(),
+        TargetPlatform.iOS: _SlidePageTransitionsBuilder(),
+        TargetPlatform.macOS: _SlidePageTransitionsBuilder(),
+        TargetPlatform.windows: _SlidePageTransitionsBuilder(),
+        TargetPlatform.linux: _SlidePageTransitionsBuilder(),
+        TargetPlatform.fuchsia: _SlidePageTransitionsBuilder(),
+      }),
       // shadcn/ui 暗色 token：card/popover darkSurface，foreground darkTextPrimary
       appBarTheme: const AppBarTheme(
         backgroundColor: SpitoutColors.darkScaffold,
@@ -223,6 +243,52 @@ class SpitoutTheme {
       ),
       iconTheme: const IconThemeData(
         color: SpitoutColors.darkTextPrimary,
+      ),
+    );
+  }
+}
+
+/// 全局页面转场 Builder：左右滑动 + 线性曲线。
+///
+/// 设计意图：取代 Material 默认的缩放淡入与 iOS 默认的带 ease 曲线滑动，
+/// 采用纯线性（`Curves.linear`）实现"匀速平移"，避免任何加速/减速感，
+/// 视觉效果对标小红书等大众 App 的页面切换。
+///
+/// 动画时长由 `appPageRoute`（`lib/widgets/app_route.dart`）统一覆盖为 200ms，
+/// 本 Builder 仅负责转场的视觉位移效果，不改变时长。
+class _SlidePageTransitionsBuilder extends PageTransitionsBuilder {
+  const _SlidePageTransitionsBuilder();
+
+  @override
+  Widget buildTransitions<T>(
+    PageRoute<T> route,
+    BuildContext context,
+    Animation<double> animation,
+    Animation<double> secondaryAnimation,
+    Widget child,
+  ) {
+    // 入场页面从右侧 100% 平移到 0（从右向左滑入）；
+    // 出场时反向（从左向右滑出）。全程线性，无加速减速。
+    const curve = Curves.linear;
+
+    // 主页面（新页面）水平位移动画：从右侧滑入到原位
+    final pageTween = Tween<Offset>(
+      begin: const Offset(1.0, 0.0),
+      end: Offset.zero,
+    ).chain(CurveTween(curve: curve));
+
+    // 次要页面（被覆盖的旧页面）轻微左移，保持全可见不缩放，
+    // 实现"前页让位"的视差效果，与小红书等大众 App 一致。
+    final secondaryPageTween = Tween<Offset>(
+      begin: Offset.zero,
+      end: const Offset(-0.3, 0.0),
+    ).chain(CurveTween(curve: curve));
+
+    return SlideTransition(
+      position: secondaryAnimation.drive(secondaryPageTween),
+      child: SlideTransition(
+        position: animation.drive(pageTween),
+        child: child,
       ),
     );
   }

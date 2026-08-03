@@ -976,6 +976,7 @@
     "sharedMembersRemoveCta": "이 멤버 제거",
     "sharedMembersRemoveConfirm": "{name}님을 제거하시겠습니까? 즉시 이 가계부에 대한 접근 권한을 잃게 됩니다.",
     "sharedMembersRemoved": "멤버가 제거되었습니다",
+    "sharedMembersSaveFirst": "먼저 가계부를 저장해 주세요",
 
     "sharedTxCreatedBy": "{name}님이 생성함",
     "sharedTxEditedBy": "{name}님이 마지막으로 편집함",
@@ -1133,11 +1134,11 @@
     "updateGoToGithub": "GitHub에서 보기",
     "mineUpdateNow": "업데이트",
     "ledgerMetaReadOnlyToast": "공동 작업자는 가계부 정보를 수정할 수 없습니다.",
-    "aaSettlementTitle": "AA 정산",
+    "aaSettlementTitle": "AA 통계",
     "aaSettlementOverview": "요약",
     "aaSettlementTotalAmount": "분담 총액",
     "aaSettlementTxCount": "분담 거래 {count}건",
-    "aaSettlementPerPerson": "인별 합계",
+    "aaSettlementPerPerson": "분담 상세",
     "aaSettlementPaid": "지출",
     "aaSettlementShare": "분담",
     "aaSettlementNet": "차액",
@@ -1146,8 +1147,16 @@
     "aaSettlementTransferPlan": "송금 계획",
     "aaSettlementTransferPayTo": "{from} → {to}",
     "aaSettlementNoTransfers": "정산 완료, 송금이 필요 없습니다",
-    "aaSettlementEmpty": "분담 거래가 없습니다",
-    "aaSettlementExcluded": "분담 제외",
+    "aaSettlementExcluded": "상세 내역 미포함",
+    "aaSettlementParticipantCount": "분담 인원 {count}명",
+    "@aaSettlementParticipantCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaSettlementExcludedEmpty": "상세 내역 제외 거래가 없습니다",
     "aaEditTitle": "분담 내역",
     "aaPayer": "지출한 사람",
     "aaSplitMode": "분담 방식",
@@ -1168,7 +1177,17 @@
     "aaVirtualUserEmpty": "가상 사용자가 없습니다",
     "aaVirtualUserDeleteConfirm": "가상 사용자「{name}」을(를) 삭제하시겠습니까?",
     "aaVirtualUserInUse": "관련 거래가 있어 삭제할 수 없습니다",
+    "aaVirtualUserDefaultName": "가상 사용자{index}",
+    "@aaVirtualUserDefaultName": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "aaAddVirtualUser": "가상 사용자 추가",
     "aaUnknownUser": "알 수 없음",
+    "aaMe": "나",
     "aaPerPersonAllMembers": "균등 분담(모든 멤버)",
     "ledgerAaEnabled": "AA 분담",
     "ledgerAaEnabledHint": "활성화하면 지출을 멤버와 분담할 수 있습니다",

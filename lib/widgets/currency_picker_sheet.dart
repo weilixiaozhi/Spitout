@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'app_route.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import '../theme/colors.dart';
@@ -43,6 +44,8 @@ Future<String?> showCurrencyPickerSheet(
     useRootNavigator: useRootNavigator,
     backgroundColor: SpitoutTokens.surfaceSheet(context),
     barrierColor: barrierColor,
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     // 抬升阴影：记账页内拉起时遮罩为透明，阴影让弹窗与下层记账页分出层级
     elevation: 8,
     shape: RoundedRectangleBorder(

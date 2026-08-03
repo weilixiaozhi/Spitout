@@ -100,7 +100,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         subtitle: languageDisplay,
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const LanguageSettingsPage()),
                           );
@@ -123,7 +123,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         subtitle: l10n.appLockDesc,
                         onTap: () async {
                           await Navigator.of(context).push(
-                            MaterialPageRoute(
+                            appPageRoute(
                                 builder: (_) =>
                                     const AppLockSettingsPage()),
                           );

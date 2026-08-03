@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_route.dart';
 import 'transaction_editor_sheet.dart';
 
 /// 弹出记账编辑 BottomSheet（单页:分类 + 金额 + 备注同页）。
@@ -42,13 +43,8 @@ Future<void> showTransactionEditorSheet(
     barrierColor: Colors.transparent,
     // 透明背景:圆角容器自行绘制,避免双层底色
     backgroundColor: Colors.transparent,
-    // 进入动画较默认略短且起步更轻快（220ms easeOutCubic），
-    // 配合分类树预热（首帧即完整渲染）提升拉起的顺滑感。
-    sheetAnimationStyle: AnimationStyle(
-      duration: const Duration(milliseconds: 220),
-      reverseDuration: const Duration(milliseconds: 200),
-      curve: Curves.easeOutCubic,
-    ),
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     builder: (context) => TransactionEditorSheet(
       initialKind: initialKind,
       editingTransactionId: editingTransactionId,

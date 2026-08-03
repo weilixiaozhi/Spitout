@@ -1384,6 +1384,7 @@
     },
     "sharedMembersRemoved": "Member removed",
     "sharedMembersSyncPending": "For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.",
+    "sharedMembersSaveFirst": "Please save the ledger first",
 
     "sharedTxCreatedBy": "Created by {name}",
     "@sharedTxCreatedBy": {
@@ -1753,7 +1754,7 @@
     "updateGoToGithub": "View on GitHub",
     "mineUpdateNow": "Update",
     "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings.",
-    "aaSettlementTitle": "AA Settlement",
+    "aaSettlementTitle": "AA Statistics",
     "aaSettlementOverview": "Overview",
     "aaSettlementTotalAmount": "Total shared",
     "aaSettlementTxCount": "{count} shared transactions",
@@ -1764,7 +1765,7 @@
             }
         }
     },
-    "aaSettlementPerPerson": "Per person",
+    "aaSettlementPerPerson": "Split details",
     "aaSettlementPaid": "Paid",
     "aaSettlementShare": "Share",
     "aaSettlementNet": "Balance",
@@ -1783,8 +1784,16 @@
         }
     },
     "aaSettlementNoTransfers": "All settled up",
-    "aaSettlementEmpty": "No shared transactions yet",
-    "aaSettlementExcluded": "Not included in split",
+    "aaSettlementExcluded": "Excluded from details",
+    "aaSettlementParticipantCount": "{count} participants",
+    "@aaSettlementParticipantCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaSettlementExcludedEmpty": "No transactions excluded",
     "aaEditTitle": "Split details",
     "aaPayer": "Paid by",
     "aaSplitMode": "Split method",
@@ -1819,7 +1828,17 @@
         }
     },
     "aaVirtualUserInUse": "Has related transactions and cannot be deleted",
+    "aaVirtualUserDefaultName": "Virtual User {index}",
+    "@aaVirtualUserDefaultName": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "aaAddVirtualUser": "Add virtual user",
     "aaUnknownUser": "Unknown",
+    "aaMe": "Me",
     "aaPerPersonAllMembers": "Split equally among all members",
     "ledgerAaEnabled": "AA Split",
     "ledgerAaEnabledHint": "Split expenses with members when enabled",

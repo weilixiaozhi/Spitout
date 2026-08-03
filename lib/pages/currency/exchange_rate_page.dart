@@ -302,7 +302,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                   child: InkWell(
                     onTap: () => Navigator.push(
                       context,
-                      MaterialPageRoute(
+                      appPageRoute(
                         builder: (_) => const CurrencyManagePage(),
                       ),
                     ),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../widgets/app_route.dart';
 import 'pages/category/category_manage_page.dart';
 import 'pages/settlement/aa_edit_page.dart';
 import 'pages/settlement/aa_settlement_page.dart';
@@ -10,16 +11,21 @@ import 'services/settlement/aa_edit_models.dart';
 ///
 /// 设计意图：所有按名称跳转的页面统一在此映射，页面之间不互相 import；
 /// 本文件是唯一允许 import 具体页面（且属于 pages 层）的路由层文件。
+/// 所有路由均通过 [appPageRoute] 创建，自动应用全局页面转场动画。
 Route<dynamic>? appRoute(RouteSettings settings) {
   switch (settings.name) {
     case Routes.categoryManage:
-      return MaterialPageRoute<void>(
+      return appPageRoute<void>(
         builder: (_) => const CategoryManagePage(),
         settings: settings,
       );
     case Routes.aaSettlement:
-      return MaterialPageRoute<void>(
-        builder: (_) => const AaSettlementPage(),
+      // 账本 id 由调用方(账本编辑页)经 arguments 传入,遵循"从哪里进入
+      // 就是哪个账本";缺失/类型不符(如新建态)时传 null,结算页按空数据渲染。
+      final args = settings.arguments;
+      return appPageRoute<void>(
+        builder: (_) =>
+            AaSettlementPage(ledgerId: args is int ? args : null),
         settings: settings,
       );
     case Routes.aaEdit:
@@ -27,7 +33,7 @@ Route<dynamic>? appRoute(RouteSettings settings) {
       // 非法跳转,返回 null 走调用方回退,避免白屏。
       final args = settings.arguments;
       if (args is! AaEditPageArgs) return null;
-      return MaterialPageRoute<AaEditResult?>(
+      return appPageRoute<AaEditResult?>(
         builder: (_) => AaEditPage(args: args),
         settings: settings,
       );

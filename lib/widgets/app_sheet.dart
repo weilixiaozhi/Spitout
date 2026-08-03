@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import 'app_route.dart';
 import '../theme/colors.dart';
 
 /// shadcn/ui 风格 Bottom Sheet wrapper(对应设计稿 AppSheet 语义组件)。
@@ -207,6 +208,8 @@ Future<T?> showAppSheet<T>({
     enableDrag: true,
     // 用自定义 _GrabHandle,关闭 Material 自带拖拽条
     showDragHandle: false,
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     constraints: BoxConstraints(
       maxHeight: mediaQuery.size.height * heightFactor,
     ),

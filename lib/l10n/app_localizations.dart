@@ -5420,6 +5420,12 @@ abstract class AppLocalizations {
   /// **'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.'**
   String get sharedMembersSyncPending;
 
+  /// No description provided for @sharedMembersSaveFirst.
+  ///
+  /// In en, this message translates to:
+  /// **'Please save the ledger first'**
+  String get sharedMembersSaveFirst;
+
   /// No description provided for @sharedTxCreatedBy.
   ///
   /// In en, this message translates to:
@@ -6683,7 +6689,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaSettlementTitle.
   ///
   /// In en, this message translates to:
-  /// **'AA Settlement'**
+  /// **'AA Statistics'**
   String get aaSettlementTitle;
 
   /// No description provided for @aaSettlementOverview.
@@ -6707,7 +6713,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaSettlementPerPerson.
   ///
   /// In en, this message translates to:
-  /// **'Per person'**
+  /// **'Split details'**
   String get aaSettlementPerPerson;
 
   /// No description provided for @aaSettlementPaid.
@@ -6758,17 +6764,23 @@ abstract class AppLocalizations {
   /// **'All settled up'**
   String get aaSettlementNoTransfers;
 
-  /// No description provided for @aaSettlementEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No shared transactions yet'**
-  String get aaSettlementEmpty;
-
   /// No description provided for @aaSettlementExcluded.
   ///
   /// In en, this message translates to:
-  /// **'Not included in split'**
+  /// **'Excluded from details'**
   String get aaSettlementExcluded;
+
+  /// No description provided for @aaSettlementParticipantCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} participants'**
+  String aaSettlementParticipantCount(int count);
+
+  /// No description provided for @aaSettlementExcludedEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No transactions excluded'**
+  String get aaSettlementExcludedEmpty;
 
   /// No description provided for @aaEditTitle.
   ///
@@ -6890,11 +6902,29 @@ abstract class AppLocalizations {
   /// **'Has related transactions and cannot be deleted'**
   String get aaVirtualUserInUse;
 
+  /// No description provided for @aaVirtualUserDefaultName.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual User {index}'**
+  String aaVirtualUserDefaultName(int index);
+
+  /// No description provided for @aaAddVirtualUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Add virtual user'**
+  String get aaAddVirtualUser;
+
   /// No description provided for @aaUnknownUser.
   ///
   /// In en, this message translates to:
   /// **'Unknown'**
   String get aaUnknownUser;
+
+  /// No description provided for @aaMe.
+  ///
+  /// In en, this message translates to:
+  /// **'Me'**
+  String get aaMe;
 
   /// No description provided for @aaPerPersonAllMembers.
   ///

@@ -46,12 +46,18 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   bool _saving = false;
   bool _initialized = false;
 
-  /// AA 分摊开关(编辑态,随「保存」落库;跨设备同步)。
+  /// AA 分摊开关(新建/编辑态,随「保存」落库;跨设备同步)。
+  ///
+  /// 开关内容(虚拟用户列表 / 分摊结算入口)跟随开关立即显示/隐藏,
+  /// 不依赖保存按钮——开关本身是纯 UI 状态,无需保存即可配置。
   bool _aaEnabled = false;
 
-  /// 已落库的 AA 开关值。「查看分摊结算 / 管理虚拟用户」入口按此值展示,
-  /// 避免用户刚打开开关(未保存)就跳到与实际数据不符的页面。
-  bool _aaEnabledSaved = false;
+  /// 新建态下内存暂存的虚拟用户列表。
+  ///
+  /// 新建态账本尚未落库、没有 ledgerId,虚拟用户无法直接写库,因此先暂存在
+  /// 内存;保存账本拿到新 ledgerId 后,由 [_saveNewLedger] 批量落库。
+  /// 编辑态虚拟用户直接走数据库 CRUD,不经过此列表。
+  final List<PendingVirtualUser> _pendingVirtualUsers = [];
 
   /// 当前账本的云端 external_id(本地 syncId),成员协作模块的数据源标识;
   /// 仅编辑模式异步加载,本地账本 / 未同步账本为 null。
@@ -108,7 +114,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           _monthStartDay = data.monthStartDay;
           _syncId = data.syncId;
           _aaEnabled = data.aaEnabled;
-          _aaEnabledSaved = data.aaEnabled;
           _initialized = true;
         });
       }
@@ -354,10 +359,13 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             ),
           ),
 
-          // ── 4. AA 分摊(开关 + 分摊设置入口) ──
-          // 间距内化:AA 区块自带顶部 16px(见 _buildAaSection),
-          // 与成员区/归属区策略一致,避免外层独立 SizedBox 在区块隐藏时残留孤儿间隙。
-          _buildAaSection(context, l10n),
+          // ── 4. 成员管理 + 成员支出(常驻显示) ──
+          //
+          // 成员管理 / 成员支出在新建、编辑、本地、云端模式下均常驻显示:
+          // - 新建态成员中必有当前用户(所有者),必定有数据;
+          // - AA 分摊开关已并入成员管理模块内部,不单独占一个模块;
+          // - 成员支出在新建态数据默认归 0,无需跟随云端。
+          _buildMemberSections(context, l10n),
 
           // ── 5. 新建模式的账本归属选择 ──
           if (_isCreating) ...[
@@ -365,110 +373,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             _buildStorageModeSelector(context, l10n),
           ],
 
-          // ── 5. 编辑模式的成员协作区 + 归属移动 ──
-          //
-          // 成员协作区与归属移动区都可能整体隐藏，且两者显示条件并不等价，
-          // 无法靠外层统一 if 包裹来同步。故间距采用"内化"策略：各区隐藏时
-          // 返回零高度 SizedBox.shrink()，展示时自带 Padding(top: 16)。
-          // 此处不垫独立 SizedBox，避免两区同时隐藏时累积出孤儿间隙。
+          // ── 6. 编辑模式的归属移动 ──
           //
           // 敏感操作（清空/删除/退出并删除）已收纳到右上角 [_buildMoreMenu]。
-          if (_isEditing) ...[
-            _buildMemberSections(context, l10n),
-            _buildStorageActions(context, l10n),
-          ],
+          if (_isEditing) _buildStorageActions(context, l10n),
         ],
       ),
-    );
-  }
-
-  /// AA 分摊设置模块。
-  ///
-  /// 结构:开关行(随「保存」落库,与其他账本元信息同一保存语义)+
-  /// 编辑模式且 AA 已生效时的「查看分摊结算 / 管理虚拟用户」入口。
-  /// 入口按 [_aaEnabledSaved](已落库值)展示,关闭后入口隐藏。
-  ///
-  /// 间距内化:区块自带顶部 16px(标题外包 Padding),与成员区/归属区一致——
-  /// 这样区块始终展示开关行时,与上一个区块之间恰为 16px,不依赖外层 SizedBox。
-  Widget _buildAaSection(BuildContext context, AppLocalizations l10n) {
-    final readOnlyColor = _isReadOnly ? Theme.of(context).disabledColor : null;
-    // 分摊结算页按「当前账本」取数,仅编辑当前账本时展示入口,
-    // 避免从非当前账本跳入看到另一本账的结算数据。
-    final isCurrentLedger =
-        _isEditing && widget.ledger!.id == ref.watch(currentLedgerIdProvider);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          // 内化顶部间距:区块顶到此标题之间无额外间隔,16px 全部在标题上方。
-          padding: const EdgeInsets.only(top: 16),
-          child: _buildSectionTitle(context, l10n.ledgerAaEnabled,
-              disabled: _isReadOnly),
-        ),
-        const SizedBox(height: 8),
-        Card(
-          child: Column(
-            children: [
-              SwitchListTile(
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                title: Text(
-                  l10n.ledgerAaEnabled,
-                  style: Theme.of(context)
-                      .textTheme
-                      .bodyLarge
-                      ?.copyWith(color: readOnlyColor),
-                ),
-                subtitle: Text(
-                  l10n.ledgerAaEnabledHint,
-                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: SpitoutTokens.textTertiary(context),
-                      ),
-                ),
-                value: _aaEnabled,
-                // 协作者只读:与其他账本元信息一致,禁用开关(onChanged=null 灰化)
-                onChanged: _isReadOnly
-                    ? null
-                    : (v) => setState(() => _aaEnabled = v),
-              ),
-              if (_isEditing && _aaEnabledSaved) ...[
-                if (isCurrentLedger) ...[
-                  Divider(height: 1, color: SpitoutTokens.divider(context)),
-                  ListTile(
-                    contentPadding:
-                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                    leading: Icon(AppIcons.pieChart,
-                        size: 20,
-                        color: SpitoutTokens.iconSecondary(context)),
-                    title: Text(l10n.ledgerAaSettlementEntry),
-                    trailing: Icon(AppIcons.chevronRight,
-                        size: 16,
-                        color: SpitoutTokens.iconTertiary(context)),
-                    onTap: () =>
-                        Navigator.of(context).pushNamed(Routes.aaSettlement),
-                  ),
-                ],
-                Divider(height: 1, color: SpitoutTokens.divider(context)),
-                ListTile(
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                  leading: Icon(AppIcons.people,
-                      size: 20,
-                      color: SpitoutTokens.iconSecondary(context)),
-                  title: Text(l10n.ledgerAaVirtualUsersEntry),
-                  trailing: Icon(AppIcons.chevronRight,
-                      size: 16,
-                      color: SpitoutTokens.iconTertiary(context)),
-                  onTap: () => showVirtualUserManageSheet(
-                    context,
-                    ledgerId: widget.ledger!.id,
-                  ),
-                ),
-              ],
-            ],
-          ),
-        ),
-      ],
     );
   }
 
@@ -535,42 +445,47 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   /// 展示时由本方法自带 `Padding(top: 16)`。这样上层 [_buildBody] 无需为
   /// 本区预留独立间隔 —— 否则本区隐藏时那段间隔会变成"孤儿间隙"。
   Widget _buildMemberSections(BuildContext context, AppLocalizations l10n) {
-    // 守卫条件需要先确定 ledger，因为要读 ledger.isCloudLedger。
-    final ledger = widget.ledger!;
-    // 用 watch 而非 read：本区展示与否取决于登录态，必须独立订阅 cloud 配置。
-    // 用 read 时本区的刷新依赖「同一 build 里恰好有别的方法 watch 了它」，
-    // 一旦 _buildStorageActions 被移走或变为条件渲染，登录/登出时本区就会僵在旧状态。
-    final isSpitoutCloud =
-        ref.watch(activeCloudConfigProvider).valueOrNull?.type ==
-            CloudBackendType.spitoutCloud;
-    // fail-closed：本地账本没有 syncId，接不进协作端；非 Spitout Cloud 后端
-    // 也没有成员体系；syncId 尚未加载或缺失时同样无法拉取成员数据。
-    // 三种情况整区隐藏，不展示不可用的协作内容。
-    final syncId = _syncId;
-    if (!isSpitoutCloud ||
-        !ledger.isCloudLedger ||
-        syncId == null ||
-        syncId.isEmpty) {
-      return const SizedBox.shrink();
-    }
+    // 新建态 ledger 为 null：账本名称取输入框当前值；编辑态取账本名。
+    final ledger = widget.ledger;
+    final ledgerName = ledger?.name ?? _nameController.text.trim();
 
     return Padding(
       padding: const EdgeInsets.only(top: 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildSectionTitle(context, l10n.sharedMembersPageTitle),
-          const SizedBox(height: 8),
+          // 成员管理模块自带标题行（色条 + "成员管理"），AA 开启时
+          // 标题右侧显示"添加虚拟用户"文字链，无需外部再渲染标题。
           MemberManagementSection(
-            ledgerExternalId: syncId,
-            ledgerName: ledger.name,
+            ledgerExternalId: _syncId,
+            ledgerName: ledgerName,
+            ledgerId: ledger?.id,
+            aaEnabled: _aaEnabled,
+            onAaChanged: (v) => setState(() => _aaEnabled = v),
+            isReadOnly: _isReadOnly,
+            pendingVirtualUsers: _pendingVirtualUsers,
+            onPendingVirtualUsersChanged: (list) => setState(
+              // final 列表不允许整体替换,原地清空后填充即可
+              () => _pendingVirtualUsers
+                ..clear()
+                ..addAll(list),
+            ),
           ),
-          // 成员支出仅共享账本有意义：个人云端账本没有其他成员可统计
-          if (ledger.isShared) ...[
-            const SizedBox(height: 16),
-            // 模块自带标题（右侧展示账本总支出金额副标题）
-            MemberStatsSection(ledgerExternalId: syncId),
-          ],
+          // 成员支出常驻显示：新建态 / 本地账本(无 syncId)时数据归 0 空态，
+          // 无需跟随云端。模块自带标题与"分摊结算"入口（跟随 AA 开关显示）。
+          const SizedBox(height: 16),
+          MemberStatsSection(
+            ledgerExternalId: _syncId,
+            aaEnabled: _aaEnabled,
+            onOpenSettlement: () {
+              // 从哪里进入就是哪个账本：编辑态传账本 id，新建态无账本
+              // 传 null，结算页各模块按空数据渲染，不做入口拦截。
+              Navigator.of(context).pushNamed(
+                Routes.aaSettlement,
+                arguments: ledger?.id,
+              );
+            },
+          ),
         ],
       ),
     );
@@ -848,6 +763,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 创建时开启了 AA 分摊 → 补写开关(默认 false,跨设备同步)
     if (_aaEnabled) {
       await repo.updateLedger(id: newLedgerId, aaEnabled: true);
+    }
+    // 新建态内存暂存的虚拟用户:拿到 ledgerId 后批量落库。
+    // 用户新建时开启 AA 即可直接添加虚拟用户(无需先保存再回来配置),
+    // 此处在账本创建成功时一并写入,保证开关与虚拟用户同事务生效。
+    for (final vu in _pendingVirtualUsers) {
+      await repo.create(ledgerId: newLedgerId, name: vu.name);
     }
 
     // 同步触发已完全响应式化(规则4):createLedger 在数据层同事务登记变更信号
@@ -1127,6 +1048,8 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
       ),
+      // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+      sheetAnimationStyle: kSheetAnimationStyle,
       builder: (ctx) {
         final primary = Theme.of(ctx).colorScheme.primary;
         final l10n = AppLocalizations.of(ctx);

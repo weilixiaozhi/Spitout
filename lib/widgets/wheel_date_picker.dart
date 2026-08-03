@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'app_route.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../utils/date/week_math.dart'
@@ -99,6 +100,8 @@ Future<DateTime?> showWheelDatePicker(
     isScrollControlled: true,
     useRootNavigator: useRootNavigator,
     barrierColor: barrierColor,
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     builder: (_) => WheelDatePicker(
       initial: initial,
       mode: mode,

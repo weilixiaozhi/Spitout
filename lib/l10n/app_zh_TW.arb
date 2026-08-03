@@ -1184,7 +1184,7 @@
     },
     "sharedMembersRemoved": "已移除成員",
     "sharedMembersSyncPending": "首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員",
-
+    "sharedMembersSaveFirst": "請先保存帳本",
     "sharedTxCreatedBy": "{name} 建立",
     "@sharedTxCreatedBy": {
         "placeholders": {
@@ -1564,11 +1564,11 @@
     },
     "ledgersLeaveAndDeleteSuccess": "已退出並刪除帳本",
     "welcomeImportNoFile": "未選擇檔案",
-    "aaSettlementTitle": "分攤結算",
+    "aaSettlementTitle": "分攤統計",
     "aaSettlementOverview": "總覽",
     "aaSettlementTotalAmount": "分攤總額",
     "aaSettlementTxCount": "{count} 筆分攤交易",
-    "aaSettlementPerPerson": "每人總覽",
+    "aaSettlementPerPerson": "分攤詳情",
     "aaSettlementPaid": "實付",
     "aaSettlementShare": "應攤",
     "aaSettlementNet": "差額",
@@ -1577,8 +1577,16 @@
     "aaSettlementTransferPlan": "轉帳方案",
     "aaSettlementTransferPayTo": "{from} 付給 {to}",
     "aaSettlementNoTransfers": "已結清，無需轉帳",
-    "aaSettlementEmpty": "暫無參與分攤的交易",
-    "aaSettlementExcluded": "不計入分攤",
+    "aaSettlementExcluded": "不計入詳單",
+    "aaSettlementParticipantCount": "分攤人數 {count} 人",
+    "@aaSettlementParticipantCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaSettlementExcludedEmpty": "暫無不計入詳單的交易",
     "aaEditTitle": "分攤明細",
     "aaPayer": "支出人",
     "aaSplitMode": "分攤方式",
@@ -1599,7 +1607,17 @@
     "aaVirtualUserEmpty": "暫無虛擬用戶",
     "aaVirtualUserDeleteConfirm": "確定刪除虛擬用戶「{name}」嗎？",
     "aaVirtualUserInUse": "該虛擬用戶名下有帳，不可刪除",
+    "aaVirtualUserDefaultName": "虛擬用戶{index}",
+    "@aaVirtualUserDefaultName": {
+        "placeholders": {
+            "index": {
+                "type": "int"
+            }
+        }
+    },
+    "aaAddVirtualUser": "新增虛擬用戶",
     "aaUnknownUser": "未知",
+    "aaMe": "我",
     "aaPerPersonAllMembers": "人均分攤（全部成員）",
     "ledgerAaEnabled": "AA 分攤",
     "ledgerAaEnabledHint": "開啟後記帳時可選擇分攤方式",

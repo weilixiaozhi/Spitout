@@ -1,5 +1,6 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'app_route.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 
@@ -114,6 +115,8 @@ Future<T?> showWheelPicker<T>(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     isScrollControlled: true,
+    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
+    sheetAnimationStyle: kSheetAnimationStyle,
     builder: (_) => WheelPicker<T>(
       initial: initial,
       items: items,

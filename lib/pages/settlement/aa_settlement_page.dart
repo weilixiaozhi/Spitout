@@ -13,19 +13,25 @@ import '../../widgets/widgets.dart';
 ///
 /// 内容结构(自上而下):
 /// 1. 汇总卡:分摊总额 + 分摊交易笔数;
-/// 2. 每人汇总表:实付 / 应摊 / 差额(应收应付着色);
+/// 2. 分摊详情表:实付 / 应摊 / 差额(应收应付着色);
 /// 3. 转账方案:贪心结算结果,已结清时展示零转账提示;
-/// 4. 不计入清单:aaMode=1(不分摊)的交易。
+/// 4. 不计入详单:aaMode=1(不分摊)的交易。
 ///
-/// 数据源为 [aaSettlementProvider](账本未开启 AA 时返回空汇总,
-/// 入口隐藏、历史数据不展示);金额以账本本位币口径展示。
+/// 数据源为 [aaSettlementProvider]。账本 id 由进入入口经 [ledgerId] 传入
+/// ("从哪里进入就是哪个账本"),缺省(如新建态)时按无账本渲染,各模块自带
+/// 空数据兜底(金额为 0 / 无行),不设整页空态。
 class AaSettlementPage extends ConsumerWidget {
-  const AaSettlementPage({super.key});
+  const AaSettlementPage({super.key, this.ledgerId});
+
+  /// 账本 id：由进入入口传入（编辑态为当前编辑账本 id，新建态为 null）。
+  /// null 时按无账本渲染，各模块展示空数据。
+  final int? ledgerId;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    final ledgerId = ref.watch(currentLedgerIdProvider);
+    // 新建态无账本 id → 哨兵 0：getLedgerById(0) 返回空，汇总/清单均为空。
+    final ledgerId = this.ledgerId ?? 0;
     final settlementAsync = ref.watch(aaSettlementProvider(ledgerId));
     final excludedAsync = ref.watch(_aaExcludedTxProvider(ledgerId));
 
@@ -71,10 +77,6 @@ class AaSettlementPage extends ConsumerWidget {
         .where((p) => p.totalPaid > 0 || p.totalShouldPay > 0)
         .toList();
 
-    if (active.isEmpty && excluded.isEmpty) {
-      return AppEmpty(text: l10n.aaSettlementEmpty);
-    }
-
     // 分摊总额 = 各参与人实付合计(每笔 AA 交易由支出人实付一次,恒等)。
     final totalAmount =
         active.fold(0.0, (sum, p) => sum + p.totalPaid);
@@ -90,12 +92,11 @@ class AaSettlementPage extends ConsumerWidget {
         _buildSectionTitle(context, l10n.aaSettlementTransferPlan),
         const SizedBox(height: 8),
         _buildTransferCard(context, ref, l10n, settlement.transfers),
-        if (excluded.isNotEmpty) ...[
-          const SizedBox(height: 20),
-          _buildSectionTitle(context, l10n.aaSettlementExcluded),
-          const SizedBox(height: 8),
-          _buildExcludedCard(context, ref, l10n, excluded),
-        ],
+        // 不计入详单区块始终展示(数据为空时由卡片内部渲染空态)。
+        const SizedBox(height: 20),
+        _buildSectionTitle(context, l10n.aaSettlementExcluded),
+        const SizedBox(height: 8),
+        _buildExcludedCard(context, ref, l10n, excluded),
       ],
     );
   }
@@ -129,7 +130,7 @@ class AaSettlementPage extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.aaParticipantsSelected(participantCount),
+            l10n.aaSettlementParticipantCount(participantCount),
             style: TextStyle(
               fontSize: 12,
               color: SpitoutTokens.textTertiary(context),
@@ -140,7 +141,7 @@ class AaSettlementPage extends ConsumerWidget {
     );
   }
 
-  /// 每人汇总表:成员 / 实付 / 应摊 / 差额(应收绿、应付红)。
+  /// 分摊详情表:成员 / 实付 / 应摊 / 差额(应收绿、应付红)。
   Widget _buildPerPersonCard(BuildContext context, WidgetRef ref,
       AppLocalizations l10n, List<AaParticipantSummary> active) {
     final headerStyle = TextStyle(
@@ -316,21 +317,36 @@ class AaSettlementPage extends ConsumerWidget {
     );
   }
 
-  /// 不计入清单卡:aaMode=1(不分摊)的交易,展示备注/分类 + 日期 + 金额。
+  /// 不计入详单卡:aaMode=1(不分摊)的交易,展示备注/分类 + 日期 + 金额。
+  ///
+  /// 数据为空时展示空态提示,保证区块默认可见(需求要求)。
   Widget _buildExcludedCard(BuildContext context, WidgetRef ref,
       AppLocalizations l10n, List<Transaction> excluded) {
     return SectionCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Column(
-        children: [
-          for (var i = 0; i < excluded.length; i++) ...[
-            if (i > 0)
-              Divider(height: 1, color: SpitoutTokens.divider(context)),
-            _buildExcludedRow(context, excluded[i]),
-          ],
-        ],
-      ),
+      child: excluded.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 12),
+              child: Center(
+                child: Text(
+                  l10n.aaSettlementExcludedEmpty,
+                  style: TextStyle(
+                    fontSize: 13,
+                    color: SpitoutTokens.textTertiary(context),
+                  ),
+                ),
+              ),
+            )
+          : Column(
+              children: [
+                for (var i = 0; i < excluded.length; i++) ...[
+                  if (i > 0)
+                    Divider(height: 1, color: SpitoutTokens.divider(context)),
+                  _buildExcludedRow(context, excluded[i]),
+                ],
+              ],
+            ),
     );
   }
 
@@ -414,10 +430,10 @@ class AaSettlementPage extends ConsumerWidget {
   }
 }
 
-/// 不计入分摊的交易(aaMode=1)查询。
+/// 不计入详单的交易(aaMode=1)查询。
 ///
-/// 统计页「不计入清单」区块数据源;[aaSettlementProvider] 只返回汇总结果,
-/// 清单行需要交易本体(备注 / 日期 / 金额),故在此单独查询。
+/// 统计页「不计入详单」区块数据源;[aaSettlementProvider] 只返回汇总结果,
+/// 详单行需要交易本体(备注 / 日期 / 金额),故在此单独查询。
 final _aaExcludedTxProvider =
     FutureProvider.autoDispose.family<List<Transaction>, int>(
         (ref, ledgerId) async {
