@@ -107,9 +107,9 @@ class _TransactionDetailBody extends ConsumerWidget {
     }
   }
 
-  /// AA 分摊明细区块(§6.6,人均 / 指定两种样式;不分摊仅标注)。
+  /// AA 分摊明细区块(人均 / 指定两种样式;不分摊仅标注)。
   ///
-  /// 仅账本开启 AA 时由调用方渲染;aaMode=null 按人均展示(需求 R6 向后兼容)。
+  /// 仅账本开启 AA 时由调用方渲染;aaMode=null 按人均展示(向后兼容)。
   List<Widget> _buildAaSection(BuildContext context, AppLocalizations l10n,
       Transaction t, Map<String, String> virtualNames) {
     final mode = AaMode.fromDb(t.aaMode);
@@ -140,7 +140,7 @@ class _TransactionDetailBody extends ConsumerWidget {
         ));
       }
     } else {
-      // 人均:参与人为空 = 全部成员(运行时展开,§2.4)
+      // 人均:参与人为空 = 全部成员(运行时展开)
       final ids = _parseAaIdList(t.aaParticipants);
       widgets.add(_InfoRow(
         label: l10n.aaParticipants,
@@ -249,7 +249,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                 label: l10n.homeDetailNativeAmount,
                 // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
                 value: '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
-          // 2.5 AA 分摊明细(仅账本开启 AA 时展示,§6.7 功能隔离)
+          // 2.5 AA 分摊明细(仅账本开启 AA 时展示,功能隔离)
           if (ref.watch(currentLedgerProvider).valueOrNull?.aaEnabled ??
               false)
             ..._buildAaSection(

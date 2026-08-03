@@ -362,8 +362,8 @@ Future<bool> purgeLocalCloudLedgersWithContainer(ProviderContainer container) =>
 /// tx_author_service.dart（保持 `pages/widgets → providers → services` 单向）。
 /// 失败静默（service 内部 swallow），本函数不抛错。
 ///
-/// AA 分摊 paidByUserId 回填(需求 §2.2):[markTxAuthor] 内部已实现
-/// "仅当现有值为空时取操作者 userId"的回填逻辑,编辑器模型 B' 在
+/// AA 分摊 paidByUserId 回填:[markTxAuthor] 内部已实现
+/// "仅当现有值为空时取操作者 userId"的回填逻辑,编辑器在
 /// addTransaction 时已显式写入的 paidByUserId 不会被覆盖。故本函数
 /// 无需额外传 paidByUserId 参数 —— service 层 markTxAuthor 自洽。
 Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {

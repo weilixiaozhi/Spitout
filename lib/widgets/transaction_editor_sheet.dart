@@ -71,7 +71,7 @@ class TransactionEditorSheet extends ConsumerStatefulWidget {
   /// AA 指定分摊金额初值(key=参与人标识,value=金额字符串)。
   final Map<String, String>? initialAaSplits;
 
-  /// AA 支出人初值;新建为 null,由落库层回填操作者(需求 §2.2)。
+  /// AA 支出人初值;新建为 null,由落库层回填操作者。
   final String? initialPaidByUserId;
 
   const TransactionEditorSheet({
@@ -124,7 +124,7 @@ class _TransactionEditorSheetState
   late final int _ledgerId;
 
   // —— AA 分摊(仅账本开启 AA 时展示并落库) ——
-  late AaMode _aaMode; // 分摊方式;默认人均(不分摊不在编辑器提供入口,§6.2)
+  late AaMode _aaMode; // 分摊方式;默认人均(不分摊不在编辑器提供入口)
   List<String>? _aaParticipantIds; // null = 全部成员(运行时展开)
   Map<String, String>? _aaSplits; // 指定分摊金额(编辑模式回填/AaEditPage 回传)
   String? _aaPaidByUserId; // 支出人;新建为 null,落库层回填操作者
@@ -154,7 +154,7 @@ class _TransactionEditorSheetState
     _noteCtrl.text = widget.initialNote ?? '';
 
     // AA 初值回填:不分摊(历史/导入数据)在编辑器内按人均展示,
-    // 编辑器仅提供人均/指定两种选择(§6.2)。
+    // 编辑器仅提供人均/指定两种选择。
     final initMode = AaMode.fromDb(widget.initialAaMode);
     _aaMode = initMode == AaMode.noSplit ? AaMode.perPerson : initMode;
     _aaParticipantIds = widget.initialAaParticipants;
@@ -460,7 +460,7 @@ class _TransactionEditorSheetState
 
   // —— AA 分摊 ——
 
-  /// 选择分摊方式(人均 / 指定)。「不分摊」不在编辑器提供入口(§6.2)。
+  /// 选择分摊方式(人均 / 指定)。「不分摊」不在编辑器提供入口。
   Future<void> _pickAaMode() async {
     final picked = await showAaModePickerSheet(context, selected: _aaMode);
     if (picked == null || !mounted) return;
@@ -486,10 +486,10 @@ class _TransactionEditorSheetState
     }
   }
 
-  /// 组装 AA 落库字段(模型 B',文档 §6.1)。
+  /// 组装 AA 落库字段。
   ///
   /// 返回 null 表示用户取消(指定分摊跳 [AaEditPage] 后放弃)——
-  /// 编辑器保持开启、内容保留、不落库(§6.5)。
+  /// 编辑器保持开启、内容保留、不落库。
   ///
   /// 清空语义:updateTransaction 的 aa* 参数 null = 不更新,故编辑模式下
   /// 「指定 → 人均」「部分参与人 → 全部成员」需显式传空串清空旧值。
@@ -497,8 +497,8 @@ class _TransactionEditorSheetState
       _resolveAaFields(double total, String txCurrency, Category c) async {
     final aaEnabled =
         ref.read(currentLedgerProvider).valueOrNull?.aaEnabled ?? false;
-    // 未开启 AA 的账本:aa* 恒 null(§6.7)。update 语义下 null = 不更新,
-    // 开关关闭后编辑历史交易不会清掉旧分摊数据,重开仍在(§6.5)。
+    // 未开启 AA 的账本:aa* 恒 null。update 语义下 null = 不更新,
+    // 开关关闭后编辑历史交易不会清掉旧分摊数据,重开仍在。
     if (!aaEnabled) {
       return (aaMode: null, aaParticipants: null, aaSplits: null, paidByUserId: null);
     }
@@ -547,7 +547,7 @@ class _TransactionEditorSheetState
           ? (isEditing && widget.initialAaParticipants != null ? '' : null)
           : jsonEncode(_aaParticipantIds),
       aaSplits: isEditing && _aaSplits != null ? '' : null,
-      // 支出人:新建由落库层回填操作者(需求 §2.2);编辑保留原值(不传)
+      // 支出人:新建由落库层回填操作者;编辑保留原值(不传)
       paidByUserId: null,
     );
   }
@@ -583,8 +583,8 @@ class _TransactionEditorSheetState
       nativeAmount = total * r;
     }
 
-    // AA 分流(模型 B'):指定分摊先跳 AaEditPage 取 result 后一次性落库;
-    // 取消则中止提交,编辑器保持开启、内容保留(§6.1/§6.5)。
+    // AA 分流:指定分摊先跳 AaEditPage 取 result 后一次性落库;
+    // 取消则中止提交,编辑器保持开启、内容保留。
     final aa = await _resolveAaFields(total, txCurrency, c);
     if (aa == null) {
       if (mounted) setState(() => _isSubmitting = false);
@@ -761,7 +761,7 @@ class _TransactionEditorSheetState
         _selectedCategory != null &&
         !_isSubmitting;
 
-    // AA 区块仅账本开启 AA 时展示(§6.7 功能隔离)
+    // AA 区块仅账本开启 AA 时展示(功能隔离)
     final aaEnabled =
         ref.watch(currentLedgerProvider).valueOrNull?.aaEnabled ?? false;
 
@@ -919,7 +919,7 @@ class _TransactionEditorSheetState
   );
   }
 
-  /// AA 区块(§6.2):分摊方式 + 参与人,两个紧凑胶囊一行排布。
+  /// AA 区块:分摊方式 + 参与人,两个紧凑胶囊一行排布。
   ///
   /// 设计意图:编辑器主体是金额键盘,空间紧张;AA 配置以胶囊行内嵌在
   /// 备注行上方,既不挤占分类区,也与金额栏行的圆角输入风格保持一致。

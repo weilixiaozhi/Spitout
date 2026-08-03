@@ -94,7 +94,7 @@ void main() {
     expect(txs[0].nativeAmount, closeTo(48.8, 1e-9)); // 1000 × 0.0488
   });
 
-  test('导入:CSV 币种无汇率 → native=amount(非 NULL),L11 检测能捞到', () async {
+  test('导入:CSV 币种无汇率 → native=amount(非 NULL),补折算检测能捞到', () async {
     await seed();
     final result = await service.importTransactions(
       repo,

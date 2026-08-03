@@ -13,7 +13,7 @@ import 'transaction_editor_sheet.dart';
 ///
 /// AA 分摊初值(initialAaMode/initialAaParticipants/initialAaSplits/
 /// initialPaidByUserId)仅编辑模式回填;新建交易传 null 即默认
-/// 人均分摊 / 全部成员,支出人由落库层回填操作者(需求 §2.2)。
+/// 人均分摊 / 全部成员,支出人由落库层回填操作者。
 Future<void> showTransactionEditorSheet(
   BuildContext context, {
   String initialKind = 'expense',

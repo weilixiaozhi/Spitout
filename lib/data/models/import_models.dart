@@ -91,7 +91,7 @@ class ImportTransaction {
 /// 导入虚拟用户(AA 分摊专用,随账本 JSON v7 导出导入)。
 ///
 /// 设计意图:虚拟用户是 ledger-scoped 实体,若不随账本备份导出,导入后
-/// 指定分摊数据(aaParticipants/aaSplits 引用虚拟用户 syncId)会悬空(R9)。
+/// 指定分摊数据(aaParticipants/aaSplits 引用虚拟用户 syncId)会悬空。
 class ImportVirtualUser {
   /// 跨设备唯一标识(UUID),与 server virtual_user 投影对齐。
   final String? syncId;

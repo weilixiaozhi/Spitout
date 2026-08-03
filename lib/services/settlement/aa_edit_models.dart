@@ -1,8 +1,8 @@
 /// AA 分摊编辑页(AaEditPage)的入参 / 回传契约与参与人选项模型。
 ///
-/// 设计意图:AaEditPage 是纯选择器(不写库,文档 §6.3)。编辑器( widgets 层)
+/// 设计意图:AaEditPage 是纯选择器(不写库)。编辑器(widgets 层)
 /// 跳转前构造 [AaEditPageArgs],页面 pop 时返回 [AaEditResult],由编辑器
-/// 一次性落库(模型 B')。契约放在 services 层,使 widgets 层编辑器、
+/// 一次性落库。契约放在 services 层,使 widgets 层编辑器、
 /// providers 层与 pages 层编辑页都能引用,不破坏 pages → widgets 单向依赖。
 library;
 

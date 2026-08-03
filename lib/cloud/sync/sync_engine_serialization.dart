@@ -422,7 +422,7 @@ extension SyncEngineSerializationExt on SyncEngine {
       ));
     }
 
-    // 虚拟用户:随快照导出,否则对端导入后指定分摊数据会悬空(R9)。
+    // 虚拟用户:随快照导出,否则对端导入后指定分摊数据会悬空。
     final virtualUsers = await (db.select(db.ledgerVirtualUsers)
           ..where((u) => u.ledgerId.equals(ledger.id))
           ..orderBy([(u) => d.OrderingTerm.asc(u.id)]))

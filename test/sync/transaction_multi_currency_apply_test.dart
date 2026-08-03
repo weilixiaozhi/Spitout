@@ -3,7 +3,7 @@
 //   1. serializer:payload 带 currencyCode/nativeAmount(有值才发)
 //   2. apply 快照保护:旧 payload(缺两键)+ 本地已有折算:
 //      - amount 未变(旧 App 只改备注)→ 保留本地 nativeAmount/currencyCode
-//      - amount 变了 → nativeAmount 退化 =amount(1:1,L11 可捞回)
+//      - amount 变了 → nativeAmount 退化 =amount(1:1,补折算可捞回)
 //   3. apply 新 payload(带两键)→ 原样写入
 //   4. insert 旧 payload(无两键)→ nativeAmount=amount(与迁移回填同口径)
 import 'package:drift/native.dart';
@@ -119,7 +119,7 @@ void main() {
     expect(tx.nativeAmount, 86.4, reason: 'amount 未变必须保留折算快照');
   });
 
-  test('快照保护:旧 payload 改了金额 → nativeAmount 退化 =新 amount(L11 可捞)', () async {
+  test('快照保护:旧 payload 改了金额 → nativeAmount 退化 =新 amount(补折算可捞)', () async {
     final lid = await seedLedger();
     const txSyncId = 'tx-mc-2';
     await repo.addTransaction(
@@ -148,7 +148,7 @@ void main() {
     final tx = await txBySyncId(txSyncId);
     expect(tx.amount, 24);
     expect(tx.nativeAmount, 24, reason: '旧折算对新金额失效,退化 1:1');
-    expect(tx.currencyCode, 'USD', reason: '本地币种保留 → L11 检测能命中');
+    expect(tx.currencyCode, 'USD', reason: '本地币种保留 → 补折算检测能命中');
     expect(await repo.countUnconvertedForeignTx(lid), 1);
   });
 

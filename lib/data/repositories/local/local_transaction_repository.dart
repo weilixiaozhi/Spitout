@@ -433,8 +433,8 @@ class LocalTransactionRepository implements TransactionRepository {
   /// 服务端 push.py 已经会兜底注入 userId,但本地写入路径(addTransaction /
   /// updateTransaction)不知道 currentUser 是谁,需要 UI 层在写完后调一下这个
   /// 方法。
-  ///   - isCreate=true:同时写 createdByUserId + lastEditedByUserId;并按需求
-  ///     §2.2 默认值逻辑回填 paidByUserId(仅当现有值为空时取操作者 userId,
+  ///   - isCreate=true:同时写 createdByUserId + lastEditedByUserId;并按
+  ///     默认值逻辑回填 paidByUserId(仅当现有值为空时取操作者 userId,
   ///     用户/编辑器已显式设置的值保留)。
   ///   - isCreate=false:只写 lastEditedByUserId(createdByUserId 维持
   ///     first-write-wins);paidByUserId 不覆盖(用户手改的值保留)。
@@ -444,8 +444,8 @@ class LocalTransactionRepository implements TransactionRepository {
     required bool isCreate,
   }) async {
     if (isCreate) {
-      // 创建场景:仅当 paidByUserId 为空时回填操作者(需求 §2.2)。
-      // 编辑器模型 B' 可能已在 addTransaction 时显式写入 paidByUserId
+      // 创建场景:仅当 paidByUserId 为空时回填操作者。
+      // 编辑器可能已在 addTransaction 时显式写入 paidByUserId
       // (AaEditPage 返回 result 后一次性落库),此处不能覆盖。
       final existing = await getTransactionById(txId);
       final shouldBackfillPaidBy =

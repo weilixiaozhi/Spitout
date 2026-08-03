@@ -22,7 +22,7 @@ import 'widgets.dart';
 /// 折算快照语义(破坏性说明):切本位币是唯一覆盖历史快照的操作——
 /// 旧快照按旧本位币折算,口径变更后必须全量重算;往返切换(切走再切回)
 /// ≠ 撤销,外币交易记账时刻的原始折算值永久丢失。
-/// 缺汇率的笔退化 native=amount,由统计页 L11 横幅兜底捞回。
+/// 缺汇率的笔退化 native=amount,由统计页补折算横幅兜底捞回。
 ///
 /// 返回值:`true` = 已实际应用切换;`false` = 同值跳过或用户在确认弹窗取消
 /// (调用方可据此中止本次编辑中其他字段的保存,保持「一次编辑要么全部生效
@@ -89,7 +89,7 @@ Future<bool> applyLedgerCurrencyChange(
   // 4. 先强制拉一次「以新本位币为 base」的汇率:改币种瞬间本地通常还没有
   // 这一组(汇率按本位币基准存),不拉的话重算会因缺汇率整体退化。
   // extraQuotes 带上账本实际涉及的全部外币 ∪ {新币种}。拉取失败也继续——
-  // 缺汇率的笔退化 =amount,由 L11 横幅兜底,绝不保留旧口径错值。
+  // 缺汇率的笔退化 =amount,由补折算横幅兜底,绝不保留旧口径错值。
   try {
     final foreign = await repo.getLedgerForeignCurrencies(ledgerId);
     await refreshExchangeRatesFromUi(ref,

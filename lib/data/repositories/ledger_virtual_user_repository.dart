@@ -7,7 +7,7 @@ import '../db.dart';
 /// 不跨账本共享;CRUD 写操作走 LocalRepository 委托(保证 sync 登记统一,
 /// 禁止绕过)。
 ///
-/// 删除约束:名下有账(被交易的 aaParticipants 引用)不可删(R7 硬约束),
+/// 删除约束:名下有账(被交易的 aaParticipants 引用)不可删,
 /// 规避悬空引用;删除走硬删 + change log delete 投影。
 abstract class LedgerVirtualUserRepository {
   /// 监听指定账本下的全部虚拟用户。
@@ -38,7 +38,7 @@ abstract class LedgerVirtualUserRepository {
   /// 删除虚拟用户(硬删)。
   ///
   /// 删除前校验该虚拟用户是否被任何交易的 aaParticipants 引用:
-  /// - 被引用 → 抛 [StateError],不允许删除(R7 硬约束);
+  /// - 被引用 → 抛 [StateError],不允许删除;
   /// - 未被引用 → 硬删并返回 true。
   ///
   /// 调用方(Provider/服务层)负责登记 change log delete 投影,

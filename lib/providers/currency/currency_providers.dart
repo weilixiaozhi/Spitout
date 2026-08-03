@@ -219,7 +219,7 @@ final effectiveRatesForLedgerProvider =
   );
 });
 
-/// 当前账本「未折算外币交易」条数(L11 检测):>0 时统计页显示补折算横幅。
+/// 当前账本「未折算外币交易」条数:>0 时统计页显示补折算横幅。
 /// watch statsRefresh(重算完成/交易变动后重查)。
 final ledgerUnconvertedForeignTxCountProvider = FutureProvider<int>((ref) async {
   ref.watch(statsRefreshProvider);

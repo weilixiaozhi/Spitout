@@ -76,7 +76,7 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
 
   @override
   Future<bool> delete(int id) async {
-    // R7 硬约束:名下有账不可删。先校验引用,被引用则抛错阻止删除。
+    // 名下有账不可删。先校验引用,被引用则抛错阻止删除。
     final referenced = await isReferencedByAnyTransaction(id);
     if (referenced) {
       throw StateError(

@@ -115,7 +115,7 @@ class Transactions extends Table {
       boolean().withDefault(const Constant(false))();
 
   /// 交易级多币种:交易币种(ISO 大写)。
-  /// 用户所选(L12,默认账本本位币)。显式存让交易自包含(同步/统计不必每次 join)。
+  /// 用户所选(默认账本本位币)。显式存让交易自包含(同步/统计不必每次 join)。
   TextColumn get currencyCode => text().nullable()();
 
   /// 折算到账本本位币的金额快照(按记账时汇率,保存即定,不随汇率重算)。
@@ -325,7 +325,7 @@ class SharedLedgerCategories extends Table {
 /// 设计意图:共享账本下 AA 分摊需要指定参与人,但并非所有参与人都是
 /// 注册用户(例如室友、家人),虚拟用户用于补充参与人标识。虚拟用户是
 /// 账本内实体(ledger-scoped),不跨账本共享;删除走硬删 + change log delete
-/// 投影(对齐 ledger_snapshot:delete 模式),名下有账不可删(R7)。
+/// 投影(对齐 ledger_snapshot:delete 模式),名下有账不可删。
 ///
 /// 不引入 color / avatar / deleted / avatar_seed 等需求未定义的字段;
 /// 无 SQL 外键(ledgerId 仅做逻辑关联,不做约束)。

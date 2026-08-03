@@ -1,9 +1,9 @@
 /// 交易级多币种 — Repository 层契约:
-///   - addTransaction 带折算兜底(02 §六):同币种=amount;外币先查有效汇率,
-///     取不到才 =amount(命中 L11 检测可捞回)
-///   - updateTransaction 联动(与 Cloud merge/mutator L14 同规则):不传两字段
+///   - addTransaction 带折算兜底:同币种=amount;外币先查有效汇率,
+///     取不到才 =amount
+///   - updateTransaction 联动(与 Cloud merge/mutator 同规则):不传两字段
 ///     且 amount 变了 → 按隐含汇率联动;改备注不动快照
-///   - recompute/recalc/count:补折算/全量重算/检测,逐笔记 change(L13)
+///   - recompute/recalc/count:补折算/全量重算/检测,逐笔记 change
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -76,7 +76,7 @@ void main() {
       expect(tx.nativeAmount, closeTo(86.4, 1e-9));
     });
 
-    test('不传 nativeAmount+外币+无汇率 → nativeAmount=amount(命中 L11 检测)', () async {
+    test('不传 nativeAmount+外币+无汇率 → nativeAmount=amount(命中补折算检测)', () async {
       final lid = await seedLedger();
 
       final id = await repo.addTransaction(
@@ -108,7 +108,7 @@ void main() {
       expect(tx!.nativeAmount, 87.0);
     });
 
-    test('无账户交易(L12)显式传币种 → 写入所选;不传 → 本位币', () async {
+    test('无账户交易显式传币种 → 写入所选;不传 → 本位币', () async {
       final lid = await seedLedger();
       await seedUsdRates();
       final id1 = await repo.addTransaction(
@@ -133,7 +133,7 @@ void main() {
     });
   });
 
-  group('updateTransaction 联动兜底(L14 App 侧镜像)', () {
+  group('updateTransaction 联动兜底(App 侧镜像)', () {
     test('不传两字段只改金额 → 外币按隐含汇率缩放', () async {
       final lid = await seedLedger();
 
@@ -234,7 +234,7 @@ void main() {
       expect(await repo.recomputeForeignTxForLedger(lid), 0);
     });
 
-    test('recalc 全量按新本位币重算(改本位币 §八)', () async {
+    test('recalc 全量按新本位币重算', () async {
       final lid = await seedLedger(); // 本位币 CNY
 
       // 改本位币为 USD 后:CNY 交易要折 USD、USD 交易对齐 =amount
@@ -263,7 +263,7 @@ void main() {
           closeTo(14.0, 1e-9)); // 100 × 0.14
     });
 
-    test('重算逐笔记 change(L13):pending 条数 == 改动笔数', () async {
+    test('重算逐笔记 change:pending 条数 == 改动笔数', () async {
       db = SpitoutDatabase.forTesting(NativeDatabase.memory());
       final tracker = ChangeTracker(db);
       repo = LocalRepository(db, changeTracker: tracker);

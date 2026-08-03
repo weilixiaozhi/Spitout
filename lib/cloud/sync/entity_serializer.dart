@@ -117,7 +117,7 @@ class EntitySerializer {
   /// `monthStartDay` 对齐 server `ReadLedgerOut.month_start_day`(1-28)。
   ///
   /// `aaEnabled` 必须跨设备同步:与 ledger 名/币种同通道下发,关闭后入口隐藏、
-  /// 历史数据不展示不参与统计,重开数据仍在(文档 §6.5)。
+  /// 历史数据不展示不参与统计,重开数据仍在。
   static Map<String, dynamic> serializeLedger(Ledger ledger) {
     return {
       'syncId': ledger.syncId,

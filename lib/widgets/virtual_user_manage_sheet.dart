@@ -14,7 +14,7 @@ import 'toast.dart';
 ///
 /// 数据源为 [ledgerVirtualUsersProvider](Stream,增删改自动刷新);
 /// 全部写操作走 settlement_providers 动作函数(LocalRepository 委托,
-/// 保证 sync 登记统一)。删除受 R7 硬约束:名下有账不可删,子仓抛
+/// 保证 sync 登记统一)。删除受硬约束:名下有账不可删,子仓抛
 /// [StateError],此处 catch 后 toast 提示。
 ///
 /// 打开方式:AaEditPage 参与人区 / 账本设置页「管理虚拟用户」入口。

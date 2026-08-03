@@ -50,7 +50,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   bool _aaEnabled = false;
 
   /// 已落库的 AA 开关值。「查看分摊结算 / 管理虚拟用户」入口按此值展示,
-  /// 避免用户刚打开开关(未保存)就跳到与实际数据不符的页面(§6.5)。
+  /// 避免用户刚打开开关(未保存)就跳到与实际数据不符的页面。
   bool _aaEnabledSaved = false;
 
   /// 当前账本的云端 external_id(本地 syncId),成员协作模块的数据源标识;
@@ -382,11 +382,11 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     );
   }
 
-  /// AA 分摊设置模块(文档 §6.5)。
+  /// AA 分摊设置模块。
   ///
   /// 结构:开关行(随「保存」落库,与其他账本元信息同一保存语义)+
   /// 编辑模式且 AA 已生效时的「查看分摊结算 / 管理虚拟用户」入口。
-  /// 入口按 [_aaEnabledSaved](已落库值)展示,与 §6.7「关闭后入口隐藏」一致。
+  /// 入口按 [_aaEnabledSaved](已落库值)展示,关闭后入口隐藏。
   ///
   /// 间距内化:区块自带顶部 16px(标题外包 Padding),与成员区/归属区一致——
   /// 这样区块始终展示开关行时,与上一个区块之间恰为 16px,不依赖外层 SizedBox。

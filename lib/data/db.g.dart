@@ -1406,7 +1406,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final bool excludeFromStats;
 
   /// 交易级多币种:交易币种(ISO 大写)。
-  /// 用户所选(L12,默认账本本位币)。显式存让交易自包含(同步/统计不必每次 join)。
+  /// 用户所选(默认账本本位币)。显式存让交易自包含(同步/统计不必每次 join)。
   final String? currencyCode;
 
   /// 折算到账本本位币的金额快照(按记账时汇率,保存即定,不随汇率重算)。

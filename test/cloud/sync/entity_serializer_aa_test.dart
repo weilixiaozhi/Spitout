@@ -1,4 +1,4 @@
-/// entity_serializer AA 字段序列化测试(文档 §九 测试计划 #2)。
+/// entity_serializer AA 字段序列化测试。
 ///
 /// 覆盖:
 /// - serializeTransaction: AA 字段"非空才发"守卫。

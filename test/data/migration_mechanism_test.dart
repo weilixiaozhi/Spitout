@@ -8,7 +8,7 @@
 ///
 /// 设计说明：本文件测的是 helper 的真实实现，而非"与 onUpgrade 一字不差的 SQL
 /// 副本"（本测试直接测 helper 的真实实现，而非私有 onUpgrade 的 SQL 副本）。未来首个真实迁移块
-/// （1 → 2）落地时，再按终稿方案 §四-C 用 drift schema 快照补端到端升级测试。
+/// （1 → 2）落地时，再用 drift schema 快照补端到端升级测试。
 library;
 
 import 'package:drift/drift.dart';

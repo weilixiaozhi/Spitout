@@ -14,12 +14,12 @@ import '../../widgets/widgets.dart';
 
 /// AA 分摊编辑页(纯选择器,不写库)。
 ///
-/// 职责(文档 §6.3):
+/// 职责:
 /// - 只读展示主体信息(金额 / 分类 / 日期,不可改);
 /// - 编辑支出人、分摊方式、参与人、指定金额;
-/// - 合计校验 = 交易金额,偏差按支出人兜底修正(§10.3);
+/// - 合计校验 = 交易金额,偏差按支出人兜底修正;
 /// - pop 返回 [AaEditResult](null = 取消),不落库、不触发任何 sync 登记,
-///   由编辑器(模型 B')收到 result 后一次性写入全部字段。
+///   由编辑器收到 result 后一次性写入全部字段。
 ///
 /// 虚拟用户管理入口在参与人区(新建 / 重命名 / 删除,名下有账不可删)。
 class AaEditPage extends ConsumerStatefulWidget {
@@ -61,7 +61,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   void _initOnce(List<AaParticipantOption> options) {
     if (_initialized || options.isEmpty) return;
     _initialized = true;
-    // 支出人:初值优先,其次参与人首个(文档 §6.3 兜底逻辑)。
+    // 支出人:初值优先,其次参与人首个。
     _paidById = widget.args.paidByUserId ?? options.first.id;
     _participantIds = widget.args.participantIds;
     _syncAmountControllers(options);
@@ -107,7 +107,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 完成:校验并 pop [AaEditResult]。
   ///
-  /// 指定分摊校验(§10.3):每人金额必填;合计 ≠ 交易金额时偏差按支出人
+  /// 指定分摊校验:每人金额必填;合计 ≠ 交易金额时偏差按支出人
   /// 兜底修正(支出人应摊 += 差额),修正后为负则阻断。
   void _onConfirm(List<AaParticipantOption> options) {
     final l10n = AppLocalizations.of(context);
@@ -140,7 +140,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       splits[id] = v;
     }
 
-    // 合计校验 = 交易金额,偏差按支出人兜底修正(§10.3)。
+    // 合计校验 = 交易金额,偏差按支出人兜底修正。
     final total = toDecimal2(widget.args.amount);
     var sum = Decimal.zero;
     for (final v in splits.values) {
@@ -167,7 +167,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       paidByUserId: paidBy,
       aaMode: 2,
       aaParticipants: participants,
-      // 金额一律存字符串(文档 §1.1.8),与落库 JSON 口径一致。
+      // 金额一律存字符串,与落库 JSON 口径一致。
       aaSplits: {
         for (final e in splits.entries) e.key: e.value.toStringAsFixed(2),
       },
@@ -366,7 +366,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                 context, options, participants[i], currencyCode),
           ],
           _cardDivider(context),
-          // 合计校验行:合计 vs 交易金额;未配平时差额按支出人兜底(§10.3)。
+          // 合计校验行:合计 vs 交易金额;未配平时差额按支出人兜底。
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
             child: Row(

@@ -1861,7 +1861,7 @@ class LocalRepository extends BaseRepository {
     final existing = await (db.select(db.ledgerVirtualUsers)
           ..where((t) => t.id.equals(id)))
         .getSingleOrNull();
-    // R7 硬约束:名下有账不可删(子仓内部会校验并抛错)
+    // 名下有账不可删(子仓内部会校验并抛错)
     final deleted = await _virtualUserRepo.delete(id);
     // 硬删成功后登记 virtual_user:delete change(对齐 ledger_snapshot:delete
     // 模式),server 按 entity_sync_id 删投影

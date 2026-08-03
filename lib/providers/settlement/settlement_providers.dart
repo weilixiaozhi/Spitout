@@ -1,6 +1,6 @@
 /// AA 分摊 Provider 层。
 ///
-/// 设计意图(文档 §五):
+/// 设计意图:
 /// - 新增 AA 分摊统计查询、虚拟用户 CRUD 状态入口。
 /// - 全部写操作走 [LocalRepository](保证 sync 登记统一,禁止绕过)。
 /// - 读操作直接走子仓查询,UI 通过 ref.watch 自动响应数据变化。
@@ -35,7 +35,7 @@ final aaEnabledProvider = StreamProvider<bool>((ref) {
 /// 切换账本 AA 分摊开关(动作函数)。
 ///
 /// 走 [LocalRepository.updateLedger] 保证 changeTracker 登记 sync
-/// (aaEnabled 必须跨设备同步,文档 §1.1.5)。
+/// (aaEnabled 必须跨设备同步)。
 Future<void> setAaEnabled(WidgetRef ref, int ledgerId, bool enabled) async {
   try {
     final repo = ref.read(repositoryProvider);
@@ -94,14 +94,14 @@ Future<void> renameVirtualUser(
 
 /// 删除虚拟用户(动作函数,硬删)。
 ///
-/// 名下有账(被交易 aaParticipants 引用)不可删(R7 硬约束),
+/// 名下有账(被交易 aaParticipants 引用)不可删,
 /// 子仓抛 [StateError],调用方(UI)catch 后展示友好提示。
 Future<void> deleteVirtualUser(WidgetRef ref, int id) async {
   try {
     final repo = ref.read(repositoryProvider);
     await repo.delete(id);
   } on StateError {
-    // R7 硬约束:名下有账不可删,向上透传让 UI 展示。
+    // 名下有账不可删,向上透传让 UI 展示。
     rethrow;
   } catch (e, st) {
     logger.error('AaSettlement', '删除虚拟用户失败 id=$id', e, st);
@@ -174,7 +174,7 @@ final aaSettlementProvider =
     return AaLedgerSettlement(participants: const [], transfers: const []);
   }
 
-  // 账本未开启 AA:返回空汇总(入口隐藏、历史数据不展示,文档 §6.7)。
+  // 账本未开启 AA:返回空汇总(入口隐藏、历史数据不展示)。
   if (!ledger.aaEnabled) {
     return AaLedgerSettlement(participants: const [], transfers: const []);
   }

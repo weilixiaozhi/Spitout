@@ -272,7 +272,7 @@ class DataImportService {
     }
 
     // 交易级多币种:批量预取本位币/有效汇率,
-    // 逐条填 currencyCode + nativeAmount,不落 NULL(NULL 行 L11 检测
+    // 逐条填 currencyCode + nativeAmount,不落 NULL(NULL 行补折算检测
     // 需 join 兜底)。
     final ledger = await repo.getLedgerById(ledgerId);
     final ledgerBase = ((ledger?.currency.isNotEmpty ?? false)
@@ -293,7 +293,7 @@ class DataImportService {
         ],
       );
     } catch (e) {
-      logger.warning('TxImport', '导入取汇率失败,外币交易将按 1:1 待 L11 捞回: $e');
+      logger.warning('TxImport', '导入取汇率失败,外币交易将按 1:1 待补折算捞回: $e');
     }
 
     // 导入补拉汇率：扫描交易中出现但本地汇率表缺失的外币币种，
@@ -348,7 +348,7 @@ class DataImportService {
             '导入补拉汇率: base=$ledgerBase 缺失=${missingCurrencies.length} 补齐=$filled source=${result.source}');
       } catch (e) {
         logger.warning('TxImport',
-            '导入补拉汇率失败,缺失币种(${missingCurrencies.join(",")})将按 1:1 入账待 L11 捞回: $e');
+            '导入补拉汇率失败,缺失币种(${missingCurrencies.join(",")})将按 1:1 入账待补折算捞回: $e');
       }
     }
 

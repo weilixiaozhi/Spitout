@@ -439,7 +439,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             happenedAt: transaction.happenedAt,
             onTap: () async {
               // 点击行 → 详情 sheet(AA 支出人/分摊明细 + 常驻「编辑记账」按钮),
-              // 与首页交易列表的「先看再改」交互口径一致(§6.6)。
+              // 与首页交易列表的「先看再改」交互口径一致。
               await showTransactionDetailSheet(
                 context: context,
                 transaction: transaction,

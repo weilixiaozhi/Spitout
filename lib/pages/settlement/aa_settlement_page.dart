@@ -9,7 +9,7 @@ import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../widgets/widgets.dart';
 
-/// AA 分摊统计页(文档 §6.4)。
+/// AA 分摊统计页。
 ///
 /// 内容结构(自上而下):
 /// 1. 汇总卡:分摊总额 + 分摊交易笔数;
@@ -18,7 +18,7 @@ import '../../widgets/widgets.dart';
 /// 4. 不计入清单:aaMode=1(不分摊)的交易。
 ///
 /// 数据源为 [aaSettlementProvider](账本未开启 AA 时返回空汇总,
-/// 入口隐藏、历史数据不展示,文档 §6.7);金额以账本本位币口径展示。
+/// 入口隐藏、历史数据不展示);金额以账本本位币口径展示。
 class AaSettlementPage extends ConsumerWidget {
   const AaSettlementPage({super.key});
 

@@ -171,7 +171,7 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
     throw Exception('账本 $ledgerId 不存在');
   }
 
-  // 虚拟用户:随账本导出(R9),否则导入后指定分摊数据(aaParticipants/
+  // 虚拟用户:随账本导出,否则导入后指定分摊数据(aaParticipants/
   // aaSplits 引用虚拟用户 syncId)会悬空。按 id 升序保证导出稳定。
   final virtualUsers = await (db.select(db.ledgerVirtualUsers)
         ..where((u) => u.ledgerId.equals(ledgerId))

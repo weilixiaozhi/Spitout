@@ -254,7 +254,7 @@ void main() {
           cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
-      // AA 分摊区块始终展示开关行(文档 §6.5),采用内化间距:其标题顶到
+      // AA 分摊区块始终展示开关行,采用内化间距:其标题顶到
       // 月起始日卡片底恰为 16px(标题上方 Padding(top:16),无外层独立 SizedBox)。
       final aaTitleTop = titleTop(tester, l10n.ledgerAaEnabled);
       expect(aaTitleTop - monthBottom, 16.0);

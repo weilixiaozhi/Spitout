@@ -49,7 +49,7 @@ class _AaModeOption extends StatelessWidget {
     final (title, subtitle) = switch (mode) {
       AaMode.perPerson => (l10n.aaModePerPerson, l10n.aaPerPersonAllMembers),
       AaMode.custom => (l10n.aaModeCustom, l10n.aaSplitAmounts),
-      // 不分摊不在选择器提供入口(文档 §6.2:编辑器仅人均/指定)。
+      // 不分摊不在选择器提供入口(编辑器仅人均/指定)。
       AaMode.noSplit => ('', ''),
     };
     return InkWell(

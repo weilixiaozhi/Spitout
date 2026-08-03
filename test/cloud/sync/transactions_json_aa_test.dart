@@ -1,5 +1,4 @@
-/// transactions_json v7 AA 字段 + 虚拟用户 round-trip 测试
-/// (文档 §九 测试计划 #7 导入导出)。
+/// transactions_json v7 AA 字段 + 虚拟用户 round-trip 测试。
 ///
 /// 覆盖:
 /// - export v7 含 paidByUserId/aaMode/aaParticipants/aaSplits + aaEnabled + virtualUsers。

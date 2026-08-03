@@ -197,10 +197,10 @@ void main() {
       final tx = await repo.getTransactionById(txId);
       expect(tx!.currencyCode, 'CNY', reason: '无汇率时 currencyCode 也不变');
       expect(tx.nativeAmount, 100,
-          reason: '无汇率时 nativeAmount 退化=amount,由 L11 横幅兜底');
+          reason: '无汇率时 nativeAmount 退化=amount,由补折算横幅兜底');
     });
 
-    test('逐笔记 change(L13):重算后 local_changes 有对应条数', () async {
+    test('逐笔记 change:重算后 local_changes 有对应条数', () async {
       db = SpitoutDatabase.forTesting(NativeDatabase.memory());
       final tracker = ChangeTracker(db);
       repo = LocalRepository(db, changeTracker: tracker);

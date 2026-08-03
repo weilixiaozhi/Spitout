@@ -1,8 +1,8 @@
-/// AA 分摊字段同步 apply 路径测试(文档 §九 测试计划 #2 同步)。
+/// AA 分摊字段同步 apply 路径测试。
 ///
 /// 覆盖:
 /// - 远端 upsert 携带 AA 字段 → 本地正确写入(round-trip)。
-/// - 远端 upsert 省略 AA 字段(缺键) → 本地已有值保留(缺键保护 R1)。
+/// - 远端 upsert 省略 AA 字段(缺键) → 本地已有值保留。
 /// - 远端 upsert 显式 null → 本地覆盖为 null。
 /// - 虚拟用户 create/update/delete 投影 apply。
 library;

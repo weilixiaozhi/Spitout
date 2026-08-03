@@ -15,7 +15,7 @@ enum AaMode {
   noSplit,
   custom;
 
-  /// 从数据库列值(int?)解析为枚举。null/0 → perPerson(R6)。
+  /// 从数据库列值(int?)解析为枚举。null/0 → perPerson。
   static AaMode fromDb(int? v) {
     switch (v) {
       case 1:
@@ -31,7 +31,7 @@ enum AaMode {
 /// 单条交易的 AA 分摊结果。
 ///
 /// [shares] key=参与人标识(userId 或虚拟用户 syncId),value=应摊金额(double)。
-/// 支出人实付与应摊的差额归支出人,保证 sum(应摊) == 实付(§10.2)。
+/// 支出人实付与应摊的差额归支出人,保证 sum(应摊) == 实付。
 class AaSettlementTxResult {
   /// 交易 syncId(跨设备标识,本地展示用 tx.id)。
   final String? syncId;
@@ -142,9 +142,9 @@ class AaLedgerSettlement {
 /// 入口:账本的全部 AA 交易 + 账本全部参与人(真实成员 + 虚拟用户)。
 /// 输出:每人汇总(实付/应摊/净额)+ 转账方案(贪心结算,净额最小化转账笔数)。
 ///
-/// 分摊规则(§4.1):
+/// 分摊规则:
 /// - 人均(null/0):全部参与人(aaParticipants 空则运行时展开为账本全部成员)
-///   均分;每人应摊 = floor(实付×100/n)/100;支出人实付差归支出人(§10.2)。
+///   均分;每人应摊 = floor(实付×100/n)/100;支出人实付差归支出人。
 /// - 不分摊(1):跳过,不进入 AA 统计。
 /// - 指定(2):aaSplits 即最终应摊,按分校验 sum == 实付。
 ///

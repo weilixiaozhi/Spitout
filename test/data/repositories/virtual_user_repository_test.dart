@@ -3,7 +3,7 @@
 // 本测试验证 [LocalLedgerVirtualUserRepository] 的:
 //   1. CRUD 基本操作(create/getByLedger/getBySyncId/rename/delete)
 //   2. watchByLedger stream 正常
-//   3. 删除约束:被交易的 aaParticipants 引用时不允许删除(R7 硬约束)
+//   3. 删除约束:被交易的 aaParticipants 引用时不允许删除
 //   4. 未被引用时正常硬删
 
 import 'package:drift/drift.dart' as d;
@@ -155,7 +155,7 @@ void main() {
     });
   });
 
-  group('删除约束 R7: 名下有账不可删', () {
+  group('删除约束:名下有账不可删', () {
     test('被交易的 aaParticipants 引用时抛 StateError', () async {
       final vUserId = await repo.create(
         ledgerId: 1,
@@ -184,7 +184,7 @@ void main() {
       expect(
         () => repo.delete(vUserId),
         throwsA(isA<StateError>()),
-        reason: '名下有账不可删(R7 硬约束)',
+        reason: '名下有账不可删',
       );
 
       // 验证行仍在
