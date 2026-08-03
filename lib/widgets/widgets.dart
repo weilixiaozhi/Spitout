@@ -74,6 +74,11 @@ export 'transaction_editor_sheet_entry.dart';
 export 'transaction_edit_utils.dart';
 export 'note_input_row.dart';
 
+// ===== AA 分摊 =====
+export 'aa_mode_picker_sheet.dart';
+export 'aa_participant_picker_sheet.dart';
+export 'virtual_user_manage_sheet.dart';
+
 // ===== 账号 / 登录 / 安全 =====
 export 'login_2fa_challenge_view.dart';
 export 'avatar_preview_page.dart';

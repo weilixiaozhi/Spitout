@@ -3530,4 +3530,135 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get ledgerMetaReadOnlyToast => '공동 작업자는 가계부 정보를 수정할 수 없습니다.';
+
+  @override
+  String get aaSettlementTitle => 'AA 정산';
+
+  @override
+  String get aaSettlementOverview => '요약';
+
+  @override
+  String get aaSettlementTotalAmount => '분담 총액';
+
+  @override
+  String aaSettlementTxCount(int count) {
+    return '분담 거래 $count건';
+  }
+
+  @override
+  String get aaSettlementPerPerson => '인별 합계';
+
+  @override
+  String get aaSettlementPaid => '지출';
+
+  @override
+  String get aaSettlementShare => '분담';
+
+  @override
+  String get aaSettlementNet => '차액';
+
+  @override
+  String get aaSettlementNetReceive => '받을 금액';
+
+  @override
+  String get aaSettlementNetPay => '보낼 금액';
+
+  @override
+  String get aaSettlementTransferPlan => '송금 계획';
+
+  @override
+  String aaSettlementTransferPayTo(String from, String to) {
+    return '$from → $to';
+  }
+
+  @override
+  String get aaSettlementNoTransfers => '정산 완료, 송금이 필요 없습니다';
+
+  @override
+  String get aaSettlementEmpty => '분담 거래가 없습니다';
+
+  @override
+  String get aaSettlementExcluded => '분담 제외';
+
+  @override
+  String get aaEditTitle => '분담 내역';
+
+  @override
+  String get aaPayer => '지출한 사람';
+
+  @override
+  String get aaSplitMode => '분담 방식';
+
+  @override
+  String get aaParticipants => '참여자';
+
+  @override
+  String get aaSplitAmounts => '금액 지정';
+
+  @override
+  String get aaModePerPerson => '균등 분담';
+
+  @override
+  String get aaModeCustom => '금액 지정 분담';
+
+  @override
+  String get aaParticipantsAll => '모든 멤버';
+
+  @override
+  String aaParticipantsSelected(int count) {
+    return '$count명 선택';
+  }
+
+  @override
+  String get aaSplitTotal => '합계';
+
+  @override
+  String get aaSplitPayerAdjustHint => '차액은 지출한 사람이 부담합니다';
+
+  @override
+  String get aaVirtualUserTitle => '가상 사용자';
+
+  @override
+  String get aaVirtualUserAdd => '가상 사용자 추가';
+
+  @override
+  String get aaVirtualUserNameHint => '닉네임 입력';
+
+  @override
+  String get aaVirtualUserRename => '이름 변경';
+
+  @override
+  String get aaVirtualUserEmpty => '가상 사용자가 없습니다';
+
+  @override
+  String aaVirtualUserDeleteConfirm(String name) {
+    return '가상 사용자「$name」을(를) 삭제하시겠습니까?';
+  }
+
+  @override
+  String get aaVirtualUserInUse => '관련 거래가 있어 삭제할 수 없습니다';
+
+  @override
+  String get aaUnknownUser => '알 수 없음';
+
+  @override
+  String get aaPerPersonAllMembers => '균등 분담(모든 멤버)';
+
+  @override
+  String get ledgerAaEnabled => 'AA 분담';
+
+  @override
+  String get ledgerAaEnabledHint => '활성화하면 지출을 멤버와 분담할 수 있습니다';
+
+  @override
+  String get ledgerAaSettlementEntry => '정산 보기';
+
+  @override
+  String get ledgerAaVirtualUsersEntry => '가상 사용자 관리';
+
+  @override
+  String get aaNoParticipants => '참여자를 먼저 추가하세요';
+
+  @override
+  String get aaSplitAmountIncomplete => '모든 참여자의 금액을 입력하세요';
 }

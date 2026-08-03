@@ -10,4 +10,11 @@ class Routes {
 
   /// 分类管理页
   static const String categoryManage = '/category/manage';
+
+  /// AA 分摊统计页
+  static const String aaSettlement = '/settlement/aa';
+
+  /// AA 分摊编辑页(纯选择器,参数经 RouteSettings.arguments 传
+  /// [AaEditPageArgs],返回 [AaEditResult?],null = 取消)
+  static const String aaEdit = '/settlement/aa/edit';
 }

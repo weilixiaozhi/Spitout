@@ -1752,5 +1752,77 @@
     "updateCantAutoCheck": "Couldn't fetch version info. View the latest release on GitHub.",
     "updateGoToGithub": "View on GitHub",
     "mineUpdateNow": "Update",
-    "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings."
+    "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings.",
+    "aaSettlementTitle": "AA Settlement",
+    "aaSettlementOverview": "Overview",
+    "aaSettlementTotalAmount": "Total shared",
+    "aaSettlementTxCount": "{count} shared transactions",
+    "@aaSettlementTxCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaSettlementPerPerson": "Per person",
+    "aaSettlementPaid": "Paid",
+    "aaSettlementShare": "Share",
+    "aaSettlementNet": "Balance",
+    "aaSettlementNetReceive": "to receive",
+    "aaSettlementNetPay": "to pay",
+    "aaSettlementTransferPlan": "Settlement plan",
+    "aaSettlementTransferPayTo": "{from} pays {to}",
+    "@aaSettlementTransferPayTo": {
+        "placeholders": {
+            "from": {
+                "type": "String"
+            },
+            "to": {
+                "type": "String"
+            }
+        }
+    },
+    "aaSettlementNoTransfers": "All settled up",
+    "aaSettlementEmpty": "No shared transactions yet",
+    "aaSettlementExcluded": "Not included in split",
+    "aaEditTitle": "Split details",
+    "aaPayer": "Paid by",
+    "aaSplitMode": "Split method",
+    "aaParticipants": "Participants",
+    "aaSplitAmounts": "Custom amounts",
+    "aaModePerPerson": "Split equally",
+    "aaModeCustom": "Custom split",
+    "aaParticipantsAll": "All members",
+    "aaParticipantsSelected": "{count} selected",
+    "@aaParticipantsSelected": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaSplitTotal": "Total",
+    "aaSplitPayerAdjustHint": "Any difference is adjusted to the payer",
+    "aaVirtualUserTitle": "Virtual members",
+    "aaVirtualUserAdd": "Add virtual member",
+    "aaVirtualUserNameHint": "Enter a nickname",
+    "aaVirtualUserRename": "Rename",
+    "aaVirtualUserEmpty": "No virtual members yet",
+    "aaVirtualUserDeleteConfirm": "Delete \"{name}\"?",
+    "@aaVirtualUserDeleteConfirm": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "aaVirtualUserInUse": "Has related transactions and cannot be deleted",
+    "aaUnknownUser": "Unknown",
+    "aaPerPersonAllMembers": "Split equally among all members",
+    "ledgerAaEnabled": "AA Split",
+    "ledgerAaEnabledHint": "Split expenses with members when enabled",
+    "ledgerAaSettlementEntry": "View settlement",
+    "ledgerAaVirtualUsersEntry": "Manage virtual members",
+    "aaNoParticipants": "Add participants first",
+    "aaSplitAmountIncomplete": "Enter an amount for every participant"
 }

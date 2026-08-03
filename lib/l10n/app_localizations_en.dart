@@ -3530,4 +3530,135 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get ledgerMetaReadOnlyToast => 'Collaborators cannot modify ledger settings.';
+
+  @override
+  String get aaSettlementTitle => 'AA Settlement';
+
+  @override
+  String get aaSettlementOverview => 'Overview';
+
+  @override
+  String get aaSettlementTotalAmount => 'Total shared';
+
+  @override
+  String aaSettlementTxCount(int count) {
+    return '$count shared transactions';
+  }
+
+  @override
+  String get aaSettlementPerPerson => 'Per person';
+
+  @override
+  String get aaSettlementPaid => 'Paid';
+
+  @override
+  String get aaSettlementShare => 'Share';
+
+  @override
+  String get aaSettlementNet => 'Balance';
+
+  @override
+  String get aaSettlementNetReceive => 'to receive';
+
+  @override
+  String get aaSettlementNetPay => 'to pay';
+
+  @override
+  String get aaSettlementTransferPlan => 'Settlement plan';
+
+  @override
+  String aaSettlementTransferPayTo(String from, String to) {
+    return '$from pays $to';
+  }
+
+  @override
+  String get aaSettlementNoTransfers => 'All settled up';
+
+  @override
+  String get aaSettlementEmpty => 'No shared transactions yet';
+
+  @override
+  String get aaSettlementExcluded => 'Not included in split';
+
+  @override
+  String get aaEditTitle => 'Split details';
+
+  @override
+  String get aaPayer => 'Paid by';
+
+  @override
+  String get aaSplitMode => 'Split method';
+
+  @override
+  String get aaParticipants => 'Participants';
+
+  @override
+  String get aaSplitAmounts => 'Custom amounts';
+
+  @override
+  String get aaModePerPerson => 'Split equally';
+
+  @override
+  String get aaModeCustom => 'Custom split';
+
+  @override
+  String get aaParticipantsAll => 'All members';
+
+  @override
+  String aaParticipantsSelected(int count) {
+    return '$count selected';
+  }
+
+  @override
+  String get aaSplitTotal => 'Total';
+
+  @override
+  String get aaSplitPayerAdjustHint => 'Any difference is adjusted to the payer';
+
+  @override
+  String get aaVirtualUserTitle => 'Virtual members';
+
+  @override
+  String get aaVirtualUserAdd => 'Add virtual member';
+
+  @override
+  String get aaVirtualUserNameHint => 'Enter a nickname';
+
+  @override
+  String get aaVirtualUserRename => 'Rename';
+
+  @override
+  String get aaVirtualUserEmpty => 'No virtual members yet';
+
+  @override
+  String aaVirtualUserDeleteConfirm(String name) {
+    return 'Delete \"$name\"?';
+  }
+
+  @override
+  String get aaVirtualUserInUse => 'Has related transactions and cannot be deleted';
+
+  @override
+  String get aaUnknownUser => 'Unknown';
+
+  @override
+  String get aaPerPersonAllMembers => 'Split equally among all members';
+
+  @override
+  String get ledgerAaEnabled => 'AA Split';
+
+  @override
+  String get ledgerAaEnabledHint => 'Split expenses with members when enabled';
+
+  @override
+  String get ledgerAaSettlementEntry => 'View settlement';
+
+  @override
+  String get ledgerAaVirtualUsersEntry => 'Manage virtual members';
+
+  @override
+  String get aaNoParticipants => 'Add participants first';
+
+  @override
+  String get aaSplitAmountIncomplete => 'Enter an amount for every participant';
 }

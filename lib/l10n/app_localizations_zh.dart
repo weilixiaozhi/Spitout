@@ -3530,6 +3530,137 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get ledgerMetaReadOnlyToast => '协作者无权修改账本信息';
+
+  @override
+  String get aaSettlementTitle => '分摊结算';
+
+  @override
+  String get aaSettlementOverview => '汇总';
+
+  @override
+  String get aaSettlementTotalAmount => '分摊总额';
+
+  @override
+  String aaSettlementTxCount(int count) {
+    return '$count 笔分摊交易';
+  }
+
+  @override
+  String get aaSettlementPerPerson => '每人汇总';
+
+  @override
+  String get aaSettlementPaid => '实付';
+
+  @override
+  String get aaSettlementShare => '应摊';
+
+  @override
+  String get aaSettlementNet => '差额';
+
+  @override
+  String get aaSettlementNetReceive => '应收';
+
+  @override
+  String get aaSettlementNetPay => '应付';
+
+  @override
+  String get aaSettlementTransferPlan => '转账方案';
+
+  @override
+  String aaSettlementTransferPayTo(String from, String to) {
+    return '$from 付给 $to';
+  }
+
+  @override
+  String get aaSettlementNoTransfers => '已结清，无需转账';
+
+  @override
+  String get aaSettlementEmpty => '暂无参与分摊的交易';
+
+  @override
+  String get aaSettlementExcluded => '不计入分摊';
+
+  @override
+  String get aaEditTitle => '分摊明细';
+
+  @override
+  String get aaPayer => '支出人';
+
+  @override
+  String get aaSplitMode => '分摊方式';
+
+  @override
+  String get aaParticipants => '参与人';
+
+  @override
+  String get aaSplitAmounts => '指定金额';
+
+  @override
+  String get aaModePerPerson => '人均分摊';
+
+  @override
+  String get aaModeCustom => '指定分摊';
+
+  @override
+  String get aaParticipantsAll => '全部成员';
+
+  @override
+  String aaParticipantsSelected(int count) {
+    return '已选 $count 人';
+  }
+
+  @override
+  String get aaSplitTotal => '合计';
+
+  @override
+  String get aaSplitPayerAdjustHint => '差额由支出人兜底';
+
+  @override
+  String get aaVirtualUserTitle => '虚拟用户';
+
+  @override
+  String get aaVirtualUserAdd => '新建虚拟用户';
+
+  @override
+  String get aaVirtualUserNameHint => '输入昵称';
+
+  @override
+  String get aaVirtualUserRename => '重命名';
+
+  @override
+  String get aaVirtualUserEmpty => '暂无虚拟用户';
+
+  @override
+  String aaVirtualUserDeleteConfirm(String name) {
+    return '确定删除虚拟用户「$name」吗？';
+  }
+
+  @override
+  String get aaVirtualUserInUse => '该虚拟用户名下有账，不可删除';
+
+  @override
+  String get aaUnknownUser => '未知';
+
+  @override
+  String get aaPerPersonAllMembers => '人均分摊（全部成员）';
+
+  @override
+  String get ledgerAaEnabled => 'AA 分摊';
+
+  @override
+  String get ledgerAaEnabledHint => '开启后记账时可选择分摊方式';
+
+  @override
+  String get ledgerAaSettlementEntry => '查看分摊结算';
+
+  @override
+  String get ledgerAaVirtualUsersEntry => '管理虚拟用户';
+
+  @override
+  String get aaNoParticipants => '请先添加参与人';
+
+  @override
+  String get aaSplitAmountIncomplete => '请填写全部参与人的金额';
 }
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
@@ -7060,4 +7191,135 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get ledgerMetaReadOnlyToast => '協作者無權修改帳本資訊';
+
+  @override
+  String get aaSettlementTitle => '分攤結算';
+
+  @override
+  String get aaSettlementOverview => '總覽';
+
+  @override
+  String get aaSettlementTotalAmount => '分攤總額';
+
+  @override
+  String aaSettlementTxCount(int count) {
+    return '$count 筆分攤交易';
+  }
+
+  @override
+  String get aaSettlementPerPerson => '每人總覽';
+
+  @override
+  String get aaSettlementPaid => '實付';
+
+  @override
+  String get aaSettlementShare => '應攤';
+
+  @override
+  String get aaSettlementNet => '差額';
+
+  @override
+  String get aaSettlementNetReceive => '應收';
+
+  @override
+  String get aaSettlementNetPay => '應付';
+
+  @override
+  String get aaSettlementTransferPlan => '轉帳方案';
+
+  @override
+  String aaSettlementTransferPayTo(String from, String to) {
+    return '$from 付給 $to';
+  }
+
+  @override
+  String get aaSettlementNoTransfers => '已結清，無需轉帳';
+
+  @override
+  String get aaSettlementEmpty => '暫無參與分攤的交易';
+
+  @override
+  String get aaSettlementExcluded => '不計入分攤';
+
+  @override
+  String get aaEditTitle => '分攤明細';
+
+  @override
+  String get aaPayer => '支出人';
+
+  @override
+  String get aaSplitMode => '分攤方式';
+
+  @override
+  String get aaParticipants => '參與人';
+
+  @override
+  String get aaSplitAmounts => '指定金額';
+
+  @override
+  String get aaModePerPerson => '人均分攤';
+
+  @override
+  String get aaModeCustom => '指定分攤';
+
+  @override
+  String get aaParticipantsAll => '全部成員';
+
+  @override
+  String aaParticipantsSelected(int count) {
+    return '已選 $count 人';
+  }
+
+  @override
+  String get aaSplitTotal => '合計';
+
+  @override
+  String get aaSplitPayerAdjustHint => '差額由支出人兜底';
+
+  @override
+  String get aaVirtualUserTitle => '虛擬用戶';
+
+  @override
+  String get aaVirtualUserAdd => '新增虛擬用戶';
+
+  @override
+  String get aaVirtualUserNameHint => '輸入暱稱';
+
+  @override
+  String get aaVirtualUserRename => '重新命名';
+
+  @override
+  String get aaVirtualUserEmpty => '暫無虛擬用戶';
+
+  @override
+  String aaVirtualUserDeleteConfirm(String name) {
+    return '確定刪除虛擬用戶「$name」嗎？';
+  }
+
+  @override
+  String get aaVirtualUserInUse => '該虛擬用戶名下有帳，不可刪除';
+
+  @override
+  String get aaUnknownUser => '未知';
+
+  @override
+  String get aaPerPersonAllMembers => '人均分攤（全部成員）';
+
+  @override
+  String get ledgerAaEnabled => 'AA 分攤';
+
+  @override
+  String get ledgerAaEnabledHint => '開啟後記帳時可選擇分攤方式';
+
+  @override
+  String get ledgerAaSettlementEntry => '查看分攤結算';
+
+  @override
+  String get ledgerAaVirtualUsersEntry => '管理虛擬用戶';
+
+  @override
+  String get aaNoParticipants => '請先新增參與人';
+
+  @override
+  String get aaSplitAmountIncomplete => '請填寫全部參與人的金額';
 }

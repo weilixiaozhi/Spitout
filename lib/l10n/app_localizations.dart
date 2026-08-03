@@ -6679,6 +6679,252 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Collaborators cannot modify ledger settings.'**
   String get ledgerMetaReadOnlyToast;
+
+  /// No description provided for @aaSettlementTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'AA Settlement'**
+  String get aaSettlementTitle;
+
+  /// No description provided for @aaSettlementOverview.
+  ///
+  /// In en, this message translates to:
+  /// **'Overview'**
+  String get aaSettlementOverview;
+
+  /// No description provided for @aaSettlementTotalAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total shared'**
+  String get aaSettlementTotalAmount;
+
+  /// No description provided for @aaSettlementTxCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} shared transactions'**
+  String aaSettlementTxCount(int count);
+
+  /// No description provided for @aaSettlementPerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Per person'**
+  String get aaSettlementPerPerson;
+
+  /// No description provided for @aaSettlementPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get aaSettlementPaid;
+
+  /// No description provided for @aaSettlementShare.
+  ///
+  /// In en, this message translates to:
+  /// **'Share'**
+  String get aaSettlementShare;
+
+  /// No description provided for @aaSettlementNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Balance'**
+  String get aaSettlementNet;
+
+  /// No description provided for @aaSettlementNetReceive.
+  ///
+  /// In en, this message translates to:
+  /// **'to receive'**
+  String get aaSettlementNetReceive;
+
+  /// No description provided for @aaSettlementNetPay.
+  ///
+  /// In en, this message translates to:
+  /// **'to pay'**
+  String get aaSettlementNetPay;
+
+  /// No description provided for @aaSettlementTransferPlan.
+  ///
+  /// In en, this message translates to:
+  /// **'Settlement plan'**
+  String get aaSettlementTransferPlan;
+
+  /// No description provided for @aaSettlementTransferPayTo.
+  ///
+  /// In en, this message translates to:
+  /// **'{from} pays {to}'**
+  String aaSettlementTransferPayTo(String from, String to);
+
+  /// No description provided for @aaSettlementNoTransfers.
+  ///
+  /// In en, this message translates to:
+  /// **'All settled up'**
+  String get aaSettlementNoTransfers;
+
+  /// No description provided for @aaSettlementEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No shared transactions yet'**
+  String get aaSettlementEmpty;
+
+  /// No description provided for @aaSettlementExcluded.
+  ///
+  /// In en, this message translates to:
+  /// **'Not included in split'**
+  String get aaSettlementExcluded;
+
+  /// No description provided for @aaEditTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Split details'**
+  String get aaEditTitle;
+
+  /// No description provided for @aaPayer.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get aaPayer;
+
+  /// No description provided for @aaSplitMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Split method'**
+  String get aaSplitMode;
+
+  /// No description provided for @aaParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Participants'**
+  String get aaParticipants;
+
+  /// No description provided for @aaSplitAmounts.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom amounts'**
+  String get aaSplitAmounts;
+
+  /// No description provided for @aaModePerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'Split equally'**
+  String get aaModePerPerson;
+
+  /// No description provided for @aaModeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom split'**
+  String get aaModeCustom;
+
+  /// No description provided for @aaParticipantsAll.
+  ///
+  /// In en, this message translates to:
+  /// **'All members'**
+  String get aaParticipantsAll;
+
+  /// No description provided for @aaParticipantsSelected.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} selected'**
+  String aaParticipantsSelected(int count);
+
+  /// No description provided for @aaSplitTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get aaSplitTotal;
+
+  /// No description provided for @aaSplitPayerAdjustHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Any difference is adjusted to the payer'**
+  String get aaSplitPayerAdjustHint;
+
+  /// No description provided for @aaVirtualUserTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Virtual members'**
+  String get aaVirtualUserTitle;
+
+  /// No description provided for @aaVirtualUserAdd.
+  ///
+  /// In en, this message translates to:
+  /// **'Add virtual member'**
+  String get aaVirtualUserAdd;
+
+  /// No description provided for @aaVirtualUserNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter a nickname'**
+  String get aaVirtualUserNameHint;
+
+  /// No description provided for @aaVirtualUserRename.
+  ///
+  /// In en, this message translates to:
+  /// **'Rename'**
+  String get aaVirtualUserRename;
+
+  /// No description provided for @aaVirtualUserEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No virtual members yet'**
+  String get aaVirtualUserEmpty;
+
+  /// No description provided for @aaVirtualUserDeleteConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Delete \"{name}\"?'**
+  String aaVirtualUserDeleteConfirm(String name);
+
+  /// No description provided for @aaVirtualUserInUse.
+  ///
+  /// In en, this message translates to:
+  /// **'Has related transactions and cannot be deleted'**
+  String get aaVirtualUserInUse;
+
+  /// No description provided for @aaUnknownUser.
+  ///
+  /// In en, this message translates to:
+  /// **'Unknown'**
+  String get aaUnknownUser;
+
+  /// No description provided for @aaPerPersonAllMembers.
+  ///
+  /// In en, this message translates to:
+  /// **'Split equally among all members'**
+  String get aaPerPersonAllMembers;
+
+  /// No description provided for @ledgerAaEnabled.
+  ///
+  /// In en, this message translates to:
+  /// **'AA Split'**
+  String get ledgerAaEnabled;
+
+  /// No description provided for @ledgerAaEnabledHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Split expenses with members when enabled'**
+  String get ledgerAaEnabledHint;
+
+  /// No description provided for @ledgerAaSettlementEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'View settlement'**
+  String get ledgerAaSettlementEntry;
+
+  /// No description provided for @ledgerAaVirtualUsersEntry.
+  ///
+  /// In en, this message translates to:
+  /// **'Manage virtual members'**
+  String get ledgerAaVirtualUsersEntry;
+
+  /// No description provided for @aaNoParticipants.
+  ///
+  /// In en, this message translates to:
+  /// **'Add participants first'**
+  String get aaNoParticipants;
+
+  /// No description provided for @aaSplitAmountIncomplete.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter an amount for every participant'**
+  String get aaSplitAmountIncomplete;
 }
 
 class _AppLocalizationsDelegate extends LocalizationsDelegate<AppLocalizations> {

@@ -19,6 +19,7 @@ import '../../data/db.dart';
 import '../../providers/core/database_providers.dart';
 import '../../providers/sync/shared_ledger_providers.dart';
 import '../../providers/sync/sync_state_providers.dart';
+import '../../services/settlement/aa_edit_models.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 
 /// 当前账本的 AA 分摊开关(Stream,自动响应 ledger.aaEnabled 变更)。
@@ -107,6 +108,54 @@ Future<void> deleteVirtualUser(WidgetRef ref, int id) async {
     rethrow;
   }
 }
+
+/// 账本 AA 参与人选项列表(真实成员 + 虚拟用户)。
+///
+/// 供编辑器 AA 区块、AaEditPage、交易详情页统一取参与人名册,
+/// 标识口径与 [aaSettlementProvider] 一致(真实成员 userId、
+/// 虚拟用户 syncId,无 syncId 兜底 `vu_<本地id>`)。
+/// watch [sharedResourceRefreshProvider] 让成员变更后自动重取。
+final aaParticipantOptionsProvider =
+    FutureProvider.autoDispose.family<List<AaParticipantOption>, int>(
+        (ref, ledgerId) async {
+  ref.watch(sharedResourceRefreshProvider);
+
+  final repo = ref.read(repositoryProvider);
+  final options = <AaParticipantOption>[];
+
+  // 真实成员:仅共享账本(有 syncId)才有成员体系;
+  // 单人/本地账本无成员表,参与人仅虚拟用户。
+  final ledger = await repo.getLedgerById(ledgerId);
+  final syncId = ledger?.syncId;
+  if (syncId != null && syncId.isNotEmpty) {
+    try {
+      final members = await ref.read(ledgerMembersProvider(syncId).future);
+      for (final m in members) {
+        // displayName 可能为 null/空,email 兜底(email 为非空字段)。
+        final dn = m.displayName;
+        options.add(AaParticipantOption(
+          id: m.userId,
+          name: (dn != null && dn.isNotEmpty) ? dn : m.email,
+          isVirtual: false,
+        ));
+      }
+    } catch (e, st) {
+      logger.warning(
+          'AaSettlement', '读取账本成员失败 ledger=$ledgerId,成员选项降级为空', '$e\n$st');
+    }
+  }
+
+  // 虚拟用户:syncId 作为参与人标识(与统计口径一致)。
+  final virtualUsers = await repo.getByLedger(ledgerId);
+  for (final vu in virtualUsers) {
+    options.add(AaParticipantOption(
+      id: vu.syncId ?? 'vu_${vu.id}',
+      name: vu.name,
+      isVirtual: true,
+    ));
+  }
+  return options;
+});
 
 /// 账本 AA 分摊汇总(纯计算,依赖交易+成员+虚拟用户)。
 ///
