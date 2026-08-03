@@ -5426,6 +5426,12 @@ abstract class AppLocalizations {
   /// **'Please save the ledger first'**
   String get sharedMembersSaveFirst;
 
+  /// No description provided for @sharedMembersInviteSyncFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud sync not finished yet. Please try again later.'**
+  String get sharedMembersInviteSyncFailed;
+
   /// No description provided for @sharedTxCreatedBy.
   ///
   /// In en, this message translates to:
@@ -6785,8 +6791,14 @@ abstract class AppLocalizations {
   /// No description provided for @aaEditTitle.
   ///
   /// In en, this message translates to:
-  /// **'Split details'**
+  /// **'Edit split'**
   String get aaEditTitle;
+
+  /// No description provided for @aaEditSplitButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Edit split'**
+  String get aaEditSplitButton;
 
   /// No description provided for @aaPayer.
   ///
@@ -6806,12 +6818,6 @@ abstract class AppLocalizations {
   /// **'Participants'**
   String get aaParticipants;
 
-  /// No description provided for @aaSplitAmounts.
-  ///
-  /// In en, this message translates to:
-  /// **'Custom amounts'**
-  String get aaSplitAmounts;
-
   /// No description provided for @aaModePerPerson.
   ///
   /// In en, this message translates to:
@@ -6830,35 +6836,29 @@ abstract class AppLocalizations {
   /// **'No split'**
   String get aaModeNoSplit;
 
-  /// No description provided for @aaSplitClearAll.
-  ///
-  /// In en, this message translates to:
-  /// **'Clear & refill'**
-  String get aaSplitClearAll;
-
   /// No description provided for @aaParticipantsAll.
   ///
   /// In en, this message translates to:
   /// **'All members'**
   String get aaParticipantsAll;
 
-  /// No description provided for @aaParticipantsSelected.
+  /// No description provided for @aaParticipantsAllCount.
   ///
   /// In en, this message translates to:
-  /// **'{count} selected'**
-  String aaParticipantsSelected(int count);
+  /// **'All members ({count})'**
+  String aaParticipantsAllCount(int count);
+
+  /// No description provided for @aaParticipantsUnit.
+  ///
+  /// In en, this message translates to:
+  /// **''**
+  String get aaParticipantsUnit;
 
   /// No description provided for @aaSplitTotal.
   ///
   /// In en, this message translates to:
   /// **'Total'**
   String get aaSplitTotal;
-
-  /// No description provided for @aaSplitPayerAdjustHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Any difference is adjusted to the payer'**
-  String get aaSplitPayerAdjustHint;
 
   /// No description provided for @aaVirtualUserTitle.
   ///
@@ -6925,12 +6925,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Me'**
   String get aaMe;
-
-  /// No description provided for @aaPerPersonAllMembers.
-  ///
-  /// In en, this message translates to:
-  /// **'Split equally among all members'**
-  String get aaPerPersonAllMembers;
 
   /// No description provided for @ledgerAaEnabled.
   ///

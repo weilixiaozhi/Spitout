@@ -1292,6 +1292,7 @@
     "sharedMembersRemoved": "已移除成员",
     "sharedMembersSyncPending": "首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员",
     "sharedMembersSaveFirst": "请先保存账本",
+    "sharedMembersInviteSyncFailed": "云端同步尚未完成，请稍后重试",
     "sharedTxCreatedBy": "{name} 创建",
     "@sharedTxCreatedBy": {
         "placeholders": {
@@ -1658,19 +1659,25 @@
         }
     },
     "aaSettlementExcludedEmpty": "暂无不计入详单的交易",
-    "aaEditTitle": "分摊明细",
+    "aaEditTitle": "编辑分摊",
+    "aaEditSplitButton": "编辑分摊",
     "aaPayer": "支出人",
     "aaSplitMode": "分摊方式",
     "aaParticipants": "参与人",
-    "aaSplitAmounts": "指定金额",
     "aaModePerPerson": "人均分摊",
     "aaModeCustom": "指定分摊",
     "aaModeNoSplit": "不分摊",
-    "aaSplitClearAll": "清空重填",
     "aaParticipantsAll": "全部成员",
-    "aaParticipantsSelected": "已选 {count} 人",
+    "aaParticipantsAllCount": "全部成员（{count}人）",
+    "@aaParticipantsAllCount": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "aaParticipantsUnit": "人",
     "aaSplitTotal": "合计",
-    "aaSplitPayerAdjustHint": "差额由支出人兜底",
     "aaVirtualUserTitle": "虚拟用户",
     "aaVirtualUserAdd": "新建虚拟用户",
     "aaVirtualUserNameHint": "输入昵称",
@@ -1689,7 +1696,6 @@
     "aaAddVirtualUser": "添加虚拟用户",
     "aaUnknownUser": "未知",
     "aaMe": "我",
-    "aaPerPersonAllMembers": "人均分摊（全部成员）",
     "ledgerAaEnabled": "AA 分摊",
     "ledgerAaEnabledHint": "开启后记账时可选择分摊方式",
     "ledgerAaSettlementEntry": "分摊统计",

@@ -8,10 +8,17 @@ import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/statistics/record_history_providers.dart';
-import 'package:spitout/providers/providers.dart' show currentLedgerProvider, expenseColorSchemeProvider, ledgerVirtualUsersProvider;
-import 'package:spitout/providers/sync/cloud_client_providers.dart' show cloudCurrentUserProvider;
-import 'package:spitout/providers/ui/theme_providers.dart' show displayNameProvider;
-import 'package:spitout/core/identity/local_user_identity.dart' show localSelfIdProvider;
+import 'package:spitout/providers/providers.dart'
+    show
+        currentLedgerProvider,
+        expenseColorSchemeProvider,
+        ledgerVirtualUsersProvider;
+import 'package:spitout/providers/sync/cloud_client_providers.dart'
+    show cloudCurrentUserProvider;
+import 'package:spitout/providers/ui/theme_providers.dart'
+    show displayNameProvider;
+import 'package:spitout/core/identity/local_user_identity.dart'
+    show localSelfIdProvider;
 import '../services/settlement/aa_settlement_service.dart' show AaMode;
 import '../theme/colors.dart';
 import 'category_icon.dart';
@@ -69,9 +76,11 @@ class _TransactionDetailBody extends ConsumerWidget {
   final Category? category;
   final Map<String, SpitoutCloudLedgerMember> memberDisplayMap;
   final String? localOwnerDisplayName;
+
   /// 账本是否开启分摊。决定底部按钮态(单/双)与右上角删除 icon 是否影响布局。
   final bool aaEnabled;
   final Future<void> Function() onEdit;
+
   /// 编辑分摊回调;仅 [aaEnabled] 为 true 时使用。
   final Future<void> Function()? onEditAa;
   final Future<void> Function() onDelete;
@@ -124,7 +133,8 @@ class _TransactionDetailBody extends ConsumerWidget {
     try {
       return (jsonDecode(json) as List).map((e) => e.toString()).toList();
     } catch (e, st) {
-      logger.warning('TransactionDetailSheet', '解析 aaParticipants 失败', '$e\n$st');
+      logger.warning(
+          'TransactionDetailSheet', '解析 aaParticipants 失败', '$e\n$st');
       return null;
     }
   }
@@ -141,10 +151,12 @@ class _TransactionDetailBody extends ConsumerWidget {
     }
   }
 
-  /// AA 分摊明细区块(人均 / 指定两种样式;不分摊仅标注)。
+  /// AA 分摊明细区块(只读,与编辑分摊页对齐)。
   ///
-  /// 仅账本开启 AA 时由调用方渲染;aaMode=null 按人均展示(向后兼容)。
-  /// [resolver] 统一解析参与人标识为展示名。
+  /// 布局:分摊方式 / 支出人 / 参与人 三行,均为只读信息行。
+  /// - 分摊方式:不分摊/人均分摊/指定分摊(右对齐值);
+  /// - 参与人:昵称前若干人逗号隔开,剩余以「…(x人)」省略;全选显示「全部成员(x人)」。
+  /// 指定分摊时仍逐人展示金额行(只读),与人均保持区块结构一致。
   List<Widget> _buildAaSection(
     BuildContext context,
     AppLocalizations l10n,
@@ -157,24 +169,42 @@ class _TransactionDetailBody extends ConsumerWidget {
     final widgets = <Widget>[
       const _Divider(),
       _SectionLabel(text: l10n.aaSplitMode),
+      // 分摊方式(右对齐值)
       _InfoRow(
-          label: l10n.aaPayer,
-          value: resolver.resolve(t.paidByUserId).isEmpty
-              ? l10n.aaUnknownUser
-              : resolver.resolve(t.paidByUserId)),
+        label: l10n.aaSplitMode,
+        value: mode == AaMode.custom
+            ? l10n.aaModeCustom
+            : mode == AaMode.perPerson
+                ? l10n.aaModePerPerson
+                : l10n.aaModeNoSplit,
+      ),
+      // 支出人
+      _InfoRow(
+        label: l10n.aaPayer,
+        value: resolver.resolve(t.paidByUserId).isEmpty
+            ? l10n.aaUnknownUser
+            : resolver.resolve(t.paidByUserId),
+      ),
     ];
     if (mode == AaMode.noSplit) {
-      // 不分摊模式:分摊方式展示「不分摊」(与编辑页/列表页展示值保持一致)。
-      widgets.add(_InfoRow(
-          label: l10n.aaSplitMode, value: l10n.aaModeNoSplit));
       return widgets;
     }
+    // 参与人展示:昵称前若干人逗号隔开,剩余「…(x人)」;全选显示「全部成员(x人)」。
+    final ids = _parseAaIdList(t.aaParticipants);
+    final allNames = (ids ?? const <String>[])
+        .map((id) {
+          final name = resolver.resolve(id);
+          return name.isEmpty ? l10n.aaUnknownUser : name;
+        })
+        .toList();
+    final participantsText =
+        _formatParticipants(l10n, allNames, all: ids == null);
     widgets.add(_InfoRow(
-      label: l10n.aaSplitMode,
-      value: mode == AaMode.custom ? l10n.aaModeCustom : l10n.aaModePerPerson,
+      label: l10n.aaParticipants,
+      value: participantsText,
     ));
     if (mode == AaMode.custom) {
-      // 指定分摊:逐人金额(aaSplits 的 key = 参与人标识)
+      // 指定分摊:逐人金额(只读)
       final splits = _parseAaSplits(t.aaSplits);
       for (final e in splits.entries) {
         final name = resolver.resolve(e.key);
@@ -184,20 +214,32 @@ class _TransactionDetailBody extends ConsumerWidget {
               currencyCode: currency),
         ));
       }
-    } else {
-      // 人均:参与人为空 = 全部成员(运行时展开)
-      final ids = _parseAaIdList(t.aaParticipants);
-      widgets.add(_InfoRow(
-        label: l10n.aaParticipants,
-        value: ids == null
-            ? l10n.aaParticipantsAll
-            : ids.map((id) {
-                final name = resolver.resolve(id);
-                return name.isEmpty ? l10n.aaUnknownUser : name;
-              }).join('、'),
-      ));
     }
     return widgets;
+  }
+
+  /// 格式化参与人展示文本:昵称前若干人逗号隔开,剩余以「…(x人)」省略。
+  ///
+  /// 全选([all]=true)时显示「全部成员(x人)」;否则展示前 2 人 + 「…(x人)」。
+  /// 全选且人数 = 0 时回退到「全部成员」。
+  String _formatParticipants(
+    AppLocalizations l10n,
+    List<String> names, {
+    required bool all,
+  }) {
+    final count = names.length;
+    if (all) {
+      return count == 0
+          ? l10n.aaParticipantsAll
+          : l10n.aaParticipantsAllCount(count);
+    }
+    if (count == 0) return l10n.aaParticipantsAll;
+    if (count <= 2) {
+      return '${names.join('、')}（$count${l10n.aaParticipantsUnit}）';
+    }
+    final head = names.take(2).join('、');
+    final rest = count - 2;
+    return '$head…（$rest${l10n.aaParticipantsUnit}）';
   }
 
   @override
@@ -212,10 +254,9 @@ class _TransactionDetailBody extends ConsumerWidget {
 
     // 虚拟成员 标识→名称;真实成员走 memberDisplayMap。
     final virtualNames = <String, String>{
-      for (final v in ref
-              .watch(ledgerVirtualUsersProvider(t.ledgerId))
-              .valueOrNull ??
-          const [])
+      for (final v
+          in ref.watch(ledgerVirtualUsersProvider(t.ledgerId)).valueOrNull ??
+              const [])
         v.syncId ?? 'vu_${v.id}': v.name,
     };
     // 统一展示名解析器:修复 id/邮箱/昵称混用,统一走 memberDisplayMap→
@@ -273,159 +314,166 @@ class _TransactionDetailBody extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(12))),
               child: Text(l10n.homeDetailEditButton),
             ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. 头部:分类图标 + 分类名 + 备注
-          Row(
-            children: [
-              Container(
-                width: 36,
-                height: 36,
-                decoration: BoxDecoration(
-                  color: SpitoutTokens.surfaceSecondary(context),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: CategoryIconWidget(category: category, size: 20),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(categoryName,
-                        style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: SpitoutTokens.textPrimary(context)),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis),
-                    if (t.note != null && t.note!.isNotEmpty)
-                      Padding(
-                        padding: const EdgeInsets.only(top: 2),
-                        child: Text(t.note!,
-                            style: TextStyle(
-                                fontSize: 13,
-                                color: SpitoutTokens.textSecondary(context)),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis),
-                      ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          _Divider(),
-          // 2. 信息区
-          _InfoRow(
-              label: l10n.homeDetailDate, value: _fmt(t.happenedAt)),
-          _InfoRow(
-            label: l10n.homeDetailAmount,
-            value: formatMoneyCompact(t.amount),
-            // 主金额:显示交易原币种 + 原金额(与列表项一致)。
-            // 设计意图:记账时的币种和金额不受账本主币种变更影响,
-            // currencyCode 为 null(历史数据)时 AmountText 自动回退到账本币种符号。
-            valueWidget: AmountText(
-              value: (t.type == 'expense' ? -1 : 1) * t.amount,
-              signed: true,
-              showCurrency: true,
-              currencyCode: t.currencyCode,
-              decimals: 2,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),
-              ),
-            ),
-          ),
-          if (t.currencyCode != null && t.currencyCode!.isNotEmpty)
-            _InfoRow(
-                label: l10n.homeDetailCurrency,
-                value: t.currencyCode!,
-                // 全局统一「ISO + (符号)」展示；右对齐与其他信息行一致
-                valueWidget: Align(
-                  alignment: Alignment.centerRight,
-                  child: currencyFlagLabel(
-                    context,
-                    t.currencyCode!,
-                    textStyle: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+      // 内容区:超出弹层可用高度时内部滚动,保证标题栏 trailing 与底部操作
+      // 按钮始终常驻可见(账本开启分摊后内容行数更多,小屏/测试视口下可能放不下,
+      // 用 SingleChildScrollView 吸收垂直溢出,避免被 Flexible 截断)。
+      child: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // 1. 头部:分类图标 + 分类名 + 备注
+            Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: SpitoutTokens.surfaceSecondary(context),
+                    borderRadius: BorderRadius.circular(12),
                   ),
-                )),
-          if (t.nativeAmount != null && t.nativeAmount != t.amount)
-            _InfoRow(
-                label: l10n.homeDetailNativeAmount,
-                // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
-                value: '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
-          // 2.5 AA 分摊明细(仅账本开启 AA 时展示,功能隔离)
-          if (aaOn)
-            ..._buildAaSection(
-              context,
-              l10n,
-              t,
-              resolver,
-            ),
-          // 3. 协作成员(共享账本才显示:有 createdBy/lastEditedBy 时)
-          if (t.createdByUserId != null || t.lastEditedByUserId != null) ...[
-            _Divider(),
-            _SectionLabel(text: l10n.homeDetailMembers),
-            if (t.createdByUserId != null)
-              _MemberRow(
-                  label: l10n.homeDetailCreator,
-                  name: resolver.resolve(t.createdByUserId)),
-            if (t.lastEditedByUserId != null)
-              _MemberRow(
-                  label: l10n.homeDetailLastEditor,
-                  name: resolver.resolve(t.lastEditedByUserId),
-                  subtext: t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
-          ],
-          // 4. 编辑记录(仅供查看)
-          _Divider(),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(children: [
-              _SectionLabel(text: l10n.homeDetailEditHistory, dense: true),
-              const SizedBox(width: 6),
-              Text(l10n.homeDetailEditHistoryHint,
-                  style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context))),
-            ]),
-          ),
-          historyAsync.when(
-            data: (h) => h.isEmpty
-                ? Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    child: Text(l10n.homeDetailNoHistory,
-                        style: TextStyle(
-                            fontSize: 13,
-                            color: SpitoutTokens.textTertiary(context))))
-                : Column(
+                  child: CategoryIconWidget(category: category, size: 20),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Text(categoryName,
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: SpitoutTokens.textPrimary(context)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis),
+                      if (t.note != null && t.note!.isNotEmpty)
+                        Padding(
+                          padding: const EdgeInsets.only(top: 2),
+                          child: Text(t.note!,
+                              style: TextStyle(
+                                  fontSize: 13,
+                                  color: SpitoutTokens.textSecondary(context)),
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _Divider(),
+            // 2. 信息区
+            _InfoRow(label: l10n.homeDetailDate, value: _fmt(t.happenedAt)),
+            _InfoRow(
+              label: l10n.homeDetailAmount,
+              value: formatMoneyCompact(t.amount),
+              // 主金额:显示交易原币种 + 原金额(与列表项一致)。
+              // 设计意图:记账时的币种和金额不受账本主币种变更影响,
+              // currencyCode 为 null(历史数据)时 AmountText 自动回退到账本币种符号。
+              valueWidget: AmountText(
+                value: (t.type == 'expense' ? -1 : 1) * t.amount,
+                signed: true,
+                showCurrency: true,
+                currencyCode: t.currencyCode,
+                decimals: 2,
+                style: TextStyle(
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  color: ref.watch(expenseColorSchemeProvider) == 'green'
+                      ? SpitoutTokens.success(context)
+                      : SpitoutTokens.error(context),
+                ),
+              ),
+            ),
+            if (t.currencyCode != null && t.currencyCode!.isNotEmpty)
+              _InfoRow(
+                  label: l10n.homeDetailCurrency,
+                  value: t.currencyCode!,
+                  // 全局统一「ISO + (符号)」展示；右对齐与其他信息行一致
+                  valueWidget: Align(
+                    alignment: Alignment.centerRight,
+                    child: currencyFlagLabel(
+                      context,
+                      t.currencyCode!,
+                      textStyle: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                    ),
+                  )),
+            if (t.nativeAmount != null && t.nativeAmount != t.amount)
+              _InfoRow(
+                  label: l10n.homeDetailNativeAmount,
+                  // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
+                  value:
+                      '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
+            // 2.5 AA 分摊明细(仅账本开启 AA 时展示,功能隔离)
+            if (aaOn)
+              ..._buildAaSection(
+                context,
+                l10n,
+                t,
+                resolver,
+              ),
+            // 3. 协作成员(共享账本才显示:有 createdBy/lastEditedBy 时)
+            if (t.createdByUserId != null || t.lastEditedByUserId != null) ...[
+              _Divider(),
+              _SectionLabel(text: l10n.homeDetailMembers),
+              if (t.createdByUserId != null)
+                _MemberRow(
+                    label: l10n.homeDetailCreator,
+                    name: resolver.resolve(t.createdByUserId)),
+              if (t.lastEditedByUserId != null)
+                _MemberRow(
+                    label: l10n.homeDetailLastEditor,
+                    name: resolver.resolve(t.lastEditedByUserId),
+                    subtext:
+                        t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
+            ],
+            // 4. 编辑记录(仅供查看)
+            _Divider(),
+            Padding(
+              padding: const EdgeInsets.symmetric(vertical: 8),
+              child: Row(children: [
+                _SectionLabel(text: l10n.homeDetailEditHistory, dense: true),
+                const SizedBox(width: 6),
+                Text(l10n.homeDetailEditHistoryHint,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: SpitoutTokens.textTertiary(context))),
+              ]),
+            ),
+            historyAsync.when(
+              data: (h) => h.isEmpty
+                  ? Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Text(l10n.homeDetailNoHistory,
+                          style: TextStyle(
+                              fontSize: 13,
+                              color: SpitoutTokens.textTertiary(context))))
+                  : Column(children: [
                       for (final e in h)
                         _HistoryRow(e, (id) => resolver.resolve(id))
                     ]),
-            loading: () => const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Center(
-                    child: SizedBox(
-                        width: 16,
-                        height: 16,
-                        child: CircularProgressIndicator(strokeWidth: 2)))),
-            error: (_, __) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 8),
-                child: Text(l10n.homeDetailNoHistory,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: SpitoutTokens.textTertiary(context)))),
-          ),
-          const SizedBox(height: 16),
-        ],
+              loading: () => const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 12),
+                  child: Center(
+                      child: SizedBox(
+                          width: 16,
+                          height: 16,
+                          child: CircularProgressIndicator(strokeWidth: 2)))),
+              error: (_, __) => Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  child: Text(l10n.homeDetailNoHistory,
+                      style: TextStyle(
+                          fontSize: 13,
+                          color: SpitoutTokens.textTertiary(context)))),
+            ),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -484,8 +532,7 @@ class _InfoRow extends StatelessWidget {
   final String value;
   // 自定义值组件(如带币种符号与负号的金额);优先于 [value] 渲染。
   final Widget? valueWidget;
-  const _InfoRow(
-      {required this.label, required this.value, this.valueWidget});
+  const _InfoRow({required this.label, required this.value, this.valueWidget});
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
@@ -494,8 +541,7 @@ class _InfoRow extends StatelessWidget {
           children: [
             Text(label,
                 style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textSecondary(context))),
+                    fontSize: 14, color: SpitoutTokens.textSecondary(context))),
             Flexible(
               child: valueWidget ??
                   Text(value,
@@ -525,8 +571,7 @@ class _MemberRow extends StatelessWidget {
           children: [
             Text(label,
                 style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textSecondary(context))),
+                    fontSize: 13, color: SpitoutTokens.textSecondary(context))),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,

@@ -1385,6 +1385,7 @@
     "sharedMembersRemoved": "Member removed",
     "sharedMembersSyncPending": "For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.",
     "sharedMembersSaveFirst": "Please save the ledger first",
+    "sharedMembersInviteSyncFailed": "Cloud sync not finished yet. Please try again later.",
 
     "sharedTxCreatedBy": "Created by {name}",
     "@sharedTxCreatedBy": {
@@ -1794,26 +1795,25 @@
         }
     },
     "aaSettlementExcludedEmpty": "No transactions excluded",
-    "aaEditTitle": "Split details",
+    "aaEditTitle": "Edit split",
+    "aaEditSplitButton": "Edit split",
     "aaPayer": "Paid by",
     "aaSplitMode": "Split method",
     "aaParticipants": "Participants",
-    "aaSplitAmounts": "Custom amounts",
     "aaModePerPerson": "Split equally",
     "aaModeCustom": "Custom split",
     "aaModeNoSplit": "No split",
-    "aaSplitClearAll": "Clear & refill",
     "aaParticipantsAll": "All members",
-    "aaParticipantsSelected": "{count} selected",
-    "@aaParticipantsSelected": {
+    "aaParticipantsAllCount": "All members ({count})",
+    "@aaParticipantsAllCount": {
         "placeholders": {
             "count": {
                 "type": "int"
             }
         }
     },
+    "aaParticipantsUnit": "",
     "aaSplitTotal": "Total",
-    "aaSplitPayerAdjustHint": "Any difference is adjusted to the payer",
     "aaVirtualUserTitle": "Virtual members",
     "aaVirtualUserAdd": "Add virtual member",
     "aaVirtualUserNameHint": "Enter a nickname",
@@ -1839,7 +1839,6 @@
     "aaAddVirtualUser": "Add virtual user",
     "aaUnknownUser": "Unknown",
     "aaMe": "Me",
-    "aaPerPersonAllMembers": "Split equally among all members",
     "ledgerAaEnabled": "AA Split",
     "ledgerAaEnabledHint": "Split expenses with members when enabled",
     "ledgerAaSettlementEntry": "AA Statistics",

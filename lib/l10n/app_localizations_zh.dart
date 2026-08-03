@@ -2859,6 +2859,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedMembersSaveFirst => '请先保存账本';
 
   @override
+  String get sharedMembersInviteSyncFailed => '云端同步尚未完成，请稍后重试';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name 创建';
   }
@@ -3589,7 +3592,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaSettlementExcludedEmpty => '暂无不计入详单的交易';
 
   @override
-  String get aaEditTitle => '分摊明细';
+  String get aaEditTitle => '编辑分摊';
+
+  @override
+  String get aaEditSplitButton => '编辑分摊';
 
   @override
   String get aaPayer => '支出人';
@@ -3601,9 +3607,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaParticipants => '参与人';
 
   @override
-  String get aaSplitAmounts => '指定金额';
-
-  @override
   String get aaModePerPerson => '人均分摊';
 
   @override
@@ -3613,21 +3616,18 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaModeNoSplit => '不分摊';
 
   @override
-  String get aaSplitClearAll => '清空重填';
-
-  @override
   String get aaParticipantsAll => '全部成员';
 
   @override
-  String aaParticipantsSelected(int count) {
-    return '已选 $count 人';
+  String aaParticipantsAllCount(int count) {
+    return '全部成员（$count人）';
   }
 
   @override
-  String get aaSplitTotal => '合计';
+  String get aaParticipantsUnit => '人';
 
   @override
-  String get aaSplitPayerAdjustHint => '差额由支出人兜底';
+  String get aaSplitTotal => '合计';
 
   @override
   String get aaVirtualUserTitle => '虚拟用户';
@@ -3665,9 +3665,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get aaMe => '我';
-
-  @override
-  String get aaPerPersonAllMembers => '人均分摊（全部成员）';
 
   @override
   String get ledgerAaEnabled => 'AA 分摊';
@@ -6545,6 +6542,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get sharedMembersSaveFirst => '請先保存帳本';
 
   @override
+  String get sharedMembersInviteSyncFailed => '雲端同步尚未完成，請稍後再試';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name 建立';
   }
@@ -7275,7 +7275,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaSettlementExcludedEmpty => '暫無不計入詳單的交易';
 
   @override
-  String get aaEditTitle => '分攤明細';
+  String get aaEditTitle => '編輯分攤';
+
+  @override
+  String get aaEditSplitButton => '編輯分攤';
 
   @override
   String get aaPayer => '支出人';
@@ -7287,9 +7290,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaParticipants => '參與人';
 
   @override
-  String get aaSplitAmounts => '指定金額';
-
-  @override
   String get aaModePerPerson => '人均分攤';
 
   @override
@@ -7299,21 +7299,18 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaModeNoSplit => '不分攤';
 
   @override
-  String get aaSplitClearAll => '清空重填';
-
-  @override
   String get aaParticipantsAll => '全部成員';
 
   @override
-  String aaParticipantsSelected(int count) {
-    return '已選 $count 人';
+  String aaParticipantsAllCount(int count) {
+    return '全部成員（$count人）';
   }
 
   @override
-  String get aaSplitTotal => '合計';
+  String get aaParticipantsUnit => '人';
 
   @override
-  String get aaSplitPayerAdjustHint => '差額由支出人兜底';
+  String get aaSplitTotal => '合計';
 
   @override
   String get aaVirtualUserTitle => '虛擬用戶';
@@ -7351,9 +7348,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aaMe => '我';
-
-  @override
-  String get aaPerPersonAllMembers => '人均分攤（全部成員）';
 
   @override
   String get ledgerAaEnabled => 'AA 分攤';

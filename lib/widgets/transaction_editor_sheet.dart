@@ -501,6 +501,7 @@ class _TransactionEditorSheetState
           amount: total,
           currencyCode: txCurrency,
           categoryName: CategoryUtils.getDisplayName(c.name, context),
+          categoryIconName: c.icon,
           date: _date,
           mode: _aaMode,
           paidByUserId: _aaPaidByUserId,
@@ -649,8 +650,7 @@ class _TransactionEditorSheetState
         aaSplits: aa.aaSplits,
       );
       // 共享账本：新建本地 tx 回填创建人 + 编辑人（同一个 user）;
-      // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖;
-      // 本地账本 cloud 不可用时用 'me' 兜底,保证全局非空。
+      // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖。
       await markTxCreatedFromUi(ref, transactionId);
     }
 

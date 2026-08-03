@@ -2859,6 +2859,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersSaveFirst => '먼저 가계부를 저장해 주세요';
 
   @override
+  String get sharedMembersInviteSyncFailed => '클라우드 동기화가 아직 완료되지 않았습니다. 나중에 다시 시도하세요.';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name님이 생성함';
   }
@@ -3589,7 +3592,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaSettlementExcludedEmpty => '상세 내역 제외 거래가 없습니다';
 
   @override
-  String get aaEditTitle => '분담 내역';
+  String get aaEditTitle => '분담 편집';
+
+  @override
+  String get aaEditSplitButton => '분담 편집';
 
   @override
   String get aaPayer => '지출한 사람';
@@ -3601,9 +3607,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaParticipants => '참여자';
 
   @override
-  String get aaSplitAmounts => '금액 지정';
-
-  @override
   String get aaModePerPerson => '균등 분담';
 
   @override
@@ -3613,21 +3616,18 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaModeNoSplit => '미분담';
 
   @override
-  String get aaSplitClearAll => '전체 지우기';
-
-  @override
   String get aaParticipantsAll => '모든 멤버';
 
   @override
-  String aaParticipantsSelected(int count) {
-    return '$count명 선택';
+  String aaParticipantsAllCount(int count) {
+    return '모든 멤버($count명)';
   }
 
   @override
-  String get aaSplitTotal => '합계';
+  String get aaParticipantsUnit => '명';
 
   @override
-  String get aaSplitPayerAdjustHint => '차액은 지출한 사람이 부담합니다';
+  String get aaSplitTotal => '합계';
 
   @override
   String get aaVirtualUserTitle => '가상 사용자';
@@ -3665,9 +3665,6 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get aaMe => '나';
-
-  @override
-  String get aaPerPersonAllMembers => '균등 분담(모든 멤버)';
 
   @override
   String get ledgerAaEnabled => 'AA 분담';

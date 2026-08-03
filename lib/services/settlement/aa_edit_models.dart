@@ -43,6 +43,9 @@ class AaEditPageArgs {
   /// 分类显示名(只读展示)。
   final String categoryName;
 
+  /// 分类 Lucide 图标名(只读展示,供主体卡顶部 icon 解析);空时用兜底图标。
+  final String? categoryIconName;
+
   /// 交易发生时间(只读展示)。
   final DateTime date;
 
@@ -63,6 +66,7 @@ class AaEditPageArgs {
     required this.amount,
     required this.currencyCode,
     required this.categoryName,
+    this.categoryIconName,
     required this.date,
     required this.mode,
     this.paidByUserId,

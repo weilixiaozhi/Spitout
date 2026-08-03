@@ -2859,6 +2859,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMembersSaveFirst => 'Please save the ledger first';
 
   @override
+  String get sharedMembersInviteSyncFailed => 'Cloud sync not finished yet. Please try again later.';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return 'Created by $name';
   }
@@ -3589,7 +3592,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaSettlementExcludedEmpty => 'No transactions excluded';
 
   @override
-  String get aaEditTitle => 'Split details';
+  String get aaEditTitle => 'Edit split';
+
+  @override
+  String get aaEditSplitButton => 'Edit split';
 
   @override
   String get aaPayer => 'Paid by';
@@ -3601,9 +3607,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaParticipants => 'Participants';
 
   @override
-  String get aaSplitAmounts => 'Custom amounts';
-
-  @override
   String get aaModePerPerson => 'Split equally';
 
   @override
@@ -3613,21 +3616,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaModeNoSplit => 'No split';
 
   @override
-  String get aaSplitClearAll => 'Clear & refill';
-
-  @override
   String get aaParticipantsAll => 'All members';
 
   @override
-  String aaParticipantsSelected(int count) {
-    return '$count selected';
+  String aaParticipantsAllCount(int count) {
+    return 'All members ($count)';
   }
 
   @override
-  String get aaSplitTotal => 'Total';
+  String get aaParticipantsUnit => '';
 
   @override
-  String get aaSplitPayerAdjustHint => 'Any difference is adjusted to the payer';
+  String get aaSplitTotal => 'Total';
 
   @override
   String get aaVirtualUserTitle => 'Virtual members';
@@ -3665,9 +3665,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get aaMe => 'Me';
-
-  @override
-  String get aaPerPersonAllMembers => 'Split equally among all members';
 
   @override
   String get ledgerAaEnabled => 'AA Split';
