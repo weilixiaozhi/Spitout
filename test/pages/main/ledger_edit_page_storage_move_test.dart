@@ -254,12 +254,14 @@ void main() {
           cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
-      // 归属区有「存储位置」标题收纳,区块顶以标题顶为锚点。
+      // AA 分摊区块始终展示开关行(文档 §6.5),采用内化间距:其标题顶到
+      // 月起始日卡片底恰为 16px(标题上方 Padding(top:16),无外层独立 SizedBox)。
+      final aaTitleTop = titleTop(tester, l10n.ledgerAaEnabled);
+      expect(aaTitleTop - monthBottom, 16.0);
+      // 归属区有「存储位置」标题收纳,在 AA 区块之后;本地账本无成员管理,
+      // 归属区成为 AA 区块之后第一个可见区块,其标题顶必大于 AA 区块标题顶。
       final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);
-      // 共享区隐藏(本地账本无成员管理),归属区成为月起始日之后第一个可见区块。
-      // 标题顶到月起始日卡片底 = 区块自带 Padding(top:16)(标题下方的 8px 在标题与卡片之间,
-      // 不计入此度量)。若共享区残留独立间隔,这里会变成 16+16=32px。
-      expect(storageTitleTop - monthBottom, 16.0);
+      expect(storageTitleTop, greaterThan(aaTitleTop));
     });
 
     testWidgets('Spitout Cloud + 云端账本:两区皆展示,各自内化 16px',
@@ -272,12 +274,14 @@ void main() {
           cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
+      // AA 分摊区块始终展示,其标题顶到月起始日卡片底 = 16px(内化间距)。
+      final aaTitleTop = titleTop(tester, l10n.ledgerAaEnabled);
+      expect(aaTitleTop - monthBottom, 16.0);
       // 成员区与归属区标题均在 Card 外,分别以各自标题顶为区块顶锚点。
       final sharedTitleTop = titleTop(tester, l10n.sharedMembersPageTitle);
       final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);
-      // 成员区自带 16px 上间距,与月起始日卡片之间恰为 16px(无孤儿间隙);
-      // 标题下方的 8px 在标题与卡片之间,不计入此度量。
-      expect(sharedTitleTop - monthBottom, 16.0);
+      // 成员区在 AA 区块之后,其标题顶必大于 AA 区块标题顶。
+      expect(sharedTitleTop, greaterThan(aaTitleTop));
       // 归属区在成员区之后,其顶部间距 = 成员区内容高度 + 自带的 16px,
       // 故必大于 16px(仅验证方向,不绑定成员区内容高度)。
       expect(storageTitleTop - sharedTitleTop, greaterThan(16.0));

@@ -355,7 +355,8 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           ),
 
           // ── 4. AA 分摊(开关 + 分摊设置入口) ──
-          const SizedBox(height: 16),
+          // 间距内化:AA 区块自带顶部 16px(见 _buildAaSection),
+          // 与成员区/归属区策略一致,避免外层独立 SizedBox 在区块隐藏时残留孤儿间隙。
           _buildAaSection(context, l10n),
 
           // ── 5. 新建模式的账本归属选择 ──
@@ -386,6 +387,9 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   /// 结构:开关行(随「保存」落库,与其他账本元信息同一保存语义)+
   /// 编辑模式且 AA 已生效时的「查看分摊结算 / 管理虚拟用户」入口。
   /// 入口按 [_aaEnabledSaved](已落库值)展示,与 §6.7「关闭后入口隐藏」一致。
+  ///
+  /// 间距内化:区块自带顶部 16px(标题外包 Padding),与成员区/归属区一致——
+  /// 这样区块始终展示开关行时,与上一个区块之间恰为 16px,不依赖外层 SizedBox。
   Widget _buildAaSection(BuildContext context, AppLocalizations l10n) {
     final readOnlyColor = _isReadOnly ? Theme.of(context).disabledColor : null;
     // 分摊结算页按「当前账本」取数,仅编辑当前账本时展示入口,
@@ -395,8 +399,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _buildSectionTitle(context, l10n.ledgerAaEnabled,
-            disabled: _isReadOnly),
+        Padding(
+          // 内化顶部间距:区块顶到此标题之间无额外间隔,16px 全部在标题上方。
+          padding: const EdgeInsets.only(top: 16),
+          child: _buildSectionTitle(context, l10n.ledgerAaEnabled,
+              disabled: _isReadOnly),
+        ),
         const SizedBox(height: 8),
         Card(
           child: Column(
