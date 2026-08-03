@@ -151,8 +151,8 @@ class _TransactionEditorSheetState
     _amountStr = trimmed.isEmpty ? '0' : trimmed;
     _noteCtrl.text = widget.initialNote ?? '';
 
-    // AA 初值回填:编辑器现支持人均/不分摊/指定三态循环切换,
-    // 不分摊交易原样回显为「不分摊」,不再强制按人均展示。
+    // AA 初值回填:编辑器支持人均/不分摊/指定三态循环切换,
+    // 不分摊交易原样回显为「不分摊」。
     _aaMode = AaMode.fromDb(widget.initialAaMode);
     _aaParticipantIds = widget.initialAaParticipants;
     _aaSplits = widget.initialAaSplits;
@@ -923,56 +923,108 @@ class _TransactionEditorSheetState
             ),
           ),
           const SizedBox(width: 8),
-          Expanded(
-            child: Text(
-              l10n.txAddEntryTitle,
-              style: TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: SpitoutTokens.textPrimary(context),
+          // 标题 + 分摊方式:作为左对齐整体,分摊方式紧贴标题约 10px(「隔壁」),
+          // 而非被 Expanded 推到行尾;标题超宽时省略号截断,保证 toggle 不被挤出。
+          if (aaEnabled) ...[
+            Flexible(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      l10n.txAddEntryTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  _buildAaModeToggle(context, l10n),
+                ],
               ),
             ),
-          ),
-          // 分摊方式：弱化入口,单点循环切换(仅账本开启 AA 时展示)
-          if (aaEnabled) _buildAaModeToggle(context, l10n),
-          // 作者头像（编辑模式 + 共享账本时显示）
-          if (editingTxId != null)
-            _TxAuthorAvatars(editingTransactionId: editingTxId),
+            // 作者头像:Spacer 推至行尾,避免挤占「标题+分摊方式」组
+            if (editingTxId != null) ...[
+              const Spacer(),
+              _TxAuthorAvatars(editingTransactionId: editingTxId),
+            ],
+          ] else ...[
+            // 无 AA 账本:标题直接顶满剩余空间
+            Expanded(
+              child: Text(
+                l10n.txAddEntryTitle,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                  color: SpitoutTokens.textPrimary(context),
+                ),
+              ),
+            ),
+            if (editingTxId != null)
+              _TxAuthorAvatars(editingTransactionId: editingTxId),
+          ],
         ],
       ),
     );
   }
 
-  /// 分摊方式弱化入口:小图标 + 当前方式文本,单点循环切换。
+  /// 分摊方式切换按钮:固定宽度,左右箭头 + 中间方式文本,单点循环切换。
   ///
-  /// 设计意图:放在标题隔壁但不抢主信息(金额/类目)焦点——
-  /// 小字号、弱色、常规字重,视觉上是一行弱化文本而非开关。
+  /// 设计意图:
+  /// - 固定宽度:边框不随「人均分摊/不分摊/指定分摊」字符数变化而抖动;
+  /// - 左右箭头:直观暗示「可切换」(左/右箭头指向切换方向),
+  ///   与边框一起构成明确的可点击提示;
+  /// - 小圆角(6px)+ 弱色小字号:保持弱化,不抢标题与金额输入区焦点。
   Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
     final modeText = switch (_aaMode) {
       AaMode.perPerson => l10n.aaModePerPerson,
       AaMode.noSplit => l10n.aaModeNoSplit,
       AaMode.custom => l10n.aaModeCustom,
     };
-    return InkWell(
-      onTap: _cycleAaMode,
-      borderRadius: BorderRadius.circular(14),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(AppIcons.pieChart,
-                size: 12, color: SpitoutTokens.iconTertiary(context)),
-            const SizedBox(width: 4),
-            Text(
-              modeText,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.w400,
-                color: SpitoutTokens.textTertiary(context),
+    // 边框色:文字三级色 35% 透明度,亮暗模式下均清晰可见但不抢眼
+    final borderColor =
+        SpitoutTokens.textTertiary(context).withValues(alpha: 0.35);
+    final arrowColor = SpitoutTokens.iconTertiary(context);
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: _cycleAaMode,
+        borderRadius: BorderRadius.circular(6),
+        child: Container(
+          // 固定宽度 80:容纳最长文案「人均分摊」(4 字 @11px ≈44px)
+          // + 左右箭头(20px) + 内边距,不随当前方式文字长度变化
+          width: 80,
+          height: 22,
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          decoration: BoxDecoration(
+            border: Border.all(color: borderColor),
+            borderRadius: BorderRadius.circular(6),
+          ),
+          child: Row(
+            children: [
+              Icon(AppIcons.chevronLeft, size: 10, color: arrowColor),
+              Expanded(
+                child: Text(
+                  modeText,
+                  textAlign: TextAlign.center,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w400,
+                    color: SpitoutTokens.textTertiary(context),
+                  ),
+                ),
               ),
-            ),
-          ],
+              Icon(AppIcons.chevronRight, size: 10, color: arrowColor),
+            ],
+          ),
         ),
       ),
     );
