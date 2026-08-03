@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/providers/sync/shared_ledger_providers.dart'
+    show ledgerMembersProvider;
 import '../../data/models.dart' as db;
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
@@ -107,7 +110,18 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
 
     // 构建 categoryMap 快照，供列表渲染使用
     final categoryMap = categoryMapAsync.valueOrNull ?? <int, db.Category>{};
-    
+
+    // 共享账本成员表(userId→成员),详情 sheet 用于协作成员 / AA 支出人展示名
+    final ledger = ref.watch(currentLedgerProvider).asData?.value;
+    var memberMap = const <String, SpitoutCloudLedgerMember>{};
+    final syncId = ledger?.syncId;
+    if (ledger != null && ledger.isShared && syncId != null && syncId.isNotEmpty) {
+      final members = ref.watch(ledgerMembersProvider(syncId)).asData?.value;
+      if (members != null) {
+        memberMap = {for (final m in members) m.userId: m};
+      }
+    }
+
     return Scaffold(
       body: Column(
         children: [
@@ -138,7 +152,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   child: filteredTransactionsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Center(child: Text('${AppLocalizations.of(context).categoryDetailLoadFailed}: $error')),
-                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap),
+                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap),
                   ),
                 ),
               ],
@@ -272,10 +286,34 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
   // 核心改动：按分类分组 → 分类内按日期分组 → 每笔交易用实际分类 icon/名称
   // ============================================================
 
+  /// 删除交易:写库 → 后台同步 → 刷新账本笔数与全局统计。
+  /// 详情 sheet 与行内删除入口共用同一逻辑。
+  Future<void> _deleteTransaction(db.Transaction transaction) async {
+    final repo = ref.read(repositoryProvider);
+    final ledgerId = ref.read(currentLedgerIdProvider);
+
+    try {
+      await repo.deleteTransaction(transaction.id);
+
+      // 统一处理：自动/手动同步与状态刷新（后台静默）
+      await PostProcessor.sync(ref, ledgerId: ledgerId);
+
+      // 刷新：账本笔数与全局统计
+      ref.invalidate(countsForLedgerProvider(ledgerId));
+      ref.read(statsRefreshProvider.notifier).state++;
+    } catch (e) {
+      if (mounted) {
+        showToast(context,
+            '${AppLocalizations.of(context).categoryDetailDeleteFailed}: $e');
+      }
+    }
+  }
+
   Widget _buildTransactionsList(
     List<db.Transaction> transactions,
     SortType currentSortType,
     Map<int, db.Category> categoryMap,
+    Map<String, SpitoutCloudLedgerMember> memberMap,
   ) {
     if (transactions.isEmpty) {
       return AppEmpty(
@@ -400,33 +438,23 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             isExpense: transaction.type == 'expense',
             happenedAt: transaction.happenedAt,
             onTap: () async {
-              await TransactionEditUtils.editTransaction(
-                context,
-                ref,
-                transaction,
-                cat,
+              // 点击行 → 详情 sheet(AA 支出人/分摊明细 + 常驻「编辑记账」按钮),
+              // 与首页交易列表的「先看再改」交互口径一致(§6.6)。
+              await showTransactionDetailSheet(
+                context: context,
+                transaction: transaction,
+                category: cat,
+                memberDisplayMap: memberMap,
+                onEdit: () => TransactionEditUtils.editTransaction(
+                  context,
+                  ref,
+                  transaction,
+                  cat,
+                ),
+                onDelete: () => _deleteTransaction(transaction),
               );
             },
-            onDelete: () async {
-              final repo = ref.read(repositoryProvider);
-              final ledgerId = ref.read(currentLedgerIdProvider);
-
-              try {
-                await repo.deleteTransaction(transaction.id);
-
-                // 统一处理：自动/手动同步与状态刷新（后台静默）
-                await PostProcessor.sync(ref, ledgerId: ledgerId);
-
-                // 刷新：账本笔数与全局统计
-                ref.invalidate(countsForLedgerProvider(ledgerId));
-                ref.read(statsRefreshProvider.notifier).state++;
-              } catch (e) {
-                if (context.mounted) {
-                  showToast(context,
-                      '${AppLocalizations.of(context).categoryDetailDeleteFailed}: $e');
-                }
-              }
-            },
+            onDelete: () => _deleteTransaction(transaction),
           );
         }
         return const SizedBox.shrink();

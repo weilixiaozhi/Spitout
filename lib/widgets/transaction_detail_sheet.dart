@@ -1,11 +1,15 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/statistics/record_history_providers.dart';
-import 'package:spitout/providers/providers.dart' show currentLedgerProvider, expenseColorSchemeProvider;
+import 'package:spitout/providers/providers.dart' show currentLedgerProvider, expenseColorSchemeProvider, ledgerVirtualUsersProvider;
+import '../services/settlement/aa_settlement_service.dart' show AaMode;
 import '../theme/colors.dart';
 import 'category_icon.dart';
 import 'currency_flag.dart';
@@ -65,6 +69,87 @@ class _TransactionDetailBody extends ConsumerWidget {
     final l = dt.toLocal();
     return '${l.year}-${l.month.toString().padLeft(2, '0')}-${l.day.toString().padLeft(2, '0')} '
         '${l.hour.toString().padLeft(2, '0')}:${l.minute.toString().padLeft(2, '0')}';
+  }
+
+  /// 解析 AA 相关标识(真实成员 userId / 虚拟成员标识)为展示名。
+  /// 真实成员查 [memberDisplayMap],虚拟成员查 [virtualNames],兜底原始 id。
+  String _aaNameOf(
+      String? id, Map<String, String> virtualNames, AppLocalizations l10n) {
+    if (id == null || id.isEmpty) return l10n.aaUnknownUser;
+    final m = memberDisplayMap[id];
+    if (m != null) {
+      final dn = m.displayName;
+      return (dn != null && dn.isNotEmpty) ? dn : m.email;
+    }
+    return virtualNames[id] ?? id;
+  }
+
+  /// 解析 aaParticipants(JSON 数组字符串);空 / 解析失败返回 null(全部成员)。
+  List<String>? _parseAaIdList(String? json) {
+    if (json == null || json.isEmpty) return null;
+    try {
+      return (jsonDecode(json) as List).map((e) => e.toString()).toList();
+    } catch (e, st) {
+      logger.warning('TransactionDetailSheet', '解析 aaParticipants 失败', '$e\n$st');
+      return null;
+    }
+  }
+
+  /// 解析 aaSplits(JSON 对象字符串)为 参与人标识 → 金额字符串;失败返回空表。
+  Map<String, String> _parseAaSplits(String? json) {
+    if (json == null || json.isEmpty) return const {};
+    try {
+      final obj = jsonDecode(json) as Map<String, dynamic>;
+      return {for (final e in obj.entries) e.key: e.value.toString()};
+    } catch (e, st) {
+      logger.warning('TransactionDetailSheet', '解析 aaSplits 失败', '$e\n$st');
+      return const {};
+    }
+  }
+
+  /// AA 分摊明细区块(§6.6,人均 / 指定两种样式;不分摊仅标注)。
+  ///
+  /// 仅账本开启 AA 时由调用方渲染;aaMode=null 按人均展示(需求 R6 向后兼容)。
+  List<Widget> _buildAaSection(BuildContext context, AppLocalizations l10n,
+      Transaction t, Map<String, String> virtualNames) {
+    final mode = AaMode.fromDb(t.aaMode);
+    final currency =
+        t.currencyCode?.trim().isNotEmpty == true ? t.currencyCode! : 'CNY';
+    final widgets = <Widget>[
+      const _Divider(),
+      _SectionLabel(text: l10n.aaSplitMode),
+      _InfoRow(label: l10n.aaPayer, value: _aaNameOf(t.paidByUserId, virtualNames, l10n)),
+    ];
+    if (mode == AaMode.noSplit) {
+      widgets.add(_InfoRow(
+          label: l10n.aaSplitMode, value: l10n.aaSettlementExcluded));
+      return widgets;
+    }
+    widgets.add(_InfoRow(
+      label: l10n.aaSplitMode,
+      value: mode == AaMode.custom ? l10n.aaModeCustom : l10n.aaModePerPerson,
+    ));
+    if (mode == AaMode.custom) {
+      // 指定分摊:逐人金额(aaSplits 的 key = 参与人标识)
+      final splits = _parseAaSplits(t.aaSplits);
+      for (final e in splits.entries) {
+        widgets.add(_InfoRow(
+          label: _aaNameOf(e.key, virtualNames, l10n),
+          value: formatMoneyWithCurrency(double.tryParse(e.value) ?? 0,
+              currencyCode: currency),
+        ));
+      }
+    } else {
+      // 人均:参与人为空 = 全部成员(运行时展开,§2.4)
+      final ids = _parseAaIdList(t.aaParticipants);
+      widgets.add(_InfoRow(
+        label: l10n.aaParticipants,
+        value: ids == null
+            ? l10n.aaParticipantsAll
+            : ids.map((id) => _aaNameOf(id, virtualNames, l10n)).join('、'),
+      ));
+    }
+    return widgets;
   }
 
   @override
@@ -164,6 +249,22 @@ class _TransactionDetailBody extends ConsumerWidget {
                 label: l10n.homeDetailNativeAmount,
                 // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
                 value: '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
+          // 2.5 AA 分摊明细(仅账本开启 AA 时展示,§6.7 功能隔离)
+          if (ref.watch(currentLedgerProvider).valueOrNull?.aaEnabled ??
+              false)
+            ..._buildAaSection(
+              context,
+              l10n,
+              t,
+              // 虚拟成员 标识→名称;真实成员走 memberDisplayMap
+              <String, String>{
+                for (final v in ref
+                        .watch(ledgerVirtualUsersProvider(t.ledgerId))
+                        .valueOrNull ??
+                    const [])
+                  v.syncId ?? 'vu_${v.id}': v.name,
+              },
+            ),
           // 3. 协作成员(共享账本才显示:有 createdBy/lastEditedBy 时)
           if (t.createdByUserId != null || t.lastEditedByUserId != null) ...[
             _Divider(),
