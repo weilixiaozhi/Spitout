@@ -295,7 +295,7 @@ class SeedService {
       'subscription_cloud': 'cloud',
       'subscription_other': 'repeat',
 
-      // 转账一级与二级分类（新增）
+      // 转账一级与二级分类
       'transfer': 'arrowLeftRight',
       'transfer_livingcost': 'heartHandshake',
       'transfer_family': 'users',

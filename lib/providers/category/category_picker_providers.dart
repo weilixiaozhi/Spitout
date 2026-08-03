@@ -46,8 +46,7 @@ const _selfHealCooldown = Duration(minutes: 5);
 final selfHealCooldownProvider =
     Provider<HashMap<String, DateTime>>((ref) => HashMap<String, DateTime>());
 
-/// 记账页分类树。family 参数为分类 kind(当前恒为 'expense',
-/// 保留 family 形式与 [CategoryGridSection.kind] 扩展点对齐)。
+/// 记账页分类树。family 参数为分类 kind（全局仅支出模式，恒为 'expense'）。
 final categoryPickerTreeProvider =
     StreamProvider.family<CategoryPickerTree, String>((ref, kind) {
   final repo = ref.watch(repositoryProvider);

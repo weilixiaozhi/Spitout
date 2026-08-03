@@ -61,7 +61,7 @@ class _AnalyticsData {
 class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   // 父级周期：week / month / year（悬浮 Tab 控制）
   AnalyticsPeriod _period = AnalyticsPeriod.month;
-  // 全局仅支出模式（统计页当前只呈现支出）
+  // 全局仅支出模式，统计页只呈现支出
   final String _type = 'expense';
 
   // 各父级周期独立记忆的选中子周期，避免切换父级后丢失选择

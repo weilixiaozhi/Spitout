@@ -233,8 +233,7 @@ extension SyncEngineRealtime on SyncEngine {
             // 不 mirror 主表。
           }
           break;
-        // case 'account' 不存在(SharedLedgerAccounts 表未启用)。
-        // case 'tag' 不存在(Tags / SharedLedgerTags 表未启用)。
+
       }
       // 共享资源变化的精确信号(sharedResourceRefreshProvider 在此 bump),
       // 跟 PullCompleted 分开避免 home 全局刷新 — Owner 改分类/标签时
@@ -337,8 +336,6 @@ extension SyncEngineRealtime on SyncEngine {
               ),
             );
       }
-      // SharedLedgerAccounts 表不存在,不 mirror accounts 快照。
-      // SharedLedgerTags 表不存在,不 mirror tags 快照。
     });
     logger.info('SyncEngine',
         'fetchAndStoreSharedResources ledger=$ledgerExternalId categories=${snapshot.categories.length}');

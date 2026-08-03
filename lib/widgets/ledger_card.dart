@@ -270,7 +270,7 @@ class LedgerCard extends ConsumerWidget {
     }
 
     // 统一读取当前激活后端类型:本地账本据此判断是否处于快照备份态,
-    // 云端账本据此决定图标形状(云端账本恒为云形,此处仅保留读取以备扩展)。
+    // 云端账本恒为云形。
     final backendType =
         ref.watch(activeCloudConfigProvider).valueOrNull?.type;
 

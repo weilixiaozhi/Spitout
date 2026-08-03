@@ -39,7 +39,7 @@ import '../theme/icons/app_icons.dart';
 /// 仅把备注行 / 币种行顶到系统键盘之上，不收起分类区。
 /// 点击非备注区域优先收起系统键盘；返回键仅收起键盘、保留记账页。
 class TransactionEditorSheet extends ConsumerStatefulWidget {
-  /// 值固定为 'expense'（全局仅支出模式，字段保留作扩展点）
+  /// 值固定为 'expense'（全局仅支出模式）
   final String initialKind;
 
   /// 编辑模式交易 ID；null = 新建

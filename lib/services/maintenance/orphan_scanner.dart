@@ -197,7 +197,6 @@ class OrphanScanner {
   ///
   /// entity_type 分支:
   /// - transaction → transactions.sync_id
-  /// - account → accounts.sync_id
   /// - category → categories.sync_id
   /// - ledger_snapshot / ledger → ledgers.sync_id
   ///

@@ -28,8 +28,6 @@ typedef TransactionDisplayItem = ({
   Category? category,
 });
 
-// 缓存的完整交易数据Provider（含标签、附件、账户，用于首屏快速展示）
-//
 // 两侧使用方：sync_providers 的 bootstrap 完成时清缓存，
 // ui_state_providers 的启屏预加载时写缓存。
 final cachedTransactionsProvider =

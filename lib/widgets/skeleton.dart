@@ -165,7 +165,7 @@ class SkeletonCircle extends StatelessWidget {
 }
 
 /// 模拟 ListTile 的骨架行:左圆 + 中间两行文字 + 右侧金额条。
-/// 常用于交易列表、账户列表、分类列表等 loading 占位。
+/// 常用于交易列表、分类列表等 loading 占位。
 class SkeletonListTile extends StatelessWidget {
   final double iconSize;
   final EdgeInsetsGeometry padding;

@@ -20,7 +20,7 @@ abstract class SyncService {
   /// 下载并导入到当前账本
   /// 返回 (inserted, deletedDup) 二元组：
   /// - inserted: 新增条数
-  /// - deletedDup: 保留字段（目前始终为0）
+  /// - deletedDup: 下载后去重删除的重复交易条数
   Future<({int inserted, int deletedDup})>
       downloadAndRestoreToCurrentLedger({required int ledgerId});
 

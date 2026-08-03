@@ -34,7 +34,7 @@ class LocalCategoryRepository implements CategoryRepository {
     // 「服装>鞋子」)。caller 显式 handle:
     //   - UI 主动建 → 先过 isCategoryNameDuplicate 警告;真冲突 try/catch 弹 toast
     //   - import / 自动记账等静默路径 → 使用 upsertCategory(get-or-create)
-    // 静默复用会把收入 tx 错挂到 expense 分类或吞掉 caller 传的 icon/sortOrder。
+    // 静默复用会吞掉 caller 传的 icon/sortOrder。
     final dupQuery = db.select(db.categories)
       ..where((c) => c.name.equals(name) & c.kind.equals(kind));
     if (parentId == null) {

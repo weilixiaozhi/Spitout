@@ -489,7 +489,7 @@ class RecurringTransactionsConfig {
 /// 周期账单项
 class RecurringTransactionItem {
   final String ledgerName; // 账本名称（用于导出/导入匹配）
-  final String type; // expense（值固定为 expense，保留字段便于后续扩展）
+  final String type; // 全局仅支出模式，固定为 'expense'
   final double amount;
   final String? categoryName; // 分类名称（用于导出/导入匹配）
   final String? note;
@@ -605,7 +605,7 @@ class CategoriesConfig {
 /// 分类项
 class CategoryItem {
   final String name;
-  final String kind; // expense（值固定为 expense，保留字段便于后续扩展）
+  final String kind; // 全局仅支出模式，固定为 'expense'
   final String? icon;
   final int sortOrder;
   final String? parentName; // 使用父分类名称而非ID
@@ -920,8 +920,7 @@ class ConfigExportService {
     CategoriesConfig? categoriesConfig;
     if (repository != null && (options.categories || requiredCategoryIds.isNotEmpty)) {
       try {
-        // 全局仅支出模式,只导出 expense 分类(income/transfer 分类已不存在,
-        // 无冗余的 getTopLevelCategories('income') 调用)。
+        // 全局仅支出模式，只导出 expense 分类。
         final expenseCategories = await repository.getTopLevelCategories('expense');
         final categoriesList = <Category>[];
         categoriesList.addAll(expenseCategories);
@@ -1540,7 +1539,7 @@ class ConfigExportService {
           // 通过名称查找分类ID
           int? categoryId;
           if (item.categoryName != null) {
-            // 周期账单 type(expense/income)即分类 kind
+            // 周期账单 type 即分类 kind
             categoryId = catKeyToId['${item.categoryName!.toLowerCase()}|${item.type}'];
             if (categoryId == null) {
               logger.warning('ConfigImport', '找不到分类: ${item.categoryName}，跳过周期账单');

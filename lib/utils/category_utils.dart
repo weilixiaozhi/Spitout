@@ -57,7 +57,7 @@ class CategoryUtils {
 
   /// 获取分类的翻译字符串
   static String _getCategoryTranslationString(String key, String kind, AppLocalizations l10n) {
-    // 全局仅支出模式，kind 恒为 'expense'，因此直接走支出翻译（保留 kind 参数以维持调用签名稳定）
+    // 全局仅支出模式，kind 固定为 'expense'，因此直接走支出翻译
     if (key.contains('_')) {
       // 二级分类：key格式为 parent_child，如 dining_breakfast
       final parts = key.split('_');
@@ -143,7 +143,7 @@ class CategoryUtils {
 
   /// 获取所有一级分类的显示名称列表（全局仅支出模式）
   static List<String> getAllCategoryDisplayNames(String kind, AppLocalizations l10n) {
-    // kind 参数保留用于接口兼容，实际始终使用支出分类
+    // 全局仅支出模式，kind 固定为 'expense'，实际始终使用支出分类
     final translationString = l10n.categoryExpense;
 
     return translationString.split(separator).map((e) => e.trim()).toList();

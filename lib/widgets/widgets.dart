@@ -74,7 +74,7 @@ export 'transaction_editor_sheet_entry.dart';
 export 'transaction_edit_utils.dart';
 export 'note_input_row.dart';
 
-// ===== 账户 / 登录 / 安全 =====
+// ===== 账号 / 登录 / 安全 =====
 export 'login_2fa_challenge_view.dart';
 export 'avatar_preview_page.dart';
 export 'mine_page_header.dart';

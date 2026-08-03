@@ -14,7 +14,7 @@ library;
 /// 导入分类（CSV/云端恢复统一口径）
 class ImportCategory {
   final String name;
-  final String kind; // 值固定为 'expense'(字段保留便于后续扩展)
+  final String kind; // 全局仅支出模式，固定为 'expense'
   final int level; // 1 or 2
   final int sortOrder; // 排序顺序
   final String? icon;
@@ -32,7 +32,7 @@ class ImportCategory {
 
 /// 导入交易数据
 class ImportTransaction {
-  final String type; // 值固定为 'expense'(字段保留便于后续扩展)
+  final String type; // 全局仅支出模式，固定为 'expense'
   final double amount;
   final String? categoryName;
   final String? categoryKind;

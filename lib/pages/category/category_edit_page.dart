@@ -15,7 +15,7 @@ import '../transaction/category_detail_page.dart';
 
 class CategoryEditPage extends ConsumerStatefulWidget {
   final db.Category? category; // null表示新建
-  final String kind; // expense 或 income
+  final String kind; // 全局仅支出模式，固定为 'expense'
   final db.Category? parentCategory; // 父分类（用于创建二级分类）
 
   const CategoryEditPage({

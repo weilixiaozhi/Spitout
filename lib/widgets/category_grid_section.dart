@@ -25,7 +25,7 @@ import '../theme/icons/app_icons.dart';
 /// sheet 打开首帧即同步渲染，无「空白 → 出现 → 自动选中再跳」的跳变；
 /// provider 由 Drift 表监听驱动，数据变更自动重建，按键 setState 不重查 DB。
 class CategoryGridSection extends ConsumerStatefulWidget {
-  /// 分类类型，值固定为 'expense'（字段保留作扩展点）
+  /// 分类类型，值固定为 'expense'（全局仅支出模式）
   final String kind;
 
   /// 初始选中分类 ID（编辑模式回显 / quickAdd 预选）

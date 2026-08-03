@@ -14,7 +14,7 @@ typedef CategoryFilterCallback = Future<bool> Function(Category category);
 
 /// 显示分类选择器
 ///
-/// [type] 分类类型：'income'、'expense' 或 'all'
+/// [type] 分类类型：全局仅支出模式，固定为 'expense'
 /// [currentCategoryId] 当前选中的分类ID（用于高亮显示）
 /// [includeParentCategories] 是否包含有子分类的一级分类
 /// [excludeNames] 排除的分类名称列表
@@ -479,7 +479,7 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
   Future<List<Category>> _loadAllCategories() async {
     final repo = ref.read(repositoryProvider);
 
-    // 全局仅支出模式,只查 expense 分类(不存在 income 分类)。
+    // 全局仅支出模式，只查 expense 分类。
     final expenseCategories = await repo.getTopLevelCategories('expense');
 
     // 获取所有二级分类
@@ -549,10 +549,9 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
 
   /// 构建分类分组数据
   List<_CategoryGroup> _buildCategoryGroups(List<Category> allCategories) {
-    // all 模式用于跨收支类型的分类筛选，其他模式保持按类型筛选。
-    final typedCategories = widget.type == 'all'
-        ? allCategories
-        : allCategories.where((c) => c.kind == widget.type).toList();
+    // 全局仅支出模式，按 kind 过滤（type 固定为 'expense'）。
+    final typedCategories =
+        allCategories.where((c) => c.kind == widget.type).toList();
 
     // 应用排除规则
     final filteredCategories = typedCategories.where((c) {

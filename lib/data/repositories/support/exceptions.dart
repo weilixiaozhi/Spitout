@@ -5,15 +5,14 @@ library;
 
 /// 创建实体时撞了已有的同名条目。
 ///
-/// 抛它的场景:`createCategory` / `createSubCategory` /
-/// `createAccount` 撞到本地已有同名行(name 全局唯一)。caller 应该:
+/// 抛它的场景:`createCategory` / `createSubCategory` 撞到本地已有同名行
+/// (name 全局唯一)。caller 应该:
 ///   - **UI 主动建**:弹 toast 提示用户改名(同名 UI 警告也在挡)。
 ///   - **非交互路径**(import / app-link / 自动记账等):使用 `upsertX`
 ///     —— get-or-create 语义,按 name 匹配。
 ///
-/// 撞同名必须显式抛错(fail-loud):那会把收入 tx 错挂到 expense 分类,
-/// 或者把 caller 传的 icon/sortOrder 静默吞掉,排查极难。fail-loud 才能让
-/// 这类 bug 第一时间冒出来。
+/// 撞同名必须显式抛错(fail-loud):那会把 caller 传的 icon/sortOrder 静默
+/// 吞掉,排查极难。fail-loud 才能让这类 bug 第一时间冒出来。
 class DuplicateNameException implements Exception {
   const DuplicateNameException({
     required this.entityType,
@@ -21,7 +20,7 @@ class DuplicateNameException implements Exception {
     this.existingId,
   });
 
-  /// 'category' / 'account' / 'tag' — 给日志和上层 UI 区分。
+  /// 实体类型（如 'category'），给日志和上层 UI 区分。
   final String entityType;
   final String name;
   final int? existingId;

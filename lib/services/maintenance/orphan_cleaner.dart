@@ -6,8 +6,6 @@
 ///
 /// 删除策略:
 /// - **A1/A2/A3/A4/A7/A8/A10**:直接删 DB 行(它们本身就是孤儿,无下游引用)
-/// - **A5(tx 失主 account)**:**不删** tx,只把 `account_id`/`to_account_id`
-///   置 null(交易本体有用户数据,保留)
 /// - **A6(tx 失主 category)**:**不删** tx,只把 `category_id` 置 null
 /// - **A9(共享二级分类失父)**:删 SharedLedgerCategories 行(复合主键)
 /// - **A_dup(syncId 重复交易)**:直接删多余重复行(绕过变更追踪,避免把

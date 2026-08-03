@@ -27,10 +27,9 @@ class TransactionEditUtils {
     if (!context.mounted) return;
 
     // 全局仅支出模式,交易 type 恒为 'expense',所有交易都使用同一编辑器。
-    // initialKind 字段保留作为扩展点(未来恢复多类型时直接复用)。
     await showTransactionEditorSheet(
       context,
-      initialKind: transaction.type, // 值固定为 'expense'(字段保留便于后续扩展)
+      initialKind: transaction.type, // 全局仅支出模式，值固定为 'expense'
       editingTransactionId: transaction.id,
       initialCategoryId: initialCategoryId,
       initialAmount: transaction.amount,

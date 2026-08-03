@@ -69,7 +69,7 @@ class ExchangeRateOverrides extends Table {
 class Categories extends Table {
   IntColumn get id => integer().autoIncrement()();
   TextColumn get name => text()();
-  TextColumn get kind => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get kind => text()(); // 全局仅支出模式，kind 固定为 expense
   TextColumn get icon => text().nullable()();
   IntColumn get sortOrder =>
       integer().withDefault(const Constant(0))(); // 排序顺序，数字越小越靠前
@@ -83,7 +83,7 @@ class Categories extends Table {
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get ledgerId => integer()();
-  TextColumn get type => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get type => text()(); // 全局仅支出模式，type 固定为 expense
   RealColumn get amount => real()();
   IntColumn get categoryId => integer().nullable()();
   DateTimeColumn get happenedAt => dateTime().withDefault(currentDateAndTime)();
@@ -145,7 +145,7 @@ class RecordEditHistories extends Table {
 class RecurringTransactions extends Table {
   IntColumn get id => integer().autoIncrement()();
   IntColumn get ledgerId => integer()();
-  TextColumn get type => text()(); // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get type => text()(); // 全局仅支出模式，type 固定为 expense
   RealColumn get amount => real()();
   IntColumn get categoryId => integer().nullable()();
   TextColumn get note => text().nullable()();
@@ -280,7 +280,7 @@ class SharedLedgerCategories extends Table {
   TextColumn get ledgerSyncId => text()();
   TextColumn get syncId => text()();              // Owner 的 user-global category sync_id
   TextColumn get name => text()();
-  TextColumn get kind => text()();                // expense（值固定为 expense，保留字段便于后续扩展）
+  TextColumn get kind => text()();                // 全局仅支出模式，kind 固定为 expense
   TextColumn get icon => text().nullable()();
   // 共享账本分类图标统一走 Lucide 内置图标(icon 列)。
   TextColumn get color => text().nullable()();

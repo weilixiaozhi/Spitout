@@ -188,7 +188,7 @@ final color = SpitoutTokens.semantic(context, 'success');
 
 ## 11. 图表/统计色 Token (Chart Colors)
 
-> 项目为**全局仅支出模式**，已移除收入/转账相关 token（`chartIncome` / `chartTransfer`）。
+> 项目为**全局仅支出模式**，仅保留支出相关 token。
 
 | Token 名称 | 用途 | 说明 |
 |-----------|------|------|

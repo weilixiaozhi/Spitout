@@ -42,8 +42,6 @@ enum AppInitState {
 final appInitStateProvider =
     StateProvider<AppInitState>((ref) => AppInitState.splash);
 
-// 无账户启用状态持久化
-
 // 应用初始化Provider - 管理数据预加载
 final appSplashInitProvider = FutureProvider<void>((ref) async {
   const tag = 'Splash';
@@ -161,6 +159,3 @@ final welcomeCheckProvider = FutureProvider<bool>((ref) async {
   }
   return false;
 });
-
-// 无默认账户ID持久化
-

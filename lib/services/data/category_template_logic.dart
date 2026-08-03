@@ -88,7 +88,7 @@ typedef ExistingCategoryLite = ({
 /// syncId 通道覆盖 seed/模板写入的分类（改名后仍认得出），
 /// 名称通道覆盖手动创建的同名分类，二者互补。
 ///
-/// 仅匹配 expense 分类（模板库全局仅支出模式；收入分类同名不构成冲突）。
+/// 仅匹配 expense 分类（模板库全局仅支出模式）。
 class ExistingCategoryIndex {
   /// 全部 expense 分类的非空 syncId
   final Set<String> _syncIds;

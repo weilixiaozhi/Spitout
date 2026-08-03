@@ -115,7 +115,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
               child: ListView(
                 padding: const EdgeInsets.all(16),
                 children: [
-                  // 全局仅支出模式，交易类型恒为支出，移除类型选择器（_type 恒为 'expense'）
+                  // 全局仅支出模式，交易类型恒为支出（_type 固定为 'expense'）
                   const SizedBox(height: 16),
 
                   // Ledger selection

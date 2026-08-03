@@ -39,14 +39,11 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     'currency': null,            // 多币种:币种列
     'category': null,
     'sub_category': null,       // 二级分类
-    'account': null,
-    'from_account': null,
-    'to_account': null,
     'note': null,
     // 无标签和附件字段
   };
   bool importing = false;
-  int ok = 0, fail = 0, skipped = 0; // skipped: 跳过的非收支类型记录
+  int ok = 0, fail = 0, skipped = 0; // skipped: 跳过的非支出类型记录
   int step = 0; // 0: 字段映射, 1: 分类映射
   bool _cancelled = false;
   List<String> distinctCategories = [];
@@ -316,17 +313,12 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                     FilledButton(
                       onPressed: () {
                         // 检查是否有分类列映射
-                        // 如果没有分类列，说明可能只有转账记录，跳过分类映射步骤，直接开始导入
                         if (mapping['category'] == null) {
-                          // 如果没有分类列但有转账相关列，则直接开始导入
-                          if (mapping['from_account'] != null || mapping['to_account'] != null) {
-                            _startImport();
-                          } else {
-                            showToast(
-                                context,
-                                AppLocalizations.of(context)
-                                    .importSelectCategoryFirst);
-                          }
+                          // 没有分类列，提示用户先选择分类列
+                          showToast(
+                              context,
+                              AppLocalizations.of(context)
+                                  .importSelectCategoryFirst);
                           return;
                         }
                         _buildDistinctCategories();
@@ -858,8 +850,7 @@ List<List<String>> _parseRowsIsolate(String input) {
 
 Future<List<schema.Category>> _loadAllCategories(WidgetRef ref) async {
   final repo = ref.read(repositoryProvider);
-  // 全局仅支出模式,只查 expense 分类(income 分类已不存在,
-  // 无冗余的 getTopLevelCategories('income') 调用)。
+  // 全局仅支出模式，只查 expense 分类。
   final expenseTopLevel = await repo.getTopLevelCategories('expense');
 
   final allCategories = <schema.Category>[];

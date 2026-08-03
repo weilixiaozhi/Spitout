@@ -8,7 +8,7 @@ import 'transaction_editor_sheet.dart';
 /// 系统键盘拉起时整页保持可见并上移,仅把备注 / 币种行顶到键盘之上,
 /// 不收起分类区。
 ///
-/// [initialKind] 值固定为 'expense'(全局仅支出模式,字段保留作扩展点)。
+/// [initialKind] 值固定为 'expense'（全局仅支出模式）。
 /// 传入 [editingTransactionId] 即为编辑模式,会按初始值回显。
 Future<void> showTransactionEditorSheet(
   BuildContext context, {

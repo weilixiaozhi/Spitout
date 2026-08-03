@@ -103,8 +103,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
   List<dynamic> _flatItems = []; // 扁平化的项目列表
   final Map<String, int> _dateIndexMap = {}; // 日期到列表索引的映射
 
-  // 不保留账户名缓存：账户功能不参与列表展示。
-
   // 标记是否应使用预加载数据（当 Stream 数据与预加载数据不同时切换）
   bool _usePreloadedData = true;
 
@@ -237,8 +235,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
 
   @override
   Widget build(BuildContext context) {
-    // 不 watch sharedResourceRefreshProvider 触发账户名刷新
-
     _buildFlatItems();
 
     // 无数据时展示空状态。
@@ -302,7 +298,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
             final list = item.$3 as List<({Transaction t, Category? category})>;
             double dayExpense = 0;
             for (final it in list) {
-              // 全局仅支出模式，type 恒为 'expense'，保留字段便于后续扩展
+              // 全局仅支出模式，type 固定为 'expense'
               if (it.t.type == 'expense') {
                 dayExpense += it.t.nativeAmount ?? it.t.amount;
               }

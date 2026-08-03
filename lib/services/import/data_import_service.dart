@@ -109,8 +109,7 @@ class DataImportService {
 
     try {
       // 获取所有现有分类
-      // 全局仅支出模式,只查 expense 分类(income 分类已不存在,
-      // 冗余的 getTopLevelCategories('income') 调用无需保留)。
+      // 全局仅支出模式，只查 expense 分类。
       final existingExpense = await repo.getTopLevelCategories('expense');
       final existingCategoryMap = <String, int>{};
 
@@ -363,8 +362,7 @@ class DataImportService {
         // 或携带 categoryParentName 字段以便按主 key 精确匹配。
         final key = '${tx.categoryKind}|${tx.categoryName}';
         categoryId = localCategoryCache[key];
-        // 无转账类型,type 恒为 'expense',无需判断 tx.type != 'transfer'
-        // 跳过分类创建。命中失败时直接 upsertCategory 兜底创建。
+        // 命中失败时直接 upsertCategory 兜底创建。
         if (categoryId == null) {
           try {
             categoryId = await repo.upsertCategory(
