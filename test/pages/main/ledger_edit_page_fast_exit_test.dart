@@ -52,6 +52,7 @@ class _GatedRepo extends LocalRepository {
     String? name,
     String? currency,
     int? monthStartDay,
+    bool? aaEnabled,
   }) async {
     if (updateGate != null) await updateGate!.future;
     await super.updateLedger(
@@ -59,6 +60,7 @@ class _GatedRepo extends LocalRepository {
       name: name,
       currency: currency,
       monthStartDay: monthStartDay,
+      aaEnabled: aaEnabled,
     );
   }
 }

@@ -17,6 +17,7 @@ void main() {
       ownerUserId: null,
       monthStartDay: 15,
       storageMode: 'cloud',
+      aaEnabled: false,
     );
     final m = EntitySerializer.serializeLedger(ledger);
     expect(m['monthStartDay'], 15);
@@ -37,6 +38,7 @@ void main() {
       ownerUserId: null,
       monthStartDay: 1,
       storageMode: 'cloud',
+      aaEnabled: false,
     );
     final m = EntitySerializer.serializeLedger(ledger);
     expect(m['monthStartDay'], 1);

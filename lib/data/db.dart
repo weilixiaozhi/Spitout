@@ -6,6 +6,9 @@ import 'package:drift/native.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:path/path.dart' as p;
 
+// 迁移幂等工具箱:onUpgrade 内的所有 DDL 必须经此扩展的 helper。
+import 'migration_helpers.dart';
+
 part 'db.g.dart';
 
 // --- Tables ---
@@ -38,6 +41,10 @@ class Ledgers extends Table {
   /// (supabase/webdav/s3)是整库文件级操作,不属于账本级同步,本地账本一律标 local。
   /// 默认值 'local':新建账本默认本地归属,数据主权零风险。
   TextColumn get storageMode => text().withDefault(const Constant('local'))();
+
+  /// AA 分摊开关。关闭后入口隐藏、历史数据不展示不参与统计;重开数据仍在。
+  /// 必须跨设备同步(随 ledger 同通道下发)。
+  BoolColumn get aaEnabled => boolean().withDefault(const Constant(false))();
 }
 
 /// 自动汇率本地缓存。日期键 append-only;可随时整表重建 → **不进同步**。
@@ -124,6 +131,23 @@ class Transactions extends Table {
   /// 首次编辑后写入。列表项第二行的 HH:mm 与详情协作成员区块均读本字段
   /// (非 happenedAt,后者是"记账日期"语义)。
   DateTimeColumn get lastEditedAt => dateTime().nullable()();
+
+  /// AA 分摊:支出人 userId。
+  /// nullable 列,运行时由写入层 `?? 操作者 userId` 保证非空(DB 不做约束);
+  /// 迁移时从 created_by_user_id 回填,展示层空串降级"未知"。
+  TextColumn get paidByUserId => text().nullable()();
+
+  /// AA 分摊模式:null/0=人均,1=不分摊,2=指定金额。
+  /// null 视为人均(历史交易默认进人均统计)。
+  IntColumn get aaMode => integer().nullable()();
+
+  /// AA 分摊参与人列表(JSON 数组,元素为 userId 或虚拟用户 syncId)。
+  /// 空值在运行时展开为当前账本全部成员。
+  TextColumn get aaParticipants => text().nullable()();
+
+  /// AA 指定分摊金额(JSON 对象,key=参与人,value=金额字符串)。
+  /// 仅 aaMode=2 时有意义。
+  TextColumn get aaSplits => text().nullable()();
 }
 
 /// 记录编辑历史。对应记录详情 Bottom Sheet 的"编辑记录(仅供查看)"区块，
@@ -296,6 +320,37 @@ class SharedLedgerCategories extends Table {
   Set<Column> get primaryKey => {ledgerSyncId, syncId};
 }
 
+/// AA 分摊:账本维度虚拟用户表。
+///
+/// 设计意图:共享账本下 AA 分摊需要指定参与人,但并非所有参与人都是
+/// 注册用户(例如室友、家人),虚拟用户用于补充参与人标识。虚拟用户是
+/// 账本内实体(ledger-scoped),不跨账本共享;删除走硬删 + change log delete
+/// 投影(对齐 ledger_snapshot:delete 模式),名下有账不可删(R7)。
+///
+/// 不引入 color / avatar / deleted / avatar_seed 等需求未定义的字段;
+/// 无 SQL 外键(ledgerId 仅做逻辑关联,不做约束)。
+class LedgerVirtualUsers extends Table {
+  /// 本地主键。
+  IntColumn get id => integer().autoIncrement()();
+
+  /// 所属账本(逻辑关联 ledgers.id,不做 SQL 外键)。
+  IntColumn get ledgerId => integer()();
+
+  /// 跨设备唯一标识(UUID),与 server 端 virtual_user 投影对齐。
+  /// 本地新建时填 UUID;sync pull 时写回 server 下发的 syncId。
+  TextColumn get syncId => text().nullable()();
+
+  /// 虚拟用户昵称。
+  TextColumn get name => text()();
+
+  /// 创建时间。
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(currentDateAndTime)();
+
+  /// 修改时间。
+  DateTimeColumn get updatedAt => dateTime().nullable()();
+}
+
 
 
 @DriftDatabase(tables: [
@@ -312,6 +367,7 @@ class SharedLedgerCategories extends Table {
   ExchangeRates,
   ExchangeRateOverrides,
   SnapshotDirtyLedgers,
+  LedgerVirtualUsers,
 ])
 class SpitoutDatabase extends _$SpitoutDatabase {
   SpitoutDatabase() : super(_openConnection());
@@ -321,7 +377,7 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// 用这个。
   SpitoutDatabase.forTesting(super.executor);
 
-  /// 当前 schema 结构对应的数据库版本号 = 1。
+  /// 当前 schema 结构对应的数据库版本号 = 2。
   ///
   /// drift 不允许以 0 为起始版本（已知 bug，会破坏迁移），故基线从 1 起步；
   /// 任何 schema 演进都从这里递增版本号。
@@ -330,8 +386,11 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// if (from < V) 迁移块（走 migration_helpers.dart 的幂等 helper）③ 重跑
   /// schema dump 快照 + 补升级端到端测试。绝不允许 onUpgrade 回到空实现
   /// （否则老用户升级即崩溃）。
+  ///
+  /// v2: AA 分摊功能 —— Transactions 加 4 字段(paidByUserId/aaMode/
+  /// aaParticipants/aaSplits),Ledgers 加 aaEnabled,新增 LedgerVirtualUsers 表。
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -368,6 +427,55 @@ class SpitoutDatabase extends _$SpitoutDatabase {
           //    新版本快照 + 补"vN 旧库升级到当前版本"端到端测试，并同步补齐
           //    分场景步骤与发布前清单。
           // ─────────────────────────────────────────────────────────────
+
+          if (from < 2) {
+            // v2: AA 分摊功能 schema 迁移
+            logger.info('DBMigration', '开始迁移到 v2: AA 分摊功能');
+            // 第一步:加可空列(两步法 —— SQLite 不允许对已有表加 NOT NULL
+            // 无默认列,先加 nullable 列再回填)。addColumnIfMissing 幂等,
+            // 中断重跑不会因 duplicate column 崩溃。
+            await addColumnIfMissing(
+              'transactions',
+              'paid_by_user_id',
+              'ALTER TABLE transactions ADD COLUMN paid_by_user_id TEXT;',
+            );
+            await addColumnIfMissing(
+              'transactions',
+              'aa_mode',
+              'ALTER TABLE transactions ADD COLUMN aa_mode INTEGER;',
+            );
+            await addColumnIfMissing(
+              'transactions',
+              'aa_participants',
+              'ALTER TABLE transactions ADD COLUMN aa_participants TEXT;',
+            );
+            await addColumnIfMissing(
+              'transactions',
+              'aa_splits',
+              'ALTER TABLE transactions ADD COLUMN aa_splits TEXT;',
+            );
+            // ledgers 加 aa_enabled(NOT NULL DEFAULT 0,新列对旧行直接取默认值)
+            await addColumnIfMissing(
+              'ledgers',
+              'aa_enabled',
+              'ALTER TABLE ledgers ADD COLUMN aa_enabled INTEGER NOT NULL DEFAULT 0;',
+            );
+            // 新建虚拟用户表(createTableIfMissing 幂等)
+            await createTableIfMissing(
+              migrator,
+              'ledger_virtual_users',
+              ledgerVirtualUsers,
+            );
+            // 第二步:回填 paid_by_user_id(COALESCE + WHERE 守卫,幂等)。
+            // 优先取 created_by_user_id,缺失则空串;运行时写入层 `?? 操作者
+            // userId` 再兜底为非空。
+            await customStatement(
+              'UPDATE transactions SET paid_by_user_id = '
+              "COALESCE(created_by_user_id, '') "
+              'WHERE paid_by_user_id IS NULL;',
+            );
+            logger.info('DBMigration', 'v2 迁移完成');
+          }
         },
 
         onCreate: (m) async {

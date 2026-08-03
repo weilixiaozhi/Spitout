@@ -48,6 +48,7 @@ void main() {
       isShared: false,
       monthStartDay: 1,
       storageMode: 'local',
+      aaEnabled: false,
     );
     catFood = const db.Category(
       id: 10,

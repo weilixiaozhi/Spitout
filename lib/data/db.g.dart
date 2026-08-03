@@ -97,6 +97,16 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
       type: DriftSqlType.string,
       requiredDuringInsert: false,
       defaultValue: const Constant('local'));
+  static const VerificationMeta _aaEnabledMeta =
+      const VerificationMeta('aaEnabled');
+  @override
+  late final GeneratedColumn<bool> aaEnabled = GeneratedColumn<bool>(
+      'aa_enabled', aliasedName, false,
+      type: DriftSqlType.bool,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('CHECK ("aa_enabled" IN (0, 1))'),
+      defaultValue: const Constant(false));
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -110,7 +120,8 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
         isShared,
         ownerUserId,
         monthStartDay,
-        storageMode
+        storageMode,
+        aaEnabled
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -179,6 +190,10 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
           storageMode.isAcceptableOrUnknown(
               data['storage_mode']!, _storageModeMeta));
     }
+    if (data.containsKey('aa_enabled')) {
+      context.handle(_aaEnabledMeta,
+          aaEnabled.isAcceptableOrUnknown(data['aa_enabled']!, _aaEnabledMeta));
+    }
     return context;
   }
 
@@ -212,6 +227,8 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
           .read(DriftSqlType.int, data['${effectivePrefix}month_start_day'])!,
       storageMode: attachedDatabase.typeMapping
           .read(DriftSqlType.string, data['${effectivePrefix}storage_mode'])!,
+      aaEnabled: attachedDatabase.typeMapping
+          .read(DriftSqlType.bool, data['${effectivePrefix}aa_enabled'])!,
     );
   }
 
@@ -240,6 +257,10 @@ class Ledger extends DataClass implements Insertable<Ledger> {
   /// (supabase/webdav/s3)是整库文件级操作,不属于账本级同步,本地账本一律标 local。
   /// 默认值 'local':新建账本默认本地归属,数据主权零风险。
   final String storageMode;
+
+  /// AA 分摊开关。关闭后入口隐藏、历史数据不展示不参与统计;重开数据仍在。
+  /// 必须跨设备同步(随 ledger 同通道下发)。
+  final bool aaEnabled;
   const Ledger(
       {required this.id,
       required this.name,
@@ -252,7 +273,8 @@ class Ledger extends DataClass implements Insertable<Ledger> {
       required this.isShared,
       this.ownerUserId,
       required this.monthStartDay,
-      required this.storageMode});
+      required this.storageMode,
+      required this.aaEnabled});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -272,6 +294,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
     }
     map['month_start_day'] = Variable<int>(monthStartDay);
     map['storage_mode'] = Variable<String>(storageMode);
+    map['aa_enabled'] = Variable<bool>(aaEnabled);
     return map;
   }
 
@@ -292,6 +315,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
           : Value(ownerUserId),
       monthStartDay: Value(monthStartDay),
       storageMode: Value(storageMode),
+      aaEnabled: Value(aaEnabled),
     );
   }
 
@@ -311,6 +335,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
       ownerUserId: serializer.fromJson<String?>(json['ownerUserId']),
       monthStartDay: serializer.fromJson<int>(json['monthStartDay']),
       storageMode: serializer.fromJson<String>(json['storageMode']),
+      aaEnabled: serializer.fromJson<bool>(json['aaEnabled']),
     );
   }
   @override
@@ -329,6 +354,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
       'ownerUserId': serializer.toJson<String?>(ownerUserId),
       'monthStartDay': serializer.toJson<int>(monthStartDay),
       'storageMode': serializer.toJson<String>(storageMode),
+      'aaEnabled': serializer.toJson<bool>(aaEnabled),
     };
   }
 
@@ -344,7 +370,8 @@ class Ledger extends DataClass implements Insertable<Ledger> {
           bool? isShared,
           Value<String?> ownerUserId = const Value.absent(),
           int? monthStartDay,
-          String? storageMode}) =>
+          String? storageMode,
+          bool? aaEnabled}) =>
       Ledger(
         id: id ?? this.id,
         name: name ?? this.name,
@@ -358,6 +385,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
         ownerUserId: ownerUserId.present ? ownerUserId.value : this.ownerUserId,
         monthStartDay: monthStartDay ?? this.monthStartDay,
         storageMode: storageMode ?? this.storageMode,
+        aaEnabled: aaEnabled ?? this.aaEnabled,
       );
   Ledger copyWithCompanion(LedgersCompanion data) {
     return Ledger(
@@ -378,6 +406,7 @@ class Ledger extends DataClass implements Insertable<Ledger> {
           : this.monthStartDay,
       storageMode:
           data.storageMode.present ? data.storageMode.value : this.storageMode,
+      aaEnabled: data.aaEnabled.present ? data.aaEnabled.value : this.aaEnabled,
     );
   }
 
@@ -395,14 +424,27 @@ class Ledger extends DataClass implements Insertable<Ledger> {
           ..write('isShared: $isShared, ')
           ..write('ownerUserId: $ownerUserId, ')
           ..write('monthStartDay: $monthStartDay, ')
-          ..write('storageMode: $storageMode')
+          ..write('storageMode: $storageMode, ')
+          ..write('aaEnabled: $aaEnabled')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, name, currency, type, createdAt, syncId,
-      myRole, memberCount, isShared, ownerUserId, monthStartDay, storageMode);
+  int get hashCode => Object.hash(
+      id,
+      name,
+      currency,
+      type,
+      createdAt,
+      syncId,
+      myRole,
+      memberCount,
+      isShared,
+      ownerUserId,
+      monthStartDay,
+      storageMode,
+      aaEnabled);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -418,7 +460,8 @@ class Ledger extends DataClass implements Insertable<Ledger> {
           other.isShared == this.isShared &&
           other.ownerUserId == this.ownerUserId &&
           other.monthStartDay == this.monthStartDay &&
-          other.storageMode == this.storageMode);
+          other.storageMode == this.storageMode &&
+          other.aaEnabled == this.aaEnabled);
 }
 
 class LedgersCompanion extends UpdateCompanion<Ledger> {
@@ -434,6 +477,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
   final Value<String?> ownerUserId;
   final Value<int> monthStartDay;
   final Value<String> storageMode;
+  final Value<bool> aaEnabled;
   const LedgersCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
@@ -447,6 +491,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
     this.ownerUserId = const Value.absent(),
     this.monthStartDay = const Value.absent(),
     this.storageMode = const Value.absent(),
+    this.aaEnabled = const Value.absent(),
   });
   LedgersCompanion.insert({
     this.id = const Value.absent(),
@@ -461,6 +506,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
     this.ownerUserId = const Value.absent(),
     this.monthStartDay = const Value.absent(),
     this.storageMode = const Value.absent(),
+    this.aaEnabled = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Ledger> custom({
     Expression<int>? id,
@@ -475,6 +521,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
     Expression<String>? ownerUserId,
     Expression<int>? monthStartDay,
     Expression<String>? storageMode,
+    Expression<bool>? aaEnabled,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -489,6 +536,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
       if (ownerUserId != null) 'owner_user_id': ownerUserId,
       if (monthStartDay != null) 'month_start_day': monthStartDay,
       if (storageMode != null) 'storage_mode': storageMode,
+      if (aaEnabled != null) 'aa_enabled': aaEnabled,
     });
   }
 
@@ -504,7 +552,8 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
       Value<bool>? isShared,
       Value<String?>? ownerUserId,
       Value<int>? monthStartDay,
-      Value<String>? storageMode}) {
+      Value<String>? storageMode,
+      Value<bool>? aaEnabled}) {
     return LedgersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -518,6 +567,7 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
       ownerUserId: ownerUserId ?? this.ownerUserId,
       monthStartDay: monthStartDay ?? this.monthStartDay,
       storageMode: storageMode ?? this.storageMode,
+      aaEnabled: aaEnabled ?? this.aaEnabled,
     );
   }
 
@@ -560,6 +610,9 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
     if (storageMode.present) {
       map['storage_mode'] = Variable<String>(storageMode.value);
     }
+    if (aaEnabled.present) {
+      map['aa_enabled'] = Variable<bool>(aaEnabled.value);
+    }
     return map;
   }
 
@@ -577,7 +630,8 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
           ..write('isShared: $isShared, ')
           ..write('ownerUserId: $ownerUserId, ')
           ..write('monthStartDay: $monthStartDay, ')
-          ..write('storageMode: $storageMode')
+          ..write('storageMode: $storageMode, ')
+          ..write('aaEnabled: $aaEnabled')
           ..write(')'))
         .toString();
   }
@@ -1102,6 +1156,29 @@ class $TransactionsTable extends Transactions
   late final GeneratedColumn<DateTime> lastEditedAt = GeneratedColumn<DateTime>(
       'last_edited_at', aliasedName, true,
       type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  static const VerificationMeta _paidByUserIdMeta =
+      const VerificationMeta('paidByUserId');
+  @override
+  late final GeneratedColumn<String> paidByUserId = GeneratedColumn<String>(
+      'paid_by_user_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _aaModeMeta = const VerificationMeta('aaMode');
+  @override
+  late final GeneratedColumn<int> aaMode = GeneratedColumn<int>(
+      'aa_mode', aliasedName, true,
+      type: DriftSqlType.int, requiredDuringInsert: false);
+  static const VerificationMeta _aaParticipantsMeta =
+      const VerificationMeta('aaParticipants');
+  @override
+  late final GeneratedColumn<String> aaParticipants = GeneratedColumn<String>(
+      'aa_participants', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _aaSplitsMeta =
+      const VerificationMeta('aaSplits');
+  @override
+  late final GeneratedColumn<String> aaSplits = GeneratedColumn<String>(
+      'aa_splits', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
   @override
   List<GeneratedColumn> get $columns => [
         id,
@@ -1120,7 +1197,11 @@ class $TransactionsTable extends Transactions
         currencyCode,
         nativeAmount,
         version,
-        lastEditedAt
+        lastEditedAt,
+        paidByUserId,
+        aaMode,
+        aaParticipants,
+        aaSplits
       ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -1225,6 +1306,26 @@ class $TransactionsTable extends Transactions
           lastEditedAt.isAcceptableOrUnknown(
               data['last_edited_at']!, _lastEditedAtMeta));
     }
+    if (data.containsKey('paid_by_user_id')) {
+      context.handle(
+          _paidByUserIdMeta,
+          paidByUserId.isAcceptableOrUnknown(
+              data['paid_by_user_id']!, _paidByUserIdMeta));
+    }
+    if (data.containsKey('aa_mode')) {
+      context.handle(_aaModeMeta,
+          aaMode.isAcceptableOrUnknown(data['aa_mode']!, _aaModeMeta));
+    }
+    if (data.containsKey('aa_participants')) {
+      context.handle(
+          _aaParticipantsMeta,
+          aaParticipants.isAcceptableOrUnknown(
+              data['aa_participants']!, _aaParticipantsMeta));
+    }
+    if (data.containsKey('aa_splits')) {
+      context.handle(_aaSplitsMeta,
+          aaSplits.isAcceptableOrUnknown(data['aa_splits']!, _aaSplitsMeta));
+    }
     return context;
   }
 
@@ -1269,6 +1370,14 @@ class $TransactionsTable extends Transactions
           .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
       lastEditedAt: attachedDatabase.typeMapping.read(
           DriftSqlType.dateTime, data['${effectivePrefix}last_edited_at']),
+      paidByUserId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}paid_by_user_id']),
+      aaMode: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}aa_mode']),
+      aaParticipants: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}aa_participants']),
+      aaSplits: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}aa_splits']),
     );
   }
 
@@ -1312,6 +1421,23 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   /// 首次编辑后写入。列表项第二行的 HH:mm 与详情协作成员区块均读本字段
   /// (非 happenedAt,后者是"记账日期"语义)。
   final DateTime? lastEditedAt;
+
+  /// AA 分摊:支出人 userId。
+  /// nullable 列,运行时由写入层 `?? 操作者 userId` 保证非空(DB 不做约束);
+  /// 迁移时从 created_by_user_id 回填,展示层空串降级"未知"。
+  final String? paidByUserId;
+
+  /// AA 分摊模式:null/0=人均,1=不分摊,2=指定金额。
+  /// null 视为人均(历史交易默认进人均统计)。
+  final int? aaMode;
+
+  /// AA 分摊参与人列表(JSON 数组,元素为 userId 或虚拟用户 syncId)。
+  /// 空值在运行时展开为当前账本全部成员。
+  final String? aaParticipants;
+
+  /// AA 指定分摊金额(JSON 对象,key=参与人,value=金额字符串)。
+  /// 仅 aaMode=2 时有意义。
+  final String? aaSplits;
   const Transaction(
       {required this.id,
       required this.ledgerId,
@@ -1329,7 +1455,11 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       this.currencyCode,
       this.nativeAmount,
       required this.version,
-      this.lastEditedAt});
+      this.lastEditedAt,
+      this.paidByUserId,
+      this.aaMode,
+      this.aaParticipants,
+      this.aaSplits});
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1371,6 +1501,18 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     if (!nullToAbsent || lastEditedAt != null) {
       map['last_edited_at'] = Variable<DateTime>(lastEditedAt);
     }
+    if (!nullToAbsent || paidByUserId != null) {
+      map['paid_by_user_id'] = Variable<String>(paidByUserId);
+    }
+    if (!nullToAbsent || aaMode != null) {
+      map['aa_mode'] = Variable<int>(aaMode);
+    }
+    if (!nullToAbsent || aaParticipants != null) {
+      map['aa_participants'] = Variable<String>(aaParticipants);
+    }
+    if (!nullToAbsent || aaSplits != null) {
+      map['aa_splits'] = Variable<String>(aaSplits);
+    }
     return map;
   }
 
@@ -1410,6 +1552,17 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       lastEditedAt: lastEditedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(lastEditedAt),
+      paidByUserId: paidByUserId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(paidByUserId),
+      aaMode:
+          aaMode == null && nullToAbsent ? const Value.absent() : Value(aaMode),
+      aaParticipants: aaParticipants == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aaParticipants),
+      aaSplits: aaSplits == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aaSplits),
     );
   }
 
@@ -1436,6 +1589,10 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       nativeAmount: serializer.fromJson<double?>(json['nativeAmount']),
       version: serializer.fromJson<int>(json['version']),
       lastEditedAt: serializer.fromJson<DateTime?>(json['lastEditedAt']),
+      paidByUserId: serializer.fromJson<String?>(json['paidByUserId']),
+      aaMode: serializer.fromJson<int?>(json['aaMode']),
+      aaParticipants: serializer.fromJson<String?>(json['aaParticipants']),
+      aaSplits: serializer.fromJson<String?>(json['aaSplits']),
     );
   }
   @override
@@ -1460,6 +1617,10 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'nativeAmount': serializer.toJson<double?>(nativeAmount),
       'version': serializer.toJson<int>(version),
       'lastEditedAt': serializer.toJson<DateTime?>(lastEditedAt),
+      'paidByUserId': serializer.toJson<String?>(paidByUserId),
+      'aaMode': serializer.toJson<int?>(aaMode),
+      'aaParticipants': serializer.toJson<String?>(aaParticipants),
+      'aaSplits': serializer.toJson<String?>(aaSplits),
     };
   }
 
@@ -1480,7 +1641,11 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           Value<String?> currencyCode = const Value.absent(),
           Value<double?> nativeAmount = const Value.absent(),
           int? version,
-          Value<DateTime?> lastEditedAt = const Value.absent()}) =>
+          Value<DateTime?> lastEditedAt = const Value.absent(),
+          Value<String?> paidByUserId = const Value.absent(),
+          Value<int?> aaMode = const Value.absent(),
+          Value<String?> aaParticipants = const Value.absent(),
+          Value<String?> aaSplits = const Value.absent()}) =>
       Transaction(
         id: id ?? this.id,
         ledgerId: ledgerId ?? this.ledgerId,
@@ -1508,6 +1673,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
         version: version ?? this.version,
         lastEditedAt:
             lastEditedAt.present ? lastEditedAt.value : this.lastEditedAt,
+        paidByUserId:
+            paidByUserId.present ? paidByUserId.value : this.paidByUserId,
+        aaMode: aaMode.present ? aaMode.value : this.aaMode,
+        aaParticipants:
+            aaParticipants.present ? aaParticipants.value : this.aaParticipants,
+        aaSplits: aaSplits.present ? aaSplits.value : this.aaSplits,
       );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
@@ -1545,6 +1716,14 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       lastEditedAt: data.lastEditedAt.present
           ? data.lastEditedAt.value
           : this.lastEditedAt,
+      paidByUserId: data.paidByUserId.present
+          ? data.paidByUserId.value
+          : this.paidByUserId,
+      aaMode: data.aaMode.present ? data.aaMode.value : this.aaMode,
+      aaParticipants: data.aaParticipants.present
+          ? data.aaParticipants.value
+          : this.aaParticipants,
+      aaSplits: data.aaSplits.present ? data.aaSplits.value : this.aaSplits,
     );
   }
 
@@ -1567,30 +1746,39 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           ..write('currencyCode: $currencyCode, ')
           ..write('nativeAmount: $nativeAmount, ')
           ..write('version: $version, ')
-          ..write('lastEditedAt: $lastEditedAt')
+          ..write('lastEditedAt: $lastEditedAt, ')
+          ..write('paidByUserId: $paidByUserId, ')
+          ..write('aaMode: $aaMode, ')
+          ..write('aaParticipants: $aaParticipants, ')
+          ..write('aaSplits: $aaSplits')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(
-      id,
-      ledgerId,
-      type,
-      amount,
-      categoryId,
-      happenedAt,
-      note,
-      recurringId,
-      syncId,
-      createdByUserId,
-      lastEditedByUserId,
-      categorySyncIdOverride,
-      excludeFromStats,
-      currencyCode,
-      nativeAmount,
-      version,
-      lastEditedAt);
+  int get hashCode => Object.hashAll([
+        id,
+        ledgerId,
+        type,
+        amount,
+        categoryId,
+        happenedAt,
+        note,
+        recurringId,
+        syncId,
+        createdByUserId,
+        lastEditedByUserId,
+        categorySyncIdOverride,
+        excludeFromStats,
+        currencyCode,
+        nativeAmount,
+        version,
+        lastEditedAt,
+        paidByUserId,
+        aaMode,
+        aaParticipants,
+        aaSplits
+      ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1611,7 +1799,11 @@ class Transaction extends DataClass implements Insertable<Transaction> {
           other.currencyCode == this.currencyCode &&
           other.nativeAmount == this.nativeAmount &&
           other.version == this.version &&
-          other.lastEditedAt == this.lastEditedAt);
+          other.lastEditedAt == this.lastEditedAt &&
+          other.paidByUserId == this.paidByUserId &&
+          other.aaMode == this.aaMode &&
+          other.aaParticipants == this.aaParticipants &&
+          other.aaSplits == this.aaSplits);
 }
 
 class TransactionsCompanion extends UpdateCompanion<Transaction> {
@@ -1632,6 +1824,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<double?> nativeAmount;
   final Value<int> version;
   final Value<DateTime?> lastEditedAt;
+  final Value<String?> paidByUserId;
+  final Value<int?> aaMode;
+  final Value<String?> aaParticipants;
+  final Value<String?> aaSplits;
   const TransactionsCompanion({
     this.id = const Value.absent(),
     this.ledgerId = const Value.absent(),
@@ -1650,6 +1846,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.nativeAmount = const Value.absent(),
     this.version = const Value.absent(),
     this.lastEditedAt = const Value.absent(),
+    this.paidByUserId = const Value.absent(),
+    this.aaMode = const Value.absent(),
+    this.aaParticipants = const Value.absent(),
+    this.aaSplits = const Value.absent(),
   });
   TransactionsCompanion.insert({
     this.id = const Value.absent(),
@@ -1669,6 +1869,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.nativeAmount = const Value.absent(),
     this.version = const Value.absent(),
     this.lastEditedAt = const Value.absent(),
+    this.paidByUserId = const Value.absent(),
+    this.aaMode = const Value.absent(),
+    this.aaParticipants = const Value.absent(),
+    this.aaSplits = const Value.absent(),
   })  : ledgerId = Value(ledgerId),
         type = Value(type),
         amount = Value(amount);
@@ -1690,6 +1894,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<double>? nativeAmount,
     Expression<int>? version,
     Expression<DateTime>? lastEditedAt,
+    Expression<String>? paidByUserId,
+    Expression<int>? aaMode,
+    Expression<String>? aaParticipants,
+    Expression<String>? aaSplits,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -1711,6 +1919,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       if (nativeAmount != null) 'native_amount': nativeAmount,
       if (version != null) 'version': version,
       if (lastEditedAt != null) 'last_edited_at': lastEditedAt,
+      if (paidByUserId != null) 'paid_by_user_id': paidByUserId,
+      if (aaMode != null) 'aa_mode': aaMode,
+      if (aaParticipants != null) 'aa_participants': aaParticipants,
+      if (aaSplits != null) 'aa_splits': aaSplits,
     });
   }
 
@@ -1731,7 +1943,11 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       Value<String?>? currencyCode,
       Value<double?>? nativeAmount,
       Value<int>? version,
-      Value<DateTime?>? lastEditedAt}) {
+      Value<DateTime?>? lastEditedAt,
+      Value<String?>? paidByUserId,
+      Value<int?>? aaMode,
+      Value<String?>? aaParticipants,
+      Value<String?>? aaSplits}) {
     return TransactionsCompanion(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
@@ -1751,6 +1967,10 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       nativeAmount: nativeAmount ?? this.nativeAmount,
       version: version ?? this.version,
       lastEditedAt: lastEditedAt ?? this.lastEditedAt,
+      paidByUserId: paidByUserId ?? this.paidByUserId,
+      aaMode: aaMode ?? this.aaMode,
+      aaParticipants: aaParticipants ?? this.aaParticipants,
+      aaSplits: aaSplits ?? this.aaSplits,
     );
   }
 
@@ -1810,6 +2030,18 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     if (lastEditedAt.present) {
       map['last_edited_at'] = Variable<DateTime>(lastEditedAt.value);
     }
+    if (paidByUserId.present) {
+      map['paid_by_user_id'] = Variable<String>(paidByUserId.value);
+    }
+    if (aaMode.present) {
+      map['aa_mode'] = Variable<int>(aaMode.value);
+    }
+    if (aaParticipants.present) {
+      map['aa_participants'] = Variable<String>(aaParticipants.value);
+    }
+    if (aaSplits.present) {
+      map['aa_splits'] = Variable<String>(aaSplits.value);
+    }
     return map;
   }
 
@@ -1832,7 +2064,11 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
           ..write('currencyCode: $currencyCode, ')
           ..write('nativeAmount: $nativeAmount, ')
           ..write('version: $version, ')
-          ..write('lastEditedAt: $lastEditedAt')
+          ..write('lastEditedAt: $lastEditedAt, ')
+          ..write('paidByUserId: $paidByUserId, ')
+          ..write('aaMode: $aaMode, ')
+          ..write('aaParticipants: $aaParticipants, ')
+          ..write('aaSplits: $aaSplits')
           ..write(')'))
         .toString();
   }
@@ -6426,6 +6662,354 @@ class SnapshotDirtyLedgersCompanion
   }
 }
 
+class $LedgerVirtualUsersTable extends LedgerVirtualUsers
+    with TableInfo<$LedgerVirtualUsersTable, LedgerVirtualUser> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $LedgerVirtualUsersTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+      'id', aliasedName, false,
+      hasAutoIncrement: true,
+      type: DriftSqlType.int,
+      requiredDuringInsert: false,
+      defaultConstraints:
+          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+  static const VerificationMeta _ledgerIdMeta =
+      const VerificationMeta('ledgerId');
+  @override
+  late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
+      'ledger_id', aliasedName, false,
+      type: DriftSqlType.int, requiredDuringInsert: true);
+  static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
+  @override
+  late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
+      'sync_id', aliasedName, true,
+      type: DriftSqlType.string, requiredDuringInsert: false);
+  static const VerificationMeta _nameMeta = const VerificationMeta('name');
+  @override
+  late final GeneratedColumn<String> name = GeneratedColumn<String>(
+      'name', aliasedName, false,
+      type: DriftSqlType.string, requiredDuringInsert: true);
+  static const VerificationMeta _createdAtMeta =
+      const VerificationMeta('createdAt');
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+      'created_at', aliasedName, false,
+      type: DriftSqlType.dateTime,
+      requiredDuringInsert: false,
+      defaultValue: currentDateAndTime);
+  static const VerificationMeta _updatedAtMeta =
+      const VerificationMeta('updatedAt');
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+      'updated_at', aliasedName, true,
+      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+  @override
+  List<GeneratedColumn> get $columns =>
+      [id, ledgerId, syncId, name, createdAt, updatedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'ledger_virtual_users';
+  @override
+  VerificationContext validateIntegrity(Insertable<LedgerVirtualUser> instance,
+      {bool isInserting = false}) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('ledger_id')) {
+      context.handle(_ledgerIdMeta,
+          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+    } else if (isInserting) {
+      context.missing(_ledgerIdMeta);
+    }
+    if (data.containsKey('sync_id')) {
+      context.handle(_syncIdMeta,
+          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+    }
+    if (data.containsKey('name')) {
+      context.handle(
+          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+    } else if (isInserting) {
+      context.missing(_nameMeta);
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(_createdAtMeta,
+          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(_updatedAtMeta,
+          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  LedgerVirtualUser map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return LedgerVirtualUser(
+      id: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
+      ledgerId: attachedDatabase.typeMapping
+          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
+      syncId: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
+      name: attachedDatabase.typeMapping
+          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
+      createdAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+      updatedAt: attachedDatabase.typeMapping
+          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
+    );
+  }
+
+  @override
+  $LedgerVirtualUsersTable createAlias(String alias) {
+    return $LedgerVirtualUsersTable(attachedDatabase, alias);
+  }
+}
+
+class LedgerVirtualUser extends DataClass
+    implements Insertable<LedgerVirtualUser> {
+  /// 本地主键。
+  final int id;
+
+  /// 所属账本(逻辑关联 ledgers.id,不做 SQL 外键)。
+  final int ledgerId;
+
+  /// 跨设备唯一标识(UUID),与 server 端 virtual_user 投影对齐。
+  /// 本地新建时填 UUID;sync pull 时写回 server 下发的 syncId。
+  final String? syncId;
+
+  /// 虚拟用户昵称。
+  final String name;
+
+  /// 创建时间。
+  final DateTime createdAt;
+
+  /// 修改时间。
+  final DateTime? updatedAt;
+  const LedgerVirtualUser(
+      {required this.id,
+      required this.ledgerId,
+      this.syncId,
+      required this.name,
+      required this.createdAt,
+      this.updatedAt});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['ledger_id'] = Variable<int>(ledgerId);
+    if (!nullToAbsent || syncId != null) {
+      map['sync_id'] = Variable<String>(syncId);
+    }
+    map['name'] = Variable<String>(name);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    if (!nullToAbsent || updatedAt != null) {
+      map['updated_at'] = Variable<DateTime>(updatedAt);
+    }
+    return map;
+  }
+
+  LedgerVirtualUsersCompanion toCompanion(bool nullToAbsent) {
+    return LedgerVirtualUsersCompanion(
+      id: Value(id),
+      ledgerId: Value(ledgerId),
+      syncId:
+          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      name: Value(name),
+      createdAt: Value(createdAt),
+      updatedAt: updatedAt == null && nullToAbsent
+          ? const Value.absent()
+          : Value(updatedAt),
+    );
+  }
+
+  factory LedgerVirtualUser.fromJson(Map<String, dynamic> json,
+      {ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return LedgerVirtualUser(
+      id: serializer.fromJson<int>(json['id']),
+      ledgerId: serializer.fromJson<int>(json['ledgerId']),
+      syncId: serializer.fromJson<String?>(json['syncId']),
+      name: serializer.fromJson<String>(json['name']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime?>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'ledgerId': serializer.toJson<int>(ledgerId),
+      'syncId': serializer.toJson<String?>(syncId),
+      'name': serializer.toJson<String>(name),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime?>(updatedAt),
+    };
+  }
+
+  LedgerVirtualUser copyWith(
+          {int? id,
+          int? ledgerId,
+          Value<String?> syncId = const Value.absent(),
+          String? name,
+          DateTime? createdAt,
+          Value<DateTime?> updatedAt = const Value.absent()}) =>
+      LedgerVirtualUser(
+        id: id ?? this.id,
+        ledgerId: ledgerId ?? this.ledgerId,
+        syncId: syncId.present ? syncId.value : this.syncId,
+        name: name ?? this.name,
+        createdAt: createdAt ?? this.createdAt,
+        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+      );
+  LedgerVirtualUser copyWithCompanion(LedgerVirtualUsersCompanion data) {
+    return LedgerVirtualUser(
+      id: data.id.present ? data.id.value : this.id,
+      ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
+      syncId: data.syncId.present ? data.syncId.value : this.syncId,
+      name: data.name.present ? data.name.value : this.name,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LedgerVirtualUser(')
+          ..write('id: $id, ')
+          ..write('ledgerId: $ledgerId, ')
+          ..write('syncId: $syncId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, ledgerId, syncId, name, createdAt, updatedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is LedgerVirtualUser &&
+          other.id == this.id &&
+          other.ledgerId == this.ledgerId &&
+          other.syncId == this.syncId &&
+          other.name == this.name &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class LedgerVirtualUsersCompanion extends UpdateCompanion<LedgerVirtualUser> {
+  final Value<int> id;
+  final Value<int> ledgerId;
+  final Value<String?> syncId;
+  final Value<String> name;
+  final Value<DateTime> createdAt;
+  final Value<DateTime?> updatedAt;
+  const LedgerVirtualUsersCompanion({
+    this.id = const Value.absent(),
+    this.ledgerId = const Value.absent(),
+    this.syncId = const Value.absent(),
+    this.name = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  LedgerVirtualUsersCompanion.insert({
+    this.id = const Value.absent(),
+    required int ledgerId,
+    this.syncId = const Value.absent(),
+    required String name,
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  })  : ledgerId = Value(ledgerId),
+        name = Value(name);
+  static Insertable<LedgerVirtualUser> custom({
+    Expression<int>? id,
+    Expression<int>? ledgerId,
+    Expression<String>? syncId,
+    Expression<String>? name,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ledgerId != null) 'ledger_id': ledgerId,
+      if (syncId != null) 'sync_id': syncId,
+      if (name != null) 'name': name,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  LedgerVirtualUsersCompanion copyWith(
+      {Value<int>? id,
+      Value<int>? ledgerId,
+      Value<String?>? syncId,
+      Value<String>? name,
+      Value<DateTime>? createdAt,
+      Value<DateTime?>? updatedAt}) {
+    return LedgerVirtualUsersCompanion(
+      id: id ?? this.id,
+      ledgerId: ledgerId ?? this.ledgerId,
+      syncId: syncId ?? this.syncId,
+      name: name ?? this.name,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (ledgerId.present) {
+      map['ledger_id'] = Variable<int>(ledgerId.value);
+    }
+    if (syncId.present) {
+      map['sync_id'] = Variable<String>(syncId.value);
+    }
+    if (name.present) {
+      map['name'] = Variable<String>(name.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('LedgerVirtualUsersCompanion(')
+          ..write('id: $id, ')
+          ..write('ledgerId: $ledgerId, ')
+          ..write('syncId: $syncId, ')
+          ..write('name: $name, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$SpitoutDatabase extends GeneratedDatabase {
   _$SpitoutDatabase(QueryExecutor e) : super(e);
   $SpitoutDatabaseManager get managers => $SpitoutDatabaseManager(this);
@@ -6447,6 +7031,8 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
       $ExchangeRateOverridesTable(this);
   late final $SnapshotDirtyLedgersTable snapshotDirtyLedgers =
       $SnapshotDirtyLedgersTable(this);
+  late final $LedgerVirtualUsersTable ledgerVirtualUsers =
+      $LedgerVirtualUsersTable(this);
   @override
   Iterable<TableInfo<Table, Object?>> get allTables =>
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
@@ -6464,7 +7050,8 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
         syncPullErrors,
         exchangeRates,
         exchangeRateOverrides,
-        snapshotDirtyLedgers
+        snapshotDirtyLedgers,
+        ledgerVirtualUsers
       ];
 }
 
@@ -6481,6 +7068,7 @@ typedef $$LedgersTableCreateCompanionBuilder = LedgersCompanion Function({
   Value<String?> ownerUserId,
   Value<int> monthStartDay,
   Value<String> storageMode,
+  Value<bool> aaEnabled,
 });
 typedef $$LedgersTableUpdateCompanionBuilder = LedgersCompanion Function({
   Value<int> id,
@@ -6495,6 +7083,7 @@ typedef $$LedgersTableUpdateCompanionBuilder = LedgersCompanion Function({
   Value<String?> ownerUserId,
   Value<int> monthStartDay,
   Value<String> storageMode,
+  Value<bool> aaEnabled,
 });
 
 class $$LedgersTableFilterComposer
@@ -6541,6 +7130,9 @@ class $$LedgersTableFilterComposer
 
   ColumnFilters<String> get storageMode => $composableBuilder(
       column: $table.storageMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<bool> get aaEnabled => $composableBuilder(
+      column: $table.aaEnabled, builder: (column) => ColumnFilters(column));
 }
 
 class $$LedgersTableOrderingComposer
@@ -6588,6 +7180,9 @@ class $$LedgersTableOrderingComposer
 
   ColumnOrderings<String> get storageMode => $composableBuilder(
       column: $table.storageMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<bool> get aaEnabled => $composableBuilder(
+      column: $table.aaEnabled, builder: (column) => ColumnOrderings(column));
 }
 
 class $$LedgersTableAnnotationComposer
@@ -6634,6 +7229,9 @@ class $$LedgersTableAnnotationComposer
 
   GeneratedColumn<String> get storageMode => $composableBuilder(
       column: $table.storageMode, builder: (column) => column);
+
+  GeneratedColumn<bool> get aaEnabled =>
+      $composableBuilder(column: $table.aaEnabled, builder: (column) => column);
 }
 
 class $$LedgersTableTableManager extends RootTableManager<
@@ -6671,6 +7269,7 @@ class $$LedgersTableTableManager extends RootTableManager<
             Value<String?> ownerUserId = const Value.absent(),
             Value<int> monthStartDay = const Value.absent(),
             Value<String> storageMode = const Value.absent(),
+            Value<bool> aaEnabled = const Value.absent(),
           }) =>
               LedgersCompanion(
             id: id,
@@ -6685,6 +7284,7 @@ class $$LedgersTableTableManager extends RootTableManager<
             ownerUserId: ownerUserId,
             monthStartDay: monthStartDay,
             storageMode: storageMode,
+            aaEnabled: aaEnabled,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -6699,6 +7299,7 @@ class $$LedgersTableTableManager extends RootTableManager<
             Value<String?> ownerUserId = const Value.absent(),
             Value<int> monthStartDay = const Value.absent(),
             Value<String> storageMode = const Value.absent(),
+            Value<bool> aaEnabled = const Value.absent(),
           }) =>
               LedgersCompanion.insert(
             id: id,
@@ -6713,6 +7314,7 @@ class $$LedgersTableTableManager extends RootTableManager<
             ownerUserId: ownerUserId,
             monthStartDay: monthStartDay,
             storageMode: storageMode,
+            aaEnabled: aaEnabled,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -6956,6 +7558,10 @@ typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
   Value<double?> nativeAmount,
   Value<int> version,
   Value<DateTime?> lastEditedAt,
+  Value<String?> paidByUserId,
+  Value<int?> aaMode,
+  Value<String?> aaParticipants,
+  Value<String?> aaSplits,
 });
 typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
     Function({
@@ -6976,6 +7582,10 @@ typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
   Value<double?> nativeAmount,
   Value<int> version,
   Value<DateTime?> lastEditedAt,
+  Value<String?> paidByUserId,
+  Value<int?> aaMode,
+  Value<String?> aaParticipants,
+  Value<String?> aaSplits,
 });
 
 class $$TransactionsTableFilterComposer
@@ -7041,6 +7651,19 @@ class $$TransactionsTableFilterComposer
 
   ColumnFilters<DateTime> get lastEditedAt => $composableBuilder(
       column: $table.lastEditedAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get aaMode => $composableBuilder(
+      column: $table.aaMode, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get aaParticipants => $composableBuilder(
+      column: $table.aaParticipants,
+      builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get aaSplits => $composableBuilder(
+      column: $table.aaSplits, builder: (column) => ColumnFilters(column));
 }
 
 class $$TransactionsTableOrderingComposer
@@ -7109,6 +7732,20 @@ class $$TransactionsTableOrderingComposer
   ColumnOrderings<DateTime> get lastEditedAt => $composableBuilder(
       column: $table.lastEditedAt,
       builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get aaMode => $composableBuilder(
+      column: $table.aaMode, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get aaParticipants => $composableBuilder(
+      column: $table.aaParticipants,
+      builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get aaSplits => $composableBuilder(
+      column: $table.aaSplits, builder: (column) => ColumnOrderings(column));
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -7170,6 +7807,18 @@ class $$TransactionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get lastEditedAt => $composableBuilder(
       column: $table.lastEditedAt, builder: (column) => column);
+
+  GeneratedColumn<String> get paidByUserId => $composableBuilder(
+      column: $table.paidByUserId, builder: (column) => column);
+
+  GeneratedColumn<int> get aaMode =>
+      $composableBuilder(column: $table.aaMode, builder: (column) => column);
+
+  GeneratedColumn<String> get aaParticipants => $composableBuilder(
+      column: $table.aaParticipants, builder: (column) => column);
+
+  GeneratedColumn<String> get aaSplits =>
+      $composableBuilder(column: $table.aaSplits, builder: (column) => column);
 }
 
 class $$TransactionsTableTableManager extends RootTableManager<
@@ -7216,6 +7865,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<double?> nativeAmount = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<DateTime?> lastEditedAt = const Value.absent(),
+            Value<String?> paidByUserId = const Value.absent(),
+            Value<int?> aaMode = const Value.absent(),
+            Value<String?> aaParticipants = const Value.absent(),
+            Value<String?> aaSplits = const Value.absent(),
           }) =>
               TransactionsCompanion(
             id: id,
@@ -7235,6 +7888,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
             nativeAmount: nativeAmount,
             version: version,
             lastEditedAt: lastEditedAt,
+            paidByUserId: paidByUserId,
+            aaMode: aaMode,
+            aaParticipants: aaParticipants,
+            aaSplits: aaSplits,
           ),
           createCompanionCallback: ({
             Value<int> id = const Value.absent(),
@@ -7254,6 +7911,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
             Value<double?> nativeAmount = const Value.absent(),
             Value<int> version = const Value.absent(),
             Value<DateTime?> lastEditedAt = const Value.absent(),
+            Value<String?> paidByUserId = const Value.absent(),
+            Value<int?> aaMode = const Value.absent(),
+            Value<String?> aaParticipants = const Value.absent(),
+            Value<String?> aaSplits = const Value.absent(),
           }) =>
               TransactionsCompanion.insert(
             id: id,
@@ -7273,6 +7934,10 @@ class $$TransactionsTableTableManager extends RootTableManager<
             nativeAmount: nativeAmount,
             version: version,
             lastEditedAt: lastEditedAt,
+            paidByUserId: paidByUserId,
+            aaMode: aaMode,
+            aaParticipants: aaParticipants,
+            aaSplits: aaSplits,
           ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
@@ -9579,6 +10244,192 @@ typedef $$SnapshotDirtyLedgersTableProcessedTableManager
         ),
         SnapshotDirtyLedger,
         PrefetchHooks Function()>;
+typedef $$LedgerVirtualUsersTableCreateCompanionBuilder
+    = LedgerVirtualUsersCompanion Function({
+  Value<int> id,
+  required int ledgerId,
+  Value<String?> syncId,
+  required String name,
+  Value<DateTime> createdAt,
+  Value<DateTime?> updatedAt,
+});
+typedef $$LedgerVirtualUsersTableUpdateCompanionBuilder
+    = LedgerVirtualUsersCompanion Function({
+  Value<int> id,
+  Value<int> ledgerId,
+  Value<String?> syncId,
+  Value<String> name,
+  Value<DateTime> createdAt,
+  Value<DateTime?> updatedAt,
+});
+
+class $$LedgerVirtualUsersTableFilterComposer
+    extends Composer<_$SpitoutDatabase, $LedgerVirtualUsersTable> {
+  $$LedgerVirtualUsersTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<int> get ledgerId => $composableBuilder(
+      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get syncId => $composableBuilder(
+      column: $table.syncId, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+
+  ColumnFilters<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+}
+
+class $$LedgerVirtualUsersTableOrderingComposer
+    extends Composer<_$SpitoutDatabase, $LedgerVirtualUsersTable> {
+  $$LedgerVirtualUsersTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+      column: $table.id, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<int> get ledgerId => $composableBuilder(
+      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get syncId => $composableBuilder(
+      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<String> get name => $composableBuilder(
+      column: $table.name, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+
+  ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
+      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+}
+
+class $$LedgerVirtualUsersTableAnnotationComposer
+    extends Composer<_$SpitoutDatabase, $LedgerVirtualUsersTable> {
+  $$LedgerVirtualUsersTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get ledgerId =>
+      $composableBuilder(column: $table.ledgerId, builder: (column) => column);
+
+  GeneratedColumn<String> get syncId =>
+      $composableBuilder(column: $table.syncId, builder: (column) => column);
+
+  GeneratedColumn<String> get name =>
+      $composableBuilder(column: $table.name, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get updatedAt =>
+      $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+}
+
+class $$LedgerVirtualUsersTableTableManager extends RootTableManager<
+    _$SpitoutDatabase,
+    $LedgerVirtualUsersTable,
+    LedgerVirtualUser,
+    $$LedgerVirtualUsersTableFilterComposer,
+    $$LedgerVirtualUsersTableOrderingComposer,
+    $$LedgerVirtualUsersTableAnnotationComposer,
+    $$LedgerVirtualUsersTableCreateCompanionBuilder,
+    $$LedgerVirtualUsersTableUpdateCompanionBuilder,
+    (
+      LedgerVirtualUser,
+      BaseReferences<_$SpitoutDatabase, $LedgerVirtualUsersTable,
+          LedgerVirtualUser>
+    ),
+    LedgerVirtualUser,
+    PrefetchHooks Function()> {
+  $$LedgerVirtualUsersTableTableManager(
+      _$SpitoutDatabase db, $LedgerVirtualUsersTable table)
+      : super(TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$LedgerVirtualUsersTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$LedgerVirtualUsersTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$LedgerVirtualUsersTableAnnotationComposer(
+                  $db: db, $table: table),
+          updateCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            Value<int> ledgerId = const Value.absent(),
+            Value<String?> syncId = const Value.absent(),
+            Value<String> name = const Value.absent(),
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
+          }) =>
+              LedgerVirtualUsersCompanion(
+            id: id,
+            ledgerId: ledgerId,
+            syncId: syncId,
+            name: name,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          createCompanionCallback: ({
+            Value<int> id = const Value.absent(),
+            required int ledgerId,
+            Value<String?> syncId = const Value.absent(),
+            required String name,
+            Value<DateTime> createdAt = const Value.absent(),
+            Value<DateTime?> updatedAt = const Value.absent(),
+          }) =>
+              LedgerVirtualUsersCompanion.insert(
+            id: id,
+            ledgerId: ledgerId,
+            syncId: syncId,
+            name: name,
+            createdAt: createdAt,
+            updatedAt: updatedAt,
+          ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ));
+}
+
+typedef $$LedgerVirtualUsersTableProcessedTableManager = ProcessedTableManager<
+    _$SpitoutDatabase,
+    $LedgerVirtualUsersTable,
+    LedgerVirtualUser,
+    $$LedgerVirtualUsersTableFilterComposer,
+    $$LedgerVirtualUsersTableOrderingComposer,
+    $$LedgerVirtualUsersTableAnnotationComposer,
+    $$LedgerVirtualUsersTableCreateCompanionBuilder,
+    $$LedgerVirtualUsersTableUpdateCompanionBuilder,
+    (
+      LedgerVirtualUser,
+      BaseReferences<_$SpitoutDatabase, $LedgerVirtualUsersTable,
+          LedgerVirtualUser>
+    ),
+    LedgerVirtualUser,
+    PrefetchHooks Function()>;
 
 class $SpitoutDatabaseManager {
   final _$SpitoutDatabase _db;
@@ -9610,4 +10461,6 @@ class $SpitoutDatabaseManager {
       $$ExchangeRateOverridesTableTableManager(_db, _db.exchangeRateOverrides);
   $$SnapshotDirtyLedgersTableTableManager get snapshotDirtyLedgers =>
       $$SnapshotDirtyLedgersTableTableManager(_db, _db.snapshotDirtyLedgers);
+  $$LedgerVirtualUsersTableTableManager get ledgerVirtualUsers =>
+      $$LedgerVirtualUsersTableTableManager(_db, _db.ledgerVirtualUsers);
 }

@@ -44,6 +44,7 @@ void main() {
           isShared: false,
           monthStartDay: 1,
           storageMode: 'local',
+        aaEnabled: false,
         ),
       ],
     );

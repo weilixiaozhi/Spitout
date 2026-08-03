@@ -29,6 +29,7 @@ Ledger _buildLedger() => Ledger(
       isShared: false,
       monthStartDay: 1,
       storageMode: 'local',
+      aaEnabled: false,
     );
 
 /// 用 ProviderScope + MaterialApp 包装待测的 CategoryRankRow。

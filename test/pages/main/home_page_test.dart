@@ -89,6 +89,7 @@ void main() {
       isShared: false,
       monthStartDay: 1,
       storageMode: 'local',
+      aaEnabled: false,
     );
     // 默认每次返回发射空列表的新 stream：snapshot.hasData=true 且 monthItems
     // 为空 → AppEmpty（无持续动画，不阻塞 pump）。
@@ -533,6 +534,7 @@ void main() {
       monthStartDay: 1,
       syncId: 'sync-1',
       storageMode: 'cloud',
+      aaEnabled: false,
     );
 
     // 用 StreamController 驱动 currentLedgerProvider，便于在测试中再发一次
@@ -599,6 +601,7 @@ void main() {
       monthStartDay: 1,
       syncId: 'sync-1',
       storageMode: 'cloud',
+      aaEnabled: false,
     );
 
     final members = <SpitoutCloudLedgerMember>[

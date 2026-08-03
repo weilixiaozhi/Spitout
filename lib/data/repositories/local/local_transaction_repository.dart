@@ -278,6 +278,11 @@ class LocalTransactionRepository implements TransactionRepository {
     bool excludeFromStats = false,
     String? currencyCode,
     double? nativeAmount,
+    // AA 分摊字段:由调用方显式传入,子仓收"已定值"直写
+    String? paidByUserId,
+    int? aaMode,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     // 子仓收「已定值」直写;带折算的兜底(查汇率)在聚合
     // LocalRepository 包装层(子仓拿不到汇率)。
@@ -293,6 +298,11 @@ class LocalTransactionRepository implements TransactionRepository {
           excludeFromStats: d.Value(excludeFromStats),
           currencyCode: d.Value(currencyCode),
           nativeAmount: d.Value(nativeAmount),
+          // AA 字段:nullable,非 AA 交易传 null(列存 NULL)
+          paidByUserId: d.Value(paidByUserId),
+          aaMode: d.Value(aaMode),
+          aaParticipants: d.Value(aaParticipants),
+          aaSplits: d.Value(aaSplits),
         ));
   }
 
@@ -362,6 +372,11 @@ class LocalTransactionRepository implements TransactionRepository {
     bool? excludeFromStats,
     String? currencyCode,
     double? nativeAmount,
+    // AA 分摊字段:null = 不更新保持原值
+    String? paidByUserId,
+    int? aaMode,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     // 本地编辑路径 version+1 + lastEditedAt,支撑编辑历史与列表项 HH:mm 展示。
     // 同步路径(updateTransactionBySyncId 等)不走此方法,不会误增版本号。
@@ -388,6 +403,21 @@ class LocalTransactionRepository implements TransactionRepository {
         nativeAmount: nativeAmount == null
             ? const d.Value.absent()
             : d.Value(nativeAmount),
+        // AA 分摊字段:null = 不更新(absent);非 null = 显式写入。
+        // 对 nullable 列,传入显式 null(空串)用于清空场景由调用方决定,
+        // 这里按"传了就写"语义处理。
+        paidByUserId: paidByUserId == null
+            ? const d.Value.absent()
+            : d.Value(paidByUserId),
+        aaMode: aaMode == null
+            ? const d.Value.absent()
+            : d.Value(aaMode),
+        aaParticipants: aaParticipants == null
+            ? const d.Value.absent()
+            : d.Value(aaParticipants),
+        aaSplits: aaSplits == null
+            ? const d.Value.absent()
+            : d.Value(aaSplits),
         // 版本号自增 + 最后编辑时间戳
         version: d.Value(newVersion),
         lastEditedAt: d.Value(DateTime.now()),
@@ -543,6 +573,22 @@ class LocalTransactionRepository implements TransactionRepository {
           ..orderBy([
             (t) =>
                 d.OrderingTerm(expression: t.happenedAt, mode: d.OrderingMode.desc)
+          ]))
+        .get();
+  }
+
+  @override
+  Future<List<Transaction>> getAaTransactionsByLedger(int ledgerId) async {
+    // AA 分摊统计:过滤出 aaMode != 1 的交易。
+    // aaMode=null/0(人均)和 aaMode=2(指定)都纳入;"不分摊"(aaMode=1)跳过。
+    // 用 isNull() | isNotValue(1) 兼容 null 和非 1 两种"参与分摊"的情况。
+    return await (db.select(db.transactions)
+          ..where((t) =>
+              t.ledgerId.equals(ledgerId) &
+              (t.aaMode.isNull() | t.aaMode.isNotValue(1)))
+          ..orderBy([
+            (t) => d.OrderingTerm(
+                expression: t.happenedAt, mode: d.OrderingMode.desc)
           ]))
         .get();
   }

@@ -266,12 +266,17 @@ class LocalLedgerRepository implements LedgerRepository {
     String? name,
     String? currency,
     int? monthStartDay,
+    bool? aaEnabled,
   }) async {
     final comp = LedgersCompanion(
       name: name != null ? d.Value(name) : const d.Value.absent(),
       currency: currency != null ? d.Value(currency) : const d.Value.absent(),
       monthStartDay: monthStartDay != null
           ? d.Value(monthStartDay.clamp(1, 28))
+          : const d.Value.absent(),
+      // AA 开关:null = 不更新;非 null = 显式写入(跨设备同步)
+      aaEnabled: aaEnabled != null
+          ? d.Value(aaEnabled)
           : const d.Value.absent(),
     );
     await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id)))

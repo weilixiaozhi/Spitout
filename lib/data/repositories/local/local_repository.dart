@@ -17,6 +17,7 @@ import 'local_category_repository.dart';
 import 'local_statistics_repository.dart';
 import 'local_recurring_transaction_repository.dart';
 import 'local_exchange_rate_repository.dart';
+import 'local_ledger_virtual_user_repository.dart';
 
 /// LocalRepository 本地数据库实现
 /// 基于 Drift 本地数据库实现所有 Repository 接口
@@ -49,6 +50,7 @@ class LocalRepository extends BaseRepository {
   late final LocalStatisticsRepository _statisticsRepo;
   late final LocalRecurringTransactionRepository _recurringTransactionRepo;
   late final LocalExchangeRateRepository _exchangeRateRepo;
+  late final LocalLedgerVirtualUserRepository _virtualUserRepo;
 
   LocalRepository(
     this.db, {
@@ -68,6 +70,9 @@ class LocalRepository extends BaseRepository {
     _statisticsRepo = LocalStatisticsRepository(db);
     _recurringTransactionRepo = LocalRecurringTransactionRepository(db);
     _exchangeRateRepo = LocalExchangeRateRepository(db, trackerGetter: () => changeTracker);
+    // 虚拟用户子仓不挂 changeTracker —— sync 登记由本委托层负责,
+    // 与 transaction 子仓模式一致(子仓收"已定值"直写,变更登记在 wrapper)。
+    _virtualUserRepo = LocalLedgerVirtualUserRepository(db);
   }
 
   // ============================================
@@ -142,9 +147,17 @@ class LocalRepository extends BaseRepository {
 
   @override
   Future<void> updateLedger(
-      {required int id, String? name, String? currency, int? monthStartDay}) async {
+      {required int id,
+      String? name,
+      String? currency,
+      int? monthStartDay,
+      bool? aaEnabled}) async {
     await _ledgerRepo.updateLedger(
-        id: id, name: name, currency: currency, monthStartDay: monthStartDay);
+        id: id,
+        name: name,
+        currency: currency,
+        monthStartDay: monthStartDay,
+        aaEnabled: aaEnabled);
     if (changeTracker != null) {
       final row =
           await (db.select(db.ledgers)..where((l) => l.id.equals(id))).getSingleOrNull();
@@ -354,6 +367,11 @@ class LocalRepository extends BaseRepository {
     bool excludeFromStats = false,
     String? currencyCode,
     double? nativeAmount,
+    // AA 分摊字段:透传给子仓
+    String? paidByUserId,
+    int? aaMode,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     // 带折算兜底:任何调用方(单币种记账/AI/周期模板)未传两字段
     // 时在此补齐 —— 外币先查有效汇率,取不到则等于 amount,由未折算检测统一捞回。
@@ -375,6 +393,10 @@ class LocalRepository extends BaseRepository {
       excludeFromStats: excludeFromStats,
       currencyCode: cc,
       nativeAmount: na,
+      paidByUserId: paidByUserId,
+      aaMode: aaMode,
+      aaParticipants: aaParticipants,
+      aaSplits: aaSplits,
     );
     if (changeTracker != null) {
       final tx = await _transactionRepo.getTransactionById(id);
@@ -445,6 +467,11 @@ class LocalRepository extends BaseRepository {
     bool? excludeFromStats,
     String? currencyCode,
     double? nativeAmount,
+    // AA 分摊字段:透传给子仓(null = 不更新)
+    String? paidByUserId,
+    int? aaMode,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     final old = await _transactionRepo.getTransactionById(id);
     // 联动兜底:调用方不传两字段时——
@@ -471,6 +498,10 @@ class LocalRepository extends BaseRepository {
           excludeFromStats: excludeFromStats,
           currencyCode: effCurrency,
           nativeAmount: effNative,
+          paidByUserId: paidByUserId,
+          aaMode: aaMode,
+          aaParticipants: aaParticipants,
+          aaSplits: aaSplits,
         );
         await changeTracker!.recordLedgerChange(
           entityType: 'transaction',
@@ -492,6 +523,10 @@ class LocalRepository extends BaseRepository {
       excludeFromStats: excludeFromStats,
       currencyCode: effCurrency,
       nativeAmount: effNative,
+      paidByUserId: paidByUserId,
+      aaMode: aaMode,
+      aaParticipants: aaParticipants,
+      aaSplits: aaSplits,
     );
   }
 
@@ -836,6 +871,10 @@ class LocalRepository extends BaseRepository {
   @override
   Future<List<Transaction>> getTransactionsByLedger(int ledgerId) =>
       _transactionRepo.getTransactionsByLedger(ledgerId);
+
+  @override
+  Future<List<Transaction>> getAaTransactionsByLedger(int ledgerId) =>
+      _transactionRepo.getAaTransactionsByLedger(ledgerId);
 
   @override
   Future<List<Transaction>> getTransactionsByLedgerInRange({
@@ -1740,6 +1779,107 @@ class LocalRepository extends BaseRepository {
   @override
   Future<void> batchInsertRecurringTransactions(List<RecurringTransactionsCompanion> items) =>
       _recurringTransactionRepo.batchInsertRecurringTransactions(items);
+
+
+
+  // ============================================
+  // LedgerVirtualUserRepository 接口实现 - 委托给 LocalLedgerVirtualUserRepository
+  // ============================================
+  //
+  // 虚拟用户是 ledger-scoped 同步实体(与 transaction 同通道),写操作
+  // (create/rename/delete)必须经本委托层登记 change log,保证 sync 推送。
+  // 读操作(watch/getByLedger/getBySyncId/isReferencedByAnyTransaction)
+  // 纯查询,直接委托子仓,不登记 change。
+
+  @override
+  Stream<List<LedgerVirtualUser>> watchByLedger(int ledgerId) =>
+      _virtualUserRepo.watchByLedger(ledgerId);
+
+  @override
+  Future<List<LedgerVirtualUser>> getByLedger(int ledgerId) =>
+      _virtualUserRepo.getByLedger(ledgerId);
+
+  @override
+  Future<LedgerVirtualUser?> getBySyncId(String syncId) =>
+      _virtualUserRepo.getBySyncId(syncId);
+
+  @override
+  Future<int> create({
+    required int ledgerId,
+    required String name,
+    String? syncId,
+  }) async {
+    final id = await _virtualUserRepo.create(
+      ledgerId: ledgerId,
+      name: name,
+      syncId: syncId,
+    );
+    // 登记 virtual_user:create change(ledger-scoped),供 sync 推送到协作设备。
+    // 仅 changeTracker 挂上时才登记(未登录/无后端时为 no-op)。
+    if (changeTracker != null) {
+      // 重新查:子仓已写完,这里取回 syncId 用于 change log
+      final created = await (db.select(db.ledgerVirtualUsers)
+            ..where((t) => t.id.equals(id)))
+          .getSingleOrNull();
+      if (created != null && created.syncId != null) {
+        await changeTracker!.recordLedgerChange(
+          entityType: 'virtual_user',
+          entityId: id,
+          entitySyncId: created.syncId!,
+          ledgerId: ledgerId,
+          action: 'create',
+        );
+      }
+    }
+    return id;
+  }
+
+  @override
+  Future<void> rename({
+    required int id,
+    required String name,
+  }) async {
+    // 先预查 syncId 和 ledgerId(删/改名后行可能查不到)
+    final existing = await (db.select(db.ledgerVirtualUsers)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    await _virtualUserRepo.rename(id: id, name: name);
+    if (changeTracker != null && existing != null && existing.syncId != null) {
+      await changeTracker!.recordLedgerChange(
+        entityType: 'virtual_user',
+        entityId: id,
+        entitySyncId: existing.syncId!,
+        ledgerId: existing.ledgerId,
+        action: 'update',
+      );
+    }
+  }
+
+  @override
+  Future<bool> delete(int id) async {
+    // 先预查 syncId 和 ledgerId(删后查不到),用于 change log
+    final existing = await (db.select(db.ledgerVirtualUsers)
+          ..where((t) => t.id.equals(id)))
+        .getSingleOrNull();
+    // R7 硬约束:名下有账不可删(子仓内部会校验并抛错)
+    final deleted = await _virtualUserRepo.delete(id);
+    // 硬删成功后登记 virtual_user:delete change(对齐 ledger_snapshot:delete
+    // 模式),server 按 entity_sync_id 删投影
+    if (deleted && changeTracker != null && existing != null && existing.syncId != null) {
+      await changeTracker!.recordLedgerChange(
+        entityType: 'virtual_user',
+        entityId: id,
+        entitySyncId: existing.syncId!,
+        ledgerId: existing.ledgerId,
+        action: 'delete',
+      );
+    }
+    return deleted;
+  }
+
+  @override
+  Future<bool> isReferencedByAnyTransaction(int id) =>
+      _virtualUserRepo.isReferencedByAnyTransaction(id);
 
 
 

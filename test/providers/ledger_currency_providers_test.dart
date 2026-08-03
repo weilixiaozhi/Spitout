@@ -37,6 +37,7 @@ void main() {
         isShared: false,
         monthStartDay: 1,
         storageMode: 'local',
+        aaEnabled: false,
       );
 
   test('currentLedgerCurrencyProvider:账本币种大写;无账本兜底 CNY', () async {

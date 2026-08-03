@@ -66,11 +66,14 @@ abstract class LedgerRepository {
   });
 
   /// 更新账本信息
+  ///
+  /// [aaEnabled] 为 AA 分摊开关,跨设备同步。null = 不更新。
   Future<void> updateLedger({
     required int id,
     String? name,
     String? currency,
     int? monthStartDay,
+    bool? aaEnabled,
   });
 
   /// 监听单个账本(sync pull 改了 ledger 行时自动通知 watcher)

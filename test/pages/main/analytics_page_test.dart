@@ -68,6 +68,7 @@ void main() {
       isShared: false,
       monthStartDay: 1,
       storageMode: 'local',
+      aaEnabled: false,
     );
     // 默认 stub：空数据
     when(() => repo.hasAnyExpenseTx(ledgerId: any(named: 'ledgerId')))

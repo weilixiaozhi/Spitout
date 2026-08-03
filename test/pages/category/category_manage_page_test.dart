@@ -103,6 +103,7 @@ void main() {
         isShared: isShared,
         monthStartDay: 1,
         storageMode: 'cloud',
+        aaEnabled: false,
       );
 
   /// 构建测试宿主，注入 mock repo 和预设分类数据。

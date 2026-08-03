@@ -4,6 +4,7 @@ import 'category_repository.dart';
 import 'statistics_repository.dart';
 import 'recurring_transaction_repository.dart';
 import 'exchange_rate_repository.dart';
+import 'ledger_virtual_user_repository.dart';
 
 /// 基础 Repository 抽象类
 /// 组合所有 Repository 接口，用于类型约束
@@ -20,7 +21,8 @@ abstract class BaseRepository
         CategoryRepository,
         StatisticsRepository,
         RecurringTransactionRepository,
-        ExchangeRateRepository {
+        ExchangeRateRepository,
+        LedgerVirtualUserRepository {
   // -------------------------------------------------------------------
   // 重算 / 检测。
   // 声明在聚合层而非 TransactionRepository:这些方法要同时访问交易表与

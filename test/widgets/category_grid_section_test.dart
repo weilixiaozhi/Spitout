@@ -64,6 +64,7 @@ void main() {
         isShared: isShared,
         monthStartDay: 1,
         storageMode: 'cloud',
+        aaEnabled: false,
       );
 
   /// 分类管理页路由标记：跳转成功即渲染该文本。
