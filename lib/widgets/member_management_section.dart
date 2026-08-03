@@ -64,11 +64,14 @@ class MemberManagementSection extends ConsumerStatefulWidget {
     required this.isReadOnly,
     required this.pendingVirtualUsers,
     required this.onPendingVirtualUsersChanged,
+    required this.showInviteEntry,
+    this.onInviteWithoutSyncId,
   });
 
   /// Server external_id(本地 syncId);null/空 = 新建态或本地账本。
   ///
-  /// 为空时本模块展示"所有者(我)"作为唯一成员,邀请新成员入口禁用。
+  /// 为空时本模块展示"所有者(我)"作为唯一成员;[showInviteEntry] 控制
+  /// 是否展示"邀请新成员"入口(本地账本不展示,新建态展示自动保存流程)。
   final String? ledgerExternalId;
 
   /// 账本名称,用于分享邀请时的文案拼接。
@@ -94,6 +97,18 @@ class MemberManagementSection extends ConsumerStatefulWidget {
   /// 新建态虚拟用户列表变化回调(增删改时通知父组件同步内存状态)。
   final ValueChanged<List<PendingVirtualUser>> onPendingVirtualUsersChanged;
 
+  /// 是否展示"邀请新成员"入口。
+  ///
+  /// - 新建态:展示(点击自动保存账本拿 syncId 后进入正式邀请);
+  /// - 云端账本(有 syncId):展示;
+  /// - 本地账本(已存在、storageMode=local):不展示(本地账本不支持协作邀请,
+  ///   点击会因同步层不会创建 syncId 而陷入永久 loading)。
+  final bool showInviteEntry;
+
+  /// 无 syncId 时点击"邀请新成员"的回调:由父组件自动保存/同步拿 syncId,
+  /// 期间本模块展示 loading,不拦截;成功后随 syncId 更新自动进入正式邀请。
+  final Future<void> Function()? onInviteWithoutSyncId;
+
   @override
   ConsumerState<MemberManagementSection> createState() =>
       _MemberManagementSectionState();
@@ -104,15 +119,20 @@ class _MemberManagementSectionState
   // 邀请码有效期选项:1d / 3d / 7d
   static const _expiryOptions = <int>[24, 72, 168];
 
-  /// 邀请模块本地状态 — 有效期 / 已生成的邀请码 / 生成中 / 错误信息。
+  /// 邀请模块本地状态 — 有效期 / 已生成的邀请码 / 生成中 / 错误信息 / 展开态。
   int _expiresInHours = 24;
   SpitoutCloudInvite? _generated;
   bool _busy = false;
   String? _error;
+  /// 邀请模块是否展开:用于切换收起/展开箭头(收起朝右、展开朝下)。
+  bool _inviteExpanded = false;
 
   /// 新建态下推导的当前用户信息(异步加载,用于展示"所有者(我)")。
   String? _ownerDisplayName;
   String? _ownerEmail;
+
+  /// 无 syncId 时点击邀请入口,父组件正在保存/同步拿 syncId 的等待态。
+  bool _inviteBusy = false;
 
   @override
   void initState() {
@@ -303,7 +323,7 @@ class _MemberManagementSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // 标题行(色条 + "成员管理",AA 开启时右侧显示"添加虚拟用户"文字链)
+        // 标题行(色条 + "成员管理" + AA 分摊开关 + "添加虚拟用户"文字链)
         _buildHeader(context, l10n),
         const SizedBox(height: 8),
         _buildCardContent(context, l10n),
@@ -311,12 +331,23 @@ class _MemberManagementSectionState
     );
   }
 
-  /// 模块标题行:左侧色条 + "成员管理",AA 开启时右侧显示"添加虚拟用户"文字链。
+  /// 模块标题行:左侧色条 + "成员管理",右侧 AA 分摊开关(文字+开关),
+  /// AA 开启后追加"添加虚拟用户"文字链。
   ///
-  /// 文字链跟随 AA 开关立即显示/隐藏,点击直接添加默认名"虚拟用户N",
-  /// 无需先保存账本(新建态虚拟用户在父组件内存暂存,保存时批量落库)。
+  /// AA 开关作为紧凑的文字+Switch 紧贴标题右侧,字号/icon 对齐标题
+  /// (titleSmall 14px),不占用成员列表空间;开关状态在父组件持有,
+  /// 跟随开关立即显示/隐藏虚拟用户列表与"添加虚拟用户"入口。
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
+    final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
+          fontWeight: FontWeight.w700,
+          color: primary,
+        );
+    final switchLabelStyle = Theme.of(context).textTheme.labelSmall?.copyWith(
+          color: widget.isReadOnly
+              ? Theme.of(context).disabledColor
+              : SpitoutTokens.textSecondary(context),
+        );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(
@@ -330,23 +361,32 @@ class _MemberManagementSectionState
             ),
           ),
           const SizedBox(width: 8),
-          Text(
-            l10n.sharedMembersPageTitle,
-            style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: primary,
-                ),
+          Text(l10n.sharedMembersPageTitle, style: titleStyle),
+          const SizedBox(width: 12),
+          // AA 分摊开关:紧凑的文字+Switch,紧贴标题右侧
+          Text(l10n.ledgerAaEnabled, style: switchLabelStyle),
+          const SizedBox(width: 4),
+          SizedBox(
+            // 紧凑开关,与标题字号视觉对齐
+            height: 24,
+            child: Switch(
+              value: widget.aaEnabled,
+              // 协作者只读:禁用开关(onChanged=null 灰化)
+              onChanged: widget.isReadOnly ? null : (v) => widget.onAaChanged(v),
+            ),
           ),
           const Spacer(),
           if (widget.aaEnabled && !widget.isReadOnly)
             TextButton.icon(
               onPressed: _addVirtualUser,
-              icon: const Icon(AppIcons.personAdd, size: 16),
-              label: Text(l10n.aaAddVirtualUser),
+              icon: const Icon(AppIcons.personAdd, size: 14),
+              label: Text(l10n.aaAddVirtualUser,
+                  style: Theme.of(context).textTheme.labelSmall),
               style: TextButton.styleFrom(
                 foregroundColor: primary,
                 visualDensity: VisualDensity.compact,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
               ),
             ),
         ],
@@ -402,13 +442,14 @@ class _MemberManagementSectionState
     return _buildContent(context, const <SpitoutCloudLedgerMember>[], l10n);
   }
 
-  /// 成员列表 + 虚拟用户列表 + AA 开关 + (Owner)邀请模块。
+  /// 成员列表 + 虚拟用户列表 + (Owner)邀请模块。
   ///
   /// 布局:SectionCard 内按顺序排列——
   /// 1. 真实成员行(所有者 / 协作者)
   /// 2. 虚拟用户行(可改名 / 可删除,AA 开启时显示)
-  /// 3. AA 分摊开关(SwitchListTile)
-  /// 4. 邀请新成员模块(仅 Owner 且有 syncId 时显示)
+  /// 3. 邀请新成员模块(仅 Owner 且 [showInviteEntry] 为 true 时显示)
+  ///
+  /// AA 分摊开关已移至模块标题行(_buildHeader),不再占用卡片内空间。
   Widget _buildContent(
     BuildContext context,
     List<SpitoutCloudLedgerMember> members,
@@ -441,13 +482,11 @@ class _MemberManagementSectionState
           // —— 虚拟用户行(AA 开启时显示) ——
           if (widget.aaEnabled) ..._buildVirtualUserRows(context, l10n, effectiveMembers),
 
-          // —— AA 分摊开关 ——
-          if (effectiveMembers.isNotEmpty) const Divider(height: 1),
-          _buildAaSwitch(context, l10n),
-
-          // —— 邀请新成员模块(仅 Owner 常驻显示) ——
-          if (amOwner) ...[
-            const Divider(height: 1),
+          // —— 邀请新成员模块(仅 Owner 且允许展示时显示) ——
+          // 本地账本(已存在、storageMode=local)不支持协作邀请,
+          // [showInviteEntry] 为 false 时不渲染入口,避免点击后永久 loading。
+          if (amOwner && widget.showInviteEntry) ...[
+            if (effectiveMembers.isNotEmpty) const Divider(height: 1),
             if (_isNoSyncIdMode)
               _buildSaveFirstInviteTile(context, l10n)
             else
@@ -461,15 +500,21 @@ class _MemberManagementSectionState
   /// 新建态/本地账本:构造"所有者(我)"行作为唯一成员。
   ///
   /// 从 [_ownerDisplayName]/[_ownerEmail] 推导;加载中或失败时兜底"我"。
+  /// 仅在确有显示名时设置 displayName,否则让 _MemberTile 回退到 email
+  /// 作为标题且不渲染副标题,避免标题/副标题重复展示同一邮箱。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
-    final name = _ownerDisplayName?.isNotEmpty == true
-        ? _ownerDisplayName!
-        : (_ownerEmail ?? AppLocalizations.of(context).sharedMembersYou);
+    final hasName = _ownerDisplayName?.isNotEmpty == true;
+    final email = _ownerEmail ?? '';
+    // 无 email 时用兜底"我"作为标题(displayName 设为"我",email 留空);
+    // 有 email 但无显示名时 displayName 留空,_MemberTile 标题回退到 email。
+    final displayName = hasName
+        ? _ownerDisplayName
+        : (email.isEmpty ? AppLocalizations.of(context).sharedMembersYou : null);
     return [
       SpitoutCloudLedgerMember(
         userId: '',
-        email: _ownerEmail ?? '',
-        displayName: name,
+        email: email,
+        displayName: displayName,
         role: 'owner',
         joinedAt: DateTime.now().toUtc(),
         isSelf: true,
@@ -543,43 +588,14 @@ class _MemberManagementSectionState
     return rows;
   }
 
-  /// AA 分摊开关行(SwitchListTile)。
-  ///
-  /// 作为成员管理模块内部的一个开关,跟随开关立即显示/隐藏虚拟用户列表,
-  /// 不依赖保存按钮(开关状态在父组件持有,保存时一并落库)。
-  Widget _buildAaSwitch(BuildContext context, AppLocalizations l10n) {
-    final readOnlyColor =
-        widget.isReadOnly ? Theme.of(context).disabledColor : null;
-    return SwitchListTile(
-      contentPadding:
-          const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      title: Text(
-        l10n.ledgerAaEnabled,
-        style: Theme.of(context)
-            .textTheme
-            .bodyLarge
-            ?.copyWith(color: readOnlyColor),
-      ),
-      subtitle: Text(
-        l10n.ledgerAaEnabledHint,
-        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: SpitoutTokens.textTertiary(context),
-            ),
-      ),
-      value: widget.aaEnabled,
-      // 协作者只读:禁用开关(onChanged=null 灰化)
-      onChanged: widget.isReadOnly
-          ? null
-          : (v) => widget.onAaChanged(v),
-    );
-  }
-
   /// 新建态/本地账本(无 syncId)的邀请入口占位行。
   ///
-  /// 邀请码生成依赖云端账本 ID,新建态账本未保存、本地账本未上云,
-  /// 无法真正生成邀请码,因此常驻显示入口但点击时提示先保存账本。
+  /// 邀请码生成依赖云端账本 ID,无 syncId 时无法直接生成,因此点击不拦截:
+  /// 由父组件自动保存账本 + 触发同步上云,等待云端账本创建完成拿到 syncId
+  /// 后本模块自动切换为正式邀请表单;等待期间展示 loading。
   Widget _buildSaveFirstInviteTile(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
+    final busy = _inviteBusy;
     return ListTile(
       contentPadding: const EdgeInsets.symmetric(horizontal: 16),
       leading: Icon(AppIcons.personAdd, size: 18, color: primary),
@@ -587,29 +603,71 @@ class _MemberManagementSectionState
         l10n.sharedMembersInviteCta,
         style: Theme.of(context).textTheme.titleMedium,
       ),
-      trailing: Icon(
-        AppIcons.chevronRight,
-        size: 16,
-        color: SpitoutTokens.iconTertiary(context),
-      ),
-      onTap: () => showToast(context, l10n.sharedMembersSaveFirst),
+      trailing: busy
+          ? const SizedBox(
+              width: 18,
+              height: 18,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            )
+          : Icon(
+              AppIcons.chevronRight,
+              size: 16,
+              color: SpitoutTokens.iconTertiary(context),
+            ),
+      onTap: busy ? null : () => _handleInviteWithoutSyncId(context),
     );
+  }
+
+  /// 无 syncId 时点击邀请入口:调父组件完成「保存/同步拿 syncId」,
+  /// 期间展示 loading;成功后父组件更新 syncId,本模块自动重建为正式邀请表单。
+  Future<void> _handleInviteWithoutSyncId(BuildContext context) async {
+    // async gap 前一次性取好 l10n,避免 await 后用 context 取导致 lint 告警。
+    final l10n = AppLocalizations.of(context);
+    final onInvite = widget.onInviteWithoutSyncId;
+    if (onInvite == null) {
+      // 防御性兜底:父组件未注入回调时提示先保存账本。
+      showToast(context, l10n.sharedMembersSaveFirst);
+      return;
+    }
+    setState(() => _inviteBusy = true);
+    try {
+      await onInvite();
+    } catch (e) {
+      if (context.mounted) {
+        showToast(context, l10n.sharedMembersInviteSyncFailed);
+      }
+    } finally {
+      // setState 属于 State,用 State 的 mounted 守卫。
+      if (mounted) setState(() => _inviteBusy = false);
+    }
   }
 
   /// 内嵌邀请模块 — 默认收起只显示标题(personAdd + 「邀请新成员」),
   /// 点击标题展开内容,按状态切换:未生成时展示表单,已生成时展示邀请码分享视图。
+  ///
+  /// 箭头规则统一:收起时朝右(chevronRight)、展开时朝下(chevronDown),
+  /// 替代 ExpansionTile 默认的「下/上」翻转,消除多指向歧义。
   Widget _buildInviteSection(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     return Theme(
       // 去掉 ExpansionTile 默认的上下分割线,贴合 SectionCard 风格
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
+        initiallyExpanded: _inviteExpanded,
+        onExpansionChanged: (v) => setState(() => _inviteExpanded = v),
         tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(top: 16, bottom: 4, left: 16, right: 16),
+        childrenPadding:
+            const EdgeInsets.only(top: 16, bottom: 4, left: 16, right: 16),
         leading: Icon(AppIcons.personAdd, size: 18, color: primary),
         title: Text(
           l10n.sharedMembersInviteCta,
           style: Theme.of(context).textTheme.titleMedium,
+        ),
+        // 收起朝右、展开朝下,指向明确
+        trailing: Icon(
+          _inviteExpanded ? AppIcons.chevronDown : AppIcons.chevronRight,
+          size: 18,
+          color: SpitoutTokens.iconTertiary(context),
         ),
         children: [
           if (_generated == null)
@@ -811,13 +869,12 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // 成员未设昵称时展示完整邮箱,便于识别账号身份
-    final displayName = member.displayName?.isNotEmpty == true
-        ? member.displayName!
-        : member.email;
+    // 标题优先用昵称;昵称为空时回退到邮箱,且此时不再展示 subtitle(避免邮箱重复)。
+    final hasDisplayName = member.displayName?.isNotEmpty == true;
+    final displayName = hasDisplayName ? member.displayName! : member.email;
     final isOwner = member.role == 'owner';
-    // 邮箱为空时(新建态推导的 owner)不展示 subtitle。
-    final hasEmail = member.email.isNotEmpty;
+    // 有昵称时 subtitle 展示邮箱;昵称为空时标题已是邮箱,subtitle 留空避免重复。
+    final subtitleEmail = hasDisplayName ? member.email : null;
     return ListTile(
       dense: true,
       leading: _MemberAvatar(member: member, displayName: displayName),
@@ -841,9 +898,9 @@ class _MemberTile extends ConsumerWidget {
           ],
         ],
       ),
-      subtitle: hasEmail
+      subtitle: subtitleEmail != null
           ? Text(
-              member.email,
+              subtitleEmail,
               style: TextStyle(
                   color: SpitoutTokens.textSecondary(context), fontSize: 12),
             )
@@ -859,6 +916,10 @@ class _MemberTile extends ConsumerWidget {
               icon: const Icon(AppIcons.personRemove, size: 20),
               tooltip: l10n.sharedMembersRemoveCta,
               onPressed: onRemove,
+              // 统一删除 icon 颜色为语义错误色,与虚拟用户删除 icon 一致
+              style: IconButton.styleFrom(
+                foregroundColor: SpitoutTokens.error(context),
+              ),
             ),
           Chip(
             visualDensity: VisualDensity.compact,
@@ -964,9 +1025,27 @@ class _VirtualUserTile extends StatelessWidget {
         readOnly: isReadOnly,
         decoration: InputDecoration(
           isDense: true,
-          border: InputBorder.none,
-          contentPadding: EdgeInsets.zero,
           hintText: l10n.aaVirtualUserNameHint,
+          hintStyle: TextStyle(
+            color: SpitoutTokens.textTertiary(context),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          // 与全局编辑框一致的色块样式(filled 背景 + 无描边圆角)
+          filled: true,
+          fillColor: SpitoutTokens.surfaceInput(context),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(8),
+            borderSide: BorderSide.none,
+          ),
         ),
         style: TextStyle(
           fontSize: 15,

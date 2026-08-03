@@ -203,7 +203,6 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
               ),
               decoration: InputDecoration(
                 hintText: 'ABC 123',
-                border: const OutlineInputBorder(),
                 counterText: '',
                 errorText: _error,
               ),

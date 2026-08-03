@@ -126,7 +126,7 @@ void main() {
   }
 
   // 本地 + 已登录 Spitout Cloud → 仅「移动到 Spitout Cloud」
-  testWidgets('本地账本 + Spitout Cloud:显示移动到云端,隐藏移动到本地/复制与成员管理',
+  testWidgets('本地账本 + Spitout Cloud:显示移动到云端,隐藏移动到本地/复制与邀请新成员',
       (tester) async {
     final ledger = await seed(isShared: false, isCloud: false);
     final l10n = await pump(tester, ledger,
@@ -134,8 +134,10 @@ void main() {
     expect(find.text(l10n.ledgersActionMoveToCloud), findsOneWidget);
     expect(find.text(l10n.ledgersActionMoveToLocal), findsNothing);
     expect(find.text(l10n.ledgersActionCopyToLocal), findsNothing);
-    // 本地账本无 syncId,成员管理不应出现(避免"请先启用云同步"死路)。
-    expect(find.text(l10n.sharedMembersPageTitle), findsNothing);
+    // 成员管理常驻显示(所有者信息 + AA 开关),但本地账本不支持协作邀请,
+    // 「邀请新成员」入口不渲染(避免点击后因同步层不会创建 syncId 而永久 loading)。
+    expect(find.text(l10n.sharedMembersPageTitle), findsOneWidget);
+    expect(find.text(l10n.sharedMembersInviteCta), findsNothing);
   });
 
   // 云端 + 非共享 + Spitout Cloud → 「移动到本地」+「复制到本地」
@@ -254,14 +256,17 @@ void main() {
           cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
-      // AA 分摊区块始终展示开关行,采用内化间距:其标题顶到
-      // 月起始日卡片底恰为 16px(标题上方 Padding(top:16),无外层独立 SizedBox)。
-      final aaTitleTop = titleTop(tester, l10n.ledgerAaEnabled);
-      expect(aaTitleTop - monthBottom, 16.0);
-      // 归属区有「存储位置」标题收纳,在 AA 区块之后;本地账本无成员管理,
-      // 归属区成为 AA 区块之后第一个可见区块,其标题顶必大于 AA 区块标题顶。
+      // 成员管理标题行(含 AA 开关)采用内化间距:其标题顶到
+      // 月起始日卡片底为 16px 区间(标题上方 Padding(top:16),无外层独立 SizedBox)。
+      // AA 开关已并入标题行,Switch 高度(24)使标题文本垂直居中,
+      // 故标题顶略大于 16 但远小于"孤儿间隙"的 32px 阈值。
+      final memberTitleTop = titleTop(tester, l10n.sharedMembersPageTitle);
+      expect(memberTitleTop - monthBottom, greaterThanOrEqualTo(16.0));
+      expect(memberTitleTop - monthBottom, lessThan(32.0));
+      // 归属区有「存储位置」标题收纳,在成员管理区之后;本地账本无邀请新成员,
+      // 归属区成为成员管理区之后第一个可见区块,其标题顶必大于成员管理标题顶。
       final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);
-      expect(storageTitleTop, greaterThan(aaTitleTop));
+      expect(storageTitleTop, greaterThan(memberTitleTop));
     });
 
     testWidgets('Spitout Cloud + 云端账本:两区皆展示,各自内化 16px',
@@ -274,17 +279,17 @@ void main() {
           cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
-      // AA 分摊区块始终展示,其标题顶到月起始日卡片底 = 16px(内化间距)。
-      final aaTitleTop = titleTop(tester, l10n.ledgerAaEnabled);
-      expect(aaTitleTop - monthBottom, 16.0);
-      // 成员区与归属区标题均在 Card 外,分别以各自标题顶为区块顶锚点。
-      final sharedTitleTop = titleTop(tester, l10n.sharedMembersPageTitle);
-      final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);
-      // 成员区在 AA 区块之后,其标题顶必大于 AA 区块标题顶。
-      expect(sharedTitleTop, greaterThan(aaTitleTop));
-      // 归属区在成员区之后,其顶部间距 = 成员区内容高度 + 自带的 16px,
+      // 成员管理标题行(含 AA 开关)采用内化间距:其标题顶到月起始日卡片底
+      // 在 16px 区间(标题上方 Padding(top:16))。
+      final memberTitleTop = titleTop(tester, l10n.sharedMembersPageTitle);
+      expect(memberTitleTop - monthBottom, greaterThanOrEqualTo(16.0));
+      expect(memberTitleTop - monthBottom, lessThan(32.0));
+      // AA 开关与「成员管理」标题同处一行,AA 文案必然出现在成员管理区。
+      expect(find.text(l10n.ledgerAaEnabled), findsOneWidget);
+      // 归属区标题在成员管理区之后,其顶部间距 = 成员区内容高度 + 自带的 16px,
       // 故必大于 16px(仅验证方向,不绑定成员区内容高度)。
-      expect(storageTitleTop - sharedTitleTop, greaterThan(16.0));
+      final storageTitleTop = titleTop(tester, l10n.ledgersStorageLocation);
+      expect(storageTitleTop - memberTitleTop, greaterThan(16.0));
     });
   });
 }

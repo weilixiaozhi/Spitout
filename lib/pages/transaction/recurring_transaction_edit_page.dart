@@ -127,7 +127,6 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                     controller: _amountController,
                     decoration: InputDecoration(
                       labelText: l10n.importFieldAmount,
-                      border: const OutlineInputBorder(),
                     ),
                     keyboardType: const TextInputType.numberWithOptions(decimal: true),
                     validator: (value) {
@@ -185,7 +184,6 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                     controller: _noteController,
                     decoration: InputDecoration(
                       labelText: l10n.commonNoteHint,
-                      border: const OutlineInputBorder(),
                     ),
                     maxLines: 3,
                   ),
@@ -214,7 +212,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.categoryTitle,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           errorText: _getCategoryErrorText(),
         ),
         child: Text(
@@ -232,7 +233,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.ledgerSelectTitle,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           errorText: _getLedgerErrorText(),
         ),
         child: FutureBuilder<Ledger?>(
@@ -333,7 +337,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionFrequency,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -393,7 +400,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionInterval,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -426,7 +436,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionDayOfMonth,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -451,7 +464,10 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       child: InputDecorator(
         decoration: InputDecoration(
           labelText: label,
-          border: const OutlineInputBorder(),
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(12),
+            borderSide: BorderSide.none,
+          ),
           suffixIcon: allowClear && date != null
               ? IconButton(
                   icon: const Icon(AppIcons.close),

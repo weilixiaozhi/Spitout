@@ -3,13 +3,15 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/identity/local_user_identity.dart';
 import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/statistics/record_history_providers.dart';
 import 'package:spitout/providers/providers.dart' show currentLedgerProvider, expenseColorSchemeProvider, ledgerVirtualUsersProvider;
+import 'package:spitout/providers/sync/cloud_client_providers.dart' show cloudCurrentUserProvider;
+import 'package:spitout/providers/ui/theme_providers.dart' show displayNameProvider;
+import 'package:spitout/core/identity/local_user_identity.dart' show localSelfIdProvider;
 import '../services/settlement/aa_settlement_service.dart' show AaMode;
 import '../theme/colors.dart';
 import 'category_icon.dart';
@@ -17,6 +19,8 @@ import 'currency_flag.dart';
 import 'app_sheet.dart';
 import 'format_money.dart';
 import 'amount_text.dart';
+import 'user_display_name_resolver.dart';
+import '../theme/icons/app_icons.dart';
 
 /// 记录详情 Bottom Sheet(对应设计稿"记录详情 Bottom Sheet")。
 ///
@@ -28,13 +32,21 @@ import 'amount_text.dart';
 ///
 /// [localOwnerDisplayName] 为本地账本场景下的昵称(取自 displayNameProvider,纯本地、
 /// 不依赖云端登录态),当 userId 不在成员表且本地昵称已设置时兜底展示昵称而非 id。
+///
+/// [aaEnabled] 账本是否开启分摊。开启时底部常驻「编辑分摊(左) + 编辑记账(右)」,
+/// 未开启时底部仅常驻「编辑记账」;删除 icon 始终置于右上角 trailing。
+///
+/// [onEditAa] 编辑分摊回调;仅 [aaEnabled] 为 true 时使用,跳 [AaEditPage]。
+/// 不分摊的交易也允许进入,默认选中不分摊,在页内可切到其他分摊方式。
 Future<void> showTransactionDetailSheet({
   required BuildContext context,
   required Transaction transaction,
   required Category? category,
   required Map<String, SpitoutCloudLedgerMember> memberDisplayMap,
   String? localOwnerDisplayName,
+  bool aaEnabled = false,
   required Future<void> Function() onEdit,
+  Future<void> Function()? onEditAa,
   required Future<void> Function() onDelete,
 }) {
   return showAppSheet<void>(
@@ -44,7 +56,9 @@ Future<void> showTransactionDetailSheet({
       category: category,
       memberDisplayMap: memberDisplayMap,
       localOwnerDisplayName: localOwnerDisplayName,
+      aaEnabled: aaEnabled,
       onEdit: onEdit,
+      onEditAa: onEditAa,
       onDelete: onDelete,
     ),
   );
@@ -55,7 +69,11 @@ class _TransactionDetailBody extends ConsumerWidget {
   final Category? category;
   final Map<String, SpitoutCloudLedgerMember> memberDisplayMap;
   final String? localOwnerDisplayName;
+  /// 账本是否开启分摊。决定底部按钮态(单/双)与右上角删除 icon 是否影响布局。
+  final bool aaEnabled;
   final Future<void> Function() onEdit;
+  /// 编辑分摊回调;仅 [aaEnabled] 为 true 时使用。
+  final Future<void> Function()? onEditAa;
   final Future<void> Function() onDelete;
 
   const _TransactionDetailBody({
@@ -63,52 +81,41 @@ class _TransactionDetailBody extends ConsumerWidget {
     required this.category,
     required this.memberDisplayMap,
     this.localOwnerDisplayName,
+    this.aaEnabled = false,
     required this.onEdit,
+    this.onEditAa,
     required this.onDelete,
   });
 
-  /// 展示名四级兜底:共享账本成员表(昵称 → 完整邮箱) → 本地昵称 → 原始 id。
-  /// 本地账本无成员表,靠 [localOwnerDisplayName] 展示昵称;未设置昵称时回退 id。
-  String _displayName(String? userId, AppLocalizations l10n) {
-    if (userId == null || userId.isEmpty) return '';
-    // 本地账本未登录云的自我占位:统一映射为本地昵称/「我」,禁止展示字面量 me。
-    if (userId == kLocalSelfUserId) {
-      final localName = localOwnerDisplayName?.trim() ?? '';
-      return localName.isNotEmpty ? localName : l10n.aaMe;
-    }
-    final member = memberDisplayMap[userId];
-    final memberName = member?.displayName?.trim() ?? '';
-    if (memberName.isNotEmpty) return memberName;
-    // 共享账本成员未设昵称:优先展示完整邮箱而非原始 id,与 AA 区/头像/成员统计口径一致
-    final memberEmail = member?.email.trim() ?? '';
-    if (memberEmail.isNotEmpty) return memberEmail;
-    final localName = localOwnerDisplayName?.trim() ?? '';
-    if (localName.isNotEmpty) return localName;
-    return userId;
-  }
-
+  /// 格式化日期时间为本地 yyyy-MM-dd HH:mm。
   String _fmt(DateTime dt) {
     final l = dt.toLocal();
     return '${l.year}-${l.month.toString().padLeft(2, '0')}-${l.day.toString().padLeft(2, '0')} '
         '${l.hour.toString().padLeft(2, '0')}:${l.minute.toString().padLeft(2, '0')}';
   }
 
-  /// 解析 AA 相关标识(真实成员 userId / 虚拟成员标识)为展示名。
-  /// 真实成员查 [memberDisplayMap],虚拟成员查 [virtualNames],兜底原始 id。
-  String _aaNameOf(
-      String? id, Map<String, String> virtualNames, AppLocalizations l10n) {
-    if (id == null || id.isEmpty) return l10n.aaUnknownUser;
-    // 本地账本未登录云的自我占位:统一映射为本地昵称/「我」,禁止展示字面量 me。
-    if (id == kLocalSelfUserId) {
-      final localName = localOwnerDisplayName?.trim() ?? '';
-      return localName.isNotEmpty ? localName : l10n.aaMe;
-    }
-    final m = memberDisplayMap[id];
-    if (m != null) {
-      final dn = m.displayName;
-      return (dn != null && dn.isNotEmpty) ? dn : m.email;
-    }
-    return virtualNames[id] ?? id;
+  /// 构建用户展示名解析器(同步读缓存值,sheet 打开时 provider 已就绪)。
+  ///
+  /// 统一解析 userId → 展示名,修复「同一账号在不同账本显示为 id/邮箱/昵称混用」:
+  /// memberDisplayMap → 当前登录用户(userId 命中 cloudUserId)→ localSelfId → 虚拟用户 → 兜底。
+  UserDisplayNameResolver _buildResolver(
+    WidgetRef ref,
+    AppLocalizations l10n,
+    Map<String, String> virtualNames,
+  ) {
+    // 同步读取缓存值:这些 provider 在 app 启动后早已解析,sheet 打开时必然命中缓存。
+    // 若极端情况下未就绪(首次启动极早期),asData?.value 返回 null,解析器走兜底逻辑。
+    final localSelfId = ref.read(localSelfIdProvider).asData?.value ?? '';
+    final currentUser = ref.read(cloudCurrentUserProvider).asData?.value;
+    final localName = localOwnerDisplayName ?? ref.read(displayNameProvider);
+    return UserDisplayNameResolver(
+      memberDisplayMap: memberDisplayMap,
+      localOwnerDisplayName: localName,
+      localSelfId: localSelfId,
+      currentUser: currentUser,
+      virtualNames: virtualNames,
+      l10n: l10n,
+    );
   }
 
   /// 解析 aaParticipants(JSON 数组字符串);空 / 解析失败返回 null(全部成员)。
@@ -137,15 +144,24 @@ class _TransactionDetailBody extends ConsumerWidget {
   /// AA 分摊明细区块(人均 / 指定两种样式;不分摊仅标注)。
   ///
   /// 仅账本开启 AA 时由调用方渲染;aaMode=null 按人均展示(向后兼容)。
-  List<Widget> _buildAaSection(BuildContext context, AppLocalizations l10n,
-      Transaction t, Map<String, String> virtualNames) {
+  /// [resolver] 统一解析参与人标识为展示名。
+  List<Widget> _buildAaSection(
+    BuildContext context,
+    AppLocalizations l10n,
+    Transaction t,
+    UserDisplayNameResolver resolver,
+  ) {
     final mode = AaMode.fromDb(t.aaMode);
     final currency =
         t.currencyCode?.trim().isNotEmpty == true ? t.currencyCode! : 'CNY';
     final widgets = <Widget>[
       const _Divider(),
       _SectionLabel(text: l10n.aaSplitMode),
-      _InfoRow(label: l10n.aaPayer, value: _aaNameOf(t.paidByUserId, virtualNames, l10n)),
+      _InfoRow(
+          label: l10n.aaPayer,
+          value: resolver.resolve(t.paidByUserId).isEmpty
+              ? l10n.aaUnknownUser
+              : resolver.resolve(t.paidByUserId)),
     ];
     if (mode == AaMode.noSplit) {
       // 不分摊模式:分摊方式展示「不分摊」(与编辑页/列表页展示值保持一致)。
@@ -161,8 +177,9 @@ class _TransactionDetailBody extends ConsumerWidget {
       // 指定分摊:逐人金额(aaSplits 的 key = 参与人标识)
       final splits = _parseAaSplits(t.aaSplits);
       for (final e in splits.entries) {
+        final name = resolver.resolve(e.key);
         widgets.add(_InfoRow(
-          label: _aaNameOf(e.key, virtualNames, l10n),
+          label: name.isEmpty ? l10n.aaUnknownUser : name,
           value: formatMoneyWithCurrency(double.tryParse(e.value) ?? 0,
               currencyCode: currency),
         ));
@@ -174,7 +191,10 @@ class _TransactionDetailBody extends ConsumerWidget {
         label: l10n.aaParticipants,
         value: ids == null
             ? l10n.aaParticipantsAll
-            : ids.map((id) => _aaNameOf(id, virtualNames, l10n)).join('、'),
+            : ids.map((id) {
+                final name = resolver.resolve(id);
+                return name.isEmpty ? l10n.aaUnknownUser : name;
+              }).join('、'),
       ));
     }
     return widgets;
@@ -186,8 +206,73 @@ class _TransactionDetailBody extends ConsumerWidget {
     final t = transaction;
     final historyAsync = ref.watch(recordEditHistoryProvider(t.id));
     final categoryName = category?.name ?? l10n.homeDetailCategory;
+    // 账本是否开启分摊由调用方传入,详情 sheet 不再重复读取账本 provider,
+    // 避免与首页/分类详情页的口径分歧;AA 区块的展示仍按当前交易分摊态渲染。
+    final aaOn = aaEnabled;
+
+    // 虚拟成员 标识→名称;真实成员走 memberDisplayMap。
+    final virtualNames = <String, String>{
+      for (final v in ref
+              .watch(ledgerVirtualUsersProvider(t.ledgerId))
+              .valueOrNull ??
+          const [])
+        v.syncId ?? 'vu_${v.id}': v.name,
+    };
+    // 统一展示名解析器:修复 id/邮箱/昵称混用,统一走 memberDisplayMap→
+    // 当前登录用户→localSelfId→虚拟用户→兜底。
+    final resolver = _buildResolver(ref, l10n, virtualNames);
 
     return AppSheet(
+      // 右上角常驻删除 icon:吸顶始终可见,与底部按钮(编辑分摊/编辑记账)分离,
+      // 避免底部双按钮挤压删除可用区域;图标色用 error token 与文案按钮保持一致语义。
+      trailing: _DeleteTrailingIcon(onTap: () async {
+        Navigator.pop(context);
+        await onDelete();
+      }),
+      // 底部按钮区:开启分摊 → 「编辑分摊(左) + 编辑记账(右)」;
+      // 未开启 → 仅「编辑记账」单按钮全宽常驻。删除已上移到 trailing,不再占底部。
+      footer: aaOn
+          ? Row(children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await onEditAa?.call();
+                  },
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(12)),
+                  ),
+                  child: Text(l10n.aaEditSplitButton),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: FilledButton(
+                  onPressed: () async {
+                    Navigator.pop(context);
+                    await onEdit();
+                  },
+                  style: FilledButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12))),
+                  child: Text(l10n.homeDetailEditButton),
+                ),
+              ),
+            ])
+          : FilledButton(
+              onPressed: () async {
+                Navigator.pop(context);
+                await onEdit();
+              },
+              style: FilledButton.styleFrom(
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12))),
+              child: Text(l10n.homeDetailEditButton),
+            ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -278,20 +363,12 @@ class _TransactionDetailBody extends ConsumerWidget {
                 // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
                 value: '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
           // 2.5 AA 分摊明细(仅账本开启 AA 时展示,功能隔离)
-          if (ref.watch(currentLedgerProvider).valueOrNull?.aaEnabled ??
-              false)
+          if (aaOn)
             ..._buildAaSection(
               context,
               l10n,
               t,
-              // 虚拟成员 标识→名称;真实成员走 memberDisplayMap
-              <String, String>{
-                for (final v in ref
-                        .watch(ledgerVirtualUsersProvider(t.ledgerId))
-                        .valueOrNull ??
-                    const [])
-                  v.syncId ?? 'vu_${v.id}': v.name,
-              },
+              resolver,
             ),
           // 3. 协作成员(共享账本才显示:有 createdBy/lastEditedBy 时)
           if (t.createdByUserId != null || t.lastEditedByUserId != null) ...[
@@ -300,11 +377,11 @@ class _TransactionDetailBody extends ConsumerWidget {
             if (t.createdByUserId != null)
               _MemberRow(
                   label: l10n.homeDetailCreator,
-                  name: _displayName(t.createdByUserId, l10n)),
+                  name: resolver.resolve(t.createdByUserId)),
             if (t.lastEditedByUserId != null)
               _MemberRow(
                   label: l10n.homeDetailLastEditor,
-                  name: _displayName(t.lastEditedByUserId, l10n),
+                  name: resolver.resolve(t.lastEditedByUserId),
                   subtext: t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
           ],
           // 4. 编辑记录(仅供查看)
@@ -331,7 +408,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                 : Column(
                     children: [
                       for (final e in h)
-                        _HistoryRow(e, (id) => _displayName(id, l10n))
+                        _HistoryRow(e, (id) => resolver.resolve(id))
                     ]),
             loading: () => const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
@@ -348,41 +425,34 @@ class _TransactionDetailBody extends ConsumerWidget {
                         color: SpitoutTokens.textTertiary(context)))),
           ),
           const SizedBox(height: 16),
-          // 5. 底部:删除 + 编辑按钮
-          Row(children: [
-            Expanded(
-              child: OutlinedButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await onDelete();
-                },
-                style: OutlinedButton.styleFrom(
-                    foregroundColor: SpitoutTokens.error(context),
-                    side: BorderSide(
-                        color: SpitoutTokens.error(context).withValues(alpha: 0.4)),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                child: Text(l10n.commonDelete),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: FilledButton(
-                onPressed: () async {
-                  Navigator.pop(context);
-                  await onEdit();
-                },
-                style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
-                child: Text(l10n.homeDetailEditButton),
-              ),
-            ),
-          ]),
         ],
       ),
+    );
+  }
+}
+
+/// 右上角删除 icon。吸顶常驻,色用 error token,语义与文案删除按钮一致。
+///
+/// 设计意图:删除从底部按钮区上移,腾出底部空间给「编辑分摊/编辑记账」双按钮;
+/// icon 形式更轻量,不抢底部主操作焦点,符合"删除是次要操作"的语义层级。
+class _DeleteTrailingIcon extends StatelessWidget {
+  final Future<void> Function() onTap;
+  const _DeleteTrailingIcon({required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: () => onTap(),
+      icon: Icon(
+        AppIcons.delete,
+        size: 20,
+        color: SpitoutTokens.error(context),
+      ),
+      // 收紧尺寸:与其他 sheet 顶部 trailing 一致(32px 行高),
+      // 不撑大标题栏高度。
+      constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+      padding: EdgeInsets.zero,
+      tooltip: AppLocalizations.of(context).commonDelete,
     );
   }
 }

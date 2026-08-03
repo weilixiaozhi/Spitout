@@ -728,24 +728,12 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
                               ),
                             )
                           : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: SpitoutTokens.border(context),
-                        ),
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                        ),
-                      ),
                       contentPadding: const EdgeInsets.symmetric(
                         vertical: 12,
                         horizontal: 16,
                       ),
                       filled: true,
-                      fillColor: SpitoutTokens.surface(context),
+                      fillColor: SpitoutTokens.surfaceInput(context),
                     ),
                   ),
                 ],

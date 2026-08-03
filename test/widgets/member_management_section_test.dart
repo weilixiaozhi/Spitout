@@ -69,6 +69,7 @@ Future<void> _pump(
               isReadOnly: false,
               pendingVirtualUsers: const [],
               onPendingVirtualUsersChanged: (_) {},
+              showInviteEntry: true,
             ),
           ),
         ),
@@ -91,6 +92,9 @@ void main() {
     expect(find.text('角色'), findsNothing);
     expect(find.text('有效期'), findsNothing);
     expect(find.text('生成邀请码'), findsNothing);
+    // 收起态箭头朝右(chevronRight)
+    expect(find.byIcon(AppIcons.chevronRight), findsOneWidget);
+    expect(find.byIcon(AppIcons.chevronDown), findsNothing);
 
     // 点击标题展开:角色 / 有效期 / 生成按钮直接可见,无需跳页
     await tester.tap(find.text('邀请新成员'));
@@ -100,7 +104,8 @@ void main() {
     expect(find.text('生成邀请码'), findsOneWidget);
     // 1 个角色 chip + 3 个有效期 chip
     expect(find.byType(ChoiceChip), findsNWidgets(4));
-    // 模块内无跳转箭头(chevronRight)
+    // 展开态箭头朝下(chevronDown),不再有朝右箭头
+    expect(find.byIcon(AppIcons.chevronDown), findsOneWidget);
     expect(find.byIcon(AppIcons.chevronRight), findsNothing);
   });
 
@@ -166,6 +171,7 @@ void main() {
                 isReadOnly: false,
                 pendingVirtualUsers: const [],
                 onPendingVirtualUsersChanged: (_) {},
+                showInviteEntry: true,
               ),
             ),
           ),
@@ -188,5 +194,84 @@ void main() {
 
     // 失败日志的 LoggerService debounce 定时器推进掉，避免 pending timer
     await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('本地账本(showInviteEntry=false)不渲染邀请新成员入口', (tester) async {
+    // 本地账本不支持协作邀请:点击会因同步层不会创建 syncId 而陷入永久 loading,
+    // 故 showInviteEntry=false 时整个邀请模块不应渲染。
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          spitoutCloudProviderInstance.overrideWith((ref) async => null),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MemberManagementSection(
+                // 无 syncId 模拟本地账本
+                ledgerExternalId: null,
+                ledgerName: '本地账本',
+                ledgerId: 1,
+                aaEnabled: false,
+                onAaChanged: (_) {},
+                isReadOnly: false,
+                pendingVirtualUsers: const [],
+                onPendingVirtualUsersChanged: (_) {},
+                // 本地账本不展示邀请入口
+                showInviteEntry: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // 成员管理标题常驻显示,但邀请新成员入口不渲染
+    expect(find.text('成员管理'), findsOneWidget);
+    expect(find.text('邀请新成员'), findsNothing);
+    expect(find.text('生成邀请码'), findsNothing);
+  });
+
+  testWidgets('AA 分摊开关位于成员管理标题行(文字+开关)', (tester) async {
+    // AA 开关不再作为卡片内 SwitchListTile,而是并入标题行(文字+紧凑 Switch)。
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          spitoutCloudProviderInstance.overrideWith((ref) async => null),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MemberManagementSection(
+                ledgerExternalId: null,
+                ledgerName: '测试账本',
+                ledgerId: 1,
+                aaEnabled: false,
+                onAaChanged: (_) {},
+                isReadOnly: false,
+                pendingVirtualUsers: const [],
+                onPendingVirtualUsersChanged: (_) {},
+                showInviteEntry: false,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    // AA 分摊文案与开关均出现在标题行(与「成员管理」同处一行)
+    expect(find.text('成员管理'), findsOneWidget);
+    expect(find.text('AA 分摊'), findsOneWidget);
+    expect(find.byType(Switch), findsOneWidget);
+    // 不再使用 SwitchListTile(卡片内独立一行)
+    expect(find.byType(SwitchListTile), findsNothing);
   });
 }

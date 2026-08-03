@@ -196,9 +196,6 @@ class _Login2FAChallengeDialogState
                     ? l10n.twofaTotpInputPlaceholder
                     : l10n.twofaRecoveryInputPlaceholder,
                 hintStyle: hintStyle,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
                 contentPadding: const EdgeInsets.symmetric(
                     horizontal: 12, vertical: 14),
               ),

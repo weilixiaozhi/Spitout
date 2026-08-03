@@ -124,6 +124,40 @@ class SpitoutTheme {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         margin: EdgeInsets.zero,
       ),
+      // 全局输入框主题：色块样式（filled 背景 + 无描边圆角），
+      // 替代原先各处散用的 OutlineInputBorder 描边样式，统一视觉。
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: SpitoutColors.lightInputBg,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: SpitoutColors.errorLight,
+            width: 1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: SpitoutColors.errorLight,
+            width: 1,
+          ),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      ),
     );
   }
 
@@ -240,6 +274,40 @@ class SpitoutTheme {
       dividerTheme: DividerThemeData(
         color: SpitoutColors.darkBorder.withValues(alpha: 0.10),
         thickness: 1,
+      ),
+      // 全局输入框主题：色块样式（filled 背景 + 无描边圆角），
+      // 替代原先各处散用的 OutlineInputBorder 描边样式，统一视觉。
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: SpitoutColors.darkSurfaceSecondary,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide.none,
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: SpitoutColors.errorDark,
+            width: 1,
+          ),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: BorderSide(
+            color: SpitoutColors.errorDark,
+            width: 1,
+          ),
+        ),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       ),
       iconTheme: const IconThemeData(
         color: SpitoutColors.darkTextPrimary,

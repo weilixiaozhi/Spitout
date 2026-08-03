@@ -222,7 +222,6 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                             controller: _nameController,
                             decoration: InputDecoration(
                               hintText: l10n.categoryNameHint,
-                              border: const OutlineInputBorder(),
                               errorText: _duplicateErrorMessage,
                             ),
                             maxLength: 10,

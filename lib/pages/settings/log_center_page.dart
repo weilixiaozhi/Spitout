@@ -121,9 +121,6 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                         },
                       )
                     : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8.0),
-                ),
                 contentPadding: EdgeInsets.symmetric(
                   horizontal: 12.0,
                   vertical: 8.0,

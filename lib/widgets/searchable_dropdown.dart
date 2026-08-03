@@ -111,12 +111,6 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
                     decoration: InputDecoration(
                       hintText: '搜索...',
                       prefixIcon: const Icon(AppIcons.search),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.outline.withValues(alpha: 0.3),
-                        ),
-                      ),
                       isDense: true,
                       contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     ),

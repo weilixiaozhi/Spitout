@@ -13,6 +13,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
+import 'package:spitout/services/data/tx_author_service.dart';
 import '../../data/models.dart';
 import '../../routes.dart';
 import '../../widgets/widgets.dart';
@@ -45,6 +47,10 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   int _monthStartDay = 1;
   bool _saving = false;
   bool _initialized = false;
+
+  /// 邀请流程中已自动创建的账本 id:新建态点击「邀请新成员」会先保存账本,
+  /// 之后用户再点保存按钮时复用该 id 更新,避免同一会话创建多本账本。
+  int? _inviteCreatedLedgerId;
 
   /// AA 分摊开关(新建/编辑态,随「保存」落库;跨设备同步)。
   ///
@@ -246,7 +252,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
                       controller: _nameController,
                       decoration: InputDecoration(
                         hintText: l10n.ledgerNameHint,
-                        border: const OutlineInputBorder(),
                       ),
                       validator: (value) {
                         if (value == null || value.trim().isEmpty) {
@@ -470,6 +475,14 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
                 ..clear()
                 ..addAll(list),
             ),
+            // 邀请入口展示判断:
+            // - 新建态:展示(点击自动保存账本拿 syncId 后进入正式邀请);
+            // - 云端账本(isCloudLedger):展示;
+            // - 本地账本(已存在、storageMode=local):不展示(本地账本不支持
+            //   协作邀请,点击会因同步层不会创建 syncId 而陷入永久 loading)。
+            showInviteEntry: _isCreating || (ledger?.isCloudLedger ?? false),
+            // 无 syncId 时点击「邀请新成员」自动保存/同步拿 syncId,不拦截。
+            onInviteWithoutSyncId: _ensureSyncIdForInvite,
           ),
           // 成员支出常驻显示：新建态 / 本地账本(无 syncId)时数据归 0 空态，
           // 无需跟随云端。模块自带标题与"分摊结算"入口（跟随 AA 开关显示）。
@@ -739,7 +752,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   /// 原因：用户新建后可能极快退出，此时 mounted 变 false，若用 ref 执行会被
   /// `if (!mounted) return` 整段跳过 —— 表现为「首快照没发 + 首本账本没被选中
   /// + 账本列表不刷新」。mounted 守卫只保留给真正需要 BuildContext 的 UI 反馈。
-  Future<void> _saveNewLedger(String name) async {
+  Future<int?> _saveNewLedger(String name) async {
     // 必须在任何 await 之前捕获：此刻由按钮回调同步进入，context 必然有效。
     final container = ProviderScope.containerOf(context, listen: false);
     final repo = ref.read(repositoryProvider);
@@ -750,11 +763,43 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 二次夹紧：未登录 Spitout Cloud 时无论 UI 状态如何都只能建本地账本，
     // 否则会造出"标了 cloud 却没有云端副本"的孤儿账本。
     final storageMode = isSpitoutCloud ? _effectiveStorageMode(true) : 'local';
-    final newLedgerId = await repo.createLedger(
-      name: name,
-      currency: _currency,
-      storageMode: storageMode,
-    );
+    // 防重复：邀请流程已自动创建过账本时(见 _ensureSyncIdForInvite),复用其
+    // id 更新而非再次创建,避免同一会话产生多本账本。
+    final int newLedgerId;
+    if (_inviteCreatedLedgerId != null) {
+      newLedgerId = _inviteCreatedLedgerId!;
+      // 复用已创建账本时同步当前表单的名称与币种,保证后续保存一致。
+      await repo.updateLedger(
+        id: newLedgerId,
+        name: name,
+        currency: _currency,
+      );
+    } else {
+      // 解析账本所有者身份:已登录取云 userId,未登录取 localSelfId。
+      // localSelfIdProvider 首次调用会生成并持久化 UUID,此后稳定不变。
+      // 仅 SpitoutCloud 后端才读 cloud userId;其他后端(webdav/s3/supabase)
+      // 无云身份概念,直接用 localSelfId,避免无谓的 provider 初始化报错。
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      String? cloudUserId;
+      try {
+        final backendType = ref.read(currentCloudBackendTypeProvider);
+        if (backendType == CloudBackendType.spitoutCloud) {
+          final cloud = await ref.read(spitoutCloudProviderInstance.future);
+          cloudUserId = await TxAuthorService.currentUserId(cloud);
+        }
+      } catch (e) {
+        // cloud 不可用,降级 localSelfId(未登录建账本场景)。
+        cloudUserId = null;
+      }
+      final ownerUserId = cloudUserId ?? localSelfId;
+      newLedgerId = await repo.createLedger(
+        name: name,
+        currency: _currency,
+        storageMode: storageMode,
+        ownerUserId: ownerUserId,
+      );
+      _inviteCreatedLedgerId = newLedgerId;
+    }
 
     // 创建时选了非 1 的起始日 → 补写
     if (_monthStartDay != 1) {
@@ -770,6 +815,8 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     for (final vu in _pendingVirtualUsers) {
       await repo.create(ledgerId: newLedgerId, name: vu.name);
     }
+    // 落库完成后清空内存暂存,避免「邀请自动保存后再点保存」重复创建虚拟用户。
+    _pendingVirtualUsers.clear();
 
     // 同步触发已完全响应式化(规则4):createLedger 在数据层同事务登记变更信号
     // —— Spitout Cloud 写 local_changes(SyncCoordinator 监听)、快照型后端写
@@ -787,8 +834,72 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     container.read(ledgerListRefreshProvider.notifier).state++;
 
     // 仅 UI 反馈需要 mounted
-    if (!mounted) return;
+    if (!mounted) return newLedgerId;
     showToast(context, AppLocalizations.of(context).ledgersCreateSuccess);
+    return newLedgerId;
+  }
+
+  /// 邀请新成员前置:确保账本已有云端副本(syncId)。
+  ///
+  /// 无 syncId(新建态/本地账本)时,点击邀请入口自动保存账本并触发同步上云,
+  /// 等待云端账本创建完成拿到 syncId 后由子组件进入正式邀请流程,期间子组件
+  /// 展示 loading,不做入口拦截;云端副本暂未就绪时仅兜底提示,不阻断页面。
+  Future<void> _ensureSyncIdForInvite() async {
+    final l10n = AppLocalizations.of(context);
+    try {
+      // 已有云端副本,直接可邀请。
+      if (_syncId != null && _syncId!.isNotEmpty) return;
+
+      int ledgerId;
+      if (_isCreating) {
+        // 新建态:名称必填(表单校验失败会就地提示),先保存账本再等上云。
+        if (!_formKey.currentState!.validate()) return;
+        final name = _nameController.text.trim();
+        if (name.isEmpty) return;
+        final created = await _saveNewLedger(name);
+        if (created == null) return;
+        ledgerId = created;
+      } else {
+        // 本地账本:触发一次同步上云(推送会创建云端副本并写回 syncId)。
+        ledgerId = widget.ledger!.id;
+        final container = ProviderScope.containerOf(context, listen: false);
+        try {
+          await PostProcessor.syncC(container, ledgerId: ledgerId);
+        } catch (e) {
+          // 同步触发失败不致命:继续等待,超时兜底提示。
+          logger.warning('LedgerEditPage', '邀请前触发同步失败(继续等待): $e');
+        }
+      }
+
+      // 轮询本地库,等待同步层将 syncId 写回(上云完成)。
+      final syncId = await _waitForSyncId(ledgerId);
+      if (!mounted) return;
+      if (syncId != null && syncId.isNotEmpty) {
+        setState(() => _syncId = syncId);
+      } else {
+        // 超时兜底:账本本身已保存成功,仅提示云端副本暂未就绪,不拦截页面。
+        showToast(context, l10n.sharedMembersInviteSyncFailed);
+      }
+    } catch (e) {
+      logger.warning('LedgerEditPage', '邀请前保存/同步失败: $e');
+      if (mounted) showToast(context, '$e');
+    }
+  }
+
+  /// 轮询本地库直到账本被同步层写回 syncId(上云完成),带超时兜底。
+  Future<String?> _waitForSyncId(
+    int ledgerId, {
+    Duration timeout = const Duration(seconds: 30),
+  }) async {
+    final repo = ref.read(repositoryProvider);
+    final deadline = DateTime.now().add(timeout);
+    while (DateTime.now().isBefore(deadline)) {
+      final data = await repo.getLedgerById(ledgerId);
+      final syncId = data?.syncId;
+      if (syncId != null && syncId.isNotEmpty) return syncId;
+      await Future.delayed(const Duration(milliseconds: 400));
+    }
+    return null;
   }
 
   /// 编辑账本
