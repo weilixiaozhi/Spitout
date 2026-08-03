@@ -14,6 +14,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import '../../data/models.dart';
+import '../../routes.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
 import '../../core/logging/logger_service.dart';
@@ -44,6 +45,13 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   int _monthStartDay = 1;
   bool _saving = false;
   bool _initialized = false;
+
+  /// AA 分摊开关(编辑态,随「保存」落库;跨设备同步)。
+  bool _aaEnabled = false;
+
+  /// 已落库的 AA 开关值。「查看分摊结算 / 管理虚拟用户」入口按此值展示,
+  /// 避免用户刚打开开关(未保存)就跳到与实际数据不符的页面(§6.5)。
+  bool _aaEnabledSaved = false;
 
   /// 当前账本的云端 external_id(本地 syncId),成员协作模块的数据源标识;
   /// 仅编辑模式异步加载,本地账本 / 未同步账本为 null。
@@ -99,6 +107,8 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           _currency = data.currency;
           _monthStartDay = data.monthStartDay;
           _syncId = data.syncId;
+          _aaEnabled = data.aaEnabled;
+          _aaEnabledSaved = data.aaEnabled;
           _initialized = true;
         });
       }
@@ -344,7 +354,11 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             ),
           ),
 
-          // ── 4. 新建模式的账本归属选择 ──
+          // ── 4. AA 分摊(开关 + 分摊设置入口) ──
+          const SizedBox(height: 16),
+          _buildAaSection(context, l10n),
+
+          // ── 5. 新建模式的账本归属选择 ──
           if (_isCreating) ...[
             const SizedBox(height: 16),
             _buildStorageModeSelector(context, l10n),
@@ -364,6 +378,89 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           ],
         ],
       ),
+    );
+  }
+
+  /// AA 分摊设置模块(文档 §6.5)。
+  ///
+  /// 结构:开关行(随「保存」落库,与其他账本元信息同一保存语义)+
+  /// 编辑模式且 AA 已生效时的「查看分摊结算 / 管理虚拟用户」入口。
+  /// 入口按 [_aaEnabledSaved](已落库值)展示,与 §6.7「关闭后入口隐藏」一致。
+  Widget _buildAaSection(BuildContext context, AppLocalizations l10n) {
+    final readOnlyColor = _isReadOnly ? Theme.of(context).disabledColor : null;
+    // 分摊结算页按「当前账本」取数,仅编辑当前账本时展示入口,
+    // 避免从非当前账本跳入看到另一本账的结算数据。
+    final isCurrentLedger =
+        _isEditing && widget.ledger!.id == ref.watch(currentLedgerIdProvider);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        _buildSectionTitle(context, l10n.ledgerAaEnabled,
+            disabled: _isReadOnly),
+        const SizedBox(height: 8),
+        Card(
+          child: Column(
+            children: [
+              SwitchListTile(
+                contentPadding:
+                    const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                title: Text(
+                  l10n.ledgerAaEnabled,
+                  style: Theme.of(context)
+                      .textTheme
+                      .bodyLarge
+                      ?.copyWith(color: readOnlyColor),
+                ),
+                subtitle: Text(
+                  l10n.ledgerAaEnabledHint,
+                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: SpitoutTokens.textTertiary(context),
+                      ),
+                ),
+                value: _aaEnabled,
+                // 协作者只读:与其他账本元信息一致,禁用开关(onChanged=null 灰化)
+                onChanged: _isReadOnly
+                    ? null
+                    : (v) => setState(() => _aaEnabled = v),
+              ),
+              if (_isEditing && _aaEnabledSaved) ...[
+                if (isCurrentLedger) ...[
+                  Divider(height: 1, color: SpitoutTokens.divider(context)),
+                  ListTile(
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                    leading: Icon(AppIcons.pieChart,
+                        size: 20,
+                        color: SpitoutTokens.iconSecondary(context)),
+                    title: Text(l10n.ledgerAaSettlementEntry),
+                    trailing: Icon(AppIcons.chevronRight,
+                        size: 16,
+                        color: SpitoutTokens.iconTertiary(context)),
+                    onTap: () =>
+                        Navigator.of(context).pushNamed(Routes.aaSettlement),
+                  ),
+                ],
+                Divider(height: 1, color: SpitoutTokens.divider(context)),
+                ListTile(
+                  contentPadding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  leading: Icon(AppIcons.people,
+                      size: 20,
+                      color: SpitoutTokens.iconSecondary(context)),
+                  title: Text(l10n.ledgerAaVirtualUsersEntry),
+                  trailing: Icon(AppIcons.chevronRight,
+                      size: 16,
+                      color: SpitoutTokens.iconTertiary(context)),
+                  onTap: () => showVirtualUserManageSheet(
+                    context,
+                    ledgerId: widget.ledger!.id,
+                  ),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 
@@ -740,6 +837,10 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     if (_monthStartDay != 1) {
       await repo.updateLedger(id: newLedgerId, monthStartDay: _monthStartDay);
     }
+    // 创建时开启了 AA 分摊 → 补写开关(默认 false,跨设备同步)
+    if (_aaEnabled) {
+      await repo.updateLedger(id: newLedgerId, aaEnabled: true);
+    }
 
     // 同步触发已完全响应式化(规则4):createLedger 在数据层同事务登记变更信号
     // —— Spitout Cloud 写 local_changes(SyncCoordinator 监听)、快照型后端写
@@ -792,16 +893,21 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       if (!applied || !mounted) return;
     }
 
-    // 名称/起始日变更
+    // 名称/起始日/AA 开关变更
     final nameChanged = name != ledgerData.name;
     final startDayChanged = _monthStartDay != ledgerData.monthStartDay;
-    if (!nameChanged && !startDayChanged && !currencyChanged) return;
+    final aaChanged = _aaEnabled != ledgerData.aaEnabled;
+    if (!nameChanged && !startDayChanged && !currencyChanged && !aaChanged) {
+      return;
+    }
 
-    if (nameChanged || startDayChanged) {
+    if (nameChanged || startDayChanged || aaChanged) {
       await repo.updateLedger(
         id: ledger.id,
         name: name,
         monthStartDay: _monthStartDay,
+        // 未变更时传 null = 不更新(updateLedger 语义)
+        aaEnabled: aaChanged ? _aaEnabled : null,
       );
     }
 
