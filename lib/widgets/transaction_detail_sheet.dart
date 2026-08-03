@@ -24,11 +24,15 @@ import 'amount_text.dart';
 ///
 /// [memberDisplayMap] 由调用方从 ledgerMembersProvider 构建(userId→SpitoutCloudLedgerMember),
 /// 用于协作成员区块与编辑历史的操作者展示。
+///
+/// [localOwnerDisplayName] 为本地账本场景下的昵称(取自 displayNameProvider,纯本地、
+/// 不依赖云端登录态),当 userId 不在成员表且本地昵称已设置时兜底展示昵称而非 id。
 Future<void> showTransactionDetailSheet({
   required BuildContext context,
   required Transaction transaction,
   required Category? category,
   required Map<String, SpitoutCloudLedgerMember> memberDisplayMap,
+  String? localOwnerDisplayName,
   required Future<void> Function() onEdit,
   required Future<void> Function() onDelete,
 }) {
@@ -38,6 +42,7 @@ Future<void> showTransactionDetailSheet({
       transaction: transaction,
       category: category,
       memberDisplayMap: memberDisplayMap,
+      localOwnerDisplayName: localOwnerDisplayName,
       onEdit: onEdit,
       onDelete: onDelete,
     ),
@@ -48,6 +53,7 @@ class _TransactionDetailBody extends ConsumerWidget {
   final Transaction transaction;
   final Category? category;
   final Map<String, SpitoutCloudLedgerMember> memberDisplayMap;
+  final String? localOwnerDisplayName;
   final Future<void> Function() onEdit;
   final Future<void> Function() onDelete;
 
@@ -55,14 +61,20 @@ class _TransactionDetailBody extends ConsumerWidget {
     required this.transaction,
     required this.category,
     required this.memberDisplayMap,
+    this.localOwnerDisplayName,
     required this.onEdit,
     required this.onDelete,
   });
 
+  /// 展示名三级兜底:共享账本成员表 → 本地昵称 → 原始 id。
+  /// 本地账本无成员表,靠 [localOwnerDisplayName] 展示昵称;未设置昵称时回退 id。
   String _displayName(String? userId) {
     if (userId == null || userId.isEmpty) return '';
-    // 成员表类型为 SpitoutCloudLedgerMember,这里取真实 displayName
-    return memberDisplayMap[userId]?.displayName ?? userId;
+    final memberName = memberDisplayMap[userId]?.displayName?.trim() ?? '';
+    if (memberName.isNotEmpty) return memberName;
+    final localName = localOwnerDisplayName?.trim() ?? '';
+    if (localName.isNotEmpty) return localName;
+    return userId;
   }
 
   String _fmt(DateTime dt) {

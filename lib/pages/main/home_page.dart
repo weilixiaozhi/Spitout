@@ -1186,6 +1186,10 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
               transaction: tx,
               category: cat,
               memberDisplayMap: memberMap ?? const {},
+              // 本地账本无成员表:传本地昵称供详情页兜底展示(纯本地,不依赖云端登录态)
+              localOwnerDisplayName: (ledger?.isShared ?? false)
+                  ? null
+                  : ref.read(displayNameProvider),
               onEdit: () => widget.onEdit(tx, cat),
               onDelete: () => widget.onDelete(tx),
             );

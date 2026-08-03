@@ -121,6 +121,9 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
         memberMap = {for (final m in members) m.userId: m};
       }
     }
+    // 本地账本无成员表:取本地昵称供详情页兜底展示(纯本地,不依赖云端登录态)
+    final localOwnerName =
+        (ledger?.isShared ?? false) ? null : ref.read(displayNameProvider);
 
     return Scaffold(
       body: Column(
@@ -152,7 +155,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   child: filteredTransactionsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
                     error: (error, stack) => Center(child: Text('${AppLocalizations.of(context).categoryDetailLoadFailed}: $error')),
-                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap),
+                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap, localOwnerName),
                   ),
                 ),
               ],
@@ -314,6 +317,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
     SortType currentSortType,
     Map<int, db.Category> categoryMap,
     Map<String, SpitoutCloudLedgerMember> memberMap,
+    String? localOwnerName,
   ) {
     if (transactions.isEmpty) {
       return AppEmpty(
@@ -445,6 +449,8 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                 transaction: transaction,
                 category: cat,
                 memberDisplayMap: memberMap,
+                // 本地账本无成员表:传本地昵称供详情页兜底展示(纯本地,不依赖云端登录态)
+                localOwnerDisplayName: localOwnerName,
                 onEdit: () => TransactionEditUtils.editTransaction(
                   context,
                   ref,
