@@ -56,7 +56,7 @@ void main() {
 
   group('transaction AA 字段 apply', () {
     test('远端 upsert 携带 AA 字段 → 本地正确写入', () async {
-      final lid = await seedLedger();
+      await seedLedger();
       const txSyncId = 'tx-aa-1';
 
       provider.pushFakeChange(
