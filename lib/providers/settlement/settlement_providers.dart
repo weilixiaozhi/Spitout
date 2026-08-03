@@ -17,8 +17,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging/logger_service.dart';
 import '../../data/db.dart';
 import '../../providers/core/database_providers.dart';
+import '../../providers/sync/cloud_client_providers.dart';
 import '../../providers/sync/shared_ledger_providers.dart';
 import '../../providers/sync/sync_state_providers.dart';
+import '../../services/data/tx_author_service.dart';
 import '../../services/settlement/aa_edit_models.dart';
 import '../../services/settlement/aa_settlement_service.dart';
 
@@ -115,6 +117,10 @@ Future<void> deleteVirtualUser(WidgetRef ref, int id) async {
 /// 标识口径与 [aaSettlementProvider] 一致(真实成员 userId、
 /// 虚拟用户 syncId,无 syncId 兜底 `vu_<本地id>`)。
 /// watch [sharedResourceRefreshProvider] 让成员变更后自动重取。
+///
+/// 单人/本地账本(无 syncId)无成员表,此处会把 owner 自动纳入参与人
+/// 名册(优先 ledger.ownerUserId,其次当前登录用户),避免参与人选择器
+/// 在单人账本场景下出现空列表、用户无从下手。
 final aaParticipantOptionsProvider =
     FutureProvider.autoDispose.family<List<AaParticipantOption>, int>(
         (ref, ledgerId) async {
@@ -123,11 +129,12 @@ final aaParticipantOptionsProvider =
   final repo = ref.read(repositoryProvider);
   final options = <AaParticipantOption>[];
 
-  // 真实成员:仅共享账本(有 syncId)才有成员体系;
-  // 单人/本地账本无成员表,参与人仅虚拟用户。
   final ledger = await repo.getLedgerById(ledgerId);
   final syncId = ledger?.syncId;
-  if (syncId != null && syncId.isNotEmpty) {
+  final isSharedLedger = syncId != null && syncId.isNotEmpty;
+
+  if (isSharedLedger) {
+    // 共享账本:从 ledgerMembersProvider 取真实成员(userId 为参与人标识)。
     try {
       final members = await ref.read(ledgerMembersProvider(syncId).future);
       for (final m in members) {
@@ -143,6 +150,23 @@ final aaParticipantOptionsProvider =
       logger.warning(
           'AaSettlement', '读取账本成员失败 ledger=$ledgerId,成员选项降级为空', '$e\n$st');
     }
+  } else {
+    // 单人/本地账本:无成员表,把 owner 自动纳入参与人名册,
+    // 保证参与人选择器至少有一个可选项(需求 §5.2)。
+    // 优先取 ledger.ownerUserId;为空时回退当前登录用户 id;
+    // 两者都拿不到时用 'me' 占位,确保 UI 不空态(结算侧仍可正常兜底)。
+    var ownerId = ledger?.ownerUserId;
+    if (ownerId == null || ownerId.isEmpty) {
+      final cloud = await ref.read(spitoutCloudProviderInstance.future);
+      ownerId = await TxAuthorService.currentUserId(cloud);
+    }
+    final ownerName = (ownerId != null && ownerId.isNotEmpty) ? ownerId : '我';
+    final finalId = (ownerId != null && ownerId.isNotEmpty) ? ownerId : 'me';
+    options.add(AaParticipantOption(
+      id: finalId,
+      name: ownerName,
+      isVirtual: false,
+    ));
   }
 
   // 虚拟用户:syncId 作为参与人标识(与统计口径一致)。
@@ -195,9 +219,10 @@ final aaSettlementProvider =
     displayNameMap[pid] = vu.name;
   }
 
-  // 真实成员:userId 作为参与人标识
-  // 共享账本:从 ledgerMembersProvider 取(需 ledger.syncId);
-  // 单人/本地账本:无成员表,用操作者兜底(单人场景 paidByUserId 即自己)。
+  // 真实成员:userId 作为参与人标识。
+  // 共享账本从 ledgerMembersProvider 取;单人/本地账本无成员表,
+  // 把 owner 纳入(优先 ledger.ownerUserId,其次当前登录用户),保证统计侧
+  // 参与人名册与 aaParticipantOptionsProvider 口径一致,不依赖 computeLedger 兜底。
   if (ledger.syncId != null && ledger.syncId!.isNotEmpty) {
     try {
       final members =
@@ -214,8 +239,16 @@ final aaSettlementProvider =
           '读取账本成员失败 ledger=$ledgerId,真实成员降级为空', '$e\n$st');
     }
   } else {
-    // 单人账本:无成员表,若交易有 paidByUserId 则自动纳入汇总(兜底)。
-    // 这里不预填,computeLedger 内部对未知 paidBy 会自动补入。
+    // 单人/本地账本:无成员表,把 owner 纳入参与人名册。
+    var ownerId = ledger.ownerUserId;
+    if (ownerId == null || ownerId.isEmpty) {
+      final cloud = await ref.read(spitoutCloudProviderInstance.future);
+      ownerId = await TxAuthorService.currentUserId(cloud);
+    }
+    if (ownerId != null && ownerId.isNotEmpty) {
+      participantIds.add(ownerId);
+      displayNameMap[ownerId] = ownerId;
+    }
   }
 
   // 3) 调用纯计算服务

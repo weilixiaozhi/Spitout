@@ -2,13 +2,15 @@
 ///
 /// 覆盖三个 sheet 的核心契约:
 /// - showAaModePickerSheet:渲染人均/指定两个选项,点击返回对应 AaMode;
-/// - showAaParticipantPickerSheet(多选):「全部成员」为默认选中,
-///   完成返回 all=true;取消全选后反选某成员,完成返回具体名单;
+/// - showAaParticipantPickerSheet(多选):初值 null 时默认全选,完成返回
+///   all=true(运行时展开);反选某成员后完成返回其余名单;lockedId 行
+///   不可反选(支出人必是参与人);全选态完成仍返回 all=true;
 /// - showAaPayerPickerSheet(单选):点击成员行即返回其标识。
 library;
 
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:lucide_icons/lucide_icons.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/settlement/aa_edit_models.dart';
@@ -85,7 +87,7 @@ void main() {
   });
 
   group('showAaParticipantPickerSheet(参与人多选)', () {
-    testWidgets('初值 null 时默认「全部成员」,完成返回 all=true', (tester) async {
+    testWidgets('初值 null 时默认全选,完成返回 all=true', (tester) async {
       AaParticipantSelection? result;
       await tester.pumpWidget(_shell<AaParticipantSelection?>(
         launch: (context) => showAaParticipantPickerSheet(
@@ -96,16 +98,19 @@ void main() {
         onResult: (v) => result = v,
       ));
       await _open(tester);
+
+      // 初值 null 展开为全部 options,所有行应显示勾选态。
+      expect(find.byIcon(LucideIcons.check), findsNWidgets(3));
 
       await tester.tap(find.text('完成'));
       await tester.pumpAndSettle();
 
       expect(result, isNotNull);
-      expect(result!.all, isTrue, reason: 'null 初值语义 = 全部成员');
+      expect(result!.all, isTrue, reason: '初值 null = 全部成员,全选即落 null');
       expect(result!.ids, isEmpty);
     });
 
-    testWidgets('全选态反选某成员,完成返回其余成员名单', (tester) async {
+    testWidgets('反选某成员后完成,返回其余成员名单', (tester) async {
       AaParticipantSelection? result;
       await tester.pumpWidget(_shell<AaParticipantSelection?>(
         launch: (context) => showAaParticipantPickerSheet(
@@ -117,9 +122,7 @@ void main() {
       ));
       await _open(tester);
 
-      // 全选态个人行禁用;先点「全部成员」切到指定模式(全选起步),再反选李四
-      await tester.tap(find.text('全部成员'));
-      await tester.pump();
+      // 直接反选李四(全选起步),完成应返回除李四外的具体名单。
       await tester.tap(find.text('李四'));
       await tester.pump();
       await tester.tap(find.text('完成'));
@@ -149,6 +152,54 @@ void main() {
       expect(result, isNotNull);
       expect(result!.all, isFalse);
       expect(result!.ids, ['u1']);
+    });
+
+    testWidgets('lockedId 行不可反选,完成时仍在选中集合内', (tester) async {
+      AaParticipantSelection? result;
+      await tester.pumpWidget(_shell<AaParticipantSelection?>(
+        launch: (context) => showAaParticipantPickerSheet(
+          context,
+          options: _options,
+          // 指定初值排除 u1,但 u1 是 lockedId,应被强制补入且不可反选。
+          initialSelectedIds: const ['u2'],
+          lockedId: 'u1',
+        ),
+        onResult: (v) => result = v,
+      ));
+      await _open(tester);
+
+      // 尝试反选张三(lockedId),应无效,张三仍保持勾选。
+      await tester.tap(find.text('张三'));
+      await tester.pump();
+      expect(find.byIcon(LucideIcons.check), findsNWidgets(2));
+
+      await tester.tap(find.text('完成'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      expect(result!.all, isFalse);
+      expect(result!.ids, containsAll(['u1', 'u2']));
+    });
+
+    testWidgets('lockedId + 全选完成返回 all=true', (tester) async {
+      AaParticipantSelection? result;
+      await tester.pumpWidget(_shell<AaParticipantSelection?>(
+        launch: (context) => showAaParticipantPickerSheet(
+          context,
+          options: _options,
+          initialSelectedIds: null,
+          lockedId: 'u1',
+        ),
+        onResult: (v) => result = v,
+      ));
+      await _open(tester);
+
+      await tester.tap(find.text('完成'));
+      await tester.pumpAndSettle();
+
+      expect(result, isNotNull);
+      expect(result!.all, isTrue, reason: '全选即落 null,运行时展开');
+      expect(result!.ids, isEmpty);
     });
   });
 

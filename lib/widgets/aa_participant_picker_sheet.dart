@@ -19,18 +19,25 @@ class AaParticipantSelection {
 
 /// 参与人多选 Bottom Sheet(分摊参与人)。
 ///
-/// 顶部固定「全部成员」选项:选中后下方个人选项禁用,语义为运行时展开
-/// 全部成员(aaParticipants 落 null)。取消(下滑/遮罩)返回 null。
+/// 设计意图(需求方案 A):
+/// - 不再用独立的「全部成员」开关,统一用逐行复选;
+/// - 完成时若选中集合覆盖全部 options,语义等价于「全部成员」,
+///   返回 all=true(运行时展开,aaParticipants 落 null),避免存一份
+///   与成员表完全一致的冗余名单;
+/// - 支出人lockedId 行强制锁定勾选(支出人必是参与人),禁用反选。
+/// 取消(下滑/遮罩)返回 null。
 Future<AaParticipantSelection?> showAaParticipantPickerSheet(
   BuildContext context, {
   required List<AaParticipantOption> options,
   required List<String>? initialSelectedIds,
+  String? lockedId,
 }) {
   return showAppSheet<AaParticipantSelection>(
     context: context,
     child: _AaParticipantPicker(
       options: options,
       initialSelectedIds: initialSelectedIds,
+      lockedId: lockedId,
     ),
   );
 }
@@ -63,14 +70,21 @@ Future<String?> showAaPayerPickerSheet(
   );
 }
 
-/// 参与人多选 Sheet 内容(带「全部成员」开关 + 完成按钮)。
+/// 参与人多选 Sheet 内容(逐行复选 + 完成按钮)。
+///
+/// 状态仅维护 [_selected] 集合;完成时若覆盖全部 options 则返回 all=true。
+/// [lockedId] 对应的行强制保持勾选,禁用反选(支出人必是参与人)。
 class _AaParticipantPicker extends StatefulWidget {
   final List<AaParticipantOption> options;
   final List<String>? initialSelectedIds;
 
+  /// 锁定为参与人的标识(支出人);该行不可反选。
+  final String? lockedId;
+
   const _AaParticipantPicker({
     required this.options,
     required this.initialSelectedIds,
+    this.lockedId,
   });
 
   @override
@@ -78,11 +92,42 @@ class _AaParticipantPicker extends StatefulWidget {
 }
 
 class _AaParticipantPickerState extends State<_AaParticipantPicker> {
-  /// true = 全部成员(初始 selectedIds 为 null 时)。
-  late bool _all = widget.initialSelectedIds == null;
+  /// 当前选中的参与人标识集合。
+  ///
+  /// 初值 null 语义 = 全部成员(运行时展开),内部展开为全部 options 的 id,
+  /// 这样统一用逐行复选表达「全部成员」态,完成时再判断是否全覆盖回写 all。
+  late final Set<String> _selected = _initSelected();
 
-  /// 具体选中的参与人标识(_all=false 时生效)。
-  late final Set<String> _selected = {...?widget.initialSelectedIds};
+  Set<String> _initSelected() {
+    final init = widget.initialSelectedIds;
+    if (init == null) {
+      // null = 全部成员,展开为全部 options。
+      return {...widget.options.map((e) => e.id)};
+    }
+    // 指定名单模式:确保 lockedId 一定在内(支出人必是参与人)。
+    final s = {...init};
+    if (widget.lockedId != null) s.add(widget.lockedId!);
+    return s;
+  }
+
+  /// 切换某行选中态;lockedId 行禁用反选。
+  void _toggle(String id) {
+    if (id == widget.lockedId) return; // 支出人锁定,不可反选
+    setState(() {
+      if (!_selected.remove(id)) {
+        _selected.add(id);
+      }
+    });
+  }
+
+  /// 完成时判定:选中集合覆盖全部 options → all=true(落 null,运行时展开)。
+  bool _isAllSelected() {
+    if (widget.options.isEmpty) return true;
+    for (final o in widget.options) {
+      if (!_selected.contains(o.id)) return false;
+    }
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -92,36 +137,21 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
       footer: SizedBox(
         width: double.infinity,
         child: FilledButton(
-          onPressed: () => Navigator.of(context).pop(
-            _all
-                ? const AaParticipantSelection(all: true, ids: [])
-                : AaParticipantSelection(
-                    all: false, ids: _selected.toList()),
-          ),
+          onPressed: () {
+            final all = _isAllSelected();
+            Navigator.of(context).pop(
+              all
+                  ? const AaParticipantSelection(all: true, ids: [])
+                  : AaParticipantSelection(
+                      all: false, ids: _selected.toList()),
+            );
+          },
           child: Text(l10n.commonFinish),
         ),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // 全部成员:选中后个人选择禁用,语义为运行时展开(aaParticipants=null)。
-          // 已选中时再次点击 → 切到指定成员模式并以全选起步,便于逐个反选,
-          // 否则全选态下永远无法进入指定成员模式。
-          _AaSimpleRow(
-            title: l10n.aaParticipantsAll,
-            checked: _all,
-            onTap: () => setState(() {
-              if (_all) {
-                _all = false;
-                _selected
-                  ..clear()
-                  ..addAll(widget.options.map((e) => e.id));
-              } else {
-                _all = true;
-              }
-            }),
-          ),
-          Divider(height: 1, color: SpitoutTokens.divider(context)),
           ConstrainedBox(
             // 个人选项区限高滚动,避免成员过多撑爆 sheet。
             constraints: const BoxConstraints(maxHeight: 320),
@@ -132,14 +162,10 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
                   for (final o in widget.options)
                     _AaOptionRow(
                       option: o,
-                      checked: _all || _selected.contains(o.id),
-                      enabled: !_all,
-                      onTap: () => setState(() {
-                        // 行仅在指定成员模式下可点(enabled: !_all),直接切换选中态
-                        if (!_selected.remove(o.id)) {
-                          _selected.add(o.id);
-                        }
-                      }),
+                      checked: _selected.contains(o.id),
+                      // lockedId 行点击时 _toggle 内直接 return,
+                      // 保持已勾选态不可反选(支出人必是参与人)。
+                      onTap: () => _toggle(o.id),
                     ),
                 ],
               ),
@@ -152,78 +178,16 @@ class _AaParticipantPickerState extends State<_AaParticipantPicker> {
 }
 
 /// 参与人选项行:显示名 + 虚拟用户徽标 + 选中勾。
+///
+/// 复用单元:支出人单选与参与人多选共用此行。锁定行(支出人)
+/// 由调用方在 onTap 回调内自行拦截反选,行本身不做禁用态。
 class _AaOptionRow extends StatelessWidget {
   final AaParticipantOption option;
   final bool checked;
-  final bool enabled;
   final VoidCallback onTap;
 
   const _AaOptionRow({
     required this.option,
-    required this.checked,
-    this.enabled = true,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
-    return Opacity(
-      opacity: enabled ? 1 : 0.45,
-      child: InkWell(
-        onTap: enabled ? onTap : null,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 10),
-          child: Row(
-            children: [
-              // 参与人头像位:虚拟用户与真实成员用不同图标区分。
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: option.isVirtual
-                      ? SpitoutTokens.surfaceSecondary(context)
-                      : primary.withValues(alpha: 0.12),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  AppIcons.person,
-                  size: 16,
-                  color: option.isVirtual
-                      ? SpitoutTokens.iconSecondary(context)
-                      : primary,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  option.name,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              if (checked) Icon(AppIcons.check, size: 18, color: primary),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// 纯文本选项行(用于「全部成员」这类无头像的选项)。
-class _AaSimpleRow extends StatelessWidget {
-  final String title;
-  final bool checked;
-  final VoidCallback onTap;
-
-  const _AaSimpleRow({
-    required this.title,
     required this.checked,
     required this.onTap,
   });
@@ -235,19 +199,37 @@ class _AaSimpleRow extends StatelessWidget {
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
+            // 参与人头像位:虚拟用户与真实成员用不同图标区分。
+            Container(
+              width: 32,
+              height: 32,
+              decoration: BoxDecoration(
+                color: option.isVirtual
+                    ? SpitoutTokens.surfaceSecondary(context)
+                    : primary.withValues(alpha: 0.12),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                AppIcons.person,
+                size: 16,
+                color: option.isVirtual
+                    ? SpitoutTokens.iconSecondary(context)
+                    : primary,
+              ),
+            ),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
-                title,
+                option.name,
                 style: TextStyle(
                   fontSize: 15,
-                  fontWeight: checked ? FontWeight.w600 : FontWeight.w400,
-                  color: checked
-                      ? primary
-                      : SpitoutTokens.textPrimary(context),
+                  color: SpitoutTokens.textPrimary(context),
                 ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
             if (checked) Icon(AppIcons.check, size: 18, color: primary),
