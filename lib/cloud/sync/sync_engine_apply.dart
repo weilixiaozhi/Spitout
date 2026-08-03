@@ -33,6 +33,9 @@ extension SyncEngineApplyExt on SyncEngine {
       case 'ledger':
         await _applyLedgerChange(change);
         return true;
+      case 'virtual_user':
+        await _applyVirtualUserChange(change);
+        return true;
       case 'ledger_snapshot':
         // 账本删除信号必须对"增量 pull"与"replayAllChanges"都生效。
         // replayAllChanges() 不走 fullPull → ledger_snapshot:delete 如果跳过,
@@ -164,6 +167,23 @@ extension SyncEngineApplyExt on SyncEngine {
     final payloadNative =
         hasNativeKey ? (payload['nativeAmount'] as num?)?.toDouble() : null;
 
+    // AA 分摊字段(缺键保护,对齐 excludeFromStats 模式):
+    // payload 不含键 → null → update 走 Value.absent() 不覆盖本地;
+    // insert 路径落 null(列默认值)。旧 server/旧客户端下发的 payload 不含
+    // AA 键,apply 后本地 AA 字段保持原值/空,兼容性安全。
+    final hasPaidByUserIdKey = payload.containsKey('paidByUserId');
+    final hasAaModeKey = payload.containsKey('aaMode');
+    final hasAaParticipantsKey = payload.containsKey('aaParticipants');
+    final hasAaSplitsKey = payload.containsKey('aaSplits');
+    final payloadPaidByUserId =
+        hasPaidByUserIdKey ? (payload['paidByUserId'] as String?) : null;
+    final payloadAaMode =
+        hasAaModeKey ? (payload['aaMode'] as int?) : null;
+    final payloadAaParticipants =
+        hasAaParticipantsKey ? (payload['aaParticipants'] as String?) : null;
+    final payloadAaSplits =
+        hasAaSplitsKey ? (payload['aaSplits'] as String?) : null;
+
     if (existingId != null) {
       // 更新 — createdByUserId 走"本地为 null 就回填,否则保持"的策略。
       final shouldBackfillCreator =
@@ -202,6 +222,19 @@ extension SyncEngineApplyExt on SyncEngine {
             ? d.Value(payloadCurrency)
             : const d.Value.absent(), // 缺键保留本地币种
         nativeAmount: nativeValue,
+        // AA 字段:缺键走 absent 保留本地,有键(含 null)显式写入。
+        paidByUserId: hasPaidByUserIdKey
+            ? d.Value(payloadPaidByUserId)
+            : const d.Value.absent(),
+        aaMode: hasAaModeKey
+            ? d.Value(payloadAaMode)
+            : const d.Value.absent(),
+        aaParticipants: hasAaParticipantsKey
+            ? d.Value(payloadAaParticipants)
+            : const d.Value.absent(),
+        aaSplits: hasAaSplitsKey
+            ? d.Value(payloadAaSplits)
+            : const d.Value.absent(),
       ));
       logger.debug('SyncEngine', 'pull: 更新交易 $syncId');
     } else {
@@ -223,6 +256,11 @@ extension SyncEngineApplyExt on SyncEngine {
               // 留 NULL(检测端 LEFT JOIN 账户币种兜底)。
               currencyCode: d.Value(payloadCurrency),
               nativeAmount: d.Value(hasNativeKey ? payloadNative : amount),
+              // AA 字段:缺键落 null(列默认值),有键显式写入。
+              paidByUserId: d.Value(payloadPaidByUserId),
+              aaMode: d.Value(payloadAaMode),
+              aaParticipants: d.Value(payloadAaParticipants),
+              aaSplits: d.Value(payloadAaSplits),
             ),
           );
       // 写回 cache,后续同 syncId 的 update change 能命中
@@ -458,6 +496,12 @@ extension SyncEngineApplyExt on SyncEngine {
     // update 路径 Value.absent 不动原值(老 server payload 兼容)。
     final monthStartDay =
         ((payload['monthStartDay'] as num?)?.toInt())?.clamp(1, 28);
+    // AA 分摊开关(缺键保护):payload 不含键 → null → update 走 absent
+    // 保留本地;含键(包括显式 false)→ 覆盖。与 name/currency 模式一致。
+    final aaEnabledKey = payload.containsKey('aaEnabled');
+    final payloadAaEnabled = aaEnabledKey
+        ? (payload['aaEnabled'] as bool? ?? false)
+        : null;
     if (ledgerList.isEmpty) {
       // 本地未就绪时,若 payload 至少有 name + currency,主动 insert 一行本地
       // ledger,避免 web 端新建账本后 app 拉到 ledger change 却不落库。
@@ -475,9 +519,11 @@ extension SyncEngineApplyExt on SyncEngine {
             currency: d.Value(currency ?? 'CNY'),
             syncId: d.Value(syncId),
             monthStartDay: d.Value(monthStartDay ?? 1),
+            // aaEnabled 缺键落默认 false;有键显式写入。
+            aaEnabled: d.Value(payloadAaEnabled ?? false),
           ));
       logger.info('SyncEngine',
-          'pull: 新增账本 syncId=$syncId name=$name currency=${currency ?? "CNY"}');
+          'pull: 新增账本 syncId=$syncId name=$name currency=${currency ?? "CNY"} aaEnabled=${payloadAaEnabled ?? false}');
       activePullCache?.putLedger(
           syncId,
           (await (db.select(db.ledgers)..where((l) => l.syncId.equals(syncId)))
@@ -503,16 +549,85 @@ extension SyncEngineApplyExt on SyncEngine {
       monthStartDay: monthStartDay != null
           ? d.Value(monthStartDay)
           : const d.Value.absent(),
+      // aaEnabled:缺键 absent 保留本地;有键(含 false)显式覆盖。
+      // payloadAaEnabled 已在解析时 `?? false` 兜底,此处非 null。
+      aaEnabled: aaEnabledKey
+          ? d.Value(payloadAaEnabled!)
+          : const d.Value.absent(),
     );
     await (db.update(db.ledgers)..where((l) => l.id.equals(ledger.id)))
         .write(comp);
     logger.debug(
-        'SyncEngine', 'pull: 更新账本 $syncId name=$name currency=$currency');
+        'SyncEngine', 'pull: 更新账本 $syncId name=$name currency=$currency aaEnabled=$payloadAaEnabled');
 
     // 云同步拉取到币种变更时全量重算 nativeAmount，
     // 否则多设备场景下其他设备拉到的交易 nativeAmount 仍是旧币种口径。
     if (currency != null) {
       await repo.recalcNativeAmountsForLedger(ledger.id, currency);
+    }
+  }
+
+  /// 应用远程下发的虚拟用户变更(create/update/delete)。
+  ///
+  /// 虚拟用户是 ledger-scoped 实体(与 transaction 同通道),change log 走
+  /// create/update/delete 三类 action。删除走硬删(对齐 ledger_snapshot:delete
+  /// 模式),server 按 entity_sync_id 删投影。
+  ///
+  /// 缺键保护:payload 缺 name 键时 update 走 absent 保留本地。
+  Future<void> _applyVirtualUserChange(SpitoutCloudSyncChange change) async {
+    final syncId = change.entitySyncId;
+
+    if (change.action == 'delete') {
+      // 硬删:按 syncId 删本地行(对齐 transaction:delete 模式)。
+      // syncId 未匹配是 no-op(可能本地从未拉到此虚拟用户,或已被本地删)。
+      await (db.delete(db.ledgerVirtualUsers)
+            ..where((t) => t.syncId.equals(syncId)))
+          .go();
+      logger.debug('SyncEngine', 'pull: 删除虚拟用户 $syncId');
+      return;
+    }
+
+    // upsert(create/update 同走 upsert 语义)
+    final payload = change.payload!;
+    final name = payload['name'] as String?;
+
+    // 解析 ledgerId:change.ledgerId 是 server 的 external_id(string),
+    // 本地 auto-increment int id 不一致,按 syncId 查本地 int id。
+    final ledgerIdInt = await _resolveLedgerIdBySyncId(change.ledgerId) ??
+        int.tryParse(change.ledgerId) ??
+        -1;
+    if (ledgerIdInt <= 0) {
+      logger.warning('SyncEngine',
+          'pull: 虚拟用户 $syncId 解析 ledgerId 失败(${change.ledgerId}),跳过');
+      return;
+    }
+
+    // 查 existing:按 syncId 精确匹配
+    final existing = syncId.isEmpty
+        ? null
+        : await (db.select(db.ledgerVirtualUsers)
+              ..where((t) => t.syncId.equals(syncId)))
+            .getSingleOrNull();
+
+    if (existing != null) {
+      // 更新:name 缺键走 absent 保留本地(缺键保护)。
+      await (db.update(db.ledgerVirtualUsers)
+            ..where((t) => t.id.equals(existing.id)))
+          .write(LedgerVirtualUsersCompanion(
+        name: name != null ? d.Value(name) : const d.Value.absent(),
+        updatedAt: d.Value(DateTime.now()),
+      ));
+      logger.debug('SyncEngine', 'pull: 更新虚拟用户 $syncId name=$name');
+    } else {
+      // 插入:name 必须有值,缺则用空串兜底(列 notNull 约束)。
+      await db.into(db.ledgerVirtualUsers).insert(
+            LedgerVirtualUsersCompanion.insert(
+              ledgerId: ledgerIdInt,
+              syncId: d.Value(syncId),
+              name: name ?? '',
+            ),
+          );
+      logger.debug('SyncEngine', 'pull: 新增虚拟用户 $syncId name=$name');
     }
   }
 

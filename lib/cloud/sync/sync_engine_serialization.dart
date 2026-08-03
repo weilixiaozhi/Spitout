@@ -98,9 +98,9 @@ extension SyncEngineSerializationExt on SyncEngine {
       // 无 tag/budget 表,对应 entity_type 不会产生 changes。
 
       case 'ledger':
-        // 账本元数据(名字 / 币种)。entityId 是本地 int id,取出后按 syncId
+        // 账本元数据(名字 / 币种 / AA 开关)。entityId 是本地 int id,取出后按 syncId
         // 推送,server materialize 时更新 `ledger_snapshot.ledgerName/currency`
-        // + `Ledger.name` 自身,web 下次 read 就拿到新名字。
+        // + `Ledger` 自身,web 下次 read 就拿到新名字。
         final ledger = await (db.select(db.ledgers)
               ..where((l) => l.id.equals(entityId)))
             .getSingleOrNull();
@@ -108,6 +108,15 @@ extension SyncEngineSerializationExt on SyncEngine {
           return <String, dynamic>{};
         }
         return EntitySerializer.serializeLedger(ledger);
+
+      case 'virtual_user':
+        // 虚拟用户:ledger-scoped 实体,按 entityId 查本地行,按 syncId 推送。
+        // 行已删(delete change)时返回空 payload,delete 路径 server 只看 action。
+        final virtualUser = await (db.select(db.ledgerVirtualUsers)
+              ..where((u) => u.id.equals(entityId)))
+            .getSingleOrNull();
+        if (virtualUser == null) return <String, dynamic>{};
+        return EntitySerializer.serializeVirtualUser(virtualUser);
 
       default:
         return <String, dynamic>{};
@@ -330,10 +339,37 @@ extension SyncEngineSerializationExt on SyncEngine {
     // 统计实体数量
     final categoryCount = categories.length;
     final txCount = transactions.length;
+
+    // 虚拟用户:ledger-scoped 实体,随本账本一起 fullPush。
+    // syncId 缺失的本地行需先生成 syncId 再推送(与 tx 同模式)。
+    final virtualUsers = await (db.select(db.ledgerVirtualUsers)
+          ..where((u) => u.ledgerId.equals(ledger.id))
+          ..orderBy([(u) => d.OrderingTerm.asc(u.id)]))
+        .get();
+    for (final vu in virtualUsers) {
+      final vuSyncId = vu.syncId ?? _uuid.v4();
+      if (vu.syncId == null) {
+        await (db.update(db.ledgerVirtualUsers)
+              ..where((u) => u.id.equals(vu.id)))
+            .write(LedgerVirtualUsersCompanion(syncId: d.Value(vuSyncId)));
+      }
+      syncChanges.add({
+        'ledger_id': ledgerId,
+        'entity_type': 'virtual_user',
+        'entity_sync_id': vuSyncId,
+        'action': 'upsert',
+        'payload': {
+          'syncId': vuSyncId,
+          'name': vu.name,
+        },
+        'updated_at': now,
+      });
+    }
+
     logger.info(
         'SyncEngine',
         '开始推送个体变更 共${syncChanges.length}条 '
-            '(categories=$categoryCount, transactions=$txCount)');
+            '(categories=$categoryCount, transactions=$txCount, virtualUsers=${virtualUsers.length})');
 
     // 分批推送:每条 change 平均 ~500 字节,500 条 ≈ 250KB,远低于网关限制,
     // 但单次请求内 server 事务处理时间 ~100ms 可接受;3 万条交易仅 60 批。
@@ -386,6 +422,15 @@ extension SyncEngineSerializationExt on SyncEngine {
       ));
     }
 
+    // 虚拟用户:随快照导出,否则对端导入后指定分摊数据会悬空(R9)。
+    final virtualUsers = await (db.select(db.ledgerVirtualUsers)
+          ..where((u) => u.ledgerId.equals(ledger.id))
+          ..orderBy([(u) => d.OrderingTerm.asc(u.id)]))
+        .get();
+    final virtualUserItems = virtualUsers
+        .map((u) => EntitySerializer.serializeVirtualUser(u))
+        .toList();
+
     return jsonEncode({
       'version': 6,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
@@ -393,6 +438,7 @@ extension SyncEngineSerializationExt on SyncEngine {
       'ledgerName': ledger.name,
       'currency': ledger.currency,
       'monthStartDay': ledger.monthStartDay,
+      'aaEnabled': ledger.aaEnabled,
       'count': items.length,
       'categories': categories.map((c) {
         String? parentName;
@@ -408,6 +454,7 @@ extension SyncEngineSerializationExt on SyncEngine {
             parentName: parentName, parentSyncId: parentSyncId);
       }).toList(),
       'items': items,
+      'virtualUsers': virtualUserItems,
     });
   }
 }

@@ -56,3 +56,6 @@ export 'package:spitout/providers/ui/update_check_providers.dart';
 
 // 公共导出目录动作函数（resolveExportDir / requestPublicExportDirAccess）
 export 'package:spitout/providers/import_export/public_export_dir_providers.dart';
+
+// AA 分摊(统计 + 虚拟用户管理 + 账本开关)
+export 'package:spitout/providers/settlement/settlement_providers.dart';

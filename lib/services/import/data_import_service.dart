@@ -48,7 +48,7 @@ class DataImportService {
     bool recordChanges = true,
   }) async {
     // 1. 更新账本信息（如果提供）
-    if (data.ledgerName != null || data.currency != null) {
+    if (data.ledgerName != null || data.currency != null || data.aaEnabled != null) {
       // 币种变更前先记下旧币种,用于变更后重算 nativeAmount。
       // 导入数据中可能携带不同于当前账本的 currency 字段(如从另一个币种
       // 的备份恢复),不重算会导致副行换算显示错误的旧口径金额。
@@ -60,6 +60,7 @@ class DataImportService {
           id: ledgerId,
           name: data.ledgerName,
           currency: data.currency,
+          aaEnabled: data.aaEnabled,
         );
       } catch (_) {}
       // 币种确实变更(忽略大小写差异)后全量重算 nativeAmount
@@ -73,7 +74,11 @@ class DataImportService {
     // 2. 导入分类
     final categoryCache = await importCategories(repo, data.categories);
 
-    // 3. 导入交易（不含标签/附件关联步骤）
+    // 3. 导入虚拟用户(在交易之前,避免交易 aaParticipants 引用悬空)
+    // 仅云端全量恢复 / v7 备份携带 virtualUsers;CSV 路径为空列表跳过。
+    await importVirtualUsers(repo, ledgerId, data.virtualUsers);
+
+    // 4. 导入交易（不含标签/附件关联步骤）
     final result = await importTransactions(
       repo,
       ledgerId,
@@ -84,6 +89,49 @@ class DataImportService {
     );
 
     return result;
+  }
+
+  /// 导入虚拟用户(ledger-scoped),按 syncId 幂等 upsert。
+  ///
+  /// public — 供 transactions_json 导入路径与 importData 复用。
+  /// recordChanges 由调用方(repo 层)决定是否登记 change log,
+  /// 本方法只管数据层写入。
+  Future<void> importVirtualUsers(
+    BaseRepository repo,
+    int ledgerId,
+    List<ImportVirtualUser> virtualUsers,
+  ) async {
+    if (virtualUsers.isEmpty) return;
+    logger.info('VirtualUserImport', '开始导入虚拟用户: ${virtualUsers.length} 个');
+    int inserted = 0;
+    int skipped = 0;
+    try {
+      // 幂等:预取已存在的 syncId 集合,避免重复导入产生重复行。
+      final existing = await repo.getByLedger(ledgerId);
+      final existingSyncIds = <String>{
+        for (final u in existing)
+          if (u.syncId != null && u.syncId!.isNotEmpty) u.syncId!,
+      };
+      for (final vu in virtualUsers) {
+        final sid = vu.syncId;
+        // 已存在(按 syncId 命中)跳过;无 syncId 的导入项不在此路径处理。
+        if (sid != null && sid.isNotEmpty && existingSyncIds.contains(sid)) {
+          skipped++;
+          continue;
+        }
+        await repo.create(
+          ledgerId: ledgerId,
+          name: vu.name,
+          syncId: sid,
+        );
+        if (sid != null && sid.isNotEmpty) existingSyncIds.add(sid);
+        inserted++;
+      }
+      logger.info('VirtualUserImport',
+          '虚拟用户导入完成: 新增=$inserted 跳过重复=$skipped');
+    } catch (e, st) {
+      logger.error('VirtualUserImport', '虚拟用户导入失败', e, st);
+    }
   }
 
   /// 导入分类(先一级后二级)。public — sync_diff_service 复用。
@@ -406,6 +454,12 @@ class DataImportService {
         nativeAmount: d.Value(txNative),
         // 缺键(JSON/CSV)落默认 false,与 server snapshot「缺键 = false」语义对齐。
         excludeFromStats: d.Value(tx.excludeFromStats ?? false),
+        // AA 分摊字段:JSON 缺键落 null(列默认值),有值显式写入。
+        // 与 server snapshot「缺键 = 未启用 AA」语义对齐。
+        paidByUserId: d.Value(tx.paidByUserId),
+        aaMode: d.Value(tx.aaMode),
+        aaParticipants: d.Value(tx.aaParticipants),
+        aaSplits: d.Value(tx.aaSplits),
       );
 
       batchTx.add(txCompanion);

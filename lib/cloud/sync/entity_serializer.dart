@@ -8,6 +8,11 @@ import '../../data/db.dart';
 class EntitySerializer {
   // ==================== Transaction ====================
 
+  /// 序列化 [Transaction] 为 sync push payload。
+  ///
+  /// AA 分摊字段(paidByUserId/aaMode/aaParticipants/aaSplits)采用"非空才发"
+  /// 守卫：null 字段不发键,server merge 走缺键保护(保留本地既有值),
+  /// 旧 server 收不到未知键也不会崩(向后兼容)。
   static Map<String, dynamic> serializeTransaction(
     Transaction tx, {
     String? categoryName,
@@ -49,6 +54,22 @@ class EntitySerializer {
         'createdByUserId': tx.createdByUserId,
       if (tx.lastEditedByUserId != null && tx.lastEditedByUserId!.isNotEmpty)
         'updatedByUserId': tx.lastEditedByUserId,
+      // AA 分摊:支出人 userId。非空才发,缺键保护下旧 server / 旧客户端
+      // apply 时视为未启用 AA。运行时写入层已 ?? 操作者 userId 兜底,
+      // 此处仅在确实有值时下发。
+      if (tx.paidByUserId != null && tx.paidByUserId!.isNotEmpty)
+        'paidByUserId': tx.paidByUserId,
+      // AA 分摊模式:null/0=人均,1=不分摊,2=指定。非空才发,
+      // null 视为人均(历史交易默认进人均统计)。
+      if (tx.aaMode != null) 'aaMode': tx.aaMode,
+      // AA 参与人(JSON 数组字符串:元素为 userId 或虚拟用户 syncId)。
+      // 空值运行时展开为账本全部成员,此处不展开,只发已写入值。
+      if (tx.aaParticipants != null && tx.aaParticipants!.isNotEmpty)
+        'aaParticipants': tx.aaParticipants,
+      // AA 指定分摊金额(JSON 对象字符串:key=参与人,value=金额字符串)。
+      // 仅 aaMode=2 时有意义。
+      if (tx.aaSplits != null && tx.aaSplits!.isNotEmpty)
+        'aaSplits': tx.aaSplits,
     };
   }
 
@@ -90,16 +111,37 @@ class EntitySerializer {
 
   // ==================== Ledger ====================
 
-  /// 账本元数据(名字 / 币种 / 月度起始日)的跨设备 payload。字段名对齐 server
-  /// `WriteLedgerMetaUpdateRequest`,server materialize 时会用这些字段
-  /// 更新 `ledger_snapshot` 的 top-level `ledgerName` / `currency`。
+  /// 账本元数据(名字 / 币种 / 月度起始日 / AA 分摊开关)的跨设备 payload。
+  /// 字段名对齐 server `WriteLedgerMetaUpdateRequest`,server materialize 时
+  /// 会用这些字段更新 `ledger_snapshot` 的 top-level `ledgerName` / `currency`。
   /// `monthStartDay` 对齐 server `ReadLedgerOut.month_start_day`(1-28)。
+  ///
+  /// `aaEnabled` 必须跨设备同步:与 ledger 名/币种同通道下发,关闭后入口隐藏、
+  /// 历史数据不展示不参与统计,重开数据仍在(文档 §6.5)。
   static Map<String, dynamic> serializeLedger(Ledger ledger) {
     return {
       'syncId': ledger.syncId,
       'ledgerName': ledger.name,
       'currency': ledger.currency,
       'monthStartDay': ledger.monthStartDay,
+      'aaEnabled': ledger.aaEnabled,
+    };
+  }
+
+  // ==================== VirtualUser ====================
+
+  /// 序列化虚拟用户为 sync push payload。
+  ///
+  /// 虚拟用户是 ledger-scoped 实体(与 transaction 同通道),change log 走
+  /// create/update/delete 三类 action。字段对齐 server virtual_user projection:
+  /// `syncId`(跨设备唯一标识) + `name`(昵称)。
+  ///
+  /// 不带 ledgerId:ledger_id 走 change log 外层(recordLedgerChange 传入),
+  /// 与 transaction payload 模式一致。
+  static Map<String, dynamic> serializeVirtualUser(LedgerVirtualUser user) {
+    return {
+      'syncId': user.syncId,
+      'name': user.name,
     };
   }
 

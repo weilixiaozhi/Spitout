@@ -51,4 +51,4 @@ export 'models/app_update_info.dart' show AppUpdateInfo, UpdateStatus;
 // UI 与 cloud/sync 层取 Import* 类型统一走本 barrel；落库编排逻辑仍留在
 // services/import/data_import_service.dart（依赖汇率服务）。
 export 'models/import_models.dart'
-    show ImportCategory, ImportTransaction, ImportData, ImportResult;
+    show ImportCategory, ImportTransaction, ImportData, ImportResult, ImportVirtualUser;

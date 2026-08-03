@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:drift/drift.dart' show OrderingTerm;
 import '../../data/db.dart';
 import '../../data/models.dart';
 import '../../data/repositories/base_repository.dart';
@@ -108,6 +109,15 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
       if (t.nativeAmount != null) 'nativeAmount': t.nativeAmount,
       // 缺键 = false(server snapshot 同语义),只为 true 时输出,保持 payload 干净。
       if (t.excludeFromStats) 'excludeFromStats': true,
+      // AA 分摊字段(非空才发,与 serializer "非空才发"守卫一致):
+      // 缺键导入兜底为 null → 视为未启用 AA,与旧 v6 备份兼容。
+      if (t.paidByUserId != null && t.paidByUserId!.isNotEmpty)
+        'paidByUserId': t.paidByUserId,
+      if (t.aaMode != null) 'aaMode': t.aaMode,
+      if (t.aaParticipants != null && t.aaParticipants!.isNotEmpty)
+        'aaParticipants': t.aaParticipants,
+      if (t.aaSplits != null && t.aaSplits!.isNotEmpty)
+        'aaSplits': t.aaSplits,
     };
 
     return item;
@@ -161,19 +171,40 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
     throw Exception('账本 $ledgerId 不存在');
   }
 
+  // 虚拟用户:随账本导出(R9),否则导入后指定分摊数据(aaParticipants/
+  // aaSplits 引用虚拟用户 syncId)会悬空。按 id 升序保证导出稳定。
+  final virtualUsers = await (db.select(db.ledgerVirtualUsers)
+        ..where((u) => u.ledgerId.equals(ledgerId))
+        ..orderBy([(u) => OrderingTerm.asc(u.id)]))
+      .get();
+  final virtualUserItems = virtualUsers.map((u) {
+    final vuItem = <String, dynamic>{
+      'name': _sanitizeString(u.name),
+    };
+    if (u.syncId != null && u.syncId!.isNotEmpty) {
+      vuItem['syncId'] = u.syncId;
+    }
+    return vuItem;
+  }).toList();
+
   final payload = {
-    'version': 6, // 版本升级,新增 syncId 用于跨设备同步
+    'version': 7, // v7:AA 分摊功能(paidByUserId/aaMode/aaParticipants/
+    // aaSplits + ledger.aaEnabled + virtualUsers 数组)。
+    // v6 导入兜底为 null/空 → 视为未启用 AA,向后兼容。
     'exportedAt': DateTime.now().toUtc().toIso8601String(),
     'ledgerId': ledgerId,
     'ledgerName': ledger.name,
     'currency': ledger.currency,
     'monthStartDay': ledger.monthStartDay,
+    'aaEnabled': ledger.aaEnabled,
     'count': items.length,
     'categories': categoryItems,
     'items': items,
+    'virtualUsers': virtualUserItems,
   };
 
-  logger.debug('TransactionsJson', '导出完成: ${items.length} 条交易, ${categoryItems.length} 个分类');
+  logger.debug('TransactionsJson',
+      '导出完成: ${items.length} 条交易, ${categoryItems.length} 个分类, ${virtualUserItems.length} 个虚拟用户');
   return jsonEncode(payload);
 }
 
@@ -218,17 +249,38 @@ ImportData parseJsonToImportData(String jsonStr) {
         happenedAt: DateTime.parse(it['happenedAt'] as String).toLocal(),
         note: it['note'] as String?,
         syncId: it['syncId'] as String?,
+        // AA 分摊字段:v6 缺键兜底 null → 落库视为未启用 AA。
+        // v7 显式输出(非空才发),round-trip 保真。
+        paidByUserId: it['paidByUserId'] as String?,
+        aaMode: it['aaMode'] as int?,
+        aaParticipants: it['aaParticipants'] as String?,
+        aaSplits: it['aaSplits'] as String?,
+      ));
+    }
+  }
+
+  // 解析虚拟用户(v7+ 携带;v6 缺键 → 空列表,导入跳过)
+  final virtualUsers = <ImportVirtualUser>[];
+  final jsonVirtualUsers = data['virtualUsers'] as List?;
+  if (jsonVirtualUsers != null) {
+    for (final vu in jsonVirtualUsers.cast<Map<String, dynamic>>()) {
+      virtualUsers.add(ImportVirtualUser(
+        syncId: vu['syncId'] as String?,
+        name: vu['name'] as String? ?? '',
       ));
     }
   }
 
   // monthStartDay 在导出 payload 里有,但这里刻意不读 —— 恢复路径由
   // syncLedgersFromServer 收敛。
+  // aaEnabled:v6 缺键 → null(不更新账本既有值);v7 显式携带。
   return ImportData(
     categories: categories,
     transactions: transactions,
+    virtualUsers: virtualUsers,
     ledgerName: data['ledgerName'] as String?,
     currency: data['currency'] as String?,
+    aaEnabled: data['aaEnabled'] as bool?,
   );
 }
 

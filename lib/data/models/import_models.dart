@@ -54,6 +54,21 @@ class ImportTransaction {
   /// 与 server snapshot「缺键 = false」语义对齐。
   final bool? excludeFromStats;
 
+  /// AA 分摊:支出人 userId。null(JSON/CSV 无此键) → 落库 null,
+  /// 由运行时写入层 ?? 操作者 userId 兜底,展示层空串降级"未知"。
+  final String? paidByUserId;
+
+  /// AA 分摊模式:null/0=人均,1=不分摊,2=指定。null 视为人均。
+  final int? aaMode;
+
+  /// AA 参与人(JSON 数组字符串:元素为 userId 或虚拟用户 syncId)。
+  /// null/空 → 运行时展开为账本全部成员。
+  final String? aaParticipants;
+
+  /// AA 指定分摊金额(JSON 对象字符串:key=参与人,value=金额字符串)。
+  /// 仅 aaMode=2 时有意义。
+  final String? aaSplits;
+
   const ImportTransaction({
     required this.type,
     required this.amount,
@@ -66,6 +81,27 @@ class ImportTransaction {
     this.note,
     this.categoryId,
     this.syncId,
+    this.paidByUserId,
+    this.aaMode,
+    this.aaParticipants,
+    this.aaSplits,
+  });
+}
+
+/// 导入虚拟用户(AA 分摊专用,随账本 JSON v7 导出导入)。
+///
+/// 设计意图:虚拟用户是 ledger-scoped 实体,若不随账本备份导出,导入后
+/// 指定分摊数据(aaParticipants/aaSplits 引用虚拟用户 syncId)会悬空(R9)。
+class ImportVirtualUser {
+  /// 跨设备唯一标识(UUID),与 server virtual_user 投影对齐。
+  final String? syncId;
+
+  /// 虚拟用户昵称。
+  final String name;
+
+  const ImportVirtualUser({
+    this.syncId,
+    required this.name,
   });
 }
 
@@ -74,16 +110,26 @@ class ImportData {
   final List<ImportCategory> categories;
   final List<ImportTransaction> transactions;
 
+  /// 虚拟用户列表(可选):仅云端全量恢复 / v7 备份携带。
+  /// CSV 导入路径不填,落库时跳过虚拟用户导入。
+  final List<ImportVirtualUser> virtualUsers;
+
   /// 账本名称（可选，用于更新账本信息）
   final String? ledgerName;
   /// 货币（可选，用于更新账本信息）
   final String? currency;
 
+  /// AA 分摊开关(可选):仅云端全量恢复 / v7 备份携带。
+  /// null → 不更新账本既有值。
+  final bool? aaEnabled;
+
   const ImportData({
     this.categories = const [],
     this.transactions = const [],
+    this.virtualUsers = const [],
     this.ledgerName,
     this.currency,
+    this.aaEnabled,
   });
 }
 

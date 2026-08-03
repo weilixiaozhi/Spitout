@@ -433,21 +433,40 @@ class LocalTransactionRepository implements TransactionRepository {
   /// 服务端 push.py 已经会兜底注入 userId,但本地写入路径(addTransaction /
   /// updateTransaction)不知道 currentUser 是谁,需要 UI 层在写完后调一下这个
   /// 方法。
-  ///   - isCreate=true:同时写 createdByUserId + lastEditedByUserId(新建场景)
-  ///   - isCreate=false:只写 lastEditedByUserId(编辑场景,createdByUserId
-  ///     维持 first-write-wins)
+  ///   - isCreate=true:同时写 createdByUserId + lastEditedByUserId;并按需求
+  ///     §2.2 默认值逻辑回填 paidByUserId(仅当现有值为空时取操作者 userId,
+  ///     用户/编辑器已显式设置的值保留)。
+  ///   - isCreate=false:只写 lastEditedByUserId(createdByUserId 维持
+  ///     first-write-wins);paidByUserId 不覆盖(用户手改的值保留)。
   Future<void> markTxAuthor({
     required int txId,
     required String userId,
     required bool isCreate,
   }) async {
-    await (db.update(db.transactions)..where((t) => t.id.equals(txId))).write(
-      TransactionsCompanion(
-        createdByUserId:
-            isCreate ? d.Value(userId) : const d.Value.absent(),
+    if (isCreate) {
+      // 创建场景:仅当 paidByUserId 为空时回填操作者(需求 §2.2)。
+      // 编辑器模型 B' 可能已在 addTransaction 时显式写入 paidByUserId
+      // (AaEditPage 返回 result 后一次性落库),此处不能覆盖。
+      final existing = await getTransactionById(txId);
+      final shouldBackfillPaidBy =
+          existing == null ||
+          existing.paidByUserId == null ||
+          existing.paidByUserId!.isEmpty;
+      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
+          .write(TransactionsCompanion(
+        createdByUserId: d.Value(userId),
         lastEditedByUserId: d.Value(userId),
-      ),
-    );
+        paidByUserId: shouldBackfillPaidBy
+            ? d.Value(userId)
+            : const d.Value.absent(),
+      ));
+    } else {
+      // 编辑场景:只写 lastEditedByUserId,paidByUserId 保持用户手改值。
+      await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
+          .write(TransactionsCompanion(
+        lastEditedByUserId: d.Value(userId),
+      ));
+    }
   }
 
   @override
