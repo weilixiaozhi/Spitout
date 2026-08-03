@@ -6812,6 +6812,18 @@ abstract class AppLocalizations {
   /// **'Custom split'**
   String get aaModeCustom;
 
+  /// No description provided for @aaModeNoSplit.
+  ///
+  /// In en, this message translates to:
+  /// **'No split'**
+  String get aaModeNoSplit;
+
+  /// No description provided for @aaSplitClearAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear & refill'**
+  String get aaSplitClearAll;
+
   /// No description provided for @aaParticipantsAll.
   ///
   /// In en, this message translates to:

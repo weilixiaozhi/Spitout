@@ -1155,6 +1155,8 @@
     "aaSplitAmounts": "금액 지정",
     "aaModePerPerson": "균등 분담",
     "aaModeCustom": "금액 지정 분담",
+    "aaModeNoSplit": "미분담",
+    "aaSplitClearAll": "전체 지우기",
     "aaParticipantsAll": "모든 멤버",
     "aaParticipantsSelected": "{count}명 선택",
     "aaSplitTotal": "합계",

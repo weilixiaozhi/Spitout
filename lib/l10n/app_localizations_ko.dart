@@ -3602,6 +3602,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaModeCustom => '금액 지정 분담';
 
   @override
+  String get aaModeNoSplit => '미분담';
+
+  @override
+  String get aaSplitClearAll => '전체 지우기';
+
+  @override
   String get aaParticipantsAll => '모든 멤버';
 
   @override

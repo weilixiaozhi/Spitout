@@ -58,6 +58,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   }
 
   /// 参与人选项到达后的首次初始化:支出人兜底、指定金额回填。
+  ///
+  /// 首次进入指定分摊且无既有金额时,默认填充所有人的人均金额(4.3),
+  /// 便于在人均基础上微调;编辑模式则回填既有指定金额。
   void _initOnce(List<AaParticipantOption> options) {
     if (_initialized || options.isEmpty) return;
     _initialized = true;
@@ -65,10 +68,31 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     _paidById = widget.args.paidByUserId ?? options.first.id;
     _participantIds = widget.args.participantIds;
     _syncAmountControllers(options);
-    // 编辑模式回填既有指定金额。
-    widget.args.splits?.forEach((id, amount) {
-      _amountCtrls[id]?.text = amount;
-    });
+    final hasSplits =
+        widget.args.splits != null && widget.args.splits!.isNotEmpty;
+    if (_mode == AaMode.custom && !hasSplits) {
+      // 指定分摊默认填充人均金额,减少逐人输入成本。
+      _fillPerPersonAmounts(options);
+    } else {
+      // 编辑模式回填既有指定金额。
+      widget.args.splits?.forEach((id, amount) {
+        _amountCtrls[id]?.text = amount;
+      });
+    }
+  }
+
+  /// 按人均分摊默认填充所有参与人金额(总额 / 人数,保留两位小数)。
+  ///
+  /// 设计意图:指定分摊常基于人均微调,先填人均可减少输入成本;
+  /// 除不尽的尾差由保存时的合计校验按支出人兜底修正。
+  void _fillPerPersonAmounts(List<AaParticipantOption> options) {
+    final participants = _effectiveParticipants(options);
+    if (participants.isEmpty) return;
+    final per = widget.args.amount / participants.length;
+    final perText = per.toStringAsFixed(2);
+    for (final id in participants) {
+      _amountCtrls[id]?.text = perText;
+    }
   }
 
   /// 按当前参与人集合同步金额输入控制器:新增补空控制器,移除释放。
@@ -300,6 +324,13 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                 setState(() {
                   _mode = picked;
                   _syncAmountControllers(options);
+                  // 从人均切到指定分摊:金额栏为空,默认填充人均金额,
+                  // 降低逐人输入成本(与 4.3「指定分摊默认人均」一致)。
+                  final hasAnyAmount = _effectiveParticipants(options).any(
+                      (id) => (_amountCtrls[id]?.text.trim() ?? '').isNotEmpty);
+                  if (_mode == AaMode.custom && !hasAnyAmount) {
+                    _fillPerPersonAmounts(options);
+                  }
                 });
               }
             },
@@ -360,6 +391,28 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       child: Column(
         children: [
+          // 清空重填:一键清空所有指定金额,便于整体重填(4.3)。
+          Align(
+            alignment: Alignment.centerRight,
+            child: TextButton.icon(
+              onPressed: () {
+                setState(() {
+                  for (final c in _amountCtrls.values) {
+                    c.clear();
+                  }
+                });
+              },
+              icon: const Icon(AppIcons.clearAll, size: 14),
+              label: Text(l10n.aaSplitClearAll),
+              style: TextButton.styleFrom(
+                foregroundColor: SpitoutTokens.textTertiary(context),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                minimumSize: Size.zero,
+                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                textStyle: const TextStyle(fontSize: 12),
+              ),
+            ),
+          ),
           for (var i = 0; i < participants.length; i++) ...[
             if (i > 0) _cardDivider(context),
             _buildAmountRow(

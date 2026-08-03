@@ -16,8 +16,6 @@ import '../services/settlement/aa_edit_models.dart';
 import '../services/settlement/aa_settlement_service.dart' show AaMode;
 import '../theme/colors.dart';
 import '../utils/category_utils.dart';
-import 'aa_mode_picker_sheet.dart';
-import 'aa_participant_picker_sheet.dart';
 import 'currency_picker_sheet.dart';
 import 'toast.dart';
 import 'wheel_date_picker.dart';
@@ -153,10 +151,9 @@ class _TransactionEditorSheetState
     _amountStr = trimmed.isEmpty ? '0' : trimmed;
     _noteCtrl.text = widget.initialNote ?? '';
 
-    // AA 初值回填:不分摊(历史/导入数据)在编辑器内按人均展示,
-    // 编辑器仅提供人均/指定两种选择。
-    final initMode = AaMode.fromDb(widget.initialAaMode);
-    _aaMode = initMode == AaMode.noSplit ? AaMode.perPerson : initMode;
+    // AA 初值回填:编辑器现支持人均/不分摊/指定三态循环切换,
+    // 不分摊交易原样回显为「不分摊」,不再强制按人均展示。
+    _aaMode = AaMode.fromDb(widget.initialAaMode);
     _aaParticipantIds = widget.initialAaParticipants;
     _aaSplits = widget.initialAaSplits;
     _aaPaidByUserId = widget.initialPaidByUserId;
@@ -460,30 +457,19 @@ class _TransactionEditorSheetState
 
   // —— AA 分摊 ——
 
-  /// 选择分摊方式(人均 / 指定)。「不分摊」不在编辑器提供入口。
-  Future<void> _pickAaMode() async {
-    final picked = await showAaModePickerSheet(context, selected: _aaMode);
-    if (picked == null || !mounted) return;
-    setState(() => _aaMode = picked);
-  }
-
-  /// 选择参与人(多选;「全部成员」语义为 null,运行时展开)。
-  Future<void> _pickAaParticipants() async {
-    final l10n = AppLocalizations.of(context);
-    try {
-      final options =
-          await ref.read(aaParticipantOptionsProvider(_ledgerId).future);
-      if (!mounted) return;
-      final picked = await showAaParticipantPickerSheet(
-        context,
-        options: options,
-        initialSelectedIds: _aaParticipantIds,
-      );
-      if (picked == null || !mounted) return;
-      setState(() => _aaParticipantIds = picked.all ? null : picked.ids);
-    } catch (e) {
-      if (mounted) showToast(context, '${l10n.commonFailed}: $e');
-    }
+  /// 单点循环切换分摊方式:人均 → 不分摊 → 指定 → 人均。
+  ///
+  /// 设计意图:人均分摊是最高频场景,作为循环起点;不分摊次之;
+  /// 指定分摊最重(需逐人填金额),故放最后。切换仅改本地状态,
+  /// 落库(含指定分摊跳 [AaEditPage] 确认金额)统一在提交时处理。
+  void _cycleAaMode() {
+    setState(() {
+      _aaMode = switch (_aaMode) {
+        AaMode.perPerson => AaMode.noSplit,
+        AaMode.noSplit => AaMode.custom,
+        AaMode.custom => AaMode.perPerson,
+      };
+    });
   }
 
   /// 组装 AA 落库字段。
@@ -505,8 +491,9 @@ class _TransactionEditorSheetState
 
     final isEditing = widget.editingTransactionId != null;
 
-    if (_aaMode == AaMode.custom) {
-      // 指定分摊:跳页前不落库;AaEditPage 是纯选择器,pop 返回 result。
+    // 人均/指定分摊:提交时统一跳 AaEditPage 配置——人均可改参与人/支出人,
+    // 指定再逐人填金额;跳页前不落库,AaEditPage 是纯选择器,pop 返回 result。
+    if (_aaMode == AaMode.perPerson || _aaMode == AaMode.custom) {
       final result = await Navigator.of(context).pushNamed(
         Routes.aaEdit,
         arguments: AaEditPageArgs(
@@ -515,7 +502,7 @@ class _TransactionEditorSheetState
           currencyCode: txCurrency,
           categoryName: CategoryUtils.getDisplayName(c.name, context),
           date: _date,
-          mode: AaMode.custom,
+          mode: _aaMode,
           paidByUserId: _aaPaidByUserId,
           participantIds: _aaParticipantIds,
           splits: _aaSplits,
@@ -539,16 +526,13 @@ class _TransactionEditorSheetState
       );
     }
 
-    // 人均:直接落库;参与人 null = 全部成员(运行时展开)
+    // 不分摊:不参与分摊算法,列入「不计入清单」;
+    // 无参与人/支出人/指定金额,编辑模式显式清空旧分摊数据。
     return (
-      aaMode: 0,
-      aaParticipants: _aaParticipantIds == null
-          // 编辑模式从「指定参与人」重置回「全部成员」时显式清空旧值
-          ? (isEditing && widget.initialAaParticipants != null ? '' : null)
-          : jsonEncode(_aaParticipantIds),
-      aaSplits: isEditing && _aaSplits != null ? '' : null,
-      // 支出人:新建由落库层回填操作者;编辑保留原值(不传)
-      paidByUserId: null,
+      aaMode: 1,
+      aaParticipants: isEditing ? '' : null,
+      aaSplits: isEditing ? '' : null,
+      paidByUserId: isEditing ? '' : null,
     );
   }
 
@@ -809,8 +793,8 @@ class _TransactionEditorSheetState
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            // —— Header：返回 + EXPENSE ENTRY + 记一笔 + 作者头像 ——
-            _buildHeader(context, l10n, editingTxId),
+            // —— Header：返回 + 记一笔 + 分摊方式(弱化) + 作者头像 ——
+            _buildHeader(context, l10n, editingTxId, aaEnabled),
             // —— 分类区（始终显示，含系统键盘拉起时） ——
             // 键盘拉起时分类区保持可见，整页上移保留。
             // 弱分隔线
@@ -858,11 +842,6 @@ class _TransactionEditorSheetState
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // AA 区块(分摊方式 + 参与人),仅账本开启 AA 时展示
-                  if (aaEnabled) ...[
-                    _buildAaConfigRow(context, l10n),
-                    const SizedBox(height: 4),
-                  ],
                   // 备注输入行（备注行在金额栏行上方）
                   NoteInputRow(
                     noteController: _noteCtrl,
@@ -919,98 +898,9 @@ class _TransactionEditorSheetState
   );
   }
 
-  /// AA 区块:分摊方式 + 参与人,两个紧凑胶囊一行排布。
-  ///
-  /// 设计意图:编辑器主体是金额键盘,空间紧张;AA 配置以胶囊行内嵌在
-  /// 备注行上方,既不挤占分类区,也与金额栏行的圆角输入风格保持一致。
-  Widget _buildAaConfigRow(BuildContext context, AppLocalizations l10n) {
-    final modeText = _aaMode == AaMode.custom
-        ? l10n.aaModeCustom
-        : l10n.aaModePerPerson;
-    final participantsText = _aaParticipantIds == null
-        ? l10n.aaParticipantsAll
-        : l10n.aaParticipantsSelected(_aaParticipantIds!.length);
-    return Row(
-      children: [
-        Expanded(
-          child: _buildAaCapsule(
-            context,
-            icon: AppIcons.pieChart,
-            label: l10n.aaSplitMode,
-            value: modeText,
-            onTap: _pickAaMode,
-          ),
-        ),
-        const SizedBox(width: 8),
-        Expanded(
-          child: _buildAaCapsule(
-            context,
-            icon: AppIcons.people,
-            label: l10n.aaParticipants,
-            value: participantsText,
-            onTap: _pickAaParticipants,
-          ),
-        ),
-      ],
-    );
-  }
-
-  /// AA 配置胶囊:图标 + 小标签 + 当前值 + 右箭头,点击弹出对应选择 sheet。
-  Widget _buildAaCapsule(
-    BuildContext context, {
-    required IconData icon,
-    required String label,
-    required String value,
-    required VoidCallback onTap,
-  }) {
-    return Material(
-      color: SpitoutTokens.surfaceInput(context),
-      borderRadius: BorderRadius.circular(8),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          child: Row(
-            children: [
-              Icon(icon,
-                  size: 14, color: SpitoutTokens.iconSecondary(context)),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      label,
-                      style: TextStyle(
-                        fontSize: 10,
-                        color: SpitoutTokens.textTertiary(context),
-                      ),
-                    ),
-                    Text(
-                      value,
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-              Icon(AppIcons.chevronRight,
-                  size: 12, color: SpitoutTokens.iconTertiary(context)),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 构建 Header：返回按钮 + 「记一笔」标题 + 作者头像。
-  Widget _buildHeader(BuildContext context, AppLocalizations l10n, int? editingTxId) {
+  /// 构建 Header：返回按钮 + 「记一笔」标题 + 分摊方式(弱化) + 作者头像。
+  Widget _buildHeader(
+      BuildContext context, AppLocalizations l10n, int? editingTxId, bool aaEnabled) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       child: Row(
@@ -1043,10 +933,47 @@ class _TransactionEditorSheetState
               ),
             ),
           ),
+          // 分摊方式：弱化入口,单点循环切换(仅账本开启 AA 时展示)
+          if (aaEnabled) _buildAaModeToggle(context, l10n),
           // 作者头像（编辑模式 + 共享账本时显示）
           if (editingTxId != null)
             _TxAuthorAvatars(editingTransactionId: editingTxId),
         ],
+      ),
+    );
+  }
+
+  /// 分摊方式弱化入口:小图标 + 当前方式文本,单点循环切换。
+  ///
+  /// 设计意图:放在标题隔壁但不抢主信息(金额/类目)焦点——
+  /// 小字号、弱色、常规字重,视觉上是一行弱化文本而非开关。
+  Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
+    final modeText = switch (_aaMode) {
+      AaMode.perPerson => l10n.aaModePerPerson,
+      AaMode.noSplit => l10n.aaModeNoSplit,
+      AaMode.custom => l10n.aaModeCustom,
+    };
+    return InkWell(
+      onTap: _cycleAaMode,
+      borderRadius: BorderRadius.circular(14),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(AppIcons.pieChart,
+                size: 12, color: SpitoutTokens.iconTertiary(context)),
+            const SizedBox(width: 4),
+            Text(
+              modeText,
+              style: TextStyle(
+                fontSize: 11,
+                fontWeight: FontWeight.w400,
+                color: SpitoutTokens.textTertiary(context),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

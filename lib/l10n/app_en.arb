@@ -1792,6 +1792,8 @@
     "aaSplitAmounts": "Custom amounts",
     "aaModePerPerson": "Split equally",
     "aaModeCustom": "Custom split",
+    "aaModeNoSplit": "No split",
+    "aaSplitClearAll": "Clear & refill",
     "aaParticipantsAll": "All members",
     "aaParticipantsSelected": "{count} selected",
     "@aaParticipantsSelected": {

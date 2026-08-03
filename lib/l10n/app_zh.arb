@@ -1657,6 +1657,8 @@
     "aaSplitAmounts": "指定金额",
     "aaModePerPerson": "人均分摊",
     "aaModeCustom": "指定分摊",
+    "aaModeNoSplit": "不分摊",
+    "aaSplitClearAll": "清空重填",
     "aaParticipantsAll": "全部成员",
     "aaParticipantsSelected": "已选 {count} 人",
     "aaSplitTotal": "合计",

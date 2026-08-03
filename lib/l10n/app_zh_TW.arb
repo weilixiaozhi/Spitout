@@ -1586,6 +1586,8 @@
     "aaSplitAmounts": "指定金額",
     "aaModePerPerson": "人均分攤",
     "aaModeCustom": "指定分攤",
+    "aaModeNoSplit": "不分攤",
+    "aaSplitClearAll": "清空重填",
     "aaParticipantsAll": "全部成員",
     "aaParticipantsSelected": "已選 {count} 人",
     "aaSplitTotal": "合計",

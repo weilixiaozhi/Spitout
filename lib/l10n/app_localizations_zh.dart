@@ -3602,6 +3602,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaModeCustom => '指定分摊';
 
   @override
+  String get aaModeNoSplit => '不分摊';
+
+  @override
+  String get aaSplitClearAll => '清空重填';
+
+  @override
   String get aaParticipantsAll => '全部成员';
 
   @override
@@ -7261,6 +7267,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aaModeCustom => '指定分攤';
+
+  @override
+  String get aaModeNoSplit => '不分攤';
+
+  @override
+  String get aaSplitClearAll => '清空重填';
 
   @override
   String get aaParticipantsAll => '全部成員';

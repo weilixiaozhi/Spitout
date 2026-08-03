@@ -3602,6 +3602,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaModeCustom => 'Custom split';
 
   @override
+  String get aaModeNoSplit => 'No split';
+
+  @override
+  String get aaSplitClearAll => 'Clear & refill';
+
+  @override
   String get aaParticipantsAll => 'All members';
 
   @override
