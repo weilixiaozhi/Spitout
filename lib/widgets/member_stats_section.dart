@@ -170,9 +170,12 @@ class _MemberStatTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    // 成员未设昵称时优先展示完整邮箱,邮箱缺失才回退 id 前缀
     final displayName = stat.displayName?.isNotEmpty == true
         ? stat.displayName!
-        : (stat.email?.split('@').first ?? stat.userId.substring(0, 6));
+        : (stat.email?.isNotEmpty == true
+            ? stat.email!
+            : stat.userId.substring(0, 6));
     final share = totalExpense > 0
         ? (stat.expenseTotal / totalExpense * 100).clamp(0, 100)
         : 0;

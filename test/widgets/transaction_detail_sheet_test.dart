@@ -1,7 +1,7 @@
-/// 记录详情 Bottom Sheet 展示名三级兜底测试。
+/// 记录详情 Bottom Sheet 展示名四级兜底测试。
 ///
-/// 锁定:共享账本成员表 → 本地昵称 → 原始 id 的兜底顺序;本地账本
-/// (无成员表)只要设置了本地昵称就必须显示昵称而非 id,与云端登录态无关。
+/// 锁定:共享账本成员表(昵称 → 完整邮箱) → 本地昵称 → 原始 id 的兜底顺序;
+/// 本地账本(无成员表)只要设置了本地昵称就必须显示昵称而非 id,与云端登录态无关。
 library;
 
 import 'package:flutter/material.dart';
@@ -166,9 +166,9 @@ void main() {
       localOwnerDisplayName: '本地昵称',
     );
 
-    // u_creator 在成员表但 displayName 为空 → 落到本地昵称;u_editor 不在成员表 → 本地昵称
-    expect(find.text('本地昵称'), findsNWidgets(2));
-    expect(find.text('creator@example.com'), findsNothing);
+    // u_creator 在成员表但 displayName 为空 → 展示完整邮箱;u_editor 不在成员表 → 本地昵称
+    expect(find.text('本地昵称'), findsOneWidget);
+    expect(find.text('creator@example.com'), findsOneWidget);
     expect(find.text('u_creator'), findsNothing);
     expect(find.text('u_editor'), findsNothing);
   });

@@ -398,9 +398,10 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
+    // 成员未设昵称时展示完整邮箱,便于识别账号身份
     final displayName = member.displayName?.isNotEmpty == true
         ? member.displayName!
-        : member.email.split('@').first;
+        : member.email;
     final isOwner = member.role == 'owner';
     return ListTile(
       leading: _MemberAvatar(member: member, displayName: displayName),

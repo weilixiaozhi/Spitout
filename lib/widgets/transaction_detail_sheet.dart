@@ -66,12 +66,16 @@ class _TransactionDetailBody extends ConsumerWidget {
     required this.onDelete,
   });
 
-  /// 展示名三级兜底:共享账本成员表 → 本地昵称 → 原始 id。
+  /// 展示名四级兜底:共享账本成员表(昵称 → 完整邮箱) → 本地昵称 → 原始 id。
   /// 本地账本无成员表,靠 [localOwnerDisplayName] 展示昵称;未设置昵称时回退 id。
   String _displayName(String? userId) {
     if (userId == null || userId.isEmpty) return '';
-    final memberName = memberDisplayMap[userId]?.displayName?.trim() ?? '';
+    final member = memberDisplayMap[userId];
+    final memberName = member?.displayName?.trim() ?? '';
     if (memberName.isNotEmpty) return memberName;
+    // 共享账本成员未设昵称:优先展示完整邮箱而非原始 id,与 AA 区/头像/成员统计口径一致
+    final memberEmail = member?.email.trim() ?? '';
+    if (memberEmail.isNotEmpty) return memberEmail;
     final localName = localOwnerDisplayName?.trim() ?? '';
     if (localName.isNotEmpty) return localName;
     return userId;
