@@ -391,7 +391,7 @@ class LocalBackupService {
       logger.error('LocalBackup', '备份文件校验失败', e, st);
       return RestoreStatus.integrityFailed;
     } finally {
-      database?.dispose();
+      database?.close();
     }
   }
 

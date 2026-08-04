@@ -21,22 +21,29 @@ class SectionCard extends StatelessWidget {
     final borderWidth = SpitoutTokens.cardOuterBorderWidth(context);
     final borderColor = SpitoutTokens.cardOuterBorderColor(context);
 
+    // 阴影由外层容器承载（不设颜色，避免在 ListTile 的 Material 祖先链中引入带背景色的 DecoratedBox），
+    // 背景色与圆角交给 Material，保证 ListTile 家族的 ink 波纹与选中背景绘制在 Material 之上不被遮挡。
     return Container(
       margin: margin, // 使用传入的 margin
       decoration: BoxDecoration(
-        color: SpitoutTokens.surface(context), // ⭐ 使用 Token
-        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
-        border: borderWidth > 0
-            ? Border.all(
-                color: borderColor, // ⭐ 使用卡片边框 Token
-                width: borderWidth,
-              )
-            : null,
-        boxShadow: isDark ? null : SpitoutShadows.card,  // ⭐ 暗黑模式：无阴影，亮色模式：有阴影
+        boxShadow: isDark ? null : SpitoutShadows.card, // 暗黑模式：无阴影，亮色模式：有阴影
       ),
-      child: Padding(
-        padding: padding,
-        child: child,
+      child: Material(
+        color: SpitoutTokens.surface(context), // ⭐ 使用 Token
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
+          side: borderWidth > 0
+              ? BorderSide(
+                  color: borderColor, // ⭐ 使用卡片边框 Token
+                  width: borderWidth,
+                )
+              : BorderSide.none,
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Padding(
+          padding: padding,
+          child: child,
+        ),
       ),
     );
   }

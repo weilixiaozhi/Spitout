@@ -139,12 +139,12 @@ class AppLockService {
   static Future<bool> authenticateWithBiometrics(
       {String reason = '请验证身份以解锁应用'}) async {
     try {
+      // local_auth 3.x 起不再使用 AuthenticationOptions，
+      // 直接以命名参数指定：仅生物识别 + 跨前后台保持认证状态
       return await _localAuth.authenticate(
         localizedReason: reason,
-        options: const AuthenticationOptions(
-          stickyAuth: true,
-          biometricOnly: true,
-        ),
+        biometricOnly: true,
+        persistAcrossBackgrounding: true,
       );
     } catch (e) {
       logger.error('AppLock', '生物识别认证失败', e);

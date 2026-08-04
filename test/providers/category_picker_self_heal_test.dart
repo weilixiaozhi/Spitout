@@ -114,7 +114,7 @@ void main() {
     // 写镜像表 → tableUpdates 自动重建 → 二次发新树)
     final sub = container.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
 
@@ -150,7 +150,7 @@ void main() {
     // 第一次"打开":订阅 stream → 自愈触发拉取
     final sub1 = container.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
     await waitFor(() => fake.fetchCallCount == 1, '首次自愈应触发拉取');
@@ -167,7 +167,7 @@ void main() {
 
     final sub2 = container.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
     // 等 100ms 给 unawaited 自愈执行窗口
@@ -180,7 +180,7 @@ void main() {
     // fake 默认 _resources=null,fetchSharedResources 抛异常
     final sub = container.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
     await waitFor(() => fake.fetchCallCount == 1, '首次自愈应触发拉取(失败)');
@@ -189,7 +189,7 @@ void main() {
     // 第二次打开:不应再次拉
     final sub2 = container.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
     await Future<void>.delayed(const Duration(milliseconds: 100));
@@ -219,7 +219,7 @@ void main() {
 
     final sub = container2.listen(
       categoryPickerTreeProvider('expense'),
-      (_, __) {},
+      (_, _) {},
       fireImmediately: true,
     );
     final tree = await container2

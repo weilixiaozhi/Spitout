@@ -99,7 +99,7 @@ class _PulseSkeletonState extends State<PulseSkeleton>
   Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: _controller,
-      builder: (_, __) {
+      builder: (_, _) {
         final v = 0.55 + 0.45 * (1 - _controller.value);
         return Opacity(opacity: v, child: widget.child);
       },

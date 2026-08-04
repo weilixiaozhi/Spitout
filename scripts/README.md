@@ -26,7 +26,7 @@ scripts/
 ### 🧪 测试运行工具
 
 - **run_tests.sh / run_tests.ps1** - 统一测试入口，默认开启 `--test-randomize-ordering-seed=random`，
-  让每次运行都在随机用例顺序下执行，持续暴露"用例间顺序依赖"隐患（优先用 `fvm flutter`，缺失时回退 `flutter`）。
+  让每次运行都在随机用例顺序下执行，持续暴露"用例间顺序依赖"隐患（直接使用 PATH 中的系统 `flutter`，不依赖 fvm）。
 
 ## 🚀 快速开始
 

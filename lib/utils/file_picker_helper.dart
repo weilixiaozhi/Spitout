@@ -27,14 +27,14 @@ class FilePickerHelper {
 
     try {
       // 尝试使用扩展名过滤
-      result = await FilePicker.platform.pickFiles(
+      result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: allowedExtensions,
       );
     } on PlatformException catch (e) {
       // 设备不支持扩展名过滤，fallback 到选择任意文件
       logger.warning('FilePickerHelper', '设备不支持扩展名过滤，fallback 到选择任意文件: $e');
-      result = await FilePicker.platform.pickFiles(type: FileType.any);
+      result = await FilePicker.pickFiles(type: FileType.any);
     }
 
     // 用户取消选择

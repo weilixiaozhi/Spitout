@@ -560,7 +560,7 @@ class _HomePageState extends ConsumerState<HomePage>
             );
           },
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
         );
       },
     );
@@ -586,8 +586,8 @@ class _HomePageState extends ConsumerState<HomePage>
     final primary = Theme.of(context).colorScheme.primary;
 
     return SizeTransition(
-      // axisAlignment: -1.0 = 顶部对齐，从卡片底部向下展开
-      axisAlignment: -1.0,
+      // 顶部对齐：竖直轴下 Alignment(-1.0, -1.0) 等价于旧 axisAlignment: -1.0
+      alignment: const Alignment(-1.0, -1.0),
       sizeFactor: _indicatorCtrl,
       child: Container(
         // 背景色 = scaffold 底色：叠层模式下覆盖下方列表内容，
@@ -1262,7 +1262,7 @@ class _MonthSkeleton extends StatelessWidget {
       physics: const NeverScrollableScrollPhysics(),
       padding: const EdgeInsets.only(top: 8),
       itemCount: 8,
-      itemBuilder: (_, __) => const PulseSkeleton(child: SkeletonListTile()),
+      itemBuilder: (_, _) => const PulseSkeleton(child: SkeletonListTile()),
     );
   }
 }

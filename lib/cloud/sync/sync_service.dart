@@ -97,8 +97,9 @@ class LocalOnlySyncService implements SyncService {
   /// timer 断言失败)。惰性解析把仓库创建推迟到真正执行删除的那一刻。
   /// 可空:大量测试直接 `LocalOnlySyncService()` 构造且不触达删除路径,
   /// 保持无参构造兼容;真正走删除时解析器为空则抛错提示配置缺失。
+  // 参数保持公共名:私有字段不能作为跨库命名参数调用(如 sync_providers.dart 注入处)
   LocalOnlySyncService({LedgerRepository Function()? repoResolver})
-      : _repoResolver = repoResolver;
+      : _repoResolver = repoResolver; // ignore: prefer_initializing_formals
 
   final LedgerRepository Function()? _repoResolver;
 

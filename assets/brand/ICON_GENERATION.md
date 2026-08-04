@@ -133,8 +133,8 @@ flutter_launcher_icons:
 
 | 切换方向 | 要改的文件 | 要改的 pubspec | 要跑的命令 |
 | --- | --- | --- | --- |
-| PNG → SVG（第四节） | `spitout_icon.dart` 全文替换 | 移除 `.png` 注册 | `fvm flutter pub get` |
-| SVG → PNG（第五节） | `spitout_icon.dart` 全文替换 + 生成 PNG | 新增 `.png` 注册 | 栅格化 + 复制 + `fvm flutter pub get` |
+| PNG → SVG（第四节） | `spitout_icon.dart` 全文替换 | 移除 `.png` 注册 | `flutter pub get` |
+| SVG → PNG（第五节） | `spitout_icon.dart` 全文替换 + 生成 PNG | 新增 `.png` 注册 | 栅格化 + 复制 + `flutter pub get` |
 
 > ⚠️ **关键约束**：`pubspec.yaml` 的 `flutter.assets` 里，**写了但文件不存在的资产会直接导致构建失败**。因此「切到哪边」和「资产注册哪边」必须同步，缺一不可。下面每个流程都按此顺序给全。
 
@@ -193,14 +193,14 @@ class SpitoutIcon extends StatelessWidget {
 
 ```powershell
 # 因增删了 pubspec 资产，必须刷新资源清单（否则运行期报 MissingAssetError）
-fvm flutter pub get
+flutter pub get
 ```
 
 #### 4.5 验证
 
 ```powershell
-fvm flutter analyze        # 确认无编译/导入错误
-fvm flutter run            # 观察欢迎页/锁屏页/我的页品牌图标正常显示
+flutter analyze        # 确认无编译/导入错误
+flutter run            # 观察欢迎页/锁屏页/我的页品牌图标正常显示
 ```
 
 ---
@@ -214,7 +214,7 @@ fvm flutter run            # 观察欢迎页/锁屏页/我的页品牌图标正�
 启动图标用的栅格化脚本会把 SVG 渲染成 PNG，并把产物写到 `assets/flutter_launcher_icons/`（**不是**品牌目录）。在仓库根目录执行：
 
 ```powershell
-fvm flutter test scripts/launcher_icons/rasterize_svg.dart
+flutter test scripts/launcher_icons/rasterize_svg.dart
 ```
 
 执行后生成：
@@ -280,14 +280,14 @@ class SpitoutIcon extends StatelessWidget {
 
 ```powershell
 # 因新增了 .png 资产，必须刷新资源清单
-fvm flutter pub get
+flutter pub get
 ```
 
 #### 5.6 验证
 
 ```powershell
-fvm flutter analyze        # 确认无编译/导入错误（注意 PNG 模式不应再 import flutter_svg）
-fvm flutter run            # 观察品牌图标正常显示
+flutter analyze        # 确认无编译/导入错误（注意 PNG 模式不应再 import flutter_svg）
+flutter run            # 观察品牌图标正常显示
 ```
 
 ### 6. 影响面（改动 SpitoutIcon 后无需改调用方）

@@ -102,10 +102,10 @@ class EntitySerializer {
       'level': category.level,
       'sortOrder': category.sortOrder,
       'icon': category.icon,
-      if (parentName != null) 'parentName': parentName,
       // 共享账本二级分类:parent 的稳定 syncId,server 端 projection.upsert_category
       // 直接用,不依赖 parent_name 反查(同名 + 重命名场景更稳)。
-      if (parentSyncId != null) 'parentSyncId': parentSyncId,
+      'parentName': ?parentName,
+      'parentSyncId': ?parentSyncId,
     };
   }
 

@@ -179,17 +179,22 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
                     children: [
                       const SizedBox(height: 16),
                       // ===== 自动本地备份开关 =====
+                      // 背景色由 Material 承载：若用带背景色的 Container 包裹
+                      // SwitchListTile，其 ink 波纹会画在 DecoratedBox 之下而被
+                      // 遮挡，触发 Flutter 的 ListTile 背景调试断言。
                       Container(
                         margin: const EdgeInsets.symmetric(horizontal: 16),
-                        decoration: BoxDecoration(
+                        child: Material(
                           color: SpitoutTokens.surface(context),
-                          borderRadius: BorderRadius.circular(12),
-                          border: isDark
-                              ? Border.all(
-                                  color: SpitoutTokens.border(context))
-                              : null,
-                        ),
-                        child: SwitchListTile(
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                            side: isDark
+                                ? BorderSide(
+                                    color: SpitoutTokens.border(context))
+                                : BorderSide.none,
+                          ),
+                          clipBehavior: Clip.antiAlias,
+                          child: SwitchListTile(
                           title: Text(
                             l10n.localBackupAutoTitle,
                             style: TextStyle(
@@ -209,7 +214,8 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
                           value: autoBackup.valueOrNull ?? true,
                           onChanged: (v) =>
                               ref.read(autoBackupSetterProvider).set(v),
-                          activeColor: Theme.of(context).primaryColor,
+                          activeThumbColor: Theme.of(context).primaryColor,
+                          ),
                         ),
                       ),
                       const SizedBox(height: 24),
@@ -339,31 +345,37 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
   /// 单个备份快照列表项：文件名（主）+ 大小（副），点击进入恢复确认
   Widget _buildBackupTile(
       BuildContext context, LocalBackupFile backup, bool isDark) {
+    // 背景色交给 Material 承载（原因同自动备份开关卡片），
+    // 外层仅留 margin，确保 ListTile 的最近 Material 祖先先于任何带背景的 DecoratedBox。
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-      decoration: BoxDecoration(
+      child: Material(
         color: SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(12),
-        border:
-            isDark ? Border.all(color: SpitoutTokens.border(context)) : null,
-      ),
-      child: ListTile(
-        title: Text(
-          backup.fileName,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w500,
-            color: SpitoutTokens.textPrimary(context),
-          ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+          side: isDark
+              ? BorderSide(color: SpitoutTokens.border(context))
+              : BorderSide.none,
         ),
-        subtitle: Text(
-          backup.sizeLabel,
-          style: TextStyle(
-            fontSize: 13,
-            color: SpitoutTokens.textSecondary(context),
+        clipBehavior: Clip.antiAlias,
+        child: ListTile(
+          title: Text(
+            backup.fileName,
+            style: TextStyle(
+              fontSize: 15,
+              fontWeight: FontWeight.w500,
+              color: SpitoutTokens.textPrimary(context),
+            ),
           ),
+          subtitle: Text(
+            backup.sizeLabel,
+            style: TextStyle(
+              fontSize: 13,
+              color: SpitoutTokens.textSecondary(context),
+            ),
+          ),
+          onTap: () => _restoreFile(backup.file),
         ),
-        onTap: () => _restoreFile(backup.file),
       ),
     );
   }

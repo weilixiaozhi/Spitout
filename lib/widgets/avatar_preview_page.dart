@@ -70,7 +70,7 @@ class AvatarPreviewPage extends StatelessWidget {
                           child: Image.file(
                             File(avatarPath!),
                             fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
+                            errorBuilder: (_, _, _) => const Icon(
                               Icons.broken_image,
                               size: 80,
                               color: Colors.white54,

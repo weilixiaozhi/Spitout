@@ -195,7 +195,8 @@ class AnalyticsLineChart extends StatelessWidget {
                   enabled: false,
                   touchTooltipData: fl.LineTouchTooltipData(
                     getTooltipColor: (_) => Colors.transparent,
-                    tooltipRoundedRadius: 0,
+                    // fl_chart 1.x 中圆角参数改为 BorderRadius 类型
+                    tooltipBorderRadius: BorderRadius.zero,
                     tooltipPadding: EdgeInsets.zero,
                     tooltipMargin: 10,
                     maxContentWidth: 60,
@@ -241,7 +242,7 @@ class AnalyticsLineChart extends StatelessWidget {
       double value, fl.TitleMeta meta, double yMax, Color color) {
     if (value >= yMax) return const SizedBox.shrink();
     return fl.SideTitleWidget(
-      axisSide: meta.axisSide,
+      meta: meta,
       space: 4,
       child: Text(
         '${value.round()}',
@@ -270,7 +271,7 @@ class AnalyticsLineChart extends StatelessWidget {
     if (idx % step != 0) return const SizedBox.shrink();
     final highlighted = highlightIndex != null && idx == highlightIndex;
     return fl.SideTitleWidget(
-      axisSide: meta.axisSide,
+      meta: meta,
       space: 4,
       child: Text(
         xLabels[idx],

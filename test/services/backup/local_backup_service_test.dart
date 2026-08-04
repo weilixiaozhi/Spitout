@@ -57,7 +57,7 @@ void main() {
     // 用独立只读连接打开备份文件，验证内容就是当前库数据
     final checkDb = sqlite3.open(backup.path, mode: OpenMode.readOnly);
     final rows = checkDb.select('SELECT name FROM categories');
-    checkDb.dispose();
+    checkDb.close();
     expect(rows.map((r) => r['name']), contains('food'));
   });
 

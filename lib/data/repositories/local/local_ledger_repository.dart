@@ -30,12 +30,14 @@ class LocalLedgerRepository implements LedgerRepository {
   /// local_changes 增量通道;无后端时两者都不注入。
   final SnapshotDirtyMarker? Function()? _snapshotDirtyMarkerGetter;
 
+  // 参数保持公共名:私有字段不能作为跨库命名参数调用(如 local_repository.dart 注入处)
+  // ignore: prefer_initializing_formals
   LocalLedgerRepository(
     this.db, {
     ChangeRecorder? Function()? trackerGetter,
     SnapshotDirtyMarker? Function()? snapshotDirtyMarkerGetter,
-  })  : _trackerGetter = trackerGetter,
-        _snapshotDirtyMarkerGetter = snapshotDirtyMarkerGetter;
+  })  : _trackerGetter = trackerGetter, // ignore: prefer_initializing_formals
+        _snapshotDirtyMarkerGetter = snapshotDirtyMarkerGetter; // ignore: prefer_initializing_formals
 
   @override
   Stream<List<Ledger>> watchLedgers() => db.select(db.ledgers).watch();

@@ -545,7 +545,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2)))),
-              error: (_, __) => Padding(
+              error: (_, _) => Padding(
                   padding: const EdgeInsets.symmetric(vertical: 8),
                   child: Text(l10n.homeDetailNoHistory,
                       style: TextStyle(

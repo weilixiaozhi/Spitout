@@ -13,8 +13,8 @@ permissions:
   contents: read
 
 env:
-  # 与 .fvmrc（Flutter 3.27.0）保持一致，避免 CI 与本地 SDK 版本漂移。
-  FLUTTER_VERSION: "3.27.0"
+  # 项目已弃用 fvm，统一使用系统全局 Flutter 稳定版。
+  FLUTTER_VERSION: "3.44.6"
 
 jobs:
   test:

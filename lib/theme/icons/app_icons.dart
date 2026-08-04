@@ -1,4 +1,4 @@
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// UI 框架图标：语义化 token。
 ///

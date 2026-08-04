@@ -1078,7 +1078,7 @@ class _MemberAvatar extends ConsumerWidget {
     return CircleAvatar(
       radius: 20,
       backgroundImage: NetworkImage(absoluteUrl),
-      onBackgroundImageError: (_, __) {/* fallback child 显示 */},
+      onBackgroundImageError: (_, _) {/* fallback child 显示 */},
       child: const PersonAvatar(size: 40, iconSize: 18),
     );
   }

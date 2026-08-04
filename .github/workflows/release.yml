@@ -23,7 +23,7 @@ permissions:
   contents: write
 
 env:
-  FLUTTER_VERSION: "3.27.3"
+  FLUTTER_VERSION: "3.44.6"
   APP_NAME: "Spitout"
 
 jobs:
@@ -60,7 +60,7 @@ jobs:
 
       - name: 安装 Android SDK 组件
         run: |
-          sdkmanager --install "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
+          sdkmanager --install "platform-tools" "platforms;android-35" "platforms;android-36" "platforms;android-37" "build-tools;35.0.0"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
@@ -117,21 +117,13 @@ jobs:
           echo "=== 原始产物 ==="
           ls -la "$APK_DIR"
 
+          # AGP 9.0 移除了 Gradle 侧自定义 APK 文件名的能力，产物统一为 app-prod-release.apk。
           for src in "$APK_DIR"/app-prod-*.apk; do
             [ -f "$src" ] || continue
             name="$(basename "$src")"
             case "$name" in
-              app-prod-release-v*.apk)
+              app-prod-release.apk)
                 dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}.apk"
-                ;;
-              app-prod-armeabi-v7a-release-v*.apk)
-                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-armeabi-v7a.apk"
-                ;;
-              app-prod-x86_64-release-v*.apk)
-                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-x86_64.apk"
-                ;;
-              app-prod-universal-release-v*.apk)
-                dest="$APK_DIR/${{ env.APP_NAME }}-${VERSION}-universal.apk"
                 ;;
               *)
                 echo "跳过: $name"

@@ -314,7 +314,7 @@ class _SwitchTile extends StatelessWidget {
           Switch.adaptive(
             value: value,
             onChanged: onChanged,
-            activeColor: primaryColor,
+            activeThumbColor: primaryColor,
           ),
         ],
       ),

@@ -1109,14 +1109,14 @@ class _TxAuthorAvatars extends ConsumerWidget {
     return contextAsync.when(
       // 加载中 / 出错 / 非共享账本 → 不展示
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (ctx) {
         if (ctx == null) return const SizedBox.shrink();
         // 从成员列表中查找创作者/编辑者信息
         final membersAsync = ref.watch(ledgerMembersProvider(ctx.ledgerSyncId));
         return membersAsync.when(
           loading: () => const SizedBox.shrink(),
-          error: (_, __) => const SizedBox.shrink(),
+          error: (_, _) => const SizedBox.shrink(),
           data: (members) {
             final byId = <String, SpitoutCloudLedgerMember>{
               for (final m in members) m.userId: m,

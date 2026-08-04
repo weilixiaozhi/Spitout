@@ -19,7 +19,8 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
     const initSettings = InitializationSettings(android: androidSettings);
 
-    await _plugin.initialize(initSettings);
+    // 22.x 起 initialize 改为命名参数
+    await _plugin.initialize(settings: initSettings);
 
     // 不在初始化阶段自动请求通知权限，避免应用首次安装启动即弹出系统权限弹窗。
     // 通知权限延迟到用户主动开启记账提醒时再请求（见 ReminderSettingsNotifier）。
@@ -86,16 +87,15 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     const notificationDetails = NotificationDetails(android: androidDetails);
 
     try {
-      // 使用 exactAllowWhileIdle 确保休眠时也能触发
+      // 使用 exactAllowWhileIdle 确保休眠时也能触发；
+      // flutter_local_notifications 22.x 起全部为命名参数
       await _plugin.zonedSchedule(
-        id,
-        title,
-        body,
-        tzScheduledDate,
-        notificationDetails,
+        id: id,
+        title: title,
+        body: body,
+        scheduledDate: tzScheduledDate,
+        notificationDetails: notificationDetails,
         androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-        uiLocalNotificationDateInterpretation:
-            UILocalNotificationDateInterpretation.absoluteTime,
         matchDateTimeComponents: DateTimeComponents.time, // 每天重复
       );
 
@@ -147,14 +147,12 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     const notificationDetails = NotificationDetails(android: androidDetails);
 
     await _plugin.zonedSchedule(
-      id,
-      title,
-      body,
-      tzScheduledDate,
-      notificationDetails,
+      id: id,
+      title: title,
+      body: body,
+      scheduledDate: tzScheduledDate,
+      notificationDetails: notificationDetails,
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-      uiLocalNotificationDateInterpretation:
-          UILocalNotificationDateInterpretation.absoluteTime,
     );
 
     debugPrint('[Android] 单次提醒设置成功: $scheduledDate');
@@ -167,13 +165,13 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     debugPrint('[Android] 🗑️  开始取消所有提醒...');
 
     // 取消主要提醒
-    await _plugin.cancel(id);
+    await _plugin.cancel(id: id);
     debugPrint('[Android] 🗑️  取消主要提醒 (ID: $id)');
 
     // 取消所有7天备用提醒
     debugPrint('[Android] 🗑️  取消备用提醒 (ID: ${id + 1} - ${id + 7})');
     for (int i = 1; i <= 7; i++) {
-      await _plugin.cancel(id + i);
+      await _plugin.cancel(id: id + i);
     }
 
     // 同时取消 AlarmManager 备用
@@ -219,7 +217,13 @@ class AndroidNotificationUtil implements util.NotificationUtil {
 
     const notificationDetails = NotificationDetails(android: androidDetails);
 
-    await _plugin.show(id, title, body, notificationDetails);
+    // 22.x 起 show 改为命名参数
+    await _plugin.show(
+      id: id,
+      title: title,
+      body: body,
+      notificationDetails: notificationDetails,
+    );
     debugPrint('[Android] 即时通知已显示: $title');
   }
 
@@ -277,14 +281,12 @@ class AndroidNotificationUtil implements util.NotificationUtil {
         const notificationDetails = NotificationDetails(android: androidDetails);
 
         await _plugin.zonedSchedule(
-          backupId,
-          title,
-          body,
-          tzBackupDate,
-          notificationDetails,
+          id: backupId,
+          title: title,
+          body: body,
+          scheduledDate: tzBackupDate,
+          notificationDetails: notificationDetails,
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
-          uiLocalNotificationDateInterpretation:
-              UILocalNotificationDateInterpretation.absoluteTime,
         );
       }
       debugPrint('[Android] ✅ 所有备用提醒设置完成 (共7天)');

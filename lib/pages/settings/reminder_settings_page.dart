@@ -61,7 +61,7 @@ class ReminderSettingsPage extends ConsumerWidget {
               onChanged: (value) {
                 ref.read(reminderSettingsProvider.notifier).updateEnabled(value);
               },
-              activeColor: Theme.of(context).primaryColor,
+              activeThumbColor: Theme.of(context).primaryColor,
             ),
           ),
 

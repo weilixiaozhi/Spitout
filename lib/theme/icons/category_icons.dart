@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:lucide_icons/lucide_icons.dart';
+import 'package:lucide_icons_flutter/lucide_icons.dart';
 
 /// 分类/选择器图标库（DB 持久化反查注册表）。
 ///

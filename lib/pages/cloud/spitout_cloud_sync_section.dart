@@ -842,7 +842,7 @@ class _TwoFactorStatusRowState extends ConsumerState<_TwoFactorStatusRow> {
     final l10n = AppLocalizations.of(context);
     // syncStatusRefreshProvider 在「重新登录成功 / 同步完成」时 bump,
     // 监听它就能让切换云方案后回来 / 用户重新登录后自动重新拉取 2FA 状态。
-    ref.listen<int>(syncStatusRefreshProvider, (_, __) => _load());
+    ref.listen<int>(syncStatusRefreshProvider, (_, _) => _load());
 
     // 还没加载完 / 拉取失败 / 未登录 / 不是 Spitout Cloud → 整行隐藏。
     // 不显示 loading 占位避免初次进入页面时闪一下。

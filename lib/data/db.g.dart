@@ -11,126 +11,181 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _currencyMeta =
-      const VerificationMeta('currency');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _currencyMeta = const VerificationMeta(
+    'currency',
+  );
   @override
   late final GeneratedColumn<String> currency = GeneratedColumn<String>(
-      'currency', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('CNY'));
+    'currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('CNY'),
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('personal'));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('personal'),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _myRoleMeta = const VerificationMeta('myRole');
   @override
   late final GeneratedColumn<String> myRole = GeneratedColumn<String>(
-      'my_role', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('owner'));
-  static const VerificationMeta _memberCountMeta =
-      const VerificationMeta('memberCount');
+    'my_role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('owner'),
+  );
+  static const VerificationMeta _memberCountMeta = const VerificationMeta(
+    'memberCount',
+  );
   @override
   late final GeneratedColumn<int> memberCount = GeneratedColumn<int>(
-      'member_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _isSharedMeta =
-      const VerificationMeta('isShared');
+    'member_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _isSharedMeta = const VerificationMeta(
+    'isShared',
+  );
   @override
   late final GeneratedColumn<bool> isShared = GeneratedColumn<bool>(
-      'is_shared', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("is_shared" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _ownerUserIdMeta =
-      const VerificationMeta('ownerUserId');
+    'is_shared',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_shared" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _ownerUserIdMeta = const VerificationMeta(
+    'ownerUserId',
+  );
   @override
   late final GeneratedColumn<String> ownerUserId = GeneratedColumn<String>(
-      'owner_user_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _monthStartDayMeta =
-      const VerificationMeta('monthStartDay');
+    'owner_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _monthStartDayMeta = const VerificationMeta(
+    'monthStartDay',
+  );
   @override
   late final GeneratedColumn<int> monthStartDay = GeneratedColumn<int>(
-      'month_start_day', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _storageModeMeta =
-      const VerificationMeta('storageMode');
+    'month_start_day',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _storageModeMeta = const VerificationMeta(
+    'storageMode',
+  );
   @override
   late final GeneratedColumn<String> storageMode = GeneratedColumn<String>(
-      'storage_mode', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('local'));
-  static const VerificationMeta _aaEnabledMeta =
-      const VerificationMeta('aaEnabled');
+    'storage_mode',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('local'),
+  );
+  static const VerificationMeta _aaEnabledMeta = const VerificationMeta(
+    'aaEnabled',
+  );
   @override
   late final GeneratedColumn<bool> aaEnabled = GeneratedColumn<bool>(
-      'aa_enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("aa_enabled" IN (0, 1))'),
-      defaultValue: const Constant(false));
+    'aa_enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("aa_enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        name,
-        currency,
-        type,
-        createdAt,
-        syncId,
-        myRole,
-        memberCount,
-        isShared,
-        ownerUserId,
-        monthStartDay,
-        storageMode,
-        aaEnabled
-      ];
+    id,
+    name,
+    currency,
+    type,
+    createdAt,
+    syncId,
+    myRole,
+    memberCount,
+    isShared,
+    ownerUserId,
+    monthStartDay,
+    storageMode,
+    aaEnabled,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'ledgers';
   @override
-  VerificationContext validateIntegrity(Insertable<Ledger> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Ledger> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -138,61 +193,89 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('currency')) {
-      context.handle(_currencyMeta,
-          currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta));
+      context.handle(
+        _currencyMeta,
+        currency.isAcceptableOrUnknown(data['currency']!, _currencyMeta),
+      );
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     }
     if (data.containsKey('my_role')) {
-      context.handle(_myRoleMeta,
-          myRole.isAcceptableOrUnknown(data['my_role']!, _myRoleMeta));
+      context.handle(
+        _myRoleMeta,
+        myRole.isAcceptableOrUnknown(data['my_role']!, _myRoleMeta),
+      );
     }
     if (data.containsKey('member_count')) {
       context.handle(
+        _memberCountMeta,
+        memberCount.isAcceptableOrUnknown(
+          data['member_count']!,
           _memberCountMeta,
-          memberCount.isAcceptableOrUnknown(
-              data['member_count']!, _memberCountMeta));
+        ),
+      );
     }
     if (data.containsKey('is_shared')) {
-      context.handle(_isSharedMeta,
-          isShared.isAcceptableOrUnknown(data['is_shared']!, _isSharedMeta));
+      context.handle(
+        _isSharedMeta,
+        isShared.isAcceptableOrUnknown(data['is_shared']!, _isSharedMeta),
+      );
     }
     if (data.containsKey('owner_user_id')) {
       context.handle(
+        _ownerUserIdMeta,
+        ownerUserId.isAcceptableOrUnknown(
+          data['owner_user_id']!,
           _ownerUserIdMeta,
-          ownerUserId.isAcceptableOrUnknown(
-              data['owner_user_id']!, _ownerUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('month_start_day')) {
       context.handle(
+        _monthStartDayMeta,
+        monthStartDay.isAcceptableOrUnknown(
+          data['month_start_day']!,
           _monthStartDayMeta,
-          monthStartDay.isAcceptableOrUnknown(
-              data['month_start_day']!, _monthStartDayMeta));
+        ),
+      );
     }
     if (data.containsKey('storage_mode')) {
       context.handle(
+        _storageModeMeta,
+        storageMode.isAcceptableOrUnknown(
+          data['storage_mode']!,
           _storageModeMeta,
-          storageMode.isAcceptableOrUnknown(
-              data['storage_mode']!, _storageModeMeta));
+        ),
+      );
     }
     if (data.containsKey('aa_enabled')) {
-      context.handle(_aaEnabledMeta,
-          aaEnabled.isAcceptableOrUnknown(data['aa_enabled']!, _aaEnabledMeta));
+      context.handle(
+        _aaEnabledMeta,
+        aaEnabled.isAcceptableOrUnknown(data['aa_enabled']!, _aaEnabledMeta),
+      );
     }
     return context;
   }
@@ -203,32 +286,58 @@ class $LedgersTable extends Ledgers with TableInfo<$LedgersTable, Ledger> {
   Ledger map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Ledger(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      currency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}currency'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
-      myRole: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}my_role'])!,
-      memberCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}member_count'])!,
-      isShared: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}is_shared'])!,
-      ownerUserId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}owner_user_id']),
-      monthStartDay: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}month_start_day'])!,
-      storageMode: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}storage_mode'])!,
-      aaEnabled: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}aa_enabled'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      currency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
+      myRole: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}my_role'],
+      )!,
+      memberCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}member_count'],
+      )!,
+      isShared: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_shared'],
+      )!,
+      ownerUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}owner_user_id'],
+      ),
+      monthStartDay: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}month_start_day'],
+      )!,
+      storageMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}storage_mode'],
+      )!,
+      aaEnabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}aa_enabled'],
+      )!,
     );
   }
 
@@ -261,20 +370,21 @@ class Ledger extends DataClass implements Insertable<Ledger> {
   /// AA 分摊开关。关闭后入口隐藏、历史数据不展示不参与统计;重开数据仍在。
   /// 必须跨设备同步(随 ledger 同通道下发)。
   final bool aaEnabled;
-  const Ledger(
-      {required this.id,
-      required this.name,
-      required this.currency,
-      required this.type,
-      required this.createdAt,
-      this.syncId,
-      required this.myRole,
-      required this.memberCount,
-      required this.isShared,
-      this.ownerUserId,
-      required this.monthStartDay,
-      required this.storageMode,
-      required this.aaEnabled});
+  const Ledger({
+    required this.id,
+    required this.name,
+    required this.currency,
+    required this.type,
+    required this.createdAt,
+    this.syncId,
+    required this.myRole,
+    required this.memberCount,
+    required this.isShared,
+    this.ownerUserId,
+    required this.monthStartDay,
+    required this.storageMode,
+    required this.aaEnabled,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -305,8 +415,9 @@ class Ledger extends DataClass implements Insertable<Ledger> {
       currency: Value(currency),
       type: Value(type),
       createdAt: Value(createdAt),
-      syncId:
-          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
       myRole: Value(myRole),
       memberCount: Value(memberCount),
       isShared: Value(isShared),
@@ -319,8 +430,10 @@ class Ledger extends DataClass implements Insertable<Ledger> {
     );
   }
 
-  factory Ledger.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Ledger.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Ledger(
       id: serializer.fromJson<int>(json['id']),
@@ -358,35 +471,35 @@ class Ledger extends DataClass implements Insertable<Ledger> {
     };
   }
 
-  Ledger copyWith(
-          {int? id,
-          String? name,
-          String? currency,
-          String? type,
-          DateTime? createdAt,
-          Value<String?> syncId = const Value.absent(),
-          String? myRole,
-          int? memberCount,
-          bool? isShared,
-          Value<String?> ownerUserId = const Value.absent(),
-          int? monthStartDay,
-          String? storageMode,
-          bool? aaEnabled}) =>
-      Ledger(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        currency: currency ?? this.currency,
-        type: type ?? this.type,
-        createdAt: createdAt ?? this.createdAt,
-        syncId: syncId.present ? syncId.value : this.syncId,
-        myRole: myRole ?? this.myRole,
-        memberCount: memberCount ?? this.memberCount,
-        isShared: isShared ?? this.isShared,
-        ownerUserId: ownerUserId.present ? ownerUserId.value : this.ownerUserId,
-        monthStartDay: monthStartDay ?? this.monthStartDay,
-        storageMode: storageMode ?? this.storageMode,
-        aaEnabled: aaEnabled ?? this.aaEnabled,
-      );
+  Ledger copyWith({
+    int? id,
+    String? name,
+    String? currency,
+    String? type,
+    DateTime? createdAt,
+    Value<String?> syncId = const Value.absent(),
+    String? myRole,
+    int? memberCount,
+    bool? isShared,
+    Value<String?> ownerUserId = const Value.absent(),
+    int? monthStartDay,
+    String? storageMode,
+    bool? aaEnabled,
+  }) => Ledger(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    currency: currency ?? this.currency,
+    type: type ?? this.type,
+    createdAt: createdAt ?? this.createdAt,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    myRole: myRole ?? this.myRole,
+    memberCount: memberCount ?? this.memberCount,
+    isShared: isShared ?? this.isShared,
+    ownerUserId: ownerUserId.present ? ownerUserId.value : this.ownerUserId,
+    monthStartDay: monthStartDay ?? this.monthStartDay,
+    storageMode: storageMode ?? this.storageMode,
+    aaEnabled: aaEnabled ?? this.aaEnabled,
+  );
   Ledger copyWithCompanion(LedgersCompanion data) {
     return Ledger(
       id: data.id.present ? data.id.value : this.id,
@@ -396,16 +509,19 @@ class Ledger extends DataClass implements Insertable<Ledger> {
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       syncId: data.syncId.present ? data.syncId.value : this.syncId,
       myRole: data.myRole.present ? data.myRole.value : this.myRole,
-      memberCount:
-          data.memberCount.present ? data.memberCount.value : this.memberCount,
+      memberCount: data.memberCount.present
+          ? data.memberCount.value
+          : this.memberCount,
       isShared: data.isShared.present ? data.isShared.value : this.isShared,
-      ownerUserId:
-          data.ownerUserId.present ? data.ownerUserId.value : this.ownerUserId,
+      ownerUserId: data.ownerUserId.present
+          ? data.ownerUserId.value
+          : this.ownerUserId,
       monthStartDay: data.monthStartDay.present
           ? data.monthStartDay.value
           : this.monthStartDay,
-      storageMode:
-          data.storageMode.present ? data.storageMode.value : this.storageMode,
+      storageMode: data.storageMode.present
+          ? data.storageMode.value
+          : this.storageMode,
       aaEnabled: data.aaEnabled.present ? data.aaEnabled.value : this.aaEnabled,
     );
   }
@@ -432,19 +548,20 @@ class Ledger extends DataClass implements Insertable<Ledger> {
 
   @override
   int get hashCode => Object.hash(
-      id,
-      name,
-      currency,
-      type,
-      createdAt,
-      syncId,
-      myRole,
-      memberCount,
-      isShared,
-      ownerUserId,
-      monthStartDay,
-      storageMode,
-      aaEnabled);
+    id,
+    name,
+    currency,
+    type,
+    createdAt,
+    syncId,
+    myRole,
+    memberCount,
+    isShared,
+    ownerUserId,
+    monthStartDay,
+    storageMode,
+    aaEnabled,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -540,20 +657,21 @@ class LedgersCompanion extends UpdateCompanion<Ledger> {
     });
   }
 
-  LedgersCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? name,
-      Value<String>? currency,
-      Value<String>? type,
-      Value<DateTime>? createdAt,
-      Value<String?>? syncId,
-      Value<String>? myRole,
-      Value<int>? memberCount,
-      Value<bool>? isShared,
-      Value<String?>? ownerUserId,
-      Value<int>? monthStartDay,
-      Value<String>? storageMode,
-      Value<bool>? aaEnabled}) {
+  LedgersCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? currency,
+    Value<String>? type,
+    Value<DateTime>? createdAt,
+    Value<String?>? syncId,
+    Value<String>? myRole,
+    Value<int>? memberCount,
+    Value<bool>? isShared,
+    Value<String?>? ownerUserId,
+    Value<int>? monthStartDay,
+    Value<String>? storageMode,
+    Value<bool>? aaEnabled,
+  }) {
     return LedgersCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -646,64 +764,106 @@ class $CategoriesTable extends Categories
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
-      'kind', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _iconMeta = const VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
-      'icon', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _sortOrderMeta =
-      const VerificationMeta('sortOrder');
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
-      'sort_order', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _parentIdMeta =
-      const VerificationMeta('parentId');
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _parentIdMeta = const VerificationMeta(
+    'parentId',
+  );
   @override
   late final GeneratedColumn<int> parentId = GeneratedColumn<int>(
-      'parent_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'parent_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _levelMeta = const VerificationMeta('level');
   @override
   late final GeneratedColumn<int> level = GeneratedColumn<int>(
-      'level', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, name, kind, icon, sortOrder, parentId, level, syncId];
+  List<GeneratedColumn> get $columns => [
+    id,
+    name,
+    kind,
+    icon,
+    sortOrder,
+    parentId,
+    level,
+    syncId,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'categories';
   @override
-  VerificationContext validateIntegrity(Insertable<Category> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Category> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -711,35 +871,49 @@ class $CategoriesTable extends Categories
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('kind')) {
       context.handle(
-          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('icon')) {
       context.handle(
-          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
     }
     if (data.containsKey('sort_order')) {
-      context.handle(_sortOrderMeta,
-          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
     }
     if (data.containsKey('parent_id')) {
-      context.handle(_parentIdMeta,
-          parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta));
+      context.handle(
+        _parentIdMeta,
+        parentId.isAcceptableOrUnknown(data['parent_id']!, _parentIdMeta),
+      );
     }
     if (data.containsKey('level')) {
       context.handle(
-          _levelMeta, level.isAcceptableOrUnknown(data['level']!, _levelMeta));
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     }
     return context;
   }
@@ -750,22 +924,38 @@ class $CategoriesTable extends Categories
   Category map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Category(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      kind: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
-      icon: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
-      sortOrder: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
-      parentId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}parent_id']),
-      level: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}level'])!,
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      parentId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}parent_id'],
+      ),
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
     );
   }
 
@@ -784,15 +974,16 @@ class Category extends DataClass implements Insertable<Category> {
   final int? parentId;
   final int level;
   final String? syncId;
-  const Category(
-      {required this.id,
-      required this.name,
-      required this.kind,
-      this.icon,
-      required this.sortOrder,
-      this.parentId,
-      required this.level,
-      this.syncId});
+  const Category({
+    required this.id,
+    required this.name,
+    required this.kind,
+    this.icon,
+    required this.sortOrder,
+    this.parentId,
+    required this.level,
+    this.syncId,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -824,13 +1015,16 @@ class Category extends DataClass implements Insertable<Category> {
           ? const Value.absent()
           : Value(parentId),
       level: Value(level),
-      syncId:
-          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
     );
   }
 
-  factory Category.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Category.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Category(
       id: serializer.fromJson<int>(json['id']),
@@ -858,25 +1052,25 @@ class Category extends DataClass implements Insertable<Category> {
     };
   }
 
-  Category copyWith(
-          {int? id,
-          String? name,
-          String? kind,
-          Value<String?> icon = const Value.absent(),
-          int? sortOrder,
-          Value<int?> parentId = const Value.absent(),
-          int? level,
-          Value<String?> syncId = const Value.absent()}) =>
-      Category(
-        id: id ?? this.id,
-        name: name ?? this.name,
-        kind: kind ?? this.kind,
-        icon: icon.present ? icon.value : this.icon,
-        sortOrder: sortOrder ?? this.sortOrder,
-        parentId: parentId.present ? parentId.value : this.parentId,
-        level: level ?? this.level,
-        syncId: syncId.present ? syncId.value : this.syncId,
-      );
+  Category copyWith({
+    int? id,
+    String? name,
+    String? kind,
+    Value<String?> icon = const Value.absent(),
+    int? sortOrder,
+    Value<int?> parentId = const Value.absent(),
+    int? level,
+    Value<String?> syncId = const Value.absent(),
+  }) => Category(
+    id: id ?? this.id,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    icon: icon.present ? icon.value : this.icon,
+    sortOrder: sortOrder ?? this.sortOrder,
+    parentId: parentId.present ? parentId.value : this.parentId,
+    level: level ?? this.level,
+    syncId: syncId.present ? syncId.value : this.syncId,
+  );
   Category copyWithCompanion(CategoriesCompanion data) {
     return Category(
       id: data.id.present ? data.id.value : this.id,
@@ -950,8 +1144,8 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     this.parentId = const Value.absent(),
     this.level = const Value.absent(),
     this.syncId = const Value.absent(),
-  })  : name = Value(name),
-        kind = Value(kind);
+  }) : name = Value(name),
+       kind = Value(kind);
   static Insertable<Category> custom({
     Expression<int>? id,
     Expression<String>? name,
@@ -974,15 +1168,16 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
     });
   }
 
-  CategoriesCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? name,
-      Value<String>? kind,
-      Value<String?>? icon,
-      Value<int>? sortOrder,
-      Value<int?>? parentId,
-      Value<int>? level,
-      Value<String?>? syncId}) {
+  CategoriesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<String?>? icon,
+    Value<int>? sortOrder,
+    Value<int?>? parentId,
+    Value<int>? level,
+    Value<String?>? syncId,
+  }) {
     return CategoriesCompanion(
       id: id ?? this.id,
       name: name ?? this.name,
@@ -1050,281 +1245,426 @@ class $TransactionsTable extends Transactions
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _ledgerIdMeta =
-      const VerificationMeta('ledgerId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
   @override
   late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-      'ledger_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
-      'amount', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _categoryIdMeta =
-      const VerificationMeta('categoryId');
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
   @override
   late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-      'category_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _happenedAtMeta =
-      const VerificationMeta('happenedAt');
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _happenedAtMeta = const VerificationMeta(
+    'happenedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> happenedAt = GeneratedColumn<DateTime>(
-      'happened_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'happened_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
-      'note', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _recurringIdMeta =
-      const VerificationMeta('recurringId');
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _recurringIdMeta = const VerificationMeta(
+    'recurringId',
+  );
   @override
   late final GeneratedColumn<int> recurringId = GeneratedColumn<int>(
-      'recurring_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'recurring_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdByUserIdMeta =
-      const VerificationMeta('createdByUserId');
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdByUserIdMeta = const VerificationMeta(
+    'createdByUserId',
+  );
   @override
   late final GeneratedColumn<String> createdByUserId = GeneratedColumn<String>(
-      'created_by_user_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'created_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _lastEditedByUserIdMeta =
       const VerificationMeta('lastEditedByUserId');
   @override
   late final GeneratedColumn<String> lastEditedByUserId =
-      GeneratedColumn<String>('last_edited_by_user_id', aliasedName, true,
-          type: DriftSqlType.string, requiredDuringInsert: false);
+      GeneratedColumn<String>(
+        'last_edited_by_user_id',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
   static const VerificationMeta _categorySyncIdOverrideMeta =
       const VerificationMeta('categorySyncIdOverride');
   @override
   late final GeneratedColumn<String> categorySyncIdOverride =
-      GeneratedColumn<String>('category_sync_id_override', aliasedName, true,
-          type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _excludeFromStatsMeta =
-      const VerificationMeta('excludeFromStats');
+      GeneratedColumn<String>(
+        'category_sync_id_override',
+        aliasedName,
+        true,
+        type: DriftSqlType.string,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _excludeFromStatsMeta = const VerificationMeta(
+    'excludeFromStats',
+  );
   @override
   late final GeneratedColumn<bool> excludeFromStats = GeneratedColumn<bool>(
-      'exclude_from_stats', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints: GeneratedColumn.constraintIsAlways(
-          'CHECK ("exclude_from_stats" IN (0, 1))'),
-      defaultValue: const Constant(false));
-  static const VerificationMeta _currencyCodeMeta =
-      const VerificationMeta('currencyCode');
+    'exclude_from_stats',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("exclude_from_stats" IN (0, 1))',
+    ),
+    defaultValue: const Constant(false),
+  );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
   @override
   late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
-      'currency_code', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _nativeAmountMeta =
-      const VerificationMeta('nativeAmount');
+    'currency_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _nativeAmountMeta = const VerificationMeta(
+    'nativeAmount',
+  );
   @override
   late final GeneratedColumn<double> nativeAmount = GeneratedColumn<double>(
-      'native_amount', aliasedName, true,
-      type: DriftSqlType.double, requiredDuringInsert: false);
-  static const VerificationMeta _versionMeta =
-      const VerificationMeta('version');
+    'native_amount',
+    aliasedName,
+    true,
+    type: DriftSqlType.double,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
   @override
   late final GeneratedColumn<int> version = GeneratedColumn<int>(
-      'version', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _lastEditedAtMeta =
-      const VerificationMeta('lastEditedAt');
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _lastEditedAtMeta = const VerificationMeta(
+    'lastEditedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> lastEditedAt = GeneratedColumn<DateTime>(
-      'last_edited_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _paidByUserIdMeta =
-      const VerificationMeta('paidByUserId');
+    'last_edited_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _paidByUserIdMeta = const VerificationMeta(
+    'paidByUserId',
+  );
   @override
   late final GeneratedColumn<String> paidByUserId = GeneratedColumn<String>(
-      'paid_by_user_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'paid_by_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _aaModeMeta = const VerificationMeta('aaMode');
   @override
   late final GeneratedColumn<int> aaMode = GeneratedColumn<int>(
-      'aa_mode', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _aaParticipantsMeta =
-      const VerificationMeta('aaParticipants');
+    'aa_mode',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _aaParticipantsMeta = const VerificationMeta(
+    'aaParticipants',
+  );
   @override
   late final GeneratedColumn<String> aaParticipants = GeneratedColumn<String>(
-      'aa_participants', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _aaSplitsMeta =
-      const VerificationMeta('aaSplits');
+    'aa_participants',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _aaSplitsMeta = const VerificationMeta(
+    'aaSplits',
+  );
   @override
   late final GeneratedColumn<String> aaSplits = GeneratedColumn<String>(
-      'aa_splits', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'aa_splits',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        ledgerId,
-        type,
-        amount,
-        categoryId,
-        happenedAt,
-        note,
-        recurringId,
-        syncId,
-        createdByUserId,
-        lastEditedByUserId,
-        categorySyncIdOverride,
-        excludeFromStats,
-        currencyCode,
-        nativeAmount,
-        version,
-        lastEditedAt,
-        paidByUserId,
-        aaMode,
-        aaParticipants,
-        aaSplits
-      ];
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    happenedAt,
+    note,
+    recurringId,
+    syncId,
+    createdByUserId,
+    lastEditedByUserId,
+    categorySyncIdOverride,
+    excludeFromStats,
+    currencyCode,
+    nativeAmount,
+    version,
+    lastEditedAt,
+    paidByUserId,
+    aaMode,
+    aaParticipants,
+    aaSplits,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'transactions';
   @override
-  VerificationContext validateIntegrity(Insertable<Transaction> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<Transaction> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('ledger_id')) {
-      context.handle(_ledgerIdMeta,
-          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_ledgerIdMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('amount')) {
-      context.handle(_amountMeta,
-          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
     if (data.containsKey('category_id')) {
       context.handle(
-          _categoryIdMeta,
-          categoryId.isAcceptableOrUnknown(
-              data['category_id']!, _categoryIdMeta));
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
     }
     if (data.containsKey('happened_at')) {
       context.handle(
-          _happenedAtMeta,
-          happenedAt.isAcceptableOrUnknown(
-              data['happened_at']!, _happenedAtMeta));
+        _happenedAtMeta,
+        happenedAt.isAcceptableOrUnknown(data['happened_at']!, _happenedAtMeta),
+      );
     }
     if (data.containsKey('note')) {
       context.handle(
-          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
     }
     if (data.containsKey('recurring_id')) {
       context.handle(
+        _recurringIdMeta,
+        recurringId.isAcceptableOrUnknown(
+          data['recurring_id']!,
           _recurringIdMeta,
-          recurringId.isAcceptableOrUnknown(
-              data['recurring_id']!, _recurringIdMeta));
+        ),
+      );
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     }
     if (data.containsKey('created_by_user_id')) {
       context.handle(
+        _createdByUserIdMeta,
+        createdByUserId.isAcceptableOrUnknown(
+          data['created_by_user_id']!,
           _createdByUserIdMeta,
-          createdByUserId.isAcceptableOrUnknown(
-              data['created_by_user_id']!, _createdByUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('last_edited_by_user_id')) {
       context.handle(
+        _lastEditedByUserIdMeta,
+        lastEditedByUserId.isAcceptableOrUnknown(
+          data['last_edited_by_user_id']!,
           _lastEditedByUserIdMeta,
-          lastEditedByUserId.isAcceptableOrUnknown(
-              data['last_edited_by_user_id']!, _lastEditedByUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('category_sync_id_override')) {
       context.handle(
+        _categorySyncIdOverrideMeta,
+        categorySyncIdOverride.isAcceptableOrUnknown(
+          data['category_sync_id_override']!,
           _categorySyncIdOverrideMeta,
-          categorySyncIdOverride.isAcceptableOrUnknown(
-              data['category_sync_id_override']!, _categorySyncIdOverrideMeta));
+        ),
+      );
     }
     if (data.containsKey('exclude_from_stats')) {
       context.handle(
+        _excludeFromStatsMeta,
+        excludeFromStats.isAcceptableOrUnknown(
+          data['exclude_from_stats']!,
           _excludeFromStatsMeta,
-          excludeFromStats.isAcceptableOrUnknown(
-              data['exclude_from_stats']!, _excludeFromStatsMeta));
+        ),
+      );
     }
     if (data.containsKey('currency_code')) {
       context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
           _currencyCodeMeta,
-          currencyCode.isAcceptableOrUnknown(
-              data['currency_code']!, _currencyCodeMeta));
+        ),
+      );
     }
     if (data.containsKey('native_amount')) {
       context.handle(
+        _nativeAmountMeta,
+        nativeAmount.isAcceptableOrUnknown(
+          data['native_amount']!,
           _nativeAmountMeta,
-          nativeAmount.isAcceptableOrUnknown(
-              data['native_amount']!, _nativeAmountMeta));
+        ),
+      );
     }
     if (data.containsKey('version')) {
-      context.handle(_versionMeta,
-          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
     }
     if (data.containsKey('last_edited_at')) {
       context.handle(
+        _lastEditedAtMeta,
+        lastEditedAt.isAcceptableOrUnknown(
+          data['last_edited_at']!,
           _lastEditedAtMeta,
-          lastEditedAt.isAcceptableOrUnknown(
-              data['last_edited_at']!, _lastEditedAtMeta));
+        ),
+      );
     }
     if (data.containsKey('paid_by_user_id')) {
       context.handle(
+        _paidByUserIdMeta,
+        paidByUserId.isAcceptableOrUnknown(
+          data['paid_by_user_id']!,
           _paidByUserIdMeta,
-          paidByUserId.isAcceptableOrUnknown(
-              data['paid_by_user_id']!, _paidByUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('aa_mode')) {
-      context.handle(_aaModeMeta,
-          aaMode.isAcceptableOrUnknown(data['aa_mode']!, _aaModeMeta));
+      context.handle(
+        _aaModeMeta,
+        aaMode.isAcceptableOrUnknown(data['aa_mode']!, _aaModeMeta),
+      );
     }
     if (data.containsKey('aa_participants')) {
       context.handle(
+        _aaParticipantsMeta,
+        aaParticipants.isAcceptableOrUnknown(
+          data['aa_participants']!,
           _aaParticipantsMeta,
-          aaParticipants.isAcceptableOrUnknown(
-              data['aa_participants']!, _aaParticipantsMeta));
+        ),
+      );
     }
     if (data.containsKey('aa_splits')) {
-      context.handle(_aaSplitsMeta,
-          aaSplits.isAcceptableOrUnknown(data['aa_splits']!, _aaSplitsMeta));
+      context.handle(
+        _aaSplitsMeta,
+        aaSplits.isAcceptableOrUnknown(data['aa_splits']!, _aaSplitsMeta),
+      );
     }
     return context;
   }
@@ -1335,49 +1675,90 @@ class $TransactionsTable extends Transactions
   Transaction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Transaction(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      ledgerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      amount: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
-      categoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}category_id']),
-      happenedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}happened_at'])!,
-      note: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}note']),
-      recurringId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}recurring_id']),
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      ),
+      happenedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}happened_at'],
+      )!,
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      recurringId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}recurring_id'],
+      ),
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
       createdByUserId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}created_by_user_id']),
-      lastEditedByUserId: attachedDatabase.typeMapping.read(DriftSqlType.string,
-          data['${effectivePrefix}last_edited_by_user_id']),
+        DriftSqlType.string,
+        data['${effectivePrefix}created_by_user_id'],
+      ),
+      lastEditedByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}last_edited_by_user_id'],
+      ),
       categorySyncIdOverride: attachedDatabase.typeMapping.read(
-          DriftSqlType.string,
-          data['${effectivePrefix}category_sync_id_override']),
+        DriftSqlType.string,
+        data['${effectivePrefix}category_sync_id_override'],
+      ),
       excludeFromStats: attachedDatabase.typeMapping.read(
-          DriftSqlType.bool, data['${effectivePrefix}exclude_from_stats'])!,
-      currencyCode: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}currency_code']),
-      nativeAmount: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}native_amount']),
-      version: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+        DriftSqlType.bool,
+        data['${effectivePrefix}exclude_from_stats'],
+      )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      ),
+      nativeAmount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}native_amount'],
+      ),
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       lastEditedAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_edited_at']),
-      paidByUserId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}paid_by_user_id']),
-      aaMode: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}aa_mode']),
-      aaParticipants: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}aa_participants']),
-      aaSplits: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}aa_splits']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_edited_at'],
+      ),
+      paidByUserId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}paid_by_user_id'],
+      ),
+      aaMode: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}aa_mode'],
+      ),
+      aaParticipants: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aa_participants'],
+      ),
+      aaSplits: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}aa_splits'],
+      ),
     );
   }
 
@@ -1439,28 +1820,29 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   /// AA 指定分摊金额(JSON 对象,key=参与人,value=金额字符串)。
   /// 仅 aaMode=2 时有意义。
   final String? aaSplits;
-  const Transaction(
-      {required this.id,
-      required this.ledgerId,
-      required this.type,
-      required this.amount,
-      this.categoryId,
-      required this.happenedAt,
-      this.note,
-      this.recurringId,
-      this.syncId,
-      this.createdByUserId,
-      this.lastEditedByUserId,
-      this.categorySyncIdOverride,
-      required this.excludeFromStats,
-      this.currencyCode,
-      this.nativeAmount,
-      required this.version,
-      this.lastEditedAt,
-      this.paidByUserId,
-      this.aaMode,
-      this.aaParticipants,
-      this.aaSplits});
+  const Transaction({
+    required this.id,
+    required this.ledgerId,
+    required this.type,
+    required this.amount,
+    this.categoryId,
+    required this.happenedAt,
+    this.note,
+    this.recurringId,
+    this.syncId,
+    this.createdByUserId,
+    this.lastEditedByUserId,
+    this.categorySyncIdOverride,
+    required this.excludeFromStats,
+    this.currencyCode,
+    this.nativeAmount,
+    required this.version,
+    this.lastEditedAt,
+    this.paidByUserId,
+    this.aaMode,
+    this.aaParticipants,
+    this.aaSplits,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -1488,8 +1870,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       map['last_edited_by_user_id'] = Variable<String>(lastEditedByUserId);
     }
     if (!nullToAbsent || categorySyncIdOverride != null) {
-      map['category_sync_id_override'] =
-          Variable<String>(categorySyncIdOverride);
+      map['category_sync_id_override'] = Variable<String>(
+        categorySyncIdOverride,
+      );
     }
     map['exclude_from_stats'] = Variable<bool>(excludeFromStats);
     if (!nullToAbsent || currencyCode != null) {
@@ -1531,8 +1914,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       recurringId: recurringId == null && nullToAbsent
           ? const Value.absent()
           : Value(recurringId),
-      syncId:
-          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
       createdByUserId: createdByUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(createdByUserId),
@@ -1556,8 +1940,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       paidByUserId: paidByUserId == null && nullToAbsent
           ? const Value.absent()
           : Value(paidByUserId),
-      aaMode:
-          aaMode == null && nullToAbsent ? const Value.absent() : Value(aaMode),
+      aaMode: aaMode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(aaMode),
       aaParticipants: aaParticipants == null && nullToAbsent
           ? const Value.absent()
           : Value(aaParticipants),
@@ -1567,8 +1952,10 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     );
   }
 
-  factory Transaction.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory Transaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Transaction(
       id: serializer.fromJson<int>(json['id']),
@@ -1581,10 +1968,12 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       recurringId: serializer.fromJson<int?>(json['recurringId']),
       syncId: serializer.fromJson<String?>(json['syncId']),
       createdByUserId: serializer.fromJson<String?>(json['createdByUserId']),
-      lastEditedByUserId:
-          serializer.fromJson<String?>(json['lastEditedByUserId']),
-      categorySyncIdOverride:
-          serializer.fromJson<String?>(json['categorySyncIdOverride']),
+      lastEditedByUserId: serializer.fromJson<String?>(
+        json['lastEditedByUserId'],
+      ),
+      categorySyncIdOverride: serializer.fromJson<String?>(
+        json['categorySyncIdOverride'],
+      ),
       excludeFromStats: serializer.fromJson<bool>(json['excludeFromStats']),
       currencyCode: serializer.fromJson<String?>(json['currencyCode']),
       nativeAmount: serializer.fromJson<double?>(json['nativeAmount']),
@@ -1611,8 +2000,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'syncId': serializer.toJson<String?>(syncId),
       'createdByUserId': serializer.toJson<String?>(createdByUserId),
       'lastEditedByUserId': serializer.toJson<String?>(lastEditedByUserId),
-      'categorySyncIdOverride':
-          serializer.toJson<String?>(categorySyncIdOverride),
+      'categorySyncIdOverride': serializer.toJson<String?>(
+        categorySyncIdOverride,
+      ),
       'excludeFromStats': serializer.toJson<bool>(excludeFromStats),
       'currencyCode': serializer.toJson<String?>(currencyCode),
       'nativeAmount': serializer.toJson<double?>(nativeAmount),
@@ -1625,75 +2015,75 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     };
   }
 
-  Transaction copyWith(
-          {int? id,
-          int? ledgerId,
-          String? type,
-          double? amount,
-          Value<int?> categoryId = const Value.absent(),
-          DateTime? happenedAt,
-          Value<String?> note = const Value.absent(),
-          Value<int?> recurringId = const Value.absent(),
-          Value<String?> syncId = const Value.absent(),
-          Value<String?> createdByUserId = const Value.absent(),
-          Value<String?> lastEditedByUserId = const Value.absent(),
-          Value<String?> categorySyncIdOverride = const Value.absent(),
-          bool? excludeFromStats,
-          Value<String?> currencyCode = const Value.absent(),
-          Value<double?> nativeAmount = const Value.absent(),
-          int? version,
-          Value<DateTime?> lastEditedAt = const Value.absent(),
-          Value<String?> paidByUserId = const Value.absent(),
-          Value<int?> aaMode = const Value.absent(),
-          Value<String?> aaParticipants = const Value.absent(),
-          Value<String?> aaSplits = const Value.absent()}) =>
-      Transaction(
-        id: id ?? this.id,
-        ledgerId: ledgerId ?? this.ledgerId,
-        type: type ?? this.type,
-        amount: amount ?? this.amount,
-        categoryId: categoryId.present ? categoryId.value : this.categoryId,
-        happenedAt: happenedAt ?? this.happenedAt,
-        note: note.present ? note.value : this.note,
-        recurringId: recurringId.present ? recurringId.value : this.recurringId,
-        syncId: syncId.present ? syncId.value : this.syncId,
-        createdByUserId: createdByUserId.present
-            ? createdByUserId.value
-            : this.createdByUserId,
-        lastEditedByUserId: lastEditedByUserId.present
-            ? lastEditedByUserId.value
-            : this.lastEditedByUserId,
-        categorySyncIdOverride: categorySyncIdOverride.present
-            ? categorySyncIdOverride.value
-            : this.categorySyncIdOverride,
-        excludeFromStats: excludeFromStats ?? this.excludeFromStats,
-        currencyCode:
-            currencyCode.present ? currencyCode.value : this.currencyCode,
-        nativeAmount:
-            nativeAmount.present ? nativeAmount.value : this.nativeAmount,
-        version: version ?? this.version,
-        lastEditedAt:
-            lastEditedAt.present ? lastEditedAt.value : this.lastEditedAt,
-        paidByUserId:
-            paidByUserId.present ? paidByUserId.value : this.paidByUserId,
-        aaMode: aaMode.present ? aaMode.value : this.aaMode,
-        aaParticipants:
-            aaParticipants.present ? aaParticipants.value : this.aaParticipants,
-        aaSplits: aaSplits.present ? aaSplits.value : this.aaSplits,
-      );
+  Transaction copyWith({
+    int? id,
+    int? ledgerId,
+    String? type,
+    double? amount,
+    Value<int?> categoryId = const Value.absent(),
+    DateTime? happenedAt,
+    Value<String?> note = const Value.absent(),
+    Value<int?> recurringId = const Value.absent(),
+    Value<String?> syncId = const Value.absent(),
+    Value<String?> createdByUserId = const Value.absent(),
+    Value<String?> lastEditedByUserId = const Value.absent(),
+    Value<String?> categorySyncIdOverride = const Value.absent(),
+    bool? excludeFromStats,
+    Value<String?> currencyCode = const Value.absent(),
+    Value<double?> nativeAmount = const Value.absent(),
+    int? version,
+    Value<DateTime?> lastEditedAt = const Value.absent(),
+    Value<String?> paidByUserId = const Value.absent(),
+    Value<int?> aaMode = const Value.absent(),
+    Value<String?> aaParticipants = const Value.absent(),
+    Value<String?> aaSplits = const Value.absent(),
+  }) => Transaction(
+    id: id ?? this.id,
+    ledgerId: ledgerId ?? this.ledgerId,
+    type: type ?? this.type,
+    amount: amount ?? this.amount,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    happenedAt: happenedAt ?? this.happenedAt,
+    note: note.present ? note.value : this.note,
+    recurringId: recurringId.present ? recurringId.value : this.recurringId,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    createdByUserId: createdByUserId.present
+        ? createdByUserId.value
+        : this.createdByUserId,
+    lastEditedByUserId: lastEditedByUserId.present
+        ? lastEditedByUserId.value
+        : this.lastEditedByUserId,
+    categorySyncIdOverride: categorySyncIdOverride.present
+        ? categorySyncIdOverride.value
+        : this.categorySyncIdOverride,
+    excludeFromStats: excludeFromStats ?? this.excludeFromStats,
+    currencyCode: currencyCode.present ? currencyCode.value : this.currencyCode,
+    nativeAmount: nativeAmount.present ? nativeAmount.value : this.nativeAmount,
+    version: version ?? this.version,
+    lastEditedAt: lastEditedAt.present ? lastEditedAt.value : this.lastEditedAt,
+    paidByUserId: paidByUserId.present ? paidByUserId.value : this.paidByUserId,
+    aaMode: aaMode.present ? aaMode.value : this.aaMode,
+    aaParticipants: aaParticipants.present
+        ? aaParticipants.value
+        : this.aaParticipants,
+    aaSplits: aaSplits.present ? aaSplits.value : this.aaSplits,
+  );
   Transaction copyWithCompanion(TransactionsCompanion data) {
     return Transaction(
       id: data.id.present ? data.id.value : this.id,
       ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
       type: data.type.present ? data.type.value : this.type,
       amount: data.amount.present ? data.amount.value : this.amount,
-      categoryId:
-          data.categoryId.present ? data.categoryId.value : this.categoryId,
-      happenedAt:
-          data.happenedAt.present ? data.happenedAt.value : this.happenedAt,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      happenedAt: data.happenedAt.present
+          ? data.happenedAt.value
+          : this.happenedAt,
       note: data.note.present ? data.note.value : this.note,
-      recurringId:
-          data.recurringId.present ? data.recurringId.value : this.recurringId,
+      recurringId: data.recurringId.present
+          ? data.recurringId.value
+          : this.recurringId,
       syncId: data.syncId.present ? data.syncId.value : this.syncId,
       createdByUserId: data.createdByUserId.present
           ? data.createdByUserId.value
@@ -1758,28 +2148,28 @@ class Transaction extends DataClass implements Insertable<Transaction> {
 
   @override
   int get hashCode => Object.hashAll([
-        id,
-        ledgerId,
-        type,
-        amount,
-        categoryId,
-        happenedAt,
-        note,
-        recurringId,
-        syncId,
-        createdByUserId,
-        lastEditedByUserId,
-        categorySyncIdOverride,
-        excludeFromStats,
-        currencyCode,
-        nativeAmount,
-        version,
-        lastEditedAt,
-        paidByUserId,
-        aaMode,
-        aaParticipants,
-        aaSplits
-      ]);
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    happenedAt,
+    note,
+    recurringId,
+    syncId,
+    createdByUserId,
+    lastEditedByUserId,
+    categorySyncIdOverride,
+    excludeFromStats,
+    currencyCode,
+    nativeAmount,
+    version,
+    lastEditedAt,
+    paidByUserId,
+    aaMode,
+    aaParticipants,
+    aaSplits,
+  ]);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1874,9 +2264,9 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.aaMode = const Value.absent(),
     this.aaParticipants = const Value.absent(),
     this.aaSplits = const Value.absent(),
-  })  : ledgerId = Value(ledgerId),
-        type = Value(type),
-        amount = Value(amount);
+  }) : ledgerId = Value(ledgerId),
+       type = Value(type),
+       amount = Value(amount);
   static Insertable<Transaction> custom({
     Expression<int>? id,
     Expression<int>? ledgerId,
@@ -1927,28 +2317,29 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     });
   }
 
-  TransactionsCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? ledgerId,
-      Value<String>? type,
-      Value<double>? amount,
-      Value<int?>? categoryId,
-      Value<DateTime>? happenedAt,
-      Value<String?>? note,
-      Value<int?>? recurringId,
-      Value<String?>? syncId,
-      Value<String?>? createdByUserId,
-      Value<String?>? lastEditedByUserId,
-      Value<String?>? categorySyncIdOverride,
-      Value<bool>? excludeFromStats,
-      Value<String?>? currencyCode,
-      Value<double?>? nativeAmount,
-      Value<int>? version,
-      Value<DateTime?>? lastEditedAt,
-      Value<String?>? paidByUserId,
-      Value<int?>? aaMode,
-      Value<String?>? aaParticipants,
-      Value<String?>? aaSplits}) {
+  TransactionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? ledgerId,
+    Value<String>? type,
+    Value<double>? amount,
+    Value<int?>? categoryId,
+    Value<DateTime>? happenedAt,
+    Value<String?>? note,
+    Value<int?>? recurringId,
+    Value<String?>? syncId,
+    Value<String?>? createdByUserId,
+    Value<String?>? lastEditedByUserId,
+    Value<String?>? categorySyncIdOverride,
+    Value<bool>? excludeFromStats,
+    Value<String?>? currencyCode,
+    Value<double?>? nativeAmount,
+    Value<int>? version,
+    Value<DateTime?>? lastEditedAt,
+    Value<String?>? paidByUserId,
+    Value<int?>? aaMode,
+    Value<String?>? aaParticipants,
+    Value<String?>? aaSplits,
+  }) {
     return TransactionsCompanion(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
@@ -2009,12 +2400,14 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       map['created_by_user_id'] = Variable<String>(createdByUserId.value);
     }
     if (lastEditedByUserId.present) {
-      map['last_edited_by_user_id'] =
-          Variable<String>(lastEditedByUserId.value);
+      map['last_edited_by_user_id'] = Variable<String>(
+        lastEditedByUserId.value,
+      );
     }
     if (categorySyncIdOverride.present) {
-      map['category_sync_id_override'] =
-          Variable<String>(categorySyncIdOverride.value);
+      map['category_sync_id_override'] = Variable<String>(
+        categorySyncIdOverride.value,
+      );
     }
     if (excludeFromStats.present) {
       map['exclude_from_stats'] = Variable<bool>(excludeFromStats.value);
@@ -2084,87 +2477,134 @@ class $RecordEditHistoriesTable extends RecordEditHistories
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _recordIdMeta =
-      const VerificationMeta('recordId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _recordIdMeta = const VerificationMeta(
+    'recordId',
+  );
   @override
   late final GeneratedColumn<int> recordId = GeneratedColumn<int>(
-      'record_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _versionMeta =
-      const VerificationMeta('version');
+    'record_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _versionMeta = const VerificationMeta(
+    'version',
+  );
   @override
   late final GeneratedColumn<int> version = GeneratedColumn<int>(
-      'version', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _operatorUserIdMeta =
-      const VerificationMeta('operatorUserId');
+    'version',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operatorUserIdMeta = const VerificationMeta(
+    'operatorUserId',
+  );
   @override
   late final GeneratedColumn<String> operatorUserId = GeneratedColumn<String>(
-      'operator_user_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _summaryMeta =
-      const VerificationMeta('summary');
+    'operator_user_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _summaryMeta = const VerificationMeta(
+    'summary',
+  );
   @override
   late final GeneratedColumn<String> summary = GeneratedColumn<String>(
-      'summary', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'summary',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, recordId, version, operatorUserId, summary, createdAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    recordId,
+    version,
+    operatorUserId,
+    summary,
+    createdAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'record_edit_histories';
   @override
-  VerificationContext validateIntegrity(Insertable<RecordEditHistory> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<RecordEditHistory> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('record_id')) {
-      context.handle(_recordIdMeta,
-          recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta));
+      context.handle(
+        _recordIdMeta,
+        recordId.isAcceptableOrUnknown(data['record_id']!, _recordIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_recordIdMeta);
     }
     if (data.containsKey('version')) {
-      context.handle(_versionMeta,
-          version.isAcceptableOrUnknown(data['version']!, _versionMeta));
+      context.handle(
+        _versionMeta,
+        version.isAcceptableOrUnknown(data['version']!, _versionMeta),
+      );
     } else if (isInserting) {
       context.missing(_versionMeta);
     }
     if (data.containsKey('operator_user_id')) {
       context.handle(
+        _operatorUserIdMeta,
+        operatorUserId.isAcceptableOrUnknown(
+          data['operator_user_id']!,
           _operatorUserIdMeta,
-          operatorUserId.isAcceptableOrUnknown(
-              data['operator_user_id']!, _operatorUserIdMeta));
+        ),
+      );
     }
     if (data.containsKey('summary')) {
-      context.handle(_summaryMeta,
-          summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta));
+      context.handle(
+        _summaryMeta,
+        summary.isAcceptableOrUnknown(data['summary']!, _summaryMeta),
+      );
     } else if (isInserting) {
       context.missing(_summaryMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     return context;
   }
@@ -2175,18 +2615,30 @@ class $RecordEditHistoriesTable extends RecordEditHistories
   RecordEditHistory map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RecordEditHistory(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      recordId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}record_id'])!,
-      version: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}version'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      recordId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}record_id'],
+      )!,
+      version: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}version'],
+      )!,
       operatorUserId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}operator_user_id']),
-      summary: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}summary'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}operator_user_id'],
+      ),
+      summary: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}summary'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
     );
   }
 
@@ -2204,13 +2656,14 @@ class RecordEditHistory extends DataClass
   final String? operatorUserId;
   final String summary;
   final DateTime createdAt;
-  const RecordEditHistory(
-      {required this.id,
-      required this.recordId,
-      required this.version,
-      this.operatorUserId,
-      required this.summary,
-      required this.createdAt});
+  const RecordEditHistory({
+    required this.id,
+    required this.recordId,
+    required this.version,
+    this.operatorUserId,
+    required this.summary,
+    required this.createdAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2238,8 +2691,10 @@ class RecordEditHistory extends DataClass
     );
   }
 
-  factory RecordEditHistory.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory RecordEditHistory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RecordEditHistory(
       id: serializer.fromJson<int>(json['id']),
@@ -2263,22 +2718,23 @@ class RecordEditHistory extends DataClass
     };
   }
 
-  RecordEditHistory copyWith(
-          {int? id,
-          int? recordId,
-          int? version,
-          Value<String?> operatorUserId = const Value.absent(),
-          String? summary,
-          DateTime? createdAt}) =>
-      RecordEditHistory(
-        id: id ?? this.id,
-        recordId: recordId ?? this.recordId,
-        version: version ?? this.version,
-        operatorUserId:
-            operatorUserId.present ? operatorUserId.value : this.operatorUserId,
-        summary: summary ?? this.summary,
-        createdAt: createdAt ?? this.createdAt,
-      );
+  RecordEditHistory copyWith({
+    int? id,
+    int? recordId,
+    int? version,
+    Value<String?> operatorUserId = const Value.absent(),
+    String? summary,
+    DateTime? createdAt,
+  }) => RecordEditHistory(
+    id: id ?? this.id,
+    recordId: recordId ?? this.recordId,
+    version: version ?? this.version,
+    operatorUserId: operatorUserId.present
+        ? operatorUserId.value
+        : this.operatorUserId,
+    summary: summary ?? this.summary,
+    createdAt: createdAt ?? this.createdAt,
+  );
   RecordEditHistory copyWithCompanion(RecordEditHistoriesCompanion data) {
     return RecordEditHistory(
       id: data.id.present ? data.id.value : this.id,
@@ -2342,9 +2798,9 @@ class RecordEditHistoriesCompanion extends UpdateCompanion<RecordEditHistory> {
     this.operatorUserId = const Value.absent(),
     required String summary,
     this.createdAt = const Value.absent(),
-  })  : recordId = Value(recordId),
-        version = Value(version),
-        summary = Value(summary);
+  }) : recordId = Value(recordId),
+       version = Value(version),
+       summary = Value(summary);
   static Insertable<RecordEditHistory> custom({
     Expression<int>? id,
     Expression<int>? recordId,
@@ -2363,13 +2819,14 @@ class RecordEditHistoriesCompanion extends UpdateCompanion<RecordEditHistory> {
     });
   }
 
-  RecordEditHistoriesCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? recordId,
-      Value<int>? version,
-      Value<String?>? operatorUserId,
-      Value<String>? summary,
-      Value<DateTime>? createdAt}) {
+  RecordEditHistoriesCompanion copyWith({
+    Value<int>? id,
+    Value<int>? recordId,
+    Value<int>? version,
+    Value<String?>? operatorUserId,
+    Value<String>? summary,
+    Value<DateTime>? createdAt,
+  }) {
     return RecordEditHistoriesCompanion(
       id: id ?? this.id,
       recordId: recordId ?? this.recordId,
@@ -2427,135 +2884,214 @@ class $RecurringTransactionsTable extends RecurringTransactions
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _ledgerIdMeta =
-      const VerificationMeta('ledgerId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
   @override
   late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-      'ledger_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
   late final GeneratedColumn<String> type = GeneratedColumn<String>(
-      'type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
   late final GeneratedColumn<double> amount = GeneratedColumn<double>(
-      'amount', aliasedName, false,
-      type: DriftSqlType.double, requiredDuringInsert: true);
-  static const VerificationMeta _categoryIdMeta =
-      const VerificationMeta('categoryId');
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.double,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
   @override
   late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-      'category_id', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _noteMeta = const VerificationMeta('note');
   @override
   late final GeneratedColumn<String> note = GeneratedColumn<String>(
-      'note', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _frequencyMeta =
-      const VerificationMeta('frequency');
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
   @override
   late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
-      'frequency', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _intervalMeta =
-      const VerificationMeta('interval');
+    'frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalMeta = const VerificationMeta(
+    'interval',
+  );
   @override
   late final GeneratedColumn<int> interval = GeneratedColumn<int>(
-      'interval', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _dayOfMonthMeta =
-      const VerificationMeta('dayOfMonth');
+    'interval',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _dayOfMonthMeta = const VerificationMeta(
+    'dayOfMonth',
+  );
   @override
   late final GeneratedColumn<int> dayOfMonth = GeneratedColumn<int>(
-      'day_of_month', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _dayOfWeekMeta =
-      const VerificationMeta('dayOfWeek');
+    'day_of_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dayOfWeekMeta = const VerificationMeta(
+    'dayOfWeek',
+  );
   @override
   late final GeneratedColumn<int> dayOfWeek = GeneratedColumn<int>(
-      'day_of_week', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _monthOfYearMeta =
-      const VerificationMeta('monthOfYear');
+    'day_of_week',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _monthOfYearMeta = const VerificationMeta(
+    'monthOfYear',
+  );
   @override
   late final GeneratedColumn<int> monthOfYear = GeneratedColumn<int>(
-      'month_of_year', aliasedName, true,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _startDateMeta =
-      const VerificationMeta('startDate');
+    'month_of_year',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
   @override
   late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
-      'start_date', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _endDateMeta =
-      const VerificationMeta('endDate');
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
   @override
   late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
-      'end_date', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastGeneratedDateMeta =
-      const VerificationMeta('lastGeneratedDate');
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastGeneratedDateMeta = const VerificationMeta(
+    'lastGeneratedDate',
+  );
   @override
   late final GeneratedColumn<DateTime> lastGeneratedDate =
-      GeneratedColumn<DateTime>('last_generated_date', aliasedName, true,
-          type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _enabledMeta =
-      const VerificationMeta('enabled');
+      GeneratedColumn<DateTime>(
+        'last_generated_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _enabledMeta = const VerificationMeta(
+    'enabled',
+  );
   @override
   late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
-      'enabled', aliasedName, false,
-      type: DriftSqlType.bool,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('CHECK ("enabled" IN (0, 1))'),
-      defaultValue: const Constant(true));
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        ledgerId,
-        type,
-        amount,
-        categoryId,
-        note,
-        frequency,
-        interval,
-        dayOfMonth,
-        dayOfWeek,
-        monthOfYear,
-        startDate,
-        endDate,
-        lastGeneratedDate,
-        enabled,
-        createdAt,
-        updatedAt
-      ];
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    dayOfWeek,
+    monthOfYear,
+    startDate,
+    endDate,
+    lastGeneratedDate,
+    enabled,
+    createdAt,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -2563,96 +3099,128 @@ class $RecurringTransactionsTable extends RecurringTransactions
   static const String $name = 'recurring_transactions';
   @override
   VerificationContext validateIntegrity(
-      Insertable<RecurringTransaction> instance,
-      {bool isInserting = false}) {
+    Insertable<RecurringTransaction> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('ledger_id')) {
-      context.handle(_ledgerIdMeta,
-          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_ledgerIdMeta);
     }
     if (data.containsKey('type')) {
       context.handle(
-          _typeMeta, type.isAcceptableOrUnknown(data['type']!, _typeMeta));
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
     } else if (isInserting) {
       context.missing(_typeMeta);
     }
     if (data.containsKey('amount')) {
-      context.handle(_amountMeta,
-          amount.isAcceptableOrUnknown(data['amount']!, _amountMeta));
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
     } else if (isInserting) {
       context.missing(_amountMeta);
     }
     if (data.containsKey('category_id')) {
       context.handle(
-          _categoryIdMeta,
-          categoryId.isAcceptableOrUnknown(
-              data['category_id']!, _categoryIdMeta));
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
     }
     if (data.containsKey('note')) {
       context.handle(
-          _noteMeta, note.isAcceptableOrUnknown(data['note']!, _noteMeta));
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
     }
     if (data.containsKey('frequency')) {
-      context.handle(_frequencyMeta,
-          frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta));
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
     } else if (isInserting) {
       context.missing(_frequencyMeta);
     }
     if (data.containsKey('interval')) {
-      context.handle(_intervalMeta,
-          interval.isAcceptableOrUnknown(data['interval']!, _intervalMeta));
+      context.handle(
+        _intervalMeta,
+        interval.isAcceptableOrUnknown(data['interval']!, _intervalMeta),
+      );
     }
     if (data.containsKey('day_of_month')) {
       context.handle(
+        _dayOfMonthMeta,
+        dayOfMonth.isAcceptableOrUnknown(
+          data['day_of_month']!,
           _dayOfMonthMeta,
-          dayOfMonth.isAcceptableOrUnknown(
-              data['day_of_month']!, _dayOfMonthMeta));
+        ),
+      );
     }
     if (data.containsKey('day_of_week')) {
       context.handle(
-          _dayOfWeekMeta,
-          dayOfWeek.isAcceptableOrUnknown(
-              data['day_of_week']!, _dayOfWeekMeta));
+        _dayOfWeekMeta,
+        dayOfWeek.isAcceptableOrUnknown(data['day_of_week']!, _dayOfWeekMeta),
+      );
     }
     if (data.containsKey('month_of_year')) {
       context.handle(
+        _monthOfYearMeta,
+        monthOfYear.isAcceptableOrUnknown(
+          data['month_of_year']!,
           _monthOfYearMeta,
-          monthOfYear.isAcceptableOrUnknown(
-              data['month_of_year']!, _monthOfYearMeta));
+        ),
+      );
     }
     if (data.containsKey('start_date')) {
-      context.handle(_startDateMeta,
-          startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta));
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
     } else if (isInserting) {
       context.missing(_startDateMeta);
     }
     if (data.containsKey('end_date')) {
-      context.handle(_endDateMeta,
-          endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta));
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
     }
     if (data.containsKey('last_generated_date')) {
       context.handle(
+        _lastGeneratedDateMeta,
+        lastGeneratedDate.isAcceptableOrUnknown(
+          data['last_generated_date']!,
           _lastGeneratedDateMeta,
-          lastGeneratedDate.isAcceptableOrUnknown(
-              data['last_generated_date']!, _lastGeneratedDateMeta));
+        ),
+      );
     }
     if (data.containsKey('enabled')) {
-      context.handle(_enabledMeta,
-          enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta));
+      context.handle(
+        _enabledMeta,
+        enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     }
     return context;
   }
@@ -2663,40 +3231,74 @@ class $RecurringTransactionsTable extends RecurringTransactions
   RecurringTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return RecurringTransaction(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      ledgerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
-      type: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}type'])!,
-      amount: attachedDatabase.typeMapping
-          .read(DriftSqlType.double, data['${effectivePrefix}amount'])!,
-      categoryId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}category_id']),
-      note: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}note']),
-      frequency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}frequency'])!,
-      interval: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}interval'])!,
-      dayOfMonth: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}day_of_month']),
-      dayOfWeek: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}day_of_week']),
-      monthOfYear: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}month_of_year']),
-      startDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}start_date'])!,
-      endDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}end_date']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.double,
+        data['${effectivePrefix}amount'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      )!,
+      interval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval'],
+      )!,
+      dayOfMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_month'],
+      ),
+      dayOfWeek: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_week'],
+      ),
+      monthOfYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}month_of_year'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_date'],
+      ),
       lastGeneratedDate: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_generated_date']),
-      enabled: attachedDatabase.typeMapping
-          .read(DriftSqlType.bool, data['${effectivePrefix}enabled'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_generated_date'],
+      ),
+      enabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enabled'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -2725,24 +3327,25 @@ class RecurringTransaction extends DataClass
   final bool enabled;
   final DateTime createdAt;
   final DateTime updatedAt;
-  const RecurringTransaction(
-      {required this.id,
-      required this.ledgerId,
-      required this.type,
-      required this.amount,
-      this.categoryId,
-      this.note,
-      required this.frequency,
-      required this.interval,
-      this.dayOfMonth,
-      this.dayOfWeek,
-      this.monthOfYear,
-      required this.startDate,
-      this.endDate,
-      this.lastGeneratedDate,
-      required this.enabled,
-      required this.createdAt,
-      required this.updatedAt});
+  const RecurringTransaction({
+    required this.id,
+    required this.ledgerId,
+    required this.type,
+    required this.amount,
+    this.categoryId,
+    this.note,
+    required this.frequency,
+    required this.interval,
+    this.dayOfMonth,
+    this.dayOfWeek,
+    this.monthOfYear,
+    required this.startDate,
+    this.endDate,
+    this.lastGeneratedDate,
+    required this.enabled,
+    required this.createdAt,
+    required this.updatedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -2814,8 +3417,10 @@ class RecurringTransaction extends DataClass
     );
   }
 
-  factory RecurringTransaction.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory RecurringTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return RecurringTransaction(
       id: serializer.fromJson<int>(json['id']),
@@ -2831,8 +3436,9 @@ class RecurringTransaction extends DataClass
       monthOfYear: serializer.fromJson<int?>(json['monthOfYear']),
       startDate: serializer.fromJson<DateTime>(json['startDate']),
       endDate: serializer.fromJson<DateTime?>(json['endDate']),
-      lastGeneratedDate:
-          serializer.fromJson<DateTime?>(json['lastGeneratedDate']),
+      lastGeneratedDate: serializer.fromJson<DateTime?>(
+        json['lastGeneratedDate'],
+      ),
       enabled: serializer.fromJson<bool>(json['enabled']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
       updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
@@ -2862,61 +3468,64 @@ class RecurringTransaction extends DataClass
     };
   }
 
-  RecurringTransaction copyWith(
-          {int? id,
-          int? ledgerId,
-          String? type,
-          double? amount,
-          Value<int?> categoryId = const Value.absent(),
-          Value<String?> note = const Value.absent(),
-          String? frequency,
-          int? interval,
-          Value<int?> dayOfMonth = const Value.absent(),
-          Value<int?> dayOfWeek = const Value.absent(),
-          Value<int?> monthOfYear = const Value.absent(),
-          DateTime? startDate,
-          Value<DateTime?> endDate = const Value.absent(),
-          Value<DateTime?> lastGeneratedDate = const Value.absent(),
-          bool? enabled,
-          DateTime? createdAt,
-          DateTime? updatedAt}) =>
-      RecurringTransaction(
-        id: id ?? this.id,
-        ledgerId: ledgerId ?? this.ledgerId,
-        type: type ?? this.type,
-        amount: amount ?? this.amount,
-        categoryId: categoryId.present ? categoryId.value : this.categoryId,
-        note: note.present ? note.value : this.note,
-        frequency: frequency ?? this.frequency,
-        interval: interval ?? this.interval,
-        dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
-        dayOfWeek: dayOfWeek.present ? dayOfWeek.value : this.dayOfWeek,
-        monthOfYear: monthOfYear.present ? monthOfYear.value : this.monthOfYear,
-        startDate: startDate ?? this.startDate,
-        endDate: endDate.present ? endDate.value : this.endDate,
-        lastGeneratedDate: lastGeneratedDate.present
-            ? lastGeneratedDate.value
-            : this.lastGeneratedDate,
-        enabled: enabled ?? this.enabled,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  RecurringTransaction copyWith({
+    int? id,
+    int? ledgerId,
+    String? type,
+    double? amount,
+    Value<int?> categoryId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    String? frequency,
+    int? interval,
+    Value<int?> dayOfMonth = const Value.absent(),
+    Value<int?> dayOfWeek = const Value.absent(),
+    Value<int?> monthOfYear = const Value.absent(),
+    DateTime? startDate,
+    Value<DateTime?> endDate = const Value.absent(),
+    Value<DateTime?> lastGeneratedDate = const Value.absent(),
+    bool? enabled,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => RecurringTransaction(
+    id: id ?? this.id,
+    ledgerId: ledgerId ?? this.ledgerId,
+    type: type ?? this.type,
+    amount: amount ?? this.amount,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    note: note.present ? note.value : this.note,
+    frequency: frequency ?? this.frequency,
+    interval: interval ?? this.interval,
+    dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
+    dayOfWeek: dayOfWeek.present ? dayOfWeek.value : this.dayOfWeek,
+    monthOfYear: monthOfYear.present ? monthOfYear.value : this.monthOfYear,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    lastGeneratedDate: lastGeneratedDate.present
+        ? lastGeneratedDate.value
+        : this.lastGeneratedDate,
+    enabled: enabled ?? this.enabled,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
   RecurringTransaction copyWithCompanion(RecurringTransactionsCompanion data) {
     return RecurringTransaction(
       id: data.id.present ? data.id.value : this.id,
       ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
       type: data.type.present ? data.type.value : this.type,
       amount: data.amount.present ? data.amount.value : this.amount,
-      categoryId:
-          data.categoryId.present ? data.categoryId.value : this.categoryId,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
       note: data.note.present ? data.note.value : this.note,
       frequency: data.frequency.present ? data.frequency.value : this.frequency,
       interval: data.interval.present ? data.interval.value : this.interval,
-      dayOfMonth:
-          data.dayOfMonth.present ? data.dayOfMonth.value : this.dayOfMonth,
+      dayOfMonth: data.dayOfMonth.present
+          ? data.dayOfMonth.value
+          : this.dayOfMonth,
       dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
-      monthOfYear:
-          data.monthOfYear.present ? data.monthOfYear.value : this.monthOfYear,
+      monthOfYear: data.monthOfYear.present
+          ? data.monthOfYear.value
+          : this.monthOfYear,
       startDate: data.startDate.present ? data.startDate.value : this.startDate,
       endDate: data.endDate.present ? data.endDate.value : this.endDate,
       lastGeneratedDate: data.lastGeneratedDate.present
@@ -2954,23 +3563,24 @@ class RecurringTransaction extends DataClass
 
   @override
   int get hashCode => Object.hash(
-      id,
-      ledgerId,
-      type,
-      amount,
-      categoryId,
-      note,
-      frequency,
-      interval,
-      dayOfMonth,
-      dayOfWeek,
-      monthOfYear,
-      startDate,
-      endDate,
-      lastGeneratedDate,
-      enabled,
-      createdAt,
-      updatedAt);
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    dayOfWeek,
+    monthOfYear,
+    startDate,
+    endDate,
+    lastGeneratedDate,
+    enabled,
+    createdAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3050,11 +3660,11 @@ class RecurringTransactionsCompanion
     this.enabled = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : ledgerId = Value(ledgerId),
-        type = Value(type),
-        amount = Value(amount),
-        frequency = Value(frequency),
-        startDate = Value(startDate);
+  }) : ledgerId = Value(ledgerId),
+       type = Value(type),
+       amount = Value(amount),
+       frequency = Value(frequency),
+       startDate = Value(startDate);
   static Insertable<RecurringTransaction> custom({
     Expression<int>? id,
     Expression<int>? ledgerId,
@@ -3095,24 +3705,25 @@ class RecurringTransactionsCompanion
     });
   }
 
-  RecurringTransactionsCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? ledgerId,
-      Value<String>? type,
-      Value<double>? amount,
-      Value<int?>? categoryId,
-      Value<String?>? note,
-      Value<String>? frequency,
-      Value<int>? interval,
-      Value<int?>? dayOfMonth,
-      Value<int?>? dayOfWeek,
-      Value<int?>? monthOfYear,
-      Value<DateTime>? startDate,
-      Value<DateTime?>? endDate,
-      Value<DateTime?>? lastGeneratedDate,
-      Value<bool>? enabled,
-      Value<DateTime>? createdAt,
-      Value<DateTime>? updatedAt}) {
+  RecurringTransactionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? ledgerId,
+    Value<String>? type,
+    Value<double>? amount,
+    Value<int?>? categoryId,
+    Value<String?>? note,
+    Value<String>? frequency,
+    Value<int>? interval,
+    Value<int?>? dayOfMonth,
+    Value<int?>? dayOfWeek,
+    Value<int?>? monthOfYear,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? endDate,
+    Value<DateTime?>? lastGeneratedDate,
+    Value<bool>? enabled,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
     return RecurringTransactionsCompanion(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
@@ -3225,81 +3836,125 @@ class $LocalChangesTable extends LocalChanges
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _entityTypeMeta =
-      const VerificationMeta('entityType');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
   @override
   late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
-      'entity_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _entityIdMeta =
-      const VerificationMeta('entityId');
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entityIdMeta = const VerificationMeta(
+    'entityId',
+  );
   @override
   late final GeneratedColumn<int> entityId = GeneratedColumn<int>(
-      'entity_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
-  static const VerificationMeta _entitySyncIdMeta =
-      const VerificationMeta('entitySyncId');
+    'entity_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entitySyncIdMeta = const VerificationMeta(
+    'entitySyncId',
+  );
   @override
   late final GeneratedColumn<String> entitySyncId = GeneratedColumn<String>(
-      'entity_sync_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _ledgerIdMeta =
-      const VerificationMeta('ledgerId');
+    'entity_sync_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
   @override
   late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-      'ledger_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _actionMeta = const VerificationMeta('action');
   @override
   late final GeneratedColumn<String> action = GeneratedColumn<String>(
-      'action', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _payloadJsonMeta =
-      const VerificationMeta('payloadJson');
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadJsonMeta = const VerificationMeta(
+    'payloadJson',
+  );
   @override
   late final GeneratedColumn<String> payloadJson = GeneratedColumn<String>(
-      'payload_json', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'payload_json',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _pushedAtMeta =
-      const VerificationMeta('pushedAt');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _pushedAtMeta = const VerificationMeta(
+    'pushedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> pushedAt = GeneratedColumn<DateTime>(
-      'pushed_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'pushed_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        entityType,
-        entityId,
-        entitySyncId,
-        ledgerId,
-        action,
-        payloadJson,
-        createdAt,
-        pushedAt
-      ];
+    id,
+    entityType,
+    entityId,
+    entitySyncId,
+    ledgerId,
+    action,
+    payloadJson,
+    createdAt,
+    pushedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'local_changes';
   @override
-  VerificationContext validateIntegrity(Insertable<LocalChange> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<LocalChange> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
@@ -3307,51 +3962,67 @@ class $LocalChangesTable extends LocalChanges
     }
     if (data.containsKey('entity_type')) {
       context.handle(
-          _entityTypeMeta,
-          entityType.isAcceptableOrUnknown(
-              data['entity_type']!, _entityTypeMeta));
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
     } else if (isInserting) {
       context.missing(_entityTypeMeta);
     }
     if (data.containsKey('entity_id')) {
-      context.handle(_entityIdMeta,
-          entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta));
+      context.handle(
+        _entityIdMeta,
+        entityId.isAcceptableOrUnknown(data['entity_id']!, _entityIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_entityIdMeta);
     }
     if (data.containsKey('entity_sync_id')) {
       context.handle(
+        _entitySyncIdMeta,
+        entitySyncId.isAcceptableOrUnknown(
+          data['entity_sync_id']!,
           _entitySyncIdMeta,
-          entitySyncId.isAcceptableOrUnknown(
-              data['entity_sync_id']!, _entitySyncIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_entitySyncIdMeta);
     }
     if (data.containsKey('ledger_id')) {
-      context.handle(_ledgerIdMeta,
-          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_ledgerIdMeta);
     }
     if (data.containsKey('action')) {
-      context.handle(_actionMeta,
-          action.isAcceptableOrUnknown(data['action']!, _actionMeta));
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
     } else if (isInserting) {
       context.missing(_actionMeta);
     }
     if (data.containsKey('payload_json')) {
       context.handle(
+        _payloadJsonMeta,
+        payloadJson.isAcceptableOrUnknown(
+          data['payload_json']!,
           _payloadJsonMeta,
-          payloadJson.isAcceptableOrUnknown(
-              data['payload_json']!, _payloadJsonMeta));
+        ),
+      );
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('pushed_at')) {
-      context.handle(_pushedAtMeta,
-          pushedAt.isAcceptableOrUnknown(data['pushed_at']!, _pushedAtMeta));
+      context.handle(
+        _pushedAtMeta,
+        pushedAt.isAcceptableOrUnknown(data['pushed_at']!, _pushedAtMeta),
+      );
     }
     return context;
   }
@@ -3362,24 +4033,42 @@ class $LocalChangesTable extends LocalChanges
   LocalChange map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LocalChange(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      entityType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}entity_type'])!,
-      entityId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}entity_id'])!,
-      entitySyncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}entity_sync_id'])!,
-      ledgerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
-      action: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
-      payloadJson: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}payload_json']),
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      pushedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}pushed_at']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entityId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}entity_id'],
+      )!,
+      entitySyncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_sync_id'],
+      )!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
+      payloadJson: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload_json'],
+      ),
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      pushedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}pushed_at'],
+      ),
     );
   }
 
@@ -3399,16 +4088,17 @@ class LocalChange extends DataClass implements Insertable<LocalChange> {
   final String? payloadJson;
   final DateTime createdAt;
   final DateTime? pushedAt;
-  const LocalChange(
-      {required this.id,
-      required this.entityType,
-      required this.entityId,
-      required this.entitySyncId,
-      required this.ledgerId,
-      required this.action,
-      this.payloadJson,
-      required this.createdAt,
-      this.pushedAt});
+  const LocalChange({
+    required this.id,
+    required this.entityType,
+    required this.entityId,
+    required this.entitySyncId,
+    required this.ledgerId,
+    required this.action,
+    this.payloadJson,
+    required this.createdAt,
+    this.pushedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3446,8 +4136,10 @@ class LocalChange extends DataClass implements Insertable<LocalChange> {
     );
   }
 
-  factory LocalChange.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LocalChange.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LocalChange(
       id: serializer.fromJson<int>(json['id']),
@@ -3477,40 +4169,42 @@ class LocalChange extends DataClass implements Insertable<LocalChange> {
     };
   }
 
-  LocalChange copyWith(
-          {int? id,
-          String? entityType,
-          int? entityId,
-          String? entitySyncId,
-          int? ledgerId,
-          String? action,
-          Value<String?> payloadJson = const Value.absent(),
-          DateTime? createdAt,
-          Value<DateTime?> pushedAt = const Value.absent()}) =>
-      LocalChange(
-        id: id ?? this.id,
-        entityType: entityType ?? this.entityType,
-        entityId: entityId ?? this.entityId,
-        entitySyncId: entitySyncId ?? this.entitySyncId,
-        ledgerId: ledgerId ?? this.ledgerId,
-        action: action ?? this.action,
-        payloadJson: payloadJson.present ? payloadJson.value : this.payloadJson,
-        createdAt: createdAt ?? this.createdAt,
-        pushedAt: pushedAt.present ? pushedAt.value : this.pushedAt,
-      );
+  LocalChange copyWith({
+    int? id,
+    String? entityType,
+    int? entityId,
+    String? entitySyncId,
+    int? ledgerId,
+    String? action,
+    Value<String?> payloadJson = const Value.absent(),
+    DateTime? createdAt,
+    Value<DateTime?> pushedAt = const Value.absent(),
+  }) => LocalChange(
+    id: id ?? this.id,
+    entityType: entityType ?? this.entityType,
+    entityId: entityId ?? this.entityId,
+    entitySyncId: entitySyncId ?? this.entitySyncId,
+    ledgerId: ledgerId ?? this.ledgerId,
+    action: action ?? this.action,
+    payloadJson: payloadJson.present ? payloadJson.value : this.payloadJson,
+    createdAt: createdAt ?? this.createdAt,
+    pushedAt: pushedAt.present ? pushedAt.value : this.pushedAt,
+  );
   LocalChange copyWithCompanion(LocalChangesCompanion data) {
     return LocalChange(
       id: data.id.present ? data.id.value : this.id,
-      entityType:
-          data.entityType.present ? data.entityType.value : this.entityType,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
       entityId: data.entityId.present ? data.entityId.value : this.entityId,
       entitySyncId: data.entitySyncId.present
           ? data.entitySyncId.value
           : this.entitySyncId,
       ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
       action: data.action.present ? data.action.value : this.action,
-      payloadJson:
-          data.payloadJson.present ? data.payloadJson.value : this.payloadJson,
+      payloadJson: data.payloadJson.present
+          ? data.payloadJson.value
+          : this.payloadJson,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
       pushedAt: data.pushedAt.present ? data.pushedAt.value : this.pushedAt,
     );
@@ -3533,8 +4227,17 @@ class LocalChange extends DataClass implements Insertable<LocalChange> {
   }
 
   @override
-  int get hashCode => Object.hash(id, entityType, entityId, entitySyncId,
-      ledgerId, action, payloadJson, createdAt, pushedAt);
+  int get hashCode => Object.hash(
+    id,
+    entityType,
+    entityId,
+    entitySyncId,
+    ledgerId,
+    action,
+    payloadJson,
+    createdAt,
+    pushedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3581,11 +4284,11 @@ class LocalChangesCompanion extends UpdateCompanion<LocalChange> {
     this.payloadJson = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.pushedAt = const Value.absent(),
-  })  : entityType = Value(entityType),
-        entityId = Value(entityId),
-        entitySyncId = Value(entitySyncId),
-        ledgerId = Value(ledgerId),
-        action = Value(action);
+  }) : entityType = Value(entityType),
+       entityId = Value(entityId),
+       entitySyncId = Value(entitySyncId),
+       ledgerId = Value(ledgerId),
+       action = Value(action);
   static Insertable<LocalChange> custom({
     Expression<int>? id,
     Expression<String>? entityType,
@@ -3610,16 +4313,17 @@ class LocalChangesCompanion extends UpdateCompanion<LocalChange> {
     });
   }
 
-  LocalChangesCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? entityType,
-      Value<int>? entityId,
-      Value<String>? entitySyncId,
-      Value<int>? ledgerId,
-      Value<String>? action,
-      Value<String?>? payloadJson,
-      Value<DateTime>? createdAt,
-      Value<DateTime?>? pushedAt}) {
+  LocalChangesCompanion copyWith({
+    Value<int>? id,
+    Value<String>? entityType,
+    Value<int>? entityId,
+    Value<String>? entitySyncId,
+    Value<int>? ledgerId,
+    Value<String>? action,
+    Value<String?>? payloadJson,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? pushedAt,
+  }) {
     return LocalChangesCompanion(
       id: id ?? this.id,
       entityType: entityType ?? this.entityType,
@@ -3692,91 +4396,140 @@ class $SyncStateTable extends SyncState
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _deviceIdMeta =
-      const VerificationMeta('deviceId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
   @override
   late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
-      'device_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _providerTypeMeta =
-      const VerificationMeta('providerType');
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _providerTypeMeta = const VerificationMeta(
+    'providerType',
+  );
   @override
   late final GeneratedColumn<String> providerType = GeneratedColumn<String>(
-      'provider_type', aliasedName, false,
-      type: DriftSqlType.string,
-      requiredDuringInsert: false,
-      defaultValue: const Constant('spitout_cloud'));
-  static const VerificationMeta _serverCursorMeta =
-      const VerificationMeta('serverCursor');
+    'provider_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('spitout_cloud'),
+  );
+  static const VerificationMeta _serverCursorMeta = const VerificationMeta(
+    'serverCursor',
+  );
   @override
   late final GeneratedColumn<int> serverCursor = GeneratedColumn<int>(
-      'server_cursor', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
-  static const VerificationMeta _lastPushAtMeta =
-      const VerificationMeta('lastPushAt');
+    'server_cursor',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
+  static const VerificationMeta _lastPushAtMeta = const VerificationMeta(
+    'lastPushAt',
+  );
   @override
   late final GeneratedColumn<DateTime> lastPushAt = GeneratedColumn<DateTime>(
-      'last_push_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
-  static const VerificationMeta _lastPullAtMeta =
-      const VerificationMeta('lastPullAt');
+    'last_push_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastPullAtMeta = const VerificationMeta(
+    'lastPullAt',
+  );
   @override
   late final GeneratedColumn<DateTime> lastPullAt = GeneratedColumn<DateTime>(
-      'last_pull_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'last_pull_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, deviceId, providerType, serverCursor, lastPushAt, lastPullAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    deviceId,
+    providerType,
+    serverCursor,
+    lastPushAt,
+    lastPullAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sync_state';
   @override
-  VerificationContext validateIntegrity(Insertable<SyncStateData> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<SyncStateData> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('device_id')) {
-      context.handle(_deviceIdMeta,
-          deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta));
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_deviceIdMeta);
     }
     if (data.containsKey('provider_type')) {
       context.handle(
+        _providerTypeMeta,
+        providerType.isAcceptableOrUnknown(
+          data['provider_type']!,
           _providerTypeMeta,
-          providerType.isAcceptableOrUnknown(
-              data['provider_type']!, _providerTypeMeta));
+        ),
+      );
     }
     if (data.containsKey('server_cursor')) {
       context.handle(
+        _serverCursorMeta,
+        serverCursor.isAcceptableOrUnknown(
+          data['server_cursor']!,
           _serverCursorMeta,
-          serverCursor.isAcceptableOrUnknown(
-              data['server_cursor']!, _serverCursorMeta));
+        ),
+      );
     }
     if (data.containsKey('last_push_at')) {
       context.handle(
+        _lastPushAtMeta,
+        lastPushAt.isAcceptableOrUnknown(
+          data['last_push_at']!,
           _lastPushAtMeta,
-          lastPushAt.isAcceptableOrUnknown(
-              data['last_push_at']!, _lastPushAtMeta));
+        ),
+      );
     }
     if (data.containsKey('last_pull_at')) {
       context.handle(
+        _lastPullAtMeta,
+        lastPullAt.isAcceptableOrUnknown(
+          data['last_pull_at']!,
           _lastPullAtMeta,
-          lastPullAt.isAcceptableOrUnknown(
-              data['last_pull_at']!, _lastPullAtMeta));
+        ),
+      );
     }
     return context;
   }
@@ -3787,18 +4540,30 @@ class $SyncStateTable extends SyncState
   SyncStateData map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncStateData(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      deviceId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}device_id'])!,
-      providerType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}provider_type'])!,
-      serverCursor: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}server_cursor'])!,
-      lastPushAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_push_at']),
-      lastPullAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}last_pull_at']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      providerType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}provider_type'],
+      )!,
+      serverCursor: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}server_cursor'],
+      )!,
+      lastPushAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_push_at'],
+      ),
+      lastPullAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_pull_at'],
+      ),
     );
   }
 
@@ -3815,13 +4580,14 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
   final int serverCursor;
   final DateTime? lastPushAt;
   final DateTime? lastPullAt;
-  const SyncStateData(
-      {required this.id,
-      required this.deviceId,
-      required this.providerType,
-      required this.serverCursor,
-      this.lastPushAt,
-      this.lastPullAt});
+  const SyncStateData({
+    required this.id,
+    required this.deviceId,
+    required this.providerType,
+    required this.serverCursor,
+    this.lastPushAt,
+    this.lastPullAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -3853,8 +4619,10 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     );
   }
 
-  factory SyncStateData.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SyncStateData.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncStateData(
       id: serializer.fromJson<int>(json['id']),
@@ -3878,21 +4646,21 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
     };
   }
 
-  SyncStateData copyWith(
-          {int? id,
-          String? deviceId,
-          String? providerType,
-          int? serverCursor,
-          Value<DateTime?> lastPushAt = const Value.absent(),
-          Value<DateTime?> lastPullAt = const Value.absent()}) =>
-      SyncStateData(
-        id: id ?? this.id,
-        deviceId: deviceId ?? this.deviceId,
-        providerType: providerType ?? this.providerType,
-        serverCursor: serverCursor ?? this.serverCursor,
-        lastPushAt: lastPushAt.present ? lastPushAt.value : this.lastPushAt,
-        lastPullAt: lastPullAt.present ? lastPullAt.value : this.lastPullAt,
-      );
+  SyncStateData copyWith({
+    int? id,
+    String? deviceId,
+    String? providerType,
+    int? serverCursor,
+    Value<DateTime?> lastPushAt = const Value.absent(),
+    Value<DateTime?> lastPullAt = const Value.absent(),
+  }) => SyncStateData(
+    id: id ?? this.id,
+    deviceId: deviceId ?? this.deviceId,
+    providerType: providerType ?? this.providerType,
+    serverCursor: serverCursor ?? this.serverCursor,
+    lastPushAt: lastPushAt.present ? lastPushAt.value : this.lastPushAt,
+    lastPullAt: lastPullAt.present ? lastPullAt.value : this.lastPullAt,
+  );
   SyncStateData copyWithCompanion(SyncStateCompanion data) {
     return SyncStateData(
       id: data.id.present ? data.id.value : this.id,
@@ -3903,10 +4671,12 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
       serverCursor: data.serverCursor.present
           ? data.serverCursor.value
           : this.serverCursor,
-      lastPushAt:
-          data.lastPushAt.present ? data.lastPushAt.value : this.lastPushAt,
-      lastPullAt:
-          data.lastPullAt.present ? data.lastPullAt.value : this.lastPullAt,
+      lastPushAt: data.lastPushAt.present
+          ? data.lastPushAt.value
+          : this.lastPushAt,
+      lastPullAt: data.lastPullAt.present
+          ? data.lastPullAt.value
+          : this.lastPullAt,
     );
   }
 
@@ -3925,7 +4695,13 @@ class SyncStateData extends DataClass implements Insertable<SyncStateData> {
 
   @override
   int get hashCode => Object.hash(
-      id, deviceId, providerType, serverCursor, lastPushAt, lastPullAt);
+    id,
+    deviceId,
+    providerType,
+    serverCursor,
+    lastPushAt,
+    lastPullAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -3979,13 +4755,14 @@ class SyncStateCompanion extends UpdateCompanion<SyncStateData> {
     });
   }
 
-  SyncStateCompanion copyWith(
-      {Value<int>? id,
-      Value<String>? deviceId,
-      Value<String>? providerType,
-      Value<int>? serverCursor,
-      Value<DateTime?>? lastPushAt,
-      Value<DateTime?>? lastPullAt}) {
+  SyncStateCompanion copyWith({
+    Value<int>? id,
+    Value<String>? deviceId,
+    Value<String>? providerType,
+    Value<int>? serverCursor,
+    Value<DateTime?>? lastPushAt,
+    Value<DateTime?>? lastPullAt,
+  }) {
     return SyncStateCompanion(
       id: id ?? this.id,
       deviceId: deviceId ?? this.deviceId,
@@ -4040,115 +4817,172 @@ class $LedgerMembersTable extends LedgerMembers
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $LedgerMembersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _ledgerSyncIdMeta =
-      const VerificationMeta('ledgerSyncId');
+  static const VerificationMeta _ledgerSyncIdMeta = const VerificationMeta(
+    'ledgerSyncId',
+  );
   @override
   late final GeneratedColumn<String> ledgerSyncId = GeneratedColumn<String>(
-      'ledger_sync_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'ledger_sync_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _userIdMeta = const VerificationMeta('userId');
   @override
   late final GeneratedColumn<String> userId = GeneratedColumn<String>(
-      'user_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'user_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _emailMeta = const VerificationMeta('email');
   @override
   late final GeneratedColumn<String> email = GeneratedColumn<String>(
-      'email', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _displayNameMeta =
-      const VerificationMeta('displayName');
+    'email',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _displayNameMeta = const VerificationMeta(
+    'displayName',
+  );
   @override
   late final GeneratedColumn<String> displayName = GeneratedColumn<String>(
-      'display_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _avatarUrlMeta =
-      const VerificationMeta('avatarUrl');
+    'display_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _avatarUrlMeta = const VerificationMeta(
+    'avatarUrl',
+  );
   @override
   late final GeneratedColumn<String> avatarUrl = GeneratedColumn<String>(
-      'avatar_url', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'avatar_url',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _roleMeta = const VerificationMeta('role');
   @override
   late final GeneratedColumn<String> role = GeneratedColumn<String>(
-      'role', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _joinedAtMeta =
-      const VerificationMeta('joinedAt');
+    'role',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _joinedAtMeta = const VerificationMeta(
+    'joinedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> joinedAt = GeneratedColumn<DateTime>(
-      'joined_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
+    'joined_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        ledgerSyncId,
-        userId,
-        email,
-        displayName,
-        avatarUrl,
-        role,
-        joinedAt,
-        updatedAt
-      ];
+    ledgerSyncId,
+    userId,
+    email,
+    displayName,
+    avatarUrl,
+    role,
+    joinedAt,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'ledger_members';
   @override
-  VerificationContext validateIntegrity(Insertable<LedgerMember> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<LedgerMember> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('ledger_sync_id')) {
       context.handle(
+        _ledgerSyncIdMeta,
+        ledgerSyncId.isAcceptableOrUnknown(
+          data['ledger_sync_id']!,
           _ledgerSyncIdMeta,
-          ledgerSyncId.isAcceptableOrUnknown(
-              data['ledger_sync_id']!, _ledgerSyncIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_ledgerSyncIdMeta);
     }
     if (data.containsKey('user_id')) {
-      context.handle(_userIdMeta,
-          userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta));
+      context.handle(
+        _userIdMeta,
+        userId.isAcceptableOrUnknown(data['user_id']!, _userIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
     if (data.containsKey('email')) {
       context.handle(
-          _emailMeta, email.isAcceptableOrUnknown(data['email']!, _emailMeta));
+        _emailMeta,
+        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+      );
     }
     if (data.containsKey('display_name')) {
       context.handle(
+        _displayNameMeta,
+        displayName.isAcceptableOrUnknown(
+          data['display_name']!,
           _displayNameMeta,
-          displayName.isAcceptableOrUnknown(
-              data['display_name']!, _displayNameMeta));
+        ),
+      );
     }
     if (data.containsKey('avatar_url')) {
-      context.handle(_avatarUrlMeta,
-          avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta));
+      context.handle(
+        _avatarUrlMeta,
+        avatarUrl.isAcceptableOrUnknown(data['avatar_url']!, _avatarUrlMeta),
+      );
     }
     if (data.containsKey('role')) {
       context.handle(
-          _roleMeta, role.isAcceptableOrUnknown(data['role']!, _roleMeta));
+        _roleMeta,
+        role.isAcceptableOrUnknown(data['role']!, _roleMeta),
+      );
     } else if (isInserting) {
       context.missing(_roleMeta);
     }
     if (data.containsKey('joined_at')) {
-      context.handle(_joinedAtMeta,
-          joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta));
+      context.handle(
+        _joinedAtMeta,
+        joinedAt.isAcceptableOrUnknown(data['joined_at']!, _joinedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_joinedAtMeta);
     }
     if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
@@ -4161,22 +4995,38 @@ class $LedgerMembersTable extends LedgerMembers
   LedgerMember map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LedgerMember(
-      ledgerSyncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}ledger_sync_id'])!,
-      userId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}user_id'])!,
-      email: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}email']),
-      displayName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}display_name']),
-      avatarUrl: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}avatar_url']),
-      role: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}role'])!,
-      joinedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}joined_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      ledgerSyncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ledger_sync_id'],
+      )!,
+      userId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_id'],
+      )!,
+      email: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}email'],
+      ),
+      displayName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}display_name'],
+      ),
+      avatarUrl: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}avatar_url'],
+      ),
+      role: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}role'],
+      )!,
+      joinedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}joined_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -4195,15 +5045,16 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   final String role;
   final DateTime joinedAt;
   final DateTime updatedAt;
-  const LedgerMember(
-      {required this.ledgerSyncId,
-      required this.userId,
-      this.email,
-      this.displayName,
-      this.avatarUrl,
-      required this.role,
-      required this.joinedAt,
-      required this.updatedAt});
+  const LedgerMember({
+    required this.ledgerSyncId,
+    required this.userId,
+    this.email,
+    this.displayName,
+    this.avatarUrl,
+    required this.role,
+    required this.joinedAt,
+    required this.updatedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4228,8 +5079,9 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     return LedgerMembersCompanion(
       ledgerSyncId: Value(ledgerSyncId),
       userId: Value(userId),
-      email:
-          email == null && nullToAbsent ? const Value.absent() : Value(email),
+      email: email == null && nullToAbsent
+          ? const Value.absent()
+          : Value(email),
       displayName: displayName == null && nullToAbsent
           ? const Value.absent()
           : Value(displayName),
@@ -4242,8 +5094,10 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     );
   }
 
-  factory LedgerMember.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LedgerMember.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LedgerMember(
       ledgerSyncId: serializer.fromJson<String>(json['ledgerSyncId']),
@@ -4271,25 +5125,25 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     };
   }
 
-  LedgerMember copyWith(
-          {String? ledgerSyncId,
-          String? userId,
-          Value<String?> email = const Value.absent(),
-          Value<String?> displayName = const Value.absent(),
-          Value<String?> avatarUrl = const Value.absent(),
-          String? role,
-          DateTime? joinedAt,
-          DateTime? updatedAt}) =>
-      LedgerMember(
-        ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
-        userId: userId ?? this.userId,
-        email: email.present ? email.value : this.email,
-        displayName: displayName.present ? displayName.value : this.displayName,
-        avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
-        role: role ?? this.role,
-        joinedAt: joinedAt ?? this.joinedAt,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  LedgerMember copyWith({
+    String? ledgerSyncId,
+    String? userId,
+    Value<String?> email = const Value.absent(),
+    Value<String?> displayName = const Value.absent(),
+    Value<String?> avatarUrl = const Value.absent(),
+    String? role,
+    DateTime? joinedAt,
+    DateTime? updatedAt,
+  }) => LedgerMember(
+    ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
+    userId: userId ?? this.userId,
+    email: email.present ? email.value : this.email,
+    displayName: displayName.present ? displayName.value : this.displayName,
+    avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
+    role: role ?? this.role,
+    joinedAt: joinedAt ?? this.joinedAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
   LedgerMember copyWithCompanion(LedgerMembersCompanion data) {
     return LedgerMember(
       ledgerSyncId: data.ledgerSyncId.present
@@ -4297,8 +5151,9 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
           : this.ledgerSyncId,
       userId: data.userId.present ? data.userId.value : this.userId,
       email: data.email.present ? data.email.value : this.email,
-      displayName:
-          data.displayName.present ? data.displayName.value : this.displayName,
+      displayName: data.displayName.present
+          ? data.displayName.value
+          : this.displayName,
       avatarUrl: data.avatarUrl.present ? data.avatarUrl.value : this.avatarUrl,
       role: data.role.present ? data.role.value : this.role,
       joinedAt: data.joinedAt.present ? data.joinedAt.value : this.joinedAt,
@@ -4322,8 +5177,16 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   }
 
   @override
-  int get hashCode => Object.hash(ledgerSyncId, userId, email, displayName,
-      avatarUrl, role, joinedAt, updatedAt);
+  int get hashCode => Object.hash(
+    ledgerSyncId,
+    userId,
+    email,
+    displayName,
+    avatarUrl,
+    role,
+    joinedAt,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4369,11 +5232,11 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     required DateTime joinedAt,
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
-  })  : ledgerSyncId = Value(ledgerSyncId),
-        userId = Value(userId),
-        role = Value(role),
-        joinedAt = Value(joinedAt),
-        updatedAt = Value(updatedAt);
+  }) : ledgerSyncId = Value(ledgerSyncId),
+       userId = Value(userId),
+       role = Value(role),
+       joinedAt = Value(joinedAt),
+       updatedAt = Value(updatedAt);
   static Insertable<LedgerMember> custom({
     Expression<String>? ledgerSyncId,
     Expression<String>? userId,
@@ -4398,16 +5261,17 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     });
   }
 
-  LedgerMembersCompanion copyWith(
-      {Value<String>? ledgerSyncId,
-      Value<String>? userId,
-      Value<String?>? email,
-      Value<String?>? displayName,
-      Value<String?>? avatarUrl,
-      Value<String>? role,
-      Value<DateTime>? joinedAt,
-      Value<DateTime>? updatedAt,
-      Value<int>? rowid}) {
+  LedgerMembersCompanion copyWith({
+    Value<String>? ledgerSyncId,
+    Value<String>? userId,
+    Value<String?>? email,
+    Value<String?>? displayName,
+    Value<String?>? avatarUrl,
+    Value<String>? role,
+    Value<DateTime>? joinedAt,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
     return LedgerMembersCompanion(
       ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
       userId: userId ?? this.userId,
@@ -4477,84 +5341,131 @@ class $SharedLedgerCategoriesTable extends SharedLedgerCategories
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SharedLedgerCategoriesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _ledgerSyncIdMeta =
-      const VerificationMeta('ledgerSyncId');
+  static const VerificationMeta _ledgerSyncIdMeta = const VerificationMeta(
+    'ledgerSyncId',
+  );
   @override
   late final GeneratedColumn<String> ledgerSyncId = GeneratedColumn<String>(
-      'ledger_sync_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'ledger_sync_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'sync_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _kindMeta = const VerificationMeta('kind');
   @override
   late final GeneratedColumn<String> kind = GeneratedColumn<String>(
-      'kind', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'kind',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _iconMeta = const VerificationMeta('icon');
   @override
   late final GeneratedColumn<String> icon = GeneratedColumn<String>(
-      'icon', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'icon',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _colorMeta = const VerificationMeta('color');
   @override
   late final GeneratedColumn<String> color = GeneratedColumn<String>(
-      'color', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _sortOrderMeta =
-      const VerificationMeta('sortOrder');
+    'color',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _sortOrderMeta = const VerificationMeta(
+    'sortOrder',
+  );
   @override
   late final GeneratedColumn<int> sortOrder = GeneratedColumn<int>(
-      'sort_order', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(0));
+    'sort_order',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _levelMeta = const VerificationMeta('level');
   @override
   late final GeneratedColumn<int> level = GeneratedColumn<int>(
-      'level', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _parentNameMeta =
-      const VerificationMeta('parentName');
+    'level',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _parentNameMeta = const VerificationMeta(
+    'parentName',
+  );
   @override
   late final GeneratedColumn<String> parentName = GeneratedColumn<String>(
-      'parent_name', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _parentSyncIdMeta =
-      const VerificationMeta('parentSyncId');
+    'parent_name',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _parentSyncIdMeta = const VerificationMeta(
+    'parentSyncId',
+  );
   @override
   late final GeneratedColumn<String> parentSyncId = GeneratedColumn<String>(
-      'parent_sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
+    'parent_sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        ledgerSyncId,
-        syncId,
-        name,
-        kind,
-        icon,
-        color,
-        sortOrder,
-        level,
-        parentName,
-        parentSyncId,
-        updatedAt
-      ];
+    ledgerSyncId,
+    syncId,
+    name,
+    kind,
+    icon,
+    color,
+    sortOrder,
+    level,
+    parentName,
+    parentSyncId,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -4562,67 +5473,90 @@ class $SharedLedgerCategoriesTable extends SharedLedgerCategories
   static const String $name = 'shared_ledger_categories';
   @override
   VerificationContext validateIntegrity(
-      Insertable<SharedLedgerCategory> instance,
-      {bool isInserting = false}) {
+    Insertable<SharedLedgerCategory> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('ledger_sync_id')) {
       context.handle(
+        _ledgerSyncIdMeta,
+        ledgerSyncId.isAcceptableOrUnknown(
+          data['ledger_sync_id']!,
           _ledgerSyncIdMeta,
-          ledgerSyncId.isAcceptableOrUnknown(
-              data['ledger_sync_id']!, _ledgerSyncIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_ledgerSyncIdMeta);
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_syncIdMeta);
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('kind')) {
       context.handle(
-          _kindMeta, kind.isAcceptableOrUnknown(data['kind']!, _kindMeta));
+        _kindMeta,
+        kind.isAcceptableOrUnknown(data['kind']!, _kindMeta),
+      );
     } else if (isInserting) {
       context.missing(_kindMeta);
     }
     if (data.containsKey('icon')) {
       context.handle(
-          _iconMeta, icon.isAcceptableOrUnknown(data['icon']!, _iconMeta));
+        _iconMeta,
+        icon.isAcceptableOrUnknown(data['icon']!, _iconMeta),
+      );
     }
     if (data.containsKey('color')) {
       context.handle(
-          _colorMeta, color.isAcceptableOrUnknown(data['color']!, _colorMeta));
+        _colorMeta,
+        color.isAcceptableOrUnknown(data['color']!, _colorMeta),
+      );
     }
     if (data.containsKey('sort_order')) {
-      context.handle(_sortOrderMeta,
-          sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta));
+      context.handle(
+        _sortOrderMeta,
+        sortOrder.isAcceptableOrUnknown(data['sort_order']!, _sortOrderMeta),
+      );
     }
     if (data.containsKey('level')) {
       context.handle(
-          _levelMeta, level.isAcceptableOrUnknown(data['level']!, _levelMeta));
+        _levelMeta,
+        level.isAcceptableOrUnknown(data['level']!, _levelMeta),
+      );
     }
     if (data.containsKey('parent_name')) {
       context.handle(
-          _parentNameMeta,
-          parentName.isAcceptableOrUnknown(
-              data['parent_name']!, _parentNameMeta));
+        _parentNameMeta,
+        parentName.isAcceptableOrUnknown(data['parent_name']!, _parentNameMeta),
+      );
     }
     if (data.containsKey('parent_sync_id')) {
       context.handle(
+        _parentSyncIdMeta,
+        parentSyncId.isAcceptableOrUnknown(
+          data['parent_sync_id']!,
           _parentSyncIdMeta,
-          parentSyncId.isAcceptableOrUnknown(
-              data['parent_sync_id']!, _parentSyncIdMeta));
+        ),
+      );
     }
     if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_updatedAtMeta);
     }
@@ -4635,28 +5569,50 @@ class $SharedLedgerCategoriesTable extends SharedLedgerCategories
   SharedLedgerCategory map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SharedLedgerCategory(
-      ledgerSyncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}ledger_sync_id'])!,
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id'])!,
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      kind: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}kind'])!,
-      icon: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}icon']),
-      color: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}color']),
-      sortOrder: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}sort_order'])!,
-      level: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}level'])!,
-      parentName: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}parent_name']),
-      parentSyncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}parent_sync_id']),
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at'])!,
+      ledgerSyncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}ledger_sync_id'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      )!,
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      kind: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}kind'],
+      )!,
+      icon: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}icon'],
+      ),
+      color: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}color'],
+      ),
+      sortOrder: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}sort_order'],
+      )!,
+      level: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}level'],
+      )!,
+      parentName: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_name'],
+      ),
+      parentSyncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}parent_sync_id'],
+      ),
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
     );
   }
 
@@ -4679,18 +5635,19 @@ class SharedLedgerCategory extends DataClass
   final String? parentName;
   final String? parentSyncId;
   final DateTime updatedAt;
-  const SharedLedgerCategory(
-      {required this.ledgerSyncId,
-      required this.syncId,
-      required this.name,
-      required this.kind,
-      this.icon,
-      this.color,
-      required this.sortOrder,
-      required this.level,
-      this.parentName,
-      this.parentSyncId,
-      required this.updatedAt});
+  const SharedLedgerCategory({
+    required this.ledgerSyncId,
+    required this.syncId,
+    required this.name,
+    required this.kind,
+    this.icon,
+    this.color,
+    required this.sortOrder,
+    required this.level,
+    this.parentName,
+    this.parentSyncId,
+    required this.updatedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -4723,8 +5680,9 @@ class SharedLedgerCategory extends DataClass
       name: Value(name),
       kind: Value(kind),
       icon: icon == null && nullToAbsent ? const Value.absent() : Value(icon),
-      color:
-          color == null && nullToAbsent ? const Value.absent() : Value(color),
+      color: color == null && nullToAbsent
+          ? const Value.absent()
+          : Value(color),
       sortOrder: Value(sortOrder),
       level: Value(level),
       parentName: parentName == null && nullToAbsent
@@ -4737,8 +5695,10 @@ class SharedLedgerCategory extends DataClass
     );
   }
 
-  factory SharedLedgerCategory.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SharedLedgerCategory.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SharedLedgerCategory(
       ledgerSyncId: serializer.fromJson<String>(json['ledgerSyncId']),
@@ -4772,32 +5732,31 @@ class SharedLedgerCategory extends DataClass
     };
   }
 
-  SharedLedgerCategory copyWith(
-          {String? ledgerSyncId,
-          String? syncId,
-          String? name,
-          String? kind,
-          Value<String?> icon = const Value.absent(),
-          Value<String?> color = const Value.absent(),
-          int? sortOrder,
-          int? level,
-          Value<String?> parentName = const Value.absent(),
-          Value<String?> parentSyncId = const Value.absent(),
-          DateTime? updatedAt}) =>
-      SharedLedgerCategory(
-        ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
-        syncId: syncId ?? this.syncId,
-        name: name ?? this.name,
-        kind: kind ?? this.kind,
-        icon: icon.present ? icon.value : this.icon,
-        color: color.present ? color.value : this.color,
-        sortOrder: sortOrder ?? this.sortOrder,
-        level: level ?? this.level,
-        parentName: parentName.present ? parentName.value : this.parentName,
-        parentSyncId:
-            parentSyncId.present ? parentSyncId.value : this.parentSyncId,
-        updatedAt: updatedAt ?? this.updatedAt,
-      );
+  SharedLedgerCategory copyWith({
+    String? ledgerSyncId,
+    String? syncId,
+    String? name,
+    String? kind,
+    Value<String?> icon = const Value.absent(),
+    Value<String?> color = const Value.absent(),
+    int? sortOrder,
+    int? level,
+    Value<String?> parentName = const Value.absent(),
+    Value<String?> parentSyncId = const Value.absent(),
+    DateTime? updatedAt,
+  }) => SharedLedgerCategory(
+    ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
+    syncId: syncId ?? this.syncId,
+    name: name ?? this.name,
+    kind: kind ?? this.kind,
+    icon: icon.present ? icon.value : this.icon,
+    color: color.present ? color.value : this.color,
+    sortOrder: sortOrder ?? this.sortOrder,
+    level: level ?? this.level,
+    parentName: parentName.present ? parentName.value : this.parentName,
+    parentSyncId: parentSyncId.present ? parentSyncId.value : this.parentSyncId,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
   SharedLedgerCategory copyWithCompanion(SharedLedgerCategoriesCompanion data) {
     return SharedLedgerCategory(
       ledgerSyncId: data.ledgerSyncId.present
@@ -4810,8 +5769,9 @@ class SharedLedgerCategory extends DataClass
       color: data.color.present ? data.color.value : this.color,
       sortOrder: data.sortOrder.present ? data.sortOrder.value : this.sortOrder,
       level: data.level.present ? data.level.value : this.level,
-      parentName:
-          data.parentName.present ? data.parentName.value : this.parentName,
+      parentName: data.parentName.present
+          ? data.parentName.value
+          : this.parentName,
       parentSyncId: data.parentSyncId.present
           ? data.parentSyncId.value
           : this.parentSyncId,
@@ -4838,8 +5798,19 @@ class SharedLedgerCategory extends DataClass
   }
 
   @override
-  int get hashCode => Object.hash(ledgerSyncId, syncId, name, kind, icon, color,
-      sortOrder, level, parentName, parentSyncId, updatedAt);
+  int get hashCode => Object.hash(
+    ledgerSyncId,
+    syncId,
+    name,
+    kind,
+    icon,
+    color,
+    sortOrder,
+    level,
+    parentName,
+    parentSyncId,
+    updatedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -4898,11 +5869,11 @@ class SharedLedgerCategoriesCompanion
     this.parentSyncId = const Value.absent(),
     required DateTime updatedAt,
     this.rowid = const Value.absent(),
-  })  : ledgerSyncId = Value(ledgerSyncId),
-        syncId = Value(syncId),
-        name = Value(name),
-        kind = Value(kind),
-        updatedAt = Value(updatedAt);
+  }) : ledgerSyncId = Value(ledgerSyncId),
+       syncId = Value(syncId),
+       name = Value(name),
+       kind = Value(kind),
+       updatedAt = Value(updatedAt);
   static Insertable<SharedLedgerCategory> custom({
     Expression<String>? ledgerSyncId,
     Expression<String>? syncId,
@@ -4933,19 +5904,20 @@ class SharedLedgerCategoriesCompanion
     });
   }
 
-  SharedLedgerCategoriesCompanion copyWith(
-      {Value<String>? ledgerSyncId,
-      Value<String>? syncId,
-      Value<String>? name,
-      Value<String>? kind,
-      Value<String?>? icon,
-      Value<String?>? color,
-      Value<int>? sortOrder,
-      Value<int>? level,
-      Value<String?>? parentName,
-      Value<String?>? parentSyncId,
-      Value<DateTime>? updatedAt,
-      Value<int>? rowid}) {
+  SharedLedgerCategoriesCompanion copyWith({
+    Value<String>? ledgerSyncId,
+    Value<String>? syncId,
+    Value<String>? name,
+    Value<String>? kind,
+    Value<String?>? icon,
+    Value<String?>? color,
+    Value<int>? sortOrder,
+    Value<int>? level,
+    Value<String?>? parentName,
+    Value<String?>? parentSyncId,
+    Value<DateTime>? updatedAt,
+    Value<int>? rowid,
+  }) {
     return SharedLedgerCategoriesCompanion(
       ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
       syncId: syncId ?? this.syncId,
@@ -5033,223 +6005,322 @@ class $SyncPullErrorsTable extends SyncPullErrors
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _changeIdMeta =
-      const VerificationMeta('changeId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _changeIdMeta = const VerificationMeta(
+    'changeId',
+  );
   @override
   late final GeneratedColumn<int> changeId = GeneratedColumn<int>(
-      'change_id', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: true,
-      defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'));
-  static const VerificationMeta _ledgerExternalIdMeta =
-      const VerificationMeta('ledgerExternalId');
+    'change_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways('UNIQUE'),
+  );
+  static const VerificationMeta _ledgerExternalIdMeta = const VerificationMeta(
+    'ledgerExternalId',
+  );
   @override
   late final GeneratedColumn<String> ledgerExternalId = GeneratedColumn<String>(
-      'ledger_external_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _entityTypeMeta =
-      const VerificationMeta('entityType');
+    'ledger_external_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _entityTypeMeta = const VerificationMeta(
+    'entityType',
+  );
   @override
   late final GeneratedColumn<String> entityType = GeneratedColumn<String>(
-      'entity_type', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _entitySyncIdMeta =
-      const VerificationMeta('entitySyncId');
+    'entity_type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _entitySyncIdMeta = const VerificationMeta(
+    'entitySyncId',
+  );
   @override
   late final GeneratedColumn<String> entitySyncId = GeneratedColumn<String>(
-      'entity_sync_id', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'entity_sync_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _actionMeta = const VerificationMeta('action');
   @override
   late final GeneratedColumn<String> action = GeneratedColumn<String>(
-      'action', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _rawChangeJsonMeta =
-      const VerificationMeta('rawChangeJson');
+    'action',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rawChangeJsonMeta = const VerificationMeta(
+    'rawChangeJson',
+  );
   @override
   late final GeneratedColumn<String> rawChangeJson = GeneratedColumn<String>(
-      'raw_change_json', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _errorClassMeta =
-      const VerificationMeta('errorClass');
+    'raw_change_json',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _errorClassMeta = const VerificationMeta(
+    'errorClass',
+  );
   @override
   late final GeneratedColumn<String> errorClass = GeneratedColumn<String>(
-      'error_class', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _errorMessageMeta =
-      const VerificationMeta('errorMessage');
+    'error_class',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _errorMessageMeta = const VerificationMeta(
+    'errorMessage',
+  );
   @override
   late final GeneratedColumn<String> errorMessage = GeneratedColumn<String>(
-      'error_message', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _stackTraceMeta =
-      const VerificationMeta('stackTrace');
+    'error_message',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _stackTraceMeta = const VerificationMeta(
+    'stackTrace',
+  );
   @override
   late final GeneratedColumn<String> stackTrace = GeneratedColumn<String>(
-      'stack_trace', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _firstSeenAtMeta =
-      const VerificationMeta('firstSeenAt');
+    'stack_trace',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _firstSeenAtMeta = const VerificationMeta(
+    'firstSeenAt',
+  );
   @override
   late final GeneratedColumn<DateTime> firstSeenAt = GeneratedColumn<DateTime>(
-      'first_seen_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _lastAttemptAtMeta =
-      const VerificationMeta('lastAttemptAt');
+    'first_seen_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastAttemptAtMeta = const VerificationMeta(
+    'lastAttemptAt',
+  );
   @override
   late final GeneratedColumn<DateTime> lastAttemptAt =
-      GeneratedColumn<DateTime>('last_attempt_at', aliasedName, false,
-          type: DriftSqlType.dateTime, requiredDuringInsert: true);
-  static const VerificationMeta _attemptCountMeta =
-      const VerificationMeta('attemptCount');
+      GeneratedColumn<DateTime>(
+        'last_attempt_at',
+        aliasedName,
+        false,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: true,
+      );
+  static const VerificationMeta _attemptCountMeta = const VerificationMeta(
+    'attemptCount',
+  );
   @override
   late final GeneratedColumn<int> attemptCount = GeneratedColumn<int>(
-      'attempt_count', aliasedName, false,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultValue: const Constant(1));
-  static const VerificationMeta _userActionMeta =
-      const VerificationMeta('userAction');
+    'attempt_count',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _userActionMeta = const VerificationMeta(
+    'userAction',
+  );
   @override
   late final GeneratedColumn<String> userAction = GeneratedColumn<String>(
-      'user_action', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _resolvedAtMeta =
-      const VerificationMeta('resolvedAt');
+    'user_action',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _resolvedAtMeta = const VerificationMeta(
+    'resolvedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> resolvedAt = GeneratedColumn<DateTime>(
-      'resolved_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'resolved_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
   List<GeneratedColumn> get $columns => [
-        id,
-        changeId,
-        ledgerExternalId,
-        entityType,
-        entitySyncId,
-        action,
-        rawChangeJson,
-        errorClass,
-        errorMessage,
-        stackTrace,
-        firstSeenAt,
-        lastAttemptAt,
-        attemptCount,
-        userAction,
-        resolvedAt
-      ];
+    id,
+    changeId,
+    ledgerExternalId,
+    entityType,
+    entitySyncId,
+    action,
+    rawChangeJson,
+    errorClass,
+    errorMessage,
+    stackTrace,
+    firstSeenAt,
+    lastAttemptAt,
+    attemptCount,
+    userAction,
+    resolvedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'sync_pull_errors';
   @override
-  VerificationContext validateIntegrity(Insertable<SyncPullError> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<SyncPullError> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('change_id')) {
-      context.handle(_changeIdMeta,
-          changeId.isAcceptableOrUnknown(data['change_id']!, _changeIdMeta));
+      context.handle(
+        _changeIdMeta,
+        changeId.isAcceptableOrUnknown(data['change_id']!, _changeIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_changeIdMeta);
     }
     if (data.containsKey('ledger_external_id')) {
       context.handle(
+        _ledgerExternalIdMeta,
+        ledgerExternalId.isAcceptableOrUnknown(
+          data['ledger_external_id']!,
           _ledgerExternalIdMeta,
-          ledgerExternalId.isAcceptableOrUnknown(
-              data['ledger_external_id']!, _ledgerExternalIdMeta));
+        ),
+      );
     }
     if (data.containsKey('entity_type')) {
       context.handle(
-          _entityTypeMeta,
-          entityType.isAcceptableOrUnknown(
-              data['entity_type']!, _entityTypeMeta));
+        _entityTypeMeta,
+        entityType.isAcceptableOrUnknown(data['entity_type']!, _entityTypeMeta),
+      );
     } else if (isInserting) {
       context.missing(_entityTypeMeta);
     }
     if (data.containsKey('entity_sync_id')) {
       context.handle(
+        _entitySyncIdMeta,
+        entitySyncId.isAcceptableOrUnknown(
+          data['entity_sync_id']!,
           _entitySyncIdMeta,
-          entitySyncId.isAcceptableOrUnknown(
-              data['entity_sync_id']!, _entitySyncIdMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_entitySyncIdMeta);
     }
     if (data.containsKey('action')) {
-      context.handle(_actionMeta,
-          action.isAcceptableOrUnknown(data['action']!, _actionMeta));
+      context.handle(
+        _actionMeta,
+        action.isAcceptableOrUnknown(data['action']!, _actionMeta),
+      );
     } else if (isInserting) {
       context.missing(_actionMeta);
     }
     if (data.containsKey('raw_change_json')) {
       context.handle(
+        _rawChangeJsonMeta,
+        rawChangeJson.isAcceptableOrUnknown(
+          data['raw_change_json']!,
           _rawChangeJsonMeta,
-          rawChangeJson.isAcceptableOrUnknown(
-              data['raw_change_json']!, _rawChangeJsonMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_rawChangeJsonMeta);
     }
     if (data.containsKey('error_class')) {
       context.handle(
-          _errorClassMeta,
-          errorClass.isAcceptableOrUnknown(
-              data['error_class']!, _errorClassMeta));
+        _errorClassMeta,
+        errorClass.isAcceptableOrUnknown(data['error_class']!, _errorClassMeta),
+      );
     }
     if (data.containsKey('error_message')) {
       context.handle(
+        _errorMessageMeta,
+        errorMessage.isAcceptableOrUnknown(
+          data['error_message']!,
           _errorMessageMeta,
-          errorMessage.isAcceptableOrUnknown(
-              data['error_message']!, _errorMessageMeta));
+        ),
+      );
     }
     if (data.containsKey('stack_trace')) {
       context.handle(
-          _stackTraceMeta,
-          stackTrace.isAcceptableOrUnknown(
-              data['stack_trace']!, _stackTraceMeta));
+        _stackTraceMeta,
+        stackTrace.isAcceptableOrUnknown(data['stack_trace']!, _stackTraceMeta),
+      );
     }
     if (data.containsKey('first_seen_at')) {
       context.handle(
+        _firstSeenAtMeta,
+        firstSeenAt.isAcceptableOrUnknown(
+          data['first_seen_at']!,
           _firstSeenAtMeta,
-          firstSeenAt.isAcceptableOrUnknown(
-              data['first_seen_at']!, _firstSeenAtMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_firstSeenAtMeta);
     }
     if (data.containsKey('last_attempt_at')) {
       context.handle(
+        _lastAttemptAtMeta,
+        lastAttemptAt.isAcceptableOrUnknown(
+          data['last_attempt_at']!,
           _lastAttemptAtMeta,
-          lastAttemptAt.isAcceptableOrUnknown(
-              data['last_attempt_at']!, _lastAttemptAtMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_lastAttemptAtMeta);
     }
     if (data.containsKey('attempt_count')) {
       context.handle(
+        _attemptCountMeta,
+        attemptCount.isAcceptableOrUnknown(
+          data['attempt_count']!,
           _attemptCountMeta,
-          attemptCount.isAcceptableOrUnknown(
-              data['attempt_count']!, _attemptCountMeta));
+        ),
+      );
     }
     if (data.containsKey('user_action')) {
       context.handle(
-          _userActionMeta,
-          userAction.isAcceptableOrUnknown(
-              data['user_action']!, _userActionMeta));
+        _userActionMeta,
+        userAction.isAcceptableOrUnknown(data['user_action']!, _userActionMeta),
+      );
     }
     if (data.containsKey('resolved_at')) {
       context.handle(
-          _resolvedAtMeta,
-          resolvedAt.isAcceptableOrUnknown(
-              data['resolved_at']!, _resolvedAtMeta));
+        _resolvedAtMeta,
+        resolvedAt.isAcceptableOrUnknown(data['resolved_at']!, _resolvedAtMeta),
+      );
     }
     return context;
   }
@@ -5260,36 +6331,66 @@ class $SyncPullErrorsTable extends SyncPullErrors
   SyncPullError map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SyncPullError(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      changeId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}change_id'])!,
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      changeId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}change_id'],
+      )!,
       ledgerExternalId: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}ledger_external_id']),
-      entityType: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}entity_type'])!,
-      entitySyncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}entity_sync_id'])!,
-      action: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}action'])!,
+        DriftSqlType.string,
+        data['${effectivePrefix}ledger_external_id'],
+      ),
+      entityType: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_type'],
+      )!,
+      entitySyncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}entity_sync_id'],
+      )!,
+      action: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}action'],
+      )!,
       rawChangeJson: attachedDatabase.typeMapping.read(
-          DriftSqlType.string, data['${effectivePrefix}raw_change_json'])!,
-      errorClass: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}error_class']),
-      errorMessage: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}error_message']),
-      stackTrace: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}stack_trace']),
+        DriftSqlType.string,
+        data['${effectivePrefix}raw_change_json'],
+      )!,
+      errorClass: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_class'],
+      ),
+      errorMessage: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}error_message'],
+      ),
+      stackTrace: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}stack_trace'],
+      ),
       firstSeenAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}first_seen_at'])!,
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}first_seen_at'],
+      )!,
       lastAttemptAt: attachedDatabase.typeMapping.read(
-          DriftSqlType.dateTime, data['${effectivePrefix}last_attempt_at'])!,
-      attemptCount: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}attempt_count'])!,
-      userAction: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}user_action']),
-      resolvedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}resolved_at']),
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_attempt_at'],
+      )!,
+      attemptCount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}attempt_count'],
+      )!,
+      userAction: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}user_action'],
+      ),
+      resolvedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}resolved_at'],
+      ),
     );
   }
 
@@ -5315,22 +6416,23 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
   final int attemptCount;
   final String? userAction;
   final DateTime? resolvedAt;
-  const SyncPullError(
-      {required this.id,
-      required this.changeId,
-      this.ledgerExternalId,
-      required this.entityType,
-      required this.entitySyncId,
-      required this.action,
-      required this.rawChangeJson,
-      this.errorClass,
-      this.errorMessage,
-      this.stackTrace,
-      required this.firstSeenAt,
-      required this.lastAttemptAt,
-      required this.attemptCount,
-      this.userAction,
-      this.resolvedAt});
+  const SyncPullError({
+    required this.id,
+    required this.changeId,
+    this.ledgerExternalId,
+    required this.entityType,
+    required this.entitySyncId,
+    required this.action,
+    required this.rawChangeJson,
+    this.errorClass,
+    this.errorMessage,
+    this.stackTrace,
+    required this.firstSeenAt,
+    required this.lastAttemptAt,
+    required this.attemptCount,
+    this.userAction,
+    this.resolvedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5396,8 +6498,10 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
     );
   }
 
-  factory SyncPullError.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SyncPullError.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SyncPullError(
       id: serializer.fromJson<int>(json['id']),
@@ -5439,42 +6543,41 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
     };
   }
 
-  SyncPullError copyWith(
-          {int? id,
-          int? changeId,
-          Value<String?> ledgerExternalId = const Value.absent(),
-          String? entityType,
-          String? entitySyncId,
-          String? action,
-          String? rawChangeJson,
-          Value<String?> errorClass = const Value.absent(),
-          Value<String?> errorMessage = const Value.absent(),
-          Value<String?> stackTrace = const Value.absent(),
-          DateTime? firstSeenAt,
-          DateTime? lastAttemptAt,
-          int? attemptCount,
-          Value<String?> userAction = const Value.absent(),
-          Value<DateTime?> resolvedAt = const Value.absent()}) =>
-      SyncPullError(
-        id: id ?? this.id,
-        changeId: changeId ?? this.changeId,
-        ledgerExternalId: ledgerExternalId.present
-            ? ledgerExternalId.value
-            : this.ledgerExternalId,
-        entityType: entityType ?? this.entityType,
-        entitySyncId: entitySyncId ?? this.entitySyncId,
-        action: action ?? this.action,
-        rawChangeJson: rawChangeJson ?? this.rawChangeJson,
-        errorClass: errorClass.present ? errorClass.value : this.errorClass,
-        errorMessage:
-            errorMessage.present ? errorMessage.value : this.errorMessage,
-        stackTrace: stackTrace.present ? stackTrace.value : this.stackTrace,
-        firstSeenAt: firstSeenAt ?? this.firstSeenAt,
-        lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
-        attemptCount: attemptCount ?? this.attemptCount,
-        userAction: userAction.present ? userAction.value : this.userAction,
-        resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
-      );
+  SyncPullError copyWith({
+    int? id,
+    int? changeId,
+    Value<String?> ledgerExternalId = const Value.absent(),
+    String? entityType,
+    String? entitySyncId,
+    String? action,
+    String? rawChangeJson,
+    Value<String?> errorClass = const Value.absent(),
+    Value<String?> errorMessage = const Value.absent(),
+    Value<String?> stackTrace = const Value.absent(),
+    DateTime? firstSeenAt,
+    DateTime? lastAttemptAt,
+    int? attemptCount,
+    Value<String?> userAction = const Value.absent(),
+    Value<DateTime?> resolvedAt = const Value.absent(),
+  }) => SyncPullError(
+    id: id ?? this.id,
+    changeId: changeId ?? this.changeId,
+    ledgerExternalId: ledgerExternalId.present
+        ? ledgerExternalId.value
+        : this.ledgerExternalId,
+    entityType: entityType ?? this.entityType,
+    entitySyncId: entitySyncId ?? this.entitySyncId,
+    action: action ?? this.action,
+    rawChangeJson: rawChangeJson ?? this.rawChangeJson,
+    errorClass: errorClass.present ? errorClass.value : this.errorClass,
+    errorMessage: errorMessage.present ? errorMessage.value : this.errorMessage,
+    stackTrace: stackTrace.present ? stackTrace.value : this.stackTrace,
+    firstSeenAt: firstSeenAt ?? this.firstSeenAt,
+    lastAttemptAt: lastAttemptAt ?? this.lastAttemptAt,
+    attemptCount: attemptCount ?? this.attemptCount,
+    userAction: userAction.present ? userAction.value : this.userAction,
+    resolvedAt: resolvedAt.present ? resolvedAt.value : this.resolvedAt,
+  );
   SyncPullError copyWithCompanion(SyncPullErrorsCompanion data) {
     return SyncPullError(
       id: data.id.present ? data.id.value : this.id,
@@ -5482,8 +6585,9 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
       ledgerExternalId: data.ledgerExternalId.present
           ? data.ledgerExternalId.value
           : this.ledgerExternalId,
-      entityType:
-          data.entityType.present ? data.entityType.value : this.entityType,
+      entityType: data.entityType.present
+          ? data.entityType.value
+          : this.entityType,
       entitySyncId: data.entitySyncId.present
           ? data.entitySyncId.value
           : this.entitySyncId,
@@ -5491,25 +6595,30 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
       rawChangeJson: data.rawChangeJson.present
           ? data.rawChangeJson.value
           : this.rawChangeJson,
-      errorClass:
-          data.errorClass.present ? data.errorClass.value : this.errorClass,
+      errorClass: data.errorClass.present
+          ? data.errorClass.value
+          : this.errorClass,
       errorMessage: data.errorMessage.present
           ? data.errorMessage.value
           : this.errorMessage,
-      stackTrace:
-          data.stackTrace.present ? data.stackTrace.value : this.stackTrace,
-      firstSeenAt:
-          data.firstSeenAt.present ? data.firstSeenAt.value : this.firstSeenAt,
+      stackTrace: data.stackTrace.present
+          ? data.stackTrace.value
+          : this.stackTrace,
+      firstSeenAt: data.firstSeenAt.present
+          ? data.firstSeenAt.value
+          : this.firstSeenAt,
       lastAttemptAt: data.lastAttemptAt.present
           ? data.lastAttemptAt.value
           : this.lastAttemptAt,
       attemptCount: data.attemptCount.present
           ? data.attemptCount.value
           : this.attemptCount,
-      userAction:
-          data.userAction.present ? data.userAction.value : this.userAction,
-      resolvedAt:
-          data.resolvedAt.present ? data.resolvedAt.value : this.resolvedAt,
+      userAction: data.userAction.present
+          ? data.userAction.value
+          : this.userAction,
+      resolvedAt: data.resolvedAt.present
+          ? data.resolvedAt.value
+          : this.resolvedAt,
     );
   }
 
@@ -5537,21 +6646,22 @@ class SyncPullError extends DataClass implements Insertable<SyncPullError> {
 
   @override
   int get hashCode => Object.hash(
-      id,
-      changeId,
-      ledgerExternalId,
-      entityType,
-      entitySyncId,
-      action,
-      rawChangeJson,
-      errorClass,
-      errorMessage,
-      stackTrace,
-      firstSeenAt,
-      lastAttemptAt,
-      attemptCount,
-      userAction,
-      resolvedAt);
+    id,
+    changeId,
+    ledgerExternalId,
+    entityType,
+    entitySyncId,
+    action,
+    rawChangeJson,
+    errorClass,
+    errorMessage,
+    stackTrace,
+    firstSeenAt,
+    lastAttemptAt,
+    attemptCount,
+    userAction,
+    resolvedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -5622,13 +6732,13 @@ class SyncPullErrorsCompanion extends UpdateCompanion<SyncPullError> {
     this.attemptCount = const Value.absent(),
     this.userAction = const Value.absent(),
     this.resolvedAt = const Value.absent(),
-  })  : changeId = Value(changeId),
-        entityType = Value(entityType),
-        entitySyncId = Value(entitySyncId),
-        action = Value(action),
-        rawChangeJson = Value(rawChangeJson),
-        firstSeenAt = Value(firstSeenAt),
-        lastAttemptAt = Value(lastAttemptAt);
+  }) : changeId = Value(changeId),
+       entityType = Value(entityType),
+       entitySyncId = Value(entitySyncId),
+       action = Value(action),
+       rawChangeJson = Value(rawChangeJson),
+       firstSeenAt = Value(firstSeenAt),
+       lastAttemptAt = Value(lastAttemptAt);
   static Insertable<SyncPullError> custom({
     Expression<int>? id,
     Expression<int>? changeId,
@@ -5665,22 +6775,23 @@ class SyncPullErrorsCompanion extends UpdateCompanion<SyncPullError> {
     });
   }
 
-  SyncPullErrorsCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? changeId,
-      Value<String?>? ledgerExternalId,
-      Value<String>? entityType,
-      Value<String>? entitySyncId,
-      Value<String>? action,
-      Value<String>? rawChangeJson,
-      Value<String?>? errorClass,
-      Value<String?>? errorMessage,
-      Value<String?>? stackTrace,
-      Value<DateTime>? firstSeenAt,
-      Value<DateTime>? lastAttemptAt,
-      Value<int>? attemptCount,
-      Value<String?>? userAction,
-      Value<DateTime?>? resolvedAt}) {
+  SyncPullErrorsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? changeId,
+    Value<String?>? ledgerExternalId,
+    Value<String>? entityType,
+    Value<String>? entitySyncId,
+    Value<String>? action,
+    Value<String>? rawChangeJson,
+    Value<String?>? errorClass,
+    Value<String?>? errorMessage,
+    Value<String?>? stackTrace,
+    Value<DateTime>? firstSeenAt,
+    Value<DateTime>? lastAttemptAt,
+    Value<int>? attemptCount,
+    Value<String?>? userAction,
+    Value<DateTime?>? resolvedAt,
+  }) {
     return SyncPullErrorsCompanion(
       id: id ?? this.id,
       changeId: changeId ?? this.changeId,
@@ -5780,90 +6891,140 @@ class $ExchangeRatesTable extends ExchangeRates
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $ExchangeRatesTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _baseCurrencyMeta =
-      const VerificationMeta('baseCurrency');
+  static const VerificationMeta _baseCurrencyMeta = const VerificationMeta(
+    'baseCurrency',
+  );
   @override
   late final GeneratedColumn<String> baseCurrency = GeneratedColumn<String>(
-      'base_currency', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _quoteCurrencyMeta =
-      const VerificationMeta('quoteCurrency');
+    'base_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quoteCurrencyMeta = const VerificationMeta(
+    'quoteCurrency',
+  );
   @override
   late final GeneratedColumn<String> quoteCurrency = GeneratedColumn<String>(
-      'quote_currency', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _rateDateMeta =
-      const VerificationMeta('rateDate');
+    'quote_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _rateDateMeta = const VerificationMeta(
+    'rateDate',
+  );
   @override
   late final GeneratedColumn<String> rateDate = GeneratedColumn<String>(
-      'rate_date', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'rate_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _rateMeta = const VerificationMeta('rate');
   @override
   late final GeneratedColumn<String> rate = GeneratedColumn<String>(
-      'rate', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _sourceMeta = const VerificationMeta('source');
   @override
   late final GeneratedColumn<String> source = GeneratedColumn<String>(
-      'source', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _fetchedAtMeta =
-      const VerificationMeta('fetchedAt');
+    'source',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _fetchedAtMeta = const VerificationMeta(
+    'fetchedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> fetchedAt = GeneratedColumn<DateTime>(
-      'fetched_at', aliasedName, false,
-      type: DriftSqlType.dateTime, requiredDuringInsert: true);
+    'fetched_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [baseCurrency, quoteCurrency, rateDate, rate, source, fetchedAt];
+  List<GeneratedColumn> get $columns => [
+    baseCurrency,
+    quoteCurrency,
+    rateDate,
+    rate,
+    source,
+    fetchedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'exchange_rates';
   @override
-  VerificationContext validateIntegrity(Insertable<ExchangeRate> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<ExchangeRate> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('base_currency')) {
       context.handle(
+        _baseCurrencyMeta,
+        baseCurrency.isAcceptableOrUnknown(
+          data['base_currency']!,
           _baseCurrencyMeta,
-          baseCurrency.isAcceptableOrUnknown(
-              data['base_currency']!, _baseCurrencyMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_baseCurrencyMeta);
     }
     if (data.containsKey('quote_currency')) {
       context.handle(
+        _quoteCurrencyMeta,
+        quoteCurrency.isAcceptableOrUnknown(
+          data['quote_currency']!,
           _quoteCurrencyMeta,
-          quoteCurrency.isAcceptableOrUnknown(
-              data['quote_currency']!, _quoteCurrencyMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_quoteCurrencyMeta);
     }
     if (data.containsKey('rate_date')) {
-      context.handle(_rateDateMeta,
-          rateDate.isAcceptableOrUnknown(data['rate_date']!, _rateDateMeta));
+      context.handle(
+        _rateDateMeta,
+        rateDate.isAcceptableOrUnknown(data['rate_date']!, _rateDateMeta),
+      );
     } else if (isInserting) {
       context.missing(_rateDateMeta);
     }
     if (data.containsKey('rate')) {
       context.handle(
-          _rateMeta, rate.isAcceptableOrUnknown(data['rate']!, _rateMeta));
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
     } else if (isInserting) {
       context.missing(_rateMeta);
     }
     if (data.containsKey('source')) {
-      context.handle(_sourceMeta,
-          source.isAcceptableOrUnknown(data['source']!, _sourceMeta));
+      context.handle(
+        _sourceMeta,
+        source.isAcceptableOrUnknown(data['source']!, _sourceMeta),
+      );
     } else if (isInserting) {
       context.missing(_sourceMeta);
     }
     if (data.containsKey('fetched_at')) {
-      context.handle(_fetchedAtMeta,
-          fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta));
+      context.handle(
+        _fetchedAtMeta,
+        fetchedAt.isAcceptableOrUnknown(data['fetched_at']!, _fetchedAtMeta),
+      );
     } else if (isInserting) {
       context.missing(_fetchedAtMeta);
     }
@@ -5871,24 +7032,39 @@ class $ExchangeRatesTable extends ExchangeRates
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey =>
-      {baseCurrency, quoteCurrency, rateDate};
+  Set<GeneratedColumn> get $primaryKey => {
+    baseCurrency,
+    quoteCurrency,
+    rateDate,
+  };
   @override
   ExchangeRate map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ExchangeRate(
-      baseCurrency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}base_currency'])!,
-      quoteCurrency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}quote_currency'])!,
-      rateDate: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}rate_date'])!,
-      rate: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}rate'])!,
-      source: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}source'])!,
-      fetchedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}fetched_at'])!,
+      baseCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_currency'],
+      )!,
+      quoteCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quote_currency'],
+      )!,
+      rateDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate_date'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate'],
+      )!,
+      source: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}source'],
+      )!,
+      fetchedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}fetched_at'],
+      )!,
     );
   }
 
@@ -5905,13 +7081,14 @@ class ExchangeRate extends DataClass implements Insertable<ExchangeRate> {
   final String rate;
   final String source;
   final DateTime fetchedAt;
-  const ExchangeRate(
-      {required this.baseCurrency,
-      required this.quoteCurrency,
-      required this.rateDate,
-      required this.rate,
-      required this.source,
-      required this.fetchedAt});
+  const ExchangeRate({
+    required this.baseCurrency,
+    required this.quoteCurrency,
+    required this.rateDate,
+    required this.rate,
+    required this.source,
+    required this.fetchedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -5935,8 +7112,10 @@ class ExchangeRate extends DataClass implements Insertable<ExchangeRate> {
     );
   }
 
-  factory ExchangeRate.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ExchangeRate.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ExchangeRate(
       baseCurrency: serializer.fromJson<String>(json['baseCurrency']),
@@ -5960,21 +7139,21 @@ class ExchangeRate extends DataClass implements Insertable<ExchangeRate> {
     };
   }
 
-  ExchangeRate copyWith(
-          {String? baseCurrency,
-          String? quoteCurrency,
-          String? rateDate,
-          String? rate,
-          String? source,
-          DateTime? fetchedAt}) =>
-      ExchangeRate(
-        baseCurrency: baseCurrency ?? this.baseCurrency,
-        quoteCurrency: quoteCurrency ?? this.quoteCurrency,
-        rateDate: rateDate ?? this.rateDate,
-        rate: rate ?? this.rate,
-        source: source ?? this.source,
-        fetchedAt: fetchedAt ?? this.fetchedAt,
-      );
+  ExchangeRate copyWith({
+    String? baseCurrency,
+    String? quoteCurrency,
+    String? rateDate,
+    String? rate,
+    String? source,
+    DateTime? fetchedAt,
+  }) => ExchangeRate(
+    baseCurrency: baseCurrency ?? this.baseCurrency,
+    quoteCurrency: quoteCurrency ?? this.quoteCurrency,
+    rateDate: rateDate ?? this.rateDate,
+    rate: rate ?? this.rate,
+    source: source ?? this.source,
+    fetchedAt: fetchedAt ?? this.fetchedAt,
+  );
   ExchangeRate copyWithCompanion(ExchangeRatesCompanion data) {
     return ExchangeRate(
       baseCurrency: data.baseCurrency.present
@@ -6005,7 +7184,13 @@ class ExchangeRate extends DataClass implements Insertable<ExchangeRate> {
 
   @override
   int get hashCode => Object.hash(
-      baseCurrency, quoteCurrency, rateDate, rate, source, fetchedAt);
+    baseCurrency,
+    quoteCurrency,
+    rateDate,
+    rate,
+    source,
+    fetchedAt,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -6043,12 +7228,12 @@ class ExchangeRatesCompanion extends UpdateCompanion<ExchangeRate> {
     required String source,
     required DateTime fetchedAt,
     this.rowid = const Value.absent(),
-  })  : baseCurrency = Value(baseCurrency),
-        quoteCurrency = Value(quoteCurrency),
-        rateDate = Value(rateDate),
-        rate = Value(rate),
-        source = Value(source),
-        fetchedAt = Value(fetchedAt);
+  }) : baseCurrency = Value(baseCurrency),
+       quoteCurrency = Value(quoteCurrency),
+       rateDate = Value(rateDate),
+       rate = Value(rate),
+       source = Value(source),
+       fetchedAt = Value(fetchedAt);
   static Insertable<ExchangeRate> custom({
     Expression<String>? baseCurrency,
     Expression<String>? quoteCurrency,
@@ -6069,14 +7254,15 @@ class ExchangeRatesCompanion extends UpdateCompanion<ExchangeRate> {
     });
   }
 
-  ExchangeRatesCompanion copyWith(
-      {Value<String>? baseCurrency,
-      Value<String>? quoteCurrency,
-      Value<String>? rateDate,
-      Value<String>? rate,
-      Value<String>? source,
-      Value<DateTime>? fetchedAt,
-      Value<int>? rowid}) {
+  ExchangeRatesCompanion copyWith({
+    Value<String>? baseCurrency,
+    Value<String>? quoteCurrency,
+    Value<String>? rateDate,
+    Value<String>? rate,
+    Value<String>? source,
+    Value<DateTime>? fetchedAt,
+    Value<int>? rowid,
+  }) {
     return ExchangeRatesCompanion(
       baseCurrency: baseCurrency ?? this.baseCurrency,
       quoteCurrency: quoteCurrency ?? this.quoteCurrency,
@@ -6139,43 +7325,76 @@ class $ExchangeRateOverridesTable extends ExchangeRateOverrides
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
-  static const VerificationMeta _baseCurrencyMeta =
-      const VerificationMeta('baseCurrency');
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _baseCurrencyMeta = const VerificationMeta(
+    'baseCurrency',
+  );
   @override
   late final GeneratedColumn<String> baseCurrency = GeneratedColumn<String>(
-      'base_currency', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _quoteCurrencyMeta =
-      const VerificationMeta('quoteCurrency');
+    'base_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _quoteCurrencyMeta = const VerificationMeta(
+    'quoteCurrency',
+  );
   @override
   late final GeneratedColumn<String> quoteCurrency = GeneratedColumn<String>(
-      'quote_currency', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
+    'quote_currency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _rateMeta = const VerificationMeta('rate');
   @override
   late final GeneratedColumn<String> rate = GeneratedColumn<String>(
-      'rate', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
+    'rate',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, syncId, baseCurrency, quoteCurrency, rate, updatedAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    syncId,
+    baseCurrency,
+    quoteCurrency,
+    rate,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -6183,42 +7402,55 @@ class $ExchangeRateOverridesTable extends ExchangeRateOverrides
   static const String $name = 'exchange_rate_overrides';
   @override
   VerificationContext validateIntegrity(
-      Insertable<ExchangeRateOverride> instance,
-      {bool isInserting = false}) {
+    Insertable<ExchangeRateOverride> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     }
     if (data.containsKey('base_currency')) {
       context.handle(
+        _baseCurrencyMeta,
+        baseCurrency.isAcceptableOrUnknown(
+          data['base_currency']!,
           _baseCurrencyMeta,
-          baseCurrency.isAcceptableOrUnknown(
-              data['base_currency']!, _baseCurrencyMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_baseCurrencyMeta);
     }
     if (data.containsKey('quote_currency')) {
       context.handle(
+        _quoteCurrencyMeta,
+        quoteCurrency.isAcceptableOrUnknown(
+          data['quote_currency']!,
           _quoteCurrencyMeta,
-          quoteCurrency.isAcceptableOrUnknown(
-              data['quote_currency']!, _quoteCurrencyMeta));
+        ),
+      );
     } else if (isInserting) {
       context.missing(_quoteCurrencyMeta);
     }
     if (data.containsKey('rate')) {
       context.handle(
-          _rateMeta, rate.isAcceptableOrUnknown(data['rate']!, _rateMeta));
+        _rateMeta,
+        rate.isAcceptableOrUnknown(data['rate']!, _rateMeta),
+      );
     } else if (isInserting) {
       context.missing(_rateMeta);
     }
     if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     }
     return context;
   }
@@ -6229,18 +7461,30 @@ class $ExchangeRateOverridesTable extends ExchangeRateOverrides
   ExchangeRateOverride map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return ExchangeRateOverride(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
-      baseCurrency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}base_currency'])!,
-      quoteCurrency: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}quote_currency'])!,
-      rate: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}rate'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
+      baseCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}base_currency'],
+      )!,
+      quoteCurrency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}quote_currency'],
+      )!,
+      rate: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}rate'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -6258,13 +7502,14 @@ class ExchangeRateOverride extends DataClass
   final String quoteCurrency;
   final String rate;
   final DateTime? updatedAt;
-  const ExchangeRateOverride(
-      {required this.id,
-      this.syncId,
-      required this.baseCurrency,
-      required this.quoteCurrency,
-      required this.rate,
-      this.updatedAt});
+  const ExchangeRateOverride({
+    required this.id,
+    this.syncId,
+    required this.baseCurrency,
+    required this.quoteCurrency,
+    required this.rate,
+    this.updatedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6284,8 +7529,9 @@ class ExchangeRateOverride extends DataClass
   ExchangeRateOverridesCompanion toCompanion(bool nullToAbsent) {
     return ExchangeRateOverridesCompanion(
       id: Value(id),
-      syncId:
-          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
       baseCurrency: Value(baseCurrency),
       quoteCurrency: Value(quoteCurrency),
       rate: Value(rate),
@@ -6295,8 +7541,10 @@ class ExchangeRateOverride extends DataClass
     );
   }
 
-  factory ExchangeRateOverride.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory ExchangeRateOverride.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return ExchangeRateOverride(
       id: serializer.fromJson<int>(json['id']),
@@ -6320,21 +7568,21 @@ class ExchangeRateOverride extends DataClass
     };
   }
 
-  ExchangeRateOverride copyWith(
-          {int? id,
-          Value<String?> syncId = const Value.absent(),
-          String? baseCurrency,
-          String? quoteCurrency,
-          String? rate,
-          Value<DateTime?> updatedAt = const Value.absent()}) =>
-      ExchangeRateOverride(
-        id: id ?? this.id,
-        syncId: syncId.present ? syncId.value : this.syncId,
-        baseCurrency: baseCurrency ?? this.baseCurrency,
-        quoteCurrency: quoteCurrency ?? this.quoteCurrency,
-        rate: rate ?? this.rate,
-        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
-      );
+  ExchangeRateOverride copyWith({
+    int? id,
+    Value<String?> syncId = const Value.absent(),
+    String? baseCurrency,
+    String? quoteCurrency,
+    String? rate,
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => ExchangeRateOverride(
+    id: id ?? this.id,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    baseCurrency: baseCurrency ?? this.baseCurrency,
+    quoteCurrency: quoteCurrency ?? this.quoteCurrency,
+    rate: rate ?? this.rate,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
   ExchangeRateOverride copyWithCompanion(ExchangeRateOverridesCompanion data) {
     return ExchangeRateOverride(
       id: data.id.present ? data.id.value : this.id,
@@ -6401,9 +7649,9 @@ class ExchangeRateOverridesCompanion
     required String quoteCurrency,
     required String rate,
     this.updatedAt = const Value.absent(),
-  })  : baseCurrency = Value(baseCurrency),
-        quoteCurrency = Value(quoteCurrency),
-        rate = Value(rate);
+  }) : baseCurrency = Value(baseCurrency),
+       quoteCurrency = Value(quoteCurrency),
+       rate = Value(rate);
   static Insertable<ExchangeRateOverride> custom({
     Expression<int>? id,
     Expression<String>? syncId,
@@ -6422,13 +7670,14 @@ class ExchangeRateOverridesCompanion
     });
   }
 
-  ExchangeRateOverridesCompanion copyWith(
-      {Value<int>? id,
-      Value<String?>? syncId,
-      Value<String>? baseCurrency,
-      Value<String>? quoteCurrency,
-      Value<String>? rate,
-      Value<DateTime?>? updatedAt}) {
+  ExchangeRateOverridesCompanion copyWith({
+    Value<int>? id,
+    Value<String?>? syncId,
+    Value<String>? baseCurrency,
+    Value<String>? quoteCurrency,
+    Value<String>? rate,
+    Value<DateTime?>? updatedAt,
+  }) {
     return ExchangeRateOverridesCompanion(
       id: id ?? this.id,
       syncId: syncId ?? this.syncId,
@@ -6483,20 +7732,29 @@ class $SnapshotDirtyLedgersTable extends SnapshotDirtyLedgers
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $SnapshotDirtyLedgersTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _ledgerIdMeta =
-      const VerificationMeta('ledgerId');
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
   @override
   late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-      'ledger_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: false);
-  static const VerificationMeta _dirtyAtMeta =
-      const VerificationMeta('dirtyAt');
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dirtyAtMeta = const VerificationMeta(
+    'dirtyAt',
+  );
   @override
   late final GeneratedColumn<DateTime> dirtyAt = GeneratedColumn<DateTime>(
-      'dirty_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
+    'dirty_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
   @override
   List<GeneratedColumn> get $columns => [ledgerId, dirtyAt];
   @override
@@ -6506,17 +7764,22 @@ class $SnapshotDirtyLedgersTable extends SnapshotDirtyLedgers
   static const String $name = 'snapshot_dirty_ledgers';
   @override
   VerificationContext validateIntegrity(
-      Insertable<SnapshotDirtyLedger> instance,
-      {bool isInserting = false}) {
+    Insertable<SnapshotDirtyLedger> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('ledger_id')) {
-      context.handle(_ledgerIdMeta,
-          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
     }
     if (data.containsKey('dirty_at')) {
-      context.handle(_dirtyAtMeta,
-          dirtyAt.isAcceptableOrUnknown(data['dirty_at']!, _dirtyAtMeta));
+      context.handle(
+        _dirtyAtMeta,
+        dirtyAt.isAcceptableOrUnknown(data['dirty_at']!, _dirtyAtMeta),
+      );
     }
     return context;
   }
@@ -6527,10 +7790,14 @@ class $SnapshotDirtyLedgersTable extends SnapshotDirtyLedgers
   SnapshotDirtyLedger map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return SnapshotDirtyLedger(
-      ledgerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
-      dirtyAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}dirty_at'])!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      dirtyAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}dirty_at'],
+      )!,
     );
   }
 
@@ -6563,8 +7830,10 @@ class SnapshotDirtyLedger extends DataClass
     );
   }
 
-  factory SnapshotDirtyLedger.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory SnapshotDirtyLedger.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return SnapshotDirtyLedger(
       ledgerId: serializer.fromJson<int>(json['ledgerId']),
@@ -6633,8 +7902,10 @@ class SnapshotDirtyLedgersCompanion
     });
   }
 
-  SnapshotDirtyLedgersCompanion copyWith(
-      {Value<int>? ledgerId, Value<DateTime>? dirtyAt}) {
+  SnapshotDirtyLedgersCompanion copyWith({
+    Value<int>? ledgerId,
+    Value<DateTime>? dirtyAt,
+  }) {
     return SnapshotDirtyLedgersCompanion(
       ledgerId: ledgerId ?? this.ledgerId,
       dirtyAt: dirtyAt ?? this.dirtyAt,
@@ -6672,81 +7943,125 @@ class $LedgerVirtualUsersTable extends LedgerVirtualUsers
   static const VerificationMeta _idMeta = const VerificationMeta('id');
   @override
   late final GeneratedColumn<int> id = GeneratedColumn<int>(
-      'id', aliasedName, false,
-      hasAutoIncrement: true,
-      type: DriftSqlType.int,
-      requiredDuringInsert: false,
-      defaultConstraints:
-          GeneratedColumn.constraintIsAlways('PRIMARY KEY AUTOINCREMENT'));
-  static const VerificationMeta _ledgerIdMeta =
-      const VerificationMeta('ledgerId');
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
   @override
   late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-      'ledger_id', aliasedName, false,
-      type: DriftSqlType.int, requiredDuringInsert: true);
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
   late final GeneratedColumn<String> syncId = GeneratedColumn<String>(
-      'sync_id', aliasedName, true,
-      type: DriftSqlType.string, requiredDuringInsert: false);
+    'sync_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _nameMeta = const VerificationMeta('name');
   @override
   late final GeneratedColumn<String> name = GeneratedColumn<String>(
-      'name', aliasedName, false,
-      type: DriftSqlType.string, requiredDuringInsert: true);
-  static const VerificationMeta _createdAtMeta =
-      const VerificationMeta('createdAt');
+    'name',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
   @override
   late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-      'created_at', aliasedName, false,
-      type: DriftSqlType.dateTime,
-      requiredDuringInsert: false,
-      defaultValue: currentDateAndTime);
-  static const VerificationMeta _updatedAtMeta =
-      const VerificationMeta('updatedAt');
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
   @override
   late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-      'updated_at', aliasedName, true,
-      type: DriftSqlType.dateTime, requiredDuringInsert: false);
+    'updated_at',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
   @override
-  List<GeneratedColumn> get $columns =>
-      [id, ledgerId, syncId, name, createdAt, updatedAt];
+  List<GeneratedColumn> get $columns => [
+    id,
+    ledgerId,
+    syncId,
+    name,
+    createdAt,
+    updatedAt,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
   String get actualTableName => $name;
   static const String $name = 'ledger_virtual_users';
   @override
-  VerificationContext validateIntegrity(Insertable<LedgerVirtualUser> instance,
-      {bool isInserting = false}) {
+  VerificationContext validateIntegrity(
+    Insertable<LedgerVirtualUser> instance, {
+    bool isInserting = false,
+  }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
     if (data.containsKey('id')) {
       context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
     }
     if (data.containsKey('ledger_id')) {
-      context.handle(_ledgerIdMeta,
-          ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta));
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
     } else if (isInserting) {
       context.missing(_ledgerIdMeta);
     }
     if (data.containsKey('sync_id')) {
-      context.handle(_syncIdMeta,
-          syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta));
+      context.handle(
+        _syncIdMeta,
+        syncId.isAcceptableOrUnknown(data['sync_id']!, _syncIdMeta),
+      );
     }
     if (data.containsKey('name')) {
       context.handle(
-          _nameMeta, name.isAcceptableOrUnknown(data['name']!, _nameMeta));
+        _nameMeta,
+        name.isAcceptableOrUnknown(data['name']!, _nameMeta),
+      );
     } else if (isInserting) {
       context.missing(_nameMeta);
     }
     if (data.containsKey('created_at')) {
-      context.handle(_createdAtMeta,
-          createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta));
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
     }
     if (data.containsKey('updated_at')) {
-      context.handle(_updatedAtMeta,
-          updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta));
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
     }
     return context;
   }
@@ -6757,18 +8072,30 @@ class $LedgerVirtualUsersTable extends LedgerVirtualUsers
   LedgerVirtualUser map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return LedgerVirtualUser(
-      id: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}id'])!,
-      ledgerId: attachedDatabase.typeMapping
-          .read(DriftSqlType.int, data['${effectivePrefix}ledger_id'])!,
-      syncId: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}sync_id']),
-      name: attachedDatabase.typeMapping
-          .read(DriftSqlType.string, data['${effectivePrefix}name'])!,
-      createdAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}created_at'])!,
-      updatedAt: attachedDatabase.typeMapping
-          .read(DriftSqlType.dateTime, data['${effectivePrefix}updated_at']),
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      syncId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}sync_id'],
+      ),
+      name: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}name'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      ),
     );
   }
 
@@ -6798,13 +8125,14 @@ class LedgerVirtualUser extends DataClass
 
   /// 修改时间。
   final DateTime? updatedAt;
-  const LedgerVirtualUser(
-      {required this.id,
-      required this.ledgerId,
-      this.syncId,
-      required this.name,
-      required this.createdAt,
-      this.updatedAt});
+  const LedgerVirtualUser({
+    required this.id,
+    required this.ledgerId,
+    this.syncId,
+    required this.name,
+    required this.createdAt,
+    this.updatedAt,
+  });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
@@ -6825,8 +8153,9 @@ class LedgerVirtualUser extends DataClass
     return LedgerVirtualUsersCompanion(
       id: Value(id),
       ledgerId: Value(ledgerId),
-      syncId:
-          syncId == null && nullToAbsent ? const Value.absent() : Value(syncId),
+      syncId: syncId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(syncId),
       name: Value(name),
       createdAt: Value(createdAt),
       updatedAt: updatedAt == null && nullToAbsent
@@ -6835,8 +8164,10 @@ class LedgerVirtualUser extends DataClass
     );
   }
 
-  factory LedgerVirtualUser.fromJson(Map<String, dynamic> json,
-      {ValueSerializer? serializer}) {
+  factory LedgerVirtualUser.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return LedgerVirtualUser(
       id: serializer.fromJson<int>(json['id']),
@@ -6860,21 +8191,21 @@ class LedgerVirtualUser extends DataClass
     };
   }
 
-  LedgerVirtualUser copyWith(
-          {int? id,
-          int? ledgerId,
-          Value<String?> syncId = const Value.absent(),
-          String? name,
-          DateTime? createdAt,
-          Value<DateTime?> updatedAt = const Value.absent()}) =>
-      LedgerVirtualUser(
-        id: id ?? this.id,
-        ledgerId: ledgerId ?? this.ledgerId,
-        syncId: syncId.present ? syncId.value : this.syncId,
-        name: name ?? this.name,
-        createdAt: createdAt ?? this.createdAt,
-        updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
-      );
+  LedgerVirtualUser copyWith({
+    int? id,
+    int? ledgerId,
+    Value<String?> syncId = const Value.absent(),
+    String? name,
+    DateTime? createdAt,
+    Value<DateTime?> updatedAt = const Value.absent(),
+  }) => LedgerVirtualUser(
+    id: id ?? this.id,
+    ledgerId: ledgerId ?? this.ledgerId,
+    syncId: syncId.present ? syncId.value : this.syncId,
+    name: name ?? this.name,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt.present ? updatedAt.value : this.updatedAt,
+  );
   LedgerVirtualUser copyWithCompanion(LedgerVirtualUsersCompanion data) {
     return LedgerVirtualUser(
       id: data.id.present ? data.id.value : this.id,
@@ -6936,8 +8267,8 @@ class LedgerVirtualUsersCompanion extends UpdateCompanion<LedgerVirtualUser> {
     required String name,
     this.createdAt = const Value.absent(),
     this.updatedAt = const Value.absent(),
-  })  : ledgerId = Value(ledgerId),
-        name = Value(name);
+  }) : ledgerId = Value(ledgerId),
+       name = Value(name);
   static Insertable<LedgerVirtualUser> custom({
     Expression<int>? id,
     Expression<int>? ledgerId,
@@ -6956,13 +8287,14 @@ class LedgerVirtualUsersCompanion extends UpdateCompanion<LedgerVirtualUser> {
     });
   }
 
-  LedgerVirtualUsersCompanion copyWith(
-      {Value<int>? id,
-      Value<int>? ledgerId,
-      Value<String?>? syncId,
-      Value<String>? name,
-      Value<DateTime>? createdAt,
-      Value<DateTime?>? updatedAt}) {
+  LedgerVirtualUsersCompanion copyWith({
+    Value<int>? id,
+    Value<int>? ledgerId,
+    Value<String?>? syncId,
+    Value<String>? name,
+    Value<DateTime>? createdAt,
+    Value<DateTime?>? updatedAt,
+  }) {
     return LedgerVirtualUsersCompanion(
       id: id ?? this.id,
       ledgerId: ledgerId ?? this.ledgerId,
@@ -7039,53 +8371,55 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
       allSchemaEntities.whereType<TableInfo<Table, Object?>>();
   @override
   List<DatabaseSchemaEntity> get allSchemaEntities => [
-        ledgers,
-        categories,
-        transactions,
-        recordEditHistories,
-        recurringTransactions,
-        localChanges,
-        syncState,
-        ledgerMembers,
-        sharedLedgerCategories,
-        syncPullErrors,
-        exchangeRates,
-        exchangeRateOverrides,
-        snapshotDirtyLedgers,
-        ledgerVirtualUsers
-      ];
+    ledgers,
+    categories,
+    transactions,
+    recordEditHistories,
+    recurringTransactions,
+    localChanges,
+    syncState,
+    ledgerMembers,
+    sharedLedgerCategories,
+    syncPullErrors,
+    exchangeRates,
+    exchangeRateOverrides,
+    snapshotDirtyLedgers,
+    ledgerVirtualUsers,
+  ];
 }
 
-typedef $$LedgersTableCreateCompanionBuilder = LedgersCompanion Function({
-  Value<int> id,
-  required String name,
-  Value<String> currency,
-  Value<String> type,
-  Value<DateTime> createdAt,
-  Value<String?> syncId,
-  Value<String> myRole,
-  Value<int> memberCount,
-  Value<bool> isShared,
-  Value<String?> ownerUserId,
-  Value<int> monthStartDay,
-  Value<String> storageMode,
-  Value<bool> aaEnabled,
-});
-typedef $$LedgersTableUpdateCompanionBuilder = LedgersCompanion Function({
-  Value<int> id,
-  Value<String> name,
-  Value<String> currency,
-  Value<String> type,
-  Value<DateTime> createdAt,
-  Value<String?> syncId,
-  Value<String> myRole,
-  Value<int> memberCount,
-  Value<bool> isShared,
-  Value<String?> ownerUserId,
-  Value<int> monthStartDay,
-  Value<String> storageMode,
-  Value<bool> aaEnabled,
-});
+typedef $$LedgersTableCreateCompanionBuilder =
+    LedgersCompanion Function({
+      Value<int> id,
+      required String name,
+      Value<String> currency,
+      Value<String> type,
+      Value<DateTime> createdAt,
+      Value<String?> syncId,
+      Value<String> myRole,
+      Value<int> memberCount,
+      Value<bool> isShared,
+      Value<String?> ownerUserId,
+      Value<int> monthStartDay,
+      Value<String> storageMode,
+      Value<bool> aaEnabled,
+    });
+typedef $$LedgersTableUpdateCompanionBuilder =
+    LedgersCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> currency,
+      Value<String> type,
+      Value<DateTime> createdAt,
+      Value<String?> syncId,
+      Value<String> myRole,
+      Value<int> memberCount,
+      Value<bool> isShared,
+      Value<String?> ownerUserId,
+      Value<int> monthStartDay,
+      Value<String> storageMode,
+      Value<bool> aaEnabled,
+    });
 
 class $$LedgersTableFilterComposer
     extends Composer<_$SpitoutDatabase, $LedgersTable> {
@@ -7097,43 +8431,69 @@ class $$LedgersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get currency => $composableBuilder(
-      column: $table.currency, builder: (column) => ColumnFilters(column));
+    column: $table.currency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get myRole => $composableBuilder(
-      column: $table.myRole, builder: (column) => ColumnFilters(column));
+    column: $table.myRole,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get memberCount => $composableBuilder(
-      column: $table.memberCount, builder: (column) => ColumnFilters(column));
+    column: $table.memberCount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get isShared => $composableBuilder(
-      column: $table.isShared, builder: (column) => ColumnFilters(column));
+    column: $table.isShared,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get ownerUserId => $composableBuilder(
-      column: $table.ownerUserId, builder: (column) => ColumnFilters(column));
+    column: $table.ownerUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get monthStartDay => $composableBuilder(
-      column: $table.monthStartDay, builder: (column) => ColumnFilters(column));
+    column: $table.monthStartDay,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get storageMode => $composableBuilder(
-      column: $table.storageMode, builder: (column) => ColumnFilters(column));
+    column: $table.storageMode,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get aaEnabled => $composableBuilder(
-      column: $table.aaEnabled, builder: (column) => ColumnFilters(column));
+    column: $table.aaEnabled,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$LedgersTableOrderingComposer
@@ -7146,44 +8506,69 @@ class $$LedgersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get currency => $composableBuilder(
-      column: $table.currency, builder: (column) => ColumnOrderings(column));
+    column: $table.currency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get myRole => $composableBuilder(
-      column: $table.myRole, builder: (column) => ColumnOrderings(column));
+    column: $table.myRole,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get memberCount => $composableBuilder(
-      column: $table.memberCount, builder: (column) => ColumnOrderings(column));
+    column: $table.memberCount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get isShared => $composableBuilder(
-      column: $table.isShared, builder: (column) => ColumnOrderings(column));
+    column: $table.isShared,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get ownerUserId => $composableBuilder(
-      column: $table.ownerUserId, builder: (column) => ColumnOrderings(column));
+    column: $table.ownerUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get monthStartDay => $composableBuilder(
-      column: $table.monthStartDay,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.monthStartDay,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get storageMode => $composableBuilder(
-      column: $table.storageMode, builder: (column) => ColumnOrderings(column));
+    column: $table.storageMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get aaEnabled => $composableBuilder(
-      column: $table.aaEnabled, builder: (column) => ColumnOrderings(column));
+    column: $table.aaEnabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LedgersTableAnnotationComposer
@@ -7217,38 +8602,50 @@ class $$LedgersTableAnnotationComposer
       $composableBuilder(column: $table.myRole, builder: (column) => column);
 
   GeneratedColumn<int> get memberCount => $composableBuilder(
-      column: $table.memberCount, builder: (column) => column);
+    column: $table.memberCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get isShared =>
       $composableBuilder(column: $table.isShared, builder: (column) => column);
 
   GeneratedColumn<String> get ownerUserId => $composableBuilder(
-      column: $table.ownerUserId, builder: (column) => column);
+    column: $table.ownerUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get monthStartDay => $composableBuilder(
-      column: $table.monthStartDay, builder: (column) => column);
+    column: $table.monthStartDay,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get storageMode => $composableBuilder(
-      column: $table.storageMode, builder: (column) => column);
+    column: $table.storageMode,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get aaEnabled =>
       $composableBuilder(column: $table.aaEnabled, builder: (column) => column);
 }
 
-class $$LedgersTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $LedgersTable,
-    Ledger,
-    $$LedgersTableFilterComposer,
-    $$LedgersTableOrderingComposer,
-    $$LedgersTableAnnotationComposer,
-    $$LedgersTableCreateCompanionBuilder,
-    $$LedgersTableUpdateCompanionBuilder,
-    (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
-    Ledger,
-    PrefetchHooks Function()> {
+class $$LedgersTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $LedgersTable,
+          Ledger,
+          $$LedgersTableFilterComposer,
+          $$LedgersTableOrderingComposer,
+          $$LedgersTableAnnotationComposer,
+          $$LedgersTableCreateCompanionBuilder,
+          $$LedgersTableUpdateCompanionBuilder,
+          (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
+          Ledger,
+          PrefetchHooks Function()
+        > {
   $$LedgersTableTableManager(_$SpitoutDatabase db, $LedgersTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -7257,105 +8654,110 @@ class $$LedgersTableTableManager extends RootTableManager<
               $$LedgersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$LedgersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> currency = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String> myRole = const Value.absent(),
-            Value<int> memberCount = const Value.absent(),
-            Value<bool> isShared = const Value.absent(),
-            Value<String?> ownerUserId = const Value.absent(),
-            Value<int> monthStartDay = const Value.absent(),
-            Value<String> storageMode = const Value.absent(),
-            Value<bool> aaEnabled = const Value.absent(),
-          }) =>
-              LedgersCompanion(
-            id: id,
-            name: name,
-            currency: currency,
-            type: type,
-            createdAt: createdAt,
-            syncId: syncId,
-            myRole: myRole,
-            memberCount: memberCount,
-            isShared: isShared,
-            ownerUserId: ownerUserId,
-            monthStartDay: monthStartDay,
-            storageMode: storageMode,
-            aaEnabled: aaEnabled,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String name,
-            Value<String> currency = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String> myRole = const Value.absent(),
-            Value<int> memberCount = const Value.absent(),
-            Value<bool> isShared = const Value.absent(),
-            Value<String?> ownerUserId = const Value.absent(),
-            Value<int> monthStartDay = const Value.absent(),
-            Value<String> storageMode = const Value.absent(),
-            Value<bool> aaEnabled = const Value.absent(),
-          }) =>
-              LedgersCompanion.insert(
-            id: id,
-            name: name,
-            currency: currency,
-            type: type,
-            createdAt: createdAt,
-            syncId: syncId,
-            myRole: myRole,
-            memberCount: memberCount,
-            isShared: isShared,
-            ownerUserId: ownerUserId,
-            monthStartDay: monthStartDay,
-            storageMode: storageMode,
-            aaEnabled: aaEnabled,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> currency = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> myRole = const Value.absent(),
+                Value<int> memberCount = const Value.absent(),
+                Value<bool> isShared = const Value.absent(),
+                Value<String?> ownerUserId = const Value.absent(),
+                Value<int> monthStartDay = const Value.absent(),
+                Value<String> storageMode = const Value.absent(),
+                Value<bool> aaEnabled = const Value.absent(),
+              }) => LedgersCompanion(
+                id: id,
+                name: name,
+                currency: currency,
+                type: type,
+                createdAt: createdAt,
+                syncId: syncId,
+                myRole: myRole,
+                memberCount: memberCount,
+                isShared: isShared,
+                ownerUserId: ownerUserId,
+                monthStartDay: monthStartDay,
+                storageMode: storageMode,
+                aaEnabled: aaEnabled,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                Value<String> currency = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> myRole = const Value.absent(),
+                Value<int> memberCount = const Value.absent(),
+                Value<bool> isShared = const Value.absent(),
+                Value<String?> ownerUserId = const Value.absent(),
+                Value<int> monthStartDay = const Value.absent(),
+                Value<String> storageMode = const Value.absent(),
+                Value<bool> aaEnabled = const Value.absent(),
+              }) => LedgersCompanion.insert(
+                id: id,
+                name: name,
+                currency: currency,
+                type: type,
+                createdAt: createdAt,
+                syncId: syncId,
+                myRole: myRole,
+                memberCount: memberCount,
+                isShared: isShared,
+                ownerUserId: ownerUserId,
+                monthStartDay: monthStartDay,
+                storageMode: storageMode,
+                aaEnabled: aaEnabled,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$LedgersTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $LedgersTable,
-    Ledger,
-    $$LedgersTableFilterComposer,
-    $$LedgersTableOrderingComposer,
-    $$LedgersTableAnnotationComposer,
-    $$LedgersTableCreateCompanionBuilder,
-    $$LedgersTableUpdateCompanionBuilder,
-    (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
-    Ledger,
-    PrefetchHooks Function()>;
-typedef $$CategoriesTableCreateCompanionBuilder = CategoriesCompanion Function({
-  Value<int> id,
-  required String name,
-  required String kind,
-  Value<String?> icon,
-  Value<int> sortOrder,
-  Value<int?> parentId,
-  Value<int> level,
-  Value<String?> syncId,
-});
-typedef $$CategoriesTableUpdateCompanionBuilder = CategoriesCompanion Function({
-  Value<int> id,
-  Value<String> name,
-  Value<String> kind,
-  Value<String?> icon,
-  Value<int> sortOrder,
-  Value<int?> parentId,
-  Value<int> level,
-  Value<String?> syncId,
-});
+typedef $$LedgersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $LedgersTable,
+      Ledger,
+      $$LedgersTableFilterComposer,
+      $$LedgersTableOrderingComposer,
+      $$LedgersTableAnnotationComposer,
+      $$LedgersTableCreateCompanionBuilder,
+      $$LedgersTableUpdateCompanionBuilder,
+      (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
+      Ledger,
+      PrefetchHooks Function()
+    >;
+typedef $$CategoriesTableCreateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<int> id,
+      required String name,
+      required String kind,
+      Value<String?> icon,
+      Value<int> sortOrder,
+      Value<int?> parentId,
+      Value<int> level,
+      Value<String?> syncId,
+    });
+typedef $$CategoriesTableUpdateCompanionBuilder =
+    CategoriesCompanion Function({
+      Value<int> id,
+      Value<String> name,
+      Value<String> kind,
+      Value<String?> icon,
+      Value<int> sortOrder,
+      Value<int?> parentId,
+      Value<int> level,
+      Value<String?> syncId,
+    });
 
 class $$CategoriesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $CategoriesTable> {
@@ -7367,28 +8769,44 @@ class $$CategoriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnFilters(column));
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get icon => $composableBuilder(
-      column: $table.icon, builder: (column) => ColumnFilters(column));
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
-      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get parentId => $composableBuilder(
-      column: $table.parentId, builder: (column) => ColumnFilters(column));
+    column: $table.parentId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnFilters(column));
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$CategoriesTableOrderingComposer
@@ -7401,28 +8819,44 @@ class $$CategoriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnOrderings(column));
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get icon => $composableBuilder(
-      column: $table.icon, builder: (column) => ColumnOrderings(column));
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get sortOrder => $composableBuilder(
-      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get parentId => $composableBuilder(
-      column: $table.parentId, builder: (column) => ColumnOrderings(column));
+    column: $table.parentId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnOrderings(column));
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$CategoriesTableAnnotationComposer
@@ -7459,20 +8893,27 @@ class $$CategoriesTableAnnotationComposer
       $composableBuilder(column: $table.syncId, builder: (column) => column);
 }
 
-class $$CategoriesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $CategoriesTable,
-    Category,
-    $$CategoriesTableFilterComposer,
-    $$CategoriesTableOrderingComposer,
-    $$CategoriesTableAnnotationComposer,
-    $$CategoriesTableCreateCompanionBuilder,
-    $$CategoriesTableUpdateCompanionBuilder,
-    (Category, BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>),
-    Category,
-    PrefetchHooks Function()> {
+class $$CategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $CategoriesTable,
+          Category,
+          $$CategoriesTableFilterComposer,
+          $$CategoriesTableOrderingComposer,
+          $$CategoriesTableAnnotationComposer,
+          $$CategoriesTableCreateCompanionBuilder,
+          $$CategoriesTableUpdateCompanionBuilder,
+          (
+            Category,
+            BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>,
+          ),
+          Category,
+          PrefetchHooks Function()
+        > {
   $$CategoriesTableTableManager(_$SpitoutDatabase db, $CategoriesTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -7481,113 +8922,116 @@ class $$CategoriesTableTableManager extends RootTableManager<
               $$CategoriesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$CategoriesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> kind = const Value.absent(),
-            Value<String?> icon = const Value.absent(),
-            Value<int> sortOrder = const Value.absent(),
-            Value<int?> parentId = const Value.absent(),
-            Value<int> level = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-          }) =>
-              CategoriesCompanion(
-            id: id,
-            name: name,
-            kind: kind,
-            icon: icon,
-            sortOrder: sortOrder,
-            parentId: parentId,
-            level: level,
-            syncId: syncId,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String name,
-            required String kind,
-            Value<String?> icon = const Value.absent(),
-            Value<int> sortOrder = const Value.absent(),
-            Value<int?> parentId = const Value.absent(),
-            Value<int> level = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-          }) =>
-              CategoriesCompanion.insert(
-            id: id,
-            name: name,
-            kind: kind,
-            icon: icon,
-            sortOrder: sortOrder,
-            parentId: parentId,
-            level: level,
-            syncId: syncId,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int?> parentId = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+              }) => CategoriesCompanion(
+                id: id,
+                name: name,
+                kind: kind,
+                icon: icon,
+                sortOrder: sortOrder,
+                parentId: parentId,
+                level: level,
+                syncId: syncId,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String name,
+                required String kind,
+                Value<String?> icon = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int?> parentId = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+              }) => CategoriesCompanion.insert(
+                id: id,
+                name: name,
+                kind: kind,
+                icon: icon,
+                sortOrder: sortOrder,
+                parentId: parentId,
+                level: level,
+                syncId: syncId,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$CategoriesTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $CategoriesTable,
-    Category,
-    $$CategoriesTableFilterComposer,
-    $$CategoriesTableOrderingComposer,
-    $$CategoriesTableAnnotationComposer,
-    $$CategoriesTableCreateCompanionBuilder,
-    $$CategoriesTableUpdateCompanionBuilder,
-    (Category, BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>),
-    Category,
-    PrefetchHooks Function()>;
-typedef $$TransactionsTableCreateCompanionBuilder = TransactionsCompanion
-    Function({
-  Value<int> id,
-  required int ledgerId,
-  required String type,
-  required double amount,
-  Value<int?> categoryId,
-  Value<DateTime> happenedAt,
-  Value<String?> note,
-  Value<int?> recurringId,
-  Value<String?> syncId,
-  Value<String?> createdByUserId,
-  Value<String?> lastEditedByUserId,
-  Value<String?> categorySyncIdOverride,
-  Value<bool> excludeFromStats,
-  Value<String?> currencyCode,
-  Value<double?> nativeAmount,
-  Value<int> version,
-  Value<DateTime?> lastEditedAt,
-  Value<String?> paidByUserId,
-  Value<int?> aaMode,
-  Value<String?> aaParticipants,
-  Value<String?> aaSplits,
-});
-typedef $$TransactionsTableUpdateCompanionBuilder = TransactionsCompanion
-    Function({
-  Value<int> id,
-  Value<int> ledgerId,
-  Value<String> type,
-  Value<double> amount,
-  Value<int?> categoryId,
-  Value<DateTime> happenedAt,
-  Value<String?> note,
-  Value<int?> recurringId,
-  Value<String?> syncId,
-  Value<String?> createdByUserId,
-  Value<String?> lastEditedByUserId,
-  Value<String?> categorySyncIdOverride,
-  Value<bool> excludeFromStats,
-  Value<String?> currencyCode,
-  Value<double?> nativeAmount,
-  Value<int> version,
-  Value<DateTime?> lastEditedAt,
-  Value<String?> paidByUserId,
-  Value<int?> aaMode,
-  Value<String?> aaParticipants,
-  Value<String?> aaSplits,
-});
+typedef $$CategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $CategoriesTable,
+      Category,
+      $$CategoriesTableFilterComposer,
+      $$CategoriesTableOrderingComposer,
+      $$CategoriesTableAnnotationComposer,
+      $$CategoriesTableCreateCompanionBuilder,
+      $$CategoriesTableUpdateCompanionBuilder,
+      (Category, BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>),
+      Category,
+      PrefetchHooks Function()
+    >;
+typedef $$TransactionsTableCreateCompanionBuilder =
+    TransactionsCompanion Function({
+      Value<int> id,
+      required int ledgerId,
+      required String type,
+      required double amount,
+      Value<int?> categoryId,
+      Value<DateTime> happenedAt,
+      Value<String?> note,
+      Value<int?> recurringId,
+      Value<String?> syncId,
+      Value<String?> createdByUserId,
+      Value<String?> lastEditedByUserId,
+      Value<String?> categorySyncIdOverride,
+      Value<bool> excludeFromStats,
+      Value<String?> currencyCode,
+      Value<double?> nativeAmount,
+      Value<int> version,
+      Value<DateTime?> lastEditedAt,
+      Value<String?> paidByUserId,
+      Value<int?> aaMode,
+      Value<String?> aaParticipants,
+      Value<String?> aaSplits,
+    });
+typedef $$TransactionsTableUpdateCompanionBuilder =
+    TransactionsCompanion Function({
+      Value<int> id,
+      Value<int> ledgerId,
+      Value<String> type,
+      Value<double> amount,
+      Value<int?> categoryId,
+      Value<DateTime> happenedAt,
+      Value<String?> note,
+      Value<int?> recurringId,
+      Value<String?> syncId,
+      Value<String?> createdByUserId,
+      Value<String?> lastEditedByUserId,
+      Value<String?> categorySyncIdOverride,
+      Value<bool> excludeFromStats,
+      Value<String?> currencyCode,
+      Value<double?> nativeAmount,
+      Value<int> version,
+      Value<DateTime?> lastEditedAt,
+      Value<String?> paidByUserId,
+      Value<int?> aaMode,
+      Value<String?> aaParticipants,
+      Value<String?> aaSplits,
+    });
 
 class $$TransactionsTableFilterComposer
     extends Composer<_$SpitoutDatabase, $TransactionsTable> {
@@ -7599,72 +9043,109 @@ class $$TransactionsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<double> get amount => $composableBuilder(
-      column: $table.amount, builder: (column) => ColumnFilters(column));
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnFilters(column));
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get happenedAt => $composableBuilder(
-      column: $table.happenedAt, builder: (column) => ColumnFilters(column));
+    column: $table.happenedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get note => $composableBuilder(
-      column: $table.note, builder: (column) => ColumnFilters(column));
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get recurringId => $composableBuilder(
-      column: $table.recurringId, builder: (column) => ColumnFilters(column));
+    column: $table.recurringId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get createdByUserId => $composableBuilder(
-      column: $table.createdByUserId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.createdByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get lastEditedByUserId => $composableBuilder(
-      column: $table.lastEditedByUserId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastEditedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get categorySyncIdOverride => $composableBuilder(
-      column: $table.categorySyncIdOverride,
-      builder: (column) => ColumnFilters(column));
+    column: $table.categorySyncIdOverride,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get excludeFromStats => $composableBuilder(
-      column: $table.excludeFromStats,
-      builder: (column) => ColumnFilters(column));
+    column: $table.excludeFromStats,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode, builder: (column) => ColumnFilters(column));
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<double> get nativeAmount => $composableBuilder(
-      column: $table.nativeAmount, builder: (column) => ColumnFilters(column));
+    column: $table.nativeAmount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnFilters(column));
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastEditedAt => $composableBuilder(
-      column: $table.lastEditedAt, builder: (column) => ColumnFilters(column));
+    column: $table.lastEditedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get paidByUserId => $composableBuilder(
-      column: $table.paidByUserId, builder: (column) => ColumnFilters(column));
+    column: $table.paidByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get aaMode => $composableBuilder(
-      column: $table.aaMode, builder: (column) => ColumnFilters(column));
+    column: $table.aaMode,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get aaParticipants => $composableBuilder(
-      column: $table.aaParticipants,
-      builder: (column) => ColumnFilters(column));
+    column: $table.aaParticipants,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get aaSplits => $composableBuilder(
-      column: $table.aaSplits, builder: (column) => ColumnFilters(column));
+    column: $table.aaSplits,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$TransactionsTableOrderingComposer
@@ -7677,76 +9158,109 @@ class $$TransactionsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<double> get amount => $composableBuilder(
-      column: $table.amount, builder: (column) => ColumnOrderings(column));
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get happenedAt => $composableBuilder(
-      column: $table.happenedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.happenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get note => $composableBuilder(
-      column: $table.note, builder: (column) => ColumnOrderings(column));
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get recurringId => $composableBuilder(
-      column: $table.recurringId, builder: (column) => ColumnOrderings(column));
+    column: $table.recurringId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get createdByUserId => $composableBuilder(
-      column: $table.createdByUserId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.createdByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get lastEditedByUserId => $composableBuilder(
-      column: $table.lastEditedByUserId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastEditedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get categorySyncIdOverride => $composableBuilder(
-      column: $table.categorySyncIdOverride,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.categorySyncIdOverride,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get excludeFromStats => $composableBuilder(
-      column: $table.excludeFromStats,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.excludeFromStats,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<double> get nativeAmount => $composableBuilder(
-      column: $table.nativeAmount,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.nativeAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnOrderings(column));
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastEditedAt => $composableBuilder(
-      column: $table.lastEditedAt,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastEditedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get paidByUserId => $composableBuilder(
-      column: $table.paidByUserId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.paidByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get aaMode => $composableBuilder(
-      column: $table.aaMode, builder: (column) => ColumnOrderings(column));
+    column: $table.aaMode,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get aaParticipants => $composableBuilder(
-      column: $table.aaParticipants,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.aaParticipants,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get aaSplits => $composableBuilder(
-      column: $table.aaSplits, builder: (column) => ColumnOrderings(column));
+    column: $table.aaSplits,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$TransactionsTableAnnotationComposer
@@ -7771,75 +9285,104 @@ class $$TransactionsTableAnnotationComposer
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
   GeneratedColumn<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => column);
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get happenedAt => $composableBuilder(
-      column: $table.happenedAt, builder: (column) => column);
+    column: $table.happenedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
 
   GeneratedColumn<int> get recurringId => $composableBuilder(
-      column: $table.recurringId, builder: (column) => column);
+    column: $table.recurringId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get syncId =>
       $composableBuilder(column: $table.syncId, builder: (column) => column);
 
   GeneratedColumn<String> get createdByUserId => $composableBuilder(
-      column: $table.createdByUserId, builder: (column) => column);
+    column: $table.createdByUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get lastEditedByUserId => $composableBuilder(
-      column: $table.lastEditedByUserId, builder: (column) => column);
+    column: $table.lastEditedByUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get categorySyncIdOverride => $composableBuilder(
-      column: $table.categorySyncIdOverride, builder: (column) => column);
+    column: $table.categorySyncIdOverride,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get excludeFromStats => $composableBuilder(
-      column: $table.excludeFromStats, builder: (column) => column);
+    column: $table.excludeFromStats,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get currencyCode => $composableBuilder(
-      column: $table.currencyCode, builder: (column) => column);
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<double> get nativeAmount => $composableBuilder(
-      column: $table.nativeAmount, builder: (column) => column);
+    column: $table.nativeAmount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get version =>
       $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastEditedAt => $composableBuilder(
-      column: $table.lastEditedAt, builder: (column) => column);
+    column: $table.lastEditedAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get paidByUserId => $composableBuilder(
-      column: $table.paidByUserId, builder: (column) => column);
+    column: $table.paidByUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get aaMode =>
       $composableBuilder(column: $table.aaMode, builder: (column) => column);
 
   GeneratedColumn<String> get aaParticipants => $composableBuilder(
-      column: $table.aaParticipants, builder: (column) => column);
+    column: $table.aaParticipants,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get aaSplits =>
       $composableBuilder(column: $table.aaSplits, builder: (column) => column);
 }
 
-class $$TransactionsTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $TransactionsTable,
-    Transaction,
-    $$TransactionsTableFilterComposer,
-    $$TransactionsTableOrderingComposer,
-    $$TransactionsTableAnnotationComposer,
-    $$TransactionsTableCreateCompanionBuilder,
-    $$TransactionsTableUpdateCompanionBuilder,
-    (
-      Transaction,
-      BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>
-    ),
-    Transaction,
-    PrefetchHooks Function()> {
+class $$TransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $TransactionsTable,
+          Transaction,
+          $$TransactionsTableFilterComposer,
+          $$TransactionsTableOrderingComposer,
+          $$TransactionsTableAnnotationComposer,
+          $$TransactionsTableCreateCompanionBuilder,
+          $$TransactionsTableUpdateCompanionBuilder,
+          (
+            Transaction,
+            BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>,
+          ),
+          Transaction,
+          PrefetchHooks Function()
+        > {
   $$TransactionsTableTableManager(
-      _$SpitoutDatabase db, $TransactionsTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $TransactionsTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -7848,138 +9391,141 @@ class $$TransactionsTableTableManager extends RootTableManager<
               $$TransactionsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$TransactionsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> ledgerId = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<double> amount = const Value.absent(),
-            Value<int?> categoryId = const Value.absent(),
-            Value<DateTime> happenedAt = const Value.absent(),
-            Value<String?> note = const Value.absent(),
-            Value<int?> recurringId = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String?> createdByUserId = const Value.absent(),
-            Value<String?> lastEditedByUserId = const Value.absent(),
-            Value<String?> categorySyncIdOverride = const Value.absent(),
-            Value<bool> excludeFromStats = const Value.absent(),
-            Value<String?> currencyCode = const Value.absent(),
-            Value<double?> nativeAmount = const Value.absent(),
-            Value<int> version = const Value.absent(),
-            Value<DateTime?> lastEditedAt = const Value.absent(),
-            Value<String?> paidByUserId = const Value.absent(),
-            Value<int?> aaMode = const Value.absent(),
-            Value<String?> aaParticipants = const Value.absent(),
-            Value<String?> aaSplits = const Value.absent(),
-          }) =>
-              TransactionsCompanion(
-            id: id,
-            ledgerId: ledgerId,
-            type: type,
-            amount: amount,
-            categoryId: categoryId,
-            happenedAt: happenedAt,
-            note: note,
-            recurringId: recurringId,
-            syncId: syncId,
-            createdByUserId: createdByUserId,
-            lastEditedByUserId: lastEditedByUserId,
-            categorySyncIdOverride: categorySyncIdOverride,
-            excludeFromStats: excludeFromStats,
-            currencyCode: currencyCode,
-            nativeAmount: nativeAmount,
-            version: version,
-            lastEditedAt: lastEditedAt,
-            paidByUserId: paidByUserId,
-            aaMode: aaMode,
-            aaParticipants: aaParticipants,
-            aaSplits: aaSplits,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int ledgerId,
-            required String type,
-            required double amount,
-            Value<int?> categoryId = const Value.absent(),
-            Value<DateTime> happenedAt = const Value.absent(),
-            Value<String?> note = const Value.absent(),
-            Value<int?> recurringId = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String?> createdByUserId = const Value.absent(),
-            Value<String?> lastEditedByUserId = const Value.absent(),
-            Value<String?> categorySyncIdOverride = const Value.absent(),
-            Value<bool> excludeFromStats = const Value.absent(),
-            Value<String?> currencyCode = const Value.absent(),
-            Value<double?> nativeAmount = const Value.absent(),
-            Value<int> version = const Value.absent(),
-            Value<DateTime?> lastEditedAt = const Value.absent(),
-            Value<String?> paidByUserId = const Value.absent(),
-            Value<int?> aaMode = const Value.absent(),
-            Value<String?> aaParticipants = const Value.absent(),
-            Value<String?> aaSplits = const Value.absent(),
-          }) =>
-              TransactionsCompanion.insert(
-            id: id,
-            ledgerId: ledgerId,
-            type: type,
-            amount: amount,
-            categoryId: categoryId,
-            happenedAt: happenedAt,
-            note: note,
-            recurringId: recurringId,
-            syncId: syncId,
-            createdByUserId: createdByUserId,
-            lastEditedByUserId: lastEditedByUserId,
-            categorySyncIdOverride: categorySyncIdOverride,
-            excludeFromStats: excludeFromStats,
-            currencyCode: currencyCode,
-            nativeAmount: nativeAmount,
-            version: version,
-            lastEditedAt: lastEditedAt,
-            paidByUserId: paidByUserId,
-            aaMode: aaMode,
-            aaParticipants: aaParticipants,
-            aaSplits: aaSplits,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> ledgerId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<int?> categoryId = const Value.absent(),
+                Value<DateTime> happenedAt = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> recurringId = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                Value<String?> lastEditedByUserId = const Value.absent(),
+                Value<String?> categorySyncIdOverride = const Value.absent(),
+                Value<bool> excludeFromStats = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<double?> nativeAmount = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> lastEditedAt = const Value.absent(),
+                Value<String?> paidByUserId = const Value.absent(),
+                Value<int?> aaMode = const Value.absent(),
+                Value<String?> aaParticipants = const Value.absent(),
+                Value<String?> aaSplits = const Value.absent(),
+              }) => TransactionsCompanion(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                happenedAt: happenedAt,
+                note: note,
+                recurringId: recurringId,
+                syncId: syncId,
+                createdByUserId: createdByUserId,
+                lastEditedByUserId: lastEditedByUserId,
+                categorySyncIdOverride: categorySyncIdOverride,
+                excludeFromStats: excludeFromStats,
+                currencyCode: currencyCode,
+                nativeAmount: nativeAmount,
+                version: version,
+                lastEditedAt: lastEditedAt,
+                paidByUserId: paidByUserId,
+                aaMode: aaMode,
+                aaParticipants: aaParticipants,
+                aaSplits: aaSplits,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int ledgerId,
+                required String type,
+                required double amount,
+                Value<int?> categoryId = const Value.absent(),
+                Value<DateTime> happenedAt = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> recurringId = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                Value<String?> lastEditedByUserId = const Value.absent(),
+                Value<String?> categorySyncIdOverride = const Value.absent(),
+                Value<bool> excludeFromStats = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<double?> nativeAmount = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> lastEditedAt = const Value.absent(),
+                Value<String?> paidByUserId = const Value.absent(),
+                Value<int?> aaMode = const Value.absent(),
+                Value<String?> aaParticipants = const Value.absent(),
+                Value<String?> aaSplits = const Value.absent(),
+              }) => TransactionsCompanion.insert(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                happenedAt: happenedAt,
+                note: note,
+                recurringId: recurringId,
+                syncId: syncId,
+                createdByUserId: createdByUserId,
+                lastEditedByUserId: lastEditedByUserId,
+                categorySyncIdOverride: categorySyncIdOverride,
+                excludeFromStats: excludeFromStats,
+                currencyCode: currencyCode,
+                nativeAmount: nativeAmount,
+                version: version,
+                lastEditedAt: lastEditedAt,
+                paidByUserId: paidByUserId,
+                aaMode: aaMode,
+                aaParticipants: aaParticipants,
+                aaSplits: aaSplits,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$TransactionsTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $TransactionsTable,
-    Transaction,
-    $$TransactionsTableFilterComposer,
-    $$TransactionsTableOrderingComposer,
-    $$TransactionsTableAnnotationComposer,
-    $$TransactionsTableCreateCompanionBuilder,
-    $$TransactionsTableUpdateCompanionBuilder,
-    (
+typedef $$TransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $TransactionsTable,
       Transaction,
-      BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>
-    ),
-    Transaction,
-    PrefetchHooks Function()>;
-typedef $$RecordEditHistoriesTableCreateCompanionBuilder
-    = RecordEditHistoriesCompanion Function({
-  Value<int> id,
-  required int recordId,
-  required int version,
-  Value<String?> operatorUserId,
-  required String summary,
-  Value<DateTime> createdAt,
-});
-typedef $$RecordEditHistoriesTableUpdateCompanionBuilder
-    = RecordEditHistoriesCompanion Function({
-  Value<int> id,
-  Value<int> recordId,
-  Value<int> version,
-  Value<String?> operatorUserId,
-  Value<String> summary,
-  Value<DateTime> createdAt,
-});
+      $$TransactionsTableFilterComposer,
+      $$TransactionsTableOrderingComposer,
+      $$TransactionsTableAnnotationComposer,
+      $$TransactionsTableCreateCompanionBuilder,
+      $$TransactionsTableUpdateCompanionBuilder,
+      (
+        Transaction,
+        BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>,
+      ),
+      Transaction,
+      PrefetchHooks Function()
+    >;
+typedef $$RecordEditHistoriesTableCreateCompanionBuilder =
+    RecordEditHistoriesCompanion Function({
+      Value<int> id,
+      required int recordId,
+      required int version,
+      Value<String?> operatorUserId,
+      required String summary,
+      Value<DateTime> createdAt,
+    });
+typedef $$RecordEditHistoriesTableUpdateCompanionBuilder =
+    RecordEditHistoriesCompanion Function({
+      Value<int> id,
+      Value<int> recordId,
+      Value<int> version,
+      Value<String?> operatorUserId,
+      Value<String> summary,
+      Value<DateTime> createdAt,
+    });
 
 class $$RecordEditHistoriesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
@@ -7991,23 +9537,34 @@ class $$RecordEditHistoriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get recordId => $composableBuilder(
-      column: $table.recordId, builder: (column) => ColumnFilters(column));
+    column: $table.recordId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnFilters(column));
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get operatorUserId => $composableBuilder(
-      column: $table.operatorUserId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.operatorUserId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get summary => $composableBuilder(
-      column: $table.summary, builder: (column) => ColumnFilters(column));
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RecordEditHistoriesTableOrderingComposer
@@ -8020,23 +9577,34 @@ class $$RecordEditHistoriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get recordId => $composableBuilder(
-      column: $table.recordId, builder: (column) => ColumnOrderings(column));
+    column: $table.recordId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get version => $composableBuilder(
-      column: $table.version, builder: (column) => ColumnOrderings(column));
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get operatorUserId => $composableBuilder(
-      column: $table.operatorUserId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.operatorUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get summary => $composableBuilder(
-      column: $table.summary, builder: (column) => ColumnOrderings(column));
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecordEditHistoriesTableAnnotationComposer
@@ -8058,7 +9626,9 @@ class $$RecordEditHistoriesTableAnnotationComposer
       $composableBuilder(column: $table.version, builder: (column) => column);
 
   GeneratedColumn<String> get operatorUserId => $composableBuilder(
-      column: $table.operatorUserId, builder: (column) => column);
+    column: $table.operatorUserId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get summary =>
       $composableBuilder(column: $table.summary, builder: (column) => column);
@@ -8067,130 +9637,148 @@ class $$RecordEditHistoriesTableAnnotationComposer
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
 }
 
-class $$RecordEditHistoriesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $RecordEditHistoriesTable,
-    RecordEditHistory,
-    $$RecordEditHistoriesTableFilterComposer,
-    $$RecordEditHistoriesTableOrderingComposer,
-    $$RecordEditHistoriesTableAnnotationComposer,
-    $$RecordEditHistoriesTableCreateCompanionBuilder,
-    $$RecordEditHistoriesTableUpdateCompanionBuilder,
-    (
-      RecordEditHistory,
-      BaseReferences<_$SpitoutDatabase, $RecordEditHistoriesTable,
-          RecordEditHistory>
-    ),
-    RecordEditHistory,
-    PrefetchHooks Function()> {
+class $$RecordEditHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $RecordEditHistoriesTable,
+          RecordEditHistory,
+          $$RecordEditHistoriesTableFilterComposer,
+          $$RecordEditHistoriesTableOrderingComposer,
+          $$RecordEditHistoriesTableAnnotationComposer,
+          $$RecordEditHistoriesTableCreateCompanionBuilder,
+          $$RecordEditHistoriesTableUpdateCompanionBuilder,
+          (
+            RecordEditHistory,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $RecordEditHistoriesTable,
+              RecordEditHistory
+            >,
+          ),
+          RecordEditHistory,
+          PrefetchHooks Function()
+        > {
   $$RecordEditHistoriesTableTableManager(
-      _$SpitoutDatabase db, $RecordEditHistoriesTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $RecordEditHistoriesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$RecordEditHistoriesTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$RecordEditHistoriesTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$RecordEditHistoriesTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> recordId = const Value.absent(),
-            Value<int> version = const Value.absent(),
-            Value<String?> operatorUserId = const Value.absent(),
-            Value<String> summary = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              RecordEditHistoriesCompanion(
-            id: id,
-            recordId: recordId,
-            version: version,
-            operatorUserId: operatorUserId,
-            summary: summary,
-            createdAt: createdAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int recordId,
-            required int version,
-            Value<String?> operatorUserId = const Value.absent(),
-            required String summary,
-            Value<DateTime> createdAt = const Value.absent(),
-          }) =>
-              RecordEditHistoriesCompanion.insert(
-            id: id,
-            recordId: recordId,
-            version: version,
-            operatorUserId: operatorUserId,
-            summary: summary,
-            createdAt: createdAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> recordId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> operatorUserId = const Value.absent(),
+                Value<String> summary = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecordEditHistoriesCompanion(
+                id: id,
+                recordId: recordId,
+                version: version,
+                operatorUserId: operatorUserId,
+                summary: summary,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int recordId,
+                required int version,
+                Value<String?> operatorUserId = const Value.absent(),
+                required String summary,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecordEditHistoriesCompanion.insert(
+                id: id,
+                recordId: recordId,
+                version: version,
+                operatorUserId: operatorUserId,
+                summary: summary,
+                createdAt: createdAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$RecordEditHistoriesTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $RecordEditHistoriesTable,
-    RecordEditHistory,
-    $$RecordEditHistoriesTableFilterComposer,
-    $$RecordEditHistoriesTableOrderingComposer,
-    $$RecordEditHistoriesTableAnnotationComposer,
-    $$RecordEditHistoriesTableCreateCompanionBuilder,
-    $$RecordEditHistoriesTableUpdateCompanionBuilder,
-    (
+typedef $$RecordEditHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $RecordEditHistoriesTable,
       RecordEditHistory,
-      BaseReferences<_$SpitoutDatabase, $RecordEditHistoriesTable,
-          RecordEditHistory>
-    ),
-    RecordEditHistory,
-    PrefetchHooks Function()>;
-typedef $$RecurringTransactionsTableCreateCompanionBuilder
-    = RecurringTransactionsCompanion Function({
-  Value<int> id,
-  required int ledgerId,
-  required String type,
-  required double amount,
-  Value<int?> categoryId,
-  Value<String?> note,
-  required String frequency,
-  Value<int> interval,
-  Value<int?> dayOfMonth,
-  Value<int?> dayOfWeek,
-  Value<int?> monthOfYear,
-  required DateTime startDate,
-  Value<DateTime?> endDate,
-  Value<DateTime?> lastGeneratedDate,
-  Value<bool> enabled,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-});
-typedef $$RecurringTransactionsTableUpdateCompanionBuilder
-    = RecurringTransactionsCompanion Function({
-  Value<int> id,
-  Value<int> ledgerId,
-  Value<String> type,
-  Value<double> amount,
-  Value<int?> categoryId,
-  Value<String?> note,
-  Value<String> frequency,
-  Value<int> interval,
-  Value<int?> dayOfMonth,
-  Value<int?> dayOfWeek,
-  Value<int?> monthOfYear,
-  Value<DateTime> startDate,
-  Value<DateTime?> endDate,
-  Value<DateTime?> lastGeneratedDate,
-  Value<bool> enabled,
-  Value<DateTime> createdAt,
-  Value<DateTime> updatedAt,
-});
+      $$RecordEditHistoriesTableFilterComposer,
+      $$RecordEditHistoriesTableOrderingComposer,
+      $$RecordEditHistoriesTableAnnotationComposer,
+      $$RecordEditHistoriesTableCreateCompanionBuilder,
+      $$RecordEditHistoriesTableUpdateCompanionBuilder,
+      (
+        RecordEditHistory,
+        BaseReferences<
+          _$SpitoutDatabase,
+          $RecordEditHistoriesTable,
+          RecordEditHistory
+        >,
+      ),
+      RecordEditHistory,
+      PrefetchHooks Function()
+    >;
+typedef $$RecurringTransactionsTableCreateCompanionBuilder =
+    RecurringTransactionsCompanion Function({
+      Value<int> id,
+      required int ledgerId,
+      required String type,
+      required double amount,
+      Value<int?> categoryId,
+      Value<String?> note,
+      required String frequency,
+      Value<int> interval,
+      Value<int?> dayOfMonth,
+      Value<int?> dayOfWeek,
+      Value<int?> monthOfYear,
+      required DateTime startDate,
+      Value<DateTime?> endDate,
+      Value<DateTime?> lastGeneratedDate,
+      Value<bool> enabled,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
+typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
+    RecurringTransactionsCompanion Function({
+      Value<int> id,
+      Value<int> ledgerId,
+      Value<String> type,
+      Value<double> amount,
+      Value<int?> categoryId,
+      Value<String?> note,
+      Value<String> frequency,
+      Value<int> interval,
+      Value<int?> dayOfMonth,
+      Value<int?> dayOfWeek,
+      Value<int?> monthOfYear,
+      Value<DateTime> startDate,
+      Value<DateTime?> endDate,
+      Value<DateTime?> lastGeneratedDate,
+      Value<bool> enabled,
+      Value<DateTime> createdAt,
+      Value<DateTime> updatedAt,
+    });
 
 class $$RecurringTransactionsTableFilterComposer
     extends Composer<_$SpitoutDatabase, $RecurringTransactionsTable> {
@@ -8202,56 +9790,89 @@ class $$RecurringTransactionsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnFilters(column));
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<double> get amount => $composableBuilder(
-      column: $table.amount, builder: (column) => ColumnFilters(column));
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnFilters(column));
+    column: $table.categoryId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get note => $composableBuilder(
-      column: $table.note, builder: (column) => ColumnFilters(column));
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get frequency => $composableBuilder(
-      column: $table.frequency, builder: (column) => ColumnFilters(column));
+    column: $table.frequency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get interval => $composableBuilder(
-      column: $table.interval, builder: (column) => ColumnFilters(column));
+    column: $table.interval,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get dayOfMonth => $composableBuilder(
-      column: $table.dayOfMonth, builder: (column) => ColumnFilters(column));
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get dayOfWeek => $composableBuilder(
-      column: $table.dayOfWeek, builder: (column) => ColumnFilters(column));
+    column: $table.dayOfWeek,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get monthOfYear => $composableBuilder(
-      column: $table.monthOfYear, builder: (column) => ColumnFilters(column));
+    column: $table.monthOfYear,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get startDate => $composableBuilder(
-      column: $table.startDate, builder: (column) => ColumnFilters(column));
+    column: $table.startDate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get endDate => $composableBuilder(
-      column: $table.endDate, builder: (column) => ColumnFilters(column));
+    column: $table.endDate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastGeneratedDate => $composableBuilder(
-      column: $table.lastGeneratedDate,
-      builder: (column) => ColumnFilters(column));
+    column: $table.lastGeneratedDate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<bool> get enabled => $composableBuilder(
-      column: $table.enabled, builder: (column) => ColumnFilters(column));
+    column: $table.enabled,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$RecurringTransactionsTableOrderingComposer
@@ -8264,56 +9885,89 @@ class $$RecurringTransactionsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get type => $composableBuilder(
-      column: $table.type, builder: (column) => ColumnOrderings(column));
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<double> get amount => $composableBuilder(
-      column: $table.amount, builder: (column) => ColumnOrderings(column));
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => ColumnOrderings(column));
+    column: $table.categoryId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get note => $composableBuilder(
-      column: $table.note, builder: (column) => ColumnOrderings(column));
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get frequency => $composableBuilder(
-      column: $table.frequency, builder: (column) => ColumnOrderings(column));
+    column: $table.frequency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get interval => $composableBuilder(
-      column: $table.interval, builder: (column) => ColumnOrderings(column));
+    column: $table.interval,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get dayOfMonth => $composableBuilder(
-      column: $table.dayOfMonth, builder: (column) => ColumnOrderings(column));
+    column: $table.dayOfMonth,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get dayOfWeek => $composableBuilder(
-      column: $table.dayOfWeek, builder: (column) => ColumnOrderings(column));
+    column: $table.dayOfWeek,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get monthOfYear => $composableBuilder(
-      column: $table.monthOfYear, builder: (column) => ColumnOrderings(column));
+    column: $table.monthOfYear,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get startDate => $composableBuilder(
-      column: $table.startDate, builder: (column) => ColumnOrderings(column));
+    column: $table.startDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get endDate => $composableBuilder(
-      column: $table.endDate, builder: (column) => ColumnOrderings(column));
+    column: $table.endDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastGeneratedDate => $composableBuilder(
-      column: $table.lastGeneratedDate,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastGeneratedDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<bool> get enabled => $composableBuilder(
-      column: $table.enabled, builder: (column) => ColumnOrderings(column));
+    column: $table.enabled,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$RecurringTransactionsTableAnnotationComposer
@@ -8338,7 +9992,9 @@ class $$RecurringTransactionsTableAnnotationComposer
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
   GeneratedColumn<int> get categoryId => $composableBuilder(
-      column: $table.categoryId, builder: (column) => column);
+    column: $table.categoryId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get note =>
       $composableBuilder(column: $table.note, builder: (column) => column);
@@ -8350,13 +10006,17 @@ class $$RecurringTransactionsTableAnnotationComposer
       $composableBuilder(column: $table.interval, builder: (column) => column);
 
   GeneratedColumn<int> get dayOfMonth => $composableBuilder(
-      column: $table.dayOfMonth, builder: (column) => column);
+    column: $table.dayOfMonth,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get dayOfWeek =>
       $composableBuilder(column: $table.dayOfWeek, builder: (column) => column);
 
   GeneratedColumn<int> get monthOfYear => $composableBuilder(
-      column: $table.monthOfYear, builder: (column) => column);
+    column: $table.monthOfYear,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get startDate =>
       $composableBuilder(column: $table.startDate, builder: (column) => column);
@@ -8365,7 +10025,9 @@ class $$RecurringTransactionsTableAnnotationComposer
       $composableBuilder(column: $table.endDate, builder: (column) => column);
 
   GeneratedColumn<DateTime> get lastGeneratedDate => $composableBuilder(
-      column: $table.lastGeneratedDate, builder: (column) => column);
+    column: $table.lastGeneratedDate,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<bool> get enabled =>
       $composableBuilder(column: $table.enabled, builder: (column) => column);
@@ -8377,160 +10039,179 @@ class $$RecurringTransactionsTableAnnotationComposer
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$RecurringTransactionsTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $RecurringTransactionsTable,
-    RecurringTransaction,
-    $$RecurringTransactionsTableFilterComposer,
-    $$RecurringTransactionsTableOrderingComposer,
-    $$RecurringTransactionsTableAnnotationComposer,
-    $$RecurringTransactionsTableCreateCompanionBuilder,
-    $$RecurringTransactionsTableUpdateCompanionBuilder,
-    (
-      RecurringTransaction,
-      BaseReferences<_$SpitoutDatabase, $RecurringTransactionsTable,
-          RecurringTransaction>
-    ),
-    RecurringTransaction,
-    PrefetchHooks Function()> {
+class $$RecurringTransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $RecurringTransactionsTable,
+          RecurringTransaction,
+          $$RecurringTransactionsTableFilterComposer,
+          $$RecurringTransactionsTableOrderingComposer,
+          $$RecurringTransactionsTableAnnotationComposer,
+          $$RecurringTransactionsTableCreateCompanionBuilder,
+          $$RecurringTransactionsTableUpdateCompanionBuilder,
+          (
+            RecurringTransaction,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $RecurringTransactionsTable,
+              RecurringTransaction
+            >,
+          ),
+          RecurringTransaction,
+          PrefetchHooks Function()
+        > {
   $$RecurringTransactionsTableTableManager(
-      _$SpitoutDatabase db, $RecurringTransactionsTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $RecurringTransactionsTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$RecurringTransactionsTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$RecurringTransactionsTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$RecurringTransactionsTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> ledgerId = const Value.absent(),
-            Value<String> type = const Value.absent(),
-            Value<double> amount = const Value.absent(),
-            Value<int?> categoryId = const Value.absent(),
-            Value<String?> note = const Value.absent(),
-            Value<String> frequency = const Value.absent(),
-            Value<int> interval = const Value.absent(),
-            Value<int?> dayOfMonth = const Value.absent(),
-            Value<int?> dayOfWeek = const Value.absent(),
-            Value<int?> monthOfYear = const Value.absent(),
-            Value<DateTime> startDate = const Value.absent(),
-            Value<DateTime?> endDate = const Value.absent(),
-            Value<DateTime?> lastGeneratedDate = const Value.absent(),
-            Value<bool> enabled = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              RecurringTransactionsCompanion(
-            id: id,
-            ledgerId: ledgerId,
-            type: type,
-            amount: amount,
-            categoryId: categoryId,
-            note: note,
-            frequency: frequency,
-            interval: interval,
-            dayOfMonth: dayOfMonth,
-            dayOfWeek: dayOfWeek,
-            monthOfYear: monthOfYear,
-            startDate: startDate,
-            endDate: endDate,
-            lastGeneratedDate: lastGeneratedDate,
-            enabled: enabled,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int ledgerId,
-            required String type,
-            required double amount,
-            Value<int?> categoryId = const Value.absent(),
-            Value<String?> note = const Value.absent(),
-            required String frequency,
-            Value<int> interval = const Value.absent(),
-            Value<int?> dayOfMonth = const Value.absent(),
-            Value<int?> dayOfWeek = const Value.absent(),
-            Value<int?> monthOfYear = const Value.absent(),
-            required DateTime startDate,
-            Value<DateTime?> endDate = const Value.absent(),
-            Value<DateTime?> lastGeneratedDate = const Value.absent(),
-            Value<bool> enabled = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-          }) =>
-              RecurringTransactionsCompanion.insert(
-            id: id,
-            ledgerId: ledgerId,
-            type: type,
-            amount: amount,
-            categoryId: categoryId,
-            note: note,
-            frequency: frequency,
-            interval: interval,
-            dayOfMonth: dayOfMonth,
-            dayOfWeek: dayOfWeek,
-            monthOfYear: monthOfYear,
-            startDate: startDate,
-            endDate: endDate,
-            lastGeneratedDate: lastGeneratedDate,
-            enabled: enabled,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> ledgerId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<double> amount = const Value.absent(),
+                Value<int?> categoryId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<String> frequency = const Value.absent(),
+                Value<int> interval = const Value.absent(),
+                Value<int?> dayOfMonth = const Value.absent(),
+                Value<int?> dayOfWeek = const Value.absent(),
+                Value<int?> monthOfYear = const Value.absent(),
+                Value<DateTime> startDate = const Value.absent(),
+                Value<DateTime?> endDate = const Value.absent(),
+                Value<DateTime?> lastGeneratedDate = const Value.absent(),
+                Value<bool> enabled = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => RecurringTransactionsCompanion(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                note: note,
+                frequency: frequency,
+                interval: interval,
+                dayOfMonth: dayOfMonth,
+                dayOfWeek: dayOfWeek,
+                monthOfYear: monthOfYear,
+                startDate: startDate,
+                endDate: endDate,
+                lastGeneratedDate: lastGeneratedDate,
+                enabled: enabled,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int ledgerId,
+                required String type,
+                required double amount,
+                Value<int?> categoryId = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                required String frequency,
+                Value<int> interval = const Value.absent(),
+                Value<int?> dayOfMonth = const Value.absent(),
+                Value<int?> dayOfWeek = const Value.absent(),
+                Value<int?> monthOfYear = const Value.absent(),
+                required DateTime startDate,
+                Value<DateTime?> endDate = const Value.absent(),
+                Value<DateTime?> lastGeneratedDate = const Value.absent(),
+                Value<bool> enabled = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+              }) => RecurringTransactionsCompanion.insert(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                note: note,
+                frequency: frequency,
+                interval: interval,
+                dayOfMonth: dayOfMonth,
+                dayOfWeek: dayOfWeek,
+                monthOfYear: monthOfYear,
+                startDate: startDate,
+                endDate: endDate,
+                lastGeneratedDate: lastGeneratedDate,
+                enabled: enabled,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$RecurringTransactionsTableProcessedTableManager
-    = ProcessedTableManager<
-        _$SpitoutDatabase,
-        $RecurringTransactionsTable,
+typedef $$RecurringTransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $RecurringTransactionsTable,
+      RecurringTransaction,
+      $$RecurringTransactionsTableFilterComposer,
+      $$RecurringTransactionsTableOrderingComposer,
+      $$RecurringTransactionsTableAnnotationComposer,
+      $$RecurringTransactionsTableCreateCompanionBuilder,
+      $$RecurringTransactionsTableUpdateCompanionBuilder,
+      (
         RecurringTransaction,
-        $$RecurringTransactionsTableFilterComposer,
-        $$RecurringTransactionsTableOrderingComposer,
-        $$RecurringTransactionsTableAnnotationComposer,
-        $$RecurringTransactionsTableCreateCompanionBuilder,
-        $$RecurringTransactionsTableUpdateCompanionBuilder,
-        (
-          RecurringTransaction,
-          BaseReferences<_$SpitoutDatabase, $RecurringTransactionsTable,
-              RecurringTransaction>
-        ),
-        RecurringTransaction,
-        PrefetchHooks Function()>;
-typedef $$LocalChangesTableCreateCompanionBuilder = LocalChangesCompanion
-    Function({
-  Value<int> id,
-  required String entityType,
-  required int entityId,
-  required String entitySyncId,
-  required int ledgerId,
-  required String action,
-  Value<String?> payloadJson,
-  Value<DateTime> createdAt,
-  Value<DateTime?> pushedAt,
-});
-typedef $$LocalChangesTableUpdateCompanionBuilder = LocalChangesCompanion
-    Function({
-  Value<int> id,
-  Value<String> entityType,
-  Value<int> entityId,
-  Value<String> entitySyncId,
-  Value<int> ledgerId,
-  Value<String> action,
-  Value<String?> payloadJson,
-  Value<DateTime> createdAt,
-  Value<DateTime?> pushedAt,
-});
+        BaseReferences<
+          _$SpitoutDatabase,
+          $RecurringTransactionsTable,
+          RecurringTransaction
+        >,
+      ),
+      RecurringTransaction,
+      PrefetchHooks Function()
+    >;
+typedef $$LocalChangesTableCreateCompanionBuilder =
+    LocalChangesCompanion Function({
+      Value<int> id,
+      required String entityType,
+      required int entityId,
+      required String entitySyncId,
+      required int ledgerId,
+      required String action,
+      Value<String?> payloadJson,
+      Value<DateTime> createdAt,
+      Value<DateTime?> pushedAt,
+    });
+typedef $$LocalChangesTableUpdateCompanionBuilder =
+    LocalChangesCompanion Function({
+      Value<int> id,
+      Value<String> entityType,
+      Value<int> entityId,
+      Value<String> entitySyncId,
+      Value<int> ledgerId,
+      Value<String> action,
+      Value<String?> payloadJson,
+      Value<DateTime> createdAt,
+      Value<DateTime?> pushedAt,
+    });
 
 class $$LocalChangesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $LocalChangesTable> {
@@ -8542,31 +10223,49 @@ class $$LocalChangesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => ColumnFilters(column));
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get entityId => $composableBuilder(
-      column: $table.entityId, builder: (column) => ColumnFilters(column));
+    column: $table.entityId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId, builder: (column) => ColumnFilters(column));
+    column: $table.entitySyncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get action => $composableBuilder(
-      column: $table.action, builder: (column) => ColumnFilters(column));
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnFilters(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get pushedAt => $composableBuilder(
-      column: $table.pushedAt, builder: (column) => ColumnFilters(column));
+    column: $table.pushedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$LocalChangesTableOrderingComposer
@@ -8579,32 +10278,49 @@ class $$LocalChangesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => ColumnOrderings(column));
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get entityId => $composableBuilder(
-      column: $table.entityId, builder: (column) => ColumnOrderings(column));
+    column: $table.entityId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.entitySyncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get action => $composableBuilder(
-      column: $table.action, builder: (column) => ColumnOrderings(column));
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => ColumnOrderings(column));
+    column: $table.payloadJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get pushedAt => $composableBuilder(
-      column: $table.pushedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.pushedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LocalChangesTableAnnotationComposer
@@ -8620,13 +10336,17 @@ class $$LocalChangesTableAnnotationComposer
       $composableBuilder(column: $table.id, builder: (column) => column);
 
   GeneratedColumn<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => column);
+    column: $table.entityType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get entityId =>
       $composableBuilder(column: $table.entityId, builder: (column) => column);
 
   GeneratedColumn<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId, builder: (column) => column);
+    column: $table.entitySyncId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get ledgerId =>
       $composableBuilder(column: $table.ledgerId, builder: (column) => column);
@@ -8635,7 +10355,9 @@ class $$LocalChangesTableAnnotationComposer
       $composableBuilder(column: $table.action, builder: (column) => column);
 
   GeneratedColumn<String> get payloadJson => $composableBuilder(
-      column: $table.payloadJson, builder: (column) => column);
+    column: $table.payloadJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
@@ -8644,24 +10366,29 @@ class $$LocalChangesTableAnnotationComposer
       $composableBuilder(column: $table.pushedAt, builder: (column) => column);
 }
 
-class $$LocalChangesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $LocalChangesTable,
-    LocalChange,
-    $$LocalChangesTableFilterComposer,
-    $$LocalChangesTableOrderingComposer,
-    $$LocalChangesTableAnnotationComposer,
-    $$LocalChangesTableCreateCompanionBuilder,
-    $$LocalChangesTableUpdateCompanionBuilder,
-    (
-      LocalChange,
-      BaseReferences<_$SpitoutDatabase, $LocalChangesTable, LocalChange>
-    ),
-    LocalChange,
-    PrefetchHooks Function()> {
+class $$LocalChangesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $LocalChangesTable,
+          LocalChange,
+          $$LocalChangesTableFilterComposer,
+          $$LocalChangesTableOrderingComposer,
+          $$LocalChangesTableAnnotationComposer,
+          $$LocalChangesTableCreateCompanionBuilder,
+          $$LocalChangesTableUpdateCompanionBuilder,
+          (
+            LocalChange,
+            BaseReferences<_$SpitoutDatabase, $LocalChangesTable, LocalChange>,
+          ),
+          LocalChange,
+          PrefetchHooks Function()
+        > {
   $$LocalChangesTableTableManager(
-      _$SpitoutDatabase db, $LocalChangesTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $LocalChangesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -8670,88 +10397,93 @@ class $$LocalChangesTableTableManager extends RootTableManager<
               $$LocalChangesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$LocalChangesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> entityType = const Value.absent(),
-            Value<int> entityId = const Value.absent(),
-            Value<String> entitySyncId = const Value.absent(),
-            Value<int> ledgerId = const Value.absent(),
-            Value<String> action = const Value.absent(),
-            Value<String?> payloadJson = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> pushedAt = const Value.absent(),
-          }) =>
-              LocalChangesCompanion(
-            id: id,
-            entityType: entityType,
-            entityId: entityId,
-            entitySyncId: entitySyncId,
-            ledgerId: ledgerId,
-            action: action,
-            payloadJson: payloadJson,
-            createdAt: createdAt,
-            pushedAt: pushedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String entityType,
-            required int entityId,
-            required String entitySyncId,
-            required int ledgerId,
-            required String action,
-            Value<String?> payloadJson = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> pushedAt = const Value.absent(),
-          }) =>
-              LocalChangesCompanion.insert(
-            id: id,
-            entityType: entityType,
-            entityId: entityId,
-            entitySyncId: entitySyncId,
-            ledgerId: ledgerId,
-            action: action,
-            payloadJson: payloadJson,
-            createdAt: createdAt,
-            pushedAt: pushedAt,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<int> entityId = const Value.absent(),
+                Value<String> entitySyncId = const Value.absent(),
+                Value<int> ledgerId = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<String?> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> pushedAt = const Value.absent(),
+              }) => LocalChangesCompanion(
+                id: id,
+                entityType: entityType,
+                entityId: entityId,
+                entitySyncId: entitySyncId,
+                ledgerId: ledgerId,
+                action: action,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                pushedAt: pushedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String entityType,
+                required int entityId,
+                required String entitySyncId,
+                required int ledgerId,
+                required String action,
+                Value<String?> payloadJson = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> pushedAt = const Value.absent(),
+              }) => LocalChangesCompanion.insert(
+                id: id,
+                entityType: entityType,
+                entityId: entityId,
+                entitySyncId: entitySyncId,
+                ledgerId: ledgerId,
+                action: action,
+                payloadJson: payloadJson,
+                createdAt: createdAt,
+                pushedAt: pushedAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$LocalChangesTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $LocalChangesTable,
-    LocalChange,
-    $$LocalChangesTableFilterComposer,
-    $$LocalChangesTableOrderingComposer,
-    $$LocalChangesTableAnnotationComposer,
-    $$LocalChangesTableCreateCompanionBuilder,
-    $$LocalChangesTableUpdateCompanionBuilder,
-    (
+typedef $$LocalChangesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $LocalChangesTable,
       LocalChange,
-      BaseReferences<_$SpitoutDatabase, $LocalChangesTable, LocalChange>
-    ),
-    LocalChange,
-    PrefetchHooks Function()>;
-typedef $$SyncStateTableCreateCompanionBuilder = SyncStateCompanion Function({
-  Value<int> id,
-  required String deviceId,
-  Value<String> providerType,
-  Value<int> serverCursor,
-  Value<DateTime?> lastPushAt,
-  Value<DateTime?> lastPullAt,
-});
-typedef $$SyncStateTableUpdateCompanionBuilder = SyncStateCompanion Function({
-  Value<int> id,
-  Value<String> deviceId,
-  Value<String> providerType,
-  Value<int> serverCursor,
-  Value<DateTime?> lastPushAt,
-  Value<DateTime?> lastPullAt,
-});
+      $$LocalChangesTableFilterComposer,
+      $$LocalChangesTableOrderingComposer,
+      $$LocalChangesTableAnnotationComposer,
+      $$LocalChangesTableCreateCompanionBuilder,
+      $$LocalChangesTableUpdateCompanionBuilder,
+      (
+        LocalChange,
+        BaseReferences<_$SpitoutDatabase, $LocalChangesTable, LocalChange>,
+      ),
+      LocalChange,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncStateTableCreateCompanionBuilder =
+    SyncStateCompanion Function({
+      Value<int> id,
+      required String deviceId,
+      Value<String> providerType,
+      Value<int> serverCursor,
+      Value<DateTime?> lastPushAt,
+      Value<DateTime?> lastPullAt,
+    });
+typedef $$SyncStateTableUpdateCompanionBuilder =
+    SyncStateCompanion Function({
+      Value<int> id,
+      Value<String> deviceId,
+      Value<String> providerType,
+      Value<int> serverCursor,
+      Value<DateTime?> lastPushAt,
+      Value<DateTime?> lastPullAt,
+    });
 
 class $$SyncStateTableFilterComposer
     extends Composer<_$SpitoutDatabase, $SyncStateTable> {
@@ -8763,22 +10495,34 @@ class $$SyncStateTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnFilters(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get providerType => $composableBuilder(
-      column: $table.providerType, builder: (column) => ColumnFilters(column));
+    column: $table.providerType,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get serverCursor => $composableBuilder(
-      column: $table.serverCursor, builder: (column) => ColumnFilters(column));
+    column: $table.serverCursor,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastPushAt => $composableBuilder(
-      column: $table.lastPushAt, builder: (column) => ColumnFilters(column));
+    column: $table.lastPushAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastPullAt => $composableBuilder(
-      column: $table.lastPullAt, builder: (column) => ColumnFilters(column));
+    column: $table.lastPullAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SyncStateTableOrderingComposer
@@ -8791,24 +10535,34 @@ class $$SyncStateTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get deviceId => $composableBuilder(
-      column: $table.deviceId, builder: (column) => ColumnOrderings(column));
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get providerType => $composableBuilder(
-      column: $table.providerType,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.providerType,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get serverCursor => $composableBuilder(
-      column: $table.serverCursor,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.serverCursor,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastPushAt => $composableBuilder(
-      column: $table.lastPushAt, builder: (column) => ColumnOrderings(column));
+    column: $table.lastPushAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastPullAt => $composableBuilder(
-      column: $table.lastPullAt, builder: (column) => ColumnOrderings(column));
+    column: $table.lastPullAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncStateTableAnnotationComposer
@@ -8827,35 +10581,47 @@ class $$SyncStateTableAnnotationComposer
       $composableBuilder(column: $table.deviceId, builder: (column) => column);
 
   GeneratedColumn<String> get providerType => $composableBuilder(
-      column: $table.providerType, builder: (column) => column);
+    column: $table.providerType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get serverCursor => $composableBuilder(
-      column: $table.serverCursor, builder: (column) => column);
+    column: $table.serverCursor,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastPushAt => $composableBuilder(
-      column: $table.lastPushAt, builder: (column) => column);
+    column: $table.lastPushAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastPullAt => $composableBuilder(
-      column: $table.lastPullAt, builder: (column) => column);
+    column: $table.lastPullAt,
+    builder: (column) => column,
+  );
 }
 
-class $$SyncStateTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $SyncStateTable,
-    SyncStateData,
-    $$SyncStateTableFilterComposer,
-    $$SyncStateTableOrderingComposer,
-    $$SyncStateTableAnnotationComposer,
-    $$SyncStateTableCreateCompanionBuilder,
-    $$SyncStateTableUpdateCompanionBuilder,
-    (
-      SyncStateData,
-      BaseReferences<_$SpitoutDatabase, $SyncStateTable, SyncStateData>
-    ),
-    SyncStateData,
-    PrefetchHooks Function()> {
+class $$SyncStateTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $SyncStateTable,
+          SyncStateData,
+          $$SyncStateTableFilterComposer,
+          $$SyncStateTableOrderingComposer,
+          $$SyncStateTableAnnotationComposer,
+          $$SyncStateTableCreateCompanionBuilder,
+          $$SyncStateTableUpdateCompanionBuilder,
+          (
+            SyncStateData,
+            BaseReferences<_$SpitoutDatabase, $SyncStateTable, SyncStateData>,
+          ),
+          SyncStateData,
+          PrefetchHooks Function()
+        > {
   $$SyncStateTableTableManager(_$SpitoutDatabase db, $SyncStateTable table)
-      : super(TableManagerState(
+    : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -8864,84 +10630,87 @@ class $$SyncStateTableTableManager extends RootTableManager<
               $$SyncStateTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SyncStateTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String> deviceId = const Value.absent(),
-            Value<String> providerType = const Value.absent(),
-            Value<int> serverCursor = const Value.absent(),
-            Value<DateTime?> lastPushAt = const Value.absent(),
-            Value<DateTime?> lastPullAt = const Value.absent(),
-          }) =>
-              SyncStateCompanion(
-            id: id,
-            deviceId: deviceId,
-            providerType: providerType,
-            serverCursor: serverCursor,
-            lastPushAt: lastPushAt,
-            lastPullAt: lastPullAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required String deviceId,
-            Value<String> providerType = const Value.absent(),
-            Value<int> serverCursor = const Value.absent(),
-            Value<DateTime?> lastPushAt = const Value.absent(),
-            Value<DateTime?> lastPullAt = const Value.absent(),
-          }) =>
-              SyncStateCompanion.insert(
-            id: id,
-            deviceId: deviceId,
-            providerType: providerType,
-            serverCursor: serverCursor,
-            lastPushAt: lastPushAt,
-            lastPullAt: lastPullAt,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<String> providerType = const Value.absent(),
+                Value<int> serverCursor = const Value.absent(),
+                Value<DateTime?> lastPushAt = const Value.absent(),
+                Value<DateTime?> lastPullAt = const Value.absent(),
+              }) => SyncStateCompanion(
+                id: id,
+                deviceId: deviceId,
+                providerType: providerType,
+                serverCursor: serverCursor,
+                lastPushAt: lastPushAt,
+                lastPullAt: lastPullAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required String deviceId,
+                Value<String> providerType = const Value.absent(),
+                Value<int> serverCursor = const Value.absent(),
+                Value<DateTime?> lastPushAt = const Value.absent(),
+                Value<DateTime?> lastPullAt = const Value.absent(),
+              }) => SyncStateCompanion.insert(
+                id: id,
+                deviceId: deviceId,
+                providerType: providerType,
+                serverCursor: serverCursor,
+                lastPushAt: lastPushAt,
+                lastPullAt: lastPullAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SyncStateTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $SyncStateTable,
-    SyncStateData,
-    $$SyncStateTableFilterComposer,
-    $$SyncStateTableOrderingComposer,
-    $$SyncStateTableAnnotationComposer,
-    $$SyncStateTableCreateCompanionBuilder,
-    $$SyncStateTableUpdateCompanionBuilder,
-    (
+typedef $$SyncStateTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $SyncStateTable,
       SyncStateData,
-      BaseReferences<_$SpitoutDatabase, $SyncStateTable, SyncStateData>
-    ),
-    SyncStateData,
-    PrefetchHooks Function()>;
-typedef $$LedgerMembersTableCreateCompanionBuilder = LedgerMembersCompanion
-    Function({
-  required String ledgerSyncId,
-  required String userId,
-  Value<String?> email,
-  Value<String?> displayName,
-  Value<String?> avatarUrl,
-  required String role,
-  required DateTime joinedAt,
-  required DateTime updatedAt,
-  Value<int> rowid,
-});
-typedef $$LedgerMembersTableUpdateCompanionBuilder = LedgerMembersCompanion
-    Function({
-  Value<String> ledgerSyncId,
-  Value<String> userId,
-  Value<String?> email,
-  Value<String?> displayName,
-  Value<String?> avatarUrl,
-  Value<String> role,
-  Value<DateTime> joinedAt,
-  Value<DateTime> updatedAt,
-  Value<int> rowid,
-});
+      $$SyncStateTableFilterComposer,
+      $$SyncStateTableOrderingComposer,
+      $$SyncStateTableAnnotationComposer,
+      $$SyncStateTableCreateCompanionBuilder,
+      $$SyncStateTableUpdateCompanionBuilder,
+      (
+        SyncStateData,
+        BaseReferences<_$SpitoutDatabase, $SyncStateTable, SyncStateData>,
+      ),
+      SyncStateData,
+      PrefetchHooks Function()
+    >;
+typedef $$LedgerMembersTableCreateCompanionBuilder =
+    LedgerMembersCompanion Function({
+      required String ledgerSyncId,
+      required String userId,
+      Value<String?> email,
+      Value<String?> displayName,
+      Value<String?> avatarUrl,
+      required String role,
+      required DateTime joinedAt,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$LedgerMembersTableUpdateCompanionBuilder =
+    LedgerMembersCompanion Function({
+      Value<String> ledgerSyncId,
+      Value<String> userId,
+      Value<String?> email,
+      Value<String?> displayName,
+      Value<String?> avatarUrl,
+      Value<String> role,
+      Value<DateTime> joinedAt,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
 
 class $$LedgerMembersTableFilterComposer
     extends Composer<_$SpitoutDatabase, $LedgerMembersTable> {
@@ -8953,28 +10722,44 @@ class $$LedgerMembersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerSyncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnFilters(column));
+    column: $table.userId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnFilters(column));
+    column: $table.email,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnFilters(column));
+    column: $table.displayName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnFilters(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get role => $composableBuilder(
-      column: $table.role, builder: (column) => ColumnFilters(column));
+    column: $table.role,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get joinedAt => $composableBuilder(
-      column: $table.joinedAt, builder: (column) => ColumnFilters(column));
+    column: $table.joinedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$LedgerMembersTableOrderingComposer
@@ -8987,29 +10772,44 @@ class $$LedgerMembersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerSyncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get userId => $composableBuilder(
-      column: $table.userId, builder: (column) => ColumnOrderings(column));
+    column: $table.userId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get email => $composableBuilder(
-      column: $table.email, builder: (column) => ColumnOrderings(column));
+    column: $table.email,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => ColumnOrderings(column));
+    column: $table.displayName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get avatarUrl => $composableBuilder(
-      column: $table.avatarUrl, builder: (column) => ColumnOrderings(column));
+    column: $table.avatarUrl,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get role => $composableBuilder(
-      column: $table.role, builder: (column) => ColumnOrderings(column));
+    column: $table.role,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get joinedAt => $composableBuilder(
-      column: $table.joinedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.joinedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LedgerMembersTableAnnotationComposer
@@ -9022,7 +10822,9 @@ class $$LedgerMembersTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId, builder: (column) => column);
+    column: $table.ledgerSyncId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
@@ -9031,7 +10833,9 @@ class $$LedgerMembersTableAnnotationComposer
       $composableBuilder(column: $table.email, builder: (column) => column);
 
   GeneratedColumn<String> get displayName => $composableBuilder(
-      column: $table.displayName, builder: (column) => column);
+    column: $table.displayName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get avatarUrl =>
       $composableBuilder(column: $table.avatarUrl, builder: (column) => column);
@@ -9046,24 +10850,33 @@ class $$LedgerMembersTableAnnotationComposer
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$LedgerMembersTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $LedgerMembersTable,
-    LedgerMember,
-    $$LedgerMembersTableFilterComposer,
-    $$LedgerMembersTableOrderingComposer,
-    $$LedgerMembersTableAnnotationComposer,
-    $$LedgerMembersTableCreateCompanionBuilder,
-    $$LedgerMembersTableUpdateCompanionBuilder,
-    (
-      LedgerMember,
-      BaseReferences<_$SpitoutDatabase, $LedgerMembersTable, LedgerMember>
-    ),
-    LedgerMember,
-    PrefetchHooks Function()> {
+class $$LedgerMembersTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $LedgerMembersTable,
+          LedgerMember,
+          $$LedgerMembersTableFilterComposer,
+          $$LedgerMembersTableOrderingComposer,
+          $$LedgerMembersTableAnnotationComposer,
+          $$LedgerMembersTableCreateCompanionBuilder,
+          $$LedgerMembersTableUpdateCompanionBuilder,
+          (
+            LedgerMember,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $LedgerMembersTable,
+              LedgerMember
+            >,
+          ),
+          LedgerMember,
+          PrefetchHooks Function()
+        > {
   $$LedgerMembersTableTableManager(
-      _$SpitoutDatabase db, $LedgerMembersTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $LedgerMembersTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -9072,102 +10885,105 @@ class $$LedgerMembersTableTableManager extends RootTableManager<
               $$LedgerMembersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$LedgerMembersTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> ledgerSyncId = const Value.absent(),
-            Value<String> userId = const Value.absent(),
-            Value<String?> email = const Value.absent(),
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            Value<String> role = const Value.absent(),
-            Value<DateTime> joinedAt = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              LedgerMembersCompanion(
-            ledgerSyncId: ledgerSyncId,
-            userId: userId,
-            email: email,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            role: role,
-            joinedAt: joinedAt,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String ledgerSyncId,
-            required String userId,
-            Value<String?> email = const Value.absent(),
-            Value<String?> displayName = const Value.absent(),
-            Value<String?> avatarUrl = const Value.absent(),
-            required String role,
-            required DateTime joinedAt,
-            required DateTime updatedAt,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              LedgerMembersCompanion.insert(
-            ledgerSyncId: ledgerSyncId,
-            userId: userId,
-            email: email,
-            displayName: displayName,
-            avatarUrl: avatarUrl,
-            role: role,
-            joinedAt: joinedAt,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> ledgerSyncId = const Value.absent(),
+                Value<String> userId = const Value.absent(),
+                Value<String?> email = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                Value<String> role = const Value.absent(),
+                Value<DateTime> joinedAt = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => LedgerMembersCompanion(
+                ledgerSyncId: ledgerSyncId,
+                userId: userId,
+                email: email,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+                role: role,
+                joinedAt: joinedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ledgerSyncId,
+                required String userId,
+                Value<String?> email = const Value.absent(),
+                Value<String?> displayName = const Value.absent(),
+                Value<String?> avatarUrl = const Value.absent(),
+                required String role,
+                required DateTime joinedAt,
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => LedgerMembersCompanion.insert(
+                ledgerSyncId: ledgerSyncId,
+                userId: userId,
+                email: email,
+                displayName: displayName,
+                avatarUrl: avatarUrl,
+                role: role,
+                joinedAt: joinedAt,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$LedgerMembersTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $LedgerMembersTable,
-    LedgerMember,
-    $$LedgerMembersTableFilterComposer,
-    $$LedgerMembersTableOrderingComposer,
-    $$LedgerMembersTableAnnotationComposer,
-    $$LedgerMembersTableCreateCompanionBuilder,
-    $$LedgerMembersTableUpdateCompanionBuilder,
-    (
+typedef $$LedgerMembersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $LedgerMembersTable,
       LedgerMember,
-      BaseReferences<_$SpitoutDatabase, $LedgerMembersTable, LedgerMember>
-    ),
-    LedgerMember,
-    PrefetchHooks Function()>;
-typedef $$SharedLedgerCategoriesTableCreateCompanionBuilder
-    = SharedLedgerCategoriesCompanion Function({
-  required String ledgerSyncId,
-  required String syncId,
-  required String name,
-  required String kind,
-  Value<String?> icon,
-  Value<String?> color,
-  Value<int> sortOrder,
-  Value<int> level,
-  Value<String?> parentName,
-  Value<String?> parentSyncId,
-  required DateTime updatedAt,
-  Value<int> rowid,
-});
-typedef $$SharedLedgerCategoriesTableUpdateCompanionBuilder
-    = SharedLedgerCategoriesCompanion Function({
-  Value<String> ledgerSyncId,
-  Value<String> syncId,
-  Value<String> name,
-  Value<String> kind,
-  Value<String?> icon,
-  Value<String?> color,
-  Value<int> sortOrder,
-  Value<int> level,
-  Value<String?> parentName,
-  Value<String?> parentSyncId,
-  Value<DateTime> updatedAt,
-  Value<int> rowid,
-});
+      $$LedgerMembersTableFilterComposer,
+      $$LedgerMembersTableOrderingComposer,
+      $$LedgerMembersTableAnnotationComposer,
+      $$LedgerMembersTableCreateCompanionBuilder,
+      $$LedgerMembersTableUpdateCompanionBuilder,
+      (
+        LedgerMember,
+        BaseReferences<_$SpitoutDatabase, $LedgerMembersTable, LedgerMember>,
+      ),
+      LedgerMember,
+      PrefetchHooks Function()
+    >;
+typedef $$SharedLedgerCategoriesTableCreateCompanionBuilder =
+    SharedLedgerCategoriesCompanion Function({
+      required String ledgerSyncId,
+      required String syncId,
+      required String name,
+      required String kind,
+      Value<String?> icon,
+      Value<String?> color,
+      Value<int> sortOrder,
+      Value<int> level,
+      Value<String?> parentName,
+      Value<String?> parentSyncId,
+      required DateTime updatedAt,
+      Value<int> rowid,
+    });
+typedef $$SharedLedgerCategoriesTableUpdateCompanionBuilder =
+    SharedLedgerCategoriesCompanion Function({
+      Value<String> ledgerSyncId,
+      Value<String> syncId,
+      Value<String> name,
+      Value<String> kind,
+      Value<String?> icon,
+      Value<String?> color,
+      Value<int> sortOrder,
+      Value<int> level,
+      Value<String?> parentName,
+      Value<String?> parentSyncId,
+      Value<DateTime> updatedAt,
+      Value<int> rowid,
+    });
 
 class $$SharedLedgerCategoriesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $SharedLedgerCategoriesTable> {
@@ -9179,37 +10995,59 @@ class $$SharedLedgerCategoriesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerSyncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnFilters(column));
+    column: $table.kind,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get icon => $composableBuilder(
-      column: $table.icon, builder: (column) => ColumnFilters(column));
+    column: $table.icon,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get color => $composableBuilder(
-      column: $table.color, builder: (column) => ColumnFilters(column));
+    column: $table.color,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get sortOrder => $composableBuilder(
-      column: $table.sortOrder, builder: (column) => ColumnFilters(column));
+    column: $table.sortOrder,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnFilters(column));
+    column: $table.level,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get parentName => $composableBuilder(
-      column: $table.parentName, builder: (column) => ColumnFilters(column));
+    column: $table.parentName,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get parentSyncId => $composableBuilder(
-      column: $table.parentSyncId, builder: (column) => ColumnFilters(column));
+    column: $table.parentSyncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SharedLedgerCategoriesTableOrderingComposer
@@ -9222,39 +11060,59 @@ class $$SharedLedgerCategoriesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerSyncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get kind => $composableBuilder(
-      column: $table.kind, builder: (column) => ColumnOrderings(column));
+    column: $table.kind,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get icon => $composableBuilder(
-      column: $table.icon, builder: (column) => ColumnOrderings(column));
+    column: $table.icon,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get color => $composableBuilder(
-      column: $table.color, builder: (column) => ColumnOrderings(column));
+    column: $table.color,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get sortOrder => $composableBuilder(
-      column: $table.sortOrder, builder: (column) => ColumnOrderings(column));
+    column: $table.sortOrder,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get level => $composableBuilder(
-      column: $table.level, builder: (column) => ColumnOrderings(column));
+    column: $table.level,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get parentName => $composableBuilder(
-      column: $table.parentName, builder: (column) => ColumnOrderings(column));
+    column: $table.parentName,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get parentSyncId => $composableBuilder(
-      column: $table.parentSyncId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.parentSyncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SharedLedgerCategoriesTableAnnotationComposer
@@ -9267,7 +11125,9 @@ class $$SharedLedgerCategoriesTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get ledgerSyncId => $composableBuilder(
-      column: $table.ledgerSyncId, builder: (column) => column);
+    column: $table.ledgerSyncId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get syncId =>
       $composableBuilder(column: $table.syncId, builder: (column) => column);
@@ -9291,161 +11151,184 @@ class $$SharedLedgerCategoriesTableAnnotationComposer
       $composableBuilder(column: $table.level, builder: (column) => column);
 
   GeneratedColumn<String> get parentName => $composableBuilder(
-      column: $table.parentName, builder: (column) => column);
+    column: $table.parentName,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get parentSyncId => $composableBuilder(
-      column: $table.parentSyncId, builder: (column) => column);
+    column: $table.parentSyncId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$SharedLedgerCategoriesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $SharedLedgerCategoriesTable,
-    SharedLedgerCategory,
-    $$SharedLedgerCategoriesTableFilterComposer,
-    $$SharedLedgerCategoriesTableOrderingComposer,
-    $$SharedLedgerCategoriesTableAnnotationComposer,
-    $$SharedLedgerCategoriesTableCreateCompanionBuilder,
-    $$SharedLedgerCategoriesTableUpdateCompanionBuilder,
-    (
-      SharedLedgerCategory,
-      BaseReferences<_$SpitoutDatabase, $SharedLedgerCategoriesTable,
-          SharedLedgerCategory>
-    ),
-    SharedLedgerCategory,
-    PrefetchHooks Function()> {
+class $$SharedLedgerCategoriesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $SharedLedgerCategoriesTable,
+          SharedLedgerCategory,
+          $$SharedLedgerCategoriesTableFilterComposer,
+          $$SharedLedgerCategoriesTableOrderingComposer,
+          $$SharedLedgerCategoriesTableAnnotationComposer,
+          $$SharedLedgerCategoriesTableCreateCompanionBuilder,
+          $$SharedLedgerCategoriesTableUpdateCompanionBuilder,
+          (
+            SharedLedgerCategory,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $SharedLedgerCategoriesTable,
+              SharedLedgerCategory
+            >,
+          ),
+          SharedLedgerCategory,
+          PrefetchHooks Function()
+        > {
   $$SharedLedgerCategoriesTableTableManager(
-      _$SpitoutDatabase db, $SharedLedgerCategoriesTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $SharedLedgerCategoriesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$SharedLedgerCategoriesTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$SharedLedgerCategoriesTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$SharedLedgerCategoriesTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> ledgerSyncId = const Value.absent(),
-            Value<String> syncId = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<String> kind = const Value.absent(),
-            Value<String?> icon = const Value.absent(),
-            Value<String?> color = const Value.absent(),
-            Value<int> sortOrder = const Value.absent(),
-            Value<int> level = const Value.absent(),
-            Value<String?> parentName = const Value.absent(),
-            Value<String?> parentSyncId = const Value.absent(),
-            Value<DateTime> updatedAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SharedLedgerCategoriesCompanion(
-            ledgerSyncId: ledgerSyncId,
-            syncId: syncId,
-            name: name,
-            kind: kind,
-            icon: icon,
-            color: color,
-            sortOrder: sortOrder,
-            level: level,
-            parentName: parentName,
-            parentSyncId: parentSyncId,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String ledgerSyncId,
-            required String syncId,
-            required String name,
-            required String kind,
-            Value<String?> icon = const Value.absent(),
-            Value<String?> color = const Value.absent(),
-            Value<int> sortOrder = const Value.absent(),
-            Value<int> level = const Value.absent(),
-            Value<String?> parentName = const Value.absent(),
-            Value<String?> parentSyncId = const Value.absent(),
-            required DateTime updatedAt,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              SharedLedgerCategoriesCompanion.insert(
-            ledgerSyncId: ledgerSyncId,
-            syncId: syncId,
-            name: name,
-            kind: kind,
-            icon: icon,
-            color: color,
-            sortOrder: sortOrder,
-            level: level,
-            parentName: parentName,
-            parentSyncId: parentSyncId,
-            updatedAt: updatedAt,
-            rowid: rowid,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<String> ledgerSyncId = const Value.absent(),
+                Value<String> syncId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<String> kind = const Value.absent(),
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<String?> parentName = const Value.absent(),
+                Value<String?> parentSyncId = const Value.absent(),
+                Value<DateTime> updatedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SharedLedgerCategoriesCompanion(
+                ledgerSyncId: ledgerSyncId,
+                syncId: syncId,
+                name: name,
+                kind: kind,
+                icon: icon,
+                color: color,
+                sortOrder: sortOrder,
+                level: level,
+                parentName: parentName,
+                parentSyncId: parentSyncId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String ledgerSyncId,
+                required String syncId,
+                required String name,
+                required String kind,
+                Value<String?> icon = const Value.absent(),
+                Value<String?> color = const Value.absent(),
+                Value<int> sortOrder = const Value.absent(),
+                Value<int> level = const Value.absent(),
+                Value<String?> parentName = const Value.absent(),
+                Value<String?> parentSyncId = const Value.absent(),
+                required DateTime updatedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => SharedLedgerCategoriesCompanion.insert(
+                ledgerSyncId: ledgerSyncId,
+                syncId: syncId,
+                name: name,
+                kind: kind,
+                icon: icon,
+                color: color,
+                sortOrder: sortOrder,
+                level: level,
+                parentName: parentName,
+                parentSyncId: parentSyncId,
+                updatedAt: updatedAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SharedLedgerCategoriesTableProcessedTableManager
-    = ProcessedTableManager<
-        _$SpitoutDatabase,
-        $SharedLedgerCategoriesTable,
+typedef $$SharedLedgerCategoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $SharedLedgerCategoriesTable,
+      SharedLedgerCategory,
+      $$SharedLedgerCategoriesTableFilterComposer,
+      $$SharedLedgerCategoriesTableOrderingComposer,
+      $$SharedLedgerCategoriesTableAnnotationComposer,
+      $$SharedLedgerCategoriesTableCreateCompanionBuilder,
+      $$SharedLedgerCategoriesTableUpdateCompanionBuilder,
+      (
         SharedLedgerCategory,
-        $$SharedLedgerCategoriesTableFilterComposer,
-        $$SharedLedgerCategoriesTableOrderingComposer,
-        $$SharedLedgerCategoriesTableAnnotationComposer,
-        $$SharedLedgerCategoriesTableCreateCompanionBuilder,
-        $$SharedLedgerCategoriesTableUpdateCompanionBuilder,
-        (
-          SharedLedgerCategory,
-          BaseReferences<_$SpitoutDatabase, $SharedLedgerCategoriesTable,
-              SharedLedgerCategory>
-        ),
-        SharedLedgerCategory,
-        PrefetchHooks Function()>;
-typedef $$SyncPullErrorsTableCreateCompanionBuilder = SyncPullErrorsCompanion
-    Function({
-  Value<int> id,
-  required int changeId,
-  Value<String?> ledgerExternalId,
-  required String entityType,
-  required String entitySyncId,
-  required String action,
-  required String rawChangeJson,
-  Value<String?> errorClass,
-  Value<String?> errorMessage,
-  Value<String?> stackTrace,
-  required DateTime firstSeenAt,
-  required DateTime lastAttemptAt,
-  Value<int> attemptCount,
-  Value<String?> userAction,
-  Value<DateTime?> resolvedAt,
-});
-typedef $$SyncPullErrorsTableUpdateCompanionBuilder = SyncPullErrorsCompanion
-    Function({
-  Value<int> id,
-  Value<int> changeId,
-  Value<String?> ledgerExternalId,
-  Value<String> entityType,
-  Value<String> entitySyncId,
-  Value<String> action,
-  Value<String> rawChangeJson,
-  Value<String?> errorClass,
-  Value<String?> errorMessage,
-  Value<String?> stackTrace,
-  Value<DateTime> firstSeenAt,
-  Value<DateTime> lastAttemptAt,
-  Value<int> attemptCount,
-  Value<String?> userAction,
-  Value<DateTime?> resolvedAt,
-});
+        BaseReferences<
+          _$SpitoutDatabase,
+          $SharedLedgerCategoriesTable,
+          SharedLedgerCategory
+        >,
+      ),
+      SharedLedgerCategory,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncPullErrorsTableCreateCompanionBuilder =
+    SyncPullErrorsCompanion Function({
+      Value<int> id,
+      required int changeId,
+      Value<String?> ledgerExternalId,
+      required String entityType,
+      required String entitySyncId,
+      required String action,
+      required String rawChangeJson,
+      Value<String?> errorClass,
+      Value<String?> errorMessage,
+      Value<String?> stackTrace,
+      required DateTime firstSeenAt,
+      required DateTime lastAttemptAt,
+      Value<int> attemptCount,
+      Value<String?> userAction,
+      Value<DateTime?> resolvedAt,
+    });
+typedef $$SyncPullErrorsTableUpdateCompanionBuilder =
+    SyncPullErrorsCompanion Function({
+      Value<int> id,
+      Value<int> changeId,
+      Value<String?> ledgerExternalId,
+      Value<String> entityType,
+      Value<String> entitySyncId,
+      Value<String> action,
+      Value<String> rawChangeJson,
+      Value<String?> errorClass,
+      Value<String?> errorMessage,
+      Value<String?> stackTrace,
+      Value<DateTime> firstSeenAt,
+      Value<DateTime> lastAttemptAt,
+      Value<int> attemptCount,
+      Value<String?> userAction,
+      Value<DateTime?> resolvedAt,
+    });
 
 class $$SyncPullErrorsTableFilterComposer
     extends Composer<_$SpitoutDatabase, $SyncPullErrorsTable> {
@@ -9457,50 +11340,79 @@ class $$SyncPullErrorsTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get changeId => $composableBuilder(
-      column: $table.changeId, builder: (column) => ColumnFilters(column));
+    column: $table.changeId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get ledgerExternalId => $composableBuilder(
-      column: $table.ledgerExternalId,
-      builder: (column) => ColumnFilters(column));
+    column: $table.ledgerExternalId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => ColumnFilters(column));
+    column: $table.entityType,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId, builder: (column) => ColumnFilters(column));
+    column: $table.entitySyncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get action => $composableBuilder(
-      column: $table.action, builder: (column) => ColumnFilters(column));
+    column: $table.action,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get rawChangeJson => $composableBuilder(
-      column: $table.rawChangeJson, builder: (column) => ColumnFilters(column));
+    column: $table.rawChangeJson,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get errorClass => $composableBuilder(
-      column: $table.errorClass, builder: (column) => ColumnFilters(column));
+    column: $table.errorClass,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => ColumnFilters(column));
+    column: $table.errorMessage,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get stackTrace => $composableBuilder(
-      column: $table.stackTrace, builder: (column) => ColumnFilters(column));
+    column: $table.stackTrace,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get firstSeenAt => $composableBuilder(
-      column: $table.firstSeenAt, builder: (column) => ColumnFilters(column));
+    column: $table.firstSeenAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get lastAttemptAt => $composableBuilder(
-      column: $table.lastAttemptAt, builder: (column) => ColumnFilters(column));
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get attemptCount => $composableBuilder(
-      column: $table.attemptCount, builder: (column) => ColumnFilters(column));
+    column: $table.attemptCount,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get userAction => $composableBuilder(
-      column: $table.userAction, builder: (column) => ColumnFilters(column));
+    column: $table.userAction,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get resolvedAt => $composableBuilder(
-      column: $table.resolvedAt, builder: (column) => ColumnFilters(column));
+    column: $table.resolvedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SyncPullErrorsTableOrderingComposer
@@ -9513,55 +11425,79 @@ class $$SyncPullErrorsTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get changeId => $composableBuilder(
-      column: $table.changeId, builder: (column) => ColumnOrderings(column));
+    column: $table.changeId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get ledgerExternalId => $composableBuilder(
-      column: $table.ledgerExternalId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerExternalId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => ColumnOrderings(column));
+    column: $table.entityType,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.entitySyncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get action => $composableBuilder(
-      column: $table.action, builder: (column) => ColumnOrderings(column));
+    column: $table.action,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get rawChangeJson => $composableBuilder(
-      column: $table.rawChangeJson,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.rawChangeJson,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get errorClass => $composableBuilder(
-      column: $table.errorClass, builder: (column) => ColumnOrderings(column));
+    column: $table.errorClass,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.errorMessage,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get stackTrace => $composableBuilder(
-      column: $table.stackTrace, builder: (column) => ColumnOrderings(column));
+    column: $table.stackTrace,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get firstSeenAt => $composableBuilder(
-      column: $table.firstSeenAt, builder: (column) => ColumnOrderings(column));
+    column: $table.firstSeenAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get lastAttemptAt => $composableBuilder(
-      column: $table.lastAttemptAt,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.lastAttemptAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get attemptCount => $composableBuilder(
-      column: $table.attemptCount,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.attemptCount,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get userAction => $composableBuilder(
-      column: $table.userAction, builder: (column) => ColumnOrderings(column));
+    column: $table.userAction,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get resolvedAt => $composableBuilder(
-      column: $table.resolvedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.resolvedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SyncPullErrorsTableAnnotationComposer
@@ -9580,63 +11516,96 @@ class $$SyncPullErrorsTableAnnotationComposer
       $composableBuilder(column: $table.changeId, builder: (column) => column);
 
   GeneratedColumn<String> get ledgerExternalId => $composableBuilder(
-      column: $table.ledgerExternalId, builder: (column) => column);
+    column: $table.ledgerExternalId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get entityType => $composableBuilder(
-      column: $table.entityType, builder: (column) => column);
+    column: $table.entityType,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get entitySyncId => $composableBuilder(
-      column: $table.entitySyncId, builder: (column) => column);
+    column: $table.entitySyncId,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get action =>
       $composableBuilder(column: $table.action, builder: (column) => column);
 
   GeneratedColumn<String> get rawChangeJson => $composableBuilder(
-      column: $table.rawChangeJson, builder: (column) => column);
+    column: $table.rawChangeJson,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get errorClass => $composableBuilder(
-      column: $table.errorClass, builder: (column) => column);
+    column: $table.errorClass,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get errorMessage => $composableBuilder(
-      column: $table.errorMessage, builder: (column) => column);
+    column: $table.errorMessage,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get stackTrace => $composableBuilder(
-      column: $table.stackTrace, builder: (column) => column);
+    column: $table.stackTrace,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get firstSeenAt => $composableBuilder(
-      column: $table.firstSeenAt, builder: (column) => column);
+    column: $table.firstSeenAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get lastAttemptAt => $composableBuilder(
-      column: $table.lastAttemptAt, builder: (column) => column);
+    column: $table.lastAttemptAt,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get attemptCount => $composableBuilder(
-      column: $table.attemptCount, builder: (column) => column);
+    column: $table.attemptCount,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get userAction => $composableBuilder(
-      column: $table.userAction, builder: (column) => column);
+    column: $table.userAction,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get resolvedAt => $composableBuilder(
-      column: $table.resolvedAt, builder: (column) => column);
+    column: $table.resolvedAt,
+    builder: (column) => column,
+  );
 }
 
-class $$SyncPullErrorsTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $SyncPullErrorsTable,
-    SyncPullError,
-    $$SyncPullErrorsTableFilterComposer,
-    $$SyncPullErrorsTableOrderingComposer,
-    $$SyncPullErrorsTableAnnotationComposer,
-    $$SyncPullErrorsTableCreateCompanionBuilder,
-    $$SyncPullErrorsTableUpdateCompanionBuilder,
-    (
-      SyncPullError,
-      BaseReferences<_$SpitoutDatabase, $SyncPullErrorsTable, SyncPullError>
-    ),
-    SyncPullError,
-    PrefetchHooks Function()> {
+class $$SyncPullErrorsTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $SyncPullErrorsTable,
+          SyncPullError,
+          $$SyncPullErrorsTableFilterComposer,
+          $$SyncPullErrorsTableOrderingComposer,
+          $$SyncPullErrorsTableAnnotationComposer,
+          $$SyncPullErrorsTableCreateCompanionBuilder,
+          $$SyncPullErrorsTableUpdateCompanionBuilder,
+          (
+            SyncPullError,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $SyncPullErrorsTable,
+              SyncPullError
+            >,
+          ),
+          SyncPullError,
+          PrefetchHooks Function()
+        > {
   $$SyncPullErrorsTableTableManager(
-      _$SpitoutDatabase db, $SyncPullErrorsTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $SyncPullErrorsTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -9645,116 +11614,119 @@ class $$SyncPullErrorsTableTableManager extends RootTableManager<
               $$SyncPullErrorsTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$SyncPullErrorsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> changeId = const Value.absent(),
-            Value<String?> ledgerExternalId = const Value.absent(),
-            Value<String> entityType = const Value.absent(),
-            Value<String> entitySyncId = const Value.absent(),
-            Value<String> action = const Value.absent(),
-            Value<String> rawChangeJson = const Value.absent(),
-            Value<String?> errorClass = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
-            Value<String?> stackTrace = const Value.absent(),
-            Value<DateTime> firstSeenAt = const Value.absent(),
-            Value<DateTime> lastAttemptAt = const Value.absent(),
-            Value<int> attemptCount = const Value.absent(),
-            Value<String?> userAction = const Value.absent(),
-            Value<DateTime?> resolvedAt = const Value.absent(),
-          }) =>
-              SyncPullErrorsCompanion(
-            id: id,
-            changeId: changeId,
-            ledgerExternalId: ledgerExternalId,
-            entityType: entityType,
-            entitySyncId: entitySyncId,
-            action: action,
-            rawChangeJson: rawChangeJson,
-            errorClass: errorClass,
-            errorMessage: errorMessage,
-            stackTrace: stackTrace,
-            firstSeenAt: firstSeenAt,
-            lastAttemptAt: lastAttemptAt,
-            attemptCount: attemptCount,
-            userAction: userAction,
-            resolvedAt: resolvedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int changeId,
-            Value<String?> ledgerExternalId = const Value.absent(),
-            required String entityType,
-            required String entitySyncId,
-            required String action,
-            required String rawChangeJson,
-            Value<String?> errorClass = const Value.absent(),
-            Value<String?> errorMessage = const Value.absent(),
-            Value<String?> stackTrace = const Value.absent(),
-            required DateTime firstSeenAt,
-            required DateTime lastAttemptAt,
-            Value<int> attemptCount = const Value.absent(),
-            Value<String?> userAction = const Value.absent(),
-            Value<DateTime?> resolvedAt = const Value.absent(),
-          }) =>
-              SyncPullErrorsCompanion.insert(
-            id: id,
-            changeId: changeId,
-            ledgerExternalId: ledgerExternalId,
-            entityType: entityType,
-            entitySyncId: entitySyncId,
-            action: action,
-            rawChangeJson: rawChangeJson,
-            errorClass: errorClass,
-            errorMessage: errorMessage,
-            stackTrace: stackTrace,
-            firstSeenAt: firstSeenAt,
-            lastAttemptAt: lastAttemptAt,
-            attemptCount: attemptCount,
-            userAction: userAction,
-            resolvedAt: resolvedAt,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> changeId = const Value.absent(),
+                Value<String?> ledgerExternalId = const Value.absent(),
+                Value<String> entityType = const Value.absent(),
+                Value<String> entitySyncId = const Value.absent(),
+                Value<String> action = const Value.absent(),
+                Value<String> rawChangeJson = const Value.absent(),
+                Value<String?> errorClass = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+                Value<DateTime> firstSeenAt = const Value.absent(),
+                Value<DateTime> lastAttemptAt = const Value.absent(),
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> userAction = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => SyncPullErrorsCompanion(
+                id: id,
+                changeId: changeId,
+                ledgerExternalId: ledgerExternalId,
+                entityType: entityType,
+                entitySyncId: entitySyncId,
+                action: action,
+                rawChangeJson: rawChangeJson,
+                errorClass: errorClass,
+                errorMessage: errorMessage,
+                stackTrace: stackTrace,
+                firstSeenAt: firstSeenAt,
+                lastAttemptAt: lastAttemptAt,
+                attemptCount: attemptCount,
+                userAction: userAction,
+                resolvedAt: resolvedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int changeId,
+                Value<String?> ledgerExternalId = const Value.absent(),
+                required String entityType,
+                required String entitySyncId,
+                required String action,
+                required String rawChangeJson,
+                Value<String?> errorClass = const Value.absent(),
+                Value<String?> errorMessage = const Value.absent(),
+                Value<String?> stackTrace = const Value.absent(),
+                required DateTime firstSeenAt,
+                required DateTime lastAttemptAt,
+                Value<int> attemptCount = const Value.absent(),
+                Value<String?> userAction = const Value.absent(),
+                Value<DateTime?> resolvedAt = const Value.absent(),
+              }) => SyncPullErrorsCompanion.insert(
+                id: id,
+                changeId: changeId,
+                ledgerExternalId: ledgerExternalId,
+                entityType: entityType,
+                entitySyncId: entitySyncId,
+                action: action,
+                rawChangeJson: rawChangeJson,
+                errorClass: errorClass,
+                errorMessage: errorMessage,
+                stackTrace: stackTrace,
+                firstSeenAt: firstSeenAt,
+                lastAttemptAt: lastAttemptAt,
+                attemptCount: attemptCount,
+                userAction: userAction,
+                resolvedAt: resolvedAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SyncPullErrorsTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $SyncPullErrorsTable,
-    SyncPullError,
-    $$SyncPullErrorsTableFilterComposer,
-    $$SyncPullErrorsTableOrderingComposer,
-    $$SyncPullErrorsTableAnnotationComposer,
-    $$SyncPullErrorsTableCreateCompanionBuilder,
-    $$SyncPullErrorsTableUpdateCompanionBuilder,
-    (
+typedef $$SyncPullErrorsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $SyncPullErrorsTable,
       SyncPullError,
-      BaseReferences<_$SpitoutDatabase, $SyncPullErrorsTable, SyncPullError>
-    ),
-    SyncPullError,
-    PrefetchHooks Function()>;
-typedef $$ExchangeRatesTableCreateCompanionBuilder = ExchangeRatesCompanion
-    Function({
-  required String baseCurrency,
-  required String quoteCurrency,
-  required String rateDate,
-  required String rate,
-  required String source,
-  required DateTime fetchedAt,
-  Value<int> rowid,
-});
-typedef $$ExchangeRatesTableUpdateCompanionBuilder = ExchangeRatesCompanion
-    Function({
-  Value<String> baseCurrency,
-  Value<String> quoteCurrency,
-  Value<String> rateDate,
-  Value<String> rate,
-  Value<String> source,
-  Value<DateTime> fetchedAt,
-  Value<int> rowid,
-});
+      $$SyncPullErrorsTableFilterComposer,
+      $$SyncPullErrorsTableOrderingComposer,
+      $$SyncPullErrorsTableAnnotationComposer,
+      $$SyncPullErrorsTableCreateCompanionBuilder,
+      $$SyncPullErrorsTableUpdateCompanionBuilder,
+      (
+        SyncPullError,
+        BaseReferences<_$SpitoutDatabase, $SyncPullErrorsTable, SyncPullError>,
+      ),
+      SyncPullError,
+      PrefetchHooks Function()
+    >;
+typedef $$ExchangeRatesTableCreateCompanionBuilder =
+    ExchangeRatesCompanion Function({
+      required String baseCurrency,
+      required String quoteCurrency,
+      required String rateDate,
+      required String rate,
+      required String source,
+      required DateTime fetchedAt,
+      Value<int> rowid,
+    });
+typedef $$ExchangeRatesTableUpdateCompanionBuilder =
+    ExchangeRatesCompanion Function({
+      Value<String> baseCurrency,
+      Value<String> quoteCurrency,
+      Value<String> rateDate,
+      Value<String> rate,
+      Value<String> source,
+      Value<DateTime> fetchedAt,
+      Value<int> rowid,
+    });
 
 class $$ExchangeRatesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $ExchangeRatesTable> {
@@ -9766,22 +11738,34 @@ class $$ExchangeRatesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency, builder: (column) => ColumnFilters(column));
+    column: $table.baseCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency, builder: (column) => ColumnFilters(column));
+    column: $table.quoteCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get rateDate => $composableBuilder(
-      column: $table.rateDate, builder: (column) => ColumnFilters(column));
+    column: $table.rateDate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get rate => $composableBuilder(
-      column: $table.rate, builder: (column) => ColumnFilters(column));
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get source => $composableBuilder(
-      column: $table.source, builder: (column) => ColumnFilters(column));
+    column: $table.source,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get fetchedAt => $composableBuilder(
-      column: $table.fetchedAt, builder: (column) => ColumnFilters(column));
+    column: $table.fetchedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ExchangeRatesTableOrderingComposer
@@ -9794,24 +11778,34 @@ class $$ExchangeRatesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.baseCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.quoteCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get rateDate => $composableBuilder(
-      column: $table.rateDate, builder: (column) => ColumnOrderings(column));
+    column: $table.rateDate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get rate => $composableBuilder(
-      column: $table.rate, builder: (column) => ColumnOrderings(column));
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get source => $composableBuilder(
-      column: $table.source, builder: (column) => ColumnOrderings(column));
+    column: $table.source,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get fetchedAt => $composableBuilder(
-      column: $table.fetchedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.fetchedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExchangeRatesTableAnnotationComposer
@@ -9824,10 +11818,14 @@ class $$ExchangeRatesTableAnnotationComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   GeneratedColumn<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency, builder: (column) => column);
+    column: $table.baseCurrency,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency, builder: (column) => column);
+    column: $table.quoteCurrency,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get rateDate =>
       $composableBuilder(column: $table.rateDate, builder: (column) => column);
@@ -9842,24 +11840,33 @@ class $$ExchangeRatesTableAnnotationComposer
       $composableBuilder(column: $table.fetchedAt, builder: (column) => column);
 }
 
-class $$ExchangeRatesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $ExchangeRatesTable,
-    ExchangeRate,
-    $$ExchangeRatesTableFilterComposer,
-    $$ExchangeRatesTableOrderingComposer,
-    $$ExchangeRatesTableAnnotationComposer,
-    $$ExchangeRatesTableCreateCompanionBuilder,
-    $$ExchangeRatesTableUpdateCompanionBuilder,
-    (
-      ExchangeRate,
-      BaseReferences<_$SpitoutDatabase, $ExchangeRatesTable, ExchangeRate>
-    ),
-    ExchangeRate,
-    PrefetchHooks Function()> {
+class $$ExchangeRatesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $ExchangeRatesTable,
+          ExchangeRate,
+          $$ExchangeRatesTableFilterComposer,
+          $$ExchangeRatesTableOrderingComposer,
+          $$ExchangeRatesTableAnnotationComposer,
+          $$ExchangeRatesTableCreateCompanionBuilder,
+          $$ExchangeRatesTableUpdateCompanionBuilder,
+          (
+            ExchangeRate,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $ExchangeRatesTable,
+              ExchangeRate
+            >,
+          ),
+          ExchangeRate,
+          PrefetchHooks Function()
+        > {
   $$ExchangeRatesTableTableManager(
-      _$SpitoutDatabase db, $ExchangeRatesTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $ExchangeRatesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -9868,82 +11875,85 @@ class $$ExchangeRatesTableTableManager extends RootTableManager<
               $$ExchangeRatesTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$ExchangeRatesTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<String> baseCurrency = const Value.absent(),
-            Value<String> quoteCurrency = const Value.absent(),
-            Value<String> rateDate = const Value.absent(),
-            Value<String> rate = const Value.absent(),
-            Value<String> source = const Value.absent(),
-            Value<DateTime> fetchedAt = const Value.absent(),
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ExchangeRatesCompanion(
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            rateDate: rateDate,
-            rate: rate,
-            source: source,
-            fetchedAt: fetchedAt,
-            rowid: rowid,
-          ),
-          createCompanionCallback: ({
-            required String baseCurrency,
-            required String quoteCurrency,
-            required String rateDate,
-            required String rate,
-            required String source,
-            required DateTime fetchedAt,
-            Value<int> rowid = const Value.absent(),
-          }) =>
-              ExchangeRatesCompanion.insert(
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            rateDate: rateDate,
-            rate: rate,
-            source: source,
-            fetchedAt: fetchedAt,
-            rowid: rowid,
-          ),
+          updateCompanionCallback:
+              ({
+                Value<String> baseCurrency = const Value.absent(),
+                Value<String> quoteCurrency = const Value.absent(),
+                Value<String> rateDate = const Value.absent(),
+                Value<String> rate = const Value.absent(),
+                Value<String> source = const Value.absent(),
+                Value<DateTime> fetchedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ExchangeRatesCompanion(
+                baseCurrency: baseCurrency,
+                quoteCurrency: quoteCurrency,
+                rateDate: rateDate,
+                rate: rate,
+                source: source,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String baseCurrency,
+                required String quoteCurrency,
+                required String rateDate,
+                required String rate,
+                required String source,
+                required DateTime fetchedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => ExchangeRatesCompanion.insert(
+                baseCurrency: baseCurrency,
+                quoteCurrency: quoteCurrency,
+                rateDate: rateDate,
+                rate: rate,
+                source: source,
+                fetchedAt: fetchedAt,
+                rowid: rowid,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$ExchangeRatesTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $ExchangeRatesTable,
-    ExchangeRate,
-    $$ExchangeRatesTableFilterComposer,
-    $$ExchangeRatesTableOrderingComposer,
-    $$ExchangeRatesTableAnnotationComposer,
-    $$ExchangeRatesTableCreateCompanionBuilder,
-    $$ExchangeRatesTableUpdateCompanionBuilder,
-    (
+typedef $$ExchangeRatesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $ExchangeRatesTable,
       ExchangeRate,
-      BaseReferences<_$SpitoutDatabase, $ExchangeRatesTable, ExchangeRate>
-    ),
-    ExchangeRate,
-    PrefetchHooks Function()>;
-typedef $$ExchangeRateOverridesTableCreateCompanionBuilder
-    = ExchangeRateOverridesCompanion Function({
-  Value<int> id,
-  Value<String?> syncId,
-  required String baseCurrency,
-  required String quoteCurrency,
-  required String rate,
-  Value<DateTime?> updatedAt,
-});
-typedef $$ExchangeRateOverridesTableUpdateCompanionBuilder
-    = ExchangeRateOverridesCompanion Function({
-  Value<int> id,
-  Value<String?> syncId,
-  Value<String> baseCurrency,
-  Value<String> quoteCurrency,
-  Value<String> rate,
-  Value<DateTime?> updatedAt,
-});
+      $$ExchangeRatesTableFilterComposer,
+      $$ExchangeRatesTableOrderingComposer,
+      $$ExchangeRatesTableAnnotationComposer,
+      $$ExchangeRatesTableCreateCompanionBuilder,
+      $$ExchangeRatesTableUpdateCompanionBuilder,
+      (
+        ExchangeRate,
+        BaseReferences<_$SpitoutDatabase, $ExchangeRatesTable, ExchangeRate>,
+      ),
+      ExchangeRate,
+      PrefetchHooks Function()
+    >;
+typedef $$ExchangeRateOverridesTableCreateCompanionBuilder =
+    ExchangeRateOverridesCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      required String baseCurrency,
+      required String quoteCurrency,
+      required String rate,
+      Value<DateTime?> updatedAt,
+    });
+typedef $$ExchangeRateOverridesTableUpdateCompanionBuilder =
+    ExchangeRateOverridesCompanion Function({
+      Value<int> id,
+      Value<String?> syncId,
+      Value<String> baseCurrency,
+      Value<String> quoteCurrency,
+      Value<String> rate,
+      Value<DateTime?> updatedAt,
+    });
 
 class $$ExchangeRateOverridesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $ExchangeRateOverridesTable> {
@@ -9955,22 +11965,34 @@ class $$ExchangeRateOverridesTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency, builder: (column) => ColumnFilters(column));
+    column: $table.baseCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency, builder: (column) => ColumnFilters(column));
+    column: $table.quoteCurrency,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get rate => $composableBuilder(
-      column: $table.rate, builder: (column) => ColumnFilters(column));
+    column: $table.rate,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$ExchangeRateOverridesTableOrderingComposer
@@ -9983,24 +12005,34 @@ class $$ExchangeRateOverridesTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.baseCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency,
-      builder: (column) => ColumnOrderings(column));
+    column: $table.quoteCurrency,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get rate => $composableBuilder(
-      column: $table.rate, builder: (column) => ColumnOrderings(column));
+    column: $table.rate,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ExchangeRateOverridesTableAnnotationComposer
@@ -10019,10 +12051,14 @@ class $$ExchangeRateOverridesTableAnnotationComposer
       $composableBuilder(column: $table.syncId, builder: (column) => column);
 
   GeneratedColumn<String> get baseCurrency => $composableBuilder(
-      column: $table.baseCurrency, builder: (column) => column);
+    column: $table.baseCurrency,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get quoteCurrency => $composableBuilder(
-      column: $table.quoteCurrency, builder: (column) => column);
+    column: $table.quoteCurrency,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<String> get rate =>
       $composableBuilder(column: $table.rate, builder: (column) => column);
@@ -10031,102 +12067,121 @@ class $$ExchangeRateOverridesTableAnnotationComposer
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$ExchangeRateOverridesTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $ExchangeRateOverridesTable,
-    ExchangeRateOverride,
-    $$ExchangeRateOverridesTableFilterComposer,
-    $$ExchangeRateOverridesTableOrderingComposer,
-    $$ExchangeRateOverridesTableAnnotationComposer,
-    $$ExchangeRateOverridesTableCreateCompanionBuilder,
-    $$ExchangeRateOverridesTableUpdateCompanionBuilder,
-    (
-      ExchangeRateOverride,
-      BaseReferences<_$SpitoutDatabase, $ExchangeRateOverridesTable,
-          ExchangeRateOverride>
-    ),
-    ExchangeRateOverride,
-    PrefetchHooks Function()> {
+class $$ExchangeRateOverridesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $ExchangeRateOverridesTable,
+          ExchangeRateOverride,
+          $$ExchangeRateOverridesTableFilterComposer,
+          $$ExchangeRateOverridesTableOrderingComposer,
+          $$ExchangeRateOverridesTableAnnotationComposer,
+          $$ExchangeRateOverridesTableCreateCompanionBuilder,
+          $$ExchangeRateOverridesTableUpdateCompanionBuilder,
+          (
+            ExchangeRateOverride,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $ExchangeRateOverridesTable,
+              ExchangeRateOverride
+            >,
+          ),
+          ExchangeRateOverride,
+          PrefetchHooks Function()
+        > {
   $$ExchangeRateOverridesTableTableManager(
-      _$SpitoutDatabase db, $ExchangeRateOverridesTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $ExchangeRateOverridesTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$ExchangeRateOverridesTableFilterComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createOrderingComposer: () =>
               $$ExchangeRateOverridesTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$ExchangeRateOverridesTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String> baseCurrency = const Value.absent(),
-            Value<String> quoteCurrency = const Value.absent(),
-            Value<String> rate = const Value.absent(),
-            Value<DateTime?> updatedAt = const Value.absent(),
-          }) =>
-              ExchangeRateOverridesCompanion(
-            id: id,
-            syncId: syncId,
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            rate: rate,
-            updatedAt: updatedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            required String baseCurrency,
-            required String quoteCurrency,
-            required String rate,
-            Value<DateTime?> updatedAt = const Value.absent(),
-          }) =>
-              ExchangeRateOverridesCompanion.insert(
-            id: id,
-            syncId: syncId,
-            baseCurrency: baseCurrency,
-            quoteCurrency: quoteCurrency,
-            rate: rate,
-            updatedAt: updatedAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> baseCurrency = const Value.absent(),
+                Value<String> quoteCurrency = const Value.absent(),
+                Value<String> rate = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => ExchangeRateOverridesCompanion(
+                id: id,
+                syncId: syncId,
+                baseCurrency: baseCurrency,
+                quoteCurrency: quoteCurrency,
+                rate: rate,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                required String baseCurrency,
+                required String quoteCurrency,
+                required String rate,
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => ExchangeRateOverridesCompanion.insert(
+                id: id,
+                syncId: syncId,
+                baseCurrency: baseCurrency,
+                quoteCurrency: quoteCurrency,
+                rate: rate,
+                updatedAt: updatedAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$ExchangeRateOverridesTableProcessedTableManager
-    = ProcessedTableManager<
-        _$SpitoutDatabase,
-        $ExchangeRateOverridesTable,
+typedef $$ExchangeRateOverridesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $ExchangeRateOverridesTable,
+      ExchangeRateOverride,
+      $$ExchangeRateOverridesTableFilterComposer,
+      $$ExchangeRateOverridesTableOrderingComposer,
+      $$ExchangeRateOverridesTableAnnotationComposer,
+      $$ExchangeRateOverridesTableCreateCompanionBuilder,
+      $$ExchangeRateOverridesTableUpdateCompanionBuilder,
+      (
         ExchangeRateOverride,
-        $$ExchangeRateOverridesTableFilterComposer,
-        $$ExchangeRateOverridesTableOrderingComposer,
-        $$ExchangeRateOverridesTableAnnotationComposer,
-        $$ExchangeRateOverridesTableCreateCompanionBuilder,
-        $$ExchangeRateOverridesTableUpdateCompanionBuilder,
-        (
-          ExchangeRateOverride,
-          BaseReferences<_$SpitoutDatabase, $ExchangeRateOverridesTable,
-              ExchangeRateOverride>
-        ),
-        ExchangeRateOverride,
-        PrefetchHooks Function()>;
-typedef $$SnapshotDirtyLedgersTableCreateCompanionBuilder
-    = SnapshotDirtyLedgersCompanion Function({
-  Value<int> ledgerId,
-  Value<DateTime> dirtyAt,
-});
-typedef $$SnapshotDirtyLedgersTableUpdateCompanionBuilder
-    = SnapshotDirtyLedgersCompanion Function({
-  Value<int> ledgerId,
-  Value<DateTime> dirtyAt,
-});
+        BaseReferences<
+          _$SpitoutDatabase,
+          $ExchangeRateOverridesTable,
+          ExchangeRateOverride
+        >,
+      ),
+      ExchangeRateOverride,
+      PrefetchHooks Function()
+    >;
+typedef $$SnapshotDirtyLedgersTableCreateCompanionBuilder =
+    SnapshotDirtyLedgersCompanion Function({
+      Value<int> ledgerId,
+      Value<DateTime> dirtyAt,
+    });
+typedef $$SnapshotDirtyLedgersTableUpdateCompanionBuilder =
+    SnapshotDirtyLedgersCompanion Function({
+      Value<int> ledgerId,
+      Value<DateTime> dirtyAt,
+    });
 
 class $$SnapshotDirtyLedgersTableFilterComposer
     extends Composer<_$SpitoutDatabase, $SnapshotDirtyLedgersTable> {
@@ -10138,10 +12193,14 @@ class $$SnapshotDirtyLedgersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get dirtyAt => $composableBuilder(
-      column: $table.dirtyAt, builder: (column) => ColumnFilters(column));
+    column: $table.dirtyAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$SnapshotDirtyLedgersTableOrderingComposer
@@ -10154,10 +12213,14 @@ class $$SnapshotDirtyLedgersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get dirtyAt => $composableBuilder(
-      column: $table.dirtyAt, builder: (column) => ColumnOrderings(column));
+    column: $table.dirtyAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$SnapshotDirtyLedgersTableAnnotationComposer
@@ -10176,93 +12239,110 @@ class $$SnapshotDirtyLedgersTableAnnotationComposer
       $composableBuilder(column: $table.dirtyAt, builder: (column) => column);
 }
 
-class $$SnapshotDirtyLedgersTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $SnapshotDirtyLedgersTable,
-    SnapshotDirtyLedger,
-    $$SnapshotDirtyLedgersTableFilterComposer,
-    $$SnapshotDirtyLedgersTableOrderingComposer,
-    $$SnapshotDirtyLedgersTableAnnotationComposer,
-    $$SnapshotDirtyLedgersTableCreateCompanionBuilder,
-    $$SnapshotDirtyLedgersTableUpdateCompanionBuilder,
-    (
-      SnapshotDirtyLedger,
-      BaseReferences<_$SpitoutDatabase, $SnapshotDirtyLedgersTable,
-          SnapshotDirtyLedger>
-    ),
-    SnapshotDirtyLedger,
-    PrefetchHooks Function()> {
+class $$SnapshotDirtyLedgersTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $SnapshotDirtyLedgersTable,
+          SnapshotDirtyLedger,
+          $$SnapshotDirtyLedgersTableFilterComposer,
+          $$SnapshotDirtyLedgersTableOrderingComposer,
+          $$SnapshotDirtyLedgersTableAnnotationComposer,
+          $$SnapshotDirtyLedgersTableCreateCompanionBuilder,
+          $$SnapshotDirtyLedgersTableUpdateCompanionBuilder,
+          (
+            SnapshotDirtyLedger,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $SnapshotDirtyLedgersTable,
+              SnapshotDirtyLedger
+            >,
+          ),
+          SnapshotDirtyLedger,
+          PrefetchHooks Function()
+        > {
   $$SnapshotDirtyLedgersTableTableManager(
-      _$SpitoutDatabase db, $SnapshotDirtyLedgersTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $SnapshotDirtyLedgersTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
               $$SnapshotDirtyLedgersTableFilterComposer($db: db, $table: table),
           createOrderingComposer: () =>
               $$SnapshotDirtyLedgersTableOrderingComposer(
-                  $db: db, $table: table),
+                $db: db,
+                $table: table,
+              ),
           createComputedFieldComposer: () =>
               $$SnapshotDirtyLedgersTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> ledgerId = const Value.absent(),
-            Value<DateTime> dirtyAt = const Value.absent(),
-          }) =>
-              SnapshotDirtyLedgersCompanion(
-            ledgerId: ledgerId,
-            dirtyAt: dirtyAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> ledgerId = const Value.absent(),
-            Value<DateTime> dirtyAt = const Value.absent(),
-          }) =>
-              SnapshotDirtyLedgersCompanion.insert(
-            ledgerId: ledgerId,
-            dirtyAt: dirtyAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> ledgerId = const Value.absent(),
+                Value<DateTime> dirtyAt = const Value.absent(),
+              }) => SnapshotDirtyLedgersCompanion(
+                ledgerId: ledgerId,
+                dirtyAt: dirtyAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> ledgerId = const Value.absent(),
+                Value<DateTime> dirtyAt = const Value.absent(),
+              }) => SnapshotDirtyLedgersCompanion.insert(
+                ledgerId: ledgerId,
+                dirtyAt: dirtyAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$SnapshotDirtyLedgersTableProcessedTableManager
-    = ProcessedTableManager<
-        _$SpitoutDatabase,
-        $SnapshotDirtyLedgersTable,
+typedef $$SnapshotDirtyLedgersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $SnapshotDirtyLedgersTable,
+      SnapshotDirtyLedger,
+      $$SnapshotDirtyLedgersTableFilterComposer,
+      $$SnapshotDirtyLedgersTableOrderingComposer,
+      $$SnapshotDirtyLedgersTableAnnotationComposer,
+      $$SnapshotDirtyLedgersTableCreateCompanionBuilder,
+      $$SnapshotDirtyLedgersTableUpdateCompanionBuilder,
+      (
         SnapshotDirtyLedger,
-        $$SnapshotDirtyLedgersTableFilterComposer,
-        $$SnapshotDirtyLedgersTableOrderingComposer,
-        $$SnapshotDirtyLedgersTableAnnotationComposer,
-        $$SnapshotDirtyLedgersTableCreateCompanionBuilder,
-        $$SnapshotDirtyLedgersTableUpdateCompanionBuilder,
-        (
-          SnapshotDirtyLedger,
-          BaseReferences<_$SpitoutDatabase, $SnapshotDirtyLedgersTable,
-              SnapshotDirtyLedger>
-        ),
-        SnapshotDirtyLedger,
-        PrefetchHooks Function()>;
-typedef $$LedgerVirtualUsersTableCreateCompanionBuilder
-    = LedgerVirtualUsersCompanion Function({
-  Value<int> id,
-  required int ledgerId,
-  Value<String?> syncId,
-  required String name,
-  Value<DateTime> createdAt,
-  Value<DateTime?> updatedAt,
-});
-typedef $$LedgerVirtualUsersTableUpdateCompanionBuilder
-    = LedgerVirtualUsersCompanion Function({
-  Value<int> id,
-  Value<int> ledgerId,
-  Value<String?> syncId,
-  Value<String> name,
-  Value<DateTime> createdAt,
-  Value<DateTime?> updatedAt,
-});
+        BaseReferences<
+          _$SpitoutDatabase,
+          $SnapshotDirtyLedgersTable,
+          SnapshotDirtyLedger
+        >,
+      ),
+      SnapshotDirtyLedger,
+      PrefetchHooks Function()
+    >;
+typedef $$LedgerVirtualUsersTableCreateCompanionBuilder =
+    LedgerVirtualUsersCompanion Function({
+      Value<int> id,
+      required int ledgerId,
+      Value<String?> syncId,
+      required String name,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
+typedef $$LedgerVirtualUsersTableUpdateCompanionBuilder =
+    LedgerVirtualUsersCompanion Function({
+      Value<int> id,
+      Value<int> ledgerId,
+      Value<String?> syncId,
+      Value<String> name,
+      Value<DateTime> createdAt,
+      Value<DateTime?> updatedAt,
+    });
 
 class $$LedgerVirtualUsersTableFilterComposer
     extends Composer<_$SpitoutDatabase, $LedgerVirtualUsersTable> {
@@ -10274,22 +12354,34 @@ class $$LedgerVirtualUsersTableFilterComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnFilters<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnFilters(column));
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnFilters(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnFilters(column));
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnFilters(column));
+    column: $table.name,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnFilters(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnFilters<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnFilters(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnFilters(column),
+  );
 }
 
 class $$LedgerVirtualUsersTableOrderingComposer
@@ -10302,22 +12394,34 @@ class $$LedgerVirtualUsersTableOrderingComposer
     super.$removeJoinBuilderFromRootComposer,
   });
   ColumnOrderings<int> get id => $composableBuilder(
-      column: $table.id, builder: (column) => ColumnOrderings(column));
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<int> get ledgerId => $composableBuilder(
-      column: $table.ledgerId, builder: (column) => ColumnOrderings(column));
+    column: $table.ledgerId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get syncId => $composableBuilder(
-      column: $table.syncId, builder: (column) => ColumnOrderings(column));
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<String> get name => $composableBuilder(
-      column: $table.name, builder: (column) => ColumnOrderings(column));
+    column: $table.name,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-      column: $table.createdAt, builder: (column) => ColumnOrderings(column));
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 
   ColumnOrderings<DateTime> get updatedAt => $composableBuilder(
-      column: $table.updatedAt, builder: (column) => ColumnOrderings(column));
+    column: $table.updatedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$LedgerVirtualUsersTableAnnotationComposer
@@ -10348,25 +12452,33 @@ class $$LedgerVirtualUsersTableAnnotationComposer
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
 }
 
-class $$LedgerVirtualUsersTableTableManager extends RootTableManager<
-    _$SpitoutDatabase,
-    $LedgerVirtualUsersTable,
-    LedgerVirtualUser,
-    $$LedgerVirtualUsersTableFilterComposer,
-    $$LedgerVirtualUsersTableOrderingComposer,
-    $$LedgerVirtualUsersTableAnnotationComposer,
-    $$LedgerVirtualUsersTableCreateCompanionBuilder,
-    $$LedgerVirtualUsersTableUpdateCompanionBuilder,
-    (
-      LedgerVirtualUser,
-      BaseReferences<_$SpitoutDatabase, $LedgerVirtualUsersTable,
-          LedgerVirtualUser>
-    ),
-    LedgerVirtualUser,
-    PrefetchHooks Function()> {
+class $$LedgerVirtualUsersTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $LedgerVirtualUsersTable,
+          LedgerVirtualUser,
+          $$LedgerVirtualUsersTableFilterComposer,
+          $$LedgerVirtualUsersTableOrderingComposer,
+          $$LedgerVirtualUsersTableAnnotationComposer,
+          $$LedgerVirtualUsersTableCreateCompanionBuilder,
+          $$LedgerVirtualUsersTableUpdateCompanionBuilder,
+          (
+            LedgerVirtualUser,
+            BaseReferences<
+              _$SpitoutDatabase,
+              $LedgerVirtualUsersTable,
+              LedgerVirtualUser
+            >,
+          ),
+          LedgerVirtualUser,
+          PrefetchHooks Function()
+        > {
   $$LedgerVirtualUsersTableTableManager(
-      _$SpitoutDatabase db, $LedgerVirtualUsersTable table)
-      : super(TableManagerState(
+    _$SpitoutDatabase db,
+    $LedgerVirtualUsersTable table,
+  ) : super(
+        TableManagerState(
           db: db,
           table: table,
           createFilteringComposer: () =>
@@ -10375,62 +12487,70 @@ class $$LedgerVirtualUsersTableTableManager extends RootTableManager<
               $$LedgerVirtualUsersTableOrderingComposer($db: db, $table: table),
           createComputedFieldComposer: () =>
               $$LedgerVirtualUsersTableAnnotationComposer(
-                  $db: db, $table: table),
-          updateCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            Value<int> ledgerId = const Value.absent(),
-            Value<String?> syncId = const Value.absent(),
-            Value<String> name = const Value.absent(),
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> updatedAt = const Value.absent(),
-          }) =>
-              LedgerVirtualUsersCompanion(
-            id: id,
-            ledgerId: ledgerId,
-            syncId: syncId,
-            name: name,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
-          createCompanionCallback: ({
-            Value<int> id = const Value.absent(),
-            required int ledgerId,
-            Value<String?> syncId = const Value.absent(),
-            required String name,
-            Value<DateTime> createdAt = const Value.absent(),
-            Value<DateTime?> updatedAt = const Value.absent(),
-          }) =>
-              LedgerVirtualUsersCompanion.insert(
-            id: id,
-            ledgerId: ledgerId,
-            syncId: syncId,
-            name: name,
-            createdAt: createdAt,
-            updatedAt: updatedAt,
-          ),
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> ledgerId = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String> name = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => LedgerVirtualUsersCompanion(
+                id: id,
+                ledgerId: ledgerId,
+                syncId: syncId,
+                name: name,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int ledgerId,
+                Value<String?> syncId = const Value.absent(),
+                required String name,
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<DateTime?> updatedAt = const Value.absent(),
+              }) => LedgerVirtualUsersCompanion.insert(
+                id: id,
+                ledgerId: ledgerId,
+                syncId: syncId,
+                name: name,
+                createdAt: createdAt,
+                updatedAt: updatedAt,
+              ),
           withReferenceMapper: (p0) => p0
               .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
               .toList(),
           prefetchHooksCallback: null,
-        ));
+        ),
+      );
 }
 
-typedef $$LedgerVirtualUsersTableProcessedTableManager = ProcessedTableManager<
-    _$SpitoutDatabase,
-    $LedgerVirtualUsersTable,
-    LedgerVirtualUser,
-    $$LedgerVirtualUsersTableFilterComposer,
-    $$LedgerVirtualUsersTableOrderingComposer,
-    $$LedgerVirtualUsersTableAnnotationComposer,
-    $$LedgerVirtualUsersTableCreateCompanionBuilder,
-    $$LedgerVirtualUsersTableUpdateCompanionBuilder,
-    (
+typedef $$LedgerVirtualUsersTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $LedgerVirtualUsersTable,
       LedgerVirtualUser,
-      BaseReferences<_$SpitoutDatabase, $LedgerVirtualUsersTable,
-          LedgerVirtualUser>
-    ),
-    LedgerVirtualUser,
-    PrefetchHooks Function()>;
+      $$LedgerVirtualUsersTableFilterComposer,
+      $$LedgerVirtualUsersTableOrderingComposer,
+      $$LedgerVirtualUsersTableAnnotationComposer,
+      $$LedgerVirtualUsersTableCreateCompanionBuilder,
+      $$LedgerVirtualUsersTableUpdateCompanionBuilder,
+      (
+        LedgerVirtualUser,
+        BaseReferences<
+          _$SpitoutDatabase,
+          $LedgerVirtualUsersTable,
+          LedgerVirtualUser
+        >,
+      ),
+      LedgerVirtualUser,
+      PrefetchHooks Function()
+    >;
 
 class $SpitoutDatabaseManager {
   final _$SpitoutDatabase _db;
@@ -10453,7 +12573,9 @@ class $SpitoutDatabaseManager {
       $$LedgerMembersTableTableManager(_db, _db.ledgerMembers);
   $$SharedLedgerCategoriesTableTableManager get sharedLedgerCategories =>
       $$SharedLedgerCategoriesTableTableManager(
-          _db, _db.sharedLedgerCategories);
+        _db,
+        _db.sharedLedgerCategories,
+      );
   $$SyncPullErrorsTableTableManager get syncPullErrors =>
       $$SyncPullErrorsTableTableManager(_db, _db.syncPullErrors);
   $$ExchangeRatesTableTableManager get exchangeRates =>

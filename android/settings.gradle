@@ -18,9 +18,9 @@ pluginManagement {
 
 plugins {
     id "dev.flutter.flutter-plugin-loader" version "1.0.0"
-    // share_plus 12.x requires newer Android build tooling.
-    id "com.android.application" version "8.12.1" apply false
-    id "org.jetbrains.kotlin.android" version "2.2.0" apply false
+    // Flutter 3.44.6 官方模板组合：AGP 9.0.1 + Kotlin Gradle 插件 2.3.20。
+    id "com.android.application" version "9.0.1" apply false
+    id "org.jetbrains.kotlin.android" version "2.3.20" apply false
 }
 
 include ":app"

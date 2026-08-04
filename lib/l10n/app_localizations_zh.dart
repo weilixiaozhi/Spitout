@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -316,7 +318,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgersDeleteConfirm => '删除账本';
 
   @override
-  String get ledgersDeleteMessage => '确定要删除该账本及其全部记录吗？此操作不可恢复。\\n若云端存在备份，也会一并删除。';
+  String get ledgersDeleteMessage =>
+      '确定要删除该账本及其全部记录吗？此操作不可恢复。\\n若云端存在备份，也会一并删除。';
 
   @override
   String get ledgersDeleted => '已删除';
@@ -498,10 +501,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get importCategoryNotSelected => '未选择\"分类\"列，请点击\"上一步\"返回并设置\"分类\"的列，再继续。';
+  String get importCategoryNotSelected =>
+      '未选择\"分类\"列，请点击\"上一步\"返回并设置\"分类\"的列，再继续。';
 
   @override
-  String get importCategoryMappingDescription => '请将左侧\"源分类名\"映射到系统内已有分类（或保持原名自动创建/合并）';
+  String get importCategoryMappingDescription =>
+      '请将左侧\"源分类名\"映射到系统内已有分类（或保持原名自动创建/合并）';
 
   @override
   String get importKeepOriginalName => '保持原名（自动创建/合并）';
@@ -536,7 +541,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get importInProgress => '正在导入…';
 
   @override
-  String importProgressDetail(Object done, Object fail, Object ok, Object total) {
+  String importProgressDetail(
+    Object done,
+    Object fail,
+    Object ok,
+    Object total,
+  ) {
     return '已完成：$done/$total，成功 $ok，失败 $fail';
   }
 
@@ -885,7 +895,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get categorySecondLevelLabel => '二级分类';
 
   @override
-  String get categoryExpenseList => '餐饮-交通-购物-娱乐-居家-家庭-通讯-水电-住房-医疗-教育-宠物-运动-数码-旅行-烟酒-母婴-美容-维修-社交-学习-汽车-打车-地铁-外卖-物业-停车-捐赠-送礼-纳税-饮料-服装-零食-发红包-水果-游戏-书籍-爱人-装修-日用品-彩票-股票-社保-快递-工作-转账-其他';
+  String get categoryExpenseList =>
+      '餐饮-交通-购物-娱乐-居家-家庭-通讯-水电-住房-医疗-教育-宠物-运动-数码-旅行-烟酒-母婴-美容-维修-社交-学习-汽车-打车-地铁-外卖-物业-停车-捐赠-送礼-纳税-饮料-服装-零食-发红包-水果-游戏-书籍-爱人-装修-日用品-彩票-股票-社保-快递-工作-转账-其他';
 
   @override
   String get categoryExpenseDining => '餐饮-早餐-午餐-晚餐-美团外卖-饿了么外卖-京东外卖-餐厅-美食';
@@ -1103,7 +1114,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderDescription => '提示：开启记账提醒后，系统会在每天指定时间发送通知提醒您记录支出。';
 
   @override
-  String get reminderAndroidInstructions => '如果通知无法正常工作，请检查：\n• 已允许应用发送通知\n• 关闭应用的电池优化/省电模式\n• 允许应用在后台运行和自启动\n• Android 12+需要精确闹钟权限\n\n📱 小米手机特殊设置：\n• 设置 > 应用管理 > Spitout > 通知管理\n• 点击\"记账提醒\"渠道\n• 设置重要性为\"紧急\"或\"高\"\n• 开启\"横幅通知\"、\"声音\"、\"震动\"\n• 安全中心 > 应用管理 > 权限 > 自启动\n\n🔒 锁定后台方法：\n• 最近任务中找到Spitout\n• 向下拉动应用卡片显示锁定图标\n• 点击锁定图标防止被清理';
+  String get reminderAndroidInstructions =>
+      '如果通知无法正常工作，请检查：\n• 已允许应用发送通知\n• 关闭应用的电池优化/省电模式\n• 允许应用在后台运行和自启动\n• Android 12+需要精确闹钟权限\n\n📱 小米手机特殊设置：\n• 设置 > 应用管理 > Spitout > 通知管理\n• 点击\"记账提醒\"渠道\n• 设置重要性为\"紧急\"或\"高\"\n• 开启\"横幅通知\"、\"声音\"、\"震动\"\n• 安全中心 > 应用管理 > 权限 > 自启动\n\n🔒 锁定后台方法：\n• 最近任务中找到Spitout\n• 向下拉动应用卡片显示锁定图标\n• 点击锁定图标防止被清理';
 
   @override
   String get categoryDetailLoadFailed => '加载失败';
@@ -1206,7 +1218,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get categorySharedManageBannerOwner => '共享账本：分类的新增、修改、删除会同步给所有成员';
 
   @override
-  String get categorySharedManageBannerEditor => '共享账本记账使用所有者的分类；此处的编辑仅影响你的个人分类';
+  String get categorySharedManageBannerEditor =>
+      '共享账本记账使用所有者的分类；此处的编辑仅影响你的个人分类';
 
   @override
   String get categorySyncFailedBeforeInvite => '分类同步失败，请检查网络后重试';
@@ -1283,7 +1296,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudMultiDeviceWarningTitle => '多设备使用提醒';
 
   @override
-  String get cloudMultiDeviceWarningMessage => '换设备前记得先上传，到新设备后先下载再记账。不要同时在两台设备上记同一个账本。点击查看详情 →';
+  String get cloudMultiDeviceWarningMessage =>
+      '换设备前记得先上传，到新设备后先下载再记账。不要同时在两台设备上记同一个账本。点击查看详情 →';
 
   @override
   String get cloudWebdavUrlLabel => 'WebDAV 服务器地址';
@@ -1370,7 +1384,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudClearConfigConfirmTitle => '清除云端配置';
 
   @override
-  String get cloudClearConfigConfirmMessage => '确定要清除该云端服务的配置吗？\n云端已备份的数据不会被删除，你可以随时重新配置并恢复。';
+  String get cloudClearConfigConfirmMessage =>
+      '确定要清除该云端服务的配置吗？\n云端已备份的数据不会被删除，你可以随时重新配置并恢复。';
 
   @override
   String get cloudClearConfigDone => '配置已清除';
@@ -1653,7 +1668,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recurringTransactionUsageTitle => '使用说明';
 
   @override
-  String get recurringTransactionUsageContent => '周期记账会在每次冷启动进入App时自动扫描并生成账单。设置日期后，系统会在该日期之后的冷启动时创建对应账单。例如：设置11月27日，则会在11月27日之后的首次启动时自动记账。';
+  String get recurringTransactionUsageContent =>
+      '周期记账会在每次冷启动进入App时自动扫描并生成账单。设置日期后，系统会在该日期之后的冷启动时创建对应账单。例如：设置11月27日，则会在11月27日之后的首次启动时自动记账。';
 
   @override
   String get ledgerSelectTitle => '选择账本';
@@ -1668,7 +1684,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get syncNotLoggedInMessage => '未登录';
 
   @override
-  String get syncCloudBackupCorruptedMessage => '云端备份内容无法解析，可能是早期版本编码问题造成的损坏。请点击\\\"上传当前账本到云端\\\"覆盖修复。';
+  String get syncCloudBackupCorruptedMessage =>
+      '云端备份内容无法解析，可能是早期版本编码问题造成的损坏。请点击\\\"上传当前账本到云端\\\"覆盖修复。';
 
   @override
   String get syncNoCloudBackupMessage => '云端暂无备份';
@@ -1703,7 +1720,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get storagePermissionTitle => '需要存储权限';
 
   @override
-  String get storagePermissionMessage => 'Android 11 及以上版本需授予「所有文件访问」权限，才能将文件保存到公共 Download 目录（文件管理器可见、卸载应用不丢失）。\n\n选择「仍要继续」将保存到应用私有目录，文件管理器不可见，且卸载应用后会被删除。';
+  String get storagePermissionMessage =>
+      'Android 11 及以上版本需授予「所有文件访问」权限，才能将文件保存到公共 Download 目录（文件管理器可见、卸载应用不丢失）。\n\n选择「仍要继续」将保存到应用私有目录，文件管理器不可见，且卸载应用后会被删除。';
 
   @override
   String get storagePermissionGrant => '去授权';
@@ -2077,25 +2095,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudTutorialTitle => '使用教程';
 
   @override
-  String get cloudTutorialIntro => 'Spitout Cloud 是可以自建的云同步服务端,支持多设备实时协同。流程很简单:';
+  String get cloudTutorialIntro =>
+      'Spitout Cloud 是可以自建的云同步服务端,支持多设备实时协同。流程很简单:';
 
   @override
   String get cloudTutorialStep1Title => '第一步:部署或选择服务器';
 
   @override
-  String get cloudTutorialStep1Desc => '自己部署:Docker 一行命令拉起(见 GitHub README 的 Docker 指南)。或直接使用朋友/团队已有的 Spitout Cloud 服务器。';
+  String get cloudTutorialStep1Desc =>
+      '自己部署:Docker 一行命令拉起(见 GitHub README 的 Docker 指南)。或直接使用朋友/团队已有的 Spitout Cloud 服务器。';
 
   @override
   String get cloudTutorialStep2Title => '第二步:获取账号';
 
   @override
-  String get cloudTutorialStep2Desc => 'Spitout Cloud 不支持自助注册(避免公网服务被滥用)。自己部署的同学:首次启动 Docker 日志里会打印随机管理员账号密码,直接用。加入他人服务器的同学:让管理员在 Web 后台 →「用户」里帮你添加账号。';
+  String get cloudTutorialStep2Desc =>
+      'Spitout Cloud 不支持自助注册(避免公网服务被滥用)。自己部署的同学:首次启动 Docker 日志里会打印随机管理员账号密码,直接用。加入他人服务器的同学:让管理员在 Web 后台 →「用户」里帮你添加账号。';
 
   @override
   String get cloudTutorialStep3Title => '第三步:登录并开启同步';
 
   @override
-  String get cloudTutorialStep3Desc => 'App 里选「Spitout Cloud」,填服务器地址 + 管理员给你的账号,登录。首次会全量上传你本地所有账本数据,之后每次编辑实时推送。';
+  String get cloudTutorialStep3Desc =>
+      'App 里选「Spitout Cloud」,填服务器地址 + 管理员给你的账号,登录。首次会全量上传你本地所有账本数据,之后每次编辑实时推送。';
 
   @override
   String get cloudTutorialStep4Title => '第四步:其他设备登录';
@@ -2107,16 +2129,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudTutorialTipTitle => '小贴士';
 
   @override
-  String get cloudTutorialTipDesc => 'Web 端地址 = 服务器地址,浏览器直接访问即可。登录后可以管理账本、成员、查看日志。';
+  String get cloudTutorialTipDesc =>
+      'Web 端地址 = 服务器地址,浏览器直接访问即可。登录后可以管理账本、成员、查看日志。';
 
   @override
   String get cloudTutorialFeaturesTitle => '特色功能';
 
   @override
-  String get cloudTutorialFeature1 => '📱 多设备实时协同:手机 A + 手机 B + Web 三端同账号,数据秒级同步';
+  String get cloudTutorialFeature1 =>
+      '📱 多设备实时协同:手机 A + 手机 B + Web 三端同账号,数据秒级同步';
 
   @override
-  String get cloudTutorialFeature2 => '🌐 自带 Web 管理端:一个 Docker 镜像包含 server + web,浏览器即可使用';
+  String get cloudTutorialFeature2 =>
+      '🌐 自带 Web 管理端:一个 Docker 镜像包含 server + web,浏览器即可使用';
 
   @override
   String get cloudTutorialFeature3 => '👥 多用户独立:一个服务器可以多人注册,各自数据完全隔离';
@@ -2128,7 +2153,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudTutorialGotIt => '我知道了';
 
   @override
-  String get cloudSyncHint => '下载时可自动对比差异并逐条预览。非实时同步，请避免多设备同时编辑同一账本。同步范围为账本数据（含关联的账户、分类）。';
+  String get cloudSyncHint =>
+      '下载时可自动对比差异并逐条预览。非实时同步，请避免多设备同时编辑同一账本。同步范围为账本数据（含关联的账户、分类）。';
 
   @override
   String get appearanceSettings => '偏好调节';
@@ -2197,10 +2223,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get configImportExportInfoTitle => '功能说明';
 
   @override
-  String get configImportExportInfoMessage => '备份和恢复应用配置，用于跨设备迁移或恢复设置。导出为 YAML 格式，可查看和编辑。\n\n仅包含应用配置，不包含交易记录（交易数据请使用明细导入导出功能）。';
+  String get configImportExportInfoMessage =>
+      '备份和恢复应用配置，用于跨设备迁移或恢复设置。导出为 YAML 格式，可查看和编辑。\n\n仅包含应用配置，不包含交易记录（交易数据请使用明细导入导出功能）。';
 
   @override
-  String get configImportExportWarning => '配置文件包含云服务密钥、密码等敏感信息，请妥善保管。导入会覆盖现有同名配置，建议先导出备份。';
+  String get configImportExportWarning =>
+      '配置文件包含云服务密钥、密码等敏感信息，请妥善保管。导入会覆盖现有同名配置，建议先导出备份。';
 
   @override
   String get configExportTitle => '导出配置';
@@ -2440,7 +2468,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get syncPreviewOldFormat => '云端数据格式较旧，将执行全量替换';
 
   @override
-  String get syncPreviewOldFormatMessage => '云端数据不包含同步标识，无法逐条对比。将清空当前账本数据并从云端重新导入。';
+  String get syncPreviewOldFormatMessage =>
+      '云端数据不包含同步标识，无法逐条对比。将清空当前账本数据并从云端重新导入。';
 
   @override
   String syncPreviewApplied(int count) {
@@ -2487,7 +2516,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSyncGuideWrongItem1 => '两台设备同时编辑同一个账本，后上传的会覆盖先上传的改动';
 
   @override
-  String get cloudSyncGuideWrongItem2 => '上传后立刻在另一台设备下载，文件服务可能有几秒到几分钟的同步延迟，等一会再试';
+  String get cloudSyncGuideWrongItem2 =>
+      '上传后立刻在另一台设备下载，文件服务可能有几秒到几分钟的同步延迟，等一会再试';
 
   @override
   String get cloudSyncGuideWrongItem3 => '长时间不同步后一次性下载大量变更，容易遗漏需要处理的差异';
@@ -2502,7 +2532,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSyncGuideLimitItem2 => '无冲突合并：不会自动合并两端的修改，以最后上传的为准';
 
   @override
-  String get cloudSyncGuideLimitItem3 => '文件服务延迟：上传后云端文件可能需要几秒到几分钟才能被其他设备读取，取决于你使用的云服务';
+  String get cloudSyncGuideLimitItem3 =>
+      '文件服务延迟：上传后云端文件可能需要几秒到几分钟才能被其他设备读取，取决于你使用的云服务';
 
   @override
   String get appLockTitle => '应用上锁';
@@ -2582,25 +2613,29 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSyncHelpModesTitle => '三种同步方式';
 
   @override
-  String get cloudSyncHelpModesBody => '• 增量同步（日常自动）：记一笔 / 改一笔后，只把这条变化自动上传下载，快、无需手动操作 —— 平时一直在跑的就是它。\n• 全量上传：首次开启云同步、或云端还没有这个账本的数据时，把本地全部数据一次性推上云。\n• 全量下载：换新设备、重装、或本地为空时，从云端把全部数据拉下来。';
+  String get cloudSyncHelpModesBody =>
+      '• 增量同步（日常自动）：记一笔 / 改一笔后，只把这条变化自动上传下载，快、无需手动操作 —— 平时一直在跑的就是它。\n• 全量上传：首次开启云同步、或云端还没有这个账本的数据时，把本地全部数据一次性推上云。\n• 全量下载：换新设备、重装、或本地为空时，从云端把全部数据拉下来。';
 
   @override
   String get cloudSyncHelpWhenFullTitle => '什么时候才会走全量？';
 
   @override
-  String get cloudSyncHelpWhenFullBody => '全量只在某一端数据为空时才会自动触发（首次开启云同步 / 换新设备 / 重装 / 清空了本地或云端数据）。只要两端都有数据，之后一直走增量，不会无故重来。想强制重新全量同步，得先清空对应端的数据。';
+  String get cloudSyncHelpWhenFullBody =>
+      '全量只在某一端数据为空时才会自动触发（首次开启云同步 / 换新设备 / 重装 / 清空了本地或云端数据）。只要两端都有数据，之后一直走增量，不会无故重来。想强制重新全量同步，得先清空对应端的数据。';
 
   @override
   String get cloudSyncHelpStuckTitle => '为什么有时同步不动 / 卡住';
 
   @override
-  String get cloudSyncHelpStuckBody => '• 全量上传 / 下载不支持断点续传：中途断网、或 App 被切到后台被系统杀掉，会从头重来，不会接着传。数据多时请用稳定网络（建议 Wi-Fi）耐心等它跑完，别中途切走。\n• 增量同步是断点安全的，日常同步不受影响。';
+  String get cloudSyncHelpStuckBody =>
+      '• 全量上传 / 下载不支持断点续传：中途断网、或 App 被切到后台被系统杀掉，会从头重来，不会接着传。数据多时请用稳定网络（建议 Wi-Fi）耐心等它跑完，别中途切走。\n• 增量同步是断点安全的，日常同步不受影响。';
 
   @override
   String get cloudSyncHelpTroubleshootTitle => '排查办法';
 
   @override
-  String get cloudSyncHelpTroubleshootBody => '• 先在本页下拉做一次「深度检测」，对比本地与云端差异。\n• 仍有问题，去「日志中心」查看同步日志（含失败原因），方便反馈。';
+  String get cloudSyncHelpTroubleshootBody =>
+      '• 先在本页下拉做一次「深度检测」，对比本地与云端差异。\n• 仍有问题，去「日志中心」查看同步日志（含失败原因），方便反馈。';
 
   @override
   String get cloudSyncHelpOpenLogCenter => '打开日志中心';
@@ -2791,10 +2826,12 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get sharedInviteWarning => '⚠️ 不要把邀请码发到公开群 / 朋友圈。拿到码的任何人都可加入账本;泄露后请到成员管理页撤销并重新生成。';
+  String get sharedInviteWarning =>
+      '⚠️ 不要把邀请码发到公开群 / 朋友圈。拿到码的任何人都可加入账本;泄露后请到成员管理页撤销并重新生成。';
 
   @override
-  String get sharedInviteInstruction => '把邀请码或短链发给对方。对方装上 Spitout 后,点击链接或在「我的 → 加入共享账本」输入码即可加入。';
+  String get sharedInviteInstruction =>
+      '把邀请码或短链发给对方。对方装上 Spitout 后,点击链接或在「我的 → 加入共享账本」输入码即可加入。';
 
   @override
   String sharedInviteShareText(String ledger, String code, String url) {
@@ -3036,7 +3073,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerCurrencyChangeRecalcHint => '修改本位币将按当前汇率重算全部历史交易的折算值';
 
   @override
-  String get ledgerCurrencyChangeRecalcWarning => '历史折算值将按最新汇率重算并覆盖，往返切换（切走再切回）也无法还原原始折算值';
+  String get ledgerCurrencyChangeRecalcWarning =>
+      '历史折算值将按最新汇率重算并覆盖，往返切换（切走再切回）也无法还原原始折算值';
 
   @override
   String get recalcForeignTxBanner => '检测到该账本有未折算的外币交易';
@@ -3409,19 +3447,24 @@ class AppLocalizationsZh extends AppLocalizations {
   String get detailImportExportExportSubtitle => '将账本明细导出为 CSV 文件';
 
   @override
-  String get detailImportExportImportPoint1 => '支持通用 CSV、支付宝、微信三类账单，文件格式可为 CSV/TSV/XLSX';
+  String get detailImportExportImportPoint1 =>
+      '支持通用 CSV、支付宝、微信三类账单，文件格式可为 CSV/TSV/XLSX';
 
   @override
-  String get detailImportExportImportPoint2 => '差异仅在文件结构：通用 CSV 为纯净表头；支付宝、微信账单含描述性前言，应用自动跳过并定位表头';
+  String get detailImportExportImportPoint2 =>
+      '差异仅在文件结构：通用 CSV 为纯净表头；支付宝、微信账单含描述性前言，应用自动跳过并定位表头';
 
   @override
-  String get detailImportExportImportPoint3 => '三类账单统一通过列映射识别（日期、类型、金额、币种、分类、二级分类、备注），导入流程一致';
+  String get detailImportExportImportPoint3 =>
+      '三类账单统一通过列映射识别（日期、类型、金额、币种、分类、二级分类、备注），导入流程一致';
 
   @override
-  String get detailImportExportExportPoint1 => '将所选账本交易明细导出为 CSV 文件，UTF-8 BOM 编码，Excel 可直接打开';
+  String get detailImportExportExportPoint1 =>
+      '将所选账本交易明细导出为 CSV 文件，UTF-8 BOM 编码，Excel 可直接打开';
 
   @override
-  String get detailImportExportExportPoint2 => '文件名为 spitout_时间戳.csv，默认保存至系统 Download/Spitout 目录';
+  String get detailImportExportExportPoint2 =>
+      '文件名为 spitout_时间戳.csv，默认保存至系统 Download/Spitout 目录';
 
   @override
   String get detailImportExportExportPoint3 => '包含字段如下：';
@@ -3456,7 +3499,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exchangeRateInfoTitle => '关于主币种';
 
   @override
-  String get exchangeRateInfoMessage => '主币种是当前账本的本位币：账本内的外币交易会按汇率折算成主币种，在统计页和资产总览中统一汇总比较。每个账本各有自己的主币种，你可以随时切换；切换后将按最新汇率重算本账本全部交易的折算值。\n\n汇率默认从公开数据源每日自动拉取，也支持你点击下方列表中的「编辑」为任意币种手动设置汇率——手动汇率会覆盖自动数据并立即生效。';
+  String get exchangeRateInfoMessage =>
+      '主币种是当前账本的本位币：账本内的外币交易会按汇率折算成主币种，在统计页和资产总览中统一汇总比较。每个账本各有自己的主币种，你可以随时切换；切换后将按最新汇率重算本账本全部交易的折算值。\n\n汇率默认从公开数据源每日自动拉取，也支持你点击下方列表中的「编辑」为任意币种手动设置汇率——手动汇率会覆盖自动数据并立即生效。';
 
   @override
   String get rateEditLabel => '编辑';
@@ -3485,7 +3529,8 @@ class AppLocalizationsZh extends AppLocalizations {
   String get detailImportExportMigrateTitle => '账本数据迁移';
 
   @override
-  String get detailImportExportMigrateTip => '你可以先将当前账本数据导出为 CSV 文件，再切换到目标账本导入该文件，即可实现账本间数据的平滑迁移。';
+  String get detailImportExportMigrateTip =>
+      '你可以先将当前账本数据导出为 CSV 文件，再切换到目标账本导入该文件，即可实现账本间数据的平滑迁移。';
 
   @override
   String get mineCheckUpdate => '检查更新';
@@ -3691,7 +3736,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
 /// The translations for Chinese, as used in Taiwan (`zh_TW`).
 class AppLocalizationsZhTw extends AppLocalizationsZh {
-  AppLocalizationsZhTw(): super('zh_TW');
+  AppLocalizationsZhTw() : super('zh_TW');
 
   @override
   String get appTitle => 'Spitout';
@@ -4003,7 +4048,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgersDeleteConfirm => '刪除帳本';
 
   @override
-  String get ledgersDeleteMessage => '確定要刪除該帳本及其全部記錄嗎？此操作不可復原。\\n若雲端存在備份，也會一併刪除。';
+  String get ledgersDeleteMessage =>
+      '確定要刪除該帳本及其全部記錄嗎？此操作不可復原。\\n若雲端存在備份，也會一併刪除。';
 
   @override
   String get ledgersDeleted => '已刪除';
@@ -4185,10 +4231,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
-  String get importCategoryNotSelected => '未選擇\"分類\"列，請點擊\"上一步\"返回並設定\"分類\"的列，再繼續。';
+  String get importCategoryNotSelected =>
+      '未選擇\"分類\"列，請點擊\"上一步\"返回並設定\"分類\"的列，再繼續。';
 
   @override
-  String get importCategoryMappingDescription => '請將左側\"源分類名\"對應到系統內已有分類（或保持原名自動建立/合併）';
+  String get importCategoryMappingDescription =>
+      '請將左側\"源分類名\"對應到系統內已有分類（或保持原名自動建立/合併）';
 
   @override
   String get importKeepOriginalName => '保持原名（自動建立/合併）';
@@ -4223,7 +4271,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get importInProgress => '正在匯入…';
 
   @override
-  String importProgressDetail(Object done, Object fail, Object ok, Object total) {
+  String importProgressDetail(
+    Object done,
+    Object fail,
+    Object ok,
+    Object total,
+  ) {
     return '已完成：$done/$total，成功 $ok，失敗 $fail';
   }
 
@@ -4572,7 +4625,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get categorySecondLevelLabel => '二級分類';
 
   @override
-  String get categoryExpenseList => '餐飲-交通-購物-娛樂-居家-家庭-通訊-水電-住房-醫療-教育-寵物-運動-數碼-旅行-煙酒-母嬰-美容-維修-社交-學習-汽車-打車-地鐵-外賣-物業-停車-捐贈-送禮-納稅-飲料-服裝-零食-發紅包-水果-遊戲-書籍-愛人-裝修-日用品-彩票-股票-社保-快遞-工作-轉帳-其他';
+  String get categoryExpenseList =>
+      '餐飲-交通-購物-娛樂-居家-家庭-通訊-水電-住房-醫療-教育-寵物-運動-數碼-旅行-煙酒-母嬰-美容-維修-社交-學習-汽車-打車-地鐵-外賣-物業-停車-捐贈-送禮-納稅-飲料-服裝-零食-發紅包-水果-遊戲-書籍-愛人-裝修-日用品-彩票-股票-社保-快遞-工作-轉帳-其他';
 
   @override
   String get categoryExpenseDining => '餐飲-早餐-午餐-晚餐-美團外賣-餓了麼外賣-京東外賣-餐廳-美食';
@@ -4790,7 +4844,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get reminderDescription => '提示：開啟記帳提醒後，系統會在每天指定時間發送通知提醒您記錄支出。';
 
   @override
-  String get reminderAndroidInstructions => '如果通知無法正常工作，請檢查：\n• 已允許應用程式發送通知\n• 關閉應用程式的電池最佳化/省電模式\n• 允許應用程式在背景執行和自啟動\n• Android 12+需要精確鬧鐘權限\n\n📱 小米手機特殊設定：\n• 設定 > 應用程式管理 > Spitout > 通知管理\n• 點擊\"記帳提醒\"頻道\n• 設定重要性為\"緊急\"或\"高\"\n• 開啟\"橫幅通知\"、\"聲音\"、\"震動\"\n• 安全中心 > 應用程式管理 > 權限 > 自啟動\n\n🔒 鎖定背景方法：\n• 最近任務中找到Spitout\n• 向下拉動應用程式卡片顯示鎖定圖示\n• 點擊鎖定圖示防止被清理';
+  String get reminderAndroidInstructions =>
+      '如果通知無法正常工作，請檢查：\n• 已允許應用程式發送通知\n• 關閉應用程式的電池最佳化/省電模式\n• 允許應用程式在背景執行和自啟動\n• Android 12+需要精確鬧鐘權限\n\n📱 小米手機特殊設定：\n• 設定 > 應用程式管理 > Spitout > 通知管理\n• 點擊\"記帳提醒\"頻道\n• 設定重要性為\"緊急\"或\"高\"\n• 開啟\"橫幅通知\"、\"聲音\"、\"震動\"\n• 安全中心 > 應用程式管理 > 權限 > 自啟動\n\n🔒 鎖定背景方法：\n• 最近任務中找到Spitout\n• 向下拉動應用程式卡片顯示鎖定圖示\n• 點擊鎖定圖示防止被清理';
 
   @override
   String get categoryDetailLoadFailed => '載入失敗';
@@ -4893,7 +4948,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get categorySharedManageBannerOwner => '共享帳本：分類的新增、修改、刪除會同步給所有成員';
 
   @override
-  String get categorySharedManageBannerEditor => '共享帳本記帳使用擁有者的分類；此處的編輯僅影響你的個人分類';
+  String get categorySharedManageBannerEditor =>
+      '共享帳本記帳使用擁有者的分類；此處的編輯僅影響你的個人分類';
 
   @override
   String get categorySyncFailedBeforeInvite => '分類同步失敗，請檢查網路後重試';
@@ -4970,7 +5026,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudMultiDeviceWarningTitle => '多裝置使用提醒';
 
   @override
-  String get cloudMultiDeviceWarningMessage => '換裝置前記得先上傳，到新裝置後先下載再記帳。不要同時在兩台裝置上記同一個帳本。點擊查看詳情 →';
+  String get cloudMultiDeviceWarningMessage =>
+      '換裝置前記得先上傳，到新裝置後先下載再記帳。不要同時在兩台裝置上記同一個帳本。點擊查看詳情 →';
 
   @override
   String get cloudWebdavUrlLabel => 'WebDAV 伺服器地址';
@@ -5057,7 +5114,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudClearConfigConfirmTitle => '清除雲端設定';
 
   @override
-  String get cloudClearConfigConfirmMessage => '確定要清除該雲端服務的設定嗎？\n雲端已備份的資料不會被刪除，你可以隨時重新設定並恢復。';
+  String get cloudClearConfigConfirmMessage =>
+      '確定要清除該雲端服務的設定嗎？\n雲端已備份的資料不會被刪除，你可以隨時重新設定並恢復。';
 
   @override
   String get cloudClearConfigDone => '設定已清除';
@@ -5340,7 +5398,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get recurringTransactionUsageTitle => '使用說明';
 
   @override
-  String get recurringTransactionUsageContent => '週期記帳會在每次冷啟動進入 App 時自動掃描並產生帳單。設定日期後，系統會在該日期之後的冷啟動時建立對應帳單。例如：設定 11 月 27 日，則會在 11 月 27 日之後的首次啟動時自動記帳。';
+  String get recurringTransactionUsageContent =>
+      '週期記帳會在每次冷啟動進入 App 時自動掃描並產生帳單。設定日期後，系統會在該日期之後的冷啟動時建立對應帳單。例如：設定 11 月 27 日，則會在 11 月 27 日之後的首次啟動時自動記帳。';
 
   @override
   String get ledgerSelectTitle => '選擇帳本';
@@ -5355,7 +5414,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get syncNotLoggedInMessage => '未登入';
 
   @override
-  String get syncCloudBackupCorruptedMessage => '雲端備份內容無法解析，可能是早期版本編碼問題造成的損壞。請點擊\\\"上傳當前帳本到雲端\\\"覆蓋修復。';
+  String get syncCloudBackupCorruptedMessage =>
+      '雲端備份內容無法解析，可能是早期版本編碼問題造成的損壞。請點擊\\\"上傳當前帳本到雲端\\\"覆蓋修復。';
 
   @override
   String get syncNoCloudBackupMessage => '雲端暫無備份';
@@ -5390,7 +5450,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get storagePermissionTitle => '需要儲存權限';
 
   @override
-  String get storagePermissionMessage => 'Android 11 及以上需授予「所有檔案存取」權限，才能將檔案儲存到公共 Download 目錄（檔案管理員可見、解除安裝不遺失）。\n\n選擇「仍要繼續」將儲存到應用程式私有目錄，檔案管理員不可見，且解除安裝後會被刪除。';
+  String get storagePermissionMessage =>
+      'Android 11 及以上需授予「所有檔案存取」權限，才能將檔案儲存到公共 Download 目錄（檔案管理員可見、解除安裝不遺失）。\n\n選擇「仍要繼續」將儲存到應用程式私有目錄，檔案管理員不可見，且解除安裝後會被刪除。';
 
   @override
   String get storagePermissionGrant => '前往授權';
@@ -5770,19 +5831,22 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudTutorialStep1Title => '第一步:部署或選擇伺服器';
 
   @override
-  String get cloudTutorialStep1Desc => '自行部署:Docker 一行指令拉起(詳見 GitHub README 的 Docker 指南)。或直接使用朋友/團隊既有的 Spitout Cloud 伺服器。';
+  String get cloudTutorialStep1Desc =>
+      '自行部署:Docker 一行指令拉起(詳見 GitHub README 的 Docker 指南)。或直接使用朋友/團隊既有的 Spitout Cloud 伺服器。';
 
   @override
   String get cloudTutorialStep2Title => '第二步:取得帳號';
 
   @override
-  String get cloudTutorialStep2Desc => 'Spitout Cloud 不支援自助註冊(避免公網服務被濫用)。自行部署:Docker 首次啟動日誌會印出隨機管理員帳密,直接用。加入他人伺服器:請管理員在 Web 後台 →「使用者」裡為你建立帳號。';
+  String get cloudTutorialStep2Desc =>
+      'Spitout Cloud 不支援自助註冊(避免公網服務被濫用)。自行部署:Docker 首次啟動日誌會印出隨機管理員帳密,直接用。加入他人伺服器:請管理員在 Web 後台 →「使用者」裡為你建立帳號。';
 
   @override
   String get cloudTutorialStep3Title => '第三步:登入並開啟同步';
 
   @override
-  String get cloudTutorialStep3Desc => 'App 內選「Spitout Cloud」,填伺服器位址 + 管理員給你的帳號,登入。首次會全量上傳你本機所有帳本資料,之後每次編輯即時推送。';
+  String get cloudTutorialStep3Desc =>
+      'App 內選「Spitout Cloud」,填伺服器位址 + 管理員給你的帳號,登入。首次會全量上傳你本機所有帳本資料,之後每次編輯即時推送。';
 
   @override
   String get cloudTutorialStep4Title => '第四步:其他裝置登入';
@@ -5794,16 +5858,19 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudTutorialTipTitle => '小提示';
 
   @override
-  String get cloudTutorialTipDesc => 'Web 端地址 = 伺服器位址,瀏覽器直接開啟即可。登入後可管理帳本、成員、查看紀錄。';
+  String get cloudTutorialTipDesc =>
+      'Web 端地址 = 伺服器位址,瀏覽器直接開啟即可。登入後可管理帳本、成員、查看紀錄。';
 
   @override
   String get cloudTutorialFeaturesTitle => '特色功能';
 
   @override
-  String get cloudTutorialFeature1 => '📱 多裝置即時協同:手機 A + 手機 B + Web 三端同帳號,資料秒級同步';
+  String get cloudTutorialFeature1 =>
+      '📱 多裝置即時協同:手機 A + 手機 B + Web 三端同帳號,資料秒級同步';
 
   @override
-  String get cloudTutorialFeature2 => '🌐 內建 Web 管理端:一個 Docker 映像檔含 server + web,瀏覽器即可使用';
+  String get cloudTutorialFeature2 =>
+      '🌐 內建 Web 管理端:一個 Docker 映像檔含 server + web,瀏覽器即可使用';
 
   @override
   String get cloudTutorialFeature3 => '👥 多用戶獨立:一個伺服器可多人註冊,各自資料完全隔離';
@@ -5815,7 +5882,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudTutorialGotIt => '我知道了';
 
   @override
-  String get cloudSyncHint => '下載時可自動對比差異並逐條預覽。非即時同步，請避免多裝置同時編輯同一帳本。同步範圍為帳本資料（含關聯的帳戶、分類）。';
+  String get cloudSyncHint =>
+      '下載時可自動對比差異並逐條預覽。非即時同步，請避免多裝置同時編輯同一帳本。同步範圍為帳本資料（含關聯的帳戶、分類）。';
 
   @override
   String get appearanceSettings => '偏好調節';
@@ -5884,10 +5952,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get configImportExportInfoTitle => '功能說明';
 
   @override
-  String get configImportExportInfoMessage => '備份和恢復應用配置，用於跨裝置遷移或恢復設定。匯出為 YAML 格式，可檢視和編輯。\n\n僅包含應用配置，不包含交易記錄（交易資料請使用明細匯入匯出功能）。';
+  String get configImportExportInfoMessage =>
+      '備份和恢復應用配置，用於跨裝置遷移或恢復設定。匯出為 YAML 格式，可檢視和編輯。\n\n僅包含應用配置，不包含交易記錄（交易資料請使用明細匯入匯出功能）。';
 
   @override
-  String get configImportExportWarning => '配置檔案包含雲端服務金鑰、密碼等敏感資訊，請妥善保管。匯入會覆蓋同名配置，建議先匯出備份。';
+  String get configImportExportWarning =>
+      '配置檔案包含雲端服務金鑰、密碼等敏感資訊，請妥善保管。匯入會覆蓋同名配置，建議先匯出備份。';
 
   @override
   String get configExportTitle => '匯出配置';
@@ -6127,7 +6197,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get syncPreviewOldFormat => '雲端資料格式較舊，將執行全量替換';
 
   @override
-  String get syncPreviewOldFormatMessage => '雲端資料不包含同步標識，無法逐條對比。將清空當前帳本資料並從雲端重新匯入。';
+  String get syncPreviewOldFormatMessage =>
+      '雲端資料不包含同步標識，無法逐條對比。將清空當前帳本資料並從雲端重新匯入。';
 
   @override
   String syncPreviewApplied(int count) {
@@ -6174,7 +6245,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudSyncGuideWrongItem1 => '兩台裝置同時編輯同一帳本，後上傳的會覆蓋先上傳的改動';
 
   @override
-  String get cloudSyncGuideWrongItem2 => '上傳後立刻在另一台裝置下載，檔案服務可能有數秒到數分鐘的同步延遲，請稍候再試';
+  String get cloudSyncGuideWrongItem2 =>
+      '上傳後立刻在另一台裝置下載，檔案服務可能有數秒到數分鐘的同步延遲，請稍候再試';
 
   @override
   String get cloudSyncGuideWrongItem3 => '長時間不同步後一次性下載大量變更，容易遺漏需要處理的差異';
@@ -6189,7 +6261,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudSyncGuideLimitItem2 => '無衝突合併：不會自動合併兩端的修改，以最後上傳的為準';
 
   @override
-  String get cloudSyncGuideLimitItem3 => '檔案服務延遲：上傳後雲端檔案可能需要數秒到數分鐘才能被其他裝置讀取，取決於您使用的雲端服務';
+  String get cloudSyncGuideLimitItem3 =>
+      '檔案服務延遲：上傳後雲端檔案可能需要數秒到數分鐘才能被其他裝置讀取，取決於您使用的雲端服務';
 
   @override
   String get appLockTitle => '應用上鎖';
@@ -6269,25 +6342,29 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudSyncHelpModesTitle => '三種同步方式';
 
   @override
-  String get cloudSyncHelpModesBody => '• 增量同步（日常自動）：記一筆 / 改一筆後，只把這條變化自動上傳下載，快、無需手動操作 —— 平時一直在跑的就是它。\n• 全量上傳：首次開啟雲同步、或雲端還沒有這個帳本的資料時，把本機全部資料一次性推上雲。\n• 全量下載：換新裝置、重裝、或本機為空時，從雲端把全部資料拉下來。';
+  String get cloudSyncHelpModesBody =>
+      '• 增量同步（日常自動）：記一筆 / 改一筆後，只把這條變化自動上傳下載，快、無需手動操作 —— 平時一直在跑的就是它。\n• 全量上傳：首次開啟雲同步、或雲端還沒有這個帳本的資料時，把本機全部資料一次性推上雲。\n• 全量下載：換新裝置、重裝、或本機為空時，從雲端把全部資料拉下來。';
 
   @override
   String get cloudSyncHelpWhenFullTitle => '什麼時候才會走全量？';
 
   @override
-  String get cloudSyncHelpWhenFullBody => '全量只在某一端資料為空時才會自動觸發（首次開啟雲同步 / 換新裝置 / 重裝 / 清空了本機或雲端資料）。只要兩端都有資料，之後一直走增量，不會無故重來。想強制重新全量同步，得先清空對應端的資料。';
+  String get cloudSyncHelpWhenFullBody =>
+      '全量只在某一端資料為空時才會自動觸發（首次開啟雲同步 / 換新裝置 / 重裝 / 清空了本機或雲端資料）。只要兩端都有資料，之後一直走增量，不會無故重來。想強制重新全量同步，得先清空對應端的資料。';
 
   @override
   String get cloudSyncHelpStuckTitle => '為什麼有時同步不動 / 卡住';
 
   @override
-  String get cloudSyncHelpStuckBody => '• 全量上傳 / 下載不支援斷點續傳：中途斷網、或 App 被切到背景被系統清掉，會從頭重來，不會接著傳。資料多時請用穩定網路（建議 Wi-Fi）耐心等它跑完，別中途切走。\n• 增量同步是斷點安全的，日常同步不受影響。';
+  String get cloudSyncHelpStuckBody =>
+      '• 全量上傳 / 下載不支援斷點續傳：中途斷網、或 App 被切到背景被系統清掉，會從頭重來，不會接著傳。資料多時請用穩定網路（建議 Wi-Fi）耐心等它跑完，別中途切走。\n• 增量同步是斷點安全的，日常同步不受影響。';
 
   @override
   String get cloudSyncHelpTroubleshootTitle => '排查辦法';
 
   @override
-  String get cloudSyncHelpTroubleshootBody => '• 先在本頁下拉做一次「深度檢測」，對比本機與雲端差異。\n• 仍有問題，去「日誌中心」查看同步日誌（含失敗原因），方便回報。';
+  String get cloudSyncHelpTroubleshootBody =>
+      '• 先在本頁下拉做一次「深度檢測」，對比本機與雲端差異。\n• 仍有問題，去「日誌中心」查看同步日誌（含失敗原因），方便回報。';
 
   @override
   String get cloudSyncHelpOpenLogCenter => '開啟日誌中心';
@@ -6478,10 +6555,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
-  String get sharedInviteWarning => '⚠️ 不要把邀請碼發到公開群 / 朋友圈。拿到碼的任何人都可加入帳本;洩漏後請到成員管理頁撤銷並重新生成。';
+  String get sharedInviteWarning =>
+      '⚠️ 不要把邀請碼發到公開群 / 朋友圈。拿到碼的任何人都可加入帳本;洩漏後請到成員管理頁撤銷並重新生成。';
 
   @override
-  String get sharedInviteInstruction => '把邀請碼或短連結發給對方。對方裝上 Spitout 後,點擊連結或在「我的 → 加入共享帳本」輸入碼即可加入。';
+  String get sharedInviteInstruction =>
+      '把邀請碼或短連結發給對方。對方裝上 Spitout 後,點擊連結或在「我的 → 加入共享帳本」輸入碼即可加入。';
 
   @override
   String sharedInviteShareText(String ledger, String code, String url) {
@@ -6723,7 +6802,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgerCurrencyChangeRecalcHint => '修改本位幣將按當前匯率重算全部歷史交易的折算值';
 
   @override
-  String get ledgerCurrencyChangeRecalcWarning => '歷史折算值將按最新匯率重算並覆蓋，往返切換（切走再切回）也無法還原原始折算值';
+  String get ledgerCurrencyChangeRecalcWarning =>
+      '歷史折算值將按最新匯率重算並覆蓋，往返切換（切走再切回）也無法還原原始折算值';
 
   @override
   String get recalcForeignTxBanner => '偵測到該帳本有未折算的外幣交易';
@@ -7096,19 +7176,24 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get detailImportExportExportSubtitle => '將帳本明細匯出為 CSV 檔案';
 
   @override
-  String get detailImportExportImportPoint1 => '支援通用 CSV、支付寶、微信三類帳單，檔案格式可為 CSV/TSV/XLSX';
+  String get detailImportExportImportPoint1 =>
+      '支援通用 CSV、支付寶、微信三類帳單，檔案格式可為 CSV/TSV/XLSX';
 
   @override
-  String get detailImportExportImportPoint2 => '差異僅在檔案結構：通用 CSV 為純淨表頭；支付寶、微信帳單含描述性前言，應用會自動跳過並定位表頭';
+  String get detailImportExportImportPoint2 =>
+      '差異僅在檔案結構：通用 CSV 為純淨表頭；支付寶、微信帳單含描述性前言，應用會自動跳過並定位表頭';
 
   @override
-  String get detailImportExportImportPoint3 => '三類帳單統一透過列映射識別（日期、類型、金額、幣種、分類、二級分類、備註），匯入流程一致';
+  String get detailImportExportImportPoint3 =>
+      '三類帳單統一透過列映射識別（日期、類型、金額、幣種、分類、二級分類、備註），匯入流程一致';
 
   @override
-  String get detailImportExportExportPoint1 => '將所選帳本交易明細匯出為 CSV 檔案，UTF-8 BOM 編碼，Excel 可直接開啟';
+  String get detailImportExportExportPoint1 =>
+      '將所選帳本交易明細匯出為 CSV 檔案，UTF-8 BOM 編碼，Excel 可直接開啟';
 
   @override
-  String get detailImportExportExportPoint2 => '檔案名為 spitout_時間戳.csv，預設儲存至系統 Download/Spitout 目錄';
+  String get detailImportExportExportPoint2 =>
+      '檔案名為 spitout_時間戳.csv，預設儲存至系統 Download/Spitout 目錄';
 
   @override
   String get detailImportExportExportPoint3 => '包含欄位如下：';
@@ -7143,7 +7228,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get exchangeRateInfoTitle => '關於主幣種';
 
   @override
-  String get exchangeRateInfoMessage => '主幣種是目前帳本的本位幣：帳本內的外幣交易會按匯率折算成主幣種，在統計頁和資產總覽中統一彙總比較。每個帳本各有自己的主幣種，可隨時切換；切換後將按最新匯率重算本帳本全部交易的折算值。\n\n匯率預設從公開資料來源每日自動拉取，也支援你點擊下方列表中的「編輯」為任意幣種手動設定匯率——手動匯率會覆蓋自動資料並立即生效。';
+  String get exchangeRateInfoMessage =>
+      '主幣種是目前帳本的本位幣：帳本內的外幣交易會按匯率折算成主幣種，在統計頁和資產總覽中統一彙總比較。每個帳本各有自己的主幣種，可隨時切換；切換後將按最新匯率重算本帳本全部交易的折算值。\n\n匯率預設從公開資料來源每日自動拉取，也支援你點擊下方列表中的「編輯」為任意幣種手動設定匯率——手動匯率會覆蓋自動資料並立即生效。';
 
   @override
   String get rateEditLabel => '編輯';
@@ -7172,7 +7258,8 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get detailImportExportMigrateTitle => '帳本資料遷移';
 
   @override
-  String get detailImportExportMigrateTip => '你可以先將目前帳本的資料匯出為 CSV 檔案，再切換到目標帳本匯入該檔案，即可實現帳本間資料的平滑遷移。';
+  String get detailImportExportMigrateTip =>
+      '你可以先將目前帳本的資料匯出為 CSV 檔案，再切換到目標帳本匯入該檔案，即可實現帳本間資料的平滑遷移。';
 
   @override
   String get mineCheckUpdate => '檢查更新';

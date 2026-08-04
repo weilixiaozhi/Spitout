@@ -1,7 +1,9 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id "com.android.application"
-    id "kotlin-android"
-    // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
+    // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
+    // AGP 9.0 起内置 Kotlin 支持，无需再单独应用 kotlin-android 插件。
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -14,9 +16,10 @@ if (keystorePropertiesFile.exists()) {
 
 android {
     namespace = "com.weilixiaozhi.spitout"
-    compileSdk = 36
-    // Keep in sync with plugins' required NDK to avoid build warnings/errors.
-    ndkVersion = "27.0.12077973"
+    // AGP 9.0 严格对齐插件要求：permission_handler_android 需要 compileSdk 37，与 Flutter 模板常量一致。
+    compileSdk = 37
+    // 与 Flutter 模板常量保持一致，满足全部插件（15 个）要求的 NDK 版本，避免对齐报错。
+    ndkVersion = "28.2.13676358"
 
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
@@ -26,16 +29,12 @@ android {
         coreLibraryDesugaringEnabled true
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17
-    }
-
     defaultConfig {
         // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.weilixiaozhi.spitout"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = 23  // Required by record_android for voice recording
+        minSdkVersion = flutter.minSdkVersion  // Required by record_android for voice recording
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
@@ -141,31 +140,28 @@ android {
         }
     }
 
-    // 当存在 flavors 时，assembleDebug 会聚合构建所有 debug 变体（devDebug、Debug），
-    // 这会让 Flutter 工具无法确定唯一 APK 路径。这里忽略 prodDebug，仅保留 devDebug，
+    // 当存在 flavors 时，assembleDebug 会聚合构建所有 debug 变体（devDebug、prodDebug），
+    // 这会让 Flutter 工具无法确定唯一 APK 路径。这里禁用 prodDebug，仅保留 devDebug，
     // 从而让不带 --flavor 的 `flutter run` 正常工作并默认使用 dev。
-    variantFilter { variant ->
-        def names = variant.flavors*.name
-        if (variant.buildType.name == 'debug' && names.contains('prod')) {
-            setIgnore(true)
+    // AGP 9.0 移除了 variantFilter，等价逻辑迁移到下方 androidComponents.beforeVariants。
+}
+
+// AGP 9.0 移除了 applicationVariants/variantFilter 旧版 Variant API，统一迁移到 androidComponents 新 API。
+// AGP 9.0 同时移除了 outputFileName 自定义 APK 命名的能力，Release APK 统一命名为
+// app-<flavor>-release.apk，版本信息交由 CI 发布环节按 tag 重命名。
+androidComponents {
+    // AGP 9 要求 beforeVariants/onVariants 显式传入 VariantSelector，不再提供单参数重载。
+    beforeVariants(selector().withBuildType("debug")) { variantBuilder ->
+        if (variantBuilder.flavorName == 'prod') {
+            variantBuilder.enabled = false
         }
     }
 }
 
-// 自定义 Release APK 命名:app-<flavor>-release-v<ver>(<code>).apk
-// 单 ABI 由构建命令 --target-platform android-arm64 控制，产出单一 APK，不再按 ABI 拆分。
-android.applicationVariants.all { variant ->
-    if (variant.buildType.name == 'release') {
-        variant.outputs.all { output ->
-            def flavor = variant.flavorName ?: ""
-            def vName = variant.versionName
-            def vCode = variant.versionCode
-            try {
-                output.outputFileName = "app-${flavor}-release-v${vName}(${vCode}).apk"
-            } catch (ignored) {
-                // 新版 AGP 的 outputFileName 设置方式可能不同，此处忽略静默处理
-            }
-        }
+kotlin {
+    // AGP 9.0 内置 Kotlin 支持下的编译器选项配置（kotlinOptions 已废弃）
+    compilerOptions {
+        jvmTarget = JvmTarget.JVM_17
     }
 }
 

@@ -288,7 +288,7 @@ class _DetailImportExportPageState
             ),
           ),
         // 尾部附加内容（如模板预览）
-        if (footer != null) footer,
+        ?footer,
       ],
     );
   }
@@ -301,10 +301,10 @@ class _DetailImportExportPageState
   Future<void> _pickAndImport() async {
     // 促使插件完成注册，规避热重载后偶现的 MissingPluginException
     // ignore: unawaited_futures
-    FilePicker.platform.clearTemporaryFiles();
+    FilePicker.clearTemporaryFiles();
 
     try {
-      final res = await FilePicker.platform.pickFiles(
+      final res = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['csv', 'tsv', 'txt', 'xlsx'],
         allowMultiple: false,

@@ -1,3 +1,5 @@
+// ignore: unused_import
+import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
 
 // ignore_for_file: type=lint
@@ -212,7 +214,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get homePullLocalSuccess => '로컬 장부 데이터 및 설정을 새로고침했습니다';
 
   @override
-  String get homePullCloudFailedButLocalOk => '클라우드 동기화 실패, 로컬 데이터 새로고침됨(환율/설정)';
+  String get homePullCloudFailedButLocalOk =>
+      '클라우드 동기화 실패, 로컬 데이터 새로고침됨(환율/설정)';
 
   @override
   String homePullCloudHealed(int count) {
@@ -220,7 +223,8 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get homePullCloudGap => '일부 클라우드 기록을 자동 복구하지 못했습니다. 동기화 페이지에서 \'클라우드에서 복원\'을 실행하세요';
+  String get homePullCloudGap =>
+      '일부 클라우드 기록을 자동 복구하지 못했습니다. 동기화 페이지에서 \'클라우드에서 복원\'을 실행하세요';
 
   @override
   String get homeSyncing => '장부 데이터 동기화 중';
@@ -316,7 +320,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgersDeleteConfirm => '가계부 삭제';
 
   @override
-  String get ledgersDeleteMessage => '이 가계부와 모든 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.\\n클라우드에 백업이 있는 경우 함께 삭제됩니다.';
+  String get ledgersDeleteMessage =>
+      '이 가계부와 모든 기록을 삭제하시겠습니까? 이 작업은 되돌릴 수 없습니다.\\n클라우드에 백업이 있는 경우 함께 삭제됩니다.';
 
   @override
   String get ledgersDeleted => '삭제됨';
@@ -349,7 +354,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgersMonthStartDay => '월 시작일';
 
   @override
-  String get ledgersMonthStartDayHint => '통계와 예산은 이 날짜(1~28)를 매월 기간의 시작으로 사용합니다';
+  String get ledgersMonthStartDayHint =>
+      '통계와 예산은 이 날짜(1~28)를 매월 기간의 시작으로 사용합니다';
 
   @override
   String get ledgersMonthStartDayNatural => '1일 (달력 기준)';
@@ -388,10 +394,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgersSectionLocalEmpty => '로컬 가계부가 없습니다. 로컬 가계부는 이 기기에만 저장됩니다.';
 
   @override
-  String get ledgersSectionCloudEmpty => '클라우드 가계부가 없습니다. 클라우드 가계부는 기기 간에 동기화됩니다.';
+  String get ledgersSectionCloudEmpty =>
+      '클라우드 가계부가 없습니다. 클라우드 가계부는 기기 간에 동기화됩니다.';
 
   @override
-  String get ledgersSectionCloudSignInHint => 'Spitout Cloud에 로그인하면 클라우드 가계부를 사용할 수 있습니다';
+  String get ledgersSectionCloudSignInHint =>
+      'Spitout Cloud에 로그인하면 클라우드 가계부를 사용할 수 있습니다';
 
   @override
   String get ledgersStorageLocation => '저장 위치';
@@ -472,7 +480,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get importCategoryMapping => '카테고리 매핑';
 
   @override
-  String get importNoDataParsed => '파싱된 데이터가 없습니다. 이전 페이지로 돌아가 CSV 내용이나 구분자를 확인해 주세요.';
+  String get importNoDataParsed =>
+      '파싱된 데이터가 없습니다. 이전 페이지로 돌아가 CSV 내용이나 구분자를 확인해 주세요.';
 
   @override
   String get importFieldDate => '날짜';
@@ -501,7 +510,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get importCategoryNotSelected => '카테고리가 선택되지 않았습니다';
 
   @override
-  String get importCategoryMappingDescription => '각 카테고리 이름에 해당하는 로컬 카테고리를 선택하세요:';
+  String get importCategoryMappingDescription =>
+      '각 카테고리 이름에 해당하는 로컬 카테고리를 선택하세요:';
 
   @override
   String get importKeepOriginalName => '원래 이름 유지';
@@ -536,7 +546,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get importInProgress => '가져오는 중';
 
   @override
-  String importProgressDetail(Object done, Object fail, Object ok, Object total) {
+  String importProgressDetail(
+    Object done,
+    Object fail,
+    Object ok,
+    Object total,
+  ) {
     return '$total건 중 $done건 가져옴, 성공 $ok, 실패 $fail';
   }
 
@@ -752,7 +767,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mineLogoutConfirmTitle => '로그아웃';
 
   @override
-  String get mineLogoutConfirmMessage => '로그아웃하시겠습니까?\n로그아웃하면 클라우드 동기화를 사용할 수 없습니다.';
+  String get mineLogoutConfirmMessage =>
+      '로그아웃하시겠습니까?\n로그아웃하면 클라우드 동기화를 사용할 수 없습니다.';
 
   @override
   String get mineLogoutButton => '로그아웃';
@@ -885,7 +901,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get categorySecondLevelLabel => '하위';
 
   @override
-  String get categoryExpenseList => '식사-교통-쇼핑-오락-홈리빙-가족-통신비-공과금-주거-의료-교육-반려동물-운동-디지털-여행-술담배-육아-미용-수리-인간관계-학습-자동차-택시-지하철-배달음식-관리비-주차-기부-선물-세금-음료-의류-간식-축의금-과일-게임-도서-데이트-인테리어-생활용품-복권-주식-사회보험-택배-업무-이체-기타';
+  String get categoryExpenseList =>
+      '식사-교통-쇼핑-오락-홈리빙-가족-통신비-공과금-주거-의료-교육-반려동물-운동-디지털-여행-술담배-육아-미용-수리-인간관계-학습-자동차-택시-지하철-배달음식-관리비-주차-기부-선물-세금-음료-의류-간식-축의금-과일-게임-도서-데이트-인테리어-생활용품-복권-주식-사회보험-택배-업무-이체-기타';
 
   @override
   String get categoryExpenseDining => '식사-아침-점심-저녁-배달의민족-쿠팡이츠-요기요-외식-식비';
@@ -1088,7 +1105,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reminderChannelAdviceBanner => '• 배너 알림을 허용하세요';
 
   @override
-  String get reminderChannelAdviceXiaomi => '• 샤오미(Xiaomi) 기기는 채널을 개별적으로 설정해야 합니다';
+  String get reminderChannelAdviceXiaomi =>
+      '• 샤오미(Xiaomi) 기기는 채널을 개별적으로 설정해야 합니다';
 
   @override
   String get reminderChannelGood => '✅ 알림 채널이 잘 설정되어 있습니다';
@@ -1100,10 +1118,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reminderAppSettingsMessage => '설정에서 알림을 허용하고 배터리 최적화를 꺼주세요';
 
   @override
-  String get reminderDescription => '팁: 기록 알림을 활성화하면 시스템이 매일 지정한 시간에 알림을 보내 지출 기록을 상기시켜 줍니다.';
+  String get reminderDescription =>
+      '팁: 기록 알림을 활성화하면 시스템이 매일 지정한 시간에 알림을 보내 지출 기록을 상기시켜 줍니다.';
 
   @override
-  String get reminderAndroidInstructions => '알림이 제대로 오지 않는다면 다음을 확인하세요:\n• 앱의 알림 전송이 허용되어 있는지\n• 앱의 배터리 최적화/절전 모드를 꺼두었는지\n• 앱의 백그라운드 실행과 자동 시작이 허용되어 있는지\n• Android 12 이상은 정확한 알람 권한이 필요합니다\n\n📱 샤오미(Xiaomi) 기기 특별 설정:\n• 설정 > 앱 관리 > Spitout > 알림 관리\n• \"기록 알림\" 채널을 누르세요\n• 중요도를 \"긴급\" 또는 \"높음\"으로 설정하세요\n• \"배너 알림\", \"소리\", \"진동\"을 활성화하세요\n• 보안센터 > 앱 관리 > 권한 > 자동 실행\n\n🔒 백그라운드 고정 방법:\n• 최근 작업 목록에서 Spitout를 찾으세요\n• 앱 카드를 아래로 당겨 잠금 아이콘을 표시하세요\n• 잠금 아이콘을 눌러 정리되지 않도록 하세요';
+  String get reminderAndroidInstructions =>
+      '알림이 제대로 오지 않는다면 다음을 확인하세요:\n• 앱의 알림 전송이 허용되어 있는지\n• 앱의 배터리 최적화/절전 모드를 꺼두었는지\n• 앱의 백그라운드 실행과 자동 시작이 허용되어 있는지\n• Android 12 이상은 정확한 알람 권한이 필요합니다\n\n📱 샤오미(Xiaomi) 기기 특별 설정:\n• 설정 > 앱 관리 > Spitout > 알림 관리\n• \"기록 알림\" 채널을 누르세요\n• 중요도를 \"긴급\" 또는 \"높음\"으로 설정하세요\n• \"배너 알림\", \"소리\", \"진동\"을 활성화하세요\n• 보안센터 > 앱 관리 > 권한 > 자동 실행\n\n🔒 백그라운드 고정 방법:\n• 최근 작업 목록에서 Spitout를 찾으세요\n• 앱 카드를 아래로 당겨 잠금 아이콘을 표시하세요\n• 잠금 아이콘을 눌러 정리되지 않도록 하세요';
 
   @override
   String get categoryDetailLoadFailed => '불러오기 실패';
@@ -1203,13 +1223,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get categoryManageReorderHint => '길게 눌러 순서 변경';
 
   @override
-  String get categorySharedManageBannerOwner => '공유 가계부: 카테고리 변경 사항이 모든 구성원에게 동기화됩니다';
+  String get categorySharedManageBannerOwner =>
+      '공유 가계부: 카테고리 변경 사항이 모든 구성원에게 동기화됩니다';
 
   @override
-  String get categorySharedManageBannerEditor => '공유 가계부에서는 소유자의 카테고리를 사용하며, 여기서의 수정은 개인 카테고리에만 적용됩니다';
+  String get categorySharedManageBannerEditor =>
+      '공유 가계부에서는 소유자의 카테고리를 사용하며, 여기서의 수정은 개인 카테고리에만 적용됩니다';
 
   @override
-  String get categorySyncFailedBeforeInvite => '카테고리 동기화에 실패했습니다. 네트워크를 확인한 후 다시 시도하세요';
+  String get categorySyncFailedBeforeInvite =>
+      '카테고리 동기화에 실패했습니다. 네트워크를 확인한 후 다시 시도하세요';
 
   @override
   String get categorySortSaveFailed => '순서 저장에 실패했습니다. 다시 시도하세요';
@@ -1283,7 +1306,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudMultiDeviceWarningTitle => '여러 기기 사용 팁';
 
   @override
-  String get cloudMultiDeviceWarningMessage => '기기를 전환하기 전에 업로드하고, 새 기기에서는 편집 전에 다운로드하세요. 같은 가계부를 두 기기에서 동시에 편집하지 마세요. 자세히 보려면 눌러주세요 →';
+  String get cloudMultiDeviceWarningMessage =>
+      '기기를 전환하기 전에 업로드하고, 새 기기에서는 편집 전에 다운로드하세요. 같은 가계부를 두 기기에서 동시에 편집하지 마세요. 자세히 보려면 눌러주세요 →';
 
   @override
   String get cloudWebdavUrlLabel => 'WebDAV 서버 URL';
@@ -1355,7 +1379,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudFirstSaveSwitchTitle => '설정 저장 완료';
 
   @override
-  String get cloudFirstSaveSwitchMessage => '이 클라우드 서비스를 지금 현재 동기화 설정으로 전환하시겠습니까?';
+  String get cloudFirstSaveSwitchMessage =>
+      '이 클라우드 서비스를 지금 현재 동기화 설정으로 전환하시겠습니까?';
 
   @override
   String get cloudSaveOnlyNoSwitch => '나중에';
@@ -1370,7 +1395,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudClearConfigConfirmTitle => '클라우드 설정 지우기';
 
   @override
-  String get cloudClearConfigConfirmMessage => '이 클라우드 서비스 설정을 지우시겠습니까?\n클라우드에 백업된 데이터는 삭제되지 않으며, 언제든 다시 설정하고 복구할 수 있습니다.';
+  String get cloudClearConfigConfirmMessage =>
+      '이 클라우드 서비스 설정을 지우시겠습니까?\n클라우드에 백업된 데이터는 삭제되지 않으며, 언제든 다시 설정하고 복구할 수 있습니다.';
 
   @override
   String get cloudClearConfigDone => '설정이 지워졌습니다';
@@ -1394,7 +1420,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authErrorInvalidCredentials => '이메일 또는 비밀번호가 올바르지 않습니다.';
 
   @override
-  String get authErrorEmailNotConfirmed => '이메일이 인증되지 않았습니다. 로그인하기 전에 이메일에서 인증을 완료해 주세요.';
+  String get authErrorEmailNotConfirmed =>
+      '이메일이 인증되지 않았습니다. 로그인하기 전에 이메일에서 인증을 완료해 주세요.';
 
   @override
   String get authErrorRateLimit => '시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
@@ -1579,7 +1606,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get webdavConfiguredTitle => 'WebDAV 클라우드 서비스가 설정되었습니다';
 
   @override
-  String get webdavConfiguredMessage => 'WebDAV 클라우드 서비스는 설정 시 입력한 인증 정보를 사용하므로 추가 로그인이 필요하지 않습니다.';
+  String get webdavConfiguredMessage =>
+      'WebDAV 클라우드 서비스는 설정 시 입력한 인증 정보를 사용하므로 추가 로그인이 필요하지 않습니다.';
 
   @override
   String get recurringTransactionTitle => '정기 결제';
@@ -1653,7 +1681,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringTransactionUsageTitle => '사용 안내';
 
   @override
-  String get recurringTransactionUsageContent => '정기 결제는 앱을 완전히 새로 시작할 때 자동으로 스캔되어 생성됩니다. 날짜를 설정하면 해당 날짜 이후 처음 실행될 때 시스템이 관련 거래를 생성합니다. 예를 들어 11월 27일로 설정하면 11월 27일 이후 첫 실행 시 자동으로 거래가 기록됩니다.';
+  String get recurringTransactionUsageContent =>
+      '정기 결제는 앱을 완전히 새로 시작할 때 자동으로 스캔되어 생성됩니다. 날짜를 설정하면 해당 날짜 이후 처음 실행될 때 시스템이 관련 거래를 생성합니다. 예를 들어 11월 27일로 설정하면 11월 27일 이후 첫 실행 시 자동으로 거래가 기록됩니다.';
 
   @override
   String get ledgerSelectTitle => '가계부 선택';
@@ -1668,7 +1697,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncNotLoggedInMessage => '로그인하지 않음';
 
   @override
-  String get syncCloudBackupCorruptedMessage => '클라우드 백업 내용이 손상되었습니다. 이전 버전의 인코딩 문제일 수 있습니다. \'현재 가계부를 클라우드에 업로드\'를 눌러 덮어써 복구해 주세요.';
+  String get syncCloudBackupCorruptedMessage =>
+      '클라우드 백업 내용이 손상되었습니다. 이전 버전의 인코딩 문제일 수 있습니다. \'현재 가계부를 클라우드에 업로드\'를 눌러 덮어써 복구해 주세요.';
 
   @override
   String get syncNoCloudBackupMessage => '클라우드 백업이 없음';
@@ -1703,7 +1733,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get storagePermissionTitle => '저장 공간 권한 필요';
 
   @override
-  String get storagePermissionMessage => 'Android 11 이상에서 공용 Download 디렉터리에 파일을 저장하려면 \'모든 파일 액세스\' 권한이 필요합니다(파일 관리자에서 보이며 앱 삭제 후에도 유지됨).\n\n\'계속\'을 선택하면 앱 전용 디렉터리에 저장되며, 파일 관리자에서 보이지 않고 앱 삭제 시 함께 삭제됩니다.';
+  String get storagePermissionMessage =>
+      'Android 11 이상에서 공용 Download 디렉터리에 파일을 저장하려면 \'모든 파일 액세스\' 권한이 필요합니다(파일 관리자에서 보이며 앱 삭제 후에도 유지됨).\n\n\'계속\'을 선택하면 앱 전용 디렉터리에 저장되며, 파일 관리자에서 보이지 않고 앱 삭제 시 함께 삭제됩니다.';
 
   @override
   String get storagePermissionGrant => '권한 허용';
@@ -1739,7 +1770,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get localBackupRestoreTitle => '백업 복원';
 
   @override
-  String get localBackupRestoreMessage => '복원하면 현재 모든 데이터가 덮어씌워지며 되돌릴 수 없습니다. 계속하시겠습니까?';
+  String get localBackupRestoreMessage =>
+      '복원하면 현재 모든 데이터가 덮어씌워지며 되돌릴 수 없습니다. 계속하시겠습니까?';
 
   @override
   String get localBackupRestoreSuccess => '복원 완료';
@@ -1754,7 +1786,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get localBackupIntegrityFailed => '백업 파일이 손상되어 복원할 수 없습니다';
 
   @override
-  String get localBackupVersionTooNew => '이 백업은 최신 버전 앱에서 생성되었습니다. 앱을 업데이트한 후 복원하세요';
+  String get localBackupVersionTooNew =>
+      '이 백업은 최신 버전 앱에서 생성되었습니다. 앱을 업데이트한 후 복원하세요';
 
   @override
   String get localBackupRestoring => '복원 중…';
@@ -1817,7 +1850,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudTabBackup => '백업';
 
   @override
-  String get cloudTabBackupSubtitle => '카드를 탭하여 백업 방식을 전환하세요. 처음 설정 시 정보 입력이 필요합니다.';
+  String get cloudTabBackupSubtitle =>
+      '카드를 탭하여 백업 방식을 전환하세요. 처음 설정 시 정보 입력이 필요합니다.';
 
   @override
   String get cloudTabCloudSync => '클라우드 동기화';
@@ -1979,7 +2013,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudS3HelpStep5 => '5. 엔드포인트, 액세스 키, 시크릿 키, 버킷 이름을 붙여넣으세요';
 
   @override
-  String get cloudS3HelpNote => '권장: Cloudflare R2는 10GB의 무료 저장 공간을 제공하며 트래픽 비용이 없습니다';
+  String get cloudS3HelpNote =>
+      '권장: Cloudflare R2는 10GB의 무료 저장 공간을 제공하며 트래픽 비용이 없습니다';
 
   @override
   String get cloudStatusNotTested => '테스트하지 않음';
@@ -2002,7 +2037,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudErrorWebdavNotSupported => '서버가 WebDAV 프로토콜을 지원하지 않습니다';
 
   @override
-  String get cloudErrorAuthFailedCredentials => '인증 실패: 사용자 이름 또는 비밀번호가 올바르지 않습니다';
+  String get cloudErrorAuthFailedCredentials =>
+      '인증 실패: 사용자 이름 또는 비밀번호가 올바르지 않습니다';
 
   @override
   String get cloudErrorAccessDenied => '접근 거부: 권한을 확인해 주세요';
@@ -2027,7 +2063,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSwitchConfirmTitle => '클라우드 서비스 전환';
 
   @override
-  String get cloudSwitchConfirmMessage => '클라우드 서비스를 전환하면 현재 계정이 로그아웃됩니다. 전환하시겠습니까?';
+  String get cloudSwitchConfirmMessage =>
+      '클라우드 서비스를 전환하면 현재 계정이 로그아웃됩니다. 전환하시겠습니까?';
 
   @override
   String get cloudSwitchFailedTitle => '전환 실패';
@@ -2068,7 +2105,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get welcomeSelectCurrencyTitle => '기록 통화 선택';
 
   @override
-  String get welcomeCurrencyDescription => '선호하는 통화를 선택하세요. 설정에서 언제든지 변경할 수 있습니다';
+  String get welcomeCurrencyDescription =>
+      '선호하는 통화를 선택하세요. 설정에서 언제든지 변경할 수 있습니다';
 
   @override
   String get aiOcrNoLedger => '가계부를 찾을 수 없습니다';
@@ -2077,58 +2115,69 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudTutorialTitle => '시작하기';
 
   @override
-  String get cloudTutorialIntro => 'Spitout Cloud는 실시간 다중 기기 협업을 지원하는 셀프 호스팅 동기화 서버입니다. 사용 방법은 간단합니다:';
+  String get cloudTutorialIntro =>
+      'Spitout Cloud는 실시간 다중 기기 협업을 지원하는 셀프 호스팅 동기화 서버입니다. 사용 방법은 간단합니다:';
 
   @override
   String get cloudTutorialStep1Title => '1단계: 서버 배포 또는 참여';
 
   @override
-  String get cloudTutorialStep1Desc => 'Docker 명령어 한 줄로 셀프 호스팅할 수 있습니다 (GitHub README의 Docker 가이드 참고). 또는 지인/팀이 운영하는 기존 Spitout Cloud 서버에 참여하세요.';
+  String get cloudTutorialStep1Desc =>
+      'Docker 명령어 한 줄로 셀프 호스팅할 수 있습니다 (GitHub README의 Docker 가이드 참고). 또는 지인/팀이 운영하는 기존 Spitout Cloud 서버에 참여하세요.';
 
   @override
   String get cloudTutorialStep2Title => '2단계: 계정 받기';
 
   @override
-  String get cloudTutorialStep2Desc => 'Spitout Cloud는 (공개 서버 악용을 막기 위해) 자체 가입 기능을 제공하지 않습니다. 직접 호스팅하는 경우: Docker를 처음 실행하면 로그에 무작위 관리자 이메일과 비밀번호가 출력되니 이를 사용하세요. 다른 사람의 서버에 참여하는 경우: 관리자에게 웹 → 사용자에서 계정을 만들어 달라고 요청하세요.';
+  String get cloudTutorialStep2Desc =>
+      'Spitout Cloud는 (공개 서버 악용을 막기 위해) 자체 가입 기능을 제공하지 않습니다. 직접 호스팅하는 경우: Docker를 처음 실행하면 로그에 무작위 관리자 이메일과 비밀번호가 출력되니 이를 사용하세요. 다른 사람의 서버에 참여하는 경우: 관리자에게 웹 → 사용자에서 계정을 만들어 달라고 요청하세요.';
 
   @override
   String get cloudTutorialStep3Title => '3단계: 로그인 및 동기화 활성화';
 
   @override
-  String get cloudTutorialStep3Desc => '앱에서 Spitout Cloud를 선택하고 서버 URL과 2단계에서 받은 계정을 입력하세요. 첫 로그인 시 로컬 가계부 전체가 업로드되며, 이후의 모든 변경 사항은 실시간으로 전송됩니다.';
+  String get cloudTutorialStep3Desc =>
+      '앱에서 Spitout Cloud를 선택하고 서버 URL과 2단계에서 받은 계정을 입력하세요. 첫 로그인 시 로컬 가계부 전체가 업로드되며, 이후의 모든 변경 사항은 실시간으로 전송됩니다.';
 
   @override
   String get cloudTutorialStep4Title => '4단계: 다른 기기에서 로그인';
 
   @override
-  String get cloudTutorialStep4Desc => '휴대폰 / 태블릿 / 웹 — 같은 계정으로 즉시 상태를 공유합니다. 변경 사항은 몇 초 안에 전파됩니다.';
+  String get cloudTutorialStep4Desc =>
+      '휴대폰 / 태블릿 / 웹 — 같은 계정으로 즉시 상태를 공유합니다. 변경 사항은 몇 초 안에 전파됩니다.';
 
   @override
   String get cloudTutorialTipTitle => '팁';
 
   @override
-  String get cloudTutorialTipDesc => '웹 UI는 서버 URL에 있습니다. 브라우저에서 열어 가계부와 멤버를 관리하고 로그를 확인하세요.';
+  String get cloudTutorialTipDesc =>
+      '웹 UI는 서버 URL에 있습니다. 브라우저에서 열어 가계부와 멤버를 관리하고 로그를 확인하세요.';
 
   @override
   String get cloudTutorialFeaturesTitle => '기능';
 
   @override
-  String get cloudTutorialFeature1 => '📱 실시간 다중 기기: 휴대폰 A + 휴대폰 B + 웹을 하나의 계정으로, 1초 이내 동기화';
+  String get cloudTutorialFeature1 =>
+      '📱 실시간 다중 기기: 휴대폰 A + 휴대폰 B + 웹을 하나의 계정으로, 1초 이내 동기화';
 
   @override
-  String get cloudTutorialFeature2 => '🌐 웹 UI 내장: Docker 이미지 하나에 서버와 웹이 모두 포함되어 바로 브라우저로 사용 가능';
+  String get cloudTutorialFeature2 =>
+      '🌐 웹 UI 내장: Docker 이미지 하나에 서버와 웹이 모두 포함되어 바로 브라우저로 사용 가능';
 
   @override
-  String get cloudTutorialFeature3 => '👥 다중 사용자 분리: 하나의 서버에 여러 사용자, 데이터는 완전히 분리';
+  String get cloudTutorialFeature3 =>
+      '👥 다중 사용자 분리: 하나의 서버에 여러 사용자, 데이터는 완전히 분리';
 
   @override
-  String get cloudTutorialFeature4 => '🤝 공유 가계부: 가족/팀을 초대해 하나의 가계부를 몇 초 단위로 동기화';
+  String get cloudTutorialFeature4 =>
+      '🤝 공유 가계부: 가족/팀을 초대해 하나의 가계부를 몇 초 단위로 동기화';
 
   @override
   String get cloudTutorialGotIt => '확인했습니다';
 
   @override
-  String get cloudSyncHint => '다운로드 시 차이점을 자동으로 비교해 선택적으로 미리 볼 수 있습니다. 실시간이 아니므로 여러 기기에서 동시에 같은 가계부를 편집하지 마세요. 동기화 범위는 가계부 데이터(연결된 계정, 카테고리 포함)입니다.';
+  String get cloudSyncHint =>
+      '다운로드 시 차이점을 자동으로 비교해 선택적으로 미리 볼 수 있습니다. 실시간이 아니므로 여러 기기에서 동시에 같은 가계부를 편집하지 마세요. 동기화 범위는 가계부 데이터(연결된 계정, 카테고리 포함)입니다.';
 
   @override
   String get appearanceSettings => '개인화';
@@ -2179,7 +2228,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logCenterClearConfirmTitle => '로그 지우기';
 
   @override
-  String get logCenterClearConfirmMessage => '모든 로그를 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.';
+  String get logCenterClearConfirmMessage =>
+      '모든 로그를 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.';
 
   @override
   String get logCenterCleared => '로그가 지워졌습니다';
@@ -2197,10 +2247,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get configImportExportInfoTitle => '기능 설명';
 
   @override
-  String get configImportExportInfoMessage => '앱 설정을 백업하고 복원하여 다른 기기로 이동하거나 설정을 복구할 수 있습니다. YAML 형식으로 내보내며, 확인하고 편집할 수 있습니다.\n\n앱 설정만 포함되며 거래 내역은 포함되지 않습니다 (거래 데이터는 명세 가져오기/내보내기 기능을 사용하세요).';
+  String get configImportExportInfoMessage =>
+      '앱 설정을 백업하고 복원하여 다른 기기로 이동하거나 설정을 복구할 수 있습니다. YAML 형식으로 내보내며, 확인하고 편집할 수 있습니다.\n\n앱 설정만 포함되며 거래 내역은 포함되지 않습니다 (거래 데이터는 명세 가져오기/내보내기 기능을 사용하세요).';
 
   @override
-  String get configImportExportWarning => '설정 파일에는 클라우드 서비스 키, 비밀번호 등 민감한 정보가 포함되어 있습니다. 안전하게 보관하세요. 가져오기 시 같은 이름의 설정이 덮어씌워지니 먼저 백업하는 것을 권장합니다.';
+  String get configImportExportWarning =>
+      '설정 파일에는 클라우드 서비스 키, 비밀번호 등 민감한 정보가 포함되어 있습니다. 안전하게 보관하세요. 가져오기 시 같은 이름의 설정이 덮어씌워지니 먼저 백업하는 것을 권장합니다.';
 
   @override
   String get configExportTitle => '설정 내보내기';
@@ -2242,7 +2294,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get configImportRestartMessage => '설정을 가져왔습니다. 일부 설정은 앱을 재시작해야 적용됩니다.';
 
   @override
-  String get configImportOverwriteWarning => '가져오기 시 기존 설정이 덮어씌워집니다. 먼저 현재 설정을 백업하는 것을 권장합니다.';
+  String get configImportOverwriteWarning =>
+      '가져오기 시 기존 설정이 덮어씌워집니다. 먼저 현재 설정을 백업하는 것을 권장합니다.';
 
   @override
   String get configImportExportIncludesTitle => '포함된 설정';
@@ -2313,7 +2366,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgersConflictTitle => '동기화 충돌';
 
   @override
-  String get ledgersConflictMessage => '로컬과 클라우드 가계부 데이터가 일치하지 않습니다. 처리 방법을 선택해 주세요:';
+  String get ledgersConflictMessage =>
+      '로컬과 클라우드 가계부 데이터가 일치하지 않습니다. 처리 방법을 선택해 주세요:';
 
   @override
   String ledgersConflictLocalInfo(int count) {
@@ -2440,7 +2494,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncPreviewOldFormat => '이전 클라우드 형식, 전체 교체가 필요합니다';
 
   @override
-  String get syncPreviewOldFormatMessage => '클라우드 데이터에 동기화 ID가 없습니다. 로컬 데이터를 지우고 클라우드에서 다시 가져옵니다.';
+  String get syncPreviewOldFormatMessage =>
+      '클라우드 데이터에 동기화 ID가 없습니다. 로컬 데이터를 지우고 클라우드에서 다시 가져옵니다.';
 
   @override
   String syncPreviewApplied(int count) {
@@ -2457,13 +2512,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSyncGuideHowItWorks => '작동 방식';
 
   @override
-  String get cloudSyncGuideHowItem1 => '업로드: 현재 가계부의 모든 데이터를 묶어 클라우드에 업로드하고 기존 클라우드 데이터를 대체합니다';
+  String get cloudSyncGuideHowItem1 =>
+      '업로드: 현재 가계부의 모든 데이터를 묶어 클라우드에 업로드하고 기존 클라우드 데이터를 대체합니다';
 
   @override
-  String get cloudSyncGuideHowItem2 => '다운로드: 클라우드 데이터를 가져와 로컬 기록과 하나씩 비교합니다 — 적용할 변경 사항을 직접 선택할 수 있습니다';
+  String get cloudSyncGuideHowItem2 =>
+      '다운로드: 클라우드 데이터를 가져와 로컬 기록과 하나씩 비교합니다 — 적용할 변경 사항을 직접 선택할 수 있습니다';
 
   @override
-  String get cloudSyncGuideHowItem3 => '클라우드에는 항상 가장 최근에 업로드된 스냅샷만 저장되며 버전 기록은 없습니다';
+  String get cloudSyncGuideHowItem3 =>
+      '클라우드에는 항상 가장 최근에 업로드된 스냅샷만 저장되며 버전 기록은 없습니다';
 
   @override
   String get cloudSyncGuideCorrect => '올바른 사용법';
@@ -2478,19 +2536,23 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSyncGuideCorrectItem3 => '변경 사항을 적용하기 전에 미리보기를 꼼꼼히 확인하세요';
 
   @override
-  String get cloudSyncGuideCorrectItem4 => '편집 → 업로드 → 기기 전환 → 다운로드 → 편집 순서를 따르세요';
+  String get cloudSyncGuideCorrectItem4 =>
+      '편집 → 업로드 → 기기 전환 → 다운로드 → 편집 순서를 따르세요';
 
   @override
   String get cloudSyncGuideWrong => '피해야 할 사용법';
 
   @override
-  String get cloudSyncGuideWrongItem1 => '두 기기에서 동시에 같은 가계부를 편집하는 것 — 나중에 업로드한 쪽이 이전 것을 덮어씁니다';
+  String get cloudSyncGuideWrongItem1 =>
+      '두 기기에서 동시에 같은 가계부를 편집하는 것 — 나중에 업로드한 쪽이 이전 것을 덮어씁니다';
 
   @override
-  String get cloudSyncGuideWrongItem2 => '업로드 직후 바로 다운로드하는 것 — 클라우드 서비스는 수 초에서 수 분의 동기화 지연이 있을 수 있으니 잠시 기다려 주세요';
+  String get cloudSyncGuideWrongItem2 =>
+      '업로드 직후 바로 다운로드하는 것 — 클라우드 서비스는 수 초에서 수 분의 동기화 지연이 있을 수 있으니 잠시 기다려 주세요';
 
   @override
-  String get cloudSyncGuideWrongItem3 => '오랫동안 동기화하지 않다가 한 번에 많은 변경 사항을 다운로드하는 것 — 중요한 차이를 놓치기 쉽습니다';
+  String get cloudSyncGuideWrongItem3 =>
+      '오랫동안 동기화하지 않다가 한 번에 많은 변경 사항을 다운로드하는 것 — 중요한 차이를 놓치기 쉽습니다';
 
   @override
   String get cloudSyncGuideLimitations => '알려진 제한 사항';
@@ -2499,10 +2561,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSyncGuideLimitItem1 => '실시간이 아닙니다: 업로드와 다운로드를 수동으로 눌러야 합니다';
 
   @override
-  String get cloudSyncGuideLimitItem2 => '충돌 병합이 없습니다: 양쪽의 편집을 자동으로 병합하지 않으며 마지막 업로드가 우선합니다';
+  String get cloudSyncGuideLimitItem2 =>
+      '충돌 병합이 없습니다: 양쪽의 편집을 자동으로 병합하지 않으며 마지막 업로드가 우선합니다';
 
   @override
-  String get cloudSyncGuideLimitItem3 => '클라우드 서비스 지연: 업로드된 파일을 다른 기기가 읽을 수 있게 되기까지 사용하는 클라우드 제공업체에 따라 수 초에서 수 분이 걸릴 수 있습니다';
+  String get cloudSyncGuideLimitItem3 =>
+      '클라우드 서비스 지연: 업로드된 파일을 다른 기기가 읽을 수 있게 되기까지 사용하는 클라우드 제공업체에 따라 수 초에서 수 분이 걸릴 수 있습니다';
 
   @override
   String get appLockTitle => '앱 잠금';
@@ -2582,25 +2646,29 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSyncHelpModesTitle => '세 가지 동기화 모드';
 
   @override
-  String get cloudSyncHelpModesBody => '• 증분 동기화 (자동, 매일): 항목을 추가하거나 편집하면 해당 변경 사항만 자동으로 업로드/다운로드됩니다 — 빠르고 수동 작업이 필요 없습니다. 항상 실행되는 방식입니다.\n• 전체 업로드: 클라우드 동기화를 처음 활성화하거나 이 가계부에 대한 클라우드 데이터가 아직 없을 때, 로컬 데이터 전체가 한 번에 클라우드로 전송됩니다.\n• 전체 다운로드: 새 기기, 재설치 후, 또는 로컬이 비어 있을 때 클라우드에서 모든 데이터를 가져옵니다.';
+  String get cloudSyncHelpModesBody =>
+      '• 증분 동기화 (자동, 매일): 항목을 추가하거나 편집하면 해당 변경 사항만 자동으로 업로드/다운로드됩니다 — 빠르고 수동 작업이 필요 없습니다. 항상 실행되는 방식입니다.\n• 전체 업로드: 클라우드 동기화를 처음 활성화하거나 이 가계부에 대한 클라우드 데이터가 아직 없을 때, 로컬 데이터 전체가 한 번에 클라우드로 전송됩니다.\n• 전체 다운로드: 새 기기, 재설치 후, 또는 로컬이 비어 있을 때 클라우드에서 모든 데이터를 가져옵니다.';
 
   @override
   String get cloudSyncHelpWhenFullTitle => '전체 동기화는 언제 발생하나요?';
 
   @override
-  String get cloudSyncHelpWhenFullBody => '전체 동기화는 한쪽이 비어 있을 때만 자동으로 실행됩니다 (클라우드 동기화 최초 활성화 / 새 기기 / 재설치 / 로컬 또는 클라우드 데이터 삭제 후). 양쪽 모두 데이터가 있는 한 동기화는 증분 방식을 유지하며 스스로 다시 시작하지 않습니다. 강제로 전체 재동기화를 하려면 먼저 해당 쪽의 데이터를 지워야 합니다.';
+  String get cloudSyncHelpWhenFullBody =>
+      '전체 동기화는 한쪽이 비어 있을 때만 자동으로 실행됩니다 (클라우드 동기화 최초 활성화 / 새 기기 / 재설치 / 로컬 또는 클라우드 데이터 삭제 후). 양쪽 모두 데이터가 있는 한 동기화는 증분 방식을 유지하며 스스로 다시 시작하지 않습니다. 강제로 전체 재동기화를 하려면 먼저 해당 쪽의 데이터를 지워야 합니다.';
 
   @override
   String get cloudSyncHelpStuckTitle => '동기화가 가끔 멈추는 이유';
 
   @override
-  String get cloudSyncHelpStuckBody => '• 전체 업로드/다운로드는 이어받기를 지원하지 않습니다: 네트워크가 끊기거나 앱이 백그라운드에서 종료되면 이어서 진행하지 않고 처음부터 다시 시작합니다. 데이터가 클 경우 안정적인 네트워크(Wi-Fi 권장)를 사용하고 완료될 때까지 다른 곳으로 전환하지 마세요.\n• 증분 동기화는 이어받기가 안전하며 일상적인 사용에서는 영향을 받지 않습니다.';
+  String get cloudSyncHelpStuckBody =>
+      '• 전체 업로드/다운로드는 이어받기를 지원하지 않습니다: 네트워크가 끊기거나 앱이 백그라운드에서 종료되면 이어서 진행하지 않고 처음부터 다시 시작합니다. 데이터가 클 경우 안정적인 네트워크(Wi-Fi 권장)를 사용하고 완료될 때까지 다른 곳으로 전환하지 마세요.\n• 증분 동기화는 이어받기가 안전하며 일상적인 사용에서는 영향을 받지 않습니다.';
 
   @override
   String get cloudSyncHelpTroubleshootTitle => '문제 해결';
 
   @override
-  String get cloudSyncHelpTroubleshootBody => '• 먼저 이 페이지를 아래로 당겨 정밀 검사를 실행하고 로컬과 클라우드를 비교하세요.\n• 그래도 해결되지 않으면 로그 센터를 열어 동기화 로그(실패 원인 포함)를 확인하고 신고해 주세요.';
+  String get cloudSyncHelpTroubleshootBody =>
+      '• 먼저 이 페이지를 아래로 당겨 정밀 검사를 실행하고 로컬과 클라우드를 비교하세요.\n• 그래도 해결되지 않으면 로그 센터를 열어 동기화 로그(실패 원인 포함)를 확인하고 신고해 주세요.';
 
   @override
   String get cloudSyncHelpOpenLogCenter => '로그 센터 열기';
@@ -2614,7 +2682,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncHealthRecovering => '로그인 상태 복구 중…';
 
   @override
-  String get syncHealthNeedsLogin => '로그인되지 않았거나 세션이 만료되었습니다. 클라우드 동기화에 다시 로그인해 주세요.';
+  String get syncHealthNeedsLogin =>
+      '로그인되지 않았거나 세션이 만료되었습니다. 클라우드 동기화에 다시 로그인해 주세요.';
 
   @override
   String get syncHealthHasDiff => '차이가 감지되어 자동으로 동기화되었습니다';
@@ -2704,7 +2773,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedJoinEnterCode => '초대 코드 입력';
 
   @override
-  String get sharedJoinEnterCodeHint => '대문자와 숫자 6자리입니다. 공유 링크를 누르면 이 단계를 건너뛸 수 있습니다.';
+  String get sharedJoinEnterCodeHint =>
+      '대문자와 숫자 6자리입니다. 공유 링크를 누르면 이 단계를 건너뛸 수 있습니다.';
 
   @override
   String get sharedJoinPreviewButton => '코드 확인';
@@ -2746,7 +2816,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedJoinCodeFormatError => '초대 코드는 6자리 문자/숫자여야 합니다.';
 
   @override
-  String get sharedJoinInvalidOrExpired => '초대 코드가 유효하지 않거나 만료되었습니다. 초대한 사람에게 새 코드를 요청하세요.';
+  String get sharedJoinInvalidOrExpired =>
+      '초대 코드가 유효하지 않거나 만료되었습니다. 초대한 사람에게 새 코드를 요청하세요.';
 
   @override
   String get sharedJoinAlreadyMember => '이미 이 가계부의 멤버입니다.';
@@ -2791,10 +2862,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get sharedInviteWarning => '⚠️ 초대 코드를 공개 그룹이나 SNS에 게시하지 마세요. 코드를 가진 사람은 누구나 참여할 수 있습니다. 유출되었다면 멤버 화면에서 취소하고 다시 생성하세요.';
+  String get sharedInviteWarning =>
+      '⚠️ 초대 코드를 공개 그룹이나 SNS에 게시하지 마세요. 코드를 가진 사람은 누구나 참여할 수 있습니다. 유출되었다면 멤버 화면에서 취소하고 다시 생성하세요.';
 
   @override
-  String get sharedInviteInstruction => '코드나 짧은 링크를 상대방에게 전달하세요. Spitout를 설치한 후 링크를 누르거나 \"내 정보 → 공유 가계부 참여\"에서 코드를 입력하면 됩니다.';
+  String get sharedInviteInstruction =>
+      '코드나 짧은 링크를 상대방에게 전달하세요. Spitout를 설치한 후 링크를 누르거나 \"내 정보 → 공유 가계부 참여\"에서 코드를 입력하면 됩니다.';
 
   @override
   String sharedInviteShareText(String ledger, String code, String url) {
@@ -2850,13 +2923,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersRemoved => '멤버가 제거되었습니다';
 
   @override
-  String get sharedMembersSyncPending => '새로 만든 가계부는 먼저 가계부 관리 페이지에서 해당 가계부를 선택한 후 이 페이지에 다시 들어와야 멤버를 초대할 수 있습니다.';
+  String get sharedMembersSyncPending =>
+      '새로 만든 가계부는 먼저 가계부 관리 페이지에서 해당 가계부를 선택한 후 이 페이지에 다시 들어와야 멤버를 초대할 수 있습니다.';
 
   @override
   String get sharedMembersSaveFirst => '먼저 가계부를 저장해 주세요';
 
   @override
-  String get sharedMembersInviteSyncFailed => '클라우드 동기화가 아직 완료되지 않았습니다. 나중에 다시 시도하세요.';
+  String get sharedMembersInviteSyncFailed =>
+      '클라우드 동기화가 아직 완료되지 않았습니다. 나중에 다시 시도하세요.';
 
   @override
   String get sharedMembersLoadingHint => '클라우드 장부가 아직 준비되지 않았습니다. 동기화 중…';
@@ -3013,7 +3088,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get rateRefreshFailed => '가져오기에 실패했습니다. 직접 환율을 설정할 수 있습니다';
 
   @override
-  String get rateDisclaimer => '출처: 공개 환율 데이터, 매일 업데이트됩니다. 환산은 참고용이며 은행 환율과 다를 수 있습니다.';
+  String get rateDisclaimer =>
+      '출처: 공개 환율 데이터, 매일 업데이트됩니다. 환산은 참고용이며 은행 환율과 다를 수 있습니다.';
 
   @override
   String get txFlagExcludedTag => '제외됨';
@@ -3033,10 +3109,12 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get ledgerCurrencyChangeRecalcHint => '기준 통화를 변경하면 모든 내역이 현재 환율로 다시 환산됩니다';
+  String get ledgerCurrencyChangeRecalcHint =>
+      '기준 통화를 변경하면 모든 내역이 현재 환율로 다시 환산됩니다';
 
   @override
-  String get ledgerCurrencyChangeRecalcWarning => '이 장부의 모든 거래 환산 금액이 최신 환율로 재계산되어 덮어쓰기되며, 다른 통화로 변경했다가 다시 돌아와도 원래 환산 값은 복원되지 않습니다';
+  String get ledgerCurrencyChangeRecalcWarning =>
+      '이 장부의 모든 거래 환산 금액이 최신 환율로 재계산되어 덮어쓰기되며, 다른 통화로 변경했다가 다시 돌아와도 원래 환산 값은 복원되지 않습니다';
 
   @override
   String get recalcForeignTxBanner => '이 장부에 환산되지 않은 외화 거래가 있습니다';
@@ -3400,7 +3478,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get detailImportExportImportTitle => '상세 가져오기';
 
   @override
-  String get detailImportExportImportSubtitle => 'CSV/TSV/XLSX 및 알리페이/위챗 명세서 지원';
+  String get detailImportExportImportSubtitle =>
+      'CSV/TSV/XLSX 및 알리페이/위챗 명세서 지원';
 
   @override
   String get detailImportExportExportTitle => '상세 내보내기';
@@ -3409,19 +3488,24 @@ class AppLocalizationsKo extends AppLocalizations {
   String get detailImportExportExportSubtitle => '장부 내역을 CSV 파일로 내보내기';
 
   @override
-  String get detailImportExportImportPoint1 => '일반 CSV, 알리페이, 위챗 세 가지 명세서를 지원하며 파일 형식은 CSV/TSV/XLSX입니다';
+  String get detailImportExportImportPoint1 =>
+      '일반 CSV, 알리페이, 위챗 세 가지 명세서를 지원하며 파일 형식은 CSV/TSV/XLSX입니다';
 
   @override
-  String get detailImportExportImportPoint2 => '차이는 파일 구조뿐입니다: 일반 CSV는 깔끔한 헤더 행을, 알리페이/위챗 명세서는 설명용 머리말 행을 포함하며 앱이 자동으로 건너뛰고 헤더를 찾습니다';
+  String get detailImportExportImportPoint2 =>
+      '차이는 파일 구조뿐입니다: 일반 CSV는 깔끔한 헤더 행을, 알리페이/위챗 명세서는 설명용 머리말 행을 포함하며 앱이 자동으로 건너뛰고 헤더를 찾습니다';
 
   @override
-  String get detailImportExportImportPoint3 => '세 가지 모두 동일한 열 매핑(날짜, 유형, 금액, 통화, 카테고리, 하위 카테고리, 메모)으로 인식되므로 가져오기 흐름이 동일합니다';
+  String get detailImportExportImportPoint3 =>
+      '세 가지 모두 동일한 열 매핑(날짜, 유형, 금액, 통화, 카테고리, 하위 카테고리, 메모)으로 인식되므로 가져오기 흐름이 동일합니다';
 
   @override
-  String get detailImportExportExportPoint1 => '장부의 거래 내역을 UTF-8 BOM 인코딩의 CSV 파일로 내보내며 Excel에서 바로 열 수 있습니다';
+  String get detailImportExportExportPoint1 =>
+      '장부의 거래 내역을 UTF-8 BOM 인코딩의 CSV 파일로 내보내며 Excel에서 바로 열 수 있습니다';
 
   @override
-  String get detailImportExportExportPoint2 => '파일명은 spitout_타임스탬프.csv이며 기본적으로 Download/Spitout 디렉터리에 저장됩니다';
+  String get detailImportExportExportPoint2 =>
+      '파일명은 spitout_타임스탬프.csv이며 기본적으로 Download/Spitout 디렉터리에 저장됩니다';
 
   @override
   String get detailImportExportExportPoint3 => '포함 필드는 다음과 같습니다:';
@@ -3456,7 +3540,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get exchangeRateInfoTitle => '기준 통화 안내';
 
   @override
-  String get exchangeRateInfoMessage => '기준 통화는 현재 장부의 기본 통화로, 장부 내 외화 거래는 환율에 따라 기준 통화로 환산되어 통계와 자산 개요에서 통합 집계됩니다. 장부마다 고유한 기준 통화가 있으며 언제든지 변경할 수 있고, 변경하면 이 장부의 모든 거래 환산 금액이 최신 환율로 재계산됩니다.\n\n환율은 공개 데이터 소스에서 매일 자동으로 가져옵니다. 아래 목록에서 원하는 통화의 \'편집\'을 눌러 수동 환율을 설정할 수도 있으며, 수동 환율은 자동 데이터를 덮어쓰고 즉시 적용됩니다.';
+  String get exchangeRateInfoMessage =>
+      '기준 통화는 현재 장부의 기본 통화로, 장부 내 외화 거래는 환율에 따라 기준 통화로 환산되어 통계와 자산 개요에서 통합 집계됩니다. 장부마다 고유한 기준 통화가 있으며 언제든지 변경할 수 있고, 변경하면 이 장부의 모든 거래 환산 금액이 최신 환율로 재계산됩니다.\n\n환율은 공개 데이터 소스에서 매일 자동으로 가져옵니다. 아래 목록에서 원하는 통화의 \'편집\'을 눌러 수동 환율을 설정할 수도 있으며, 수동 환율은 자동 데이터를 덮어쓰고 즉시 적용됩니다.';
 
   @override
   String get rateEditLabel => '편집';
@@ -3479,13 +3564,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get currencyManageBaseLocked => '장부 기준 통화(숨길 수 없음)';
 
   @override
-  String get currencyManageHint => '숨긴 통화는 기존 거래에 영향을 주지 않으며 언제든 다시 활성화할 수 있습니다.';
+  String get currencyManageHint =>
+      '숨긴 통화는 기존 거래에 영향을 주지 않으며 언제든 다시 활성화할 수 있습니다.';
 
   @override
   String get detailImportExportMigrateTitle => '장부 데이터 마이그레이션';
 
   @override
-  String get detailImportExportMigrateTip => '현재 장부의 데이터를 CSV 파일로 내보낸 다음, 대상 장부로 전환해 해당 파일을 가져오면 장부 간 데이터를 원활하게 마이그레이션할 수 있습니다.';
+  String get detailImportExportMigrateTip =>
+      '현재 장부의 데이터를 CSV 파일로 내보낸 다음, 대상 장부로 전환해 해당 파일을 가져오면 장부 간 데이터를 원활하게 마이그레이션할 수 있습니다.';
 
   @override
   String get mineCheckUpdate => '업데이트 확인';
@@ -3532,7 +3619,8 @@ class AppLocalizationsKo extends AppLocalizations {
   String get updateCantAutoCheckTitle => '업데이트를 자동으로 확인할 수 없음';
 
   @override
-  String get updateCantAutoCheck => '버전 정보를 가져올 수 없습니다. GitHub에서 최신 릴리스를 확인하세요.';
+  String get updateCantAutoCheck =>
+      '버전 정보를 가져올 수 없습니다. GitHub에서 최신 릴리스를 확인하세요.';
 
   @override
   String get updateGoToGithub => 'GitHub에서 보기';

@@ -131,7 +131,7 @@ void main() {
         weekExpenseProvider.overrideWith((ref, ledgerId) async => 0.0),
         // 切月测试需要可控的初始月份（不依赖 DateTime.now）。
         selectedMonthProvider.overrideWith((ref) => initialMonth ?? DateTime(2026, 7, 1)),
-        if (extraOverrides != null) ...extraOverrides,
+        ...?extraOverrides,
       ],
       child: MaterialApp(
         localizationsDelegates: const [

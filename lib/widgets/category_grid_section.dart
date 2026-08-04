@@ -83,7 +83,7 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
       // 与旧 FutureBuilder 行为一致：加载中/出错不显示 loading，避免一闪。
       // 缓存已预热时首帧即走 data 分支，无空白期。
       loading: () => const SizedBox.shrink(),
-      error: (_, __) => const SizedBox.shrink(),
+      error: (_, _) => const SizedBox.shrink(),
       data: (tree) => _buildGrid(context, tree),
     );
   }

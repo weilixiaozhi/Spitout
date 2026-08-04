@@ -319,7 +319,7 @@ class _RecurringTransactionCard extends ConsumerWidget {
                             logger.debug('Recurring', '堆栈: $stackTrace');
                           }
                         },
-                        activeColor: primaryColor,
+                        activeThumbColor: primaryColor,
                       ),
                     ),
                   ],

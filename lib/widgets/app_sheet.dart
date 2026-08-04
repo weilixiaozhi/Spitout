@@ -110,7 +110,7 @@ class AppSheet extends StatelessWidget {
                 ),
               ),
                 // 标题栏右侧操作位:删除/关闭图标等。吸顶时始终可见。
-                if (trailing != null) trailing!,
+                ?trailing,
               ],
             ),
           )

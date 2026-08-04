@@ -4,7 +4,7 @@ publish_to: 'none'
 version: 1.0.2+1
 
 environment:
-  sdk: ^3.6.0
+  sdk: ^3.12.0
 
 dependencies:
   flutter:
@@ -16,38 +16,39 @@ dependencies:
   # sqlite3 原为 drift 传递依赖：本地备份的完整性校验需以只读模式直接调其
   # PRAGMA API（drift 裸 executor 的 ensureOpen 依赖内部接口不可用），提升为
   # 显式直接依赖；版本仍由 pubspec.lock 固定，未引入任何新版本。
-  sqlite3: ^2.9.4
+  sqlite3: ^3.5.1
   # 无 Dart API，仅用于打包原生 SQLite 二进制供 Drift FFI 加载，零 import 属正常，勿删。
-  sqlite3_flutter_libs: ^0.5.24
+  sqlite3_flutter_libs: ^0.6.0+eol
   path_provider: ^2.1.4
   path: ^1.9.0
-  # 【禁止升级到 0.20.x】本项目通过 FVM 锁定 Flutter 3.27.0（见 .fvmrc / .fvm/fvm_config.json），
-  # 该版本 flutter_localizations 将 intl 钉死在 0.19.0，升到 ^0.20.2 会导致版本求解失败、无法构建。
-  # 如果你在终端跑 `flutter pub get` 时看到 "intl is pinned to 0.20.2" 的报错，
-  # 说明你误用了 PATH 里的全局 Flutter 3.44.6，而不是项目约束过期——
-  # 正确做法是改用 `fvm flutter pub get`（等价于 .fvm/versions/3.27.0/bin/flutter），
-  # 千万不要通过升级 intl 来"修复"该报错。pubspec.lock 也必须用 fvm 重新生成。
-  intl: ^0.19.0
+  # 版本由 flutter_localizations 约束解析（SDK 当前锁 0.20.2），无需手动锁死。
+  intl: ^0.20.0
   decimal: ^3.0.0
-  fl_chart: ^0.68.0
+  fl_chart: ^1.2.0
   shared_preferences: ^2.3.2
-  connectivity_plus: ^6.1.0
-  csv: ^5.0.2
-  file_picker: ^8.1.2
+  connectivity_plus: ^7.3.1
+  csv: ^8.0.0
+  file_picker: ^11.0.3
   supabase_flutter: ^2.5.6
   crypto: ^3.0.5
   uuid: ^4.5.1
   flutter_svg: ^2.0.10+1
   # Lucide 图标库（ISC 许可免署名）：全站 UI 图标与分类图标的统一来源，
   # 单色描边字形，用法与 Material Icons 一致（Icon(LucideIcons.x, color:)）。
-  lucide_icons: ^0.257.0
-  package_info_plus: ^8.0.2
+  # lucide_icons 上游已停止维护（LucideIconData extends IconData 与 Flutter 3.44+
+  # 的 final class IconData 冲突），改用活跃维护的 lucide_icons_flutter
+  # （lucide 1.24 图标集，与 shadcn/ui 同源，API 完全一致）。
+  lucide_icons_flutter: ^3.1.15
+  # file_picker 11.x 仍锁 win32 ^5.9，与 package_info_plus 10.x 要求的 win32 ^6 冲突，
+  # 故停在 9.x（10 系列需待 file_picker 12 稳定后再同步放宽）。
+  package_info_plus: ^9.0.0
   http: ^1.2.2
+  # share_plus 13 系列均要求 win32 ^6，与 file_picker 11.x（win32 ^5.9）冲突，暂保持 12.x
   share_plus: ^12.0.1
   url_launcher: ^6.3.0
-  permission_handler: ^11.3.1
-  flutter_local_notifications: ^17.2.2
-  timezone: ^0.9.4
+  permission_handler: ^13.0.0
+  flutter_local_notifications: ^22.2.0
+  timezone: ^0.11.1
   flutter_list_view: ^1.1.29
   visibility_detector: ^0.4.0+2
   reorderable_grid_view: ^2.2.8
@@ -66,14 +67,15 @@ dependencies:
   flutter_cloud_sync_spitout_cloud:
     path: packages/flutter_cloud_sync_spitout_cloud
   table_calendar: ^3.1.0
-  local_auth: ^2.3.0
+  local_auth: ^3.0.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^5.0.0
+  flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  build_runner: ^2.4.10
+  # build_runner 2.15.2+ 依赖 analyzer 13.3+(meta ^1.18.3)，与 SDK 锁定的 meta 1.18.0 冲突，暂保持 2.15.x
+  build_runner: ^2.15.1
   drift_dev: ^2.20.2
 
   # Testing framework enhancements
@@ -84,26 +86,6 @@ flutter:
   generate: true
   assets:
     - assets/brand/ic_launcher_spitout.svg
-  # 字体已移动到可选依赖，使用系统字体以减少应用体积
-  # fonts:
-  #   - family: Inter
-  #     fonts:
-  #       - asset: assets/fonts/Inter-Regular.ttf
-  #       - asset: assets/fonts/Inter-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/Inter-SemiBold.ttf
-  #         weight: 600
-  #       - asset: assets/fonts/Inter-Bold.ttf
-  #         weight: 700
-  #   - family: NotoSansSC
-  #     fonts:
-  #       - asset: assets/fonts/NotoSansSC-Regular.ttf
-  #       - asset: assets/fonts/NotoSansSC-Medium.ttf
-  #         weight: 500
-  #       - asset: assets/fonts/NotoSansSC-SemiBold.ttf
-  #         weight: 600
-  #       - asset: assets/fonts/NotoSansSC-Bold.ttf
-  #         weight: 700
 
 # 重新生成应用启动图标（修改 pubspec 的 flutter_launcher_icons 配置后执行）
 #   flutter pub run flutter_launcher_icons
