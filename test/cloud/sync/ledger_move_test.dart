@@ -137,6 +137,43 @@ void main() {
       expect((await readLedger(id)).storageMode, 'local');
     });
 
+    // AA 保留:moveToCloud 只翻 mode + 补 syncId + 登记 upsert,不得触碰
+    // AA 元数据(开关 / 交易 AA 字段 / 虚拟用户)。
+    test('AA 账本转云端后 AA 开关/交易字段/虚拟用户全部保留', () async {
+      final id = await repo.createLedger(
+        name: 'AA本地本',
+        storageMode: 'local',
+        aaEnabled: true,
+      );
+      await repo.addTransaction(
+        ledgerId: id,
+        type: 'expense',
+        amount: 30,
+        happenedAt: DateTime(2026, 5, 1),
+        paidByUserId: 'aa-user-1',
+        aaMode: 2,
+        aaParticipants: 'aa-user-1,aa-user-2',
+        aaSplits: '{"aa-user-1":"15","aa-user-2":"15"}',
+      );
+      final vuId = await repo.create(ledgerId: id, name: '虚拟室友');
+
+      await engine.moveToCloud(id);
+
+      final ledger = await readLedger(id);
+      expect(ledger.aaEnabled, isTrue,
+          reason: 'moveToCloud 只翻 mode,不得重置 AA 开关');
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(id)))
+          .getSingle();
+      expect(tx.paidByUserId, 'aa-user-1');
+      expect(tx.aaMode, 2);
+      expect(tx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(tx.aaSplits, '{"aa-user-1":"15","aa-user-2":"15"}');
+      final vus = await repo.getByLedger(id);
+      expect(vus.map((v) => v.id), contains(vuId),
+          reason: '虚拟用户随账本保留,不得被移动操作清掉');
+    });
+
     test('账本不存在时抛异常', () async {
       await expectLater(
         engine.moveToCloud(9999),
@@ -183,6 +220,44 @@ void main() {
 
       expect(provider.deleteLedgerCalls, isEmpty);
       expect((await readLedger(id)).storageMode, 'local');
+    });
+
+    // AA 保留:moveToLocal 只负责断联(删云端 + detach 清 syncId),不得触碰
+    // AA 元数据(开关 / 交易 AA 字段 / 虚拟用户)。
+    test('AA 账本转本地后 AA 开关/交易字段/虚拟用户全部保留', () async {
+      final id = await repo.createLedger(
+        name: 'AA云端本',
+        storageMode: 'cloud',
+        aaEnabled: true,
+      );
+      await repo.addTransaction(
+        ledgerId: id,
+        type: 'expense',
+        amount: 42,
+        happenedAt: DateTime(2026, 5, 3),
+        paidByUserId: 'aa-user-1',
+        aaMode: 2,
+        aaParticipants: 'aa-user-1,aa-user-2',
+        aaSplits: '{"aa-user-1":"21","aa-user-2":"21"}',
+      );
+      final vuId = await repo.create(ledgerId: id, name: '虚拟室友');
+
+      await engine.moveToLocal(id);
+
+      final ledger = await readLedger(id);
+      expect(ledger.storageMode, 'local');
+      expect(ledger.aaEnabled, isTrue,
+          reason: 'moveToLocal 只做断联,不得重置 AA 开关');
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(id)))
+          .getSingle();
+      expect(tx.paidByUserId, 'aa-user-1');
+      expect(tx.aaMode, 2);
+      expect(tx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(tx.aaSplits, '{"aa-user-1":"21","aa-user-2":"21"}');
+      final vus = await repo.getByLedger(id);
+      expect(vus.map((v) => v.id), contains(vuId),
+          reason: '虚拟用户随账本保留,不得被移动操作清掉');
     });
 
     test('共享账本禁止转本地(应改用复制到本地)', () async {
@@ -551,6 +626,52 @@ void main() {
       // 源账本保持云端不变。
       expect((await readLedger(srcId)).storageMode, 'cloud');
       expect(provider.deleteLedgerCalls, isEmpty);
+    });
+
+    // AA 保留:副本必须继承源账本的 AA 开关、交易 AA 字段与虚拟用户,否则
+    // "云端开 AA → 复制到本地" 会出现开关悄悄关闭 + 分摊数据丢失的语义漂移。
+    test('复制到本地时副本保留 AA 开关/交易字段/虚拟用户', () async {
+      final srcId = await repo.createLedger(
+        name: 'AA云端本',
+        storageMode: 'cloud',
+        aaEnabled: true,
+      );
+      await repo.addTransaction(
+        ledgerId: srcId,
+        type: 'expense',
+        amount: 60,
+        happenedAt: DateTime(2026, 5, 4),
+        paidByUserId: 'aa-user-1',
+        aaMode: 2,
+        aaParticipants: 'aa-user-1,aa-user-2',
+        aaSplits: '{"aa-user-1":"30","aa-user-2":"30"}',
+      );
+      await repo.create(ledgerId: srcId, name: '虚拟室友');
+
+      final newId = await engine.copyToLocal(srcId);
+
+      final copy = await readLedger(newId);
+      expect(copy.aaEnabled, isTrue,
+          reason: '副本必须继承源账本的 AA 开关,不能悄悄关掉');
+      final copiedTx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(newId)))
+          .getSingle();
+      expect(copiedTx.paidByUserId, 'aa-user-1');
+      expect(copiedTx.aaMode, 2);
+      expect(copiedTx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(copiedTx.aaSplits, '{"aa-user-1":"30","aa-user-2":"30"}');
+      // 副本虚拟用户必须是独立新行(新 id),但名称要随副本迁移过来。
+      final copiedVus = await repo.getByLedger(newId);
+      expect(copiedVus, hasLength(1));
+      expect(copiedVus.single.name, '虚拟室友',
+          reason: '虚拟用户必须随副本迁移,否则 AA 分摊结果会缺参与者');
+      expect(copiedVus.single.id, isNot(isNull));
+      // 源账本 AA 数据保持不动。
+      final srcTx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(srcId)))
+          .getSingle();
+      expect(srcTx.aaMode, 2);
+      expect((await readLedger(srcId)).aaEnabled, isTrue);
     });
 
     test('复制出的本地副本后续变更被闸门拦截,不进 local_changes', () async {

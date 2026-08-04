@@ -100,6 +100,198 @@ void main() {
     });
   });
 
+  group('syncLedgersFromServer AA 元数据同步', () {
+    test('insert 路径:server 显式返 aaEnabled=true → 新账本落地为开启', () async {
+      provider.pushFakeLedger(
+        ledgerId: 'srv-aa-1',
+        ledgerName: 'AA新本',
+        aaEnabled: true,
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.syncId.equals('srv-aa-1')))
+          .getSingle();
+      expect(row.aaEnabled, isTrue,
+          reason: '新设备拉取时 server 明示的 AA 开关必须原样落地');
+    });
+
+    test('insert 路径:server 不返 aaEnabled(老 server) → 新账本默认关闭', () async {
+      provider.pushFakeLedger(
+        ledgerId: 'srv-aa-2',
+        ledgerName: 'AA老本',
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.syncId.equals('srv-aa-2')))
+          .getSingle();
+      expect(row.aaEnabled, isFalse,
+          reason: '老 server 无 AA 字段时新账本默认关闭,与既有客户端一致');
+    });
+
+    test('update 路径:server 显式返 aaEnabled=true → 覆盖本地已关闭的开关', () async {
+      final id = await repo.createLedger(
+        name: 'AA云本',
+        storageMode: 'cloud',
+        aaEnabled: false,
+      );
+      final local = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      provider.pushFakeLedger(
+        ledgerId: local.syncId!,
+        ledgerName: 'AA云本',
+        aaEnabled: true,
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.aaEnabled, isTrue,
+          reason: 'server 明示 AA=true 时应同步覆盖本地值,保持两端一致');
+    });
+
+    test('update 路径:server 不返 aaEnabled(老 server) → 保留本地已开启的开关', () async {
+      final id = await repo.createLedger(
+        name: 'AA云本',
+        storageMode: 'cloud',
+        aaEnabled: true,
+      );
+      final local = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      // 模拟老 server:list 接口不含 aa_enabled 字段(hasAaEnabled=false)。
+      provider.pushFakeLedger(
+        ledgerId: local.syncId!,
+        ledgerName: 'AA云本',
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.aaEnabled, isTrue,
+          reason: '老 server 不返 AA 字段时 update 不得把本地已开启的开关静默关闭');
+    });
+
+    test('byName 收编路径:server 显式返 aaEnabled=true → 收编后开关开启', () async {
+      final id = await repo.createLedger(
+        name: 'AA半截',
+        storageMode: 'cloud',
+        aaEnabled: false,
+      );
+      // 模拟 moveToCloud 中断:mode 已是 cloud 但 syncId 为空,待同名收编。
+      await (db.update(db.ledgers)..where((l) => l.id.equals(id)))
+          .write(const LedgersCompanion(syncId: Value(null)));
+      provider.pushFakeLedger(
+        ledgerId: 'srv-aa-3',
+        ledgerName: 'AA半截',
+        aaEnabled: true,
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.syncId, 'srv-aa-3');
+      expect(row.aaEnabled, isTrue,
+          reason: '同名收编也属于同步落地,server 明示的 AA 开关必须带上');
+    });
+
+    test('byName 收编路径:server 不返 aaEnabled(老 server) → 保留本地开关', () async {
+      final id = await repo.createLedger(
+        name: 'AA半截',
+        storageMode: 'cloud',
+        aaEnabled: true,
+      );
+      await (db.update(db.ledgers)..where((l) => l.id.equals(id)))
+          .write(const LedgersCompanion(syncId: Value(null)));
+      // 模拟老 server 收编:list 不含 aa_enabled 字段。
+      provider.pushFakeLedger(
+        ledgerId: 'srv-aa-4',
+        ledgerName: 'AA半截',
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.syncId, 'srv-aa-4');
+      expect(row.aaEnabled, isTrue,
+          reason: '老 server 收编时不得把本地已开启的 AA 开关静默关闭');
+    });
+  });
+
+  group('AA 开关切换变更登记', () {
+    // 开关每次翻转(开→关→再开)都必须登记一条 ledger:update 到 local_changes,
+    // 保证同步时把最新开关状态推给云端,跨设备保持一致。
+    test('云端账本 AA 开关 开→关→再开 各登记一条 ledger:update', () async {
+      final id = await repo.createLedger(name: '开关本', storageMode: 'cloud');
+      final syncId = (await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle())
+          .syncId!;
+
+      // 只统计开关翻转产生的 update 变更(createLedger 本身还会登记一条
+      // ledger:upsert,不属于本测试关注点)。
+      Future<List<LocalChange>> updateChanges() async =>
+          (await changeTracker.getUnpushedChangesForLedger(id))
+              .where((c) => c.action == 'update')
+              .toList();
+
+      // 1) 打开 AA
+      await repo.updateLedger(id: id, aaEnabled: true);
+      var changes = await updateChanges();
+      expect(changes, hasLength(1));
+      expect(changes.single.entityType, 'ledger');
+      expect(changes.single.entitySyncId, syncId,
+          reason: 'switch 变更必须以 syncId 关联到云端账本');
+
+      // 2) 关闭 AA
+      await repo.updateLedger(id: id, aaEnabled: false);
+      changes = await updateChanges();
+      expect(changes, hasLength(2),
+          reason: '关闭也是显式状态变更,必须登记,不能靠默认值漏推');
+
+      // 3) 再次打开 AA
+      await repo.updateLedger(id: id, aaEnabled: true);
+      changes = await updateChanges();
+      expect(changes, hasLength(3),
+          reason: '再开同样是状态变更,必须登记,保证最终态推上去');
+
+      // 开关值本身在本地账本行实时生效,且不污染归属字段。
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.aaEnabled, isTrue);
+      expect(row.storageMode, 'cloud');
+      expect(row.syncId, syncId);
+    });
+
+    // 本地账本没有云端关联,开关切换不得登记 change(第二层闸门兜底)。
+    test('本地账本 AA 开关切换不登记 change', () async {
+      final id = await repo.createLedger(name: '本地开关本', storageMode: 'local');
+
+      await repo.updateLedger(id: id, aaEnabled: true);
+      await repo.updateLedger(id: id, aaEnabled: false);
+
+      expect(await changeTracker.getUnpushedChangesForLedger(id), isEmpty,
+          reason: '纯本地账本的 AA 开关不跨设备同步,不得产生待推送 change');
+      final row = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(id)))
+          .getSingle();
+      expect(row.aaEnabled, isFalse);
+    });
+  });
+
   group('purgeAllCloudLedgers 退出清理', () {
     test('只清云端账本,本地账本与其交易零影响', () async {
       final cloudId = await repo.createLedger(name: '云端本', storageMode: 'cloud');
