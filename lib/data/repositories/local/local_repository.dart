@@ -146,35 +146,21 @@ class LocalRepository extends BaseRepository {
       );
 
   @override
-  Future<void> updateLedgerName({required int id, required String name}) =>
-      _ledgerRepo.updateLedgerName(id: id, name: name);
-
-  @override
   Future<void> updateLedger(
       {required int id,
       String? name,
       String? currency,
       int? monthStartDay,
       bool? aaEnabled}) async {
+    // 变更登记已下沉到子仓 updateLedger(与 createLedger 同一事务模式):
+    // cloud 账本写 local_changes、快照型后端标 snapshot_dirty_ledgers。
+    // 本层只做纯委托,避免与子仓重复登记。
     await _ledgerRepo.updateLedger(
         id: id,
         name: name,
         currency: currency,
         monthStartDay: monthStartDay,
         aaEnabled: aaEnabled);
-    if (changeTracker != null) {
-      final row =
-          await (db.select(db.ledgers)..where((l) => l.id.equals(id))).getSingleOrNull();
-      if (row != null && row.syncId != null && row.syncId!.isNotEmpty) {
-        await changeTracker!.recordLedgerChange(
-          entityType: 'ledger',
-          entityId: id,
-          entitySyncId: row.syncId!,
-          ledgerId: id,
-          action: 'update',
-        );
-      }
-    }
   }
 
   @override

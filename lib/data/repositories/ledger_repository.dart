@@ -65,12 +65,6 @@ abstract class LedgerRepository {
     required int targetLedgerId,
   });
 
-  /// 更新账本名称
-  Future<void> updateLedgerName({
-    required int id,
-    required String name,
-  });
-
   /// 更新账本信息
   ///
   /// [aaEnabled] 为 AA 分摊开关,跨设备同步。null = 不更新。

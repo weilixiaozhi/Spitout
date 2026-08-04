@@ -757,11 +757,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     final int newLedgerId;
     if (_inviteCreatedLedgerId != null) {
       newLedgerId = _inviteCreatedLedgerId!;
-      // 复用已创建账本时同步当前表单的名称与币种,保证后续保存一致。
+      // 复用已创建账本时同步当前表单的名称、币种与 AA 开关,保证后续保存一致。
       await repo.updateLedger(
         id: newLedgerId,
         name: name,
         currency: _currency,
+        aaEnabled: _aaEnabled,
       );
     } else {
       // 账本所有者身份:一律用 localSelfId 作为初始 ownerUserId。
@@ -769,11 +770,17 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       // (LocalIdentityMigrationService)改写为云 userId,此处不读取
       // spitoutCloudProviderInstance,避免未初始化时报错阻断建账本。
       final localSelfId = await ref.read(localSelfIdProvider.future);
+      // AA 开关必须随 createLedger 一同落库:数据层会在同一事务内以
+      // aaEnabled 的最终值登记同步信号(快照型后端写 snapshot_dirty_ledgers、
+      // Spitout Cloud 写 local_changes)。若先建后改(先 false 再补写 true),
+      // 首快照/首次推送拿到的是 false,而补写的 updateLedger 不登记任何
+      // 同步信号 → 云端永远是 false,下次拉取就把本地覆盖回关闭状态。
       newLedgerId = await repo.createLedger(
         name: name,
         currency: _currency,
         storageMode: storageMode,
         ownerUserId: localSelfId,
+        aaEnabled: _aaEnabled,
       );
       _inviteCreatedLedgerId = newLedgerId;
     }
@@ -781,10 +788,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 创建时选了非 1 的起始日 → 补写
     if (_monthStartDay != 1) {
       await repo.updateLedger(id: newLedgerId, monthStartDay: _monthStartDay);
-    }
-    // 创建时开启了 AA 分摊 → 补写开关(默认 false,跨设备同步)
-    if (_aaEnabled) {
-      await repo.updateLedger(id: newLedgerId, aaEnabled: true);
     }
     // 新建态内存暂存的虚拟用户:拿到 ledgerId 后批量落库。
     // 用户新建时开启 AA 即可直接添加虚拟用户(无需先保存再回来配置),

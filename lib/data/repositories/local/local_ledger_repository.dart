@@ -294,13 +294,6 @@ class LocalLedgerRepository implements LedgerRepository {
   }
 
   @override
-  Future<void> updateLedgerName({required int id, required String name}) async {
-    await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id))).write(
-      LedgersCompanion(name: d.Value(name)),
-    );
-  }
-
-  @override
   Future<void> updateLedger({
     required int id,
     String? name,
@@ -319,8 +312,46 @@ class LocalLedgerRepository implements LedgerRepository {
           ? d.Value(aaEnabled)
           : const d.Value.absent(),
     );
-    await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id)))
-        .write(comp);
+    // 全部字段均未变更时直接返回:避免空 UPDATE,也不产生无意义同步信号。
+    final hasAnyChange = name != null ||
+        currency != null ||
+        monthStartDay != null ||
+        aaEnabled != null;
+    if (!hasAnyChange) return;
+
+    // 写库与变更登记放同一事务(与 createLedger 模式对称),消除"元数据已改
+    // 但同步信号丢失"的窗口。归属以更新前行的 syncId 为准(updateLedger 不
+    // 改 syncId,前后一致):
+    //   - cloud 账本(syncId 非空)→ ChangeRecorder 写 local_changes,由
+    //     SyncCoordinator 增量推送;
+    //   - 快照型后端账本(syncId 为 null)→ SnapshotDirtyMarker 标脏整本快照
+    //     待重传。此前 updateLedger 不登记该信号,云端快照里的账本元数据
+    //     永远是旧值,任何一次快照拉取都会把本地刚改的值覆盖回去(如 AA
+    //     开关"建完自动关闭"),故必须与 createLedger 一样落信号;
+    //   - 两者均未注入(无后端)→ no-op,仅本地生效。
+    await db.transaction(() async {
+      final row = await (db.select(db.ledgers)
+            ..where((tbl) => tbl.id.equals(id)))
+          .getSingleOrNull();
+      await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id)))
+          .write(comp);
+
+      final syncId = row?.syncId;
+      final tracker = _trackerGetter?.call();
+      if (tracker != null && syncId != null) {
+        await tracker.recordLedgerChange(
+          entityType: 'ledger',
+          entityId: id,
+          entitySyncId: syncId,
+          ledgerId: id,
+          action: 'update',
+        );
+      }
+      final snapshotMarker = _snapshotDirtyMarkerGetter?.call();
+      if (snapshotMarker != null && syncId == null) {
+        await snapshotMarker.markLedgerDirty(id);
+      }
+    });
   }
 
   @override
