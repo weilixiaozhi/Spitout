@@ -4,7 +4,9 @@
 /// 交给 appRoute 解析，形成唯一「名称 → 页面」映射层。
 /// 验证内容：
 ///   1. 分类管理路由名 → 返回非空 MaterialPageRoute，settings 名称正确；
-///   2. 未知路由名 → 返回 null（由调用方走回退分支）。
+///   2. AA 统计/分摊编辑路由名 → 携带合法入参可解析为可 push 的 PageRoute
+///     （分摊编辑页经 aaSlidePageRoute 返回 PageRouteBuilder）；
+///   3. 未知路由名 → 返回 null（由调用方走回退分支）。
 library;
 
 import 'package:flutter/material.dart';
@@ -46,7 +48,9 @@ void main() {
         ),
       ));
       expect(edit, isNotNull, reason: '携带合法入参的分摊编辑页路由必须解析');
-      expect(edit, isA<MaterialPageRoute<dynamic>>());
+      // AA 编辑页走 aaSlidePageRoute(返回 PageRouteBuilder,带与 sheet 同向的
+      // 下滑转场),故只断言"可 push 的 PageRoute"而非具体的 MaterialPageRoute。
+      expect(edit, isA<PageRoute<dynamic>>());
 
       final editNoArgs = appRoute(const RouteSettings(name: Routes.aaEdit));
       expect(editNoArgs, isNull, reason: '缺失入参的分摊编辑页路由应返回 null');
