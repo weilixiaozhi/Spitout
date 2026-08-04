@@ -16,8 +16,11 @@ import '../../utils/date/month_range.dart';
 import '../../utils/category_utils.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart' show ledgerMembersProvider;
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+import '../../core/identity/local_user_identity.dart' show localSelfIdProvider;
+import '../../services/data/tx_author_service.dart';
 import '../transaction/category_detail_page.dart';
 import 'ledgers_page.dart';
+import '../../routes.dart';
 import '../../theme/icons/app_icons.dart';
 
 /// 首页内容区统一水平内边距（8）：头部汇总卡与下方交易列表共用，保证两者左右边缘对齐。
@@ -205,11 +208,26 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final ledgerId = ref.read(currentLedgerIdProvider);
     final baseCurrency = ref.read(currentLedgerCurrencyProvider);
+    // 解析当前操作者标识作为填充交易的支出人(云 userId 优先,未登录
+    // 用设备身份兜底),与真实创建路径的 markTxAuthor 回填口径一致,
+    // 避免填充数据出现「支出人未知」或分摊统计误归因。
+    String? paidByUserId;
+    try {
+      final cloud = await ref.read(spitoutCloudProviderInstance.future);
+      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      final localSelfId = await ref.read(localSelfIdProvider.future);
+      paidByUserId =
+          (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;
+    } catch (e) {
+      // 未配置/未登录时跳过,seeder 侧不传支出人(仅 debug 数据,不影响生产)。
+      paidByUserId = null;
+    }
     final seeder = AnalyticsTestDataSeeder(ref.read(repositoryProvider));
     final count = await seeder.fill(
       ledgerId: ledgerId,
       baseCurrency: baseCurrency,
       scope: scope,
+      paidByUserId: paidByUserId,
     );
     if (!mounted) return;
 
@@ -515,6 +533,30 @@ class _HomePageState extends ConsumerState<HomePage>
                     ],
                   ),
                 ),
+                // 分摊统计入口：当前账本开启 AA 分摊时显示，
+                // 位于汇总卡下方、交易列表上方，样式与编辑页原入口保持一致。
+                if (ledger != null && ledger.aaEnabled) ...[
+                  const SizedBox(height: 8),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: OutlinedButton.icon(
+                      icon: const Icon(AppIcons.pieChart, size: 18),
+                      label: Text(l10n.ledgerAaStatisticsEntry),
+                      onPressed: () {
+                        // 从首页进入即当前账本的分摊统计，直接传账本 id。
+                        Navigator.of(context).pushNamed(
+                          Routes.aaStatistics,
+                          arguments: ledger.id,
+                        );
+                      },
+                      style: OutlinedButton.styleFrom(
+                        minimumSize: const Size(double.infinity, 40.0),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10)),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             );
           },

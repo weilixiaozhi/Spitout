@@ -3535,58 +3535,56 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => '协作者无权修改账本信息';
 
   @override
-  String get aaSettlementTitle => '分摊统计';
+  String get aaStatisticsTitle => '分摊统计';
 
   @override
-  String get aaSettlementOverview => '汇总';
+  String get aaStatisticsOverview => '汇总';
 
   @override
-  String get aaSettlementTotalAmount => '分摊总额';
+  String get aaStatisticsTotalAmount => '分摊总额';
 
   @override
-  String aaSettlementTxCount(int count) {
+  String aaStatisticsTxCount(int count) {
     return '$count 笔分摊交易';
   }
 
   @override
-  String get aaSettlementPerPerson => '分摊详情';
+  String get aaStatisticsPerPerson => '分摊详情';
 
   @override
-  String get aaSettlementPaid => '实付';
+  String get aaStatisticsPaid => '实付';
 
   @override
-  String get aaSettlementShare => '应摊';
+  String get aaStatisticsShare => '应摊';
 
   @override
-  String get aaSettlementNet => '差额';
+  String get aaStatisticsNet => '差额';
 
   @override
-  String get aaSettlementNetReceive => '应收';
+  String get aaStatisticsNetReceive => '应收';
 
   @override
-  String get aaSettlementNetPay => '应付';
+  String get aaStatisticsNetPay => '应付';
 
   @override
-  String get aaSettlementTransferPlan => '转账方案';
+  String get aaStatisticsTransferPlan => '转账方案';
 
   @override
-  String aaSettlementTransferPayTo(String from, String to) {
-    return '$from 付给 $to';
-  }
+  String get aaStatisticsTransferSeparator => '付给';
 
   @override
-  String get aaSettlementNoTransfers => '已结清，无需转账';
+  String get aaStatisticsNoTransfers => '已结清，无需转账';
 
   @override
-  String get aaSettlementExcluded => '不计入详单';
+  String get aaStatisticsExcluded => '不计入详单';
 
   @override
-  String aaSettlementParticipantCount(int count) {
+  String aaStatisticsParticipantCount(int count) {
     return '分摊人数 $count 人';
   }
 
   @override
-  String get aaSettlementExcludedEmpty => '暂无不计入详单的交易';
+  String get aaStatisticsExcludedEmpty => '暂无不计入详单的交易';
 
   @override
   String get aaEditTitle => '编辑分摊';
@@ -3664,7 +3662,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get ledgerAaEnabledHint => '开启后记账时可选择分摊方式';
 
   @override
-  String get ledgerAaSettlementEntry => '分摊统计';
+  String get ledgerAaStatisticsEntry => '分摊统计';
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虚拟用户';
@@ -7215,58 +7213,56 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgerMetaReadOnlyToast => '協作者無權修改帳本資訊';
 
   @override
-  String get aaSettlementTitle => '分攤統計';
+  String get aaStatisticsTitle => '分攤統計';
 
   @override
-  String get aaSettlementOverview => '總覽';
+  String get aaStatisticsOverview => '總覽';
 
   @override
-  String get aaSettlementTotalAmount => '分攤總額';
+  String get aaStatisticsTotalAmount => '分攤總額';
 
   @override
-  String aaSettlementTxCount(int count) {
+  String aaStatisticsTxCount(int count) {
     return '$count 筆分攤交易';
   }
 
   @override
-  String get aaSettlementPerPerson => '分攤詳情';
+  String get aaStatisticsPerPerson => '分攤詳情';
 
   @override
-  String get aaSettlementPaid => '實付';
+  String get aaStatisticsPaid => '實付';
 
   @override
-  String get aaSettlementShare => '應攤';
+  String get aaStatisticsShare => '應攤';
 
   @override
-  String get aaSettlementNet => '差額';
+  String get aaStatisticsNet => '差額';
 
   @override
-  String get aaSettlementNetReceive => '應收';
+  String get aaStatisticsNetReceive => '應收';
 
   @override
-  String get aaSettlementNetPay => '應付';
+  String get aaStatisticsNetPay => '應付';
 
   @override
-  String get aaSettlementTransferPlan => '轉帳方案';
+  String get aaStatisticsTransferPlan => '轉帳方案';
 
   @override
-  String aaSettlementTransferPayTo(String from, String to) {
-    return '$from 付給 $to';
-  }
+  String get aaStatisticsTransferSeparator => '付給';
 
   @override
-  String get aaSettlementNoTransfers => '已結清，無需轉帳';
+  String get aaStatisticsNoTransfers => '已結清，無需轉帳';
 
   @override
-  String get aaSettlementExcluded => '不計入詳單';
+  String get aaStatisticsExcluded => '不計入詳單';
 
   @override
-  String aaSettlementParticipantCount(int count) {
+  String aaStatisticsParticipantCount(int count) {
     return '分攤人數 $count 人';
   }
 
   @override
-  String get aaSettlementExcludedEmpty => '暫無不計入詳單的交易';
+  String get aaStatisticsExcludedEmpty => '暫無不計入詳單的交易';
 
   @override
   String get aaEditTitle => '編輯分攤';
@@ -7344,7 +7340,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get ledgerAaEnabledHint => '開啟後記帳時可選擇分攤方式';
 
   @override
-  String get ledgerAaSettlementEntry => '分攤統計';
+  String get ledgerAaStatisticsEntry => '分攤統計';
 
   @override
   String get ledgerAaVirtualUsersEntry => '管理虛擬用戶';

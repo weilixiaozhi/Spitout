@@ -19,11 +19,12 @@ import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
 import 'text_state_switch.dart';
+import 'me_suffix.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show spitoutCloudProviderInstance, syncEventStreamProvider;
 import 'package:spitout/providers/ui/theme_providers.dart' show displayNameProvider;
-import 'package:spitout/providers/settlement/settlement_providers.dart'
+import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
     show
         ledgerVirtualUsersProvider,
         createVirtualUser,
@@ -33,6 +34,7 @@ import '../data/db.dart' show LedgerVirtualUser;
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
 import 'app_dialog.dart';
+import 'person_avatar.dart';
 import 'section_card.dart';
 import 'toast.dart';
 
@@ -872,9 +874,6 @@ class _MemberTile extends ConsumerWidget {
     // 标题优先用昵称;昵称为空时回退到邮箱,且此时不再展示 subtitle(避免邮箱重复)。
     final hasDisplayName = member.displayName?.isNotEmpty == true;
     final hasEmail = member.email.isNotEmpty;
-    // 未配置昵称(无昵称也无邮箱):标题展示「未设置昵称」占位,不再回退"你",
-    // 头像位对应展示 person 图标,避免头像/昵称/括号三处重复。
-    final showNicknamePlaceholder = !hasDisplayName && !hasEmail;
     final displayName = hasDisplayName
         ? member.displayName!
         : hasEmail
@@ -885,11 +884,7 @@ class _MemberTile extends ConsumerWidget {
     final subtitleEmail = hasDisplayName ? member.email : null;
     return ListTile(
       dense: true,
-      leading: _MemberAvatar(
-        member: member,
-        displayName: displayName,
-        showPersonIcon: showNicknamePlaceholder,
-      ),
+      leading: _MemberAvatar(member: member),
       title: Row(
         children: [
           Flexible(
@@ -898,16 +893,8 @@ class _MemberTile extends ConsumerWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          if (member.isSelf) ...[
-            const SizedBox(width: 4),
-            Text(
-              ' (${l10n.aaMe})',
-              style: TextStyle(
-                color: SpitoutTokens.textTertiary(context),
-                fontSize: 12,
-              ),
-            ),
-          ],
+          // 本人「(我)」后缀统一走共享 MeSuffix,保证各模块样式一致。
+          if (member.isSelf) const MeSuffix(),
         ],
       ),
       subtitle: subtitleEmail != null
@@ -948,55 +935,33 @@ extension _FirstOrNull<E> on Iterable<E> {
 }
 
 /// 共享账本成员头像 — server avatar_url 拼上 cloudProvider.baseUrl 用 NetworkImage,
-/// 缺失 / 加载失败 fallback 到首字母 CircleAvatar。
+/// 缺失 / 加载失败 fallback 到虚拟用户同等 person 图标。
 class _MemberAvatar extends ConsumerWidget {
-  const _MemberAvatar({
-    required this.member,
-    required this.displayName,
-    this.showPersonIcon = false,
-  });
+  const _MemberAvatar({required this.member});
 
   final SpitoutCloudLedgerMember member;
-  final String displayName;
-  // 未配置昵称(占位行):头像位展示虚拟用户样式的 person 图标,不再用占位文案首字。
-  final bool showPersonIcon;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final letter = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
     final relativeUrl = member.avatarUrl;
     if (relativeUrl == null || relativeUrl.isEmpty) {
-      // 未配置头像且未配置昵称:展示虚拟用户样式的 person 图标,避免首字
-      // 头像与占位标题重复;已配置昵称时仍展示昵称首字母头像。
-      if (showPersonIcon) {
-        return Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(
-            color: SpitoutTokens.surfaceSecondary(context),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(
-            AppIcons.person,
-            size: 18,
-            color: SpitoutTokens.iconSecondary(context),
-          ),
-        );
-      }
-      return CircleAvatar(child: Text(letter));
+      // 未配置头像:统一展示虚拟用户同等 person 图标,不再用昵称首字母,
+      // 保证所有未设置头像的占位样式全局一致。
+      return const PersonAvatar(size: 40, iconSize: 18);
     }
     final cloudAsync = ref.watch(spitoutCloudProviderInstance);
     final cloud = cloudAsync.valueOrNull;
     final base = cloud?.baseUrl;
     if (base == null || base.isEmpty) {
-      return CircleAvatar(child: Text(letter));
+      return const PersonAvatar(size: 40, iconSize: 18);
     }
     final absoluteUrl =
         relativeUrl.startsWith('http') ? relativeUrl : '$base$relativeUrl';
     return CircleAvatar(
+      radius: 20,
       backgroundImage: NetworkImage(absoluteUrl),
       onBackgroundImageError: (_, __) {/* fallback child 显示 */},
-      child: Text(letter),
+      child: const PersonAvatar(size: 40, iconSize: 18),
     );
   }
 }

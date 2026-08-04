@@ -1422,8 +1422,9 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   /// (非 happenedAt,后者是"记账日期"语义)。
   final DateTime? lastEditedAt;
 
-  /// AA 分摊:支出人 userId。
-  /// nullable 列,运行时由写入层 `?? 操作者 userId` 保证非空(DB 不做约束);
+  /// 支出人 userId(交易级全局字段,谁垫付/支出,非 AA 专属)。
+  /// 任何一笔账都有支出人:新建未手选时由写入层回填操作者(默认支出人 = 创建人),
+  /// 手选后恒写手选值;编辑未手选不更新保持原值。DB 不做非空约束(nullable);
   /// 迁移时从 created_by_user_id 回填,展示层空串降级"未知"。
   final String? paidByUserId;
 

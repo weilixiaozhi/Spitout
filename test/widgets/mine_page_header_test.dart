@@ -5,7 +5,7 @@
 ///   2. 已设置昵称时显示「问候语+昵称」，并带时段图标。
 ///   3. 点击昵称弹出编辑弹窗，保存后写入 displayNameProvider 并弹 Toast。
 ///   4. 取消弹窗不改动昵称。
-///   5. 无头像时点击头像进入全屏预览页（显示品牌图标，无删除按钮）。
+///   5. 无头像时点击头像进入全屏预览页（显示 person 图标，无删除按钮）。
 ///
 /// 依赖处理：
 ///   - SharedPreferences 走 setMockInitialValues，avatarStorage.getAvatarPath
@@ -29,9 +29,10 @@ import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 import 'package:spitout/services/storage/avatar_storage.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/avatar_preview_page.dart';
 import 'package:spitout/widgets/mine_page_header.dart';
-import 'package:spitout/widgets/spitout_icon.dart';
+import 'package:spitout/widgets/person_avatar.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -85,17 +86,17 @@ void main() {
     return ProviderScope.containerOf(tester.element(find.byType(MinePageHeader)));
   }
 
-  testWidgets('未设置昵称：显示 slogan，无时段图标，头像为占位图', (tester) async {
+  testWidgets('未设置昵称：显示 slogan，无时段图标，头像为占位 person 图标',
+      (tester) async {
     await tester.pumpWidget(buildHarness(displayName: ''));
     await pumpHeaderReady(tester);
 
     // 头部文案为 slogan（未设置昵称分支）
     expect(find.text(l10n.mineSlogan), findsOneWidget);
-    // 时段问候图标仅在已设置昵称时出现；SpitoutIcon 是 SvgPicture 不是 Icon，
-    // 因此整个头部此时不应有任何 Icon widget。
-    expect(find.byType(Icon), findsNothing);
-    // 无头像 → 占位品牌图标
-    expect(find.byType(SpitoutIcon), findsOneWidget);
+    // 时段问候图标仅在已设置昵称时出现；此时头部仅剩无头像占位的 person 图标。
+    expect(find.byType(Icon), findsOneWidget);
+    // 无头像 → 占位 person 图标（虚拟用户同等）
+    expect(find.byType(PersonAvatar), findsOneWidget);
   });
 
   testWidgets('已设置昵称：显示问候语+昵称并带时段图标', (tester) async {
@@ -105,8 +106,15 @@ void main() {
     // mineGreetingNamed 拼接「问候语,昵称」，具体问候语随测试运行时段变化，
     // 故只断言昵称包含在文案里。
     expect(find.textContaining('小明'), findsOneWidget);
-    // 时段图标（太阳/月亮）恰好一个
-    expect(find.byType(Icon), findsOneWidget);
+    // 时段图标（太阳/月亮）恰好一个；此时头像仍为占位 person 图标，
+    // 故按图标内容排除 person 后再断言。
+    final periodIcons = tester
+        .widgetList<Icon>(find.byType(Icon))
+        .where((icon) => icon.icon != AppIcons.person)
+        .length;
+    expect(periodIcons, 1);
+    // 无头像 → 占位 person 图标（虚拟用户同等）
+    expect(find.byType(PersonAvatar), findsOneWidget);
   });
 
   testWidgets('点击昵称弹出编辑弹窗，保存后更新 displayNameProvider 并弹 Toast',
@@ -161,14 +169,14 @@ void main() {
     expect(containerOf(tester).read(displayNameProvider), '原昵称');
   });
 
-  testWidgets('无头像点击头像：进入全屏预览页，显示品牌图标，无删除按钮',
+  testWidgets('无头像点击头像：进入全屏预览页，显示 person 图标，无删除按钮',
       (tester) async {
     await tester.pumpWidget(buildHarness(displayName: ''));
     await pumpHeaderReady(tester);
 
-    // 点击头像（占位图 SpitoutIcon）→ 进入全屏预览页
-    // 头部只有一个 SpitoutIcon（占位），全屏预览页里也有一个（size=120）
-    await tester.tap(find.byType(SpitoutIcon));
+    // 点击头像（占位 PersonAvatar）→ 进入全屏预览页
+    // 头部只有一个 PersonAvatar（占位），全屏预览页里也有一个 person 图标（size=120）
+    await tester.tap(find.byType(PersonAvatar));
     await tester.pumpAndSettle();
 
     // 全屏预览页已打开
@@ -252,8 +260,8 @@ void main() {
     await tester.pumpWidget(buildHarness(displayName: '小明'));
     await pumpHeaderReady(tester);
 
-    // 头像（SpitoutIcon）中心应在昵称文本中心上方
-    final avatarCenter = tester.getCenter(find.byType(SpitoutIcon));
+    // 头像（PersonAvatar）中心应在昵称文本中心上方
+    final avatarCenter = tester.getCenter(find.byType(PersonAvatar));
     final nameCenter = tester.getCenter(find.textContaining('小明'));
     expect(avatarCenter.dy, lessThan(nameCenter.dy),
         reason: '头像应在昵称上方');

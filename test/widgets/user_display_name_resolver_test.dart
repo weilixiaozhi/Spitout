@@ -90,11 +90,12 @@ void main() {
       expect(r.resolve('cloud-user-1'), '我的昵称');
     });
 
-    test('2c. 当前登录用户无邮箱无昵称时回退「未设置昵称(我)」', () {
+    test('2c. 当前登录用户无邮箱无昵称时回退「未设置昵称」', () {
       final r = buildResolver(
         currentUser: const CloudUser(id: 'cloud-user-1'),
       );
-      expect(r.resolve('cloud-user-1'), '${l10n.mineSlogan}(${l10n.aaMe})');
+      // 仅纯名:「(我)」后缀由 UI 层共享 meSuffixSpan 统一渲染,不在数据层拼接。
+      expect(r.resolve('cloud-user-1'), l10n.mineSlogan);
     });
 
     test('3. localSelfId 映射为本地昵称', () {
@@ -105,9 +106,10 @@ void main() {
       expect(r.resolve('local-uuid'), '本地昵称');
     });
 
-    test('3b. localSelfId 无昵称时回退「未设置昵称(我)」', () {
+    test('3b. localSelfId 无昵称时回退「未设置昵称」', () {
       final r = buildResolver(localSelfId: 'local-uuid');
-      expect(r.resolve('local-uuid'), '${l10n.mineSlogan}(${l10n.aaMe})');
+      // 仅纯名,后缀由 UI 层渲染。
+      expect(r.resolve('local-uuid'), l10n.mineSlogan);
     });
 
     test('4. 虚拟用户名', () {
@@ -150,6 +152,31 @@ void main() {
         currentUser: CloudUser(id: 'cloud-user-1', email: 'me@example.com'),
       );
       expect(r.resolve('cloud-user-1'), '成员昵称');
+    });
+  });
+
+  group('isSelf 本人判定', () {
+    test('currentUser 命中为本人', () {
+      final r = buildResolver(
+        currentUser: const CloudUser(id: 'cloud-user-1'),
+      );
+      expect(r.isSelf('cloud-user-1'), isTrue);
+    });
+
+    test('localSelfId 命中为本人', () {
+      final r = buildResolver(localSelfId: 'local-uuid');
+      expect(r.isSelf('local-uuid'), isTrue);
+    });
+
+    test('未登录时 currentUser 不参与判定,仅 localSelfId', () {
+      final r = buildResolver(localSelfId: 'local-uuid');
+      expect(r.isSelf('someone-else'), isFalse);
+    });
+
+    test('null/空 userId 非本人', () {
+      final r = buildResolver();
+      expect(r.isSelf(null), isFalse);
+      expect(r.isSelf(''), isFalse);
     });
   });
 }

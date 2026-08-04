@@ -4,10 +4,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
-import '../../services/settlement/aa_settlement_service.dart';
+import '../../services/statistics/aa_statistics_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../utils/category_utils.dart';
+import '../../widgets/me_suffix.dart';
 import '../../widgets/widgets.dart';
 
 /// AA 分摊统计页。
@@ -18,11 +19,11 @@ import '../../widgets/widgets.dart';
 /// 3. 转账方案:贪心结算结果,已结清时展示零转账提示;
 /// 4. 不计入详单:aaMode=1(不分摊)的交易。
 ///
-/// 数据源为 [aaSettlementProvider]。账本 id 由进入入口经 [ledgerId] 传入
+/// 数据源为 [aaStatisticsProvider]。账本 id 由进入入口经 [ledgerId] 传入
 /// ("从哪里进入就是哪个账本"),缺省(如新建态)时按无账本渲染,各模块自带
 /// 空数据兜底(金额为 0 / 无行),不设整页空态。
-class AaSettlementPage extends ConsumerWidget {
-  const AaSettlementPage({super.key, this.ledgerId});
+class AaStatisticsPage extends ConsumerWidget {
+  const AaStatisticsPage({super.key, this.ledgerId});
 
   /// 账本 id：由进入入口传入（编辑态为当前编辑账本 id，新建态为 null）。
   /// null 时按无账本渲染，各模块展示空数据。
@@ -33,18 +34,23 @@ class AaSettlementPage extends ConsumerWidget {
     final l10n = AppLocalizations.of(context);
     // 新建态无账本 id → 哨兵 0：getLedgerById(0) 返回空，汇总/清单均为空。
     final ledgerId = this.ledgerId ?? 0;
-    final settlementAsync = ref.watch(aaSettlementProvider(ledgerId));
+    final statisticsAsync = ref.watch(aaStatisticsProvider(ledgerId));
     final excludedAsync = ref.watch(_aaExcludedTxProvider(ledgerId));
+    // 转账方案参与人头像上下文：真实成员取头像，虚拟用户/无头像走占位。
+    final avatarCtx = ref
+            .watch(aaParticipantAvatarContextProvider(ledgerId))
+            .valueOrNull ??
+        const AaParticipantAvatarContext();
 
     return Scaffold(
       body: Column(
         children: [
           PrimaryHeader(
-            title: l10n.aaSettlementTitle,
+            title: l10n.aaStatisticsTitle,
             showBack: true,
           ),
           Expanded(
-            child: settlementAsync.when(
+            child: statisticsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
               error: (e, _) => Center(
                 child: Text(
@@ -52,12 +58,13 @@ class AaSettlementPage extends ConsumerWidget {
                   style: TextStyle(color: SpitoutTokens.error(context)),
                 ),
               ),
-              data: (settlement) => _buildBody(
+              data: (statistics) => _buildBody(
                 context,
                 ref,
                 l10n,
-                settlement,
+                statistics,
                 excludedAsync.valueOrNull ?? const [],
+                avatarCtx,
               ),
             ),
           ),
@@ -70,11 +77,12 @@ class AaSettlementPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
-    AaLedgerSettlement settlement,
+    AaLedgerStatistics statistics,
     List<({Transaction t, Category? category})> excluded,
+    AaParticipantAvatarContext avatarCtx,
   ) {
     // 只展示有实际分摊活动的参与人(全零成员无信息量)。
-    final active = settlement.participants
+    final active = statistics.participants
         .where((p) => p.totalPaid > 0 || p.totalShouldPay > 0)
         .toList();
 
@@ -86,16 +94,16 @@ class AaSettlementPage extends ConsumerWidget {
       children: [
         _buildOverviewCard(context, l10n, totalAmount, active.length),
         const SizedBox(height: 20),
-        _buildSectionTitle(context, l10n.aaSettlementPerPerson),
+        _buildSectionTitle(context, l10n.aaStatisticsPerPerson),
         const SizedBox(height: 8),
         _buildPerPersonCard(context, ref, l10n, active),
         const SizedBox(height: 20),
-        _buildSectionTitle(context, l10n.aaSettlementTransferPlan),
+        _buildSectionTitle(context, l10n.aaStatisticsTransferPlan),
         const SizedBox(height: 8),
-        _buildTransferCard(context, ref, l10n, settlement.transfers),
+        _buildTransferCard(context, ref, l10n, statistics.transfers, avatarCtx),
         // 不计入详单区块始终展示(数据为空时由卡片内部渲染空态)。
         const SizedBox(height: 20),
-        _buildSectionTitle(context, l10n.aaSettlementExcluded),
+        _buildSectionTitle(context, l10n.aaStatisticsExcluded),
         const SizedBox(height: 8),
         _buildExcludedCard(context, ref, l10n, excluded),
       ],
@@ -111,7 +119,7 @@ class AaSettlementPage extends ConsumerWidget {
       child: Column(
         children: [
           Text(
-            l10n.aaSettlementTotalAmount,
+            l10n.aaStatisticsTotalAmount,
             style: TextStyle(
               fontSize: 13,
               color: SpitoutTokens.textSecondary(context),
@@ -123,6 +131,8 @@ class AaSettlementPage extends ConsumerWidget {
             signed: false,
             showCurrency: true,
             decimals: 2,
+            // 汇总金额必须完整可见：金额超大时等比缩小字号而非省略。
+            scaleDown: true,
             style: TextStyle(
               fontSize: 28,
               fontWeight: FontWeight.w700,
@@ -131,7 +141,7 @@ class AaSettlementPage extends ConsumerWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            l10n.aaSettlementParticipantCount(participantCount),
+            l10n.aaStatisticsParticipantCount(participantCount),
             style: TextStyle(
               fontSize: 12,
               color: SpitoutTokens.textTertiary(context),
@@ -162,17 +172,17 @@ class AaSettlementPage extends ConsumerWidget {
                 Expanded(flex: 3, child: Text('', style: headerStyle)),
                 Expanded(
                   flex: 3,
-                  child: Text(l10n.aaSettlementPaid,
+                  child: Text(l10n.aaStatisticsPaid,
                       style: headerStyle, textAlign: TextAlign.right),
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text(l10n.aaSettlementShare,
+                  child: Text(l10n.aaStatisticsShare,
                       style: headerStyle, textAlign: TextAlign.right),
                 ),
                 Expanded(
                   flex: 3,
-                  child: Text(l10n.aaSettlementNet,
+                  child: Text(l10n.aaStatisticsNet,
                       style: headerStyle, textAlign: TextAlign.right),
                 ),
               ],
@@ -201,7 +211,7 @@ class AaSettlementPage extends ConsumerWidget {
             : SpitoutTokens.error(context));
     final netLabel = net.abs() < 0.005
         ? '—'
-        : '${net > 0 ? l10n.aaSettlementNetReceive : l10n.aaSettlementNetPay} '
+        : '${net > 0 ? l10n.aaStatisticsNetReceive : l10n.aaStatisticsNetPay} '
             '${formatMoneyWithCurrency(net.abs(), currencyCode: currencyCode)}';
     final valueStyle = TextStyle(
       fontSize: 13,
@@ -213,42 +223,57 @@ class AaSettlementPage extends ConsumerWidget {
         children: [
           Expanded(
             flex: 3,
-            child: Text(
-              p.displayName,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: SpitoutTokens.textPrimary(context),
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+            // 本人参与人:名称后追加共享「(我)」后缀,与 AA 记账页/成员管理/
+            // 交易详情口径一致;非本人用纯名 Text。
+            child: p.isSelf
+                ? Text.rich(
+                    TextSpan(
+                      text: p.displayName,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                      children: [
+                        meSuffixSpan(context, AppLocalizations.of(context))
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : Text(
+                    p.displayName,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: SpitoutTokens.textPrimary(context),
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+          ),
+          Expanded(
+            flex: 3,
+            child: _buildAmountCell(
+              formatMoneyWithCurrency(p.totalPaid,
+                  currencyCode: currencyCode),
+              valueStyle,
             ),
           ),
           Expanded(
             flex: 3,
-            child: Text(
-                formatMoneyWithCurrency(p.totalPaid,
-                    currencyCode: currencyCode),
-                style: valueStyle,
-                textAlign: TextAlign.right),
+            child: _buildAmountCell(
+              formatMoneyWithCurrency(p.totalShouldPay,
+                  currencyCode: currencyCode),
+              valueStyle,
+            ),
           ),
           Expanded(
             flex: 3,
-            child: Text(
-                formatMoneyWithCurrency(p.totalShouldPay,
-                    currencyCode: currencyCode),
-                style: valueStyle,
-                textAlign: TextAlign.right),
-          ),
-          Expanded(
-            flex: 3,
-            child: Text(
+            child: _buildAmountCell(
               netLabel,
-              style: TextStyle(
+              TextStyle(
                   fontSize: 12, fontWeight: FontWeight.w600, color: netColor),
-              textAlign: TextAlign.right,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
             ),
           ),
         ],
@@ -256,9 +281,30 @@ class AaSettlementPage extends ConsumerWidget {
     );
   }
 
-  /// 转账方案卡:每行 "A 付给 B" + 金额;已结清展示零转账提示。
+  /// 分摊详情表金额单元格：金额超宽时等比缩小字号而非省略/换行。
+  ///
+  /// 金额必须完整可见（否则用户无法确认自己出了多少钱），FittedBox
+  /// 在内容放得下时保持原字号、放不下时按比例缩小，单行右对齐且不拥挤。
+  Widget _buildAmountCell(String text, TextStyle style) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: Text(
+        text,
+        style: style,
+        textAlign: TextAlign.right,
+        maxLines: 1,
+      ),
+    );
+  }
+
+  /// 转账方案卡:每行 [头像] from 付给 [头像] to + 金额;已结清展示零转账提示。
+  ///
+  /// 头像逻辑复用 [CollaboratorAvatarSlot]:真实成员有 avatarUrl 显示网络
+  /// 头像;未配置头像的成员与虚拟用户统一回退 person 占位图标,不硬编码。
   Widget _buildTransferCard(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, List<AaTransfer> transfers) {
+      AppLocalizations l10n, List<AaTransfer> transfers,
+      AaParticipantAvatarContext avatarCtx) {
     return SectionCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -272,7 +318,7 @@ class AaSettlementPage extends ConsumerWidget {
                       size: 16, color: SpitoutTokens.success(context)),
                   const SizedBox(width: 8),
                   Text(
-                    l10n.aaSettlementNoTransfers,
+                    l10n.aaStatisticsNoTransfers,
                     style: TextStyle(
                       fontSize: 13,
                       color: SpitoutTokens.textSecondary(context),
@@ -290,27 +336,94 @@ class AaSettlementPage extends ConsumerWidget {
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     child: Row(
                       children: [
-                        Icon(AppIcons.currencyExchange,
-                            size: 16,
-                            color: SpitoutTokens.iconSecondary(context)),
-                        const SizedBox(width: 12),
                         Expanded(
-                          child: Text(
-                            l10n.aaSettlementTransferPayTo(
-                                transfers[i].fromName, transfers[i].toName),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: SpitoutTokens.textPrimary(context),
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
+                          child: Row(
+                            children: [
+                              _buildTransferAvatar(
+                                  avatarCtx, transfers[i].from),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                // 本人参与人:名称后追加共享「(我)」后缀,
+                                // 与分摊详情表口径一致。
+                                child: transfers[i].fromIsSelf
+                                    ? Text.rich(
+                                        TextSpan(
+                                          text: transfers[i].fromName,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: SpitoutTokens
+                                                .textPrimary(context),
+                                          ),
+                                          children: [meSuffixSpan(context, l10n)],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : Text(
+                                        transfers[i].fromName,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: SpitoutTokens
+                                              .textPrimary(context),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 6),
+                                child: Text(
+                                  l10n.aaStatisticsTransferSeparator,
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color:
+                                        SpitoutTokens.textTertiary(context),
+                                  ),
+                                ),
+                              ),
+                              _buildTransferAvatar(
+                                  avatarCtx, transfers[i].to),
+                              const SizedBox(width: 6),
+                              Flexible(
+                                // 本人参与人:名称后追加共享「(我)」后缀,
+                                // 与分摊详情表口径一致。
+                                child: transfers[i].toIsSelf
+                                    ? Text.rich(
+                                        TextSpan(
+                                          text: transfers[i].toName,
+                                          style: TextStyle(
+                                            fontSize: 14,
+                                            color: SpitoutTokens
+                                                .textPrimary(context),
+                                          ),
+                                          children: [meSuffixSpan(context, l10n)],
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      )
+                                    : Text(
+                                        transfers[i].toName,
+                                        style: TextStyle(
+                                          fontSize: 14,
+                                          color: SpitoutTokens
+                                              .textPrimary(context),
+                                        ),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                              ),
+                            ],
                           ),
                         ),
+                        const SizedBox(width: 12),
                         AmountText(
                           value: transfers[i].amount,
                           signed: false,
                           showCurrency: true,
                           decimals: 2,
+                          // 转账金额必须完整可见：金额超大时等比缩小字号而非省略。
+                          scaleDown: true,
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
@@ -323,6 +436,20 @@ class AaSettlementPage extends ConsumerWidget {
                 ],
               ],
             ),
+    );
+  }
+
+  /// 转账参与人头像：复用 [CollaboratorAvatarSlot]，真实成员头像 / 占位统一处理。
+  ///
+  /// 成员未配置头像或虚拟用户(不在成员表)时内部回退 person 图标，
+  /// 避免在此处硬编码占位逻辑导致样式不一致。
+  Widget _buildTransferAvatar(
+      AaParticipantAvatarContext avatarCtx, String participantId) {
+    return CollaboratorAvatarSlot(
+      member: avatarCtx.members[participantId],
+      userIdFallback: participantId,
+      baseUrl: avatarCtx.baseUrl,
+      radius: 10,
     );
   }
 
@@ -344,7 +471,7 @@ class AaSettlementPage extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 12),
               child: Center(
                 child: Text(
-                  l10n.aaSettlementExcludedEmpty,
+                  l10n.aaStatisticsExcludedEmpty,
                   style: TextStyle(
                     fontSize: 13,
                     color: SpitoutTokens.textTertiary(context),
@@ -421,14 +548,14 @@ class AaSettlementPage extends ConsumerWidget {
 
 /// 不计入详单的交易(aaMode=1)查询。
 ///
-/// 统计页「不计入详单」区块数据源;[aaSettlementProvider] 只返回汇总结果,
+/// 统计页「不计入详单」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
 /// 详单行需要交易本体 + 分类(用于 icon / 分类名展示,与首页列表完全一致),
 /// 故在此单独查询带 category 的交易列表。
 final _aaExcludedTxProvider =
     StreamProvider.autoDispose.family<List<({Transaction t, Category? category})>, int>(
         (ref, ledgerId) {
   // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
-  ref.watch(aaSettlementProvider(ledgerId));
+  ref.watch(aaStatisticsProvider(ledgerId));
   final repo = ref.read(repositoryProvider);
   // 复用首页列表同款带 category 的交易流,客户端过滤 aaMode=1。
   return repo.transactionsWithCategoryAll(ledgerId: ledgerId).map(

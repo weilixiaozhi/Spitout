@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import '../l10n/app_localizations.dart';
+import 'person_avatar.dart';
 
 /// 协作头像「单个槽位」：紧凑圆形 + 首字母兜底。
 ///
@@ -35,56 +36,42 @@ class CollaboratorAvatarSlot extends StatelessWidget {
     return '$trimmedBase$raw';
   }
 
-  /// 首字母兜底优先级：displayName 昵称首字符 > email 首字符 > userIdFallback 首字符 > '?'。
-  String get _initial {
-    final name = (member?.displayName ?? '').trim();
-    if (name.isNotEmpty) return name.characters.first.toUpperCase();
-    final email = (member?.email ?? '').trim();
-    if (email.isNotEmpty) return email.characters.first.toUpperCase();
-    final fb = userIdFallback.trim();
-    return fb.isNotEmpty ? fb.characters.first.toUpperCase() : '?';
-  }
-
-  TextStyle _letterStyle(Color fg) => TextStyle(
-        fontSize: radius * 0.85,
-        fontWeight: FontWeight.w600,
-        color: fg,
-        height: 1.0,
-      );
-
   @override
   Widget build(BuildContext context) {
     final resolved = _resolvedUrl;
     final scheme = Theme.of(context).colorScheme;
-    // 圆形底色用不透明主色 primary，首字母文字用 onPrimary；不透明避免重叠时透出下层。
+    // 圆形底色用不透明主色 primary，不透明避免重叠时透出下层。
     final bg = scheme.primary;
-    final fg = scheme.onPrimary;
 
     if (isPlaceholder) {
-      // 成员表尚未加载:返回空占位圆,数据到位后再填充正确头像/首字母。
+      // 成员表尚未加载:返回空占位圆,数据到位后再填充正确头像/图标。
       return CircleAvatar(radius: radius, backgroundColor: bg);
+    }
+
+    // 无头像:直接展示虚拟用户同等 person 图标,不再用昵称首字母兜底,
+    // 保证所有未设置头像的占位样式全局一致。
+    if (resolved == null) {
+      return PersonAvatar(size: radius * 2);
     }
 
     return CircleAvatar(
       radius: radius,
       backgroundColor: bg,
-      // 有头像时用 ClipOval 显式裁圆;加载中 / 加载失败回退到首字母。
-      child: resolved != null
-          ? ClipOval(
-              child: Image.network(
-                resolved,
-                width: radius * 2,
-                height: radius * 2,
-                fit: BoxFit.cover,
-                // 加载中先显示首字母，网络慢时不闪空白
-                loadingBuilder: (ctx, child, progress) =>
-                    progress == null ? child : Text(_initial, style: _letterStyle(fg)),
-                // 加载失败兜底首字母
-                errorBuilder: (ctx, error, stack) =>
-                    Text(_initial, style: _letterStyle(fg)),
-              ),
-            )
-          : Text(_initial, style: _letterStyle(fg)),
+      // 有头像时用 ClipOval 显式裁圆;加载中 / 加载失败回退到 person 图标。
+      child: ClipOval(
+        child: Image.network(
+          resolved,
+          width: radius * 2,
+          height: radius * 2,
+          fit: BoxFit.cover,
+          // 加载中先显示 person 图标，网络慢时不闪空白
+          loadingBuilder: (ctx, child, progress) =>
+              progress == null ? child : PersonAvatar(size: radius * 2),
+          // 加载失败兜底 person 图标
+          errorBuilder: (ctx, error, stack) =>
+              PersonAvatar(size: radius * 2),
+        ),
+      ),
     );
   }
 }

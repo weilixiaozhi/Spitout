@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 
 import '../l10n/app_localizations.dart';
-import '../services/settlement/aa_edit_models.dart';
+import '../services/statistics/aa_edit_models.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
 import 'app_sheet.dart';
+import 'me_suffix.dart';
+import 'person_avatar.dart';
 
 /// 支出人单选 Bottom Sheet。
 ///
@@ -58,34 +60,27 @@ class _AaOptionRow extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 10),
         child: Row(
           children: [
-            // 参与人头像位:虚拟用户与真实成员用不同图标区分。
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: option.isVirtual
-                    ? SpitoutTokens.surfaceSecondary(context)
-                    : primary.withValues(alpha: 0.12),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                AppIcons.person,
-                size: 16,
-                color: option.isVirtual
-                    ? SpitoutTokens.iconSecondary(context)
-                    : primary,
-              ),
-            ),
+            // 参与人头像位:未设置头像时统一展示虚拟用户同等 person 图标,
+            // 虚拟用户与真实成员保持一致,不再用底色区分。
+            const PersonAvatar(size: 32, iconSize: 16),
             const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                option.name,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      option.name,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  // 本人「(我)」后缀统一走共享 MeSuffix,与成员管理样式一致。
+                  if (option.isSelf) const MeSuffix(),
+                ],
               ),
             ),
             if (checked) Icon(AppIcons.check, size: 18, color: primary),

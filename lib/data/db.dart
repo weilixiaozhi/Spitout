@@ -390,8 +390,11 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   ///
   /// v2: AA 分摊功能 —— Transactions 加 4 字段(paidByUserId/aaMode/
   /// aaParticipants/aaSplits),Ledgers 加 aaEnabled,新增 LedgerVirtualUsers 表。
+  /// v3: 支出人兜底回填 —— 存量 NULL/空串 paidByUserId 按
+  ///     created_by_user_id → last_edited_by_user_id → 空串 回填,
+  ///     让「默认支出人 = 创建人」的语义在存量数据上落地。
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -476,6 +479,22 @@ class SpitoutDatabase extends _$SpitoutDatabase {
               'WHERE paid_by_user_id IS NULL;',
             );
             logger.info('DBMigration', 'v2 迁移完成');
+          }
+
+          if (from < 3) {
+            // v3: 支出人兜底回填。历史存量(导入/旧 server pull/v2 回填空串)
+            // 可能留下 NULL 或空串 paid_by_user_id,这里按「默认支出人 = 创建人」
+            // 语义一次性回填:优先创建人,缺失退编辑人,双缺失落空串(展示层降级
+            // "未知"、计算层跳过,不在 DB 层引入伪造身份)。
+            // WHERE 守卫(IS NULL OR = '')保证幂等:已回填的非空值不会被重写。
+            logger.info('DBMigration', '开始迁移到 v3: 支出人兜底回填');
+            await customStatement(
+              'UPDATE transactions SET paid_by_user_id = '
+              "COALESCE(NULLIF(paid_by_user_id, ''), "
+              "created_by_user_id, last_edited_by_user_id, '') "
+              "WHERE paid_by_user_id IS NULL OR paid_by_user_id = '';",
+            );
+            logger.info('DBMigration', 'v3 迁移完成');
           }
         },
 

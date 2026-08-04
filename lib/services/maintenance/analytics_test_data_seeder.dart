@@ -25,7 +25,9 @@ enum TestDataScope {
 /// 设计要点：
 /// - 随机币种（含本位币与外币）与随机金额，覆盖多币种统计路径；
 /// - 随机分配到账本可用支出分类，保证分类排行有数据；
-/// - 直接走 BaseRepository.addTransaction，复用既有写入/变更追踪逻辑。
+/// - 直接走 BaseRepository.addTransaction，复用既有写入/变更追踪逻辑；
+/// - [paidByUserId] 由调用方传入当前操作者标识，模拟真实创建行为，
+///   避免填充数据出现「支出人未知」或分摊统计误归因。
 class AnalyticsTestDataSeeder {
   final BaseRepository repo;
 
@@ -44,10 +46,15 @@ class AnalyticsTestDataSeeder {
   ];
 
   /// 按指定范围填充测试支出交易，返回实际插入条数。
+  ///
+  /// [paidByUserId] 当前操作者标识（云 userId 或 localSelfId），
+  /// 填充的交易统一以此为支出人，与真实创建路径（markTxAuthor 回填）
+  /// 保持一致。
   Future<int> fill({
     required int ledgerId,
     required String baseCurrency,
     required TestDataScope scope,
+    String? paidByUserId,
   }) async {
     // 取账本可用支出分类；为空时自建一个兜底分类，避免插入因 categoryId 缺失失败
     final cats = await repo.getUsableCategories('expense');
@@ -120,6 +127,8 @@ class AnalyticsTestDataSeeder {
         categoryId: catId,
         happenedAt: p.when,
         note: '测试填充',
+        // 支出人:传入操作者标识,模拟真实创建,避免分摊统计误归因
+        paidByUserId: paidByUserId,
         // 外币：带上币种与原始金额，命中统计多币种聚合路径
         currencyCode: isForeign ? p.currency : null,
         nativeAmount: isForeign ? p.amount : null,

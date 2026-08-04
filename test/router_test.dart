@@ -12,8 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/router.dart';
 import 'package:spitout/routes.dart';
-import 'package:spitout/services/settlement/aa_edit_models.dart';
-import 'package:spitout/services/settlement/aa_settlement_service.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart';
 
 void main() {
   group('appRoute 路由解析', () {
@@ -27,9 +27,9 @@ void main() {
           reason: '应返回 MaterialPageRoute');
     });
 
-    test('AA 结算页 / 分摊编辑页路由名可解析', () {
-      final settlement = appRoute(const RouteSettings(name: Routes.aaSettlement));
-      expect(settlement, isNotNull, reason: '分摊结算页路由必须注册');
+    test('AA 统计页 / 分摊编辑页路由名可解析', () {
+      final settlement = appRoute(const RouteSettings(name: Routes.aaStatistics));
+      expect(settlement, isNotNull, reason: '分摊统计页路由必须注册');
       expect(settlement, isA<MaterialPageRoute<dynamic>>());
 
       // 分摊编辑页为压栈式全屏页面,必须携带 AaEditPageArgs 入参,

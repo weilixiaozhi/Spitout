@@ -15,7 +15,6 @@ import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/core/identity/local_user_identity.dart';
 import '../../data/models.dart';
-import '../../routes.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
 import '../../core/logging/logger_service.dart';
@@ -53,7 +52,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
   /// AA 分摊开关(新建/编辑态,随「保存」落库;跨设备同步)。
   ///
-  /// 开关内容(虚拟用户列表 / 分摊结算入口)跟随开关立即显示/隐藏,
+  /// 开关内容(虚拟用户列表 / 分摊统计入口)跟随开关立即显示/隐藏,
   /// 不依赖保存按钮——开关本身是纯 UI 状态,无需保存即可配置。
   bool _aaEnabled = false;
 
@@ -484,19 +483,10 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             onInviteWithoutSyncId: _ensureSyncIdForInvite,
           ),
           // 成员支出常驻显示：新建态 / 本地账本(无 syncId)时数据归 0 空态，
-          // 无需跟随云端。模块自带标题与"分摊结算"入口（跟随 AA 开关显示）。
+          // 无需跟随云端。模块自带标题。
           const SizedBox(height: 16),
           MemberStatsSection(
             ledgerId: ledger?.id,
-            aaEnabled: _aaEnabled,
-            onOpenSettlement: () {
-              // 从哪里进入就是哪个账本：编辑态传账本 id，新建态无账本
-              // 传 null，结算页各模块按空数据渲染，不做入口拦截。
-              Navigator.of(context).pushNamed(
-                Routes.aaSettlement,
-                arguments: ledger?.id,
-              );
-            },
           ),
         ],
       ),

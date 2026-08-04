@@ -456,7 +456,9 @@ class DataImportService {
         excludeFromStats: d.Value(tx.excludeFromStats ?? false),
         // AA 分摊字段:JSON 缺键落 null(列默认值),有值显式写入。
         // 与 server snapshot「缺键 = 未启用 AA」语义对齐。
-        paidByUserId: d.Value(tx.paidByUserId),
+        // 支出人兜底:备份未携带(旧 v6/CSV)时默认与创建人一致(用户数据修复
+        // 约定),双缺失落空串,展示层降级"未知"、计算层跳过。
+        paidByUserId: d.Value(tx.paidByUserId ?? tx.createdByUserId ?? ''),
         aaMode: d.Value(tx.aaMode),
         aaParticipants: d.Value(tx.aaParticipants),
         aaSplits: d.Value(tx.aaSplits),

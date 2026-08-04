@@ -19,13 +19,14 @@ import 'package:spitout/providers/ui/theme_providers.dart'
     show displayNameProvider;
 import 'package:spitout/core/identity/local_user_identity.dart'
     show localSelfIdProvider;
-import '../services/settlement/aa_settlement_service.dart' show AaMode;
+import '../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../theme/colors.dart';
 import 'category_icon.dart';
 import 'currency_flag.dart';
 import 'app_sheet.dart';
 import 'format_money.dart';
 import 'amount_text.dart';
+import 'me_suffix.dart';
 import 'user_display_name_resolver.dart';
 import '../theme/icons/app_icons.dart';
 
@@ -178,38 +179,44 @@ class _TransactionDetailBody extends ConsumerWidget {
                 ? l10n.aaModePerPerson
                 : l10n.aaModeNoSplit,
       ),
-      // 支出人
-      _InfoRow(
-        label: l10n.aaPayer,
-        value: resolver.resolve(t.paidByUserId).isEmpty
-            ? l10n.aaUnknownUser
-            : resolver.resolve(t.paidByUserId),
-      ),
     ];
+    // 支出人:本人追加「(我)」共享后缀(样式与成员管理/AA 记账页一致),
+    // 非本人仍用纯文本;unknown 时不追加后缀。
+    final paidById = t.paidByUserId;
+    final paidByName = resolver.resolve(paidById);
+    final paidByNameDisplay =
+        paidByName.isEmpty ? l10n.aaUnknownUser : paidByName;
+    widgets.add(_InfoRow(
+      label: l10n.aaPayer,
+      value: paidByNameDisplay,
+      valueWidget: paidByName.isNotEmpty && resolver.isSelf(paidById)
+          ? _infoRichValue(context, paidByNameDisplay,
+              isSelf: true, l10n: l10n)
+          : null,
+    ));
     if (mode == AaMode.noSplit) {
       return widgets;
     }
     // 参与人展示:昵称前若干人逗号隔开,剩余「…(x人)」;全选显示「全部成员(x人)」。
+    // 用富文本逐名渲染,本人名字后追加「(我)」共享后缀。
     final ids = _parseAaIdList(t.aaParticipants);
-    final allNames = (ids ?? const <String>[])
-        .map((id) {
-          final name = resolver.resolve(id);
-          return name.isEmpty ? l10n.aaUnknownUser : name;
-        })
-        .toList();
-    final participantsText =
-        _formatParticipants(l10n, allNames, all: ids == null);
     widgets.add(_InfoRow(
       label: l10n.aaParticipants,
-      value: participantsText,
+      value: '',
+      valueWidget: _participantsValue(context, l10n, ids, resolver),
     ));
     if (mode == AaMode.custom) {
-      // 指定分摊:逐人金额(只读)
+      // 指定分摊:逐人金额(只读);label 为参与人名,本人时同样追加后缀。
       final splits = _parseAaSplits(t.aaSplits);
       for (final e in splits.entries) {
         final name = resolver.resolve(e.key);
+        final nameDisplay = name.isEmpty ? l10n.aaUnknownUser : name;
         widgets.add(_InfoRow(
-          label: name.isEmpty ? l10n.aaUnknownUser : name,
+          label: nameDisplay,
+          labelWidget: name.isNotEmpty && resolver.isSelf(e.key)
+              ? _labelRichValue(context, nameDisplay,
+                  isSelf: true, l10n: l10n)
+              : null,
           value: formatMoneyWithCurrency(double.tryParse(e.value) ?? 0,
               currencyCode: currency),
         ));
@@ -218,28 +225,92 @@ class _TransactionDetailBody extends ConsumerWidget {
     return widgets;
   }
 
-  /// 格式化参与人展示文本:昵称前若干人逗号隔开,剩余以「…(x人)」省略。
+  /// 构建信息行右对齐值样式(与 [_InfoRow] 默认值一致)。
+  TextStyle _infoValueStyle(BuildContext context) => TextStyle(
+        fontSize: 14,
+        fontWeight: FontWeight.w500,
+        color: SpitoutTokens.textPrimary(context),
+      );
+
+  /// 构建信息行 label 样式(与 [_InfoRow] 默认 label 一致)。
+  TextStyle _infoLabelStyle(BuildContext context) => TextStyle(
+        fontSize: 14,
+        color: SpitoutTokens.textSecondary(context),
+      );
+
+  /// 构建带「(我)」共享后缀的右对齐富文本值。
   ///
-  /// 全选([all]=true)时显示「全部成员(x人)」;否则展示前 2 人 + 「…(x人)」。
-  /// 全选且人数 = 0 时回退到「全部成员」。
-  String _formatParticipants(
+  /// [text] 为纯名;本人标记通过 [isSelf] 传入,由 [meSuffixSpan] 渲染
+  /// 统一样式的「(我)」后缀,避免整体字符串拼接导致样式不一致。
+  Widget _infoRichValue(BuildContext context, String text,
+      {required bool isSelf, required AppLocalizations l10n}) {
+    return Text.rich(
+      TextSpan(
+        text: text,
+        style: _infoValueStyle(context),
+        children: [if (isSelf) meSuffixSpan(context, l10n)],
+      ),
+      textAlign: TextAlign.right,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  /// 构建带「(我)」共享后缀的 label 富文本(指定分摊行的参与人名)。
+  Widget _labelRichValue(BuildContext context, String text,
+      {required bool isSelf, required AppLocalizations l10n}) {
+    return Text.rich(
+      TextSpan(
+        text: text,
+        style: _infoLabelStyle(context),
+        children: [if (isSelf) meSuffixSpan(context, l10n)],
+      ),
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
+  }
+
+  /// 构建参与人展示组件:昵称前若干人逗号隔开,剩余以「…(x人)」省略。
+  ///
+  /// 全选([ids]==null)时显示「全部成员」;否则展示前 2 人 + 「…(x人)」。
+  /// 富文本逐名渲染,本人名字后追加「(我)」共享后缀。
+  Widget _participantsValue(
+    BuildContext context,
     AppLocalizations l10n,
-    List<String> names, {
-    required bool all,
-  }) {
-    final count = names.length;
-    if (all) {
-      return count == 0
-          ? l10n.aaParticipantsAll
-          : l10n.aaParticipantsAllCount(count);
+    List<String>? ids,
+    UserDisplayNameResolver resolver,
+  ) {
+    final style = _infoValueStyle(context);
+    if (ids == null || ids.isEmpty) {
+      return Text(l10n.aaParticipantsAll,
+          style: style,
+          textAlign: TextAlign.right,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis);
     }
-    if (count == 0) return l10n.aaParticipantsAll;
-    if (count <= 2) {
-      return '${names.join('、')}（$count${l10n.aaParticipantsUnit}）';
+    final count = ids.length;
+    final headCount = count <= 2 ? count : 2;
+    final spans = <TextSpan>[];
+    for (var i = 0; i < headCount; i++) {
+      final id = ids[i];
+      final name = resolver.resolve(id);
+      final display = name.isEmpty ? l10n.aaUnknownUser : name;
+      if (i > 0) spans.add(TextSpan(text: '、'));
+      spans.add(TextSpan(
+        text: display,
+        children: [if (resolver.isSelf(id)) meSuffixSpan(context, l10n)],
+      ));
     }
-    final head = names.take(2).join('、');
-    final rest = count - 2;
-    return '$head…（$rest${l10n.aaParticipantsUnit}）';
+    final tail = count <= 2
+        ? '（$count${l10n.aaParticipantsUnit}）'
+        : '…（${count - 2}${l10n.aaParticipantsUnit}）';
+    spans.add(TextSpan(text: tail));
+    return Text.rich(
+      TextSpan(style: style, children: spans),
+      textAlign: TextAlign.right,
+      maxLines: 1,
+      overflow: TextOverflow.ellipsis,
+    );
   }
 
   @override
@@ -429,11 +500,15 @@ class _TransactionDetailBody extends ConsumerWidget {
               if (t.createdByUserId != null)
                 _MemberRow(
                     label: l10n.homeDetailCreator,
-                    name: resolver.resolve(t.createdByUserId)),
+                    name: resolver.resolve(t.createdByUserId),
+                    // 本人创建人:追加「(我)」共享后缀,与 AA 区块口径一致。
+                    isSelf: resolver.isSelf(t.createdByUserId)),
               if (t.lastEditedByUserId != null)
                 _MemberRow(
                     label: l10n.homeDetailLastEditor,
                     name: resolver.resolve(t.lastEditedByUserId),
+                    // 本人最后编辑人:同样追加「(我)」共享后缀。
+                    isSelf: resolver.isSelf(t.lastEditedByUserId),
                     subtext:
                         t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
             ],
@@ -460,7 +535,9 @@ class _TransactionDetailBody extends ConsumerWidget {
                               color: SpitoutTokens.textTertiary(context))))
                   : Column(children: [
                       for (final e in h)
-                        _HistoryRow(e, (id) => resolver.resolve(id))
+                        _HistoryRow(e, (id) => resolver.resolve(id),
+                            // 操作者本人判定:传入后历史行操作者名自动追加「(我)」后缀。
+                            isSelfOf: (id) => resolver.isSelf(id))
                     ]),
               loading: () => const Padding(
                   padding: EdgeInsets.symmetric(vertical: 12),
@@ -542,18 +619,27 @@ class _SectionLabel extends StatelessWidget {
 class _InfoRow extends StatelessWidget {
   final String label;
   final String value;
-  // 自定义值组件(如带币种符号与负号的金额);优先于 [value] 渲染。
+  // 自定义值组件(如带币种符号与负号的金额、本人「(我)」富文本);优先于 [value] 渲染。
   final Widget? valueWidget;
-  const _InfoRow({required this.label, required this.value, this.valueWidget});
+  // 自定义 label 组件(如本人「(我)」富文本);优先于 [label] 渲染。
+  final Widget? labelWidget;
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    this.valueWidget,
+    this.labelWidget,
+  });
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(label,
-                style: TextStyle(
-                    fontSize: 14, color: SpitoutTokens.textSecondary(context))),
+            labelWidget ??
+                Text(label,
+                    style: TextStyle(
+                        fontSize: 14,
+                        color: SpitoutTokens.textSecondary(context))),
             Flexible(
               child: valueWidget ??
                   Text(value,
@@ -574,7 +660,14 @@ class _MemberRow extends StatelessWidget {
   final String label;
   final String name;
   final String? subtext;
-  const _MemberRow({required this.label, required this.name, this.subtext});
+  // 是否本人;为真时名字后追加「(我)」共享后缀,与全局规范一致。
+  final bool isSelf;
+  const _MemberRow({
+    required this.label,
+    required this.name,
+    this.subtext,
+    this.isSelf = false,
+  });
   @override
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 6),
@@ -588,13 +681,21 @@ class _MemberRow extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  Text(name,
+                  Text.rich(
+                    TextSpan(
+                      text: name,
                       style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                           color: SpitoutTokens.textPrimary(context)),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis),
+                      children: [
+                        if (isSelf)
+                          meSuffixSpan(context, AppLocalizations.of(context)),
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   if (subtext != null)
                     Text(subtext!,
                         style: TextStyle(
@@ -612,11 +713,14 @@ class _MemberRow extends StatelessWidget {
 class _HistoryRow extends StatelessWidget {
   final RecordEditHistory h;
   final String Function(String?) displayNameOf;
-  const _HistoryRow(this.h, this.displayNameOf);
+  // 操作者是否本人的判定;为真时在操作者名后追加「(我)」共享后缀。
+  final bool Function(String?)? isSelfOf;
+  const _HistoryRow(this.h, this.displayNameOf, {this.isSelfOf});
 
   @override
   Widget build(BuildContext context) {
     final operator = displayNameOf(h.operatorUserId);
+    final operatorIsSelf = isSelfOf?.call(h.operatorUserId) ?? false;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
@@ -651,10 +755,24 @@ class _HistoryRow extends StatelessWidget {
                 if (operator.isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Text('$operator · ${_fmtDate(h.createdAt)}',
+                    child: Text.rich(
+                      TextSpan(
+                        text: operator,
                         style: TextStyle(
                             fontSize: 11,
-                            color: SpitoutTokens.textTertiary(context))),
+                            color: SpitoutTokens.textTertiary(context)),
+                        children: [
+                          // 本人操作者:追加「(我)」共享后缀,与全局规范一致。
+                          if (operatorIsSelf)
+                            meSuffixSpan(context, AppLocalizations.of(context)),
+                          TextSpan(
+                              text: ' · ${_fmtDate(h.createdAt)}',
+                              style: TextStyle(
+                                  fontSize: 11,
+                                  color: SpitoutTokens.textTertiary(context))),
+                        ],
+                      ),
+                    ),
                   ),
               ],
             ),

@@ -32,7 +32,7 @@ enum AaMode {
 ///
 /// [shares] key=参与人标识(userId 或虚拟用户 syncId),value=应摊金额(double)。
 /// 支出人实付与应摊的差额归支出人,保证 sum(应摊) == 实付。
-class AaSettlementTxResult {
+class AaStatisticsTxResult {
   /// 交易 syncId(跨设备标识,本地展示用 tx.id)。
   final String? syncId;
 
@@ -51,7 +51,7 @@ class AaSettlementTxResult {
   /// 每人应摊金额。key=参与人标识,value=应摊金额(double)。
   final Map<String, double> shares;
 
-  const AaSettlementTxResult({
+  const AaStatisticsTxResult({
     required this.syncId,
     required this.txId,
     required this.paidAmount,
@@ -75,6 +75,9 @@ class AaParticipantSummary {
   /// 该参与人总共应摊金额(所有参与交易的分摊合计)。
   final double totalShouldPay;
 
+  /// 是否本人(当前用户);UI 据此追加「(我)」共享后缀。
+  final bool isSelf;
+
   /// 净额 = 实付 - 应摊。正数表示该参与人应收(别人欠他),
   /// 负数表示该参与人应付(他欠别人)。
   double get net => totalPaid - totalShouldPay;
@@ -84,6 +87,7 @@ class AaParticipantSummary {
     required this.displayName,
     required this.totalPaid,
     required this.totalShouldPay,
+    this.isSelf = false,
   });
 
   /// 累加实付金额。
@@ -92,6 +96,7 @@ class AaParticipantSummary {
         displayName: displayName,
         totalPaid: totalPaid + amount,
         totalShouldPay: totalShouldPay,
+        isSelf: isSelf,
       );
 
   /// 累加应摊金额。
@@ -100,6 +105,7 @@ class AaParticipantSummary {
         displayName: displayName,
         totalPaid: totalPaid,
         totalShouldPay: totalShouldPay + amount,
+        isSelf: isSelf,
       );
 }
 
@@ -110,28 +116,36 @@ class AaParticipantSummary {
 class AaTransfer {
   final String from;
   final String fromName;
+
+  /// 付款方是否本人;UI 据此追加「(我)」共享后缀。
+  final bool fromIsSelf;
   final String to;
   final String toName;
+
+  /// 收款方是否本人;UI 据此追加「(我)」共享后缀。
+  final bool toIsSelf;
   final double amount;
 
   const AaTransfer({
     required this.from,
     required this.fromName,
+    this.fromIsSelf = false,
     required this.to,
     required this.toName,
+    this.toIsSelf = false,
     required this.amount,
   });
 }
 
 /// 账本级 AA 分摊汇总结果。
-class AaLedgerSettlement {
+class AaLedgerStatistics {
   /// 参与人汇总(含真实成员 + 虚拟用户)。
   final List<AaParticipantSummary> participants;
 
   /// 结算转账方案。
   final List<AaTransfer> transfers;
 
-  AaLedgerSettlement({
+  AaLedgerStatistics({
     required this.participants,
     required this.transfers,
   });
@@ -150,27 +164,28 @@ class AaLedgerSettlement {
 ///
 /// 参与人解析:真实成员取 userId,虚拟用户取 syncId;身份映射由调用方
 /// (Provider 层)从 LedgerMembers + LedgerVirtualUsers 组装后传入。
-class AaSettlementService {
-  AaSettlementService._();
+class AaStatisticsService {
+  AaStatisticsService._();
 
   /// 计算单条交易的 AA 分摊结果。
   ///
   /// [tx] 交易行(已过滤 aaMode != noSplit)。
   /// [allParticipants] 账本全部参与人列表(userId 或虚拟用户 syncId),
   ///   人均模式下 aaParticipants 为空时展开为此列表。
-  /// [payerOverride] 支出人覆盖(默认取 tx.paidByUserId;为空时取参与人首个)。
   ///
-  /// 返回 null 表示该交易无法计算(如指定分摊 aaSplits 解析失败、参与人为空)。
-  static AaSettlementTxResult? computeTx({
+  /// 返回 null 表示该交易无法计算(如指定分摊 aaSplits 解析失败、参与人为空、
+  /// 支出人未知)。
+  static AaStatisticsTxResult? computeTx({
     required Transaction tx,
     required List<String> allParticipants,
   }) {
     final mode = AaMode.fromDb(tx.aaMode);
 
-    // 支出人:tx.paidByUserId 优先;为空时取参与人首个兜底(展示层空串降级"未知")。
-    final paidBy = (tx.paidByUserId != null && tx.paidByUserId!.isNotEmpty)
-        ? tx.paidByUserId!
-        : (allParticipants.isNotEmpty ? allParticipants.first : '');
+    // 支出人未知(paidByUserId 为空):实付归属不明,强行归给参与人首个会
+    // 造成分摊统计失真(如全算给虚拟用户)。与成员支出模块「未知支出人
+    // 无法归属、不计入」口径一致,直接跳过该交易,不参与 AA 统计。
+    final paidBy = tx.paidByUserId ?? '';
+    if (paidBy.isEmpty) return null;
 
     // 解析参与人:aaParticipants 为空 → 展开为账本全部成员(运行时展开)。
     List<String> participants;
@@ -179,7 +194,7 @@ class AaSettlementService {
         final list = jsonDecode(tx.aaParticipants!) as List;
         participants = list.map((e) => e.toString()).toList();
       } catch (e, st) {
-        logger.warning('AaSettlement',
+        logger.warning('AaStatistics',
             '解析 aaParticipants 失败 tx=${tx.id}', '$e\n$st');
         return null;
       }
@@ -212,7 +227,7 @@ class AaSettlementService {
       case AaMode.custom:
         // 指定分摊:aaSplits JSON 对象,key=参与人,value=金额字符串。
         if (tx.aaSplits == null || tx.aaSplits!.isEmpty) {
-          logger.warning('AaSettlement',
+          logger.warning('AaStatistics',
               '指定分摊 aaSplits 为空 tx=${tx.id}');
           return null;
         }
@@ -227,7 +242,7 @@ class AaSettlementService {
             }
           }
         } catch (e, st) {
-          logger.warning('AaSettlement',
+          logger.warning('AaStatistics',
               '解析 aaSplits 失败 tx=${tx.id}', '$e\n$st');
           return null;
         }
@@ -235,7 +250,7 @@ class AaSettlementService {
         break;
     }
 
-    return AaSettlementTxResult(
+    return AaStatisticsTxResult(
       syncId: tx.syncId,
       txId: tx.id,
       paidAmount: tx.amount,
@@ -252,10 +267,13 @@ class AaSettlementService {
   /// [allParticipants] 账本全部参与人标识列表。
   /// [displayNameMap] 参与人标识 → 显示名映射(真实成员取 displayName,
   ///   虚拟用户取 name)。
-  static AaLedgerSettlement computeLedger({
+  /// [selfMap] 参与人标识 → 是否本人(与 [displayNameMap] 同源构建,
+  ///   供 UI 层追加「(我)」共享后缀);缺省为空(默认非本人)。
+  static AaLedgerStatistics computeLedger({
     required List<Transaction> transactions,
     required List<String> allParticipants,
     required Map<String, String> displayNameMap,
+    Map<String, bool> selfMap = const {},
   }) {
     // 每人汇总:实付 + 应摊
     final summaryMap = <String, AaParticipantSummary>{};
@@ -265,6 +283,7 @@ class AaSettlementService {
         displayName: displayNameMap[pid] ?? pid,
         totalPaid: 0.0,
         totalShouldPay: 0.0,
+        isSelf: selfMap[pid] ?? false,
       );
     }
 
@@ -312,7 +331,7 @@ class AaSettlementService {
     // 生成转账方案:贪心结算,净额最小化转账笔数。
     final transfers = _buildTransfers(participants);
 
-    return AaLedgerSettlement(
+    return AaLedgerStatistics(
       participants: participants,
       transfers: transfers,
     );
@@ -336,6 +355,10 @@ class AaSettlementService {
 
     final nameOf = <String, String>{
       for (final p in participants) p.participantId: p.displayName,
+    };
+    // 本人标记映射:与 displayName 同源,供 UI 层追加「(我)」共享后缀。
+    final selfOf = <String, bool>{
+      for (final p in participants) p.participantId: p.isSelf,
     };
 
     final result = <AaTransfer>[];
@@ -368,8 +391,10 @@ class AaSettlementService {
       result.add(AaTransfer(
         from: maxDebtor,
         fromName: nameOf[maxDebtor] ?? maxDebtor,
+        fromIsSelf: selfOf[maxDebtor] ?? false,
         to: maxCreditor,
         toName: nameOf[maxCreditor] ?? maxCreditor,
+        toIsSelf: selfOf[maxCreditor] ?? false,
         amount: double.parse(amount.toStringAsFixed(2)),
       ));
 

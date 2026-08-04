@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 
 import '../widgets/app_route.dart';
 import 'pages/category/category_manage_page.dart';
-import 'pages/settlement/aa_edit_page.dart';
-import 'pages/settlement/aa_settlement_page.dart';
+import 'pages/statistics/aa_edit_page.dart';
+import 'pages/statistics/aa_statistics_page.dart';
 import 'routes.dart';
-import 'services/settlement/aa_edit_models.dart';
+import 'services/statistics/aa_edit_models.dart';
 
 /// 全局唯一路由解析层。
 ///
@@ -19,13 +19,13 @@ Route<dynamic>? appRoute(RouteSettings settings) {
         builder: (_) => const CategoryManagePage(),
         settings: settings,
       );
-    case Routes.aaSettlement:
+    case Routes.aaStatistics:
       // 账本 id 由调用方(账本编辑页)经 arguments 传入,遵循"从哪里进入
-      // 就是哪个账本";缺失/类型不符(如新建态)时传 null,结算页按空数据渲染。
+      // 就是哪个账本";缺失/类型不符(如新建态)时传 null,统计页按空数据渲染。
       final args = settings.arguments;
       return appPageRoute<void>(
         builder: (_) =>
-            AaSettlementPage(ledgerId: args is int ? args : null),
+            AaStatisticsPage(ledgerId: args is int ? args : null),
         settings: settings,
       );
     case Routes.aaEdit:

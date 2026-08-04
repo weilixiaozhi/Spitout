@@ -61,15 +61,16 @@ class UserDisplayNameResolver {
       // 云 userId 命中但无邮箱:走本地昵称兜底
       final localName = localOwnerDisplayName?.trim() ?? '';
       if (localName.isNotEmpty) return localName;
-      // 无昵称兜底:复用「未设置昵称」+「(我)」组合,与成员管理页口径一致
-      return '${l10n.mineSlogan}(${l10n.aaMe})';
+      // 无昵称兜底:仅返回纯名「未设置昵称」,「(我)」后缀由 UI 层通过
+      // 共享 meSuffixSpan 渲染,保证与成员管理/AA 记账页样式一致。
+      return l10n.mineSlogan;
     }
 
-    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「未设置昵称(我)」
+    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「未设置昵称」
     if (userId == localSelfId) {
       final localName = localOwnerDisplayName?.trim() ?? '';
-      // 无昵称兜底:复用「未设置昵称」+「(我)」组合
-      return localName.isNotEmpty ? localName : '${l10n.mineSlogan}(${l10n.aaMe})';
+      // 无昵称兜底:仅返回纯名「未设置昵称」,「(我)」后缀由 UI 层统一渲染。
+      return localName.isNotEmpty ? localName : l10n.mineSlogan;
     }
 
     // 4. 虚拟用户
@@ -83,6 +84,19 @@ class UserDisplayNameResolver {
 
     // 6. 兜底原始 id
     return userId;
+  }
+
+  /// 判断 userId 是否为本人(当前登录用户或本地账本「我」)。
+  ///
+  /// 设计意图:本人「(我)」标记统一由 UI 层基于该标记追加共享后缀
+  /// (meSuffixSpan/MeSuffix),而非在数据层拼接整体字符串,保证各模块
+  /// 字号/颜色/间距一致。共享账本成员表的 isSelf 由成员表提供,此处
+  /// 覆盖 currentUser 与 localSelfId 两种本人身份(成员表命中的场景
+  /// 走第 1 优先级的 displayName,标记也已在调用方按成员 isSelf 处理)。
+  bool isSelf(String? userId) {
+    if (userId == null || userId.isEmpty) return false;
+    if (currentUser != null && userId == currentUser!.id) return true;
+    return userId == localSelfId;
   }
 }
 

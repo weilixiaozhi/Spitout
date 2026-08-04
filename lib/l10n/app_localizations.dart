@@ -6686,101 +6686,101 @@ abstract class AppLocalizations {
   /// **'Collaborators cannot modify ledger settings.'**
   String get ledgerMetaReadOnlyToast;
 
-  /// No description provided for @aaSettlementTitle.
+  /// No description provided for @aaStatisticsTitle.
   ///
   /// In en, this message translates to:
   /// **'AA Statistics'**
-  String get aaSettlementTitle;
+  String get aaStatisticsTitle;
 
-  /// No description provided for @aaSettlementOverview.
+  /// No description provided for @aaStatisticsOverview.
   ///
   /// In en, this message translates to:
   /// **'Overview'**
-  String get aaSettlementOverview;
+  String get aaStatisticsOverview;
 
-  /// No description provided for @aaSettlementTotalAmount.
+  /// No description provided for @aaStatisticsTotalAmount.
   ///
   /// In en, this message translates to:
   /// **'Total shared'**
-  String get aaSettlementTotalAmount;
+  String get aaStatisticsTotalAmount;
 
-  /// No description provided for @aaSettlementTxCount.
+  /// No description provided for @aaStatisticsTxCount.
   ///
   /// In en, this message translates to:
   /// **'{count} shared transactions'**
-  String aaSettlementTxCount(int count);
+  String aaStatisticsTxCount(int count);
 
-  /// No description provided for @aaSettlementPerPerson.
+  /// No description provided for @aaStatisticsPerPerson.
   ///
   /// In en, this message translates to:
   /// **'Split details'**
-  String get aaSettlementPerPerson;
+  String get aaStatisticsPerPerson;
 
-  /// No description provided for @aaSettlementPaid.
+  /// No description provided for @aaStatisticsPaid.
   ///
   /// In en, this message translates to:
   /// **'Paid'**
-  String get aaSettlementPaid;
+  String get aaStatisticsPaid;
 
-  /// No description provided for @aaSettlementShare.
+  /// No description provided for @aaStatisticsShare.
   ///
   /// In en, this message translates to:
   /// **'Share'**
-  String get aaSettlementShare;
+  String get aaStatisticsShare;
 
-  /// No description provided for @aaSettlementNet.
+  /// No description provided for @aaStatisticsNet.
   ///
   /// In en, this message translates to:
   /// **'Balance'**
-  String get aaSettlementNet;
+  String get aaStatisticsNet;
 
-  /// No description provided for @aaSettlementNetReceive.
+  /// No description provided for @aaStatisticsNetReceive.
   ///
   /// In en, this message translates to:
   /// **'to receive'**
-  String get aaSettlementNetReceive;
+  String get aaStatisticsNetReceive;
 
-  /// No description provided for @aaSettlementNetPay.
+  /// No description provided for @aaStatisticsNetPay.
   ///
   /// In en, this message translates to:
   /// **'to pay'**
-  String get aaSettlementNetPay;
+  String get aaStatisticsNetPay;
 
-  /// No description provided for @aaSettlementTransferPlan.
+  /// No description provided for @aaStatisticsTransferPlan.
   ///
   /// In en, this message translates to:
   /// **'Settlement plan'**
-  String get aaSettlementTransferPlan;
+  String get aaStatisticsTransferPlan;
 
-  /// No description provided for @aaSettlementTransferPayTo.
+  /// No description provided for @aaStatisticsTransferSeparator.
   ///
   /// In en, this message translates to:
-  /// **'{from} pays {to}'**
-  String aaSettlementTransferPayTo(String from, String to);
+  /// **'pays'**
+  String get aaStatisticsTransferSeparator;
 
-  /// No description provided for @aaSettlementNoTransfers.
+  /// No description provided for @aaStatisticsNoTransfers.
   ///
   /// In en, this message translates to:
   /// **'All settled up'**
-  String get aaSettlementNoTransfers;
+  String get aaStatisticsNoTransfers;
 
-  /// No description provided for @aaSettlementExcluded.
+  /// No description provided for @aaStatisticsExcluded.
   ///
   /// In en, this message translates to:
   /// **'Excluded from details'**
-  String get aaSettlementExcluded;
+  String get aaStatisticsExcluded;
 
-  /// No description provided for @aaSettlementParticipantCount.
+  /// No description provided for @aaStatisticsParticipantCount.
   ///
   /// In en, this message translates to:
   /// **'{count} participants'**
-  String aaSettlementParticipantCount(int count);
+  String aaStatisticsParticipantCount(int count);
 
-  /// No description provided for @aaSettlementExcludedEmpty.
+  /// No description provided for @aaStatisticsExcludedEmpty.
   ///
   /// In en, this message translates to:
   /// **'No transactions excluded'**
-  String get aaSettlementExcludedEmpty;
+  String get aaStatisticsExcludedEmpty;
 
   /// No description provided for @aaEditTitle.
   ///
@@ -6920,11 +6920,11 @@ abstract class AppLocalizations {
   /// **'Split expenses with members when enabled'**
   String get ledgerAaEnabledHint;
 
-  /// No description provided for @ledgerAaSettlementEntry.
+  /// No description provided for @ledgerAaStatisticsEntry.
   ///
   /// In en, this message translates to:
   /// **'AA Statistics'**
-  String get ledgerAaSettlementEntry;
+  String get ledgerAaStatisticsEntry;
 
   /// No description provided for @ledgerAaVirtualUsersEntry.
   ///

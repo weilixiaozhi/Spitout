@@ -8,13 +8,14 @@ import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../services/data/tx_author_service.dart';
-import '../../services/settlement/aa_decimal_util.dart';
-import '../../services/settlement/aa_edit_models.dart';
-import '../../services/settlement/aa_settlement_service.dart';
+import '../../services/statistics/aa_decimal_util.dart';
+import '../../services/statistics/aa_edit_models.dart';
+import '../../services/statistics/aa_statistics_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../utils/category_utils.dart';
 import '../../utils/currency/currencies.dart';
+import '../../widgets/me_suffix.dart';
 import '../../widgets/widgets.dart';
 
 /// AA 分摊编辑页(纯选择器,不写库)。
@@ -74,7 +75,8 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 参与人选项到达后的首次初始化:支出人兜底、参与人回填、指定金额回填。
   ///
-  /// 不分摊模式不预填金额,切换到人均/指定时按需填充。
+  /// 指定分摊新建默认不预填任何金额(金额由用户按需填写),仅在编辑模式
+  /// 回填既有指定金额;不分摊/人均模式不涉及输入框金额。
   void _initOnce(List<AaParticipantOption> options) {
     if (_initialized || options.isEmpty) return;
     _initialized = true;
@@ -92,10 +94,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     if (_mode == AaMode.noSplit) return;
     final hasSplits =
         widget.args.splits != null && widget.args.splits!.isNotEmpty;
-    if (_mode == AaMode.custom && !hasSplits) {
-      // 指定分摊默认填人均金额,便于在人均基础上微调。
-      _fillPerPersonAmounts(options);
-    } else if (hasSplits) {
+    if (hasSplits) {
       // 编辑模式回填既有指定金额。
       widget.args.splits?.forEach((id, amount) {
         _amountCtrls[id]?.text = amount;
@@ -129,19 +128,6 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       setState(() => _paidById = operatorId);
     } catch (e, st) {
       logger.warning('AaEditPage', '解析默认支出人失败,回退参与人首个兜底', '$e\n$st');
-    }
-  }
-
-  /// 按人均分摊默认填充所有参与人金额(总额 / 人数,保留两位小数)。
-  ///
-  /// 除不尽的尾差由保存时的合计校验按支出人兜底修正。
-  void _fillPerPersonAmounts(List<AaParticipantOption> options) {
-    final participants = _effectiveParticipants(options);
-    if (participants.isEmpty) return;
-    final per = widget.args.amount / participants.length;
-    final perText = per.toStringAsFixed(2);
-    for (final id in participants) {
-      _amountCtrls[id]?.text = perText;
     }
   }
 
@@ -193,14 +179,6 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       _participantIds = selected.length == _currentOptionsLength
           ? null
           : selected;
-      // 指定分摊:切到人均补默认人均金额(避免空金额阻断)
-      if (_mode == AaMode.custom) {
-        final hasAnyAmount = _effectiveParticipants(_lastOptions).any(
-            (id) => (_amountCtrls[id]?.text.trim() ?? '').isNotEmpty);
-        if (!hasAnyAmount) {
-          _fillPerPersonAmounts(_lastOptions);
-        }
-      }
     });
   }
 
@@ -220,22 +198,17 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         AaMode.custom => AaMode.perPerson,
       };
       _syncAmountControllers(_lastOptions);
-      // 从不分摊/人均切到指定分摊:金额栏为空时默认填人均金额。
-      if (_mode == AaMode.custom) {
-        final hasAnyAmount = _effectiveParticipants(_lastOptions).any(
-            (id) => (_amountCtrls[id]?.text.trim() ?? '').isNotEmpty);
-        if (!hasAnyAmount) {
-          _fillPerPersonAmounts(_lastOptions);
-        }
-      }
     });
   }
 
   /// 已填指定金额合计(Decimal 精确累加,避免浮点尾差)。
-  double _filledSum() {
+  ///
+  /// 仅统计当前已勾选参与人的金额:取消勾选的参与人不计入,
+  /// 保证参与人总额/差额展示与勾选状态一致。
+  double _filledSum(List<AaParticipantOption> options) {
     var sum = Decimal.zero;
-    for (final c in _amountCtrls.values) {
-      final v = double.tryParse(c.text.trim());
+    for (final id in _effectiveParticipants(options)) {
+      final v = double.tryParse(_amountCtrls[id]?.text.trim() ?? '');
       if (v != null) sum += toDecimal2(v);
     }
     return toDouble(sum);
@@ -546,13 +519,14 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     String? currencyCode,
   ) {
     final total = widget.args.amount;
-    final sum = _filledSum();
+    final sum = _filledSum(options);
     final diff = total - sum;
     final balanced = diff.abs() < 0.005;
 
-    // 合计行的合计值:人均分摊按勾选人数均摊(展示用);
-    // 指定分摊按已填金额累加。两者在 _filledSum 内统一处理(人均时控制器
-    // 已被 _fillPerPersonAmounts 填充,故合计 = 总额;切人或切模式时实时重算)。
+    // 合计行的合计值:人均分摊按勾选人数均摊(展示总额);
+    // 指定分摊按已填金额累加(未填行计 0)。
+    // 人均模式下金额为只读实时重算,指定模式下 _filledSum 按当前已勾选
+    // 参与人的已填金额累加,切换勾选/模式时同步更新。
     final displaySum = _mode == AaMode.perPerson ? total : sum;
 
     return SectionCard(
@@ -576,15 +550,31 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                     color: SpitoutTokens.textSecondary(context),
                   ),
                 ),
-                const Spacer(),
-                Text(
-                  '${formatMoneyWithCurrency(displaySum, currencyCode: currencyCode)}'
-                  ' / ${formatMoneyWithCurrency(total, currencyCode: currencyCode)}',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: _mode == AaMode.perPerson || balanced
-                        ? SpitoutTokens.success(context)
-                        : SpitoutTokens.warning(context),
+                // 合计值右对齐占满剩余宽度:右缩 10px 对齐参与人金额列中
+                // 金额文本的右边界(可编辑输入框 contentPadding 右侧 10px,
+                // 只读金额同缩 10px)。设计意图:支出人 chevron / 参与人总额 /
+                // 每行只读态 / 编辑态四类元素统一以金额文本右边界为基准。
+                // FittedBox 保证金额超大时不溢出/换行,而是等比缩小完整显示。
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerRight,
+                    child: Padding(
+                      padding: const EdgeInsets.only(right: 10),
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          '${formatMoneyWithCurrency(displaySum, currencyCode: currencyCode)}'
+                          ' / ${formatMoneyWithCurrency(total, currencyCode: currencyCode)}',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: _mode == AaMode.perPerson || balanced
+                                ? SpitoutTokens.success(context)
+                                : SpitoutTokens.warning(context),
+                          ),
+                        ),
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -612,8 +602,19 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     // 不在名册(解析放弃)时回退本地昵称/「我」兜底展示。手选/编辑回填后
     // 同样反查名册真实成员名。
     final localName = ref.read(displayNameProvider).trim();
+    // 未手选(_paidById 为 null)时操作者即「我」,恒为本人;手选后按名册
+    // option.isSelf 判定,与参与人锁定行 / picker 行的本人口径一致。
+    final payerIsSelf = _paidById == null
+        ? true
+        : options
+            .where((o) => o.id == _paidById)
+            .firstOrNull
+            ?.isSelf ??
+            false;
+    // 纯名展示:未手选时本地昵称 / 「未设置昵称」兜底(不再拼接「(我)」,
+    // 后缀交给 UI 层共享 meSuffixSpan 统一渲染);手选反查名册名。
     final payerName = _paidById == null
-        ? (localName.isNotEmpty ? localName : '${l10n.mineSlogan}(${l10n.aaMe})')
+        ? (localName.isNotEmpty ? localName : l10n.mineSlogan)
         : _optionName(options, _paidById!);
     return InkWell(
       onTap: () async {
@@ -649,19 +650,39 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
               ),
             ),
             const Spacer(),
-            // 支出人名右对齐,与其他信息行(日期/金额/货币)口径一致
-            Flexible(
-              child: Text(
-                payerName,
-                textAlign: TextAlign.right,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
+            // 支出人名右对齐,与其他信息行(日期/金额/货币)口径一致。
+            // 必须用 Expanded(tight) 而非 Flexible(loose):loose 下 Text 只占
+            // 内容宽并靠左,右侧留白使 chevron 无法贴行尾;tight 强制占满槽位,
+            // 配合 textAlign.right 使文本右对齐,chevron 贴到金额文本右边界。
+            Expanded(
+              // 本人支出人:名称后追加共享「(我)」后缀,与成员管理/交易详情
+              // 口径一致;非本人用纯名 Text。
+              child: payerIsSelf
+                  ? Text.rich(
+                      TextSpan(
+                        text: payerName,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: SpitoutTokens.textPrimary(context),
+                        ),
+                        children: [meSuffixSpan(context, l10n)],
+                      ),
+                      textAlign: TextAlign.right,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    )
+                  : Text(
+                      payerName,
+                      textAlign: TextAlign.right,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
             ),
             const SizedBox(width: 6),
             // 右缩进 10px,使 chevron 右边界与参与人金额列中金额文本右边界对齐
@@ -700,7 +721,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     final primary = Theme.of(context).colorScheme.primary;
     final disabledColor = Theme.of(context).disabledColor;
 
-    // 人均分摊:按勾选人数实时均摊。
+    // 人均分摊:按勾选人数实时均摊,已勾选行只读展示人均值。
     final perPersonAmount = _mode == AaMode.perPerson
         ? _computePerPerson(options)
         : null;
@@ -709,12 +730,6 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     final nameColor = (isPayer || !selected)
         ? disabledColor
         : SpitoutTokens.textPrimary(context);
-
-    // 金额输入框可用性:
-    // - 支出人:可填(指定分摊);人均置灰展示
-    // - 未勾选:置灰不可操作
-    // - 人均:全部置灰只读
-    final amountEnabled = !isPayer && selected && _mode == AaMode.custom;
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -738,67 +753,89 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              option.name,
-              style: TextStyle(
-                fontSize: 14,
-                color: nameColor,
-              ),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-            ),
+            // 本人参与人:名称后追加共享「(我)」后缀,与支出人行 / 成员管理
+            // 口径一致;非本人用纯名 Text。
+            child: option.isSelf
+                ? Text.rich(
+                    TextSpan(
+                      text: option.name,
+                      style: TextStyle(fontSize: 14, color: nameColor),
+                      children: [
+                        meSuffixSpan(context, AppLocalizations.of(context))
+                      ],
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  )
+                : Text(
+                    option.name,
+                    style: TextStyle(fontSize: 14, color: nameColor),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
           ),
           const SizedBox(width: 12),
-          // 金额:可用态用 TextField;只读态(人均/未勾选/支出人锁定)用纯文字,
-          // 去掉色块与边框,统一 disabledColor 置灰,与编辑账本只读态一致。
+          // 金额列:
+          // - 高度固定 40(与输入框 contentPadding+边框高度一致),行高不随
+          //   勾选状态收缩,取消勾选后整行不会上下移动;
+          // - 仅已勾选参与人渲染金额:指定分摊用可编辑输入框(含支出人,金额
+          //   可调),人均分摊用只读人均值(每人均摊同一值);
+          // - 取消勾选的参与人(两种模式一致)金额栏留白,金额不计入总额。
           SizedBox(
             width: 120,
-            child: amountEnabled
-                ? TextField(
-                    controller: _amountCtrls[option.id],
-                    enabled: true,
-                    keyboardType:
-                        const TextInputType.numberWithOptions(decimal: true),
-                    inputFormatters: [
-                      FilteringTextInputFormatter.allow(
-                          RegExp(r'^\d*\.?\d{0,2}')),
-                    ],
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
-                    decoration: InputDecoration(
-                      isDense: true,
-                      // 输入框前缀币种符号:输入时即可确认分摊金额币种,
-                      // 与展示金额带符号的视觉口径一致。
-                      prefixText: currencyCode == null
-                          ? null
-                          : '${getCurrencySymbol(currencyCode)} ',
-                      hintText: '0.00',
-                      hintStyle: TextStyle(color: disabledColor),
-                      contentPadding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 8),
-                      filled: true,
-                      fillColor: SpitoutTokens.surfaceInput(context),
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
-                        borderSide: BorderSide.none,
+            height: 40,
+            child: !selected
+                ? const SizedBox.shrink()
+                : _mode == AaMode.custom
+                    ? TextField(
+                        controller: _amountCtrls[option.id],
+                        enabled: true,
+                        keyboardType:
+                            const TextInputType.numberWithOptions(decimal: true),
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(
+                              RegExp(r'^\d*\.?\d{0,2}')),
+                        ],
+                        textAlign: TextAlign.right,
+                        style: TextStyle(
+                          fontSize: 14,
+                          fontWeight: FontWeight.w500,
+                          color: SpitoutTokens.textPrimary(context),
+                        ),
+                        decoration: InputDecoration(
+                          isDense: true,
+                          // 输入框前缀币种符号:输入时即可确认分摊金额币种,
+                          // 与展示金额带符号的视觉口径一致。
+                          prefixText: currencyCode == null
+                              ? null
+                              : '${getCurrencySymbol(currencyCode)} ',
+                          hintText: '0.00',
+                          hintStyle: TextStyle(color: disabledColor),
+                          // 已填金额时在右侧显示圆形 x 清空按钮(空框不占位),
+                          // 点击后一键清空便于重新填写;有内容才可清空,避免
+                          // 空输入框上出现误导性的可点图标。
+                          suffixIcon:
+                              (_amountCtrls[option.id]?.text.trim().isNotEmpty ??
+                                      false)
+                                  ? _buildClearAmountButton(context, option.id)
+                                  : null,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 10, vertical: 8),
+                          filled: true,
+                          fillColor: SpitoutTokens.surfaceInput(context),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: BorderSide.none,
+                          ),
+                        ),
+                        onChanged: (_) => setState(() {}),
+                      )
+                    : _readOnlyAmountText(
+                        context,
+                        perPersonAmount ?? 0,
+                        dimmed: true,
+                        currencyCode: currencyCode,
                       ),
-                    ),
-                    onChanged: (_) => setState(() {}),
-                  )
-                : _readOnlyAmountText(
-                    context,
-                    _mode == AaMode.perPerson
-                        ? (perPersonAmount ?? 0)
-                        : (double.tryParse(
-                                _amountCtrls[option.id]?.text.trim() ?? '') ??
-                            0),
-                    dimmed: !amountEnabled,
-                    currencyCode: currencyCode,
-                  ),
           ),
         ],
       ),
@@ -807,8 +844,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 方框勾选组件:未选空方框,选中实心带勾。
   ///
-  /// 锁定态(支出人):做置灰只读态——边框与底色用 disabledColor,勾 icon
-  /// 用白色,视觉上明确「不可操作」而非「仅禁用点击」。
+  /// 锁定态(支出人):做置灰只读态——底色用 disabledColor、勾 icon 用白色,
+  /// 且去掉外边框(支出人必是参与人,checked 恒为 true,灰底+白勾已足够表达
+  /// 「不可操作」);可勾选态保留边框,视觉上提示可点击。
   Widget _buildCheckbox(
     BuildContext context, {
     Key? key,
@@ -822,9 +860,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     final activeColor = locked ? disabledColor : primary;
     final borderColor = checked
         ? activeColor
-        : (locked
-            ? disabledColor
-            : SpitoutTokens.textTertiary(context).withValues(alpha: 0.5));
+        : SpitoutTokens.textTertiary(context).withValues(alpha: 0.5);
     return InkWell(
       key: key,
       onTap: onTap,
@@ -834,7 +870,10 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         height: 20,
         decoration: BoxDecoration(
           color: checked ? activeColor : Colors.transparent,
-          border: Border.all(color: borderColor, width: 1.5),
+          // 锁定态(支出人)去边框:仅灰底+白勾;可勾选态保留边框。
+          border: locked
+              ? Border.all(color: Colors.transparent, width: 1.5)
+              : Border.all(color: borderColor, width: 1.5),
           borderRadius: BorderRadius.circular(4),
         ),
         child: checked
@@ -844,16 +883,35 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     );
   }
 
-  /// 只读金额展示(纯文字,无边框无色块)。
+  /// 金额输入框的清空按钮:已填金额时显示圆形 x,点击一键清空。
   ///
-  /// 设计意图:统一只读态——人均分摊金额、指定分摊未勾选/支出人锁定的金额
-  /// 均用此组件,可用态 textPrimary、置灰态 disabledColor,与编辑账本只读态
-  /// 一致,避免同页面出现两套只读色(原 _readOnlyAmount 带 surfaceSecondary
-  /// 色块、TextField 带 fillColor 色块)。
+  /// 设计意图:指定分摊金额需精确调整,一键清空便于重新填写。按钮仅在有内容
+  /// 时出现,空框不占位。程序清空不触发 onChanged,故点击后需手动 setState
+  /// 刷新合计与按钮显隐。
+  Widget _buildClearAmountButton(BuildContext context, String id) {
+    return GestureDetector(
+      onTap: () {
+        _amountCtrls[id]?.clear();
+        setState(() {});
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(4),
+        child: Icon(
+          AppIcons.cancel,
+          size: 18,
+          color: SpitoutTokens.iconSecondary(context),
+        ),
+      ),
+    );
+  }
+
+  /// 只读金额展示(纯文字,无边框无色块),人均分摊已勾选行展示人均值用。
   ///
   /// 右对齐基准:可编辑金额的 TextField 有 10px 水平 contentPadding,金额文本
   /// 右边界比输入框(色块)右边界内缩 10px。只读态同样右缩 10px,保证两种状态
   /// 的金额文本右边界对齐,而不是对齐到色块右边缘。
+  /// FittedBox 在金额超大时不换行/不省略,等比缩小字号完整显示(与结算页
+  /// 分摊详情表的处理方式一致,保证用户能看清每人的分摊金额)。
   Widget _readOnlyAmountText(
     BuildContext context,
     double value, {
@@ -864,15 +922,19 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       padding: const EdgeInsets.only(right: 10),
       child: Align(
         alignment: Alignment.centerRight,
-        child: Text(
-          // 只读金额带币种符号,与可输入金额的前缀符号口径一致。
-          formatMoneyWithCurrency(value, currencyCode: currencyCode),
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w500,
-            color: dimmed
-                ? Theme.of(context).disabledColor
-                : SpitoutTokens.textPrimary(context),
+        child: FittedBox(
+          fit: BoxFit.scaleDown,
+          alignment: Alignment.centerRight,
+          child: Text(
+            // 只读金额带币种符号,与可输入金额的前缀符号口径一致。
+            formatMoneyWithCurrency(value, currencyCode: currencyCode),
+            style: TextStyle(
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
+              color: dimmed
+                  ? Theme.of(context).disabledColor
+                  : SpitoutTokens.textPrimary(context),
+            ),
           ),
         ),
       ),

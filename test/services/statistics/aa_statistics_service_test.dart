@@ -14,8 +14,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/services/settlement/aa_settlement_service.dart';
-import 'package:spitout/services/settlement/aa_decimal_util.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart';
+import 'package:spitout/services/statistics/aa_decimal_util.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -79,7 +79,7 @@ void main() {
     });
   });
 
-  group('AaSettlementService.computeTx', () {
+  group('AaStatisticsService.computeTx', () {
     late SpitoutDatabase db;
 
     setUp(() {
@@ -131,7 +131,7 @@ void main() {
         aaMode: 0, // 人均
         aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2', 'u3'],
       )!;
@@ -154,7 +154,7 @@ void main() {
         aaMode: null, // null 视为人均
         aaParticipants: null,
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2', 'u3'],
       )!;
@@ -169,7 +169,7 @@ void main() {
         id: 1,
         aaMode: 1,
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2'],
       );
@@ -185,7 +185,7 @@ void main() {
         aaParticipants: jsonEncode(['u1', 'u2']),
         aaSplits: jsonEncode({'u1': '6.00', 'u2': '4.00'}),
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2'],
       )!;
@@ -200,14 +200,14 @@ void main() {
         aaMode: 2,
         aaSplits: null,
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2'],
       );
       expect(result, isNull);
     });
 
-    test('paidByUserId 为空 → 取参与人首个兜底', () {
+    test('paidByUserId 为空(支出人未知) → 返回 null,跳过分摊', () {
       final tx = makeTx(
         id: 1,
         amount: 10.0,
@@ -215,15 +215,31 @@ void main() {
         aaMode: 0,
         aaParticipants: jsonEncode(['u1', 'u2']),
       );
-      final result = AaSettlementService.computeTx(
+      final result = AaStatisticsService.computeTx(
         tx: tx,
         allParticipants: ['u1', 'u2'],
-      )!;
-      expect(result.paidBy, 'u1', reason: '空串降级取首个参与人');
+      );
+      // 支出人未知:实付无法归属,跳过该交易,不得误归给参与人首个。
+      expect(result, isNull);
+    });
+
+    test('paidByUserId 为空串 → 同样跳过分摊', () {
+      final tx = makeTx(
+        id: 1,
+        amount: 10.0,
+        paidByUserId: '',
+        aaMode: 0,
+        aaParticipants: jsonEncode(['u1', 'u2']),
+      );
+      final result = AaStatisticsService.computeTx(
+        tx: tx,
+        allParticipants: ['u1', 'u2'],
+      );
+      expect(result, isNull);
     });
   });
 
-  group('AaSettlementService.computeLedger', () {
+  group('AaStatisticsService.computeLedger', () {
     Transaction makeTx({
       required int id,
       required double amount,
@@ -274,7 +290,7 @@ void main() {
           aaParticipants: jsonEncode(['u1', 'u2']),
         ),
       ];
-      final settlement = AaSettlementService.computeLedger(
+      final settlement = AaStatisticsService.computeLedger(
         transactions: txs,
         allParticipants: ['u1', 'u2', 'u3'],
         displayNameMap: {'u1': 'Alice', 'u2': 'Bob', 'u3': 'Carol'},
@@ -309,7 +325,7 @@ void main() {
           aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
         ),
       ];
-      final settlement = AaSettlementService.computeLedger(
+      final settlement = AaStatisticsService.computeLedger(
         transactions: txs,
         allParticipants: ['u1', 'u2', 'u3'],
         displayNameMap: {'u1': 'Alice', 'u2': 'Bob', 'u3': 'Carol'},
@@ -327,6 +343,42 @@ void main() {
       expect(fromIds, {'u2', 'u3'});
     });
 
+    test('空支出人交易被跳过,不误归给参与人首个', () {
+      final txs = [
+        makeTx(
+          id: 1,
+          amount: 30.0,
+          paidByUserId: '', // 支出人未知(如历史/导入数据缺字段)
+          aaMode: 0,
+          aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
+        ),
+        makeTx(
+          id: 2,
+          amount: 6.0,
+          paidByUserId: 'u1',
+          aaMode: 0,
+          aaParticipants: jsonEncode(['u1', 'u2']),
+        ),
+      ];
+      final settlement = AaStatisticsService.computeLedger(
+        transactions: txs,
+        allParticipants: ['u1', 'u2', 'u3'],
+        displayNameMap: {'u1': 'Alice', 'u2': 'Bob', 'u3': 'Carol'},
+      );
+
+      // tx1(30 元,支出人未知)整体跳过:参与人实付/应摊均不受影响。
+      // 仅 tx2:u1 实付 6,应摊 3,净额 +3;u2 应摊 3,净额 -3;u3 无数据。
+      final u1 = settlement.participants.firstWhere((p) => p.participantId == 'u1');
+      expect(u1.totalPaid.toStringAsFixed(2), '6.00');
+      expect(u1.net.toStringAsFixed(2), '3.00');
+      final u2 = settlement.participants.firstWhere((p) => p.participantId == 'u2');
+      expect(u2.totalPaid.toStringAsFixed(2), '0.00');
+      expect(u2.net.toStringAsFixed(2), '-3.00');
+      final u3 = settlement.participants.firstWhere((p) => p.participantId == 'u3');
+      expect(u3.totalPaid.toStringAsFixed(2), '0.00');
+      expect(u3.totalShouldPay.toStringAsFixed(2), '0.00');
+    });
+
     test('虚拟用户参与: syncId 作为参与人标识', () {
       final vuSyncId = 'vu-uuid-1';
       final txs = [
@@ -338,7 +390,7 @@ void main() {
           aaParticipants: jsonEncode(['u1', vuSyncId]),
         ),
       ];
-      final settlement = AaSettlementService.computeLedger(
+      final settlement = AaStatisticsService.computeLedger(
         transactions: txs,
         allParticipants: ['u1', vuSyncId],
         displayNameMap: {'u1': 'Alice', vuSyncId: '室友'},
@@ -355,6 +407,43 @@ void main() {
       expect(settlement.transfers, hasLength(1));
       expect(settlement.transfers.single.from, vuSyncId);
       expect(settlement.transfers.single.to, 'u1');
+    });
+
+    test('selfMap 贯通: 参与人 isSelf 与转账方案本人标记正确', () {
+      final txs = [
+        makeTx(
+          id: 1,
+          amount: 30.0,
+          paidByUserId: 'u1',
+          aaMode: 0,
+          aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
+        ),
+      ];
+      final settlement = AaStatisticsService.computeLedger(
+        transactions: txs,
+        allParticipants: ['u1', 'u2', 'u3'],
+        displayNameMap: {'u1': 'Alice', 'u2': 'Bob', 'u3': 'Carol'},
+        // 仅 u2 标记为本人(如本地账本 owner 恒为本人)。
+        selfMap: {'u2': true},
+      );
+
+      // 参与人 isSelf:默认 false,selfMap 命中者 true。
+      final u1 = settlement.participants.firstWhere((p) => p.participantId == 'u1');
+      final u2 = settlement.participants.firstWhere((p) => p.participantId == 'u2');
+      final u3 = settlement.participants.firstWhere((p) => p.participantId == 'u3');
+      expect(u1.isSelf, isFalse);
+      expect(u2.isSelf, isTrue);
+      expect(u3.isSelf, isFalse);
+
+      // u1 应收(净额 +20),u2/u3 各应付 10:转账 u2→u1、u3→u1。
+      // 收款方 u1 非本人;u2 为付款方本人,其 fromIsSelf 应为 true。
+      final fromU2 = settlement.transfers
+          .firstWhere((t) => t.from == 'u2' && t.to == 'u1');
+      final fromU3 = settlement.transfers
+          .firstWhere((t) => t.from == 'u3' && t.to == 'u1');
+      expect(fromU2.fromIsSelf, isTrue);
+      expect(fromU3.fromIsSelf, isFalse);
+      expect(fromU2.toIsSelf, isFalse);
     });
   });
 }

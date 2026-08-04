@@ -3,7 +3,7 @@
 /// 设计意图:分摊算法 + 支出人兜底余数依赖 Decimal 全程计算,
 /// 避免浮点误差(如 10.00 / 3 = 3.333... 在 double 下累计失真)。
 /// 本工具集中封装 Decimal 入口转换 + 人均分摊 + 余数兜底逻辑,
-/// 服务层 [AaSettlementService] 与 UI 层(AaEditPage 合计校验)共用。
+/// 服务层 [AaStatisticsService] 与 UI 层(AaEditPage 合计校验)共用。
 library;
 
 import 'package:decimal/decimal.dart';

@@ -12,6 +12,13 @@ class AmountText extends ConsumerWidget {
   final bool showCurrency; // 是否显示币种符号(¥/$等),默认false
   final String? currencyCode; // 指定币种代码,null时自动获取当前账本币种
 
+  /// 金额超宽时是否等比缩小字号以完整显示（而非省略号截断）。
+  ///
+  /// 默认 false（沿用省略号截断，保证行内紧凑）；置为 true 后金额永不
+  /// 省略/换行，而是按比例缩小字号直至完整容纳，用于"金额必须完整可见"
+  /// 的场景（如分摊统计页的汇总卡、分摊详情表、转账方案）。
+  final bool scaleDown;
+
   const AmountText({
     super.key,
     required this.value,
@@ -20,6 +27,7 @@ class AmountText extends ConsumerWidget {
     this.style,
     this.showCurrency = false,
     this.currencyCode,
+    this.scaleDown = false,
   });
 
   @override
@@ -51,12 +59,23 @@ class AmountText extends ConsumerWidget {
             .bodyMedium
             ?.copyWith(color: SpitoutTokens.textPrimary(context));
 
-    return Text(
+    final text = Text(
       displayText,
       maxLines: 1,
       overflow: TextOverflow.ellipsis,
       textAlign: TextAlign.right,
       style: baseStyle,
+    );
+
+    if (!scaleDown) return text;
+
+    // scaleDown 模式：FittedBox 会按文本固有宽度排版后再等比缩放，
+    // 因此内部文本永远不会触发省略号/换行，超宽时只是字号变小，
+    // 始终能完整看到全部金额数字。
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      alignment: Alignment.centerRight,
+      child: text,
     );
   }
 }

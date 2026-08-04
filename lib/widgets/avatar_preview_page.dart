@@ -14,7 +14,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import 'spitout_icon.dart';
+import '../theme/icons/app_icons.dart';
 
 /// 头像全屏预览页。
 ///
@@ -79,8 +79,8 @@ class AvatarPreviewPage extends StatelessWidget {
                         ),
                       ),
                     )
-                  // 无头像：全屏展示品牌图标占位
-                  : const SpitoutIcon(size: 120.0),
+                  // 无头像：全屏展示虚拟用户同等 person 图标占位
+                  : Icon(AppIcons.person, size: 120.0, color: Colors.white70),
             ),
             // 左上角关闭 X（参考图位置，非右上）
             SafeArea(

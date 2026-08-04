@@ -3535,58 +3535,56 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => '공동 작업자는 가계부 정보를 수정할 수 없습니다.';
 
   @override
-  String get aaSettlementTitle => 'AA 통계';
+  String get aaStatisticsTitle => 'AA 통계';
 
   @override
-  String get aaSettlementOverview => '요약';
+  String get aaStatisticsOverview => '요약';
 
   @override
-  String get aaSettlementTotalAmount => '분담 총액';
+  String get aaStatisticsTotalAmount => '분담 총액';
 
   @override
-  String aaSettlementTxCount(int count) {
+  String aaStatisticsTxCount(int count) {
     return '분담 거래 $count건';
   }
 
   @override
-  String get aaSettlementPerPerson => '분담 상세';
+  String get aaStatisticsPerPerson => '분담 상세';
 
   @override
-  String get aaSettlementPaid => '지출';
+  String get aaStatisticsPaid => '지출';
 
   @override
-  String get aaSettlementShare => '분담';
+  String get aaStatisticsShare => '분담';
 
   @override
-  String get aaSettlementNet => '차액';
+  String get aaStatisticsNet => '차액';
 
   @override
-  String get aaSettlementNetReceive => '받을 금액';
+  String get aaStatisticsNetReceive => '받을 금액';
 
   @override
-  String get aaSettlementNetPay => '보낼 금액';
+  String get aaStatisticsNetPay => '보낼 금액';
 
   @override
-  String get aaSettlementTransferPlan => '송금 계획';
+  String get aaStatisticsTransferPlan => '송금 계획';
 
   @override
-  String aaSettlementTransferPayTo(String from, String to) {
-    return '$from → $to';
-  }
+  String get aaStatisticsTransferSeparator => '→';
 
   @override
-  String get aaSettlementNoTransfers => '정산 완료, 송금이 필요 없습니다';
+  String get aaStatisticsNoTransfers => '정산 완료, 송금이 필요 없습니다';
 
   @override
-  String get aaSettlementExcluded => '상세 내역 미포함';
+  String get aaStatisticsExcluded => '상세 내역 미포함';
 
   @override
-  String aaSettlementParticipantCount(int count) {
+  String aaStatisticsParticipantCount(int count) {
     return '분담 인원 $count명';
   }
 
   @override
-  String get aaSettlementExcludedEmpty => '상세 내역 제외 거래가 없습니다';
+  String get aaStatisticsExcludedEmpty => '상세 내역 제외 거래가 없습니다';
 
   @override
   String get aaEditTitle => '분담 편집';
@@ -3664,7 +3662,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get ledgerAaEnabledHint => '활성화하면 지출을 멤버와 분담할 수 있습니다';
 
   @override
-  String get ledgerAaSettlementEntry => 'AA 통계';
+  String get ledgerAaStatisticsEntry => 'AA 통계';
 
   @override
   String get ledgerAaVirtualUsersEntry => '가상 사용자 관리';

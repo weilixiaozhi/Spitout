@@ -3535,58 +3535,56 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerMetaReadOnlyToast => 'Collaborators cannot modify ledger settings.';
 
   @override
-  String get aaSettlementTitle => 'AA Statistics';
+  String get aaStatisticsTitle => 'AA Statistics';
 
   @override
-  String get aaSettlementOverview => 'Overview';
+  String get aaStatisticsOverview => 'Overview';
 
   @override
-  String get aaSettlementTotalAmount => 'Total shared';
+  String get aaStatisticsTotalAmount => 'Total shared';
 
   @override
-  String aaSettlementTxCount(int count) {
+  String aaStatisticsTxCount(int count) {
     return '$count shared transactions';
   }
 
   @override
-  String get aaSettlementPerPerson => 'Split details';
+  String get aaStatisticsPerPerson => 'Split details';
 
   @override
-  String get aaSettlementPaid => 'Paid';
+  String get aaStatisticsPaid => 'Paid';
 
   @override
-  String get aaSettlementShare => 'Share';
+  String get aaStatisticsShare => 'Share';
 
   @override
-  String get aaSettlementNet => 'Balance';
+  String get aaStatisticsNet => 'Balance';
 
   @override
-  String get aaSettlementNetReceive => 'to receive';
+  String get aaStatisticsNetReceive => 'to receive';
 
   @override
-  String get aaSettlementNetPay => 'to pay';
+  String get aaStatisticsNetPay => 'to pay';
 
   @override
-  String get aaSettlementTransferPlan => 'Settlement plan';
+  String get aaStatisticsTransferPlan => 'Settlement plan';
 
   @override
-  String aaSettlementTransferPayTo(String from, String to) {
-    return '$from pays $to';
-  }
+  String get aaStatisticsTransferSeparator => 'pays';
 
   @override
-  String get aaSettlementNoTransfers => 'All settled up';
+  String get aaStatisticsNoTransfers => 'All settled up';
 
   @override
-  String get aaSettlementExcluded => 'Excluded from details';
+  String get aaStatisticsExcluded => 'Excluded from details';
 
   @override
-  String aaSettlementParticipantCount(int count) {
+  String aaStatisticsParticipantCount(int count) {
     return '$count participants';
   }
 
   @override
-  String get aaSettlementExcludedEmpty => 'No transactions excluded';
+  String get aaStatisticsExcludedEmpty => 'No transactions excluded';
 
   @override
   String get aaEditTitle => 'Edit split';
@@ -3664,7 +3662,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ledgerAaEnabledHint => 'Split expenses with members when enabled';
 
   @override
-  String get ledgerAaSettlementEntry => 'AA Statistics';
+  String get ledgerAaStatisticsEntry => 'AA Statistics';
 
   @override
   String get ledgerAaVirtualUsersEntry => 'Manage virtual members';

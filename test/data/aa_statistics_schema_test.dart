@@ -1,13 +1,14 @@
-// AA 分摊功能 schema v1→v2 迁移端到端测试。
+// AA 分摊功能 schema v1→v3 迁移端到端测试。
 //
 // 本测试验证:
-//   1. schemaVersion 为 2(v2 迁移已生效)
+//   1. schemaVersion 为 3(v2/v3 迁移已生效)
 //   2. Transactions 表新增 4 字段(paid_by_user_id/aa_mode/aa_participants/
 //      aa_splits)就位且均 nullable
 //   3. Ledgers 表新增 aa_enabled 字段就位,默认 false
 //   4. LedgerVirtualUsers 表存在且所有列就位
 //   5. v1→v2 迁移:存量交易 paid_by_user_id 从 created_by_user_id 回填
-//   6. 迁移幂等:重复触发 onUpgrade 不崩
+//   6. v2→v3 迁移:空支出人按「创建人 → 编辑人 → 空串」兜底回填
+//   7. 迁移幂等:重复触发 onUpgrade 不崩
 
 import 'package:drift/drift.dart' as d;
 import 'package:drift/native.dart';
@@ -37,8 +38,8 @@ void main() {
     return rows.map((r) => r.read<String>('name')).toSet();
   }
 
-  test('schemaVersion 为 2(AA 分摊功能 v2 已生效)', () {
-    expect(db.schemaVersion, 2);
+  test('schemaVersion 为 3(v2/v3 迁移已生效)', () {
+    expect(db.schemaVersion, 3);
   });
 
   test('Transactions 表新增 4 个 AA 字段就位且均 nullable', () async {
@@ -185,6 +186,109 @@ void main() {
         .getSingle();
     expect(tx.paidByUserId, 'user-bob',
         reason: '幂等回填不应改变已有值');
+  });
+
+  test('v2→v3 迁移:空支出人回填创建人,优先于编辑人', () async {
+    // 模拟 v2 存量:paid_by_user_id 为空串(或 NULL),created/lastEdited 有值
+    final txId = await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 50.0,
+            happenedAt: d.Value(DateTime.now()),
+            createdByUserId: const d.Value('user-alice'),
+            lastEditedByUserId: const d.Value('user-bob'),
+            paidByUserId: const d.Value(''),
+          ),
+        );
+    // 手动触发 v3 迁移的回填语句(模拟 onUpgrade 第三步)
+    await db.customStatement(
+      'UPDATE transactions SET paid_by_user_id = '
+      "COALESCE(NULLIF(paid_by_user_id, ''), "
+      "created_by_user_id, last_edited_by_user_id, '') "
+      "WHERE paid_by_user_id IS NULL OR paid_by_user_id = '';",
+    );
+    final tx = await (db.select(db.transactions)
+          ..where((t) => t.id.equals(txId)))
+        .getSingle();
+    expect(tx.paidByUserId, 'user-alice',
+        reason: '空支出人应按「默认支出人 = 创建人」回填为创建人');
+  });
+
+  test('v2→v3 迁移:创建人缺失时回填编辑人', () async {
+    final txId = await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 50.0,
+            happenedAt: d.Value(DateTime.now()),
+            // 不传 createdByUserId → NULL
+            lastEditedByUserId: const d.Value('user-bob'),
+            paidByUserId: const d.Value(''),
+          ),
+        );
+    await db.customStatement(
+      'UPDATE transactions SET paid_by_user_id = '
+      "COALESCE(NULLIF(paid_by_user_id, ''), "
+      "created_by_user_id, last_edited_by_user_id, '') "
+      "WHERE paid_by_user_id IS NULL OR paid_by_user_id = '';",
+    );
+    final tx = await (db.select(db.transactions)
+          ..where((t) => t.id.equals(txId)))
+        .getSingle();
+    expect(tx.paidByUserId, 'user-bob',
+        reason: '创建人缺失时应退编辑人');
+  });
+
+  test('v2→v3 迁移:创建人/编辑人双缺失落空串(不伪造身份)', () async {
+    final txId = await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 50.0,
+            happenedAt: d.Value(DateTime.now()),
+            paidByUserId: const d.Value(''),
+          ),
+        );
+    await db.customStatement(
+      'UPDATE transactions SET paid_by_user_id = '
+      "COALESCE(NULLIF(paid_by_user_id, ''), "
+      "created_by_user_id, last_edited_by_user_id, '') "
+      "WHERE paid_by_user_id IS NULL OR paid_by_user_id = '';",
+    );
+    final tx = await (db.select(db.transactions)
+          ..where((t) => t.id.equals(txId)))
+        .getSingle();
+    expect(tx.paidByUserId, '',
+        reason: '创建人/编辑人均缺失时落空串,展示层降级"未知"而非伪造身份');
+  });
+
+  test('v2→v3 迁移回填幂等:已回填的非空值不被重写', () async {
+    final txId = await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 50.0,
+            happenedAt: d.Value(DateTime.now()),
+            createdByUserId: const d.Value('user-alice'),
+            // 手选过支出人,与创建人不同 → 非空值
+            paidByUserId: const d.Value('user-carol'),
+          ),
+        );
+    // 连续执行两次 v3 回填(WHERE 守卫:非空值不满足条件,不执行)
+    for (var i = 0; i < 2; i++) {
+      await db.customStatement(
+        'UPDATE transactions SET paid_by_user_id = '
+        "COALESCE(NULLIF(paid_by_user_id, ''), "
+        "created_by_user_id, last_edited_by_user_id, '') "
+        "WHERE paid_by_user_id IS NULL OR paid_by_user_id = '';",
+      );
+    }
+    final tx = await (db.select(db.transactions)
+          ..where((t) => t.id.equals(txId)))
+        .getSingle();
+    expect(tx.paidByUserId, 'user-carol',
+        reason: '幂等回填不得覆盖手选的非空支出人');
   });
 
   test('迁移幂等:addColumnIfMissing 重复调用不崩', () async {

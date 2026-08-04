@@ -6,7 +6,7 @@
 /// providers 层与 pages 层编辑页都能引用,不破坏 pages → widgets 单向依赖。
 library;
 
-import 'aa_settlement_service.dart';
+import 'aa_statistics_service.dart';
 
 /// 参与人选项(真实成员或虚拟用户)。
 ///
@@ -17,15 +17,22 @@ class AaParticipantOption {
   final String id;
 
   /// 显示名(真实成员取 displayName/email,虚拟用户取 name)。
+  ///
+  /// 本人时已剥离「(我)」后缀(仅保留纯名字),「(我)」标记由 UI 层
+  /// 统一渲染,保证与成员管理/成员支出模块的字号/颜色/空格一致。
   final String name;
 
   /// 是否虚拟用户。
   final bool isVirtual;
 
+  /// 是否本人(当前用户);UI 据此追加「(我)」后缀。
+  final bool isSelf;
+
   const AaParticipantOption({
     required this.id,
     required this.name,
     required this.isVirtual,
+    this.isSelf = false,
   });
 }
 

@@ -13,7 +13,7 @@ import 'toast.dart';
 /// 虚拟用户管理 Bottom Sheet(新建 / 重命名 / 删除)。
 ///
 /// 数据源为 [ledgerVirtualUsersProvider](Stream,增删改自动刷新);
-/// 全部写操作走 settlement_providers 动作函数(LocalRepository 委托,
+/// 全部写操作走 aa_statistics_providers 动作函数(LocalRepository 委托,
 /// 保证 sync 登记统一)。删除受硬约束:名下有账不可删,子仓抛
 /// [StateError],此处 catch 后 toast 提示。
 ///

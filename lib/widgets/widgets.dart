@@ -7,6 +7,7 @@
 
 // ===== 基础通用组件 =====
 export 'app_empty.dart';
+export 'person_avatar.dart';
 export 'app_list_tile.dart';
 export 'app_sheet.dart';
 export 'app_dialog.dart';

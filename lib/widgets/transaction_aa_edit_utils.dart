@@ -9,8 +9,8 @@ import '../data/repositories/support/shared_ledger_picker_filter.dart'
     show syntheticIdForSyncId;
 import '../l10n/app_localizations.dart';
 import '../routes.dart';
-import '../services/settlement/aa_edit_models.dart';
-import '../services/settlement/aa_settlement_service.dart' show AaMode;
+import '../services/statistics/aa_edit_models.dart';
+import '../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../utils/category_utils.dart';
 import 'toast.dart';
 import 'package:spitout/providers/providers.dart';

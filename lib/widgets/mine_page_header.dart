@@ -8,11 +8,12 @@ import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 import '../core/logging/logger_service.dart';
-import '../theme/typography.dart';
+import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import '../theme/typography.dart';
 import 'app_route.dart';
 import 'avatar_preview_page.dart';
-import 'spitout_icon.dart';
+import 'person_avatar.dart';
 import 'toast.dart';
 
 /// 我的页头部：居中头像（上）+ 昵称（下），点击头像全屏预览，点击昵称编辑。
@@ -273,17 +274,8 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
                   height: 88.0,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: Theme.of(context)
-                        .colorScheme
-                        .primary
-                        .withValues(alpha: 0.1),
-                    border: Border.all(
-                      color: Theme.of(context)
-                          .colorScheme
-                          .primary
-                          .withValues(alpha: 0.3),
-                      width: 2,
-                    ),
+                    // 无头像占位底色与虚拟用户头像一致,统一「未设置头像」的视觉。
+                    color: SpitoutTokens.surfaceSecondary(context),
                   ),
                   child: ClipOval(
                     // 首次加载用 avatarPathProvider 的 loading 态驱动 spinner：
@@ -307,10 +299,11 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
                                 key: ValueKey(effectiveAvatarPath),
                                 File(effectiveAvatarPath),
                                 fit: BoxFit.cover,
-                                errorBuilder: (context , error , stackTrace) =>
-                                    const SpitoutIcon(size: 44.0),
+                                errorBuilder: (context, error, stackTrace) =>
+                                    const PersonAvatar(size: 88, iconSize: 40),
                               )
-                            : const SpitoutIcon(size: 44.0)),
+                            // 未设置头像:展示虚拟用户同等 person 图标,取代品牌图标。
+                            : const PersonAvatar(size: 88, iconSize: 40)),
                   ),
                 ),
               ),

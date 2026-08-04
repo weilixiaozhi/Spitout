@@ -1754,46 +1754,36 @@
     "updateGoToGithub": "View on GitHub",
     "mineUpdateNow": "Update",
     "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings.",
-    "aaSettlementTitle": "AA Statistics",
-    "aaSettlementOverview": "Overview",
-    "aaSettlementTotalAmount": "Total shared",
-    "aaSettlementTxCount": "{count} shared transactions",
-    "@aaSettlementTxCount": {
+    "aaStatisticsTitle": "AA Statistics",
+    "aaStatisticsOverview": "Overview",
+    "aaStatisticsTotalAmount": "Total shared",
+    "aaStatisticsTxCount": "{count} shared transactions",
+    "@aaStatisticsTxCount": {
         "placeholders": {
             "count": {
                 "type": "int"
             }
         }
     },
-    "aaSettlementPerPerson": "Split details",
-    "aaSettlementPaid": "Paid",
-    "aaSettlementShare": "Share",
-    "aaSettlementNet": "Balance",
-    "aaSettlementNetReceive": "to receive",
-    "aaSettlementNetPay": "to pay",
-    "aaSettlementTransferPlan": "Settlement plan",
-    "aaSettlementTransferPayTo": "{from} pays {to}",
-    "@aaSettlementTransferPayTo": {
-        "placeholders": {
-            "from": {
-                "type": "String"
-            },
-            "to": {
-                "type": "String"
-            }
-        }
-    },
-    "aaSettlementNoTransfers": "All settled up",
-    "aaSettlementExcluded": "Excluded from details",
-    "aaSettlementParticipantCount": "{count} participants",
-    "@aaSettlementParticipantCount": {
+    "aaStatisticsPerPerson": "Split details",
+    "aaStatisticsPaid": "Paid",
+    "aaStatisticsShare": "Share",
+    "aaStatisticsNet": "Balance",
+    "aaStatisticsNetReceive": "to receive",
+    "aaStatisticsNetPay": "to pay",
+    "aaStatisticsTransferPlan": "Settlement plan",
+    "aaStatisticsTransferSeparator": "pays",
+    "aaStatisticsNoTransfers": "All settled up",
+    "aaStatisticsExcluded": "Excluded from details",
+    "aaStatisticsParticipantCount": "{count} participants",
+    "@aaStatisticsParticipantCount": {
         "placeholders": {
             "count": {
                 "type": "int"
             }
         }
     },
-    "aaSettlementExcludedEmpty": "No transactions excluded",
+    "aaStatisticsExcludedEmpty": "No transactions excluded",
     "aaEditTitle": "Edit split",
     "aaEditSplitButton": "Edit split",
     "aaPayer": "Paid by",
@@ -1839,7 +1829,7 @@
     "aaMe": "Me",
 
     "ledgerAaEnabledHint": "Split expenses with members when enabled",
-    "ledgerAaSettlementEntry": "AA Statistics",
+    "ledgerAaStatisticsEntry": "AA Statistics",
     "ledgerAaVirtualUsersEntry": "Manage virtual members",
     "aaSwitchOnLabel": "Turn on AA Split",
     "aaSwitchOffLabel": "Turn off AA Split",

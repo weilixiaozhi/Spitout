@@ -14,10 +14,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/pages/settlement/aa_edit_page.dart';
-import 'package:spitout/services/settlement/aa_edit_models.dart';
-import 'package:spitout/services/settlement/aa_settlement_service.dart';
+import 'package:spitout/pages/statistics/aa_edit_page.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart';
 import 'package:spitout/routes.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 两个真实成员 + 一个虚拟用户参与人桩。
 const _options = [
@@ -79,6 +80,19 @@ Future<void> _openAaEdit(
   );
   await tester.tap(find.text('launch'));
   await tester.pumpAndSettle();
+}
+
+/// 取参与人勾选框外层 Container 的边框,用于验证锁定态去边框/普通态留边框。
+Border? _checkboxBorder(WidgetTester tester, String id) {
+  final container = tester.widget<Container>(
+    find
+        .descendant(
+            of: find.byKey(ValueKey('aa-checkbox-$id')),
+            matching: find.byType(Container))
+        .first,
+  );
+  // BoxDecoration.border 的静态类型为 BoxBorder?,实际放入的恒为 Border。
+  return (container.decoration as BoxDecoration?)?.border as Border?;
 }
 
 void main() {
@@ -157,7 +171,7 @@ void main() {
     expect(find.text('参与人'), findsOneWidget);
   });
 
-  testWidgets('人均分摊:参与人金额实时重算且置灰只读', (tester) async {
+  testWidgets('人均分摊:已勾选行展示人均金额,取消勾选金额栏不显示', (tester) async {
     await _openAaEdit(
       tester,
       args: AaEditPageArgs(
@@ -171,8 +185,22 @@ void main() {
       onResult: (_) {},
     );
 
-    // 人均分摊:3 人均摊 90 → 每人 ¥ 30
+    // 人均分摊:3 人均摊 90 → 已勾选行只读展示 ¥ 30
     expect(find.text('¥ 30'), findsNWidgets(3));
+
+    // 取消勾选「李四」(u2):金额实时重算为 90/2=45,
+    // u2 行金额栏不显示,剩 2 行展示 ¥ 45。
+    await tester.tap(find.byKey(const ValueKey('aa-checkbox-u2')));
+    await tester.pumpAndSettle();
+    expect(find.text('¥ 45'), findsNWidgets(2));
+    final u2Row = find
+        .ancestor(
+            of: find.byKey(const ValueKey('aa-checkbox-u2')),
+            matching: find.byType(Row))
+        .first;
+    expect(
+        find.descendant(of: u2Row, matching: find.text('¥ 45')),
+        findsNothing);
   });
 
   testWidgets('支出人:新建未手选,回传 paidByUserId=null(落库层回填创建人)', (tester) async {
@@ -190,8 +218,8 @@ void main() {
       onResult: (r) => result = r,
     );
 
-    // 未手选支出人:昵称为空时显示「未设置昵称(我)」(默认支出人 = 创建人,非「未知」)
-    expect(find.text('未设置昵称(我)'), findsOneWidget);
+    // 未手选支出人:昵称为空时显示「未设置昵称 (我)」(默认支出人 = 创建人,非「未知」)
+    expect(find.text('未设置昵称 (我)', findRichText: true), findsOneWidget);
 
     // 直接确认:人均模式回传 null,参与人 null = 全部成员
     await tester.tap(find.text('完成'));
@@ -217,8 +245,8 @@ void main() {
       displayName: '小计',
     );
 
-    // 未手选支出人:昵称优先于「我」,展示本地昵称
-    expect(find.text('小计'), findsOneWidget);
+    // 未手选支出人:昵称优先于「我」,展示本地昵称 + 共享「(我)」后缀
+    expect(find.text('小计 (我)', findRichText: true), findsOneWidget);
     expect(find.text('未知'), findsNothing);
   });
 
@@ -276,14 +304,17 @@ void main() {
     await tester.pumpAndSettle();
     expect(find.text('¥ 30'), findsNWidgets(3));
 
-    // 未手选:确认回传 paidByUserId=null(落库层回填操作者),不写手选值。
+    // 确认回传:参与人仍为全部成员(null = 未被取消)。
     await tester.tap(find.text('完成'));
     await tester.pumpAndSettle();
     expect(result, isNotNull);
+    expect(result!.aaParticipants, isNull);
+    // 未手选:回传 paidByUserId=null(落库层回填操作者),不写手选值。
     expect(result!.paidByUserId, isNull);
   });
 
   testWidgets('支出人:操作者不在名册时,不锁定任何参与人行', (tester) async {
+    AaEditResult? result;
     await _openAaEdit(
       tester,
       args: AaEditPageArgs(
@@ -294,16 +325,16 @@ void main() {
         date: DateTime(2026, 8, 3),
         mode: AaMode.perPerson,
       ),
-      onResult: (_) {},
+      onResult: (r) => result = r,
       // 操作者身份 = unknown-id,不在名册(u1/u2/vu_1)中。
       localSelfId: 'unknown-id',
     );
 
     // 顶部支出人展示本地昵称/「我」兜底,不反查名册。
-    expect(find.text('未设置昵称(我)'), findsOneWidget);
+    expect(find.text('未设置昵称 (我)', findRichText: true), findsOneWidget);
     expect(find.text('未知'), findsNothing);
 
-    // 未锁定任何参与人:「张三」行可正常取消勾选 → 人均按 2 人分摊(45)。
+    // 未锁定任何参与人:「张三」行可正常取消勾选。
     // 勾选切换在行首 Checkbox 上,点击昵称文本不会触发。
     final zhangSanRow = find
         .ancestor(of: find.text('张三'), matching: find.byType(Row))
@@ -311,8 +342,15 @@ void main() {
     await tester.tap(
         find.descendant(of: zhangSanRow, matching: find.byType(InkWell)).first);
     await tester.pumpAndSettle();
-    // 人均模式所有参与人行(含未勾选)都展示同一人均值:3 行 ¥ 45。
-    expect(find.text('¥ 45'), findsNWidgets(3));
+
+    // 取消勾选后张三行金额栏不显示:仅剩 2 行展示人均 ¥ 45(90 / 2)。
+    expect(find.text('¥ 45'), findsNWidgets(2));
+
+    // 确认回传参与人名单:张三(u1)退出,剩李四(u2)/小明(vu_1)。
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+    expect(result, isNotNull);
+    expect(result!.aaParticipants, ['u2', 'vu_1']);
   });
 
   testWidgets('支出人:编辑回填原值,未手选保持原值回传', (tester) async {
@@ -336,5 +374,184 @@ void main() {
     await tester.pumpAndSettle();
     expect(result, isNotNull);
     expect(result!.paidByUserId, 'u1');
+  });
+
+  testWidgets('指定分摊:支出人金额可编辑,确认回传修改值', (tester) async {
+    AaEditResult? result;
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.custom,
+        paidByUserId: 'u1',
+        splits: {'u1': '30', 'u2': '30', 'vu_1': '40'},
+      ),
+      onResult: (r) => result = r,
+    );
+
+    // 支出人(u1)行金额为可编辑输入框(金额可调,仅勾选锁定)。
+    // 用勾选框 key 定位参与人行,避免命中顶部支出人行的同名文本。
+    final u1Row = find
+        .ancestor(
+            of: find.byKey(const ValueKey('aa-checkbox-u1')),
+            matching: find.byType(Row))
+        .first;
+    final u1Field =
+        find.descendant(of: u1Row, matching: find.byType(TextField));
+    expect(u1Field, findsOneWidget);
+
+    // 支出人金额 30 → 40,李四 30 → 20,合计 100 与交易金额持平
+    await tester.enterText(u1Field, '40');
+    await tester.pump();
+    final u2Row = find
+        .ancestor(
+            of: find.byKey(const ValueKey('aa-checkbox-u2')),
+            matching: find.byType(Row))
+        .first;
+    await tester.enterText(
+        find.descendant(of: u2Row, matching: find.byType(TextField)), '20');
+    await tester.pump();
+    expect(find.text('¥ 100 / ¥ 100'), findsOneWidget);
+
+    // 确认回传修改后的支出人金额
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+    expect(result, isNotNull);
+    expect(result!.aaSplits!['u1'], '40.00');
+    expect(result!.aaSplits!['u2'], '20.00');
+    expect(result!.aaSplits!['vu_1'], '40.00');
+  });
+
+  testWidgets('指定分摊:取消勾选后总额不含其金额,金额栏不显示', (tester) async {
+    AaEditResult? result;
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.custom,
+        paidByUserId: 'u1',
+        splits: {'u1': '30', 'u2': '30', 'vu_1': '40'},
+      ),
+      onResult: (r) => result = r,
+    );
+
+    // 初始:3 个金额输入框(支出人 + 2 参与人)
+    expect(find.byType(TextField), findsNWidgets(3));
+
+    // 取消勾选「李四」(u2)
+    await tester.tap(find.byKey(const ValueKey('aa-checkbox-u2')));
+    await tester.pumpAndSettle();
+
+    // 总额/差额不含 u2 金额:仅 30(u1)+ 40(vu_1)= 70 / 100
+    expect(find.text('¥ 70 / ¥ 100'), findsOneWidget);
+    // u2 行金额栏不显示:输入框剩 2 个,且 u2 行内无金额组件
+    expect(find.byType(TextField), findsNWidgets(2));
+    final u2Row = find
+        .ancestor(
+            of: find.byKey(const ValueKey('aa-checkbox-u2')),
+            matching: find.byType(Row))
+        .first;
+    expect(
+        find.descendant(of: u2Row, matching: find.byType(TextField)),
+        findsNothing);
+
+    // 确认:u2 不参与分摊,指定金额不含 u2
+    await tester.tap(find.text('完成'));
+    await tester.pumpAndSettle();
+    expect(result, isNotNull);
+    expect(result!.aaParticipants, ['u1', 'vu_1']);
+    expect(result!.aaSplits!.keys, isNot(contains('u2')));
+  });
+
+  testWidgets('复选框:支出人锁定态去掉边框,普通参与人保留边框', (tester) async {
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.custom,
+        paidByUserId: 'u1',
+      ),
+      onResult: (_) {},
+    );
+
+    // 支出人(u1)锁定态复选框:边框透明(去边框,仅灰底+白勾)。
+    final lockedBorder = _checkboxBorder(tester, 'u1');
+    expect(lockedBorder, isNotNull);
+    expect(lockedBorder!.top.color, Colors.transparent);
+
+    // 普通参与人(u2)复选框:保留可点击边框(非透明)。
+    final normalBorder = _checkboxBorder(tester, 'u2');
+    expect(normalBorder, isNotNull);
+    expect(normalBorder!.top.color, isNot(Colors.transparent));
+  });
+
+  testWidgets('指定分摊:新建默认不填充金额,合计为 0/总额', (tester) async {
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.custom,
+        paidByUserId: 'u1',
+      ),
+      onResult: (_) {},
+    );
+
+    // 新建指定分摊:3 个金额输入框内容均为空(默认不预填人均金额)。
+    expect(find.byType(TextField), findsNWidgets(3));
+    for (final field in tester.widgetList<TextField>(find.byType(TextField))) {
+      expect(field.controller!.text, isEmpty);
+    }
+    // 空金额不触发清空按钮,且合计为 0 / 总额(偏差态,由用户按需填写)。
+    expect(find.byIcon(AppIcons.cancel), findsNothing);
+    expect(find.text('¥ 0 / ¥ 100'), findsOneWidget);
+  });
+
+  testWidgets('指定分摊:金额输入有内容显示圆形清空按钮,点击清空', (tester) async {
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.custom,
+        paidByUserId: 'u1',
+        splits: {'u1': '30', 'u2': '30', 'vu_1': '40'},
+      ),
+      onResult: (_) {},
+    );
+
+    // 3 个金额框均有内容 → 每行右侧显示圆形 x 清空按钮。
+    expect(find.byIcon(AppIcons.cancel), findsNWidgets(3));
+
+    // 点击支出人(u1)行清空按钮:金额清空、按钮消失、合计不含 u1 金额。
+    final u1Row = find
+        .ancestor(
+            of: find.byKey(const ValueKey('aa-checkbox-u1')),
+            matching: find.byType(Row))
+        .first;
+    await tester.tap(
+        find.descendant(of: u1Row, matching: find.byIcon(AppIcons.cancel)));
+    await tester.pump();
+
+    expect(find.byIcon(AppIcons.cancel), findsNWidgets(2));
+    expect(find.text('¥ 70 / ¥ 100'), findsOneWidget);
   });
 }

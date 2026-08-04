@@ -109,6 +109,10 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
       if (t.nativeAmount != null) 'nativeAmount': t.nativeAmount,
       // 缺键 = false(server snapshot 同语义),只为 true 时输出,保持 payload 干净。
       if (t.excludeFromStats) 'excludeFromStats': true,
+      // 创建人(非空才发):供导入侧「默认支出人 = 创建人」兜底,与 AA 字段
+      // 同样的缺键兼容策略(v6 及更早备份无此键 → 导入兜底空串)。
+      if (t.createdByUserId != null && t.createdByUserId!.isNotEmpty)
+        'createdByUserId': t.createdByUserId,
       // AA 分摊字段(非空才发,与 serializer "非空才发"守卫一致):
       // 缺键导入兜底为 null → 视为未启用 AA,与旧 v6 备份兼容。
       if (t.paidByUserId != null && t.paidByUserId!.isNotEmpty)
@@ -249,6 +253,8 @@ ImportData parseJsonToImportData(String jsonStr) {
         happenedAt: DateTime.parse(it['happenedAt'] as String).toLocal(),
         note: it['note'] as String?,
         syncId: it['syncId'] as String?,
+        // 创建人(v7 备份携带):支出人缺失时兜底「默认支出人 = 创建人」。
+        createdByUserId: it['createdByUserId'] as String?,
         // AA 分摊字段:v6 缺键兜底 null → 落库视为未启用 AA。
         // v7 显式输出(非空才发),round-trip 保真。
         paidByUserId: it['paidByUserId'] as String?,

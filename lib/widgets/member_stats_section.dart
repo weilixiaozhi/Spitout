@@ -9,13 +9,14 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/currency/currency_providers.dart'
     show currentLedgerCurrencyProvider;
-import 'package:spitout/providers/settlement/settlement_providers.dart'
+import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
     show memberExpenseStatsProvider, MemberExpenseStatItem;
 import 'package:spitout/providers/ui/theme_providers.dart'
     show expenseColorSchemeProvider;
 import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
 import 'format_money.dart';
+import 'me_suffix.dart';
+import 'person_avatar.dart';
 import 'section_card.dart';
 
 /// 成员支出模块
@@ -30,8 +31,6 @@ class MemberStatsSection extends ConsumerWidget {
   const MemberStatsSection({
     super.key,
     required this.ledgerId,
-    required this.aaEnabled,
-    required this.onOpenSettlement,
   });
 
   /// 本地账本 id(int);null = 新建态。
@@ -39,15 +38,6 @@ class MemberStatsSection extends ConsumerWidget {
   /// 为 null 时不拉取统计,标题右侧不展示总支出金额,
   /// 内容区直接展示"暂无记账"空态。
   final int? ledgerId;
-
-  /// AA 分摊开关当前状态;开启时在标题下方显示分摊结算入口。
-  ///
-  /// 入口跟随开关立即显示/隐藏,不依赖保存按钮。
-  final bool aaEnabled;
-
-  /// 分摊结算入口点击回调(由父组件判断是否可跳转:仅编辑态当前账本可跳,
-  /// 否则提示先保存账本)。
-  final VoidCallback onOpenSettlement;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -62,12 +52,6 @@ class MemberStatsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTitle(context, ref, l10n, statsAsync),
-        // 分摊结算入口:跟随 AA 开关立即显示(开启就显示),无需保存。
-        // 样式与"加入共享账本"入口一致(全宽 OutlinedButton)。
-        if (aaEnabled) ...[
-          const SizedBox(height: 8),
-          _buildSettlementEntry(context, l10n),
-        ],
         const SizedBox(height: 8),
         // 模块内嵌在页面滚动视图中,加载 / 错误态只需占位展示,不撑满全屏。
         statsAsync.when(
@@ -83,22 +67,6 @@ class MemberStatsSection extends ConsumerWidget {
           data: (stats) => _buildMemberList(context, stats, l10n),
         ),
       ],
-    );
-  }
-
-  /// 分摊结算入口(成员支出标题下方,AA 开关开启时显示)。
-  Widget _buildSettlementEntry(BuildContext context, AppLocalizations l10n) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      child: OutlinedButton.icon(
-        icon: const Icon(AppIcons.pieChart, size: 18),
-        label: Text(l10n.ledgerAaSettlementEntry),
-        onPressed: onOpenSettlement,
-        style: OutlinedButton.styleFrom(
-          minimumSize: const Size(double.infinity, 40.0),
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ),
-      ),
     );
   }
 
@@ -218,8 +186,17 @@ class _MemberStatTile extends ConsumerWidget {
         ? (stat.expenseTotal / totalExpense * 100).clamp(0, 100)
         : 0;
     return ListTile(
-      leading: _StatsAvatar(displayName: displayName),
-      title: Text(displayName, overflow: TextOverflow.ellipsis),
+      leading: const _StatsAvatar(),
+      // 标题行与成员管理模块一致:本人「(我)」后缀统一走共享 MeSuffix,
+      // 字号/颜色/字重相同,保证两模块本人展示统一。
+      title: Row(
+        children: [
+          Flexible(
+            child: Text(displayName, overflow: TextOverflow.ellipsis),
+          ),
+          if (stat.isSelf) const MeSuffix(),
+        ],
+      ),
       subtitle: Text(
         l10n.sharedMembersStatsTxCount(stat.txCount),
         style: TextStyle(
@@ -259,15 +236,12 @@ class _MemberStatTile extends ConsumerWidget {
   }
 }
 
-/// 成员支出头像 — 首字母 CircleAvatar(本地统计无 avatar_url,统一首字母兜底)。
+/// 成员支出头像 — 本地统计无头像数据,统一展示虚拟用户同等 person 图标。
 class _StatsAvatar extends StatelessWidget {
-  const _StatsAvatar({required this.displayName});
-
-  final String displayName;
+  const _StatsAvatar();
 
   @override
   Widget build(BuildContext context) {
-    final letter = displayName.isNotEmpty ? displayName[0].toUpperCase() : '?';
-    return CircleAvatar(child: Text(letter));
+    return const PersonAvatar(size: 40, iconSize: 18);
   }
 }

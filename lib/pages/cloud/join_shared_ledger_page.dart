@@ -246,15 +246,9 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
       child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Center(
-              child: CircleAvatar(
-                radius: 28,
-                child: Text(
-                  preview.invitedByDisplay.isNotEmpty
-                      ? preview.invitedByDisplay.substring(0, 1).toUpperCase()
-                      : '?',
-                ),
-              ),
+            // 邀请人头像:预览接口不返回头像数据,统一用虚拟用户同等 person 图标占位。
+            const Center(
+              child: PersonAvatar(size: 56, iconSize: 26),
             ),
             const SizedBox(height: 12),
             Center(

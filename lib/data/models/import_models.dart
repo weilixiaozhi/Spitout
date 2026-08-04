@@ -54,8 +54,13 @@ class ImportTransaction {
   /// 与 server snapshot「缺键 = false」语义对齐。
   final bool? excludeFromStats;
 
-  /// AA 分摊:支出人 userId。null(JSON/CSV 无此键) → 落库 null,
-  /// 由运行时写入层 ?? 操作者 userId 兜底,展示层空串降级"未知"。
+  /// 源端创建人 userId(导入兜底用)。v7 备份导出携带,用于 paidByUserId
+  /// 缺失时「默认支出人 = 创建人」的回填;旧备份(无此键)为 null,落库兜底空串。
+  final String? createdByUserId;
+
+  /// AA 分摊:支出人 userId。null(JSON/CSV 无此键) → 导入侧
+  /// 以 createdByUserId 兜底(默认支出人 = 创建人),双缺失落空串,
+  /// 展示层空串降级"未知"。
   final String? paidByUserId;
 
   /// AA 分摊模式:null/0=人均,1=不分摊,2=指定。null 视为人均。
@@ -81,6 +86,7 @@ class ImportTransaction {
     this.note,
     this.categoryId,
     this.syncId,
+    this.createdByUserId,
     this.paidByUserId,
     this.aaMode,
     this.aaParticipants,

@@ -257,7 +257,13 @@ extension SyncEngineApplyExt on SyncEngine {
               currencyCode: d.Value(payloadCurrency),
               nativeAmount: d.Value(hasNativeKey ? payloadNative : amount),
               // AA 字段:缺键落 null(列默认值),有键显式写入。
-              paidByUserId: d.Value(payloadPaidByUserId),
+              // 支出人兜底:server 未下发(旧服务端缺键/显式 null)时
+              // 默认与创建人一致(创建人由 server 注入),创建人缺失退编辑人,
+              // 双缺失落空串(展示层降级"未知"、计算层跳过)。
+              paidByUserId: d.Value(payloadPaidByUserId ??
+                  createdByUserId ??
+                  lastEditedByUserId ??
+                  ''),
               aaMode: d.Value(payloadAaMode),
               aaParticipants: d.Value(payloadAaParticipants),
               aaSplits: d.Value(payloadAaSplits),

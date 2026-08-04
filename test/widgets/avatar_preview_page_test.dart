@@ -2,7 +2,7 @@
 ///
 /// 覆盖 2026-07-24 我的页头部调整后的核心行为：
 ///   1. 有头像：黑色背景，居中显示圆形大图（InteractiveViewer）。
-///   2. 无头像：黑色背景，居中显示品牌图标（SpitoutIcon），无删除按钮。
+///   2. 无头像：黑色背景，居中显示 person 图标，无删除按钮。
 ///   3. 有头像：底部显示上传 + 删除两个按钮。
 ///   4. 无头像：底部仅显示上传按钮，无删除按钮。
 ///   5. 关闭按钮在左上角，点击关闭当前页面。
@@ -14,8 +14,8 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/avatar_preview_page.dart';
-import 'package:spitout/widgets/spitout_icon.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -78,7 +78,7 @@ void main() {
 
   // ── 无头像场景 ──────────────────────────────────────────────
 
-  testWidgets('无头像：居中显示品牌图标，无删除按钮', (tester) async {
+  testWidgets('无头像：居中显示 person 图标，无删除按钮', (tester) async {
     await tester.pumpWidget(buildHarness(
       avatarPath: null,
       uploadLabel: '上传新头像',
@@ -87,8 +87,8 @@ void main() {
       onDelete: () {},
     ));
 
-    // 无头像 → 居中显示 SpitoutIcon 品牌图标
-    expect(find.byType(SpitoutIcon), findsOneWidget);
+    // 无头像 → 居中显示 person 图标（虚拟用户同等占位）
+    expect(find.byIcon(AppIcons.person), findsOneWidget);
     // 无头像 → 不显示删除按钮（即使传了 deleteLabel/onDelete）
     expect(find.text('删除头像'), findsNothing);
     // 始终显示上传按钮
