@@ -60,10 +60,10 @@ jobs:
 
       - name: 安装 Android SDK 组件
         run: |
-          # android-37 对应 Android 17，当前仍处于 Beta 渠道（2026-06 发布 Beta 4.1），
-          # sdkmanager 默认 stable 渠道找不到该包会直接以非 0 退出码失败。
-          # 显式指定 --channel=1 覆盖到 beta 渠道；beta 是 stable 的超集，不影响其余包。
-          sdkmanager --channel=1 --install "platform-tools" "platforms;android-35" "platforms;android-36" "platforms;android-37" "build-tools;35.0.0"
+          # 插件中最高仅要求 compileSdk 36（permission_handler 已降级至 12.0.3，
+          # 其 android 插件 13.0.1 仅需 compileSdk 35），无需 API 37 平台，
+          # 因此全部走 stable 渠道即可，sdkmanager 不会因找不到包而失败。
+          sdkmanager --install "platform-tools" "platforms;android-35" "platforms;android-36" "build-tools;35.0.0"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
