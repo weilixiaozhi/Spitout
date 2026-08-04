@@ -26,14 +26,15 @@ import '../theme/icons/app_icons.dart';
 /// 尺寸自适应：
 /// - 行高不写死，由父 sheet 按可用高度算定 [u] 后下传。
 /// - 所有行高、字号均从 [u] 派生，保证小屏等比缩小、大屏不溢出。
-/// - 系统字号（textScaler）封顶到 1.2×，防止大字体撑爆按键。
+/// - 文字缩放跟随全局（main.dart 统一 ×0.85 缩小）并在 [0.85, 1.0] 封顶，
+///   防止系统大字体撑爆按键。
 class AmountKeypad extends StatelessWidget {
   /// 键盘单元行高（由父 sheet 按屏幕可用高度算好下传）。
   ///
   /// 设计意图：keypad 自身处于 mainAxisSize.min 容器内，LayoutBuilder 拿到的
   /// 纵向约束是 infinity，无法自行测算可用高度；故由 sheet 层算定 u 后传入。
   /// 所有行高、字号均从 u 派生，保证小屏等比缩小、大屏不溢出。
-  /// 取值范围 clamp[36,48]：空间充足维持 48，紧张时压到 36（仍保证可点）。
+  /// 取值范围 clamp[30,35]：空间充足维持 35，紧张时压到 30（仍保证可点）。
   final double u;
 
   /// 当前日期（日期键显示）
@@ -107,7 +108,7 @@ class AmountKeypad extends StatelessWidget {
             label,
             style: text.titleMedium?.copyWith(
               color: SpitoutTokens.textPrimary(context),
-              // 字号从 u 派生：u=48→17.3、u=36→13，按键缩小时字号同步缩小
+              // 字号从 u 派生：u=35→12.6、u=30→10.8，按键缩小时字号同步缩小
               fontSize: u * 0.36,
               fontWeight: FontWeight.w600,
             ),
@@ -204,9 +205,8 @@ class AmountKeypad extends StatelessWidget {
                           color: SpitoutTokens.textPrimary(context),
                           fontWeight: FontWeight.w600,
                           // 双行日期字号从 u 派生。
-                          // 普通/大屏(u≥44)保底 9px 保证可读；压缩区间(u<44，仅系统键盘
-                          // 拉起等极端场景触达)下限降到 7px，使两行文本能塞进最小键高 u=36，
-                          // 避免 RenderFlex 溢出（u 最小可压到 36）。
+                          // 压缩区间(u<44)下限降到 7px，使两行文本能塞进最小键高 u=30，
+                          // 避免 RenderFlex 溢出；常规 u≥44 保底 9px 保证可读。
                           fontSize: (u * 0.18).clamp(u < 44 ? 7.0 : 9.0, 11.0)),
                     ),
                     const SizedBox(height: 2),
@@ -263,7 +263,7 @@ class AmountKeypad extends StatelessWidget {
           alignment: Alignment.center,
             child: isSubmitting
               ? SizedBox(
-                  // loading 尺寸从 u 派生：u=48→17.3、u=36→13
+                  // loading 尺寸从 u 派生：u=35→12.6、u=30→10.8
                   width: u * 0.36,
                   height: u * 0.36,
                   child: const CircularProgressIndicator(
@@ -276,7 +276,7 @@ class AmountKeypad extends StatelessWidget {
                       '=',
                       style: TextStyle(
                         color: Colors.white,
-                        // 等号比数字略大：u=48→20.6、u=36→15.5
+                        // 等号比数字略大：u=35→15.1、u=30→12.9
                         fontSize: u * 0.43,
                         fontWeight: FontWeight.w700,
                       ),
@@ -302,11 +302,12 @@ class AmountKeypad extends StatelessWidget {
     // 当前激活的运算符（用于高亮）；waiting/calculated 状态无激活
     final activeOp = isInCalcMode ? op : null;
 
-    // 系统字号封顶：fontSize 已从 clamp 后的 u 派生（u≤48），
-    // 即使 textScaler 放大到 1.2×，48×0.36×1.2≈20.7px 仍落在 48px 按键内富余。
-    // 选 1.2 而非 noScaling：保留弱视用户有限放大能力，又不至于撑爆按键。
+    // 文字缩放跟随全局（main.dart 已统一 ×0.85 缩小）并在 [0.85, 1.0] 封顶：
+    // 下限 0.85 承接全局缩小（不能抬回 1.0，否则键盘文字与全局不一致）；
+    // 上限 1.0 防止系统大字体撑爆按键——fontSize 已从 u 派生（u≤35），
+    // 35×0.36×1.0≈12.6px 落在 35px 按键内富余。
     final ts = MediaQuery.textScalerOf(context);
-    final capped = TextScaler.linear(ts.scale(1.0).clamp(1.0, 1.2));
+    final capped = TextScaler.linear(ts.scale(1.0).clamp(0.85, 1.0));
 
     return MediaQuery(
       data: MediaQuery.of(context).copyWith(textScaler: capped),

@@ -729,8 +729,8 @@ class _TransactionEditorSheetState
     final l10n = AppLocalizations.of(context);
     final keyboardOpen = mq.viewInsets.bottom > 0;
     // —— 高度自适应 ——
-    // 键盘行高 u 由 computeKeypadU 按可用高度算定：默认 48，
-    // 空间不足时（系统键盘拉起、极小屏）压到 36 保底防溢出。
+    // 键盘行高 u 由 computeKeypadU 按可用高度算定：默认 35，
+    // 空间不足时（系统键盘拉起、极小屏）压到 30 保底防溢出。
     // useSafeArea:true 时 route 不 removePadding，内部 padding.top 即真实
     // 状态栏高度（SafeArea 已自动把 sheet 顶到状态栏下面，这里仅用于可用
     // 高度预算，不再做任何头部空白补偿）。

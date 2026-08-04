@@ -15,7 +15,7 @@
 ///   B. 尺寸自适应（本次改动核心）：
 ///     7. u=56 → 数字网格区高度 = 3*56+2*8，底部行高度 = 56；
 ///     8. u=44 → 行高随 u 等比缩小，验证小屏自适应；
-///     9. textScaler 封顶 1.2：系统 1.5× 大字体下文字高度不超 1.2× 基线。
+///     9. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
 
 import 'package:flutter/material.dart';
@@ -321,7 +321,7 @@ void main() {
       expect(bottomH, 36);
     });
 
-    testWidgets('textScaler 封顶 1.2：系统 1.5× 大字体下文字不超 1.2× 基线',
+    testWidgets('textScaler 封顶 1.0：系统 1.5× 大字体下文字不超 1.0× 基线',
         (tester) async {
       // 基线：textScaler=1.0
       await tester.pumpWidget(buildHarness(
@@ -335,7 +335,7 @@ void main() {
       ));
       final baseH = tester.getSize(find.text('5')).height;
 
-      // 放大到 1.5×，应被 keypad 内部封顶到 1.2×
+      // 放大到 1.5×，应被 keypad 内部封顶到 1.0×
       await tester.pumpWidget(buildHarness(
         u: 56,
         textScaler: TextScaler.linear(1.5),
@@ -347,10 +347,10 @@ void main() {
       ));
       final cappedH = tester.getSize(find.text('5')).height;
 
-      // 取 1.2× 参照高度，验证 1.5× 输入被 cap 到与 1.2× 一致
+      // 取 1.0× 参照高度，验证 1.5× 输入被 cap 到与 1.0× 一致
       await tester.pumpWidget(buildHarness(
         u: 56,
-        textScaler: TextScaler.linear(1.2),
+        textScaler: TextScaler.linear(1.0),
         onAppend: noopAppend,
         onApplyOp: noopOp,
         onApplyEquals: noop,
@@ -359,7 +359,7 @@ void main() {
       ));
       final refH = tester.getSize(find.text('5')).height;
 
-      // 1.5× 被封顶 → 渲染高度应等于 1.2× 参照
+      // 1.5× 被封顶 → 渲染高度应等于 1.0× 参照
       expect(cappedH, closeTo(refH, 0.5));
       // 且明显小于未封顶时的 1.5× 预期（baseH*1.5），证明封顶生效
       expect(cappedH, lessThan(baseH * 1.45));

@@ -108,8 +108,11 @@ class LedgerCard extends ConsumerWidget {
                     Row(
                       children: [
                         // 账本名称
+                        // 裸 RichText 默认 textScaler 为 noScaling（不随系统/全局缩放），
+                        // 显式透传 MediaQuery 的 textScaler，使账本名随全局 0.85 一同缩小。
                         Expanded(
                           child: RichText(
+                            textScaler: MediaQuery.textScalerOf(context),
                             text: TextSpan(
                               children: [
                                 TextSpan(

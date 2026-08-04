@@ -7,6 +7,11 @@ import '../theme/colors.dart';
 /// 该值只作为保底最小间距。
 const double _kButtonSpacing = 60;
 
+// 弹窗按钮水平内边距。M3 默认 24 偏宽，窄屏（<~380dp）下两个并排按钮的
+// 可用宽度有限，长文案（如 4 字的"立即切换"）会被迫换行；收紧到 16 使
+// 常规中文按钮文案保持单行，整体更紧凑。
+const EdgeInsets _kButtonPadding = EdgeInsets.symmetric(horizontal: 16);
+
 /// 统一弹窗（基础 UI 组件）
 class AppDialog {
   static Future<T?> confirm<T>(
@@ -200,8 +205,9 @@ class AppDialog {
                                     side: BorderSide(color: primary),
                                     shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(10)),
+                                    padding: _kButtonPadding,
                                   ),
-                                  child: Text(act[i].label),
+                                  child: _dialogButtonLabel(act[i].label),
                                 );
                               })
                             : FilledButton(
@@ -209,8 +215,9 @@ class AppDialog {
                                 style: FilledButton.styleFrom(
                                   shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(10)),
+                                  padding: _kButtonPadding,
                                 ),
-                                child: Text(act[i].label)),
+                                child: _dialogButtonLabel(act[i].label)),
                       ),
                     ),
                     // 最小间距保底 60，仅加在按钮"之间"，最后一个按钮之后不添加，
@@ -224,6 +231,23 @@ class AppDialog {
             ],
           ),
         ),
+      ),
+    );
+  }
+
+  /// 弹窗按钮文案渲染：强制单行，超宽时自动等比缩小而非换行。
+  ///
+  /// 设计意图：两个按钮并排时单个按钮可用宽度有限（弹窗宽 0.85 屏宽 − 内边距 −
+  /// 间距后均分），文案若超过可用宽度，Text 默认会换行，导致两个按钮高度不一、
+  /// 观感臃肿；单行 + 按需缩小可保持按钮组整齐。
+  static Widget _dialogButtonLabel(String label) {
+    return FittedBox(
+      fit: BoxFit.scaleDown,
+      child: Text(
+        label,
+        maxLines: 1,
+        softWrap: false,
+        textAlign: TextAlign.center,
       ),
     );
   }

@@ -232,8 +232,16 @@ class MainApp extends ConsumerWidget {
         ],
         locale: selectedLanguage,
         builder: (context, child) {
+          // 全局文字缩小：以系统缩放为基数再乘 0.85（整体缩 15%）。
+          // 设计意图：在系统文字标准（1.0）前提下，用户仍反馈全局偏大，
+          // 故统一等比缩小所有文字；用相对式而非绝对值，保留弱视用户
+          // 在系统层面调大字体后仍有放大能力，且不会撑爆布局。
+          final mq = MediaQuery.of(context);
+          final scaled = TextScaler.linear(mq.textScaler.scale(1.0) * 0.85);
           final showPrivacy = ref.watch(showPrivacyScreenProvider);
-          return Stack(
+          return MediaQuery(
+            data: mq.copyWith(textScaler: scaled),
+            child: Stack(
             children: [
               // 输入框焦点收起交由 Flutter 默认行为（EditableText.onTapOutside）及各处显式 FocusManager.unfocus() 处理。
               child ?? const SizedBox.shrink(),
@@ -253,6 +261,7 @@ class MainApp extends ConsumerWidget {
                   ),
                 ),
             ],
+            ),
           );
         },
         // 显式命名根路由，便于路由名调试与埋点识别
