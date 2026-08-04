@@ -1,6 +1,41 @@
 {
     "@@locale": "ko",
+    "analyticsLoadFailed": "데이터를 불러오지 못했습니다. 네트워크를 확인해 주세요.",
+    "analyticsRetry": "다시 시도",
     "appTitle": "Spitout",
+    "cloudSyncHealFailed": "자동 복원에 실패했습니다. 클라우드에서 수동으로 복원해 주세요.",
+    "detailImportExportSubtitle": "지출 내역 CSV 파일",
+    "exportCsvHeaderCurrency": "통화",
+    "importFieldCurrency": "통화",
+    "ledgersDeleteShared": "공유 가계부 삭제",
+    "ledgersDeleteSharedConfirm": "공유 가계부 삭제",
+    "ledgersDeleteSharedMessage": "공유 가계부 「{name}」을(를) 삭제하시겠습니까?\n이 작업은 모든 공동 작업자를 제거하고 그들의 로컬 데이터를 삭제합니다. 되돌릴 수 없습니다.",
+    "@ledgersDeleteSharedMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersDeleteSharedSuccess": "공유 가계부가 삭제되었습니다",
+    "ledgersLeaveAndDelete": "나가기 및 삭제",
+    "ledgersLeaveAndDeleteConfirm": "가계부 나가기 및 삭제",
+    "ledgersLeaveAndDeleteMessage": "공유 가계부 「{name}」을(를) 나가고 삭제하시겠습니까?\n나간 후 클라우드에서 회원 자격이 제거되고 모든 로컬 데이터가 삭제됩니다. 더 이상 그 거래 내역에 접근할 수 없습니다.",
+    "@ledgersLeaveAndDeleteMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersLeaveAndDeleteSuccess": "가계부를 나가고 삭제했습니다",
+    "sharedMembersSyncPending": "새로 만든 가계부는 먼저 가계부 관리 페이지에서 해당 가계부를 선택한 후 이 페이지에 다시 들어와야 멤버를 초대할 수 있습니다.",
+    "statsConvertedFootnote": "외화 포함, 각 거래의 기입 시점 환율로 {currency}(으)로 환산됨",
+    "@statsConvertedFootnote": {
+        "placeholders": {
+            "currency": {}
+        }
+    },
     "tabHome": "홈",
     "tabAnalytics": "통계",
     "tabCalendar": "캘린더",
@@ -506,7 +541,6 @@
     "exportCsvHeaderAmount": "금액",
     "exportCsvHeaderNote": "메모",
     "exportCsvHeaderTime": "시간",
-
     "exportSuccessTitle": "내보내기 성공",
     "exportSuccessMessageAndroid": "저장 위치:\n{path}",
     "exportFailedTitle": "내보내기 실패",
@@ -557,6 +591,109 @@
     "currencyBDT": "방글라데시 타카",
     "currencyLKR": "스리랑카 루피",
     "currencyMMK": "미얀마 짯",
+    "currencyAFN": "아프가니스탄 아프가니",
+    "currencyALL": "알바니아 레크",
+    "currencyAMD": "아르메니아 드람",
+    "currencyAOA": "앙골라 콴자",
+    "currencyAWG": "아루바 플로린",
+    "currencyAZN": "아제르바이잔 마나트",
+    "currencyBAM": "보스니아 헤르체고비나 태환 마르카",
+    "currencyBBD": "바베이도스 달러",
+    "currencyBGN": "불가리아 레프",
+    "currencyBHD": "바레인 디나르",
+    "currencyBIF": "부룬디 프랑",
+    "currencyBMD": "버뮤다 달러",
+    "currencyBND": "브루나이 달러",
+    "currencyBOB": "볼리비아 볼리비아노",
+    "currencyBSD": "바하마 달러",
+    "currencyBTN": "부탄 눌트럼",
+    "currencyBWP": "보츠와나 풀라",
+    "currencyBZD": "벨리즈 달러",
+    "currencyCDF": "콩고 프랑",
+    "currencyCRC": "코스타리카 콜론",
+    "currencyCUP": "쿠바 페소",
+    "currencyCVE": "카보베르데 에스쿠도",
+    "currencyDJF": "지부티 프랑",
+    "currencyDOP": "도미니카 페소",
+    "currencyDZD": "알제리 디나르",
+    "currencyERN": "에리트레아 나크파",
+    "currencyETB": "에티오피아 비르",
+    "currencyFJD": "피지 달러",
+    "currencyGEL": "조지아 라리",
+    "currencyGHS": "가나 세디",
+    "currencyGIP": "지브롤터 파운드",
+    "currencyGMD": "감비아 달라시",
+    "currencyGNF": "기니 프랑",
+    "currencyGTQ": "과테말라 케찰",
+    "currencyGYD": "가이아나 달러",
+    "currencyHNL": "온두라스 렘피라",
+    "currencyHTG": "아이티 구르드",
+    "currencyIQD": "이라크 디나르",
+    "currencyIRR": "이란 리알",
+    "currencyISK": "아이슬란드 크로나",
+    "currencyJMD": "자메이카 달러",
+    "currencyJOD": "요르단 디나르",
+    "currencyKES": "케냐 실링",
+    "currencyKGS": "키르기스스탄 솜",
+    "currencyKHR": "캄보디아 리엘",
+    "currencyKMF": "코모로 프랑",
+    "currencyKPW": "북한 원",
+    "currencyKWD": "쿠웨이트 디나르",
+    "currencyKYD": "케이맨 제도 달러",
+    "currencyLAK": "라오스 킵",
+    "currencyLBP": "레바논 파운드",
+    "currencyLRD": "라이베리아 달러",
+    "currencyLSL": "레소토 로티",
+    "currencyLYD": "리비아 디나르",
+    "currencyMAD": "모로코 디르함",
+    "currencyMDL": "몰도바 레우",
+    "currencyMGA": "마다가스카르 아리아리",
+    "currencyMKD": "북마케도니아 데나르",
+    "currencyMNT": "몽골 투그릭",
+    "currencyMOP": "마카오 파타카",
+    "currencyMRU": "모리타니 우기야",
+    "currencyMUR": "모리셔스 루피",
+    "currencyMVR": "몰디브 루피야",
+    "currencyMWK": "말라위 콰차",
+    "currencyMZN": "모잠비크 메티칼",
+    "currencyNAD": "나미비아 달러",
+    "currencyNIO": "니카라과 코르도바",
+    "currencyNPR": "네팔 루피",
+    "currencyOMR": "오만 리알",
+    "currencyPAB": "파나마 발보아",
+    "currencyPGK": "파푸아뉴기니 키나",
+    "currencyPYG": "파라과이 과라니",
+    "currencyQAR": "카타르 리얄",
+    "currencyRON": "루마니아 레우",
+    "currencyRSD": "세르비아 디나르",
+    "currencyRWF": "르완다 프랑",
+    "currencySBD": "솔로몬 제도 달러",
+    "currencySCR": "세이셸 루피",
+    "currencySDG": "수단 파운드",
+    "currencySLE": "시에라리온 레온",
+    "currencySOS": "소말리아 실링",
+    "currencySRD": "수리남 달러",
+    "currencySSP": "남수단 파운드",
+    "currencySTN": "상투메 프린시페 도브라",
+    "currencySYP": "시리아 파운드",
+    "currencySZL": "에스와티니 릴랑게니",
+    "currencyTJS": "타지키스탄 소모니",
+    "currencyTMT": "투르크메니스탄 마나트",
+    "currencyTND": "튀니지 디나르",
+    "currencyTOP": "통가 팡가",
+    "currencyTTD": "트리니다드 토바고 달러",
+    "currencyTZS": "탄자니아 실링",
+    "currencyUGX": "우간다 실링",
+    "currencyUYU": "우루과이 페소",
+    "currencyUZS": "우즈베키스탄 솜",
+    "currencyVES": "베네수엘라 볼리바르",
+    "currencyVUV": "바누아투 바투",
+    "currencyWST": "사모아 탈라",
+    "currencyYER": "예멘 리알",
+    "currencyZMW": "잠비아 콰차",
+    "txCurrencyPickerTitle": "통화 선택",
+    "txRateLabel": "환율",
+    "txRateMissingHint": "저장 전에 이 거래의 환율을 입력해 주세요",
     "webdavConfiguredTitle": "WebDAV 클라우드 서비스가 설정되었습니다",
     "webdavConfiguredMessage": "WebDAV 클라우드 서비스는 설정 시 입력한 인증 정보를 사용하므로 추가 로그인이 필요하지 않습니다.",
     "recurringTransactionTitle": "정기 결제",
@@ -743,7 +880,6 @@
     "cloudTutorialFeature4": "🤝 공유 가계부: 가족/팀을 초대해 하나의 가계부를 몇 초 단위로 동기화",
     "cloudTutorialGotIt": "확인했습니다",
     "cloudSyncHint": "다운로드 시 차이점을 자동으로 비교해 선택적으로 미리 볼 수 있습니다. 실시간이 아니므로 여러 기기에서 동시에 같은 가계부를 편집하지 마세요. 동기화 범위는 가계부 데이터(연결된 계정, 카테고리 포함)입니다.",
-
     "appearanceSettings": "개인화",
     "appearanceSettingsDesc": "테마, 글꼴, 언어, 앱 잠금 등",
     "appearanceSettingsPageTitle": "개인화",
@@ -796,7 +932,6 @@
     "configIncludeAppSettings": "앱 설정 (알림, 언어, 화면, 글꼴, 동기화 등)",
     "configIncludeRecurringTransactions": "정기 결제",
     "configIncludeCategories": "카테고리",
-
     "configIncludeOtherSettings": "기타 설정",
     "configIncludeOtherSettingsSubtitle": "클라우드 서비스 설정 및 앱 설정 포함",
     "configExportSelectTitle": "내보낼 내용 선택",
@@ -861,7 +996,6 @@
     "cloudSyncGuideLimitItem1": "실시간이 아닙니다: 업로드와 다운로드를 수동으로 눌러야 합니다",
     "cloudSyncGuideLimitItem2": "충돌 병합이 없습니다: 양쪽의 편집을 자동으로 병합하지 않으며 마지막 업로드가 우선합니다",
     "cloudSyncGuideLimitItem3": "클라우드 서비스 지연: 업로드된 파일을 다른 기기가 읽을 수 있게 되기까지 사용하는 클라우드 제공업체에 따라 수 초에서 수 분이 걸릴 수 있습니다",
-
     "appLockTitle": "앱 잠금",
     "appLockDesc": "PIN과 생체 인식으로 개인정보를 보호하세요",
     "appLockEnable": "앱 잠금 사용",
@@ -915,15 +1049,21 @@
     "@syncHealthValue": {
         "description": "동기화 상태 상세 패널의 항목별 개수, 로컬 대 원격",
         "placeholders": {
-            "local": { "type": "int" },
-            "remote": { "type": "int" }
+            "local": {
+                "type": "int"
+            },
+            "remote": {
+                "type": "int"
+            }
         }
     },
     "syncHealthValueRemoteMissing": "로컬 {local} · 원격 —",
     "@syncHealthValueRemoteMissing": {
         "description": "원격 개수를 가져오지 못할 때의 항목별 동기화 개수",
         "placeholders": {
-            "local": { "type": "int" }
+            "local": {
+                "type": "int"
+            }
         }
     },
     "twofaChallengeTitle": "2단계 인증",
@@ -977,7 +1117,6 @@
     "sharedMembersRemoved": "멤버가 제거되었습니다",
     "sharedMembersSaveFirst": "먼저 가계부를 저장해 주세요",
     "sharedMembersInviteSyncFailed": "클라우드 동기화가 아직 완료되지 않았습니다. 나중에 다시 시도하세요.",
-
     "sharedTxCreatedBy": "{name}님이 생성함",
     "sharedTxEditedBy": "{name}님이 마지막으로 편집함",
     "sharedTxCreatedAndEditedBy": "{name}님이 생성 및 편집함",
@@ -1186,7 +1325,6 @@
     "aaAddVirtualUser": "가상 사용자 추가",
     "aaUnknownUser": "알 수 없음",
     "aaMe": "나",
-
     "ledgerAaEnabledHint": "활성화하면 지출을 멤버와 분담할 수 있습니다",
     "ledgerAaStatisticsEntry": "AA 통계",
     "ledgerAaVirtualUsersEntry": "가상 사용자 관리",

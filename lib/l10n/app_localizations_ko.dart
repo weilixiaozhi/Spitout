@@ -2620,7 +2620,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get syncHealthHasDiff => '차이가 감지되어 자동으로 동기화되었습니다';
 
   @override
-  String get cloudSyncHealFailed => 'Auto-restore failed; please restore from cloud manually';
+  String get cloudSyncHealFailed => '자동 복원에 실패했습니다. 클라우드에서 수동으로 복원해 주세요.';
 
   @override
   String get syncHealthInSync => '로컬과 클라우드가 일치합니다';
@@ -2808,32 +2808,32 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersInviteCta => '새 멤버 초대';
 
   @override
-  String get ledgersLeaveAndDelete => 'Leave and Delete';
+  String get ledgersLeaveAndDelete => '나가기 및 삭제';
 
   @override
-  String get ledgersLeaveAndDeleteConfirm => 'Leave and Delete Ledger';
+  String get ledgersLeaveAndDeleteConfirm => '가계부 나가기 및 삭제';
 
   @override
   String ledgersLeaveAndDeleteMessage(String name) {
-    return 'Leave and delete the shared ledger \"$name\"?\\nAfter leaving, the cloud removes your membership and all local data is cleared. You won\'t be able to access its transactions anymore.';
+    return '공유 가계부 「$name」을(를) 나가고 삭제하시겠습니까?\n나간 후 클라우드에서 회원 자격이 제거되고 모든 로컬 데이터가 삭제됩니다. 더 이상 그 거래 내역에 접근할 수 없습니다.';
   }
 
   @override
-  String get ledgersLeaveAndDeleteSuccess => 'Left and deleted the ledger';
+  String get ledgersLeaveAndDeleteSuccess => '가계부를 나가고 삭제했습니다';
 
   @override
-  String get ledgersDeleteShared => 'Delete Shared Ledger';
+  String get ledgersDeleteShared => '공유 가계부 삭제';
 
   @override
-  String get ledgersDeleteSharedConfirm => 'Delete Shared Ledger';
+  String get ledgersDeleteSharedConfirm => '공유 가계부 삭제';
 
   @override
   String ledgersDeleteSharedMessage(String name) {
-    return 'Delete the shared ledger \"$name\"?\\nThis also removes all collaborators and clears their local data. This cannot be undone.';
+    return '공유 가계부 「$name」을(를) 삭제하시겠습니까?\n이 작업은 모든 공동 작업자를 제거하고 그들의 로컬 데이터를 삭제합니다. 되돌릴 수 없습니다.';
   }
 
   @override
-  String get ledgersDeleteSharedSuccess => 'Shared ledger deleted';
+  String get ledgersDeleteSharedSuccess => '공유 가계부가 삭제되었습니다';
 
   @override
   String get sharedMembersRemoveTitle => '멤버 제거';
@@ -2850,7 +2850,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersRemoved => '멤버가 제거되었습니다';
 
   @override
-  String get sharedMembersSyncPending => 'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.';
+  String get sharedMembersSyncPending => '새로 만든 가계부는 먼저 가계부 관리 페이지에서 해당 가계부를 선택한 후 이 페이지에 다시 들어와야 멤버를 초대할 수 있습니다.';
 
   @override
   String get sharedMembersSaveFirst => '먼저 가계부를 저장해 주세요';
@@ -3010,17 +3010,17 @@ class AppLocalizationsKo extends AppLocalizations {
   String get txFlagExcludedTag => '제외됨';
 
   @override
-  String get txRateLabel => 'Rate';
+  String get txRateLabel => '환율';
 
   @override
-  String get txRateMissingHint => 'Please enter the rate for this entry before saving';
+  String get txRateMissingHint => '저장 전에 이 거래의 환율을 입력해 주세요';
 
   @override
   String get ledgerBaseCurrencyLabel => '기준 통화';
 
   @override
   String statsConvertedFootnote(Object currency) {
-    return 'Includes foreign currency, converted to $currency at entry-time rates';
+    return '외화 포함, 각 거래의 기입 시점 환율로 $currency(으)로 환산됨';
   }
 
   @override
@@ -3041,7 +3041,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get txCurrencyPickerTitle => 'Select currency';
+  String get txCurrencyPickerTitle => '통화 선택';
 
   @override
   String get txAddEntryTitle => '기록하기';
@@ -3070,322 +3070,322 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get analyticsLoadFailed => 'Failed to load data. Please check your network.';
+  String get analyticsLoadFailed => '데이터를 불러오지 못했습니다. 네트워크를 확인해 주세요.';
 
   @override
-  String get analyticsRetry => 'Retry';
+  String get analyticsRetry => '다시 시도';
 
   @override
-  String get exportCsvHeaderCurrency => 'Currency';
+  String get exportCsvHeaderCurrency => '통화';
 
   @override
-  String get importFieldCurrency => 'Currency';
+  String get importFieldCurrency => '통화';
 
   @override
-  String get currencyMOP => 'Macau Pataca';
+  String get currencyMOP => '마카오 파타카';
 
   @override
-  String get currencyMNT => 'Mongolian Tughrik';
+  String get currencyMNT => '몽골 투그릭';
 
   @override
-  String get currencyKPW => 'North Korean Won';
+  String get currencyKPW => '북한 원';
 
   @override
-  String get currencyKHR => 'Cambodian Riel';
+  String get currencyKHR => '캄보디아 리엘';
 
   @override
-  String get currencyLAK => 'Lao Kip';
+  String get currencyLAK => '라오스 킵';
 
   @override
-  String get currencyBND => 'Bruneian Dollar';
+  String get currencyBND => '브루나이 달러';
 
   @override
-  String get currencyNPR => 'Nepalese Rupee';
+  String get currencyNPR => '네팔 루피';
 
   @override
-  String get currencyBTN => 'Bhutanese Ngultrum';
+  String get currencyBTN => '부탄 눌트럼';
 
   @override
-  String get currencyMVR => 'Maldivian Rufiyaa';
+  String get currencyMVR => '몰디브 루피야';
 
   @override
-  String get currencyAFN => 'Afghan Afghani';
+  String get currencyAFN => '아프가니스탄 아프가니';
 
   @override
-  String get currencyUZS => 'Uzbekistani Som';
+  String get currencyUZS => '우즈베키스탄 솜';
 
   @override
-  String get currencyTJS => 'Tajikistani Somoni';
+  String get currencyTJS => '타지키스탄 소모니';
 
   @override
-  String get currencyTMT => 'Turkmenistani Manat';
+  String get currencyTMT => '투르크메니스탄 마나트';
 
   @override
-  String get currencyKGS => 'Kyrgyzstani Som';
+  String get currencyKGS => '키르기스스탄 솜';
 
   @override
-  String get currencyQAR => 'Qatari Riyal';
+  String get currencyQAR => '카타르 리얄';
 
   @override
-  String get currencyKWD => 'Kuwaiti Dinar';
+  String get currencyKWD => '쿠웨이트 디나르';
 
   @override
-  String get currencyBHD => 'Bahraini Dinar';
+  String get currencyBHD => '바레인 디나르';
 
   @override
-  String get currencyOMR => 'Omani Rial';
+  String get currencyOMR => '오만 리알';
 
   @override
-  String get currencyJOD => 'Jordanian Dinar';
+  String get currencyJOD => '요르단 디나르';
 
   @override
-  String get currencyLBP => 'Lebanese Pound';
+  String get currencyLBP => '레바논 파운드';
 
   @override
-  String get currencyIQD => 'Iraqi Dinar';
+  String get currencyIQD => '이라크 디나르';
 
   @override
-  String get currencyIRR => 'Iranian Rial';
+  String get currencyIRR => '이란 리알';
 
   @override
-  String get currencyYER => 'Yemeni Rial';
+  String get currencyYER => '예멘 리알';
 
   @override
-  String get currencySYP => 'Syrian Pound';
+  String get currencySYP => '시리아 파운드';
 
   @override
-  String get currencyGEL => 'Georgian Lari';
+  String get currencyGEL => '조지아 라리';
 
   @override
-  String get currencyAMD => 'Armenian Dram';
+  String get currencyAMD => '아르메니아 드람';
 
   @override
-  String get currencyAZN => 'Azerbaijan Manat';
+  String get currencyAZN => '아제르바이잔 마나트';
 
   @override
-  String get currencyRON => 'Romanian Leu';
+  String get currencyRON => '루마니아 레우';
 
   @override
-  String get currencyBGN => 'Bulgarian Lev';
+  String get currencyBGN => '불가리아 레프';
 
   @override
-  String get currencyRSD => 'Serbian Dinar';
+  String get currencyRSD => '세르비아 디나르';
 
   @override
-  String get currencyISK => 'Icelandic Krona';
+  String get currencyISK => '아이슬란드 크로나';
 
   @override
-  String get currencyMDL => 'Moldovan Leu';
+  String get currencyMDL => '몰도바 레우';
 
   @override
-  String get currencyALL => 'Albanian Lek';
+  String get currencyALL => '알바니아 레크';
 
   @override
-  String get currencyMKD => 'Macedonian Denar';
+  String get currencyMKD => '북마케도니아 데나르';
 
   @override
-  String get currencyBAM => 'Bosnian Convertible Mark';
+  String get currencyBAM => '보스니아 헤르체고비나 태환 마르카';
 
   @override
-  String get currencyGIP => 'Gibraltar Pound';
+  String get currencyGIP => '지브롤터 파운드';
 
   @override
-  String get currencyGTQ => 'Guatemalan Quetzal';
+  String get currencyGTQ => '과테말라 케찰';
 
   @override
-  String get currencyHNL => 'Honduran Lempira';
+  String get currencyHNL => '온두라스 렘피라';
 
   @override
-  String get currencyNIO => 'Nicaraguan Cordoba';
+  String get currencyNIO => '니카라과 코르도바';
 
   @override
-  String get currencyCRC => 'Costa Rican Colon';
+  String get currencyCRC => '코스타리카 콜론';
 
   @override
-  String get currencyPAB => 'Panamanian Balboa';
+  String get currencyPAB => '파나마 발보아';
 
   @override
-  String get currencyDOP => 'Dominican Peso';
+  String get currencyDOP => '도미니카 페소';
 
   @override
-  String get currencyCUP => 'Cuban Peso';
+  String get currencyCUP => '쿠바 페소';
 
   @override
-  String get currencyJMD => 'Jamaican Dollar';
+  String get currencyJMD => '자메이카 달러';
 
   @override
-  String get currencyTTD => 'Trinidadian Dollar';
+  String get currencyTTD => '트리니다드 토바고 달러';
 
   @override
-  String get currencyBSD => 'Bahamian Dollar';
+  String get currencyBSD => '바하마 달러';
 
   @override
-  String get currencyBBD => 'Barbadian or Bajan Dollar';
+  String get currencyBBD => '바베이도스 달러';
 
   @override
-  String get currencyBZD => 'Belizean Dollar';
+  String get currencyBZD => '벨리즈 달러';
 
   @override
-  String get currencyHTG => 'Haitian Gourde';
+  String get currencyHTG => '아이티 구르드';
 
   @override
-  String get currencyKYD => 'Caymanian Dollar';
+  String get currencyKYD => '케이맨 제도 달러';
 
   @override
-  String get currencyAWG => 'Aruban or Dutch Guilder';
+  String get currencyAWG => '아루바 플로린';
 
   @override
-  String get currencyBMD => 'Bermudian Dollar';
+  String get currencyBMD => '버뮤다 달러';
 
   @override
-  String get currencyUYU => 'Uruguayan Peso';
+  String get currencyUYU => '우루과이 페소';
 
   @override
-  String get currencyPYG => 'Paraguayan Guarani';
+  String get currencyPYG => '파라과이 과라니';
 
   @override
-  String get currencyBOB => 'Bolivian Bolíviano';
+  String get currencyBOB => '볼리비아 볼리비아노';
 
   @override
-  String get currencyVES => 'Venezuelan Bolívar';
+  String get currencyVES => '베네수엘라 볼리바르';
 
   @override
-  String get currencyGYD => 'Guyanese Dollar';
+  String get currencyGYD => '가이아나 달러';
 
   @override
-  String get currencySRD => 'Surinamese Dollar';
+  String get currencySRD => '수리남 달러';
 
   @override
-  String get currencyFJD => 'Fijian Dollar';
+  String get currencyFJD => '피지 달러';
 
   @override
-  String get currencyPGK => 'Papua New Guinean Kina';
+  String get currencyPGK => '파푸아뉴기니 키나';
 
   @override
-  String get currencySBD => 'Solomon Islander Dollar';
+  String get currencySBD => '솔로몬 제도 달러';
 
   @override
-  String get currencyTOP => 'Tongan Pa\'anga';
+  String get currencyTOP => '통가 팡가';
 
   @override
-  String get currencyVUV => 'Ni-Vanuatu Vatu';
+  String get currencyVUV => '바누아투 바투';
 
   @override
-  String get currencyWST => 'Samoan Tala';
+  String get currencyWST => '사모아 탈라';
 
   @override
-  String get currencyKES => 'Kenyan Shilling';
+  String get currencyKES => '케냐 실링';
 
   @override
-  String get currencyGHS => 'Ghanaian Cedi';
+  String get currencyGHS => '가나 세디';
 
   @override
-  String get currencyMAD => 'Moroccan Dirham';
+  String get currencyMAD => '모로코 디르함';
 
   @override
-  String get currencyDZD => 'Algerian Dinar';
+  String get currencyDZD => '알제리 디나르';
 
   @override
-  String get currencyTND => 'Tunisian Dinar';
+  String get currencyTND => '튀니지 디나르';
 
   @override
-  String get currencyLYD => 'Libyan Dinar';
+  String get currencyLYD => '리비아 디나르';
 
   @override
-  String get currencyETB => 'Ethiopian Birr';
+  String get currencyETB => '에티오피아 비르';
 
   @override
-  String get currencyUGX => 'Ugandan Shilling';
+  String get currencyUGX => '우간다 실링';
 
   @override
-  String get currencyTZS => 'Tanzanian Shilling';
+  String get currencyTZS => '탄자니아 실링';
 
   @override
-  String get currencyRWF => 'Rwandan Franc';
+  String get currencyRWF => '르완다 프랑';
 
   @override
-  String get currencyMUR => 'Mauritian Rupee';
+  String get currencyMUR => '모리셔스 루피';
 
   @override
-  String get currencyBWP => 'Botswana Pula';
+  String get currencyBWP => '보츠와나 풀라';
 
   @override
-  String get currencyNAD => 'Namibian Dollar';
+  String get currencyNAD => '나미비아 달러';
 
   @override
-  String get currencyZMW => 'Zambian Kwacha';
+  String get currencyZMW => '잠비아 콰차';
 
   @override
-  String get currencyMWK => 'Malawian Kwacha';
+  String get currencyMWK => '말라위 콰차';
 
   @override
-  String get currencyMZN => 'Mozambican Metical';
+  String get currencyMZN => '모잠비크 메티칼';
 
   @override
-  String get currencyAOA => 'Angolan Kwanza';
+  String get currencyAOA => '앙골라 콴자';
 
   @override
-  String get currencyCDF => 'Congolese Franc';
+  String get currencyCDF => '콩고 프랑';
 
   @override
-  String get currencyGMD => 'Gambian Dalasi';
+  String get currencyGMD => '감비아 달라시';
 
   @override
-  String get currencyGNF => 'Guinean Franc';
+  String get currencyGNF => '기니 프랑';
 
   @override
-  String get currencyLRD => 'Liberian Dollar';
+  String get currencyLRD => '라이베리아 달러';
 
   @override
-  String get currencySLE => 'Sierra Leonean Leone';
+  String get currencySLE => '시에라리온 레온';
 
   @override
-  String get currencySDG => 'Sudanese Pound';
+  String get currencySDG => '수단 파운드';
 
   @override
-  String get currencySSP => 'South Sudanese Pound';
+  String get currencySSP => '남수단 파운드';
 
   @override
-  String get currencySOS => 'Somali Shilling';
+  String get currencySOS => '소말리아 실링';
 
   @override
-  String get currencyDJF => 'Djiboutian Franc';
+  String get currencyDJF => '지부티 프랑';
 
   @override
-  String get currencyERN => 'Eritrean Nakfa';
+  String get currencyERN => '에리트레아 나크파';
 
   @override
-  String get currencyBIF => 'Burundian Franc';
+  String get currencyBIF => '부룬디 프랑';
 
   @override
-  String get currencyCVE => 'Cape Verdean Escudo';
+  String get currencyCVE => '카보베르데 에스쿠도';
 
   @override
-  String get currencySTN => 'Sao Tomean Dobra';
+  String get currencySTN => '상투메 프린시페 도브라';
 
   @override
-  String get currencySCR => 'Seychellois Rupee';
+  String get currencySCR => '세이셸 루피';
 
   @override
-  String get currencyKMF => 'Comorian Franc';
+  String get currencyKMF => '코모로 프랑';
 
   @override
-  String get currencyLSL => 'Basotho Loti';
+  String get currencyLSL => '레소토 로티';
 
   @override
-  String get currencySZL => 'Swazi Lilangeni';
+  String get currencySZL => '에스와티니 릴랑게니';
 
   @override
-  String get currencyMGA => 'Malagasy Ariary';
+  String get currencyMGA => '마다가스카르 아리아리';
 
   @override
-  String get currencyMRU => 'Mauritanian Ouguiya';
+  String get currencyMRU => '모리타니 우기야';
 
   @override
   String get detailImportExportTitle => '상세 가져오기/내보내기';
 
   @override
-  String get detailImportExportSubtitle => 'Expense CSV file';
+  String get detailImportExportSubtitle => '지출 내역 CSV 파일';
 
   @override
   String get detailImportExportImportTitle => '상세 가져오기';
