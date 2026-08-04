@@ -2859,6 +2859,15 @@ class AppLocalizationsKo extends AppLocalizations {
   String get sharedMembersInviteSyncFailed => '클라우드 동기화가 아직 완료되지 않았습니다. 나중에 다시 시도하세요.';
 
   @override
+  String get sharedMembersLoadingHint => '클라우드 장부가 아직 준비되지 않았습니다. 동기화 중…';
+
+  @override
+  String get sharedMembersLoadFailed => '멤버 목록을 불러오지 못했습니다';
+
+  @override
+  String get sharedMembersRetry => '다시 시도';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name님이 생성함';
   }

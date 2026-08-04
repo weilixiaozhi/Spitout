@@ -5426,6 +5426,24 @@ abstract class AppLocalizations {
   /// **'Cloud sync not finished yet. Please try again later.'**
   String get sharedMembersInviteSyncFailed;
 
+  /// No description provided for @sharedMembersLoadingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Cloud ledger is not ready, syncing…'**
+  String get sharedMembersLoadingHint;
+
+  /// No description provided for @sharedMembersLoadFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to load members'**
+  String get sharedMembersLoadFailed;
+
+  /// No description provided for @sharedMembersRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get sharedMembersRetry;
+
   /// No description provided for @sharedTxCreatedBy.
   ///
   /// In en, this message translates to:

@@ -353,6 +353,7 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
     bool isShared = false,
     int memberCount = 1,
     int? monthStartDay,
+    bool? aaEnabled,
     DateTime? updatedAt,
   }) {
     _serverLedgers.add(SpitoutCloudReadLedger(
@@ -363,6 +364,10 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
       isShared: isShared,
       memberCount: memberCount,
       monthStartDay: monthStartDay,
+      // null 表示老 server 未返回该字段,hasAaEnabled 保持 false(absent 保留本地值);
+      // 传入具体值则模拟新 server 显式返回 aa_enabled。
+      aaEnabled: aaEnabled ?? false,
+      hasAaEnabled: aaEnabled != null,
       updatedAt: updatedAt ?? DateTime.now(),
       transactionCount: 0,
       expenseTotal: 0,

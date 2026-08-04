@@ -2380,8 +2380,14 @@ class SpitoutCloudStorageService implements CloudStorageService {
       method: 'GET', path: '/ledgers/$ledgerId/members',
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
+      // 透传 statusCode:调用方据此区分「账本尚未就绪」(404,云端账本刚 moveToCloud
+      // 但首次 push 未完成,listMembers 会 404,属暂时性,PushCompleted 事件会自动
+      // invalidate 重拉)与「真实错误」(5xx/401 等,需展示错误卡片 + 重试)。
       throw CloudStorageException(
-          'List members failed: ${_extractErrorMessage(response)}');
+        'List members failed: ${_extractErrorMessage(response)}',
+        null,
+        response.statusCode,
+      );
     }
     final decoded = jsonDecode(response.body);
     if (decoded is! List) return const [];
@@ -3046,6 +3052,8 @@ class SpitoutCloudReadLedger {
     this.isShared = false,
     this.memberCount = 1,
     this.monthStartDay,
+    this.aaEnabled = false,
+    this.hasAaEnabled = false,
     this.exportedAt,
     this.updatedAt,
   });
@@ -3065,10 +3073,20 @@ class SpitoutCloudReadLedger {
   /// (调用方应保持本地值不动,勿当 1 处理 —— 防版本偏斜时覆盖用户设置)。
   final int? monthStartDay;
 
+  /// AA 分摊开关(server ReadLedgerOut.aa_enabled)。
+  /// [hasAaEnabled] 为 false 时表示 server 未显式返回该字段(老版本 server),
+  /// 同步引擎必须以 absent 保留本地值,防止把本地已开启的 AA 开关静默重置为 false。
+  final bool aaEnabled;
+  final bool hasAaEnabled;
+
   final DateTime? exportedAt;
   final DateTime? updatedAt;
 
   factory SpitoutCloudReadLedger.fromJson(Map<String, dynamic> json) {
+    // 显式区分"server 未返回 aa_enabled"与"server 显式返回 false":
+    // containsKey=false 时 hasAaEnabled=false,调用方据此走 absent 保留本地值,
+    // 避免老版本 server 把本地已开启的 AA 分摊静默关闭。
+    final hasAa = json.containsKey('aa_enabled');
     return SpitoutCloudReadLedger(
       ledgerId: json['ledger_id'] as String? ?? '',
       ledgerName: json['ledger_name'] as String? ?? '',
@@ -3080,6 +3098,8 @@ class SpitoutCloudReadLedger {
       isShared: json['is_shared'] as bool? ?? false,
       memberCount: (json['member_count'] as num?)?.toInt() ?? 1,
       monthStartDay: (json['month_start_day'] as num?)?.toInt(),
+      aaEnabled: json['aa_enabled'] as bool? ?? false,
+      hasAaEnabled: hasAa,
       exportedAt: DateTime.tryParse(json['exported_at'] as String? ?? ''),
       updatedAt: DateTime.tryParse(json['updated_at'] as String? ?? ''),
     );

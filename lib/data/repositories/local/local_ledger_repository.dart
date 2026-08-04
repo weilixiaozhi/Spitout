@@ -116,6 +116,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // 账本所有者 userId:UI 新建路径传入(已登录=云 userId,未登录=localSelfId)。
     // 同步路径(副本/导入)不传,保持 null 由云端数据回填。
     String? ownerUserId,
+    // AA 分摊开关:默认 false(新账本关闭);「复制到本地」等同步路径
+    // 会透传源账本的 aaEnabled,保证副本与源账本行为一致。
+    bool aaEnabled = false,
   }) async {
     // storage_mode 决定云端归属:仅 cloud 模式分配跨设备 syncId;local 账本
     // syncId 为 null,从源头断开云端关联(配合三路闸门,local 账本永不上云)。
@@ -132,6 +135,7 @@ class LocalLedgerRepository implements LedgerRepository {
               ownerUserId: ownerUserId != null && ownerUserId.isNotEmpty
                   ? d.Value(ownerUserId)
                   : const d.Value.absent(),
+              aaEnabled: d.Value(aaEnabled),
             ),
           );
       // 仅云端账本登记 ledger:upsert 到 local_changes:
@@ -214,6 +218,8 @@ class LocalLedgerRepository implements LedgerRepository {
     // 注意:本项目的 Categories 是全局表(无 ledgerId 列),分类被所有账本共享,
     // 故无需按账本拷贝分类——交易直接保留原 categoryId 即可,避免重复复制造成冗余。
     // 新建副本一律新 syncId、清空共享 override,独立成一份本地数据。
+    // AA 分摊字段(paidByUserId/aaMode/aaSplits 等)随交易一起拷贝,保证副本
+    // 与原账本的 AA 分摊语义一致;虚拟用户表(AA 参与人)同样整表拷贝。
     // 单事务保证要么全搬要么不搬,避免半拷贝被 sync 误用。
     await db.transaction(() async {
       final srcTxs = await (db.select(db.transactions)
@@ -238,6 +244,15 @@ class LocalLedgerRepository implements LedgerRepository {
                 nativeAmount: d.Value(tx.nativeAmount),
                 version: d.Value(tx.version),
                 lastEditedAt: d.Value(tx.lastEditedAt),
+                // AA 分摊:整份随交易拷贝,副本账本保持与原账本一致的 AA 语义。
+                paidByUserId: d.Value(tx.paidByUserId),
+                aaMode: d.Value(tx.aaMode),
+                aaParticipants: tx.aaParticipants != null
+                    ? d.Value(tx.aaParticipants!)
+                    : const d.Value.absent(),
+                aaSplits: tx.aaSplits != null
+                    ? d.Value(tx.aaSplits!)
+                    : const d.Value.absent(),
               ),
             );
         // 拷贝该交易的编辑历史(保留 operatorUserId 作审计文本)。
@@ -255,6 +270,23 @@ class LocalLedgerRepository implements LedgerRepository {
                 ),
               );
         }
+      }
+      // 拷贝虚拟用户(AA 分摊参与人):整表按账本维度复制,新 syncId 独立成副本。
+      final srcVirtualUsers = await (db.select(db.ledgerVirtualUsers)
+            ..where((v) => v.ledgerId.equals(sourceLedgerId)))
+          .get();
+      for (final vu in srcVirtualUsers) {
+        await db.into(db.ledgerVirtualUsers).insert(
+              LedgerVirtualUsersCompanion.insert(
+                ledgerId: targetLedgerId,
+                syncId: d.Value(_uuid.v4()),
+                name: vu.name,
+                createdAt: d.Value(vu.createdAt),
+                updatedAt: vu.updatedAt != null
+                    ? d.Value(vu.updatedAt!)
+                    : const d.Value.absent(),
+              ),
+            );
       }
     });
   }

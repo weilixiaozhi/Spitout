@@ -12,6 +12,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/sync/sync_events.dart' show PushCompleted;
+import 'package:spitout/cloud/spitout_cloud.dart' show CloudStorageException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -422,19 +423,111 @@ class _MemberManagementSectionState
     });
 
     return membersAsync.when(
-      loading: () => _buildLoadingMemberCard(context, l10n, members: const []),
-      error: (e, _) => _buildNoSyncIdContent(context, l10n),
+      loading: () => _buildLoadingMemberCard(context, l10n),
+      // 错误分类:
+      //  - 404(云端账本刚 moveToCloud,首次 push 未完成,listMembers 抛
+      //    "Ledger not found"):属暂时性状态,PushCompleted 事件会自动
+      //    invalidate 重拉,展示加载骨架 + 提示文案,不报错。
+      //  - 其余真实错误(网络/权限/5xx 等):展示错误卡片 + 重试按钮,
+      //    避免永久 loading 让用户得不到反馈。
+      error: (e, _) {
+        if (e is CloudStorageException && e.statusCode == 404) {
+          return _buildLoadingMemberCard(context, l10n);
+        }
+        return _buildErrorCard(context, l10n, error: e);
+      },
       data: (members) => _buildContent(context, members, l10n),
     );
   }
 
-  /// 加载态:展示骨架"所有者(我)"行 + AA 开关 + 邀请入口占位。
-  Widget _buildLoadingMemberCard(
+  /// 加载态:展示骨架行(头像 + 文本占位条)+ AA 开关区域占位。
+  ///
+  /// 此前实现仅转调 [_buildContent] 渲染空成员列表,视觉上与"无成员"无法区分,
+  /// 用户感知不到正在加载。改为显式骨架(灰色占位条)让加载态可见。
+  /// 404 error 路径(云端账本尚未就绪)也复用此骨架,顶部加一行提示文案,
+  /// 让用户知道是"等云端创建中"而非"加载卡死"。
+  Widget _buildLoadingMemberCard(BuildContext context, AppLocalizations l10n) {
+    final theme = Theme.of(context);
+    final placeholderColor = theme.colorScheme.surfaceContainerHighest;
+    return SectionCard(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        children: [
+          // 云端账本尚未就绪提示(404 场景下让用户知道在等云端创建)
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            child: Row(
+              children: [
+                const SizedBox(
+                  width: 14,
+                  height: 14,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    l10n.sharedMembersLoadingHint,
+                    style: theme.textTheme.bodySmall,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
+          // 骨架行:头像占位 + 标题/副标题占位条
+          ListTile(
+            dense: true,
+            leading: CircleAvatar(
+              radius: 16,
+              backgroundColor: placeholderColor,
+            ),
+            title: _SkeletonBar(
+                width: 120, height: 12, color: placeholderColor),
+            subtitle: _SkeletonBar(
+                width: 80, height: 10, color: placeholderColor),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// 真实错误态:展示错误文案 + 重试按钮,点击重试 invalidate provider 重拉。
+  ///
+  /// 不再无条件转 loading:网络失败/权限错误等永久 loading 会让用户得不到
+  /// 任何反馈,违反错误处理原则。此处展示具体错误 + 重试入口,
+  /// 让用户主动决策是否重试。
+  Widget _buildErrorCard(
     BuildContext context,
     AppLocalizations l10n, {
-    required List<SpitoutCloudLedgerMember> members,
+    required Object error,
   }) {
-    return _buildContent(context, members, l10n);
+    final theme = Theme.of(context);
+    return SectionCard(
+      margin: const EdgeInsets.symmetric(horizontal: 4),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        child: Row(
+          children: [
+            Icon(AppIcons.error,
+                size: 18, color: theme.colorScheme.error),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                l10n.sharedMembersLoadFailed,
+                style: theme.textTheme.bodySmall
+                    ?.copyWith(color: theme.colorScheme.error),
+              ),
+            ),
+            TextButton(
+              onPressed: () => ref.invalidate(
+                  ledgerMembersProvider(widget.ledgerExternalId!)),
+              child: Text(l10n.sharedMembersRetry),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   /// 无 syncId 模式(新建态/本地账本)的成员卡片内容。
@@ -931,6 +1024,32 @@ class _MemberTile extends ConsumerWidget {
 
 extension _FirstOrNull<E> on Iterable<E> {
   E? get firstOrNull => isEmpty ? null : first;
+}
+
+/// 加载骨架占位条 — 用于 [_buildLoadingMemberCard] 中成员行的标题/副标题占位。
+/// 简单的灰色圆角条,不引入 shimmer 依赖,避免过度设计。
+class _SkeletonBar extends StatelessWidget {
+  const _SkeletonBar({
+    required this.width,
+    required this.height,
+    required this.color,
+  });
+
+  final double width;
+  final double height;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: width,
+      height: height,
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(4),
+      ),
+    );
+  }
 }
 
 /// 共享账本成员头像 — server avatar_url 拼上 cloudProvider.baseUrl 用 NetworkImage,

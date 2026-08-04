@@ -31,9 +31,11 @@ Route<dynamic>? appRoute(RouteSettings settings) {
     case Routes.aaEdit:
       // 参数由调用方(记账编辑器)经 arguments 传入;缺失/类型不符视为
       // 非法跳转,返回 null 走调用方回退,避免白屏。
+      // 退场固定为下滑动画(见 [aaSlidePageRoute]):AA 页通常在记账编辑器
+      // sheet 之上 push,保存时 sheet 同步下滑收起,两者同向视觉统一。
       final args = settings.arguments;
       if (args is! AaEditPageArgs) return null;
-      return appPageRoute<AaEditResult?>(
+      return aaSlidePageRoute<AaEditResult?>(
         builder: (_) => AaEditPage(args: args),
         settings: settings,
       );

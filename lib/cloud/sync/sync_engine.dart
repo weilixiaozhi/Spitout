@@ -584,6 +584,19 @@ class SyncEngine implements app.SyncService {
       }
       // 2) 翻 mode='cloud'——秒级可见,UI 立即生效。
       await repo.updateLedgerStorageMode(id: ledgerId, storageMode: 'cloud');
+      // 3) 登记 ledger:upsert 到 local_changes。
+      // 必须在翻 mode 之后:changeTracker 第二层闸门只放行 storage_mode='cloud'
+      // 的账本,本地账本(isLocalLedger)会被闸门挡住不写 local_changes。
+      // 登记后即使 Phase 2 走了 fullPush(已推一遍),增量 push 会再推一次——
+      // upsert 幂等,无副作用;但若 fullPush 因故未触发(如单飞被占),
+      // 这条登记保证账本变更仍会被增量 push 推上去,不依赖 fullPush 兜底。
+      await changeTracker.recordLedgerChange(
+        entityType: 'ledger',
+        entityId: ledgerId,
+        entitySyncId: syncId,
+        ledgerId: ledgerId,
+        action: 'upsert',
+      );
     } catch (e, st) {
       logger.error('SyncEngine', 'moveToCloud 翻 mode 失败,账本保持 local', e, st);
       throw CloudSyncException('转为云端失败:$e');
@@ -770,12 +783,15 @@ class SyncEngine implements app.SyncService {
       throw CloudSyncException('本地账本已是本地,无需复制');
     }
     // 新建本地账本(全新 syncId、isShared 默认 false、断联共享元数据)
+    // aaEnabled 透传源账本:副本保持与源账本一致的 AA 分摊开关,
+    // 避免"云端开 AA 分摊 → 复制到本地 → 开关悄悄关闭"的语义漂移。
     final newId = await repo.createLedger(
       name: '${src.name}(副本)',
       currency: src.currency,
       storageMode: 'local',
+      aaEnabled: src.aaEnabled,
     );
-    // 拷贝全量交易 + 编辑历史(分类是全局表,无需拷贝)
+    // 拷贝全量交易 + 编辑历史 + AA 分摊字段 + 虚拟用户(分类是全局表,无需拷贝)
     await repo.copyLedgerData(
       sourceLedgerId: sourceLedgerId,
       targetLedgerId: newId,
@@ -1291,6 +1307,11 @@ class SyncEngine implements app.SyncService {
             monthStartDay: r.monthStartDay != null
                 ? d.Value(r.monthStartDay!.clamp(1, 28))
                 : const d.Value.absent(),
+            // aaEnabled:仅当 server 显式返回该字段(hasAaEnabled)时覆盖本地值;
+            // 老 server 不返回 → absent,保留本地已开启的 AA 开关,避免静默关闭。
+            aaEnabled: r.hasAaEnabled
+                ? d.Value(r.aaEnabled)
+                : const d.Value.absent(),
           ));
           // 删 dup 行(及其关联 tx/local_changes,虽然 dup 行还没有这些)
           if (existingList.length > 1) {
@@ -1324,6 +1345,11 @@ class SyncEngine implements app.SyncService {
             monthStartDay: r.monthStartDay != null
                 ? d.Value(r.monthStartDay!.clamp(1, 28))
                 : const d.Value.absent(),
+            // 同 update 路径:hasAaEnabled=false 时 absent 保留本地值,
+            // 防止老 server 把本地已开启的 AA 分摊静默关闭。
+            aaEnabled: r.hasAaEnabled
+                ? d.Value(r.aaEnabled)
+                : const d.Value.absent(),
           ));
           upserted++;
           continue;
@@ -1347,6 +1373,9 @@ class SyncEngine implements app.SyncService {
               monthStartDay: r.monthStartDay != null
                   ? d.Value(r.monthStartDay!.clamp(1, 28))
                   : const d.Value.absent(),
+              // insert 路径(新账本):server 显式返回就用 server 值,
+              // 老 server 不返回时用 false(新账本默认 AA 关闭,与既有客户端默认一致)。
+              aaEnabled: d.Value(r.aaEnabled),
             ));
         inserted++;
         // 新设备登录:Editor 的共享账本需要拉 /shared-resources 才能在

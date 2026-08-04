@@ -1385,6 +1385,9 @@
     "sharedMembersSyncPending": "For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.",
     "sharedMembersSaveFirst": "Please save the ledger first",
     "sharedMembersInviteSyncFailed": "Cloud sync not finished yet. Please try again later.",
+    "sharedMembersLoadingHint": "Cloud ledger is not ready, syncing…",
+    "sharedMembersLoadFailed": "Failed to load members",
+    "sharedMembersRetry": "Retry",
 
     "sharedTxCreatedBy": "Created by {name}",
     "@sharedTxCreatedBy": {

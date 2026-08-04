@@ -129,15 +129,6 @@ class _TransactionEditorSheetState
   List<String>? _aaParticipantIds; // null = 全部成员(运行时展开)
   Map<String, String>? _aaSplits; // 指定分摊金额(编辑模式回填/AaEditPage 回传)
 
-  /// 本次提交是否跳转过 AaEditPage。
-  ///
-  /// 设计意图:AaEditPage 是在编辑器 sheet 之上 push 的全屏页,保存时
-  /// AaEditPage 先 pop(200ms 退出动画),编辑器随后 pop 收起 sheet。
-  /// 若两者几乎同时 pop,退出动画会重叠(sheet 与页面同时滑出,视觉混乱)。
-  /// 标记跳转过 AA 页后,在收起 sheet 前 await 一个转场时长,
-  /// 让 AA 页退出动画先完成,再收起 sheet,实现「先后收起」。
-  bool _aaPagePushed = false;
-
   @override
   void initState() {
     super.initState();
@@ -514,7 +505,6 @@ class _TransactionEditorSheetState
     // 人均/指定分摊:提交时统一跳 AaEditPage 配置——人均可改参与人/支出人,
     // 指定再逐人填金额;跳页前不落库,AaEditPage 是纯选择器,pop 返回 result。
     if (_aaMode == AaMode.perPerson || _aaMode == AaMode.custom) {
-      _aaPagePushed = true;
       final result = await Navigator.of(context).pushNamed(
         Routes.aaEdit,
         arguments: AaEditPageArgs(
@@ -686,20 +676,12 @@ class _TransactionEditorSheetState
     ref.read(statsRefreshProvider.notifier).state++;
 
     // 提交成功后关闭编辑器 sheet。
-    // 若本次提交跳转过 AaEditPage,此时 AA 页退出动画仍在 overlay 中渲染,
-    // 会盖住下层 sheet,因此用 removeRoute 瞬隐 sheet,避免同时滑出的重叠动画。
-    // 未跳转 AA 页时走标准 pop,保留 sheet 下滑动画体验不变。
+    // 若本次提交跳转过 AaEditPage,AA 页退场固定为下滑动画(见
+    // aaSlidePageRoute),与 sheet 下滑收起同向同速、同步进行,视觉上
+    // 两层"一起收起来",无需等待 AA 页退场完成,也无需瞬隐 sheet。
+    // 未跳转 AA 页时走标准 pop,sheet 下滑动画体验保持不变。
     if (mounted && Navigator.of(context).canPop()) {
-      if (_aaPagePushed) {
-        final sheetRoute = ModalRoute.of(context);
-        if (sheetRoute != null) {
-          Navigator.of(context).removeRoute(sheetRoute);
-        } else {
-          Navigator.of(context).pop();
-        }
-      } else {
-        Navigator.of(context).pop();
-      }
+      Navigator.of(context).pop();
     }
   }
 

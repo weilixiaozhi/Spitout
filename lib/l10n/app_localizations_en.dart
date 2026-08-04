@@ -2859,6 +2859,15 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sharedMembersInviteSyncFailed => 'Cloud sync not finished yet. Please try again later.';
 
   @override
+  String get sharedMembersLoadingHint => 'Cloud ledger is not ready, syncing…';
+
+  @override
+  String get sharedMembersLoadFailed => 'Failed to load members';
+
+  @override
+  String get sharedMembersRetry => 'Retry';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return 'Created by $name';
   }

@@ -111,12 +111,14 @@ class LocalRepository extends BaseRepository {
     String currency = 'CNY',
     String storageMode = 'cloud',
     String? ownerUserId,
+    bool aaEnabled = false,
   }) =>
       _ledgerRepo.createLedger(
         name: name,
         currency: currency,
         storageMode: storageMode,
         ownerUserId: ownerUserId,
+        aaEnabled: aaEnabled,
       );
 
   @override

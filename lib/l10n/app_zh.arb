@@ -1292,6 +1292,9 @@
     "sharedMembersSyncPending": "首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员",
     "sharedMembersSaveFirst": "请先保存账本",
     "sharedMembersInviteSyncFailed": "云端同步尚未完成，请稍后重试",
+    "sharedMembersLoadingHint": "云端账本尚未就绪，正在同步…",
+    "sharedMembersLoadFailed": "成员列表加载失败",
+    "sharedMembersRetry": "重试",
     "sharedTxCreatedBy": "{name} 创建",
     "@sharedTxCreatedBy": {
         "placeholders": {

@@ -28,11 +28,14 @@ abstract class LedgerRepository {
   /// 从源头断开云端关联。默认 'cloud' 以兼容现有调用方;未登录用户由 UI 显式传 'local'。
   /// [ownerUserId] 账本所有者 userId(已登录为云 userId,未登录为 localSelfId);
   /// 同步路径创建的账本不传(由云端数据回填),UI 新建路径应传入。
+  /// [aaEnabled] AA 分摊开关,默认 false(新账本关闭);「复制到本地」等同步路径
+  /// 透传源账本值,保证副本与源账本行为一致。
   Future<int> createLedger({
     required String name,
     String currency = 'CNY',
     String storageMode = 'cloud',
     String? ownerUserId,
+    bool aaEnabled = false,
   });
 
   /// 更新账本归属模式(local / cloud),移动操作完成后调用。

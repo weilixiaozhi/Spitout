@@ -6,6 +6,14 @@ import 'package:flutter/material.dart';
 /// 观感不一致；如需整体调整动画速度，只需修改此常量一处即可全局生效。
 const Duration kAppTransitionDuration = Duration(milliseconds: 200);
 
+/// AA 分摊编辑页退场动画时长（硬编码，不跟随全局参数）。
+///
+/// 设计意图：AA 页在记账编辑器 sheet 之上 push，保存时 sheet 同步下滑收起，
+/// 两者退场必须同向同速才无重叠拖影。sheet 收起动画时长见
+/// [kSheetAnimationStyle]（与全局转场一致），此处刻意硬编码为相同时长，
+/// 而非引用 [kAppTransitionDuration]，避免全局参数调整时破坏同步。
+const Duration kAaPageSlideDuration = Duration(milliseconds: 200);
+
 /// 全局统一 bottom sheet 上滑动画样式。
 ///
 /// 线性曲线（无加速减速），时长与页面转场保持一致，视觉上匀速从底部滑入。
@@ -70,4 +78,48 @@ class _AppPageRoute<T> extends MaterialPageRoute<T> {
 
   @override
   Duration get reverseTransitionDuration => kAppTransitionDuration;
+}
+
+/// AA 分摊编辑页专用路由工厂。
+///
+/// 设计意图：AA 页通常在记账编辑器 sheet 之上 push，保存时 sheet 会同步
+/// 下滑收起。若退场沿用全局左右滑动动画，会与 sheet 的下滑方向不一致，
+/// 产生两层重叠、拖影。本工厂固定退场为下滑动画（与 sheet 同向同速），
+/// 视觉上两层"一起收起来"。进入动画仍保持全局左右滑动，不影响正常 push。
+PageRoute<T> aaSlidePageRoute<T>({
+  required WidgetBuilder builder,
+  RouteSettings? settings,
+  bool maintainState = true,
+}) {
+  return PageRouteBuilder<T>(
+    settings: settings,
+    maintainState: maintainState,
+    transitionDuration: kAppTransitionDuration,
+    // 退场下滑时长硬编码，不跟随全局转场参数，保证与 sheet 收起动画同步
+    reverseTransitionDuration: kAaPageSlideDuration,
+    pageBuilder: (context, animation, secondaryAnimation) => builder(context),
+    transitionsBuilder: (context, animation, secondaryAnimation, child) {
+      // 进入：从右向左滑入（与全局页面转场一致）；退场反向时下滑移出。
+      // 用一个 Tween 同时描述"右入/下出"两个阶段：正向动画为右滑入，
+      // 反向（value 从 1→0）时偏移量从 (0,0) 滑向 (0,1)，即向下收起。
+      final slideTween = Tween<Offset>(
+        begin: const Offset(1, 0),
+        end: Offset.zero,
+      ).chain(CurveTween(curve: Curves.linear));
+      // 退场阶段：从原位向下滑出，与 sheet 收起方向一致。
+      // reverse 动画值从 1→0，经 ReverseAnimation 反转为 0→1 驱动下滑，
+      // 保证退场起始帧处于原位 (0,0)，避免从屏外跳回造成闪动。
+      final exitTween = Tween<Offset>(
+        begin: Offset.zero,
+        end: const Offset(0, 1),
+      ).chain(CurveTween(curve: Curves.linear));
+      final isExiting = animation.status == AnimationStatus.reverse;
+      return SlideTransition(
+        position: isExiting
+            ? exitTween.animate(ReverseAnimation(animation))
+            : slideTween.animate(animation),
+        child: child,
+      );
+    },
+  );
 }

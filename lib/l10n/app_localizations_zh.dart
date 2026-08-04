@@ -2859,6 +2859,15 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedMembersInviteSyncFailed => '云端同步尚未完成，请稍后重试';
 
   @override
+  String get sharedMembersLoadingHint => '云端账本尚未就绪，正在同步…';
+
+  @override
+  String get sharedMembersLoadFailed => '成员列表加载失败';
+
+  @override
+  String get sharedMembersRetry => '重试';
+
+  @override
   String sharedTxCreatedBy(String name) {
     return '$name 创建';
   }
@@ -6535,6 +6544,15 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get sharedMembersInviteSyncFailed => '雲端同步尚未完成，請稍後再試';
+
+  @override
+  String get sharedMembersLoadingHint => '雲端帳本尚未就緒，正在同步…';
+
+  @override
+  String get sharedMembersLoadFailed => '成員列表載入失敗';
+
+  @override
+  String get sharedMembersRetry => '重試';
 
   @override
   String sharedTxCreatedBy(String name) {

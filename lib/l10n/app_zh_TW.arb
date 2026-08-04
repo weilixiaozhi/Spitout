@@ -1185,6 +1185,9 @@
     "sharedMembersSyncPending": "首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員",
     "sharedMembersSaveFirst": "請先保存帳本",
     "sharedMembersInviteSyncFailed": "雲端同步尚未完成，請稍後再試",
+    "sharedMembersLoadingHint": "雲端帳本尚未就緒，正在同步…",
+    "sharedMembersLoadFailed": "成員列表載入失敗",
+    "sharedMembersRetry": "重試",
     "sharedTxCreatedBy": "{name} 建立",
     "@sharedTxCreatedBy": {
         "placeholders": {
