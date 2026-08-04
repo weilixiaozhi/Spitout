@@ -60,17 +60,6 @@ android {
         }
     }
 
-    // 仅保留 arm64-v8a：覆盖 99% 现代真机(含 Apple Silicon 模拟器)，
-    // 每次构建只产出一个 APK，不再按 ABI 拆分出 v7a / x86_64 / universal 等多个包。
-    splits {
-        abi {
-            enable = true
-            reset()
-            include 'arm64-v8a'
-            universalApk false
-        }
-    }
-
     signingConfigs {
         release {
             if (keystoreProperties['storeFile']) {
@@ -163,20 +152,16 @@ android {
     }
 }
 
-// 自定义 Release APK 命名:app-<flavor>-release-v<ver>(<code>).apk (arm64-v8a 主分发,保持原名)
+// 自定义 Release APK 命名:app-<flavor>-release-v<ver>(<code>).apk
+// 单 ABI 由构建命令 --target-platform android-arm64 控制，产出单一 APK，不再按 ABI 拆分。
 android.applicationVariants.all { variant ->
     if (variant.buildType.name == 'release') {
         variant.outputs.all { output ->
             def flavor = variant.flavorName ?: ""
             def vName = variant.versionName
             def vCode = variant.versionCode
-            def abi = output.getFilter(com.android.build.OutputFile.ABI)
-            // 仅保留 arm64-v8a 主分发命名；其余 ABI 已不构建，此分支仅作兜底
-            def baseName = (abi != null && abi != "arm64-v8a")
-                    ? "app-${flavor}-${abi}-release-v${vName}(${vCode}).apk"
-                    : "app-${flavor}-release-v${vName}(${vCode}).apk"
             try {
-                output.outputFileName = baseName
+                output.outputFileName = "app-${flavor}-release-v${vName}(${vCode}).apk"
             } catch (ignored) {
                 // 新版 AGP 的 outputFileName 设置方式可能不同，此处忽略静默处理
             }
