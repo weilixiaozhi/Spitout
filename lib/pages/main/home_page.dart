@@ -15,7 +15,6 @@ import '../../utils/format_utils.dart';
 import '../../utils/date/month_range.dart';
 import '../../utils/category_utils.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart' show ledgerMembersProvider;
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import '../../core/identity/local_user_identity.dart' show localSelfIdProvider;
 import '../../services/data/tx_author_service.dart';
 import '../transaction/category_detail_page.dart';
@@ -214,7 +213,7 @@ class _HomePageState extends ConsumerState<HomePage>
     String? paidByUserId;
     try {
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
       final localSelfId = await ref.read(localSelfIdProvider.future);
       paidByUserId =
           (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;

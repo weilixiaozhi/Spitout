@@ -18,7 +18,8 @@ export 'package:flutter_cloud_sync/flutter_cloud_sync.dart'
     show CloudBackendType, CloudServiceConfig, CloudUser, CloudAuthException,
         CloudProvider, CloudAuthService, NoopAuthService, CloudSyncException,
         CloudNotAuthenticatedException, CloudConfigurationException,
-        CloudStorageException, createCloudServices;
+        CloudStorageException, createCloudServices, CloudServiceStore,
+        encodeCloudConfig, decodeCloudConfig;
 
 // Spitout Cloud adapter 类型（白名单，随 analyze 实测收敛）
 export 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart'

@@ -118,7 +118,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     try {
       // 操作者 id 优先级与落库层一致:云 userId > localSelfId(设备身份)。
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
       final localSelfId = await ref.read(localSelfIdProvider.future);
       final operatorId =
           (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;

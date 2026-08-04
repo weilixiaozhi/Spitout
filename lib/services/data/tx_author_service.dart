@@ -7,8 +7,12 @@ import '../../core/logging/logger_service.dart';
 /// 交易作者标记工具。
 ///
 /// 依赖方式：本服务不 import providers 层（services → providers 为反向
-/// 依赖），所需的云实例、仓储、localSelfId 由调用方（widget / provider
+/// 依赖），所需的云认证实例、仓储、localSelfId 由调用方（widget / provider
 /// 编排层）读取 provider 后以参数显式注入。
+///
+/// 依赖倒置：参数类型为 [CloudAuthService] 抽象接口（核心包定义），
+/// 而非具体 `SpitoutCloudProvider`，使本服务不耦合特定后端适配器。
+/// 调用方传 `cloud?.auth`（`SpitoutCloudProvider.auth` 即返回此接口）。
 ///
 /// 调用场景:
 /// - `markCreated`:本地新建 tx 后调,写 createdByUserId + lastEditedByUserId,
@@ -25,33 +29,33 @@ class TxAuthorService {
 
   /// 标记交易创建人。
   ///
-  /// [cloud] 当前 Spitout Cloud provider 实例(未配置 / 未登录时传 null);
+  /// [auth] 当前云认证实例(未配置 / 未登录时传 null);
   /// [repo] 本地仓储(非 LocalRepository 时静默跳过);
   /// [localSelfId] 未登录时的设备身份(由调用方从 localSelfIdProvider 注入)。
   static Future<void> markCreated(
-    SpitoutCloudProvider? cloud,
+    CloudAuthService? auth,
     BaseRepository repo,
     int txId, {
     required String localSelfId,
   }) =>
-      _markImpl(cloud, repo, txId, isCreate: true, localSelfId: localSelfId);
+      _markImpl(auth, repo, txId, isCreate: true, localSelfId: localSelfId);
 
   /// 标记交易编辑人。参数语义同 [markCreated]。
   static Future<void> markEdited(
-    SpitoutCloudProvider? cloud,
+    CloudAuthService? auth,
     BaseRepository repo,
     int txId, {
     required String localSelfId,
   }) =>
-      _markImpl(cloud, repo, txId, isCreate: false, localSelfId: localSelfId);
+      _markImpl(auth, repo, txId, isCreate: false, localSelfId: localSelfId);
 
   /// 读取当前登录用户 id;未登录 / 未初始化 / 异常时返回 null。
   ///
   /// 调用方据此决定是否写云 userId;未登录时由 _markImpl 用 localSelfId 兜底。
-  static Future<String?> currentUserId(SpitoutCloudProvider? cloud) async {
+  static Future<String?> currentUserId(CloudAuthService? auth) async {
     try {
-      if (cloud == null) return null;
-      final me = await cloud.auth.currentUser;
+      if (auth == null) return null;
+      final me = await auth.currentUser;
       final userId = me?.id;
       if (userId == null || userId.isEmpty) return null;
       return userId;
@@ -62,7 +66,7 @@ class TxAuthorService {
   }
 
   static Future<void> _markImpl(
-    SpitoutCloudProvider? cloud,
+    CloudAuthService? auth,
     BaseRepository repo,
     int txId, {
     required bool isCreate,
@@ -74,9 +78,9 @@ class TxAuthorService {
       // 身份解析:优先云 userId,未登录时用 localSelfId 兜底。
       // localSelfId 是持久化的真 UUID,三字段统一写它,不再有 'me' 占位。
       String effectiveUserId;
-      if (cloud != null) {
+      if (auth != null) {
         try {
-          final me = await cloud.auth.currentUser;
+          final me = await auth.currentUser;
           final cloudUserId = me?.id;
           if (cloudUserId != null && cloudUserId.isNotEmpty) {
             effectiveUserId = cloudUserId;

@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/statistics/record_history_providers.dart';
 import 'package:spitout/providers/providers.dart'
     show

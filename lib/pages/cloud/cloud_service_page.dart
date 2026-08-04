@@ -1449,7 +1449,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
     try {
       final cloud = await container.read(spitoutCloudProviderInstance.future);
       if (cloud == null) return;
-      final cloudUserId = await TxAuthorService.currentUserId(cloud);
+      final cloudUserId = await TxAuthorService.currentUserId(cloud.auth);
       if (cloudUserId == null || cloudUserId.isEmpty) return;
       final localSelfId = await container.read(localSelfIdProvider.future);
       final db = container.read(databaseProvider);

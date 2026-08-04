@@ -180,7 +180,7 @@ final aaParticipantOptionsProvider =
     var ownerId = ledger?.ownerUserId;
     if (ownerId == null || ownerId.isEmpty) {
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      ownerId = await TxAuthorService.currentUserId(cloud);
+      ownerId = await TxAuthorService.currentUserId(cloud?.auth);
     }
     // 真实 userId 直接作为参与人标识;拿不到时用 localSelfId 兜底,保证名册非空。
     // 展示名统一走本地昵称/「未设置昵称」兜底(剥离「(我)」后缀,由 UI
@@ -304,7 +304,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
     var ownerId = ledger.ownerUserId;
     if (ownerId == null || ownerId.isEmpty) {
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      ownerId = await TxAuthorService.currentUserId(cloud);
+      ownerId = await TxAuthorService.currentUserId(cloud?.auth);
     }
     if (ownerId != null && ownerId.isNotEmpty) {
       displayNameMap[ownerId] = selfName;
@@ -396,7 +396,7 @@ final aaStatisticsProvider =
     var ownerId = ledger.ownerUserId;
     if (ownerId == null || ownerId.isEmpty) {
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      ownerId = await TxAuthorService.currentUserId(cloud);
+      ownerId = await TxAuthorService.currentUserId(cloud?.auth);
     }
     if (ownerId != null && ownerId.isNotEmpty) {
       participantIds.add(ownerId);

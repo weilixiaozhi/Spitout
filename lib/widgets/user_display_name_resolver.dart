@@ -1,6 +1,5 @@
-import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' show CloudUser;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+import '../data/models.dart' show CloudUser, SpitoutCloudLedgerMember;
 
 import '../../core/identity/local_user_identity.dart';
 import '../../l10n/app_localizations.dart';

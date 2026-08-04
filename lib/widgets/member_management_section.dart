@@ -11,13 +11,12 @@
 //   (保存账本拿到 ledgerId 后批量落库),避免"保存→返回→重新进入→配置"的长路径。
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:spitout/cloud/spitout_cloud.dart'
-    show SpitoutCloudInvite, SpitoutCloudLedgerMember;
 import 'package:spitout/cloud/sync/sync_events.dart' show PushCompleted;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
+import '../data/models.dart' show SpitoutCloudInvite, SpitoutCloudLedgerMember;
 import 'text_state_switch.dart';
 import 'me_suffix.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';

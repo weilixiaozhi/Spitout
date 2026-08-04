@@ -4,7 +4,6 @@ import 'package:intl/intl.dart';
 import 'package:flutter_list_view/flutter_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../data/models.dart';
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 // 列表项的删除/编辑动作由调用方注入，组件内不直接依赖
 // repositoryProvider / currentLedgerIdProvider / statsRefreshProvider /
 // countsForLedgerProvider，故不 import 对应 providers。

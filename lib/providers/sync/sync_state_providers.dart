@@ -1,6 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_cloud_sync/flutter_cloud_sync.dart'
-    hide SyncStatus;
+import 'package:spitout/cloud/spitout_cloud.dart';
 
 // 同步域「叶子」provider：云服务配置 + 各类刷新 tick。
 //

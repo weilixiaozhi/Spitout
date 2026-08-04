@@ -69,10 +69,10 @@ Future<void> moveLedgerToCloudProvider(
 Future<void> _migrateLedgerIdentityBeforeCloudMove(
   WidgetRef ref,
   int ledgerId,
-  dynamic cloud,
+  SpitoutCloudProvider cloud,
 ) async {
   try {
-    final cloudUserId = await TxAuthorService.currentUserId(cloud);
+    final cloudUserId = await TxAuthorService.currentUserId(cloud.auth);
     if (cloudUserId == null || cloudUserId.isEmpty) return;
     final localSelfId = await ref.read(localSelfIdProvider.future);
     if (localSelfId.isEmpty || localSelfId == cloudUserId) return;

@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yaml/yaml.dart';
-import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
+import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:drift/drift.dart' as d;
 import '../../data/db.dart';
 import '../../data/repositories/base_repository.dart';

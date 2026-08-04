@@ -335,7 +335,7 @@ Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
   final localSelfId = await ref.read(localSelfIdProvider.future);
-  await TxAuthorService.markCreated(cloud, repo, txId, localSelfId: localSelfId);
+  await TxAuthorService.markCreated(cloud?.auth, repo, txId, localSelfId: localSelfId);
 }
 
 /// 本地编辑 tx 后回填「编辑人」（动作函数）。
@@ -347,7 +347,7 @@ Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
   final localSelfId = await ref.read(localSelfIdProvider.future);
-  await TxAuthorService.markEdited(cloud, repo, txId, localSelfId: localSelfId);
+  await TxAuthorService.markEdited(cloud?.auth, repo, txId, localSelfId: localSelfId);
 }
 
 /// 读取当前登录用户 id（动作函数，供写编辑历史时作 operatorUserId）。
@@ -356,5 +356,5 @@ Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
 /// 调用方据此决定历史记录是否写操作者。
 Future<String?> currentOperatorUserIdFromUi(WidgetRef ref) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
-  return TxAuthorService.currentUserId(cloud);
+  return TxAuthorService.currentUserId(cloud?.auth);
 }

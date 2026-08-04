@@ -1,6 +1,6 @@
-import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../cloud/spitout_cloud.dart';
 import '../../data/db.dart';
 import '../../data/repositories/local/local_repository.dart';
 import '../../data/repositories/base_repository.dart';

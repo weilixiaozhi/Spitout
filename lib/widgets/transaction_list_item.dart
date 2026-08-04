@@ -10,7 +10,7 @@ import '../utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart' show expenseColorSchemeProvider;
 import 'package:spitout/providers/providers.dart' show spitoutCloudProviderInstance;
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+import '../data/models.dart' show SpitoutCloudLedgerMember;
 import 'collaborator_avatar.dart';
 import 'amount_text.dart';
 
