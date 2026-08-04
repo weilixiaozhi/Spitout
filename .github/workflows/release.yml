@@ -50,17 +50,20 @@ jobs:
           echo "版本号: $TAG_NAME"
 
       - name: Setup Java 17
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v5
         with:
           distribution: "zulu"
           java-version: "17"
 
       - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
+        uses: android-actions/setup-android@v4
 
       - name: 安装 Android SDK 组件
         run: |
-          sdkmanager --install "platform-tools" "platforms;android-35" "platforms;android-36" "platforms;android-37" "build-tools;35.0.0"
+          # android-37 对应 Android 17，当前仍处于 Beta 渠道（2026-06 发布 Beta 4.1），
+          # sdkmanager 默认 stable 渠道找不到该包会直接以非 0 退出码失败。
+          # 显式指定 --channel=1 覆盖到 beta 渠道；beta 是 stable 的超集，不影响其余包。
+          sdkmanager --channel=1 --install "platform-tools" "platforms;android-35" "platforms;android-36" "platforms;android-37" "build-tools;35.0.0"
 
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
