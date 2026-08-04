@@ -109,7 +109,11 @@ jobs:
       - name: 构建 Release APK
         run: |
           export CI_VERSION='${{ steps.meta.outputs.tag_name }}'
+          # build.gradle 已移除 splits.abi（commit 2d2b77d），单 ABI 由本参数限定：
+          # 不传则 Flutter 默认产出 universal 包（4 个 ABI 全量），包体 40+MB；
+          # 加 --target-platform android-arm64 后与本地一致，仅打包 arm64-v8a。
           flutter build apk --release --flavor prod \
+            --target-platform android-arm64 \
             --dart-define=CI_VERSION="$CI_VERSION"
 
       - name: 重命名 APK 产物
