@@ -15,7 +15,6 @@ import '../services/statistics/aa_edit_models.dart';
 import '../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../theme/colors.dart';
 import '../utils/category_utils.dart';
-import 'app_route.dart';
 import 'currency_picker_sheet.dart';
 import 'toast.dart';
 import 'wheel_date_picker.dart';
@@ -687,13 +686,20 @@ class _TransactionEditorSheetState
     ref.read(statsRefreshProvider.notifier).state++;
 
     // 提交成功后关闭编辑器 sheet。
-    // 若本次提交跳转过 AaEditPage,需等 AA 页退出动画(一个转场时长)完成
-    // 后再收起 sheet,避免 AA 页与 sheet 同时滑出的重叠动画。
+    // 若本次提交跳转过 AaEditPage,此时 AA 页退出动画仍在 overlay 中渲染,
+    // 会盖住下层 sheet,因此用 removeRoute 瞬隐 sheet,避免同时滑出的重叠动画。
+    // 未跳转 AA 页时走标准 pop,保留 sheet 下滑动画体验不变。
     if (mounted && Navigator.of(context).canPop()) {
       if (_aaPagePushed) {
-        await Future<void>.delayed(kAppTransitionDuration);
+        final sheetRoute = ModalRoute.of(context);
+        if (sheetRoute != null) {
+          Navigator.of(context).removeRoute(sheetRoute);
+        } else {
+          Navigator.of(context).pop();
+        }
+      } else {
+        Navigator.of(context).pop();
       }
-      if (mounted) Navigator.of(context).pop();
     }
   }
 

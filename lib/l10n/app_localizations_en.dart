@@ -3576,7 +3576,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsNoTransfers => 'All settled up';
 
   @override
-  String get aaStatisticsExcluded => 'Excluded from details';
+  String get aaStatisticsExcluded => 'Excluded from split';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3584,7 +3584,7 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => 'No transactions excluded';
+  String get aaStatisticsExcludedEmpty => 'No transactions excluded from split';
 
   @override
   String get aaEditTitle => 'Edit split';

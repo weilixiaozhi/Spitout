@@ -6767,7 +6767,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsExcluded.
   ///
   /// In en, this message translates to:
-  /// **'Excluded from details'**
+  /// **'Excluded from split'**
   String get aaStatisticsExcluded;
 
   /// No description provided for @aaStatisticsParticipantCount.
@@ -6779,7 +6779,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsExcludedEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No transactions excluded'**
+  /// **'No transactions excluded from split'**
   String get aaStatisticsExcludedEmpty;
 
   /// No description provided for @aaEditTitle.

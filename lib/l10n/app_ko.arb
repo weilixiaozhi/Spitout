@@ -1286,7 +1286,7 @@
     "aaStatisticsTransferPlan": "송금 계획",
     "aaStatisticsTransferSeparator": "→",
     "aaStatisticsNoTransfers": "정산 완료, 송금이 필요 없습니다",
-    "aaStatisticsExcluded": "상세 내역 미포함",
+    "aaStatisticsExcluded": "분담 미포함",
     "aaStatisticsParticipantCount": "분담 인원 {count}명",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1295,7 +1295,7 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "상세 내역 제외 거래가 없습니다",
+    "aaStatisticsExcludedEmpty": "분담 제외 거래가 없습니다",
     "aaEditTitle": "분담 편집",
     "aaEditSplitButton": "분담 편집",
     "aaPayer": "지출한 사람",

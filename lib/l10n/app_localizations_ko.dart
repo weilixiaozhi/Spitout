@@ -3576,7 +3576,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsNoTransfers => '정산 완료, 송금이 필요 없습니다';
 
   @override
-  String get aaStatisticsExcluded => '상세 내역 미포함';
+  String get aaStatisticsExcluded => '분담 미포함';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3584,7 +3584,7 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => '상세 내역 제외 거래가 없습니다';
+  String get aaStatisticsExcludedEmpty => '분담 제외 거래가 없습니다';
 
   @override
   String get aaEditTitle => '분담 편집';

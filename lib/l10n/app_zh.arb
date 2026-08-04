@@ -1648,7 +1648,7 @@
     "aaStatisticsTransferPlan": "转账方案",
     "aaStatisticsTransferSeparator": "付给",
     "aaStatisticsNoTransfers": "已结清，无需转账",
-    "aaStatisticsExcluded": "不计入详单",
+    "aaStatisticsExcluded": "不计入分摊",
     "aaStatisticsParticipantCount": "分摊人数 {count} 人",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1657,7 +1657,7 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "暂无不计入详单的交易",
+    "aaStatisticsExcludedEmpty": "暂无不计入分摊的交易",
     "aaEditTitle": "编辑分摊",
     "aaEditSplitButton": "编辑分摊",
     "aaPayer": "支出人",

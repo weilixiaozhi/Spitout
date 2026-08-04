@@ -3576,7 +3576,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsNoTransfers => '已结清，无需转账';
 
   @override
-  String get aaStatisticsExcluded => '不计入详单';
+  String get aaStatisticsExcluded => '不计入分摊';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3584,7 +3584,7 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => '暂无不计入详单的交易';
+  String get aaStatisticsExcludedEmpty => '暂无不计入分摊的交易';
 
   @override
   String get aaEditTitle => '编辑分摊';

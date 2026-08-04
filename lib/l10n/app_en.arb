@@ -1774,7 +1774,7 @@
     "aaStatisticsTransferPlan": "Settlement plan",
     "aaStatisticsTransferSeparator": "pays",
     "aaStatisticsNoTransfers": "All settled up",
-    "aaStatisticsExcluded": "Excluded from details",
+    "aaStatisticsExcluded": "Excluded from split",
     "aaStatisticsParticipantCount": "{count} participants",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1783,7 +1783,7 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "No transactions excluded",
+    "aaStatisticsExcludedEmpty": "No transactions excluded from split",
     "aaEditTitle": "Edit split",
     "aaEditSplitButton": "Edit split",
     "aaPayer": "Paid by",

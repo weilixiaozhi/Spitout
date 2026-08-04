@@ -17,7 +17,7 @@ import '../../widgets/widgets.dart';
 /// 1. 汇总卡:分摊总额 + 分摊交易笔数;
 /// 2. 分摊详情表:实付 / 应摊 / 差额(应收应付着色);
 /// 3. 转账方案:贪心结算结果,已结清时展示零转账提示;
-/// 4. 不计入详单:aaMode=1(不分摊)的交易。
+/// 4. 不计入分摊:aaMode=1(不分摊)的交易。
 ///
 /// 数据源为 [aaStatisticsProvider]。账本 id 由进入入口经 [ledgerId] 传入
 /// ("从哪里进入就是哪个账本"),缺省(如新建态)时按无账本渲染,各模块自带
@@ -36,11 +36,6 @@ class AaStatisticsPage extends ConsumerWidget {
     final ledgerId = this.ledgerId ?? 0;
     final statisticsAsync = ref.watch(aaStatisticsProvider(ledgerId));
     final excludedAsync = ref.watch(_aaExcludedTxProvider(ledgerId));
-    // 转账方案参与人头像上下文：真实成员取头像，虚拟用户/无头像走占位。
-    final avatarCtx = ref
-            .watch(aaParticipantAvatarContextProvider(ledgerId))
-            .valueOrNull ??
-        const AaParticipantAvatarContext();
 
     return Scaffold(
       body: Column(
@@ -64,7 +59,6 @@ class AaStatisticsPage extends ConsumerWidget {
                 l10n,
                 statistics,
                 excludedAsync.valueOrNull ?? const [],
-                avatarCtx,
               ),
             ),
           ),
@@ -79,7 +73,6 @@ class AaStatisticsPage extends ConsumerWidget {
     AppLocalizations l10n,
     AaLedgerStatistics statistics,
     List<({Transaction t, Category? category})> excluded,
-    AaParticipantAvatarContext avatarCtx,
   ) {
     // 只展示有实际分摊活动的参与人(全零成员无信息量)。
     final active = statistics.participants
@@ -100,8 +93,8 @@ class AaStatisticsPage extends ConsumerWidget {
         const SizedBox(height: 20),
         _buildSectionTitle(context, l10n.aaStatisticsTransferPlan),
         const SizedBox(height: 8),
-        _buildTransferCard(context, ref, l10n, statistics.transfers, avatarCtx),
-        // 不计入详单区块始终展示(数据为空时由卡片内部渲染空态)。
+        _buildTransferCard(context, ref, l10n, statistics.transfers),
+        // 不计入分摊区块始终展示(数据为空时由卡片内部渲染空态)。
         const SizedBox(height: 20),
         _buildSectionTitle(context, l10n.aaStatisticsExcluded),
         const SizedBox(height: 8),
@@ -298,13 +291,16 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 转账方案卡:每行 [头像] from 付给 [头像] to + 金额;已结清展示零转账提示。
+  /// 转账方案卡:每行 from 付给 to + 金额;已结清展示零转账提示。
   ///
-  /// 头像逻辑复用 [CollaboratorAvatarSlot]:真实成员有 avatarUrl 显示网络
-  /// 头像;未配置头像的成员与虚拟用户统一回退 person 占位图标,不硬编码。
+  /// 「付给」文案使用主题色(蓝色)以突出转账动作;转账金额采用中性色
+  /// (与分摊详情表实付一致),不加粗,保持视觉克制。
   Widget _buildTransferCard(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, List<AaTransfer> transfers,
-      AaParticipantAvatarContext avatarCtx) {
+      AppLocalizations l10n, List<AaTransfer> transfers) {
+    // 主题色(蓝色):用于「付给」文案,突出转账动作。
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    // 中性色:与分摊详情表实付金额一致,转账金额保持克制不加粗。
+    final amountColor = SpitoutTokens.textPrimary(context);
     return SectionCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -339,9 +335,6 @@ class AaStatisticsPage extends ConsumerWidget {
                         Expanded(
                           child: Row(
                             children: [
-                              _buildTransferAvatar(
-                                  avatarCtx, transfers[i].from),
-                              const SizedBox(width: 6),
                               Flexible(
                                 // 本人参与人:名称后追加共享「(我)」后缀,
                                 // 与分摊详情表口径一致。
@@ -377,14 +370,11 @@ class AaStatisticsPage extends ConsumerWidget {
                                   l10n.aaStatisticsTransferSeparator,
                                   style: TextStyle(
                                     fontSize: 12,
-                                    color:
-                                        SpitoutTokens.textTertiary(context),
+                                    // 「付给」使用主题色(蓝色),突出转账动作。
+                                    color: primaryColor,
                                   ),
                                 ),
                               ),
-                              _buildTransferAvatar(
-                                  avatarCtx, transfers[i].to),
-                              const SizedBox(width: 6),
                               Flexible(
                                 // 本人参与人:名称后追加共享「(我)」后缀,
                                 // 与分摊详情表口径一致。
@@ -426,8 +416,8 @@ class AaStatisticsPage extends ConsumerWidget {
                           scaleDown: true,
                           style: TextStyle(
                             fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            color: Theme.of(context).colorScheme.primary,
+                            // 中性色,与分摊详情表实付一致,不加粗。
+                            color: amountColor,
                           ),
                         ),
                       ],
@@ -439,24 +429,7 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 转账参与人头像：复用 [CollaboratorAvatarSlot]，真实成员头像 / 占位统一处理。
-  ///
-  /// 成员未配置头像或虚拟用户(不在成员表)时内部回退 person 图标，
-  /// 避免在此处硬编码占位逻辑导致样式不一致。
-  Widget _buildTransferAvatar(
-      AaParticipantAvatarContext avatarCtx, String participantId) {
-    return CollaboratorAvatarSlot(
-      member: avatarCtx.members[participantId],
-      userIdFallback: participantId,
-      baseUrl: avatarCtx.baseUrl,
-      radius: 10,
-    );
-  }
-
-  /// 不计入详单卡:aaMode=1(不分摊)的交易,完全照搬首页列表项布局
-  /// (icon + 分类名 + 时间/备注 + 金额),保证两处视觉一致。
-  ///
-  /// 数据为空时展示空态提示,保证区块默认可见(需求要求)。
+  /// 不计入分摊卡:aaMode=1(不分摊)的交易,完全照搬首页列表项布局
   Widget _buildExcludedCard(
     BuildContext context,
     WidgetRef ref,
@@ -491,7 +464,7 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 单条不计入详单行:复用 [TransactionListItem],布局与首页列表完全一致
+  /// 单条不计入分摊行:复用 [TransactionListItem],布局与首页列表完全一致
   /// (icon + 分类名 + 时间/备注 + 金额)。
   Widget _buildExcludedRow(
     BuildContext context,
@@ -511,7 +484,7 @@ class AaStatisticsPage extends ConsumerWidget {
       isExpense: it.t.type == 'expense',
       happenedAt: it.t.happenedAt,
       lastEditedAt: it.t.lastEditedAt,
-      // 不计入详单区块无需展示协作头像/选择模式/不计收支标签,
+      // 不计入分摊区块无需展示协作头像/选择模式/不计收支标签,
       // 保持与首页列表一致的简洁双行布局。
       isShared: false,
     );
@@ -546,9 +519,9 @@ class AaStatisticsPage extends ConsumerWidget {
   }
 }
 
-/// 不计入详单的交易(aaMode=1)查询。
+/// 不计入分摊的交易(aaMode=1)查询。
 ///
-/// 统计页「不计入详单」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
+/// 统计页「不计入分摊」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
 /// 详单行需要交易本体 + 分类(用于 icon / 分类名展示,与首页列表完全一致),
 /// 故在此单独查询带 category 的交易列表。
 final _aaExcludedTxProvider =
