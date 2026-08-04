@@ -475,7 +475,7 @@ class _MemberManagementSectionState
             ),
           ),
           const Divider(height: 1),
-          // 骨架行:头像占位 + 标题/副标题占位条
+          // 骨架行:头像占位 + 标题占位条
           ListTile(
             dense: true,
             leading: CircleAvatar(
@@ -484,8 +484,6 @@ class _MemberManagementSectionState
             ),
             title: _SkeletonBar(
                 width: 120, height: 12, color: placeholderColor),
-            subtitle: _SkeletonBar(
-                width: 80, height: 10, color: placeholderColor),
           ),
         ],
       ),
@@ -598,7 +596,7 @@ class _MemberManagementSectionState
   ///
   /// 从 [_ownerDisplayName]/[_ownerEmail] 推导;仅在确有显示名时设置
   /// displayName,否则留空交给 _MemberTile 统一处理占位:
-  /// - 有 email:标题回退到 email,不渲染副标题,避免标题/副标题重复;
+  /// - 有 email:标题回退到 email,保证可读性;
 /// - 无 email:标题展示「未设置昵称」占位,头像位展示 person 图标,
 ///   不再回退"你",避免头像/昵称/括号三处重复展示。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
@@ -949,6 +947,9 @@ class _MemberManagementSectionState
 }
 
 /// 单个真实成员行:头像 + 名称 + (自己) + 移除按钮 + 角色标签。
+///
+/// 只展示一行标题(昵称优先、无昵称回退邮箱),不再展示邮箱副标题,
+/// 避免与昵称重复占用行高;邮箱/用户名可从其他入口获取。
 class _MemberTile extends ConsumerWidget {
   const _MemberTile({
     required this.member,
@@ -963,7 +964,7 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // 标题优先用昵称;昵称为空时回退到邮箱,且此时不再展示 subtitle(避免邮箱重复)。
+    // 标题优先用昵称;昵称为空时回退到邮箱,保证每一行都能看到可读名称。
     final hasDisplayName = member.displayName?.isNotEmpty == true;
     final hasEmail = member.email.isNotEmpty;
     final displayName = hasDisplayName
@@ -972,8 +973,6 @@ class _MemberTile extends ConsumerWidget {
             ? member.email
             : l10n.mineSlogan;
     final isOwner = member.role == 'owner';
-    // 有昵称时 subtitle 展示邮箱;昵称为空时标题已是邮箱,subtitle 留空避免重复。
-    final subtitleEmail = hasDisplayName ? member.email : null;
     return ListTile(
       dense: true,
       leading: _MemberAvatar(member: member),
@@ -989,13 +988,6 @@ class _MemberTile extends ConsumerWidget {
           if (member.isSelf) const MeSuffix(),
         ],
       ),
-      subtitle: subtitleEmail != null
-          ? Text(
-              subtitleEmail,
-              style: TextStyle(
-                  color: SpitoutTokens.textSecondary(context), fontSize: 12),
-            )
-          : null,
       // 移除按钮放在角色标签左侧,而非右侧:这样 Owner 行(无按钮)与
       // Editor 行(有按钮)的角色标签都能贴最右对齐,两行标签右缘一致,
       // 视觉上「所有者 / 编辑者」保持固定对齐。
@@ -1026,7 +1018,7 @@ extension _FirstOrNull<E> on Iterable<E> {
   E? get firstOrNull => isEmpty ? null : first;
 }
 
-/// 加载骨架占位条 — 用于 [_buildLoadingMemberCard] 中成员行的标题/副标题占位。
+/// 加载骨架占位条 — 用于 [_buildLoadingMemberCard] 中成员行的标题占位。
 /// 简单的灰色圆角条,不引入 shimmer 依赖,避免过度设计。
 class _SkeletonBar extends StatelessWidget {
   const _SkeletonBar({
