@@ -429,8 +429,9 @@ class LocalCategoryRepository implements CategoryRepository {
     }
 
     final count = parseCount(result.data['count']);
-    final total = parseAmount(result.data['total']);
-    final average = parseAmount(result.data['average']);
+    // SQL 聚合结果为整数分,转"元"返回(与统计仓库口径一致)。
+    final total = parseAmount(result.data['total']) / 100;
+    final average = parseAmount(result.data['average']) / 100;
 
     return (
       totalCount: count,
@@ -868,6 +869,11 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Stream<List<Category>> watchCategoryWithSubs(int categoryId) {
+    // 负数 id 是 SharedLedgerCategories 的 synthetic 分类：
+    // 共享分类不在主表，需走镜像表构造父+子分类树，供分类汇总页渲染。
+    if (categoryId < 0) {
+      return _watchSharedCategoryWithSubs(categoryId);
+    }
     return db.customSelect(
       '''
       SELECT * FROM categories
@@ -889,6 +895,79 @@ class LocalCategoryRepository implements CategoryRepository {
         );
       }).toList();
     });
+  }
+
+  /// 监听共享账本 synthetic 一级分类及其所有二级分类。
+  ///
+  /// 设计意图：分类汇总页需要「一级 + 全部二级」的分类 map 才能给每笔交易
+  /// 渲染 icon/名称；共享分类只存在于 SharedLedgerCategories 镜像表，因此
+  /// 这里按 syntheticIdForSyncId 反查父分类，并把同一账本下 parentSyncId
+  /// 指向父分类的行一起返回。表变化时 re-emit，保证增删改实时刷新。
+  Stream<List<Category>> _watchSharedCategoryWithSubs(int syntheticId) {
+    final ctrl = StreamController<List<Category>>();
+    StreamSubscription? sub;
+
+    Future<void> emit() async {
+      final rows = await db.select(db.sharedLedgerCategories).get();
+      SharedLedgerCategory? parent;
+      for (final s in rows) {
+        if (syntheticIdForSyncId(s.syncId) == syntheticId) {
+          parent = s;
+          break;
+        }
+      }
+      if (parent == null) {
+        if (!ctrl.isClosed) ctrl.add(const []);
+        return;
+      }
+      // 闭包内捕获会阻止可空变量的类型提升，先收窄为 final 非空引用
+      final matchedParent = parent;
+      final parentSyntheticId = syntheticIdForSyncId(matchedParent.syncId);
+      final matchedParentSyncId = matchedParent.parentSyncId;
+      final parentCategory = _sharedCategoryAsSynthetic(
+        matchedParent,
+        parentId: (matchedParentSyncId != null && matchedParentSyncId.isNotEmpty)
+            ? syntheticIdForSyncId(matchedParentSyncId)
+            : null,
+      );
+      final children = rows
+          .where((s) => s.parentSyncId == matchedParent.syncId)
+          .map((s) => _sharedCategoryAsSynthetic(
+                s,
+                parentId: parentSyntheticId,
+              ))
+          .toList();
+      if (!ctrl.isClosed) ctrl.add([parentCategory, ...children]);
+    }
+
+    ctrl.onListen = () {
+      emit();
+      sub = db
+          .tableUpdates(d.TableUpdateQuery.onTable(db.sharedLedgerCategories))
+          .listen((_) => emit());
+    };
+    ctrl.onCancel = () async {
+      await sub?.cancel();
+    };
+    return ctrl.stream;
+  }
+
+  /// SharedLedgerCategory → synthetic Category。
+  /// parentId 显式传入，保证二级分类的父子链在 map 里可导航。
+  Category _sharedCategoryAsSynthetic(
+    SharedLedgerCategory s, {
+    required int? parentId,
+  }) {
+    return Category(
+      id: syntheticIdForSyncId(s.syncId),
+      name: s.name,
+      kind: s.kind,
+      icon: s.icon,
+      sortOrder: s.sortOrder,
+      parentId: parentId,
+      level: s.level,
+      syncId: s.syncId,
+    );
   }
 
   @override

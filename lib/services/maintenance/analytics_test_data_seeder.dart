@@ -141,8 +141,8 @@ class AnalyticsTestDataSeeder {
   /// 生成一条随机金额 / 随机币种的计划项
   _Plan _gen(DateTime when, String base) {
     final currency = _currencies[_rand.nextInt(_currencies.length)];
-    // 金额量级相近即可，统计聚合按 amount 求和
-    final amount = (10 + _rand.nextInt(990)) + _rand.nextDouble();
+    // 金额量级相近即可,统计聚合按 amount 求和;直接生成整数分。
+    final amount = (10 + _rand.nextInt(990)) * 100 + _rand.nextInt(100);
     return _Plan(when: when, amount: amount, currency: currency);
   }
 
@@ -152,7 +152,7 @@ class AnalyticsTestDataSeeder {
 
 class _Plan {
   final DateTime when;
-  final double amount;
+  final int amount; // 单位:分
   final String currency;
 
   _Plan({

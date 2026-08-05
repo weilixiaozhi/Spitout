@@ -12,7 +12,11 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.2
-  drift: ^2.20.2
+  # drift 与 drift_dev 必须配套固定：当前 Flutter SDK(3.44.6)的 flutter_test
+  # 把 meta 锁在 1.18.0，而 drift_dev ≥2.34.1 需要 analyzer ^13(→meta ^1.18.3)，
+  # 无法解析。保持 2.34.0 配套组合，schema 工具与代码生成均可用；
+  # 若后续升级 Flutter SDK，再把 drift 与 drift_dev 一起升到 2.34.3/2.34.5。
+  drift: 2.34.0
   # sqlite3 原为 drift 传递依赖：本地备份的完整性校验需以只读模式直接调其
   # PRAGMA API（drift 裸 executor 的 ensureOpen 依赖内部接口不可用），提升为
   # 显式直接依赖；版本仍由 pubspec.lock 固定，未引入任何新版本。
@@ -76,9 +80,9 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
-  # build_runner 2.15.2+ 依赖 analyzer 13.3+(meta ^1.18.3)，与 SDK 锁定的 meta 1.18.0 冲突，暂保持 2.15.x
+  # 与 drift 2.34.0 配套；勿单独升级到 ≥2.34.1（见上方 drift 注释）。
   build_runner: ^2.15.1
-  drift_dev: ^2.20.2
+  drift_dev: 2.34.0
 
   # Testing framework enhancements
   mocktail: ^1.0.4

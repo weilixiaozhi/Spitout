@@ -95,7 +95,7 @@ Transaction _transaction({
     id: 1,
     ledgerId: 1,
     type: 'expense',
-    amount: 12,
+    amount: 1200,
     happenedAt: DateTime(2026, 1, 1, 8, 30),
     excludeFromStats: false,
     version: 1,

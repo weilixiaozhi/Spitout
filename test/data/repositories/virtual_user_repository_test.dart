@@ -21,9 +21,13 @@ void main() {
   late SpitoutDatabase db;
   late LocalLedgerVirtualUserRepository repo;
 
-  setUp(() {
+  setUp(() async {
     db = SpitoutDatabase.forTesting(NativeDatabase.memory());
     repo = LocalLedgerVirtualUserRepository(db);
+    // 外键约束:虚拟用户与交易引用的账本先存在。
+    await db.customStatement(
+        "INSERT INTO ledgers (id, name, currency, created_at) "
+        "VALUES (1, 'L', 'CNY', 1)");
   });
 
   tearDown(() async {
@@ -167,7 +171,7 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: 1,
               type: 'expense',
-              amount: 30.0,
+              amount: 3000,
               happenedAt: d.Value(DateTime.now()),
               aaParticipants:
                   const d.Value('["user-alice","ref-sync-id"]'),
@@ -205,7 +209,7 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: 1,
               type: 'expense',
-              amount: 20.0,
+              amount: 2000,
               happenedAt: d.Value(DateTime.now()),
               aaParticipants: const d.Value('["user-alice"]'),
               aaMode: const d.Value(2),

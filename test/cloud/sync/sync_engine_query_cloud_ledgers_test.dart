@@ -65,7 +65,7 @@ void main() {
       await db.into(db.ledgers).insert(
             LedgersCompanion.insert(
               name: 'Local 1',
-              syncId: const Value(''),
+              syncId: const Value(null),
               storageMode: const Value('local'),
             ),
           );
@@ -73,7 +73,7 @@ void main() {
       await db.into(db.ledgers).insert(
             LedgersCompanion.insert(
               name: 'Cloud NoSync',
-              syncId: const Value(''),
+              syncId: const Value(null),
               storageMode: const Value('cloud'),
             ),
           );

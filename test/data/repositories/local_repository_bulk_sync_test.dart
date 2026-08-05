@@ -54,17 +54,17 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 10,
+          amount: 1000,
         ),
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'income',
-          amount: 20,
+          amount: 2000,
         ),
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 30,
+          amount: 3000,
         ),
       ]);
 
@@ -90,7 +90,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 5,
+          amount: 500,
         ),
       ]);
 
@@ -108,7 +108,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 1,
+          amount: 100,
           syncId: const Value(presetSyncId),
         ),
       ]);
@@ -130,7 +130,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: 'expense',
-            amount: i.toDouble(),
+            amount: i * 100,
           ),
       ]);
       // 清掉之前的 create change,只看 clear 产生的 delete change
@@ -156,7 +156,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 1,
+          amount: 100,
         ),
       ]);
 
@@ -179,12 +179,12 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 100,
+          amount: 10000,
         ),
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'income',
-          amount: 200,
+          amount: 20000,
         ),
       ]);
       // 清掉 create change,只看 delete 后产生的
@@ -222,7 +222,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 50,
+          amount: 5000,
         ),
       );
 
@@ -244,7 +244,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 10,
+          amount: 1000,
         ),
       );
 

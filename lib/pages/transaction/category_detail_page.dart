@@ -1,10 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart'
-    show ledgerMembersProvider;
 import '../../data/models.dart' as db;
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
@@ -98,9 +95,12 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       error: (error, stack) => AsyncValue.error(error, stack),
       data: (transactions) {
         final totalCount = transactions.length;
-        final totalAmount = transactions.fold(
-            0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-        final averageAmount = totalCount > 0 ? totalAmount / totalCount : 0.0;
+        // 整数分累加,避免 double 尾差;展示前再转"元"。
+        final totalAmountCents = transactions.fold<int>(
+            0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
+        final totalAmount = totalAmountCents / 100;
+        final averageAmount =
+            totalCount > 0 ? (totalAmountCents / totalCount) / 100 : 0.0;
         return AsyncValue.data((
           totalCount: totalCount,
           totalAmount: totalAmount,
@@ -363,8 +363,8 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       // 分类小计（仅支出）
       final catExpense = catTxns
           .where((t) => t.type == 'expense')
-          .fold(0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-      items.add(_CategoryHeaderItem(cat, catExpense));
+          .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
+      items.add(_CategoryHeaderItem(cat, catExpense / 100));
 
       if (isAmountSort) {
         // 金额排序：分类内保持金额顺序，但仍需展示日期标题
@@ -382,8 +382,8 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           final dayTxns = dateGroups[dk]!;
           final dayExpense = dayTxns
               .where((t) => t.type == 'expense')
-              .fold(0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-          items.add(_DateHeaderItem(dk, dayExpense));
+              .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
+          items.add(_DateHeaderItem(dk, dayExpense / 100));
           for (final tx in dayTxns) {
             items.add(_TransactionDisplayItem(tx, cat));
           }
@@ -404,8 +404,8 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           final dayTxns = dateGroups[dk]!;
           final dayExpense = dayTxns
               .where((t) => t.type == 'expense')
-              .fold(0.0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-          items.add(_DateHeaderItem(dk, dayExpense));
+              .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
+          items.add(_DateHeaderItem(dk, dayExpense / 100));
           for (final tx in dayTxns) {
             items.add(_TransactionDisplayItem(tx, cat));
           }
@@ -636,8 +636,8 @@ class _SummaryItem extends ConsumerWidget {
 final _categorySubsMapProvider =
     StreamProvider.family<Map<int, db.Category>, int>((ref, categoryId) {
   final repo = ref.watch(repositoryProvider);
-  // 正数 id 走本地分类查询；负数（shared ledger synthetic）返回空 map，
-  // 后续通过 _getCategoryForTransaction 回退到一级分类。
+  // 正数 id 走本地分类查询；负数（shared ledger synthetic）走 SharedLedgerCategories
+  // 镜像，返回 synthetic 一级 + 全部二级分类，供列表回退渲染。
   return repo.watchCategoryWithSubs(categoryId).map((categories) {
     return {for (final c in categories) c.id: c};
   });

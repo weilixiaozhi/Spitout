@@ -9,7 +9,6 @@
 library;
 
 import 'package:flutter/material.dart';
-import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -73,7 +73,6 @@ void main() {
     completer.complete(
       AppUpdateInfo(
         status: UpdateStatus.hasUpdate,
-        hasUpdate: true,
         latestVersion: '2.0.0',
         releaseUrl: 'https://github.com/x/y/releases/tag/v2.0.0',
         currentVersion: '1.0.0',
@@ -98,7 +97,6 @@ void main() {
     completer.complete(
       AppUpdateInfo(
         status: UpdateStatus.latest,
-        hasUpdate: false,
         currentVersion: '1.0.0',
       ),
     );

@@ -51,7 +51,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       _dayOfMonth = widget.recurring!.dayOfMonth;
       _enabled = widget.recurring!.enabled;
       _selectedLedgerId = widget.recurring!.ledgerId;
-      _amountController.text = widget.recurring!.amount.toStringAsFixed(2);
+      _amountController.text =
+          (widget.recurring!.amount / 100).toStringAsFixed(2);
       _noteController.text = widget.recurring!.note ?? '';
       _loadCategory();
     } else {
@@ -574,7 +575,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           id: widget.recurring!.id,
           ledgerId: _selectedLedgerId!,
           type: _type,
-          amount: double.parse(_amountController.text),
+          // 页面输入为"元",落库转整数分。
+          amount: (double.parse(_amountController.text) * 100).round(),
           categoryId: _selectedCategory!.id,
 
           note: _noteController.text.isEmpty ? null : _noteController.text,
@@ -599,7 +601,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
         await repo.addRecurringTransaction(
           ledgerId: _selectedLedgerId!,
           type: _type,
-          amount: double.parse(_amountController.text),
+          amount: (double.parse(_amountController.text) * 100).round(),
           categoryId: _selectedCategory!.id,
 
           note: _noteController.text.isEmpty ? null : _noteController.text,

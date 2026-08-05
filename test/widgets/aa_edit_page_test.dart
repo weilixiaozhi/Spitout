@@ -11,7 +11,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/pages/statistics/aa_edit_page.dart';

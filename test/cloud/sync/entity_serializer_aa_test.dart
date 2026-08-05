@@ -22,7 +22,7 @@ void main() {
         id: 1,
         ledgerId: 1,
         type: 'expense',
-        amount: 30.0,
+        amount: 3000,
         categoryId: null,
         happenedAt: DateTime(2026, 7, 1),
         note: null,

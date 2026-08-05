@@ -16,8 +16,7 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
-import '../../core/identity/local_user_identity.dart';
+import '../core/local_self_id_providers.dart';
 import '../../core/logging/logger_service.dart';
 import '../../data/db.dart';
 import '../../l10n/app_localizations.dart';
@@ -25,6 +24,7 @@ import '../../providers/core/database_providers.dart';
 import '../../providers/sync/cloud_client_providers.dart';
 import '../../providers/sync/shared_ledger_providers.dart';
 import '../../providers/sync/sync_state_providers.dart';
+import '../ui/avatar_providers.dart';
 import '../../providers/ui/language_provider.dart';
 import '../../providers/ui/theme_providers.dart';
 import '../../services/data/tx_author_service.dart';
@@ -222,6 +222,8 @@ class MemberExpenseStatItem {
     required this.expenseTotal,
     required this.txCount,
     this.isSelf = false,
+    this.avatarUrl,
+    this.localAvatarPath,
   });
 
   /// 参与人标识(userId 或虚拟用户 syncId)。
@@ -241,6 +243,12 @@ class MemberExpenseStatItem {
 
   /// 是否本人(当前用户);UI 据此追加「(我)」后缀,与成员管理模块一致。
   final bool isSelf;
+
+  /// 服务端头像相对/绝对 URL(真实成员);虚拟用户为 null。
+  final String? avatarUrl;
+
+  /// 本人本地头像文件路径;无头像或非本人为 null。
+  final String? localAvatarPath;
 }
 
 /// 账本成员支出统计(按 paidByUserId 聚合,含虚拟用户)。
@@ -252,10 +260,19 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
     .family<List<MemberExpenseStatItem>, int>((ref, ledgerId) async {
   ref.watch(syncGenerationProvider);
   ref.watch(sharedResourceRefreshProvider);
+  // 本人头像变化时成员支出列表也要跟着刷新
+  ref.watch(avatarRefreshProvider);
 
   final repo = ref.read(repositoryProvider);
   final ledger = await repo.getLedgerById(ledgerId);
   if (ledger == null) return const [];
+  String? localAvatarPath;
+  try {
+    localAvatarPath = await ref.read(avatarPathProvider.future);
+  } catch (e, st) {
+    logger.warning(
+        'AaStatistics', '读取本地头像失败，成员支出头像降级为图标', '$e\n$st');
+  }
 
   // 账本全部支出交易(只统计支出,与首页/统计口径一致)。
   final allTx = await repo.getTransactionsByLedger(ledgerId);
@@ -276,6 +293,8 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
   // 本人标记:单人/本地账本的 owner、共享账本 isSelf 成员均为「我」,
   // 由 UI 层统一渲染「(我)」后缀,与成员管理模块样式一致。
   final selfMap = <String, bool>{};
+  // 真实成员的头像 URL(userId → server avatarUrl)
+  final avatarUrlMap = <String, String?>{};
   // 虚拟用户:syncId 作为参与人标识。
   final virtualUsers = await repo.getByLedger(ledgerId);
   for (final vu in virtualUsers) {
@@ -292,6 +311,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
         displayNameMap[m.userId] =
             (dn != null && dn.isNotEmpty) ? dn : m.email;
         selfMap[m.userId] = m.isSelf;
+        avatarUrlMap[m.userId] = m.avatarUrl;
       }
     } catch (e, st) {
       logger.warning('AaStatistics',
@@ -319,12 +339,15 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
   // 组装结果:仅保留有支出的参与人(amountMap 的 key),按金额降序。
   final items = <MemberExpenseStatItem>[];
   amountMap.forEach((pid, total) {
+    final isSelf = selfMap[pid] ?? false;
     items.add(MemberExpenseStatItem(
       participantId: pid,
       displayName: displayNameMap[pid] ?? pid,
       expenseTotal: total,
       txCount: countMap[pid] ?? 0,
-      isSelf: selfMap[pid] ?? false,
+      isSelf: isSelf,
+      avatarUrl: avatarUrlMap[pid],
+      localAvatarPath: isSelf ? localAvatarPath : null,
     ));
   });
   items.sort((a, b) => b.expenseTotal.compareTo(a.expenseTotal));

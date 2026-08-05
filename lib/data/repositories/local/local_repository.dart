@@ -348,7 +348,7 @@ class LocalRepository extends BaseRepository {
   Future<int> addTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,
@@ -356,7 +356,7 @@ class LocalRepository extends BaseRepository {
     String? categorySyncIdOverride,
     bool excludeFromStats = false,
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // AA 分摊字段:透传给子仓
     String? paidByUserId,
     int? aaMode,
@@ -449,14 +449,14 @@ class LocalRepository extends BaseRepository {
   Future<int> updateTransaction({
     required int id,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     DateTime? happenedAt,
     String? categorySyncIdOverride,
     bool? excludeFromStats,
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // AA 分摊字段:透传给子仓(null = 不更新)
     String? paidByUserId,
     int? aaMode,
@@ -468,13 +468,37 @@ class LocalRepository extends BaseRepository {
     //   仅 amount 变了 → 按该笔隐含汇率联动缩放;amount 未变 → 不动。
     var effCurrency = currencyCode;
     var effNative = nativeAmount;
-    if (currencyCode == null && nativeAmount == null && old != null) {
+
+    // currencyCode/nativeAmount 数据库成对约束(同时空或同时非空):
+    // 只传币种 → 补快照(旧快照可用则沿用,失效按隐含汇率缩放,否则 1:1);
+    // 只传快照 → 沿用旧币种,旧行无币种则清空快照,保证约束不被破坏。
+    if (effCurrency != null && effNative == null) {
+      final oldNative = old?.nativeAmount;
+      if (old != null &&
+          oldNative != null &&
+          old.currencyCode?.toUpperCase() == effCurrency.toUpperCase() &&
+          old.amount == amount) {
+        effNative = oldNative;
+      } else if (old != null && oldNative != null && old.amount != 0 && old.amount != amount) {
+        effNative = (oldNative * amount / old.amount).round();
+      } else {
+        effNative = amount;
+      }
+    } else if (effCurrency == null && effNative != null) {
+      effCurrency = old?.currencyCode;
+      if (effCurrency == null) {
+        effNative = null; // 旧行无币种 → 快照无意义,清空保持成对。
+      }
+    }
+
+    if (effCurrency == null && effNative == null && old != null) {
       if (old.nativeAmount != null && old.amount != amount) {
         final oldNative = old.nativeAmount!;
         if (old.amount == 0 || oldNative == old.amount) {
           effNative = amount; // 同币种/未折算(隐含汇率 1)→ 跟随
         } else {
-          effNative = oldNative / old.amount * amount; // 外币按隐含汇率缩放
+          // 外币按隐含汇率缩放,整数运算后四舍五入到分。
+          effNative = (oldNative * amount / old.amount).round();
         }
       }
     }
@@ -586,11 +610,11 @@ class LocalRepository extends BaseRepository {
   /// currencyCode ??= 账本本位币;
   /// nativeAmount ??= 同币种 → amount;外币 → 有效汇率折算,取不到 → amount
   /// (恰命中「未折算外币」检测条件 currencyCode≠base && native==amount,横幅可捞回)。
-  Future<(String, double)> _resolveTxCurrency({
+  Future<(String, int)> _resolveTxCurrency({
     required int ledgerId,
-    required double amount,
+    required int amount,
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
   }) async {
     // 两字段都显式传入(UI 记账主路径)→ 零查询直通,批量调用不放大 I/O
     if (currencyCode != null && currencyCode.isNotEmpty && nativeAmount != null) {
@@ -613,7 +637,7 @@ class LocalRepository extends BaseRepository {
       } else {
         final rates = await _effectiveRatesFor(base);
         na = computeNativeAmount(
-                amount: amount,
+                amountCents: amount,
                 txCurrency: cc,
                 ledgerBase: base,
                 rates: rates) ??
@@ -656,8 +680,12 @@ class LocalRepository extends BaseRepository {
         // 本位币交易:全量重算时对齐 native=amount(改本位币后旧快照失效);
         // 补折算模式跳过(非外币)。
         if (onlyUnconverted || t.nativeAmount == t.amount) continue;
+        // 币种为空的旧行不写快照(currency/native 成对约束:两者皆空);
+        // 显式币种行才写 amount 快照。
+        final nativeValue = t.currencyCode == null ? null : t.amount;
+        if (t.nativeAmount == nativeValue) continue;
         await (db.update(db.transactions)..where((x) => x.id.equals(t.id)))
-            .write(TransactionsCompanion(nativeAmount: d.Value(t.amount)));
+            .write(TransactionsCompanion(nativeAmount: d.Value(nativeValue)));
       } else {
         if (onlyUnconverted &&
             t.nativeAmount != null &&
@@ -665,7 +693,7 @@ class LocalRepository extends BaseRepository {
           continue; // 已折算过,不动(只补从没折算的)
         }
         var na = computeNativeAmount(
-            amount: t.amount,
+            amountCents: t.amount,
             txCurrency: cc,
             ledgerBase: baseUp,
             rates: rates);
@@ -892,13 +920,13 @@ class LocalRepository extends BaseRepository {
             : 'CNY')
         .toUpperCase();
     final cc = (tx.currencyCode ?? base).toUpperCase();
-    double na;
+    int na;
     if (cc == base) {
       na = tx.amount;
     } else {
       final rates = await _effectiveRatesFor(base);
       na = computeNativeAmount(
-              amount: tx.amount,
+              amountCents: tx.amount,
               txCurrency: cc,
               ledgerBase: base,
               rates: rates) ??
@@ -980,7 +1008,7 @@ class LocalRepository extends BaseRepository {
   Future<void> updateTransactionBySyncId({
     required String syncId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,
@@ -1682,7 +1710,7 @@ class LocalRepository extends BaseRepository {
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,
@@ -1715,7 +1743,7 @@ class LocalRepository extends BaseRepository {
     required int id,
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,

@@ -93,7 +93,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 30,
+        amount: 3000,
         happenedAt: DateTime(2026, 6, 18),
         syncId: txSyncId,
         paidByUserId: 'u1',
@@ -120,7 +120,7 @@ void main() {
 
       final tx = await repo.getTransactionBySyncId(txSyncId);
       expect(tx, isNotNull);
-      expect(tx!.amount, 50, reason: 'amount 应被远端更新');
+      expect(tx!.amount, 5000, reason: 'amount 应被远端更新(50 元 → 5000 分)');
       expect(tx.paidByUserId, 'u1', reason: '缺键不应清空本地 paidByUserId');
       expect(tx.aaMode, 2, reason: '缺键不应清空本地 aaMode');
       expect(tx.aaParticipants, '["u1","u2"]',
@@ -137,7 +137,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 30,
+        amount: 3000,
         happenedAt: DateTime(2026, 6, 18),
         syncId: txSyncId,
         aaMode: 2,

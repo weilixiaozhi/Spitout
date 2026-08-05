@@ -169,8 +169,8 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
-              amount: 100.0,
-              categoryId: const Value(0),
+              amount: 10000,
+              categoryId: const Value(null),
               syncId: const Value('tx-1'),
             ),
           );
@@ -178,8 +178,8 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
-              amount: 50.0,
-              categoryId: const Value(0),
+              amount: 5000,
+              categoryId: const Value(null),
               syncId: const Value('tx-2'),
             ),
           );
@@ -222,8 +222,8 @@ void main() {
               TransactionsCompanion.insert(
                 ledgerId: ledgerA,
                 type: 'expense',
-                amount: 10.0,
-                categoryId: const Value(0),
+                amount: 1000,
+                categoryId: const Value(null),
                 syncId: Value(sid),
               ),
             );
@@ -285,8 +285,8 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerB,
               type: 'expense',
-              amount: 10.0,
-              categoryId: const Value(0),
+              amount: 1000,
+              categoryId: const Value(null),
               syncId: const Value('tx-b1'),
             ),
           );

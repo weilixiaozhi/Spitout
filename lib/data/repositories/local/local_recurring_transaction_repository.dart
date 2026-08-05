@@ -33,7 +33,7 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,
@@ -69,7 +69,7 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
     required int id,
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,

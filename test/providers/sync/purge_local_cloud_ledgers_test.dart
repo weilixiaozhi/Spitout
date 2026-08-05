@@ -11,7 +11,6 @@ import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 
 import '../../helpers/test_isolation.dart';
 
@@ -53,7 +52,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: Value('tx-$extId'),
           ),
         );

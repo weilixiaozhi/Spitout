@@ -69,7 +69,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: Value('tx-${extId ?? localId}'),
           ),
         );
@@ -99,7 +99,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
-            amount: 99.0,
+            amount: 9900,
             syncId: const Value.absent(),
           ),
         );

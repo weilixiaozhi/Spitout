@@ -31,7 +31,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
     ]);
     final rows = await q.get();
     final shared = await _loadSharedCategoriesForLedger(ledgerId);
-    final map = <int?, double>{};
+    final map = <int?, int>{};
     final names = <int?, String>{};
     final icons = <int?, String?>{};
     for (final r in rows) {
@@ -56,7 +56,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
           ifAbsent: () => t.nativeAmount ?? t.amount);
     }
     final list = map.entries
-        .map((e) => (id: e.key, name: names[e.key] ?? '未分类', icon: icons[e.key], total: e.value))
+        .map((e) => (id: e.key, name: names[e.key] ?? '未分类', icon: icons[e.key], total: e.value / 100))
         .toList()
       ..sort((a, b) => b.total.compareTo(a.total));
     return list;
@@ -122,7 +122,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
 
     final rows = await q.get();
     final shared = await _loadSharedCategoriesForLedger(ledgerId);
-    final map = <int?, double>{};
+    final map = <int?, int>{};
     final categoryInfo = <int?, ({String name, String? icon, int? parentId, int level})>{};
 
     for (final r in rows) {
@@ -177,7 +177,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
         icon: info.icon,
         parentId: info.parentId,
         level: info.level,
-        total: e.value,
+        total: e.value / 100,
       );
     }).toList()
       ..sort((a, b) => b.total.compareTo(a.total));
@@ -199,7 +199,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
               t.excludeFromStats.equals(false) &
               t.happenedAt.isBiggerOrEqualValue(start) & t.happenedAt.isSmallerThanValue(end)))
         .get();
-    final map = <DateTime, double>{};
+    final map = <DateTime, int>{};
     for (final t in rows) {
       final dt = t.happenedAt.toLocal();
       final day = DateTime(dt.year, dt.month, dt.day);
@@ -211,7 +211,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
     for (DateTime d = DateTime(start.year, start.month, start.day);
         d.isBefore(end);
         d = d.add(const Duration(days: 1))) {
-      result.add((day: d, total: map[d] ?? 0));
+      result.add((day: d, total: (map[d] ?? 0) / 100));
     }
     return result;
   }
@@ -232,7 +232,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
               t.happenedAt.isBiggerOrEqualValue(yr.start) &
               t.happenedAt.isSmallerThanValue(yr.end)))
         .get();
-    final map = <int, double>{};
+    final map = <int, int>{};
     for (final t in rows) {
       // 年范围 [当年1月周期起点, 次年1月周期起点) 内的标签必属 year,直接取 month
       final label = labelForDate(t.happenedAt.toLocal(), sd);
@@ -241,7 +241,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
     }
     final result = <({DateTime month, double total})>[];
     for (int m = 1; m <= 12; m++) {
-      result.add((month: DateTime(year, m, 1), total: map[m] ?? 0));
+      result.add((month: DateTime(year, m, 1), total: (map[m] ?? 0) / 100));
     }
     return result;
   }
@@ -259,7 +259,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
         .get();
     if (rows.isEmpty) return const [];
     final sd = await _monthStartDayOf(ledgerId);
-    final map = <int, double>{};
+    final map = <int, int>{};
     int minYear = 9999, maxYear = 0;
     for (final t in rows) {
       final y = labelForDate(t.happenedAt.toLocal(), sd).year;
@@ -270,7 +270,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
     }
     final out = <({int year, double total})>[];
     for (int y = minYear; y <= maxYear; y++) {
-      out.add((year: y, total: map[y] ?? 0));
+      out.add((year: y, total: (map[y] ?? 0) / 100));
     }
     return out;
   }
@@ -347,7 +347,9 @@ class LocalStatisticsRepository implements StatisticsRepository {
       readsFrom: {db.transactions},
     ).getSingle();
 
-    return (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    // SQL 聚合结果为整数分,转"元"再返回(展示/统计口径保持元)。
+    final cents = (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    return cents / 100;
   }
 
   /// 读取账本的自定义每月起始日(1-28);账本缺失或查询异常时按 1(自然月)降级
@@ -391,7 +393,8 @@ class LocalStatisticsRepository implements StatisticsRepository {
       readsFrom: {db.transactions},
     ).getSingle();
 
-    return (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    final cents = (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    return cents / 100;
   }
 
   @override
@@ -445,6 +448,7 @@ class LocalStatisticsRepository implements StatisticsRepository {
       readsFrom: {db.transactions},
     ).getSingle();
 
-    return (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    final cents = (result.data['expense'] as num?)?.toDouble() ?? 0.0;
+    return cents / 100;
   }
 }

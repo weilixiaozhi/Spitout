@@ -56,6 +56,25 @@ extension IdempotentMigrationHelpers on GeneratedDatabase {
     required List<String> copyColumns,
     required String primaryKey,
   }) async {
+    // 当前尚未被任何迁移调用，作为未来删列工具保留（含单测覆盖）。
+    //
+    // 入口参数校验（assert 防的是开发期传错参数）：
+    // - copyColumns 为空 → 生成 `INSERT INTO ... () SELECT`，SQLite 直接报错；
+    // - copyColumns 含 keepColumns 之外的列 → 建新表后 SELECT 引用不存在的列；
+    // - primaryKey 不在 keepColumns → 新表主键列不存在；
+    // - 被删列残留在 keep/copy 中 → 重建后该列仍在，“删列”实际不生效。
+    assert(copyColumns.isNotEmpty, 'copyColumns 不能为空');
+    assert(
+      copyColumns.every(keepColumns.containsKey),
+      'copyColumns 中的列必须全部存在于 keepColumns',
+    );
+    assert(
+      keepColumns.containsKey(primaryKey),
+      'primaryKey 必须存在于 keepColumns',
+    );
+    assert(!keepColumns.containsKey(column), '被删除列不能出现在 keepColumns 中');
+    assert(!copyColumns.contains(column), '被删除列不能出现在 copyColumns 中');
+
     final oldTable = '${table}_old';
 
     var hasTable = await _tableExists(table);
@@ -84,6 +103,55 @@ extension IdempotentMigrationHelpers on GeneratedDatabase {
     await customStatement('DROP TABLE $oldTable');
   }
 
+  /// 幂等重建表：旧表结构不满足 [migratedCheckSql] 时，按「RENAME → CREATE →
+  /// 拷贝 → DROP」重建，并处理中断残留现场。
+  ///
+  /// [migratedCheckSql] 返回任意一行即视为新结构已就位（跳过重建）；
+  /// [copySql] 必须是 `INSERT INTO <table> (...) SELECT ... FROM <table>_old`
+  /// 的完整语句，旧→新列类型转换（如 REAL 金额 → INTEGER 分）在 SELECT 里做。
+  ///
+  /// 断点续跑守卫与 [dropColumnIfExists] 一致：
+  /// - 现场 A：RENAME 后、CREATE 前被杀 → 把 `_old` 改回原名再走主流程；
+  /// - 现场 B：新表已建成、`_old` 残留 → 新表已迁移则只清 `_old` 收尾，
+  ///   否则丢弃陈旧 `_old` 后重新走完整流程。
+  Future<void> rebuildTableIfNeeded(
+    Migrator m,
+    String table,
+    TableInfo<Table, dynamic> newTable, {
+    required String migratedCheckSql,
+    required String copySql,
+  }) async {
+    final oldTable = '${table}_old';
+    var hasTable = await _tableExists(table);
+    final hasOld = await _tableExists(oldTable);
+
+    if (!hasTable && hasOld) {
+      // 现场 A：恢复现场后继续正常流程。
+      await customStatement('ALTER TABLE $oldTable RENAME TO $table');
+      hasTable = true;
+    } else if (hasTable && hasOld) {
+      final newTableMigrated = await _isMigrated(migratedCheckSql);
+      // `_old` 均为可丢弃副本：新表已迁移 → 清旧表即完成；未迁移 → 陈旧快照，
+      // 同样清掉后按当前表（未迁移原表）重新走完整流程。
+      await customStatement('DROP TABLE IF EXISTS $oldTable');
+      if (newTableMigrated) return;
+    }
+
+    if (!hasTable) return;
+    if (await _isMigrated(migratedCheckSql)) return;
+
+    await customStatement('ALTER TABLE $table RENAME TO $oldTable');
+    await m.createTable(newTable);
+    await customStatement(copySql);
+    await customStatement('DROP TABLE $oldTable');
+  }
+
+  /// 判断当前表结构是否已是目标结构（[migratedCheckSql] 有结果即 true）。
+  Future<bool> _isMigrated(String migratedCheckSql) async {
+    final row = await customSelect(migratedCheckSql).getSingleOrNull();
+    return row != null;
+  }
+
   /// 表是否存在（查 sqlite_master，参数化防注入）。
   Future<bool> _tableExists(String name) async {
     final row = await customSelect(
@@ -95,7 +163,16 @@ extension IdempotentMigrationHelpers on GeneratedDatabase {
 
   /// 列是否存在（PRAGMA table_info；表不存在时返回空结果集，自然得到 false）。
   Future<bool> _hasColumn(String table, String column) async {
+    // PRAGMA 不支持参数绑定，表名只能字符串拼接；这里用标识符白名单兜底，
+    // 与 _tableExists 的参数化查询达到同等的防注入效果。
+    if (!_isSafeIdentifier(table) || !_isSafeIdentifier(column)) {
+      throw ArgumentError('非法的表名/列名: $table.$column');
+    }
     final info = await customSelect('PRAGMA table_info($table)').get();
     return info.any((r) => r.read<String>('name') == column);
   }
 }
+
+/// 判断名称是否为合法的 SQLite 标识符（表名/列名），用于拼接前的白名单校验。
+bool _isSafeIdentifier(String name) =>
+    RegExp(r'^[A-Za-z_][A-Za-z0-9_]*$').hasMatch(name);

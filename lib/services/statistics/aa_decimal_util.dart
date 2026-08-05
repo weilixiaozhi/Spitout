@@ -17,6 +17,11 @@ Decimal toDecimal2(double amount) {
   return Decimal.parse(amount.toStringAsFixed(2));
 }
 
+/// 把数据库金额(整数分)精确转成"元"Decimal,不经过 double。
+Decimal toDecimalFromCents(int cents) {
+  return (Decimal.fromInt(cents) / Decimal.fromInt(100)).toDecimal();
+}
+
 /// Decimal → double(仅在最终输出/落库时调用)。
 double toDouble(Decimal d) {
   return double.parse(d.toString());

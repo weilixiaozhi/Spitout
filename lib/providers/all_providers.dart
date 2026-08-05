@@ -12,6 +12,9 @@ export 'package:spitout/providers/ui/theme_providers.dart';
 // 数据库相关  
 export 'package:spitout/providers/core/database_providers.dart';
 
+// 本地设备身份相关
+export 'package:spitout/providers/core/local_self_id_providers.dart';
+
 // 记账页分类树缓存
 export 'package:spitout/providers/category/category_picker_providers.dart';
 
@@ -23,6 +26,9 @@ export 'package:spitout/providers/currency/currency_providers.dart';
 
 // 同步相关
 export 'package:spitout/providers/sync/sync_providers.dart';
+
+// 共享账本成员/邀请 provider（含对应 DTO 类型转发）
+export 'package:spitout/providers/sync/shared_ledger_providers.dart';
 
 // 云同步操作门面（UI 不直接触碰 SyncEngine / SyncService 内部实现）
 export 'package:spitout/providers/sync/spitout_cloud_sync_actions.dart';

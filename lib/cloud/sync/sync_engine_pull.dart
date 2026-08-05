@@ -228,6 +228,9 @@ class SyncErrorStore {
 class LookupCache {
   final Map<String, int> _ledger = {};
   final Map<String, int> _category = {};
+  /// 共享账本 Editor 视角的本地 ledger id 集合，用于 apply 时决定分类写入方式。
+  /// 与 ledger/category/tx 一样在 prime 阶段一次加载，避免逐条交易查询。
+  final Set<int> _sharedEditorLedgerIds = {};
 
   /// transactions 表 syncId → 已存在记录的轻量信息(id + createdByUserId)。
   /// `_applyTransactionChange` 每条都要查 existing tx 决定 INSERT/UPDATE,
@@ -239,6 +242,9 @@ class LookupCache {
     for (final l in ledgers) {
       final s = l.syncId;
       if (s != null && s.isNotEmpty) _ledger[s] = l.id;
+      if (l.isShared && l.myRole != 'owner') {
+        _sharedEditorLedgerIds.add(l.id);
+      }
     }
     final categories = await db.select(db.categories).get();
     for (final c in categories) {
@@ -257,6 +263,9 @@ class LookupCache {
         'prime: ledgers=${_ledger.length} categories=${_category.length} '
         'transactions=${_tx.length}');
   }
+
+  bool isSharedEditorLedger(int ledgerId) =>
+      _sharedEditorLedgerIds.contains(ledgerId);
 
   int? ledgerId(String? syncId) =>
       (syncId == null || syncId.isEmpty) ? null : _ledger[syncId];

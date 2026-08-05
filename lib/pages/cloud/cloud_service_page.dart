@@ -10,7 +10,7 @@ import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart'
     show purgeLocalCloudLedgersWithContainer;
 import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/core/identity/local_user_identity.dart';
+import 'package:spitout/providers/providers.dart' show localSelfIdProvider;
 import 'package:spitout/services/data/tx_author_service.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
 import '../../core/logging/logger_service.dart';

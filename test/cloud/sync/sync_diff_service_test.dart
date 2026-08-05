@@ -1,4 +1,6 @@
+import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:spitout/utils/currency/money_cents.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spitout/cloud/sync/sync_diff_service.dart';
@@ -44,16 +46,17 @@ void main() {
   Future<Transaction> insertLocalTx(
     int ledgerId, {
     String syncId = 'tx-1',
-    double amount = 100.0,
+    Decimal? amount,
     String type = 'expense',
     DateTime? happenedAt,
     String? note,
   }) async {
+    final effectiveAmount = amount ?? Decimal.parse('100');
     final id = await db.into(db.transactions).insert(
           TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: type,
-            amount: amount,
+            amount: yuanToCents(effectiveAmount),
             happenedAt: Value(happenedAt ?? DateTime(2024, 1, 1, 12, 0, 0)),
             note: Value(note),
             syncId: Value(syncId),
@@ -85,7 +88,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 10,
+            amount: Decimal.parse('10'),
             happenedAt: _t(2024, 1, 1),
           ),
         ],
@@ -101,7 +104,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 12.5,
+            amount: Decimal.parse('12.5'),
             happenedAt: _t(2024, 1, 1),
             note: '午餐',
             syncId: 'tx-new-1',
@@ -117,14 +120,14 @@ void main() {
 
     test('云端与本地内容完全一致 → 无任何变更', () async {
       final ledgerId = await createLedger();
-      await insertLocalTx(ledgerId, amount: 50.5, note: '通勤');
+      await insertLocalTx(ledgerId, amount: Decimal.parse('50.5'), note: '通勤');
       final preview = await service.computeDiff(
         repo: repo,
         ledgerId: ledgerId,
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 50.5,
+            amount: Decimal.parse('50.5'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             note: '通勤',
             syncId: 'tx-1',
@@ -136,14 +139,14 @@ void main() {
 
     test('金额不同 → modified，diffDetails 含金额说明', () async {
       final ledgerId = await createLedger();
-      await insertLocalTx(ledgerId, amount: 50.5, note: '通勤');
+      await insertLocalTx(ledgerId, amount: Decimal.parse('50.5'), note: '通勤');
       final preview = await service.computeDiff(
         repo: repo,
         ledgerId: ledgerId,
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 60.0,
+            amount: Decimal.parse('60.0'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             note: '通勤',
             syncId: 'tx-1',
@@ -159,14 +162,14 @@ void main() {
 
     test('金额亚分差异（<0.001）不判定为变更', () async {
       final ledgerId = await createLedger();
-      await insertLocalTx(ledgerId, amount: 50.5001, note: '通勤');
+      await insertLocalTx(ledgerId, amount: Decimal.parse('50.501'), note: '通勤');
       final preview = await service.computeDiff(
         repo: repo,
         ledgerId: ledgerId,
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 50.5,
+            amount: Decimal.parse('50.5'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             note: '通勤',
             syncId: 'tx-1',
@@ -186,7 +189,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 100.0,
+            amount: Decimal.parse('100.0'),
             happenedAt: DateTime(2024, 1, 1, 12, 0, 1),
             syncId: 'tx-1',
           ),
@@ -204,7 +207,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 100.0,
+            amount: Decimal.parse('100.0'),
             // 毫秒不同但秒相同
             happenedAt: DateTime(2024, 1, 1, 12, 0, 0, 500),
             syncId: 'tx-1',
@@ -223,7 +226,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'expense',
-            amount: 100.0,
+            amount: Decimal.parse('100.0'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             note: '新备注',
             syncId: 'tx-1',
@@ -243,7 +246,7 @@ void main() {
         cloudTransactions: [
           ImportTransaction(
             type: 'income',
-            amount: 100.0,
+            amount: Decimal.parse('100.0'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             syncId: 'tx-1',
           ),
@@ -268,8 +271,8 @@ void main() {
 
     test('混合场景 → 排序为 added → modified → deleted', () async {
       final ledgerId = await createLedger();
-      await insertLocalTx(ledgerId, syncId: 'tx-mod', amount: 1);
-      await insertLocalTx(ledgerId, syncId: 'tx-del', amount: 2);
+      await insertLocalTx(ledgerId, syncId: 'tx-mod', amount: Decimal.parse('1'));
+      await insertLocalTx(ledgerId, syncId: 'tx-del', amount: Decimal.parse('2'));
       final preview = await service.computeDiff(
         repo: repo,
         ledgerId: ledgerId,
@@ -277,19 +280,19 @@ void main() {
           // 新增两条 + 修改一条
           ImportTransaction(
             type: 'expense',
-            amount: 10,
+            amount: Decimal.parse('10'),
             happenedAt: _t(2024, 1, 1),
             syncId: 'tx-add-1',
           ),
           ImportTransaction(
             type: 'expense',
-            amount: 11,
+            amount: Decimal.parse('11'),
             happenedAt: _t(2024, 1, 2),
             syncId: 'tx-add-2',
           ),
           ImportTransaction(
             type: 'expense',
-            amount: 99,
+            amount: Decimal.parse('99'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             syncId: 'tx-mod',
           ),
@@ -329,7 +332,7 @@ void main() {
           type: SyncChangeType.added,
           cloudTransaction: ImportTransaction(
             type: 'expense',
-            amount: 10,
+            amount: Decimal.parse('10'),
             happenedAt: _t(2024, 1, 1),
             note: 'A',
             syncId: 'tx-a',
@@ -339,7 +342,7 @@ void main() {
           type: SyncChangeType.added,
           cloudTransaction: ImportTransaction(
             type: 'expense',
-            amount: 20,
+            amount: Decimal.parse('20'),
             happenedAt: _t(2024, 1, 2),
             note: 'B',
             syncId: 'tx-b',
@@ -358,13 +361,13 @@ void main() {
 
     test('modified → 本地行被批量更新', () async {
       final ledgerId = await createLedger();
-      await insertLocalTx(ledgerId, amount: 1, note: '旧');
+      await insertLocalTx(ledgerId, amount: Decimal.parse('1'), note: '旧');
       final changes = [
         SyncChange(
           type: SyncChangeType.modified,
           cloudTransaction: ImportTransaction(
             type: 'expense',
-            amount: 88,
+            amount: Decimal.parse('88'),
             happenedAt: _t(2024, 1, 1, 12, 0, 0),
             note: '新',
             syncId: 'tx-1',
@@ -380,7 +383,7 @@ void main() {
       );
       expect(result.modifiedCount, 1);
       final local = await repo.getTransactionsByLedger(ledgerId);
-      expect(local.single.amount, closeTo(88, 0.001));
+      expect(local.single.amount, 8800);
       expect(local.single.note, '新');
     });
 
@@ -431,7 +434,7 @@ void main() {
           type: SyncChangeType.added,
           cloudTransaction: ImportTransaction(
             type: 'expense',
-            amount: 5,
+            amount: Decimal.parse('5'),
             happenedAt: _t(2024, 1, 3),
             syncId: 'tx-new',
           ),

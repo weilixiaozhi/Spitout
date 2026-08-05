@@ -1,9 +1,11 @@
 import 'package:drift/drift.dart' as d;
+import 'package:decimal/decimal.dart';
 import '../../data/db.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../data/models/import_models.dart';
 import '../currency/exchange_rate_service.dart';
 import '../../utils/currency/rate_math.dart';
+import '../../utils/currency/money_cents.dart';
 import '../../core/logging/logger_service.dart';
 
 /// 统一的数据导入服务（落库编排引擎）
@@ -20,6 +22,37 @@ import '../../core/logging/logger_service.dart';
 ///   UI 层统一从门面取类型，不直连本文件。
 
 // --- 数据导入服务 ---
+
+/// 校验单个导入分类；返回空列表表示合法，否则返回错误原因列表。
+///
+/// 全局仅支出模式，分类必须是 expense；level 只允许 1/2，二级必须带父分类名。
+List<String> validateImportCategory(ImportCategory c) {
+  final errors = <String>[];
+  if (c.name.trim().isEmpty) errors.add('分类名称为空');
+  if (c.kind != 'expense') errors.add('仅支持支出分类（kind=expense）');
+  if (c.level != 1 && c.level != 2) errors.add('level 只能是 1 或 2');
+  if (c.level == 2 && (c.parentName == null || c.parentName!.trim().isEmpty)) {
+    errors.add('二级分类必须提供 parentName');
+  }
+  return errors;
+}
+
+/// 校验单个导入交易；返回空列表表示合法，否则返回错误原因列表。
+///
+/// 金额必须为正数；币种为空或 3-8 位字母（ISO 风格代码），
+/// 与 CSV 解析器对币种列的识别口径一致。
+List<String> validateImportTransaction(ImportTransaction t) {
+  final errors = <String>[];
+  if (t.type != 'expense') errors.add('仅支持支出交易（type=expense）');
+  if (t.amount <= Decimal.zero) errors.add('金额必须为正数');
+  final cur = t.currencyCode?.trim();
+  if (cur != null &&
+      cur.isNotEmpty &&
+      !RegExp(r'^[A-Za-z]{3,8}$').hasMatch(cur)) {
+    errors.add('币种必须为 3-8 位字母（ISO 风格代码）');
+  }
+  return errors;
+}
 
 /// 通用数据导入服务
 ///
@@ -47,6 +80,32 @@ class DataImportService {
     void Function(int done, int total)? onProgress,
     bool recordChanges = true,
   }) async {
+    // 0. 入口统一校验：导入（CSV/云恢复）是脏数据的主要入口，
+    // 非法分类/交易在这里拦截并计入 failed，不进入落库流程。
+    int validationFailed = 0;
+    final validCategories = <ImportCategory>[];
+    for (final c in data.categories) {
+      final errors = validateImportCategory(c);
+      if (errors.isEmpty) {
+        validCategories.add(c);
+      } else {
+        validationFailed++;
+        logger.warning(
+            'ImportValidation', '分类校验失败，跳过: ${c.name} -> ${errors.join('; ')}');
+      }
+    }
+    final validTransactions = <ImportTransaction>[];
+    for (final t in data.transactions) {
+      final errors = validateImportTransaction(t);
+      if (errors.isEmpty) {
+        validTransactions.add(t);
+      } else {
+        validationFailed++;
+        logger.warning(
+            'ImportValidation', '交易校验失败，跳过: ${errors.join('; ')}');
+      }
+    }
+
     // 1. 更新账本信息（如果提供）
     if (data.ledgerName != null || data.currency != null || data.aaEnabled != null) {
       // 币种变更前先记下旧币种,用于变更后重算 nativeAmount。
@@ -72,7 +131,7 @@ class DataImportService {
     }
 
     // 2. 导入分类
-    final categoryCache = await importCategories(repo, data.categories);
+    final categoryCache = await importCategories(repo, validCategories);
 
     // 3. 导入虚拟用户(在交易之前,避免交易 aaParticipants 引用悬空)
     // 仅云端全量恢复 / v7 备份携带 virtualUsers;CSV 路径为空列表跳过。
@@ -82,13 +141,16 @@ class DataImportService {
     final result = await importTransactions(
       repo,
       ledgerId,
-      data.transactions,
+      validTransactions,
       categoryCache: categoryCache,
       onProgress: onProgress,
       recordChanges: recordChanges,
     );
 
-    return result;
+    return ImportResult(
+      inserted: result.inserted,
+      failed: validationFailed + result.failed,
+    );
   }
 
   /// 导入虚拟用户(ledger-scoped),按 syncId 幂等 upsert。
@@ -151,7 +213,16 @@ class DataImportService {
     final categoryCache = <String, int>{}; // key: kind|name 或 kind|parentName|name
 
     if (categories.isEmpty) return categoryCache;
-    logger.info('CategoryImport', '开始导入分类: ${categories.length} 个');
+    // 入口校验：非法分类（level 越界 / 二级缺父 / 非支出类）直接跳过；
+    // 计数由调用方（importData）负责，这里兜底保护直接调用本方法的路径。
+    final validCategories = categories
+        .where((c) => validateImportCategory(c).isEmpty)
+        .toList(growable: false);
+    if (validCategories.length != categories.length) {
+      logger.warning('CategoryImport',
+          '跳过 ${categories.length - validCategories.length} 条非法分类');
+    }
+    logger.info('CategoryImport', '开始导入分类: ${validCategories.length} 个');
     final sw = Stopwatch()..start();
     int created = 0;
 
@@ -174,8 +245,12 @@ class DataImportService {
       }
 
       // 分离一级和二级分类
-      final level1 = categories.where((c) => c.level == 1 || c.parentName == null).toList();
-      final level2 = categories.where((c) => c.level == 2 && c.parentName != null).toList();
+      final level1 = validCategories
+          .where((c) => c.level == 1 || c.parentName == null)
+          .toList();
+      final level2 = validCategories
+          .where((c) => c.level == 2 && c.parentName != null)
+          .toList();
 
       // 导入一级分类
       for (final cat in level1) {
@@ -217,7 +292,7 @@ class DataImportService {
         }
       }
       logger.info('CategoryImport',
-          '分类导入完成: 新增=$created 已存在=${categories.length - created} 耗时=${sw.elapsedMilliseconds}ms');
+          '分类导入完成: 新增=$created 已存在=${validCategories.length - created} 耗时=${sw.elapsedMilliseconds}ms');
     } catch (e, st) {
       logger.error('CategoryImport', '分类导入失败', e, st);
     }
@@ -247,6 +322,19 @@ class DataImportService {
     final total = transactions.length;
     logger.info('TxImport',
         '开始导入交易: $total 条 (recordChanges=$recordChanges)');
+
+    // 入口统一校验：同步 apply 等直接调用路径同样可能收到脏数据，
+    // 非法交易计入 failed 并跳过，不再拼进 SQL。
+    final validTransactions = <ImportTransaction>[];
+    for (final t in transactions) {
+      final errors = validateImportTransaction(t);
+      if (errors.isEmpty) {
+        validTransactions.add(t);
+      } else {
+        failed++;
+        logger.warning('TxImport', '交易校验失败，跳过: ${errors.join('; ')}');
+      }
+    }
 
     // 幂等防线：预取目标账本已存在的 syncId 集合。
     //
@@ -301,7 +389,7 @@ class DataImportService {
     // （如：导入美元100但账本币种是人民币，无汇率时直接按100入账，
     //   列表和统计全部显示 ¥100，数据严重失真）。
     final missingCurrencies = <String>{};
-    for (final tx in transactions) {
+    for (final tx in validTransactions) {
       final cur = ((tx.currencyCode?.isNotEmpty ?? false)
               ? tx.currencyCode!
               : null)
@@ -382,7 +470,7 @@ class DataImportService {
       if (onProgress != null) onProgress(processed, total);
     }
 
-    for (final tx in transactions) {
+    for (final tx in validTransactions) {
       // 按 syncId 幂等去重：本地已存在、或本批次内重复出现的 syncId 一律跳过，
       // 避免全量恢复把云端快照重复插入本地（修复下拉刷新数据翻倍 bug）。
       // 跳过的记录计入 processed 以保证进度回调准确，但不计入 inserted/failed。
@@ -431,27 +519,33 @@ class DataImportService {
       // 云端全量恢复保真:源端 nativeAmount 快照是源设备记账时的真实折算结果,
       // 本地重算会因汇率时点不同而失真,故快照有值时优先采用;
       // 缺键(CSV 导入/无该字段的备份)才走本地重算路径。
-      final txNative = tx.nativeAmount ??
-          (txCurrency == ledgerBase
-              ? tx.amount
-              : (computeNativeAmount(
-                      amount: tx.amount,
-                      txCurrency: txCurrency,
-                      ledgerBase: ledgerBase,
-                      rates: importRates) ??
-                  tx.amount));
+      final amountCents = yuanToCents(tx.amount);
+      Decimal? txNative;
+      if (tx.nativeAmount != null) {
+        txNative = tx.nativeAmount;
+      } else if (txCurrency == ledgerBase) {
+        txNative = tx.amount;
+      } else {
+        final na = computeNativeAmount(
+          amountCents: amountCents,
+          txCurrency: txCurrency,
+          ledgerBase: ledgerBase,
+          rates: importRates,
+        );
+        txNative = na != null ? centsToDecimal(na) : tx.amount;
+      }
 
       // 构建交易记录
       final txCompanion = TransactionsCompanion.insert(
         ledgerId: ledgerId,
         type: tx.type,
-        amount: tx.amount,
+        amount: amountCents,
         categoryId: d.Value(categoryId),
         happenedAt: d.Value(tx.happenedAt),
         note: d.Value(tx.note),
         syncId: d.Value(tx.syncId),
         currencyCode: d.Value(txCurrency),
-        nativeAmount: d.Value(txNative),
+        nativeAmount: d.Value(yuanToCents(txNative!)),
         // 缺键(JSON/CSV)落默认 false,与 server snapshot「缺键 = false」语义对齐。
         excludeFromStats: d.Value(tx.excludeFromStats ?? false),
         // AA 分摊字段:JSON 缺键落 null(列默认值),有值显式写入。

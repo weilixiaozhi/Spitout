@@ -16,6 +16,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -49,23 +50,23 @@ void main() {
     await db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: 1,
           type: 'expense',
-          amount: 5.0,
+          amount: 500,
           categoryId: Value(catId),
           happenedAt: Value(DateTime.utc(2026, 7, 1)),
           syncId: const Value('tx-usd'),
           currencyCode: const Value('USD'),
-          nativeAmount: const Value(35.5),
+          nativeAmount: const Value(3550),
           excludeFromStats: const Value(true),
         ));
     await db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: 1,
           type: 'expense',
-          amount: 12.0,
+          amount: 1200,
           categoryId: Value(catId),
           happenedAt: Value(DateTime.utc(2026, 7, 2)),
           syncId: const Value('tx-cny'),
           currencyCode: const Value('CNY'),
-          nativeAmount: const Value(12.0),
+          nativeAmount: const Value(1200),
           // excludeFromStats 走默认 false
         ));
   }
@@ -115,7 +116,7 @@ void main() {
     expect(data.transactions, hasLength(1));
     final tx = data.transactions.single;
     expect(tx.currencyCode, 'USD');
-    expect(tx.nativeAmount, 35.5);
+    expect(tx.nativeAmount, Decimal.parse('35.5'));
     expect(tx.excludeFromStats, true);
   });
 
@@ -153,12 +154,12 @@ void main() {
 
     final usd = data.transactions.firstWhere((t) => t.syncId == 'tx-usd');
     expect(usd.currencyCode, 'USD');
-    expect(usd.nativeAmount, 35.5);
+    expect(usd.nativeAmount, Decimal.parse('35.5'));
     expect(usd.excludeFromStats, true);
 
     final cny = data.transactions.firstWhere((t) => t.syncId == 'tx-cny');
     expect(cny.currencyCode, 'CNY');
-    expect(cny.nativeAmount, 12.0);
+    expect(cny.nativeAmount, Decimal.parse('12.0'));
     expect(cny.excludeFromStats, isNull,
         reason: 'export 不为 false 输出键,parse 读到 null,落库时 ?? false 兜底');
   });

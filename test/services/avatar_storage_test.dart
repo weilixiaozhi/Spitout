@@ -133,6 +133,23 @@ void main() {
       expect(path, endsWith('.png'));
     });
 
+    test('空字节抛 ArgumentError，不再静默返回 null', () async {
+      await expectLater(
+        avatarStorage.saveAvatarFromBytes(Uint8List(0)),
+        throwsArgumentError,
+      );
+    });
+
+    test('非法扩展名抛 ArgumentError', () async {
+      await expectLater(
+        avatarStorage.saveAvatarFromBytes(
+          Uint8List.fromList([1]),
+          extension: '../../x.html',
+        ),
+        throwsArgumentError,
+      );
+    });
+
     test('重复保存会替换旧头像内容', () async {
       await avatarStorage.saveAvatarFromBytes(Uint8List.fromList([1, 1, 1]));
       final newBytes = Uint8List.fromList([2, 2, 2]);

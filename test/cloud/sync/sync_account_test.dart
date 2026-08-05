@@ -140,8 +140,8 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerId,
               type: 'expense',
-              amount: 100.0,
-              categoryId: const Value(0),
+              amount: 10000,
+              categoryId: const Value(null),
             ),
           );
 

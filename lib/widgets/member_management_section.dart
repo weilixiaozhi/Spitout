@@ -9,6 +9,8 @@
 //   (虚拟用户列表 + 添加入口),不依赖保存按钮。
 // - 虚拟用户并入成员列表:编辑态直接写库,新建态在父组件内存暂存
 //   (保存账本拿到 ledgerId 后批量落库),避免"保存→返回→重新进入→配置"的长路径。
+import 'dart:io' show File;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/sync/sync_events.dart' show PushCompleted;
@@ -17,20 +19,20 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import '../l10n/app_localizations.dart';
-import '../data/models.dart' show SpitoutCloudInvite, SpitoutCloudLedgerMember;
 import 'text_state_switch.dart';
 import 'me_suffix.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show spitoutCloudProviderInstance, syncEventStreamProvider;
 import 'package:spitout/providers/ui/theme_providers.dart' show displayNameProvider;
+import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
     show
         ledgerVirtualUsersProvider,
         createVirtualUser,
         renameVirtualUser,
         deleteVirtualUser;
-import '../data/db.dart' show LedgerVirtualUser;
+import '../data/models.dart' show LedgerVirtualUser;
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
 import 'app_dialog.dart';
@@ -212,11 +214,14 @@ class _MemberManagementSectionState
   }
 
   /// 调起系统分享,携带账本名 + 邀请码 + 短链。
+  ///
+  /// 分享视图只展示"创建响应"生成的邀请,该响应按新协议必带 shareUrl;
+  /// 列表响应只含掩码、不会进入此路径,故这里可安全断言非空。
   Future<void> _share(SpitoutCloudInvite invite, AppLocalizations l10n) async {
     final message = l10n.sharedInviteShareText(
       widget.ledgerName,
       invite.formattedCode,
-      invite.shareUrl,
+      invite.shareUrl!,
     );
     await SharePlus.instance.share(ShareParams(text: message));
   }
@@ -837,6 +842,9 @@ class _MemberManagementSectionState
   }
 
   /// 邀请码分享视图 — 大号邀请码 + 有效期 + 复制 / 分享 / 复制链接操作。
+  ///
+  /// 仅由创建响应生成并展示,该响应必带明文 code 与 shareUrl(列表接口不返回),
+  /// 因此下方对这两个字段做非空断言。
   Widget _buildShareView(SpitoutCloudInvite invite, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -868,7 +876,7 @@ class _MemberManagementSectionState
               child: OutlinedButton.icon(
                 icon: const Icon(AppIcons.copy),
                 label: Text(l10n.sharedInviteCopyCode),
-                onPressed: () => _copy(invite.code, l10n),
+                onPressed: () => _copy(invite.code!, l10n),
               ),
             ),
             const SizedBox(width: 12),
@@ -885,7 +893,7 @@ class _MemberManagementSectionState
         OutlinedButton.icon(
           icon: const Icon(AppIcons.link),
           label: Text(l10n.sharedInviteCopyLink),
-          onPressed: () => _copy(invite.shareUrl, l10n),
+          onPressed: () => _copy(invite.shareUrl!, l10n),
         ),
         const SizedBox(height: 24),
         Text(
@@ -1043,8 +1051,8 @@ class _SkeletonBar extends StatelessWidget {
   }
 }
 
-/// 共享账本成员头像 — server avatar_url 拼上 cloudProvider.baseUrl 用 NetworkImage,
-/// 缺失 / 加载失败 fallback 到虚拟用户同等 person 图标。
+/// 成员头像 — 本人优先用本地头像文件，其他成员用 server avatar_url 拼 baseUrl；
+/// 都没有或加载失败才回退 person 图标。
 class _MemberAvatar extends ConsumerWidget {
   const _MemberAvatar({required this.member});
 
@@ -1052,6 +1060,25 @@ class _MemberAvatar extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // 本人头像优先走本地文件（离线可用、上传后即时生效），
+    // 与「我的页」头像同一数据源。
+    if (member.isSelf) {
+      final avatarAsync = ref.watch(avatarPathProvider);
+      final localPath = avatarAsync.asData?.value;
+      if (localPath != null && localPath.isNotEmpty) {
+        return ClipOval(
+          child: Image.file(
+            File(localPath),
+            width: 40,
+            height: 40,
+            fit: BoxFit.cover,
+            errorBuilder: (_, _, _) =>
+                const PersonAvatar(size: 40, iconSize: 18),
+          ),
+        );
+      }
+    }
+
     final relativeUrl = member.avatarUrl;
     if (relativeUrl == null || relativeUrl.isEmpty) {
       // 未配置头像:统一展示虚拟用户同等 person 图标,不再用昵称首字母,
@@ -1064,13 +1091,24 @@ class _MemberAvatar extends ConsumerWidget {
     if (base == null || base.isEmpty) {
       return const PersonAvatar(size: 40, iconSize: 18);
     }
+    final trimmedBase =
+        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
     final absoluteUrl =
-        relativeUrl.startsWith('http') ? relativeUrl : '$base$relativeUrl';
-    return CircleAvatar(
-      radius: 20,
-      backgroundImage: NetworkImage(absoluteUrl),
-      onBackgroundImageError: (_, _) {/* fallback child 显示 */},
-      child: const PersonAvatar(size: 40, iconSize: 18),
+        relativeUrl.startsWith('http') ? relativeUrl : '$trimmedBase$relativeUrl';
+    // 用 Image.network + 圆形裁切：加载中/失败才显示 person 图标，
+    // 避免 CircleAvatar 的 child 常驻叠加在头像图片上方。
+    return ClipOval(
+      child: Image.network(
+        absoluteUrl,
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        loadingBuilder: (ctx, child, progress) => progress == null
+            ? child
+            : const PersonAvatar(size: 40, iconSize: 18),
+        errorBuilder: (_, _, _) =>
+            const PersonAvatar(size: 40, iconSize: 18),
+      ),
     );
   }
 }

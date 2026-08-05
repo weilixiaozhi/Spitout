@@ -42,7 +42,7 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 100.0,
+        amount: 10000,
         happenedAt: DateTime.now(),
         paidByUserId: 'user-alice',
         aaMode: 2,
@@ -61,7 +61,7 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 50.0,
+        amount: 5000,
         happenedAt: DateTime.now(),
       );
       final tx = await repo.getTransactionById(id);
@@ -76,7 +76,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 30.0,
+        amount: 3000,
         happenedAt: DateTime.now(),
         paidByUserId: 'user-alice',
         aaMode: 0,
@@ -95,13 +95,13 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 100.0,
+        amount: 10000,
         happenedAt: DateTime.now(),
       );
       await repo.updateTransaction(
         id: id,
         type: 'expense',
-        amount: 100.0,
+        amount: 10000,
         paidByUserId: 'user-bob',
         aaMode: 2,
         aaParticipants: '["user-bob"]',
@@ -118,7 +118,7 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 100.0,
+        amount: 10000,
         happenedAt: DateTime.now(),
         paidByUserId: 'user-alice',
         aaMode: 2,
@@ -129,10 +129,10 @@ void main() {
       await repo.updateTransaction(
         id: id,
         type: 'expense',
-        amount: 120.0,
+        amount: 12000,
       );
       final tx = await repo.getTransactionById(id);
-      expect(tx!.amount, 120.0);
+      expect(tx!.amount, 12000);
       expect(tx.paidByUserId, 'user-alice',
           reason: '未传 paidByUserId 时应保持原值');
       expect(tx.aaMode, 2);
@@ -147,7 +147,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 30.0,
+        amount: 3000,
         happenedAt: DateTime.now(),
         // aaMode 不传 → null
       );
@@ -155,7 +155,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 20.0,
+        amount: 2000,
         happenedAt: DateTime.now(),
         aaMode: 1,
       );
@@ -163,7 +163,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 50.0,
+        amount: 5000,
         happenedAt: DateTime.now(),
         aaMode: 2,
       );
@@ -171,7 +171,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 40.0,
+        amount: 4000,
         happenedAt: DateTime.now(),
         aaMode: 0,
       );
@@ -267,7 +267,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: ledgerId,
         type: 'expense',
-        amount: 30.0,
+        amount: 3000,
         happenedAt: DateTime.now(),
         aaMode: 2,
         aaParticipants: '["ref-vuser"]',

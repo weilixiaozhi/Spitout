@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
@@ -14,6 +15,34 @@ class LocalTransactionRepository implements TransactionRepository {
   final SpitoutDatabase db;
 
   LocalTransactionRepository(this.db);
+
+  /// 校验 AA 分摊 JSON 字段可解析(审计问题 7 的仓储层守卫)。
+  ///
+  /// aaParticipants 必须是 JSON 数组、aaSplits 必须是 JSON 对象;
+  /// 空串/null 视为未配置,跳过。导入/同步/UI 任何写入路径都先过这里,
+  /// 非法 JSON 在落库前抛出 ArgumentError,不让脏数据进入统计解析路径。
+  void _validateAaJson(String? participants, String? splits) {
+    for (final entry in [
+      ('aaParticipants', participants),
+      ('aaSplits', splits),
+    ]) {
+      final value = entry.$2;
+      if (value == null || value.isEmpty) continue;
+      try {
+        jsonDecode(value);
+      } catch (e) {
+        throw ArgumentError('${entry.$1} 不是合法 JSON: $value');
+      }
+    }
+  }
+
+  /// 从 Companion 取值校验(absent 视为 null)。
+  void _validateAaJsonInCompanion(TransactionsCompanion c) {
+    _validateAaJson(
+      c.aaParticipants.present ? c.aaParticipants.value : null,
+      c.aaSplits.present ? c.aaSplits.value : null,
+    );
+  }
 
   @override
   Stream<List<Transaction>> watchRecentTransactions({
@@ -269,7 +298,7 @@ class LocalTransactionRepository implements TransactionRepository {
   Future<int> addTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,
@@ -277,7 +306,7 @@ class LocalTransactionRepository implements TransactionRepository {
     String? categorySyncIdOverride,
     bool excludeFromStats = false,
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // AA 分摊字段:由调用方显式传入,子仓收"已定值"直写
     String? paidByUserId,
     int? aaMode,
@@ -286,6 +315,7 @@ class LocalTransactionRepository implements TransactionRepository {
   }) async {
     // 子仓收「已定值」直写;带折算的兜底(查汇率)在聚合
     // LocalRepository 包装层(子仓拿不到汇率)。
+    _validateAaJson(aaParticipants, aaSplits);
     return db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: type,
@@ -314,6 +344,9 @@ class LocalTransactionRepository implements TransactionRepository {
     // 子仓库不挂 changeTracker,recordChanges 参数对它无作用 — 真正的 record
     // 在 LocalRepository wrapper 那一层。这里保留参数只是为了接口一致。
     if (items.isEmpty) return 0;
+    for (final item in items) {
+      _validateAaJsonInCompanion(item);
+    }
     final effectiveItems = items.map((item) {
       if (item.syncId == const d.Value.absent() || item.syncId.value == null) {
         return item.copyWith(syncId: d.Value(_uuid.v4()));
@@ -333,6 +366,9 @@ class LocalTransactionRepository implements TransactionRepository {
     bool recordChanges = true,
   }) async {
     if (transactions.isEmpty) return const [];
+    for (final tx in transactions) {
+      _validateAaJsonInCompanion(tx);
+    }
     // 预填充 syncId — batch insertAll 不返回 row id,必须靠 syncId 反查。
     final effective = transactions.map((tx) {
       if (tx.syncId == const d.Value.absent() || tx.syncId.value == null) {
@@ -364,14 +400,14 @@ class LocalTransactionRepository implements TransactionRepository {
   Future<int> updateTransaction({
     required int id,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     DateTime? happenedAt,
     String? categorySyncIdOverride,
     bool? excludeFromStats,
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // AA 分摊字段:null = 不更新保持原值
     String? paidByUserId,
     int? aaMode,
@@ -381,6 +417,7 @@ class LocalTransactionRepository implements TransactionRepository {
     // 本地编辑路径 version+1 + lastEditedAt,支撑编辑历史与列表项 HH:mm 展示。
     // 同步路径(updateTransactionBySyncId 等)不走此方法,不会误增版本号。
     // 先读旧 version 再 +1:本地单用户/共享账本 LWW 场景并发风险低,先读后写可接受。
+    _validateAaJson(aaParticipants, aaSplits);
     final existing = await getTransactionById(id);
     final newVersion = (existing?.version ?? 1) + 1;
     await (db.update(db.transactions)..where((t) => t.id.equals(id))).write(
@@ -537,6 +574,7 @@ class LocalTransactionRepository implements TransactionRepository {
     bool recordChanges = true,
   }) async {
     // 子仓库不挂 changeTracker,recordChanges 仅为接口一致保留。
+    _validateAaJsonInCompanion(item);
     final effective = item.syncId == const d.Value.absent() || item.syncId.value == null
         ? item.copyWith(syncId: d.Value(_uuid.v4()))
         : item;
@@ -689,7 +727,9 @@ class LocalTransactionRepository implements TransactionRepository {
     for (final row in results) {
       final date = row.read<String?>('date');
       if (date == null) continue; // 跳过null日期
-      final expense = row.read<double?>('expense') ?? 0.0;
+      // SQL 聚合的是整数分,除以 100 转成"元"供日历展示。
+      final expense =
+          (row.read<num?>('expense') ?? 0).toDouble() / 100;
       map[date] = expense;
     }
 
@@ -807,7 +847,7 @@ class LocalTransactionRepository implements TransactionRepository {
   Future<void> updateTransactionBySyncId({
     required String syncId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,

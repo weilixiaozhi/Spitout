@@ -23,16 +23,16 @@ void main() {
         ));
   }
 
-  Future<void> addTx(int lid, String type, double amount, DateTime at) =>
+  Future<void> addTx(int lid, String type, int amount, DateTime at) =>
       repo.addTransaction(
           ledgerId: lid, type: type, amount: amount, happenedAt: at);
 
   test('monthlyTotals 按起始日聚合: 6月标签 = [6.15, 7.15)', () async {
     final lid = await seedLedger(monthStartDay: 15);
-    await addTx(lid, 'expense', 10, DateTime(2026, 6, 14, 23, 59)); // 5月周期
-    await addTx(lid, 'expense', 20, DateTime(2026, 6, 15));          // 6月周期
-    await addTx(lid, 'expense', 40, DateTime(2026, 7, 14, 23, 59)); // 6月周期
-    await addTx(lid, 'expense', 80, DateTime(2026, 7, 15));          // 7月周期
+    await addTx(lid, 'expense', 1000, DateTime(2026, 6, 14, 23, 59)); // 5月周期
+    await addTx(lid, 'expense', 2000, DateTime(2026, 6, 15));         // 6月周期
+    await addTx(lid, 'expense', 4000, DateTime(2026, 7, 14, 23, 59)); // 6月周期
+    await addTx(lid, 'expense', 8000, DateTime(2026, 7, 15));         // 7月周期
 
     final expense =
         await repo.monthlyTotals(ledgerId: lid, month: DateTime(2026, 6, 1));
@@ -41,9 +41,9 @@ void main() {
 
   test('monthlyTotals 起始日=1 退化为自然月(回归红线)', () async {
     final lid = await seedLedger();
-    await addTx(lid, 'expense', 10, DateTime(2026, 6, 1));
-    await addTx(lid, 'expense', 20, DateTime(2026, 6, 30, 23, 59));
-    await addTx(lid, 'expense', 40, DateTime(2026, 7, 1));
+    await addTx(lid, 'expense', 1000, DateTime(2026, 6, 1));
+    await addTx(lid, 'expense', 2000, DateTime(2026, 6, 30, 23, 59));
+    await addTx(lid, 'expense', 4000, DateTime(2026, 7, 1));
     final expense =
         await repo.monthlyTotals(ledgerId: lid, month: DateTime(2026, 6, 1));
     expect(expense, 30);
@@ -51,9 +51,9 @@ void main() {
 
   test('totalsByMonth 年视图 12 桶按周期标签归位', () async {
     final lid = await seedLedger(monthStartDay: 10);
-    await addTx(lid, 'expense', 30, DateTime(2027, 1, 5)); // 2026-12 标签
-    await addTx(lid, 'expense', 99, DateTime(2026, 1, 9)); // 2025-12 标签 → 范围外
-    await addTx(lid, 'expense', 7, DateTime(2026, 1, 10)); // 2026-01 标签
+    await addTx(lid, 'expense', 3000, DateTime(2027, 1, 5)); // 2026-12 标签
+    await addTx(lid, 'expense', 9900, DateTime(2026, 1, 9)); // 2025-12 标签 → 范围外
+    await addTx(lid, 'expense', 700, DateTime(2026, 1, 10)); // 2026-01 标签
 
     final rows =
         await repo.totalsByMonth(ledgerId: lid, type: 'expense', year: 2026);
@@ -65,8 +65,8 @@ void main() {
 
   test('yearlyTotals = 12 个周期之和(与 totalsByMonth 恒等)', () async {
     final lid = await seedLedger(monthStartDay: 10);
-    await addTx(lid, 'expense', 30, DateTime(2027, 1, 5));
-    await addTx(lid, 'expense', 99, DateTime(2026, 1, 9));
+    await addTx(lid, 'expense', 3000, DateTime(2027, 1, 5));
+    await addTx(lid, 'expense', 9900, DateTime(2026, 1, 9));
     // yearlyTotals 现在只返回支出金额（double）
     final expense = await repo.yearlyTotals(ledgerId: lid, year: 2026);
     expect(expense, 30);
@@ -74,13 +74,13 @@ void main() {
 
   test('watchTransactionsInMonth 按周期过滤', () async {
     final lid = await seedLedger(monthStartDay: 15);
-    await addTx(lid, 'expense', 10, DateTime(2026, 6, 14)); // 5月周期
-    await addTx(lid, 'expense', 20, DateTime(2026, 6, 20)); // 6月周期
+    await addTx(lid, 'expense', 1000, DateTime(2026, 6, 14)); // 5月周期
+    await addTx(lid, 'expense', 2000, DateTime(2026, 6, 20)); // 6月周期
     final txs = await repo
         .watchTransactionsInMonth(ledgerId: lid, month: DateTime(2026, 6, 1))
         .first;
     expect(txs.length, 1);
-    expect(txs.single.amount, 20);
+    expect(txs.single.amount, 2000);
   });
 
 }

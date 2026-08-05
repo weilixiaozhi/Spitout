@@ -21,6 +21,7 @@ export 'db.dart'
         Category,
         Transaction,
         Ledger,
+        LedgerVirtualUser,
         RecurringTransaction,
         RecordEditHistory;
 
@@ -52,12 +53,3 @@ export 'models/app_update_info.dart' show AppUpdateInfo, UpdateStatus;
 // services/import/data_import_service.dart（依赖汇率服务）。
 export 'models/import_models.dart'
     show ImportCategory, ImportTransaction, ImportData, ImportResult, ImportVirtualUser;
-
-// 云端账本成员 DTO 与云用户类型：
-// UI 层（widgets/pages）展示协作者头像、名称时需要这些类型，经本 barrel
-// re-export 后 UI 不再直连 cloud/spitout_cloud.dart 门面，保持
-// "UI → data/models" 的分层纯度。门面层仍是 cloud/spitout_cloud.dart
-// 唯一权威出口，本 barrel 仅做转发。
-// SpitoutCloudInvite 为成员管理模块邀请协作时所需 DTO，同理由此出口。
-export 'package:spitout/cloud/spitout_cloud.dart'
-    show SpitoutCloudLedgerMember, CloudUser, SpitoutCloudInvite;

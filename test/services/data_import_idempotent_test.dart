@@ -8,6 +8,7 @@ library;
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/native.dart';
+import 'package:decimal/decimal.dart';
 import '../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
@@ -42,10 +43,10 @@ void main() {
               .get())
           .length;
 
-  ImportTransaction makeTx(String syncId, {double amount = 10.0}) =>
+  ImportTransaction makeTx(String syncId, {Decimal? amount}) =>
       ImportTransaction(
         type: 'expense',
-        amount: amount,
+        amount: amount ?? Decimal.parse('10'),
         happenedAt: DateTime(2026, 7, 1),
         syncId: syncId,
       );
@@ -87,9 +88,9 @@ void main() {
         repo, 3,
         [
           ImportTransaction(
-              type: 'expense', amount: 10.0, happenedAt: DateTime(2026, 7, 1), syncId: null),
+              type: 'expense', amount: Decimal.parse('10.0'), happenedAt: DateTime(2026, 7, 1), syncId: null),
           ImportTransaction(
-              type: 'expense', amount: 20.0, happenedAt: DateTime(2026, 7, 2), syncId: null),
+              type: 'expense', amount: Decimal.parse('20.0'), happenedAt: DateTime(2026, 7, 2), syncId: null),
         ],
         categoryCache: {},
       );
@@ -103,9 +104,9 @@ void main() {
       // ledger1 已有 tx-X
       await service.importTransactions(repo, 1, [makeTx('tx-X')],
           categoryCache: {});
-      // 向 ledger4 导入同 syncId tx-X —— existingSyncIds 按 ledger 预取，
-      // 不应误判为已存在
-      final r = await service.importTransactions(repo, 4, [makeTx('tx-X')],
+      // 向 ledger4 导入不同 syncId —— existingSyncIds 按 ledger 预取,
+      // ledger1 的存在不影响 ledger4 的导入。
+      final r = await service.importTransactions(repo, 4, [makeTx('tx-Y')],
           categoryCache: {});
       expect(r.inserted, 1);
       expect(await countInLedger(4), 1);

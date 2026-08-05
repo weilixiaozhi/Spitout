@@ -79,7 +79,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: Value('tx-$extId'),
           ),
         );
@@ -143,22 +143,25 @@ void main() {
     );
   });
 
-  test('dup 行（同一 syncId 多条本地行）：所有重复行都被清掉', () async {
-    // 两条本地行共享同一个 syncId，且各带一条交易
+  test('dup 行（同一 syncId 多条本地行）：唯一索引拒绝重复, purge 清掉唯一行', () async {
     final idA = await seedSharedLedger('ext-dup', 'owner');
-    final idB = await db.into(db.ledgers).insert(
-          LedgersCompanion.insert(
-            name: 'Shared-ext-dup-B',
-            syncId: const Value('ext-dup'),
-            isShared: const Value(true),
-            myRole: const Value('owner'),
-          ),
-        );
+    // 同一 syncId 的第二行会被 UNIQUE 索引直接拒绝(审计问题 4 的数据库层兜底)。
+    await expectLater(
+      db.into(db.ledgers).insert(
+        LedgersCompanion.insert(
+          name: 'Shared-ext-dup-B',
+          syncId: const Value('ext-dup'),
+          isShared: const Value(true),
+          myRole: const Value('owner'),
+        ),
+      ),
+      throwsA(isA<SqliteException>()),
+    );
     await db.into(db.transactions).insert(
           TransactionsCompanion.insert(
-            ledgerId: idB,
+            ledgerId: idA,
             type: 'expense',
-            amount: 20.0,
+            amount: 2000,
             syncId: const Value('tx-dup-b'),
           ),
         );
@@ -171,7 +174,7 @@ void main() {
     // 两笔交易都应消失
     expect(
       await (db.select(db.transactions)
-            ..where((t) => t.ledgerId.isIn([idA, idB])))
+            ..where((t) => t.ledgerId.equals(idA)))
           .get(),
       isEmpty,
     );
@@ -192,7 +195,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: otherId,
             type: 'expense',
-            amount: 99.0,
+            amount: 9900,
             syncId: const Value('tx-other'),
           ),
         );

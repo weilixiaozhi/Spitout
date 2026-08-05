@@ -3,6 +3,8 @@
 /// 红线:汇率缺失就是缺失,绝不静默回落 1.0。
 library;
 
+import 'package:decimal/decimal.dart';
+
 class EffectiveRate {
   final String rate;
   final bool manual;
@@ -34,22 +36,26 @@ Map<String, EffectiveRate> mergeEffectiveRates({
   return result;
 }
 
-/// 交易级多币种:nativeAmount = amount × rate(1 交易币种 = rate 账本本位币)。
+/// 交易级多币种:nativeAmount(分) = amountCents × rate(1 交易币种 = rate
+/// 账本本位币)。金额全程整数分 + Decimal 汇率计算,最后四舍五入到分,
+/// 避免 double 尾差污染折算快照。
 /// 交易币种 == 本位币 → 直接 amount(rate 1,不查表);
 /// 缺失 / 非法 / 非正 rate → 返回 null(L8:要求手填,绝不静默按 1.0 入账)。
 /// 方向复用本文件约定(1 quote = rate base;quote=交易币种,base=本位币)。
-double? computeNativeAmount({
-  required double amount,
+int? computeNativeAmount({
+  required int amountCents,
   required String txCurrency,
   required String ledgerBase,
   required Map<String, EffectiveRate> rates,
 }) {
-  if (txCurrency.toUpperCase() == ledgerBase.toUpperCase()) return amount;
+  if (txCurrency.toUpperCase() == ledgerBase.toUpperCase()) return amountCents;
   final er = rates[txCurrency.toUpperCase()];
   if (er == null) return null;
-  final r = double.tryParse(er.rate);
-  if (r == null || r <= 0) return null;
-  return amount * r;
+  final r = Decimal.tryParse(er.rate);
+  if (r == null || r <= Decimal.zero) return null;
+  final native =
+      (Decimal.fromInt(amountCents) * r).round().toBigInt().toInt();
+  return native;
 }
 
 /// 通用折算:按币种金额表折到 base。供净资产明细/分组小计/构成图复用。

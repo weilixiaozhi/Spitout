@@ -299,13 +299,13 @@ void main() {
       await repo.addTransaction(
         ledgerId: cloudId,
         type: 'expense',
-        amount: 10,
+        amount: 1000,
         happenedAt: DateTime(2026, 5, 1),
       );
       await repo.addTransaction(
         ledgerId: localId,
         type: 'expense',
-        amount: 20,
+        amount: 2000,
         happenedAt: DateTime(2026, 5, 1),
       );
 

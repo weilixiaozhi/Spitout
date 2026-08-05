@@ -10,14 +10,14 @@ void main() {
   test('交易币种==本位币 → 返回 amount(rate 1,不查表)', () {
     expect(
       computeNativeAmount(
-          amount: 100, txCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
-      100,
+          amountCents: 10000, txCurrency: 'CNY', ledgerBase: 'CNY', rates: {}),
+      10000,
     );
     // 大小写不敏感
     expect(
       computeNativeAmount(
-          amount: 50, txCurrency: 'usd', ledgerBase: 'USD', rates: {}),
-      50,
+          amountCents: 5000, txCurrency: 'usd', ledgerBase: 'USD', rates: {}),
+      5000,
     );
   });
 
@@ -27,15 +27,15 @@ void main() {
     };
     expect(
       computeNativeAmount(
-          amount: 12, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
-      closeTo(86.4, 1e-9),
+          amountCents: 1200, txCurrency: 'USD', ledgerBase: 'CNY', rates: rates),
+      8640,
     );
   });
 
   test('缺失汇率 → null(L8,要求手填)', () {
     expect(
       computeNativeAmount(
-          amount: 12, txCurrency: 'USD', ledgerBase: 'CNY', rates: {}),
+          amountCents: 1200, txCurrency: 'USD', ledgerBase: 'CNY', rates: {}),
       isNull,
     );
   });
@@ -43,7 +43,7 @@ void main() {
   test('非法/非正 rate → null(不入脏数据)', () {
     expect(
       computeNativeAmount(
-          amount: 12,
+          amountCents: 1200,
           txCurrency: 'USD',
           ledgerBase: 'CNY',
           rates: {'USD': const EffectiveRate(rate: 'abc', manual: true)}),
@@ -51,7 +51,7 @@ void main() {
     );
     expect(
       computeNativeAmount(
-          amount: 12,
+          amountCents: 1200,
           txCurrency: 'USD',
           ledgerBase: 'CNY',
           rates: {'USD': const EffectiveRate(rate: '0', manual: true)}),

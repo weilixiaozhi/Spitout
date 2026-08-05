@@ -11,8 +11,8 @@
 
 ## 通用自查
 
-- [ ] `fvm flutter analyze` 无 issue
-- [ ] 相关单元测试 / widget 测试已通过（`fvm flutter test`）
+- [ ] `flutter analyze` 无 issue
+- [ ] 相关单元测试 / widget 测试已通过（`flutter test`）
 - [ ] 已清理本次改动产生的死代码（无用参数 / 变量 / 导入 / 配置）
 
 ## 数据库结构变更专项（未改表结构可整节删除）

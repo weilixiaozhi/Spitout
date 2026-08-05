@@ -1,7 +1,7 @@
-// AA 分摊功能 schema v1→v3 迁移端到端测试。
+// AA 分摊功能 schema v1→v4 迁移端到端测试。
 //
 // 本测试验证:
-//   1. schemaVersion 为 3(v2/v3 迁移已生效)
+//   1. schemaVersion 为 4(v2/v3/v4 迁移已生效)
 //   2. Transactions 表新增 4 字段(paid_by_user_id/aa_mode/aa_participants/
 //      aa_splits)就位且均 nullable
 //   3. Ledgers 表新增 aa_enabled 字段就位,默认 false
@@ -24,8 +24,11 @@ void main() {
 
   late SpitoutDatabase db;
 
-  setUp(() {
+  setUp(() async {
     db = SpitoutDatabase.forTesting(NativeDatabase.memory());
+    // 外键约束要求 transactions/ledger_virtual_users 引用的账本先存在。
+    await db.customStatement(
+        "INSERT INTO ledgers (id, name, currency) VALUES (1, 'L', 'CNY')");
   });
 
   tearDown(() async {
@@ -39,7 +42,7 @@ void main() {
   }
 
   test('schemaVersion 为 3(v2/v3 迁移已生效)', () {
-    expect(db.schemaVersion, 3);
+    expect(db.schemaVersion, 4);
   });
 
   test('Transactions 表新增 4 个 AA 字段就位且均 nullable', () async {
@@ -55,7 +58,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             happenedAt: d.Value(DateTime.now()),
           ),
         );
@@ -139,7 +142,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             createdByUserId: const d.Value('user-alice'),
             // 不传 paidByUserId → 列存 NULL
@@ -164,7 +167,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             createdByUserId: const d.Value('user-bob'),
           ),
@@ -194,7 +197,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             createdByUserId: const d.Value('user-alice'),
             lastEditedByUserId: const d.Value('user-bob'),
@@ -220,7 +223,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             // 不传 createdByUserId → NULL
             lastEditedByUserId: const d.Value('user-bob'),
@@ -245,7 +248,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             paidByUserId: const d.Value(''),
           ),
@@ -268,7 +271,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: 1,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             happenedAt: d.Value(DateTime.now()),
             createdByUserId: const d.Value('user-alice'),
             // 手选过支出人,与创建人不同 → 非空值

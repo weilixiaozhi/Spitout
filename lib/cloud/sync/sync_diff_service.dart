@@ -3,6 +3,7 @@ import '../../data/repositories/base_repository.dart';
 import '../../data/repositories/transaction_repository.dart'
     show TransactionUpdateBySyncIdData;
 import '../../services/import/data_import_service.dart';
+import '../../utils/currency/money_cents.dart';
 import '../../core/logging/logger_service.dart';
 
 /// 同步变更类型
@@ -175,8 +176,11 @@ class SyncDiffService {
     if (local.type != cloud.type) {
       diffs.add('类型: ${local.type} → ${cloud.type}');
     }
-    if ((local.amount - cloud.amount).abs() > 0.001) {
-      diffs.add('金额: ${local.amount} → ${cloud.amount}');
+    // 本地金额为整数分,云端为元(Decimal);统一换算成"分"再比较,精确无尾差。
+    final localCents = local.amount;
+    final cloudCents = yuanToCents(cloud.amount);
+    if (localCents != cloudCents) {
+      diffs.add('金额: ${localCents / 100} → ${cloud.amount}');
     }
     // 比较时间（精确到秒）
     final localTime = DateTime(
@@ -277,7 +281,7 @@ class SyncDiffService {
         updates.add(TransactionUpdateBySyncIdData(
           syncId: syncId,
           type: cloud.type,
-          amount: cloud.amount,
+          amount: yuanToCents(cloud.amount),
           categoryId: categoryId,
           happenedAt: cloud.happenedAt,
           note: cloud.note,

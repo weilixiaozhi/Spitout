@@ -80,62 +80,48 @@ void main() {
   });
 
   group('A_dup syncId 重复交易清理 (P4)', () {
-    test('删多余行，保留最早一条；且绕过变更追踪避免误删云端真实记录', () async {
-      // 准备：同账本同 syncId 的 3 条重复交易
+    test('唯一索引拒绝同 syncId 重复行,清理器无重复可清', () async {
       final lid = await db.into(db.ledgers).insert(
             LedgersCompanion.insert(name: 'L', syncId: d.Value('ledger-1')));
       final id1 = await db.into(db.transactions).insert(
             TransactionsCompanion.insert(
               ledgerId: lid,
               type: 'expense',
-              amount: 10.0,
+              amount: 1000,
               syncId: const d.Value('dup-sync'),
               happenedAt: d.Value(DateTime(2026, 7, 1)),
             ),
           );
-      final id2 = await db.into(db.transactions).insert(
-            TransactionsCompanion.insert(
-              ledgerId: lid,
-              type: 'expense',
-              amount: 10.0,
-              syncId: const d.Value('dup-sync'),
-              happenedAt: d.Value(DateTime(2026, 7, 1)),
-            ),
-          );
-      final id3 = await db.into(db.transactions).insert(
-            TransactionsCompanion.insert(
-              ledgerId: lid,
-              type: 'expense',
-              amount: 10.0,
-              syncId: const d.Value('dup-sync'),
-              happenedAt: d.Value(DateTime(2026, 7, 1)),
-            ),
-          );
+      // 同 syncId 第二行会被 UNIQUE 索引直接拒绝。
+      await expectLater(
+        db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: lid,
+            type: 'expense',
+            amount: 1000,
+            syncId: const d.Value('dup-sync'),
+            happenedAt: d.Value(DateTime(2026, 7, 1)),
+          ),
+        ),
+        throwsA(isA<SqliteException>()),
+      );
 
-      // 扫描得到 2 条孤儿（保留 id1）
+      // 扫描与清理均无重复可处理。
       final before = await scanner.scanAll();
-      final dups = before.dbOrphans
-          .where((r) => r.type == OrphanType.txDuplicateSyncId)
-          .toList();
-      expect(dups, hasLength(2));
-      expect(dups.map((r) => r.localId).toList(), containsAll([id2, id3]));
-
-      // 清理
-      final result = await cleaner.clean(dups);
-      expect(result.successCount, 2);
-      expect(result.failures, isEmpty);
-
-      // 重新扫描：重复消失，仅保留 1 条（且是 id1）
-      final after = await scanner.scanAll();
       expect(
-        after.dbOrphans
+        before.dbOrphans
             .where((r) => r.type == OrphanType.txDuplicateSyncId),
         isEmpty,
       );
+      final result = await cleaner.clean(const []);
+      expect(result.successCount, 0);
+      expect(result.failures, isEmpty);
+
+      // 唯一行仍在。
       final remaining = await (db.select(db.transactions)
             ..where((t) => t.ledgerId.equals(lid)))
           .get();
-      expect(remaining, hasLength(1), reason: '应只保留最早插入的一条');
+      expect(remaining, hasLength(1));
       expect(remaining.first.id, id1);
     });
   });

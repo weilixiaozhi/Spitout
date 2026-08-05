@@ -6,7 +6,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/core/identity/local_user_identity.dart';
 import '../../services/backup/local_backup_service.dart';
 import '../../core/logging/logger_service.dart';
 import '../../theme/colors.dart';

@@ -33,12 +33,12 @@ void main() {
     await db.customStatement(
         "INSERT INTO ledgers (id, name, currency) VALUES (1, 'L', 'CNY')");
     await repo.addTransaction(
-      ledgerId: 1, type: 'expense', amount: 12,
+      ledgerId: 1, type: 'expense', amount: 1200,
       happenedAt: DateTime(2026, 7, 5),
-      currencyCode: 'USD', nativeAmount: 86.4,
+      currencyCode: 'USD', nativeAmount: 8640,
     );
     await repo.addTransaction(
-      ledgerId: 1, type: 'expense', amount: 100,
+      ledgerId: 1, type: 'expense', amount: 10000,
       happenedAt: DateTime(2026, 7, 6),
     );
     return 1;
@@ -72,10 +72,10 @@ void main() {
         "INSERT INTO ledgers (id, name, currency) VALUES (2, 'S', 'CNY')");
     // 全局仅支出模式：两笔均为支出，合计 80
     await repo.addTransaction(
-        ledgerId: 2, type: 'expense', amount: 30,
+        ledgerId: 2, type: 'expense', amount: 3000,
         happenedAt: DateTime(2026, 7, 5));
     await repo.addTransaction(
-        ledgerId: 2, type: 'expense', amount: 50,
+        ledgerId: 2, type: 'expense', amount: 5000,
         happenedAt: DateTime(2026, 7, 6));
     // monthlyTotals 现在只返回支出金额（double）
     final expense =
@@ -88,7 +88,7 @@ void main() {
         "INSERT INTO ledgers (id, name, currency) VALUES (3, 'N', 'CNY')");
     await db.customStatement(
         "INSERT INTO transactions (id, ledger_id, type, amount, happened_at) "
-        "VALUES (300, 3, 'expense', 42.0, ${DateTime(2026, 7, 5).millisecondsSinceEpoch ~/ 1000})");
+        "VALUES (300, 3, 'expense', 4200, ${DateTime(2026, 7, 5).millisecondsSinceEpoch ~/ 1000})");
     // monthlyTotals 现在只返回支出金额（double）
     final expense =
         await repo.monthlyTotals(ledgerId: 3, month: DateTime(2026, 7, 1));

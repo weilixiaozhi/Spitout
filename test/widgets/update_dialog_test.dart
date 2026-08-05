@@ -19,7 +19,6 @@ AppUpdateInfo _info(
 }) =>
     AppUpdateInfo(
       status: status,
-      hasUpdate: status == UpdateStatus.hasUpdate,
       latestVersion: latestVersion,
       releaseUrl: releaseUrl,
       currentVersion: '1.0.0',

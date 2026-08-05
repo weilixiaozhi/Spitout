@@ -9,7 +9,6 @@ import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import '../routes.dart';
 import '../services/statistics/aa_edit_models.dart';
 import '../services/statistics/aa_statistics_service.dart' show AaMode;
@@ -565,14 +564,16 @@ class _TransactionEditorSheetState
     if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
 
-    final total = _currentTotal.abs(); // 始终正数
+    final total = _currentTotal.abs(); // 始终正数(元)
+    // 落库统一为整数分:UI 已限制 2 位小数,×100 取整无尾差。
+    final totalCents = (total * 100).round();
 
     // 折本位币快照。外币且汇率无效 → 阻断。
     final txCurrency = _txCurrency();
     final ledgerBase = ref.read(currentLedgerCurrencyProvider);
-    double? nativeAmount;
+    int? nativeAmount;
     if (txCurrency == ledgerBase) {
-      nativeAmount = total;
+      nativeAmount = totalCents;
     } else {
       final r = _currentRate();
       if (r == null || r <= 0) {
@@ -580,7 +581,7 @@ class _TransactionEditorSheetState
         showToast(context, AppLocalizations.of(context).txRateMissingHint);
         return;
       }
-      nativeAmount = total * r;
+      nativeAmount = (total * r * 100).round();
     }
 
     // AA 分流:指定分摊先跳 AaEditPage 取 result 后一次性落库;
@@ -607,7 +608,7 @@ class _TransactionEditorSheetState
       final newVersion = await repo.updateTransaction(
         id: widget.editingTransactionId!,
         type: widget.initialKind,
-        amount: total,
+        amount: totalCents,
         categoryId: categoryIdForWrite,
         note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
         happenedAt: _date,
@@ -651,7 +652,7 @@ class _TransactionEditorSheetState
       transactionId = await repo.addTransaction(
         ledgerId: _ledgerId,
         type: widget.initialKind,
-        amount: total,
+        amount: totalCents,
         categoryId: categoryIdForWrite,
         happenedAt: _date,
         note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
@@ -1156,5 +1157,3 @@ class _TxAuthorAvatars extends ConsumerWidget {
     );
   }
 }
-
-

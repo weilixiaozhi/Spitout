@@ -45,7 +45,6 @@ class AppUpdateService {
       if (resp.statusCode != 200) {
         return AppUpdateInfo(
           status: UpdateStatus.unknown,
-          hasUpdate: false,
           currentVersion: current,
           releaseUrl: AppUpdateInfo.releasePageBase,
         );
@@ -62,7 +61,6 @@ class AppUpdateService {
       final hasUpdate = tag.isNotEmpty && _isNewer(tag, current);
       return AppUpdateInfo(
         status: hasUpdate ? UpdateStatus.hasUpdate : UpdateStatus.latest,
-        hasUpdate: hasUpdate,
         latestVersion: tag.isNotEmpty ? tag : null,
         releaseUrl: htmlUrl,
         currentVersion: current,
@@ -71,7 +69,6 @@ class AppUpdateService {
       // 任何网络/解析异常都降级为 unknown，统一引导去 GitHub，不报硬错误。
       return AppUpdateInfo(
         status: UpdateStatus.unknown,
-        hasUpdate: false,
         currentVersion: current,
         releaseUrl: AppUpdateInfo.releasePageBase,
       );

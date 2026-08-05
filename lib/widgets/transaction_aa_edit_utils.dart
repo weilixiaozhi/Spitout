@@ -15,8 +15,6 @@ import '../utils/category_utils.dart';
 import 'toast.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart'
-    show markTxEditedFromUi, currentOperatorUserIdFromUi;
 
 /// 从详情页直接编辑分摊的工具(绕过编辑记账器)。
 ///
@@ -58,7 +56,8 @@ class TransactionAaEditUtils {
       Routes.aaEdit,
       arguments: AaEditPageArgs(
         ledgerId: ledgerId,
-        amount: transaction.amount,
+        // 展示层口径为"元",整数分转回 double。
+        amount: transaction.amount / 100,
         currencyCode: transaction.currencyCode,
         categoryName: categoryName,
         categoryIconName: category?.icon,
@@ -113,7 +112,7 @@ class TransactionAaEditUtils {
     final l10n = context.mounted ? AppLocalizations.of(context) : null;
     final summary =
         '${category?.name ?? l10n?.homeDetailCategory ?? ''}'
-        ' · ${transaction.amount.toStringAsFixed(2)} · '
+        ' · ${(transaction.amount / 100).toStringAsFixed(2)} · '
         '${transaction.happenedAt.year}-${transaction.happenedAt.month.toString().padLeft(2, '0')}-'
         '${transaction.happenedAt.day.toString().padLeft(2, '0')} '
         '${transaction.happenedAt.hour.toString().padLeft(2, '0')}:'

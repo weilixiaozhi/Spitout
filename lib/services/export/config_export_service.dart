@@ -564,7 +564,8 @@ class RecurringTransactionItem {
     return RecurringTransactionItem(
       ledgerName: ledgerIdToName[rt.ledgerId] ?? 'Unknown',
       type: rt.type,
-      amount: rt.amount,
+      // 数据库为整数分,配置文件沿用"元"口径。
+      amount: rt.amount / 100,
       categoryName: rt.categoryId != null ? categoryIdToName[rt.categoryId] : null,
       note: rt.note,
       frequency: rt.frequency,
@@ -1551,7 +1552,8 @@ class ConfigExportService {
           await repository.addRecurringTransaction(
             ledgerId: targetLedgerId,
             type: item.type,
-            amount: item.amount,
+            // 配置文件为"元",落库前转整数分。
+            amount: (item.amount * 100).round(),
             categoryId: categoryId,
             note: item.note,
             frequency: item.frequency,

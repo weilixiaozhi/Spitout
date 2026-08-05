@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/models.dart' show CloudUser, SpitoutCloudLedgerMember;
 
-import '../../core/identity/local_user_identity.dart';
+import 'package:spitout/providers/providers.dart'
+    show CloudUser, SpitoutCloudLedgerMember, localSelfIdProvider;
 import '../../l10n/app_localizations.dart';
 import '../../providers/sync/cloud_client_providers.dart';
 import '../../providers/ui/theme_providers.dart';

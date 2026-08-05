@@ -44,7 +44,7 @@ class OrphanSeeder {
     await db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: lid,
           type: 'expense',
-          amount: 6.6,
+          amount: 660,
           categoryId: d.Value(cid),
           happenedAt: d.Value(DateTime.now()),
           syncId: d.Value('seed-tx-${_rand.nextInt(99999)}'),
@@ -76,7 +76,7 @@ class OrphanSeeder {
     await db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: lid,
           type: 'expense',
-          amount: 6.66,
+          amount: 666,
           categoryId: const d.Value(null),
           happenedAt: d.Value(DateTime.now()),
           syncId: d.Value('seed-tx-no-ledger-${_rand.nextInt(99999)}'),

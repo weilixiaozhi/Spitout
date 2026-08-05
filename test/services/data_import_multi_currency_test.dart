@@ -7,6 +7,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:drift/native.dart';
+import 'package:decimal/decimal.dart';
 import '../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
@@ -49,9 +50,9 @@ void main() {
       1,
       [
         ImportTransaction(
-            type: 'expense', amount: 100, happenedAt: DateTime(2026, 7, 1)),
+            type: 'expense', amount: Decimal.parse('100'), happenedAt: DateTime(2026, 7, 1)),
         ImportTransaction(
-            type: 'expense', amount: 50, happenedAt: DateTime(2026, 7, 2)),
+            type: 'expense', amount: Decimal.parse('50'), happenedAt: DateTime(2026, 7, 2)),
       ],
       categoryCache: {},
 
@@ -60,9 +61,9 @@ void main() {
 
     final txs = await allTx();
     expect(txs[0].currencyCode, 'CNY'); // 无币种 → 本位币兜底
-    expect(txs[0].nativeAmount, 100);
+    expect(txs[0].nativeAmount, 10000);
     expect(txs[1].currencyCode, 'CNY');
-    expect(txs[1].nativeAmount, 50);
+    expect(txs[1].nativeAmount, 5000);
   });
 
   test('导入:CSV 币种列显式指定(反馈10)→ 优先于本位币兜底', () async {
@@ -81,7 +82,7 @@ void main() {
         // CSV 带币种列 JPY → 按 JPY 折算
         ImportTransaction(
             type: 'expense',
-            amount: 1000,
+            amount: Decimal.parse('1000'),
             currencyCode: 'JPY',
             happenedAt: DateTime(2026, 7, 1)),
       ],
@@ -91,7 +92,7 @@ void main() {
     expect(result.inserted, 1);
     final txs = await allTx();
     expect(txs[0].currencyCode, 'JPY');
-    expect(txs[0].nativeAmount, closeTo(48.8, 1e-9)); // 1000 × 0.0488
+    expect(txs[0].nativeAmount, 4880); // 1000 × 0.0488
   });
 
   test('导入:CSV 币种无汇率 → native=amount(非 NULL),补折算检测能捞到', () async {
@@ -102,7 +103,7 @@ void main() {
       [
         ImportTransaction(
             type: 'expense',
-            amount: 12,
+            amount: Decimal.parse('12'),
             currencyCode: 'USD',
             happenedAt: DateTime(2026, 7, 3)),
       ],
@@ -113,7 +114,7 @@ void main() {
 
     final txs = await allTx();
     expect(txs[0].currencyCode, 'USD');
-    expect(txs[0].nativeAmount, 12.0, reason: '不落 NULL,按 1:1 待补折算');
+    expect(txs[0].nativeAmount, 1200, reason: '不落 NULL,按 1:1 待补折算');
     expect(await repo.countUnconvertedForeignTx(1), 1);
   });
 }

@@ -30,7 +30,7 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: false,
     );
@@ -38,7 +38,7 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 500,
+      amount: 50000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: true,
     );
@@ -61,14 +61,14 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: false,
     );
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 500,
+      amount: 50000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: true,
     );

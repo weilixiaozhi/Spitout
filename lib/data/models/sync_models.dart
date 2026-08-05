@@ -225,10 +225,16 @@ class SyncHealthReport {
   }
 
   /// 本地比远端多，但没 unpushed change → 绕过 changeTracker 的历史种子数据。
+  ///
+  /// 刻意只比较 categories（user-global 实体）：目前的自愈通道只对 category
+  /// 补写 change 记录；ledger-scoped 交易的差异由 [hasDiff] → syncAccount 的
+  /// 全量对账处理，这里不纳入交易维度，避免 UI 进入“可回填”分支却没有对应动作。
   bool get needsBackfill {
     if (error != null || unpushedChanges > 0 || recovering || needsLogin) {
       return false;
     }
+    // 仅 category 维度参与回填判断：ledgerTx/totalTx 没有对应的补写通道，
+    // 若纳入会导致 UI 误入“可回填”分支但实际无法回填。
     if (categories.remote >= 0 && categories.local > categories.remote) {
       return true;
     }

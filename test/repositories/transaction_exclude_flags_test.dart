@@ -28,7 +28,7 @@ void main() {
     final id = await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: true,
     );
@@ -45,7 +45,7 @@ void main() {
     final id = await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       excludeFromStats: true,
     );
@@ -53,13 +53,13 @@ void main() {
     await repo.updateTransaction(
       id: id,
       type: 'expense',
-      amount: 200,
+      amount: 20000,
     );
 
     final tx = await repo.getTransactionById(id);
     expect(tx, isNotNull);
     // excludeFromStats 未传 (null) → 应保持原值 true,不被清空
     expect(tx!.excludeFromStats, true);
-    expect(tx.amount, 200);
+    expect(tx.amount, 20000);
   });
 }

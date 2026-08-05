@@ -9,15 +9,15 @@ import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/statistics/record_history_providers.dart';
 import 'package:spitout/providers/providers.dart'
     show
+        SpitoutCloudLedgerMember,
         currentLedgerProvider,
         expenseColorSchemeProvider,
-        ledgerVirtualUsersProvider;
+        ledgerVirtualUsersProvider,
+        localSelfIdProvider;
 import 'package:spitout/providers/sync/cloud_client_providers.dart'
     show cloudCurrentUserProvider;
 import 'package:spitout/providers/ui/theme_providers.dart'
     show displayNameProvider;
-import 'package:spitout/core/identity/local_user_identity.dart'
-    show localSelfIdProvider;
 import '../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../theme/colors.dart';
 import 'category_icon.dart';
@@ -442,12 +442,12 @@ class _TransactionDetailBody extends ConsumerWidget {
             _InfoRow(label: l10n.homeDetailDate, value: _fmt(t.happenedAt)),
             _InfoRow(
               label: l10n.homeDetailAmount,
-              value: formatMoneyCompact(t.amount),
+              value: formatMoneyCompact(t.amount / 100),
               // 主金额:显示交易原币种 + 原金额(与列表项一致)。
               // 设计意图:记账时的币种和金额不受账本主币种变更影响,
               // currencyCode 为 null(历史数据)时 AmountText 自动回退到账本币种符号。
               valueWidget: AmountText(
-                value: (t.type == 'expense' ? -1 : 1) * t.amount,
+                value: (t.type == 'expense' ? -1 : 1) * t.amount / 100,
                 signed: true,
                 showCurrency: true,
                 currencyCode: t.currencyCode,
@@ -483,7 +483,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                   label: l10n.homeDetailNativeAmount,
                   // ≈ 折算金额：符号+金额统一走唯一来源 formatMoneyWithCurrency
                   value:
-                      '≈ ${formatMoneyWithCurrency(t.nativeAmount!, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
+                      '≈ ${formatMoneyWithCurrency(t.nativeAmount! / 100, currencyCode: ref.watch(currentLedgerProvider).asData?.value?.currency ?? 'CNY')}'),
             // 2.5 AA 分摊明细(仅账本开启 AA 时展示,功能隔离)
             if (aaOn)
               ..._buildAaSection(

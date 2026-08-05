@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/identity/local_user_identity.dart';
 import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';

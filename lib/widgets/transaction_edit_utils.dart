@@ -35,12 +35,14 @@ class TransactionEditUtils {
       initialKind: transaction.type, // 全局仅支出模式，值固定为 'expense'
       editingTransactionId: transaction.id,
       initialCategoryId: initialCategoryId,
-      initialAmount: transaction.amount,
+      initialAmount: transaction.amount / 100,
       initialDate: transaction.happenedAt,
       initialNote: transaction.note,
       // 多币种:编辑外币交易时汇率行按隐含汇率回显
       initialCurrencyCode: transaction.currencyCode,
-      initialNativeAmount: transaction.nativeAmount,
+      initialNativeAmount: transaction.nativeAmount != null
+          ? transaction.nativeAmount! / 100
+          : null,
       // AA 分摊:编辑模式回填,JSON 列解析失败按 null 兜底(视为未配置)
       initialAaMode: transaction.aaMode,
       initialAaParticipants: _parseIdList(transaction.aaParticipants),

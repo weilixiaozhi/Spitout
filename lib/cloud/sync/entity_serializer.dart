@@ -29,20 +29,22 @@ class EntitySerializer {
     // int id，对端设备可能匹配不上；payload 里带上 ledger 的 syncId，对端
     // apply 时能先按 syncId 找到本地账本，再用 int id 兜底。
     //
+    final nativeAmount = tx.nativeAmount;
     return {
       'syncId': tx.syncId,
       'type': tx.type,
-      'amount': tx.amount,
+      // 数据库存整数分,同步接口仍按"元"口径下发(服务端契约不变)。
+      'amount': tx.amount / 100,
       'happenedAt': tx.happenedAt.toUtc().toIso8601String(),
       'note': tx.note,
       // 账单标记:两个独立 bool。camelCase 键与 server 端
       // projection upsert 对齐 —— 改键名会让标记跨设备静默丢失。
       'excludeFromStats': tx.excludeFromStats,
-      // 交易级多币种:原币种 + 折账本本位币快照(与服务端两列对齐)。
-      // 有值才发:NULL 发出去会被 server merge 视为"不更新"(None 被过滤),
-      // 语义等价;省略保持 payload 干净。
-      if (tx.currencyCode != null) 'currencyCode': tx.currencyCode,
-      if (tx.nativeAmount != null) 'nativeAmount': tx.nativeAmount,
+    // 交易级多币种:原币种 + 折账本本位币快照(与服务端两列对齐)。
+    // 有值才发:NULL 发出去会被 server merge 视为"不更新"(None 被过滤),
+    // 语义等价;省略保持 payload 干净。
+    if (tx.currencyCode != null) 'currencyCode': tx.currencyCode,
+      if (nativeAmount != null) 'nativeAmount': nativeAmount / 100,
       if (ledgerSyncId != null && ledgerSyncId.isNotEmpty)
         'ledgerSyncId': ledgerSyncId,
       'categoryName': categoryName,

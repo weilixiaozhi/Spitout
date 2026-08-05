@@ -10,6 +10,9 @@ import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 
+// 云用户 DTO 经 providers 层 barrel 转发给 UI，data 层不再反向依赖 cloud 层。
+export 'package:spitout/cloud/spitout_cloud.dart' show CloudUser;
+
 // providers 层「叶子」模块：云客户端基础设施 provider。
 //
 // 本文件承载云客户端实例 / SyncEngine / ChangeTracker / Auth 等基础设施级

@@ -14,8 +14,6 @@ import '../../services/maintenance/analytics_test_data_seeder.dart';
 import '../../utils/format_utils.dart';
 import '../../utils/date/month_range.dart';
 import '../../utils/category_utils.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart' show ledgerMembersProvider;
-import '../../core/identity/local_user_identity.dart' show localSelfIdProvider;
 import '../../services/data/tx_author_service.dart';
 import '../transaction/category_detail_page.dart';
 import 'ledgers_page.dart';

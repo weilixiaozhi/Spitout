@@ -282,7 +282,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
   /// 导出日志
   Future<void> _exportLogs() async {
     try {
-      final text = logger.exportAsText();
+      final text = await logger.exportAsText();
       await SharePlus.instance.share(
         ShareParams(
           text: text,
@@ -318,7 +318,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
     );
 
     if (confirm == true) {
-      logger.clear();
+      await logger.clear();
       if (mounted) {
         showToast(context, l10n.logCenterCleared);
       }

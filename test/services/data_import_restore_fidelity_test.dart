@@ -11,6 +11,7 @@ library;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:drift/native.dart';
+import 'package:decimal/decimal.dart';
 import '../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
@@ -61,9 +62,9 @@ void main() {
       [
         ImportTransaction(
           type: 'expense',
-          amount: 1000,
+          amount: Decimal.parse('1000'),
           currencyCode: 'JPY',
-          nativeAmount: 35.5,
+          nativeAmount: Decimal.parse('35.5'),
           happenedAt: DateTime(2026, 7, 1),
         ),
       ],
@@ -73,7 +74,7 @@ void main() {
 
     final txs = await allTx();
     expect(txs[0].currencyCode, 'JPY');
-    expect(txs[0].nativeAmount, 35.5,
+    expect(txs[0].nativeAmount, 3550,
         reason: '源端快照优先,不得被本地汇率重算覆盖为 48.8');
   });
 
@@ -93,7 +94,7 @@ void main() {
       [
         ImportTransaction(
           type: 'expense',
-          amount: 1000,
+          amount: Decimal.parse('1000'),
           currencyCode: 'JPY',
           // nativeAmount 缺键 → 重算
           happenedAt: DateTime(2026, 7, 1),
@@ -104,7 +105,7 @@ void main() {
     expect(result.inserted, 1);
 
     final txs = await allTx();
-    expect(txs[0].nativeAmount, closeTo(48.8, 1e-9));
+    expect(txs[0].nativeAmount, 4880);
   });
 
   test('excludeFromStats: 显式 true 落库 true;缺键(null)落库 false', () async {
@@ -116,13 +117,13 @@ void main() {
       [
         ImportTransaction(
           type: 'expense',
-          amount: 10,
+          amount: Decimal.parse('10'),
           excludeFromStats: true,
           happenedAt: DateTime(2026, 7, 1),
         ),
         ImportTransaction(
           type: 'expense',
-          amount: 20,
+          amount: Decimal.parse('20'),
           // excludeFromStats 缺键
           happenedAt: DateTime(2026, 7, 2),
         ),

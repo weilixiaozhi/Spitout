@@ -87,6 +87,9 @@ class LedgerDisplayItem {
     );
   }
 
+  /// 相等语义为“身份相等”：本地 id 相同即视为同一账本，
+  /// 名称/金额/成员数等字段变化不影响判等。
+  /// 列表刷新用新实例整体替换，不依赖 == 做字段变更检测。
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -94,6 +97,7 @@ class LedgerDisplayItem {
           runtimeType == other.runtimeType &&
           id == other.id;
 
+  /// 与“身份相等”的语义一致，仅以本地 id 参与哈希。
   @override
   int get hashCode => id.hashCode;
 

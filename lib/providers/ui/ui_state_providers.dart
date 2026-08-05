@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/maintenance/maintenance_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 import 'package:spitout/providers/currency/currency_providers.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
@@ -75,6 +76,13 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     ]);
     logger.info(tag, '基础配置初始化完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms');
     stepTime = DateTime.now();
+
+    // 一次性修复共享账本历史脏数据（旧版 pull 把 Owner 分类错绑到成员本地分类）
+    try {
+      await ref.watch(sharedLedgerCategoryRepairRunProvider.future);
+    } catch (e, st) {
+      logger.error(tag, '共享账本分类历史修复执行失败', e, st);
+    }
 
     // 获取 repository
     final repo = ref.read(repositoryProvider);

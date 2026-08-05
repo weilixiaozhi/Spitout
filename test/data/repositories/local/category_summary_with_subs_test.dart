@@ -47,14 +47,14 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 50,
+        amount: 5000,
         categoryId: subA,
         happenedAt: DateTime(2026, 7, 1),
       );
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 80,
+        amount: 8000,
         categoryId: subB,
         happenedAt: DateTime(2026, 7, 2),
       );
@@ -67,7 +67,7 @@ void main() {
       expect(withSubs.length, 2,
           reason: '一级分类汇总应包含所有二级分类的交易');
       final total = withSubs.fold<double>(0, (a, t) => a + t.amount);
-      expect(total, 130.0, reason: '汇总金额应为子分类交易之和 50+80=130');
+      expect(total, 13000.0, reason: '汇总金额应为子分类交易之和 50+80=130(分)');
 
       // includeSubCategories: false（默认）—— 不含子分类交易，应为空
       final withoutSubs = await repo
@@ -87,14 +87,14 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 200,
+        amount: 20000,
         categoryId: parentId,
         happenedAt: DateTime(2026, 7, 1),
       );
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 30,
+        amount: 3000,
         categoryId: sub,
         happenedAt: DateTime(2026, 7, 2),
       );
@@ -105,7 +105,7 @@ void main() {
           .first;
       expect(txs.length, 2, reason: '应包含一级直接交易 + 二级子分类交易');
       final total = txs.fold<double>(0, (a, t) => a + t.amount);
-      expect(total, 230.0, reason: '汇总金额应为 200+30=230');
+      expect(total, 23000.0, reason: '汇总金额应为 200+30=230(分)');
     });
 
     test('二级分类调用 includeSubCategories → 仅返回自身交易（无子分类）',
@@ -118,7 +118,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 100,
+        amount: 10000,
         categoryId: sub,
         happenedAt: DateTime(2026, 7, 1),
       );
@@ -126,7 +126,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 500,
+        amount: 50000,
         categoryId: parentId,
         happenedAt: DateTime(2026, 7, 2),
       );
@@ -138,7 +138,7 @@ void main() {
               ledgerId: lid, includeSubCategories: true)
           .first;
       expect(txs.length, 1, reason: '二级分类无子分类，应只返回自身交易');
-      expect(txs.first.amount, 100.0);
+      expect(txs.first.amount, 10000);
     });
 
     test('不含 ledgerId 过滤时返回跨账本的全部子分类交易', () async {
@@ -154,14 +154,14 @@ void main() {
       await repo.addTransaction(
         ledgerId: lid1,
         type: 'expense',
-        amount: 60,
+        amount: 6000,
         categoryId: sub,
         happenedAt: DateTime(2026, 7, 1),
       );
       await repo.addTransaction(
         ledgerId: lid2,
         type: 'expense',
-        amount: 90,
+        amount: 9000,
         categoryId: sub,
         happenedAt: DateTime(2026, 7, 2),
       );

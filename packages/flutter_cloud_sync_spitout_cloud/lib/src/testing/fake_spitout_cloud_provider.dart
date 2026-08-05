@@ -269,6 +269,7 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
     }
     final now = DateTime.now().toUtc();
     return SpitoutCloudInvite(
+      id: 'invite-${createInviteCalls.length}',
       code: 'CODE${createInviteCalls.length}',
       formattedCode: 'CODE ${createInviteCalls.length}',
       targetRole: role,

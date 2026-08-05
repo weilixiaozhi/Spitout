@@ -41,7 +41,7 @@ void main() {
     await db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: 1,
           type: 'expense',
-          amount: 30.0,
+          amount: 3000,
           categoryId: const Value(1),
           happenedAt: Value(DateTime.utc(2026, 7, 1)),
           syncId: const Value('tx-aa'),

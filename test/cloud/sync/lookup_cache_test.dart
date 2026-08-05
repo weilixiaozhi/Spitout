@@ -60,7 +60,7 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerId,
               type: 'expense',
-              amount: 10.0,
+              amount: 1000,
               syncId: const Value('tx-sync-1'),
               createdByUserId: const Value('user-A'),
             ),
@@ -156,7 +156,7 @@ void main() {
         batch.add(TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 10.0 + i,
+          amount: 1000 + i * 100,
           syncId: Value('tx-$i'),
           createdByUserId: i.isEven ? const Value('user-A') : const Value.absent(),
         ));
@@ -187,7 +187,7 @@ void main() {
         batch.add(TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 10.0,
+          amount: 1000,
           syncId: Value('tx-$i'),
         ));
       }

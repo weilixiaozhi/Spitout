@@ -62,7 +62,7 @@ void main() {
   }
 
   /// 在指定账本下、指定分类创建一条交易记录，返回其 id
-  Future<int> createTransaction(int ledgerId, int? categoryId, {double amount = 100.0}) async {
+  Future<int> createTransaction(int ledgerId, int? categoryId, {int amount = 10000}) async {
     return await db.into(db.transactions).insert(
       TransactionsCompanion.insert(
         ledgerId: ledgerId,

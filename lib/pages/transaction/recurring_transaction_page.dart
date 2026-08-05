@@ -282,8 +282,8 @@ class _RecurringTransactionCard extends ConsumerWidget {
                     // 金额
                     AmountText(
                       value: recurring.type == 'expense'
-                          ? -recurring.amount
-                          : recurring.amount,
+                          ? -recurring.amount / 100
+                          : recurring.amount / 100,
                       signed: true,
                       decimals: 2,
                       style: TextStyle(

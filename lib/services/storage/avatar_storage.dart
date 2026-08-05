@@ -57,7 +57,13 @@ class LocalAvatarStorage implements AvatarStoragePort {
     Uint8List bytes, {
     String extension = '.jpg',
   }) async {
-    if (bytes.isEmpty) return null;
+    if (bytes.isEmpty) {
+      throw ArgumentError.value(bytes, 'bytes', '头像字节流不能为空');
+    }
+    if (!AvatarStoragePort.isValidExtension(extension)) {
+      throw ArgumentError.value(extension, 'extension', '非法头像扩展名');
+    }
+
     try {
       // 先删旧头像，避免同目录多份文件堆积
       await _deleteOldAvatar();
@@ -76,11 +82,15 @@ class LocalAvatarStorage implements AvatarStoragePort {
 
   @override
   Future<String?> saveAvatarFromFile(String sourcePath) async {
+    final ext = p.extension(sourcePath);
+    if (!AvatarStoragePort.isValidExtension(ext)) {
+      throw ArgumentError.value(ext, 'sourcePath', '源文件扩展名非法');
+    }
+
     try {
       await _deleteOldAvatar();
       final newPath = await _writeAvatarFile((dirPath, fileName) async {
         // 沿用源文件扩展名，保证头像后缀与实际内容一致
-        final ext = p.extension(sourcePath);
         final target = File(p.join(dirPath, '$fileName$ext'));
         await File(sourcePath).copy(target.path);
         return target.path;

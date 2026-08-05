@@ -58,7 +58,7 @@ void main() {
     return db.into(db.transactions).insert(TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: type,
-          amount: 10.0,
+          amount: 1000,
           categoryId: d.Value(categoryId),
           happenedAt: d.Value(DateTime.now()),
           syncId: d.Value(syncId ?? 'tx-sync'),
@@ -66,15 +66,18 @@ void main() {
   }
 
   group('A 类 — DB 孤儿', () {
-    test('A6 tx 失主 category', () async {
+    test('A6 tx 失主 category 被外键 SET NULL 兜底', () async {
       final lid = await insertLedger();
       final cid = await insertCategory();
       await insertTransaction(ledgerId: lid, categoryId: cid);
       await (db.delete(db.categories)..where((t) => t.id.equals(cid))).go();
 
+      final tx = (await db.select(db.transactions).get()).single;
+      expect(tx.categoryId, isNull,
+          reason: 'FK SET NULL:删分类不删交易,也不留失主引用');
       final report = await scanner.scanAll();
       expect(report.dbOrphans.where((r) => r.type == OrphanType.txMissingCategory)
-          .length, 1);
+          .length, 0);
     });
 
     test('A7 二级分类失父', () async {
@@ -135,24 +138,22 @@ void main() {
       expect(report.syncOrphans.length, 0);
     });
 
-    test('A_dup 同账本 syncId 重复 → 报孤儿(保留最早一条)', () async {
+    test('A_dup 同账本 syncId 重复被唯一索引拒绝(数据库层兜底)', () async {
       final lid = await insertLedger(syncId: 'ledger-1');
-      // 插入 3 条同 syncId 的重复交易
-      final id1 = await insertTransaction(ledgerId: lid, syncId: 'dup-sync');
-      final id2 = await insertTransaction(ledgerId: lid, syncId: 'dup-sync');
-      final id3 = await insertTransaction(ledgerId: lid, syncId: 'dup-sync');
-      // 一条唯一 syncId，不应被报
-      await insertTransaction(ledgerId: lid, syncId: 'unique-sync');
+      await insertTransaction(ledgerId: lid, syncId: 'dup-sync');
+      // 同 syncId 第二行会被 UNIQUE 索引直接拒绝。
+      await expectLater(
+        insertTransaction(ledgerId: lid, syncId: 'dup-sync'),
+        throwsA(isA<SqliteException>()),
+      );
 
       final report = await scanner.scanAll();
-      final dups = report.dbOrphans
-          .where((r) => r.type == OrphanType.txDuplicateSyncId)
-          .toList();
-      // 保留 MIN(id)=id1，其余 2 条报孤儿
-      expect(dups, hasLength(2), reason: '3 条重复只应报 2 条孤儿');
-      final dupIds = dups.map((r) => r.localId).toList();
-      expect(dupIds, containsAll([id2, id3]));
-      expect(dupIds, isNot(contains(id1)), reason: '最早插入的条应被保留');
+      expect(
+        report.dbOrphans
+            .where((r) => r.type == OrphanType.txDuplicateSyncId),
+        isEmpty,
+        reason: '唯一索引已兜底,重复交易无法写入',
+      );
     });
   });
 }

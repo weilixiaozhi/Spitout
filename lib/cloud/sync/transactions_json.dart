@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:drift/drift.dart' show OrderingTerm;
+import 'package:decimal/decimal.dart';
 import '../../data/db.dart';
 import '../../data/models.dart';
 import '../../data/repositories/base_repository.dart';
@@ -94,9 +95,11 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
         'amount=${t.amount}, note=${t.note}, happenedAt=${t.happenedAt}');
     }
 
+    final nativeAmount = t.nativeAmount;
     final item = <String, dynamic>{
       'type': t.type,
-      'amount': t.amount,
+      // 数据库存整数分,JSON 备份/云端恢复仍按"元"口径输出(契约不变)。
+      'amount': t.amount / 100,
       'categoryName': catInfo?['name'],
       'categoryKind': catInfo?['kind'],
       'happenedAt': t.happenedAt.toUtc().toIso8601String(),
@@ -106,7 +109,7 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
       // "/sync/full 全量恢复"round-trip 保真。server snapshot 同样输出这三键,
       // 键名 camelCase 与服务端契约对齐。
       if (t.currencyCode != null) 'currencyCode': t.currencyCode,
-      if (t.nativeAmount != null) 'nativeAmount': t.nativeAmount,
+      if (nativeAmount != null) 'nativeAmount': nativeAmount / 100,
       // 缺键 = false(server snapshot 同语义),只为 true 时输出,保持 payload 干净。
       if (t.excludeFromStats) 'excludeFromStats': true,
       // 创建人(非空才发):供导入侧「默认支出人 = 创建人」兜底,与 AA 字段
@@ -242,11 +245,13 @@ ImportData parseJsonToImportData(String jsonStr) {
       final type = it['type'] as String;
       transactions.add(ImportTransaction(
         type: type,
-        amount: (it['amount'] as num).toDouble(),
+        amount: Decimal.parse((it['amount'] as num).toString()),
         // 全量恢复保真(S1):/sync/full 与本文件导出路径都会输出这三键;
         // JSON 缺键 → null,落库走既有兜底(本位币/重算/false)。
         currencyCode: it['currencyCode'] as String?,
-        nativeAmount: (it['nativeAmount'] as num?)?.toDouble(),
+        nativeAmount: it['nativeAmount'] != null
+            ? Decimal.parse((it['nativeAmount'] as num).toString())
+            : null,
         excludeFromStats: it['excludeFromStats'] as bool?,
         categoryName: it['categoryName'] as String?,
         categoryKind: it['categoryKind'] as String?,

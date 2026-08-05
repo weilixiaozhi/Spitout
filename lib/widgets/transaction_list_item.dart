@@ -9,8 +9,8 @@ import 'category_icon.dart';
 import '../utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart' show expenseColorSchemeProvider;
-import 'package:spitout/providers/providers.dart' show spitoutCloudProviderInstance;
-import '../data/models.dart' show SpitoutCloudLedgerMember;
+import 'package:spitout/providers/providers.dart'
+    show SpitoutCloudLedgerMember, spitoutCloudProviderInstance;
 import 'collaborator_avatar.dart';
 import 'amount_text.dart';
 
@@ -31,12 +31,12 @@ class TransactionListItem extends ConsumerWidget {
   final IconData icon;
   final db.Category? category; // 可选的分类对象，用于显示自定义图标
   final String title;
-  final double amount;
+  final int amount; // 单位:分
   /// 多币种:交易原币种(null/等于账本本位币 → 维持无符号纯数字;
   /// 外币 → 金额前显示其币种符号,如 JP¥/US$,一眼区分原币)。
   final String? currencyCode;
   /// 多币种:折账本本位币快照。外币交易在金额右下角显示 ≈ 折算小字。
-  final double? nativeAmount;
+  final int? nativeAmount; // 单位:分
   final bool isExpense; // 决定正负号
   final VoidCallback? onTap;
   final VoidCallback? onCategoryTap; // 点击分类图标/名称的回调
@@ -212,7 +212,8 @@ class TransactionListItem extends ConsumerWidget {
                   // 仅作为与账本币种的汇率换算基准。currencyCode 为 null(历史数据)
                   // 或等于账本本位币时,AmountText 自动回退到账本币种符号。
                   AmountText(
-                      value: isExpense ? -amount : amount,
+                      // 展示层把整数分转回"元"。
+                      value: isExpense ? -amount / 100 : amount / 100,
                       signed: true,
                       showCurrency: true,
                       currencyCode: currencyCode,
@@ -238,7 +239,7 @@ class TransactionListItem extends ConsumerWidget {
                     return Padding(
                       padding: const EdgeInsets.only(top: 4),
                       child: Text(
-                        '≈ ${getCurrencySymbol(ledgerCurrency)} ${(nativeAmount ?? amount).toStringAsFixed(2)}',
+                        '≈ ${getCurrencySymbol(ledgerCurrency)} ${((nativeAmount ?? amount) / 100).toStringAsFixed(2)}',
                         style: TextStyle(
                           fontSize: 11,
                           color: SpitoutTokens.textTertiary(context),

@@ -51,13 +51,13 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 100,
+        amount: 10000,
 
         happenedAt: DateTime(2026, 7, 12),
       );
       final tx = await repo.getTransactionById(id);
       expect(tx!.currencyCode, 'CNY');
-      expect(tx.nativeAmount, 100);
+      expect(tx.nativeAmount, 10000);
     });
 
     test('不传 nativeAmount+外币+有汇率 → nativeAmount=折算值', () async {
@@ -67,13 +67,13 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
         currencyCode: 'USD',
         happenedAt: DateTime(2026, 7, 12),
       );
       final tx = await repo.getTransactionById(id);
       expect(tx!.currencyCode, 'USD');
-      expect(tx.nativeAmount, closeTo(86.4, 1e-9));
+      expect(tx.nativeAmount, 8640);
     });
 
     test('不传 nativeAmount+外币+无汇率 → nativeAmount=amount(命中补折算检测)', () async {
@@ -82,13 +82,13 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
         currencyCode: 'USD',
         happenedAt: DateTime(2026, 7, 12),
       );
       final tx = await repo.getTransactionById(id);
       expect(tx!.currencyCode, 'USD');
-      expect(tx.nativeAmount, 12);
+      expect(tx.nativeAmount, 1200);
       expect(await repo.countUnconvertedForeignTx(lid), 1);
     });
 
@@ -98,14 +98,14 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
 
         happenedAt: DateTime(2026, 7, 12),
         currencyCode: 'USD',
-        nativeAmount: 87.0, // 用户手改的汇率快照
+        nativeAmount: 8700, // 用户手改的汇率快照
       );
       final tx = await repo.getTransactionById(id);
-      expect(tx!.nativeAmount, 87.0);
+      expect(tx!.nativeAmount, 8700);
     });
 
     test('无账户交易显式传币种 → 写入所选;不传 → 本位币', () async {
@@ -114,22 +114,22 @@ void main() {
       final id1 = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
         happenedAt: DateTime(2026, 7, 12),
         currencyCode: 'USD',
-        nativeAmount: 86.4,
+        nativeAmount: 8640,
       );
       expect((await repo.getTransactionById(id1))!.currencyCode, 'USD');
 
       final id2 = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 5,
+        amount: 500,
         happenedAt: DateTime(2026, 7, 12),
       );
       final tx2 = await repo.getTransactionById(id2);
       expect(tx2!.currencyCode, 'CNY');
-      expect(tx2.nativeAmount, 5);
+      expect(tx2.nativeAmount, 500);
     });
   });
 
@@ -140,16 +140,16 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
 
         happenedAt: DateTime(2026, 7, 12),
         currencyCode: 'USD',
-        nativeAmount: 86.4,
+        nativeAmount: 8640,
       );
-      await repo.updateTransaction(id: id, type: 'expense', amount: 24);
+      await repo.updateTransaction(id: id, type: 'expense', amount: 2400);
       final tx = await repo.getTransactionById(id);
-      expect(tx!.amount, 24);
-      expect(tx.nativeAmount, closeTo(172.8, 1e-9));
+      expect(tx!.amount, 2400);
+      expect(tx.nativeAmount, 17280);
     });
 
     test('金额未变(改备注)→ 快照不动', () async {
@@ -158,17 +158,17 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
 
         happenedAt: DateTime(2026, 7, 12),
         currencyCode: 'USD',
-        nativeAmount: 86.4,
+        nativeAmount: 8640,
       );
       await repo.updateTransaction(
-          id: id, type: 'expense', amount: 12, note: '改备注');
+          id: id, type: 'expense', amount: 1200, note: '改备注');
       final tx = await repo.getTransactionById(id);
       expect(tx!.note, '改备注');
-      expect(tx.nativeAmount, 86.4);
+      expect(tx.nativeAmount, 8640);
     });
 
     test('显式传 nativeAmount → 以传入为准(不联动)', () async {
@@ -177,19 +177,19 @@ void main() {
       final id = await repo.addTransaction(
         ledgerId: lid,
         type: 'expense',
-        amount: 12,
+        amount: 1200,
 
         happenedAt: DateTime(2026, 7, 12),
         currencyCode: 'USD',
-        nativeAmount: 86.4,
+        nativeAmount: 8640,
       );
       await repo.updateTransaction(
           id: id,
           type: 'expense',
-          amount: 24,
+          amount: 2400,
           currencyCode: 'USD',
-          nativeAmount: 170.0);
-      expect((await repo.getTransactionById(id))!.nativeAmount, 170.0);
+          nativeAmount: 17000);
+      expect((await repo.getTransactionById(id))!.nativeAmount, 17000);
     });
   });
 
@@ -200,35 +200,35 @@ void main() {
       await seedUsdRates();
       // 未折算外币(native==amount,模拟迁移回填态)
       final unconverted = await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 10,
+        ledgerId: lid, type: 'expense', amount: 1000,
         happenedAt: DateTime(2026, 7, 1),
-        currencyCode: 'USD', nativeAmount: 10,
+        currencyCode: 'USD', nativeAmount: 1000,
       );
       // 已折算外币(不许覆盖)
       final converted = await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 12,
+        ledgerId: lid, type: 'expense', amount: 1200,
         happenedAt: DateTime(2026, 7, 2),
-        currencyCode: 'USD', nativeAmount: 86.4,
+        currencyCode: 'USD', nativeAmount: 8640,
       );
       // 本位币(不动)
       final cny = await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 50,
+        ledgerId: lid, type: 'expense', amount: 5000,
         happenedAt: DateTime(2026, 7, 3),
       );
 
       final n = await repo.recomputeForeignTxForLedger(lid);
       expect(n, 1);
       expect((await repo.getTransactionById(unconverted))!.nativeAmount,
-          closeTo(72.0, 1e-9)); // 10 × 7.2
-      expect((await repo.getTransactionById(converted))!.nativeAmount, 86.4);
-      expect((await repo.getTransactionById(cny))!.nativeAmount, 50);
+          7200); // 10 × 7.2
+      expect((await repo.getTransactionById(converted))!.nativeAmount, 8640);
+      expect((await repo.getTransactionById(cny))!.nativeAmount, 5000);
       expect(await repo.countUnconvertedForeignTx(lid), 0); // 横幅消失
     });
 
     test('纯本位币账本 recompute 返回 0、无改动', () async {
       final lid = await seedLedger();
       await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 50,
+        ledgerId: lid, type: 'expense', amount: 5000,
         happenedAt: DateTime(2026, 7, 3),
       );
       expect(await repo.recomputeForeignTxForLedger(lid), 0);
@@ -246,21 +246,21 @@ void main() {
         fetchedAt: DateTime.utc(2026, 7, 10),
       );
       final usdTx = await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 12,
+        ledgerId: lid, type: 'expense', amount: 1200,
         happenedAt: DateTime(2026, 7, 1),
-        currencyCode: 'USD', nativeAmount: 86.4, // 旧本位币 CNY 的快照
+        currencyCode: 'USD', nativeAmount: 8640, // 旧本位币 CNY 的快照
       );
       final cnyTx = await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 100,
+        ledgerId: lid, type: 'expense', amount: 10000,
         happenedAt: DateTime(2026, 7, 2),
-        currencyCode: 'CNY', nativeAmount: 100,
+        currencyCode: 'CNY', nativeAmount: 10000,
       );
 
       final n = await repo.recalcNativeAmountsForLedger(lid, 'USD');
       expect(n, 2);
-      expect((await repo.getTransactionById(usdTx))!.nativeAmount, 12); // 对齐原币
+      expect((await repo.getTransactionById(usdTx))!.nativeAmount, 1200); // 对齐原币
       expect((await repo.getTransactionById(cnyTx))!.nativeAmount,
-          closeTo(14.0, 1e-9)); // 100 × 0.14
+          1400); // 100 × 0.14
     });
 
     test('重算逐笔记 change:pending 条数 == 改动笔数', () async {
@@ -271,9 +271,9 @@ void main() {
 
       await seedUsdRates();
       await repo.addTransaction(
-        ledgerId: lid, type: 'expense', amount: 10,
+        ledgerId: lid, type: 'expense', amount: 1000,
         happenedAt: DateTime(2026, 7, 1),
-        currencyCode: 'USD', nativeAmount: 10,
+        currencyCode: 'USD', nativeAmount: 1000,
       );
       final before = (await db.select(db.localChanges).get()).length;
       final n = await repo.recomputeForeignTxForLedger(lid);

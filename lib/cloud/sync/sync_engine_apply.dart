@@ -1,5 +1,10 @@
 part of 'sync_engine.dart';
 
+/// 同步接口金额为"元"(JSON number),落库前统一转整数分,
+/// 避免 double 尾差进入数据库(审计问题 1)。
+int _payloadYuanToCents(num? yuan) =>
+    ((yuan?.toDouble() ?? 0.0) * 100).round();
+
 /// pull 路径上把远端变更应用到本地 Drift 的逻辑。`_applyRemoteChange` 是
 /// 总入口分发器,按 entity_type 分到具体的 `_apply*Change` handler。
 ///
@@ -95,7 +100,7 @@ extension SyncEngineApplyExt on SyncEngine {
 
     // 解析 payload 字段
     final type = payload['type'] as String? ?? 'expense';
-    final amount = (payload['amount'] as num?)?.toDouble() ?? 0.0;
+    final amount = _payloadYuanToCents(payload['amount'] as num?);
     final happenedAtStr = payload['happenedAt'] as String?;
     final happenedAt = happenedAtStr != null
         ? DateTime.tryParse(happenedAtStr)?.toLocal() ?? DateTime.now()
@@ -104,28 +109,41 @@ extension SyncEngineApplyExt on SyncEngine {
     final categoryName = payload['categoryName'] as String?;
     final categoryKind = payload['categoryKind'] as String?;
 
-    // 解析关联实体 ID —— 优先用 syncId 映射（跨设备稳定），fallback 到名字。
-    // payload 里的 categoryId 是 server snapshot.items[i] 存的远端实体 syncId，
-    // B 设备 pull 后 category 已经上 syncId 了（P1 的 fallback 给 seed 补的，
-    // 或 pull 新插入带的），按 syncId 查一定命中。
-    // 名字 fallback 兜住旧 snapshot payload 没 syncId 的老数据。
-    // server payload.categoryId 是 syncId。
-    // 主表反查不到时(Editor 视角看 Owner 的 tx),检查 SharedLedger* 表 —
-    // 命中则写 *SyncIdOverride 字段(本地 int id 留 null)。
+    // 解析交易分类引用：server payload.categoryId 是 Owner 分类的 syncId。
+    // 共享账本 Editor 视角必须统一走 categorySyncIdOverride，不能绑定到成员
+    // 自己的主表分类；Owner/个人账本才走 syncId→本地正数 id 的解析。
+    final isSharedEditor = await _isSharedLedgerEditor(ledgerIdInt);
     final rawCategoryId = payload['categoryId'] as String?;
-    int? categoryId = await _resolveCategoryIdBySyncId(rawCategoryId) ??
-        await _resolveCategoryId(
+    int? categoryId;
+    String? categorySyncIdOverride;
+    if (isSharedEditor) {
+      if (rawCategoryId != null && rawCategoryId.isNotEmpty) {
+        final shared = await (db.select(db.sharedLedgerCategories)
+              ..where((t) => t.syncId.equals(rawCategoryId)))
+            .getSingleOrNull();
+        // 镜像表暂时缺失时仍保留 syncId，等 SharedResources 拉取到位后即可正常显示
+        categorySyncIdOverride = shared?.syncId ?? rawCategoryId;
+      } else {
+        // 旧 payload 没有 categoryId 时的兜底，避免历史数据直接丢分类
+        categoryId = await _resolveCategoryId(
           categoryName: categoryName,
           categoryKind: categoryKind,
         );
-    String? categorySyncIdOverride;
-    if (categoryId == null &&
-        rawCategoryId != null &&
-        rawCategoryId.isNotEmpty) {
-      final shared = await (db.select(db.sharedLedgerCategories)
-            ..where((t) => t.syncId.equals(rawCategoryId)))
-          .getSingleOrNull();
-      if (shared != null) categorySyncIdOverride = shared.syncId;
+      }
+    } else {
+      categoryId = await _resolveCategoryIdBySyncId(rawCategoryId) ??
+          await _resolveCategoryId(
+            categoryName: categoryName,
+            categoryKind: categoryKind,
+          );
+      if (categoryId == null &&
+          rawCategoryId != null &&
+          rawCategoryId.isNotEmpty) {
+        final shared = await (db.select(db.sharedLedgerCategories)
+              ..where((t) => t.syncId.equals(rawCategoryId)))
+            .getSingleOrNull();
+        if (shared != null) categorySyncIdOverride = shared.syncId;
+      }
     }
     // 查 existing 优先走 LookupCache(prime 时已全表加载 transactions 的
     // syncId / id / createdByUserId),消除 10k 条 = 10k 次 SELECT 的 N+1。
@@ -164,8 +182,9 @@ extension SyncEngineApplyExt on SyncEngine {
     final hasNativeKey = payload.containsKey('nativeAmount');
     final payloadCurrency =
         hasCurrencyKey ? (payload['currencyCode'] as String?) : null;
-    final payloadNative =
-        hasNativeKey ? (payload['nativeAmount'] as num?)?.toDouble() : null;
+    final payloadNative = hasNativeKey
+        ? _payloadYuanToCents(payload['nativeAmount'] as num?)
+        : null;
 
     // AA 分摊字段(缺键保护,对齐 excludeFromStats 模式):
     // payload 不含键 → null → update 走 Value.absent() 不覆盖本地;
@@ -189,7 +208,7 @@ extension SyncEngineApplyExt on SyncEngine {
       final shouldBackfillCreator =
           existingCreatedByUserId == null && createdByUserId != null;
       // 快照保护:缺 nativeAmount 键时查本地旧行判断 amount 是否变化。
-      d.Value<double?> nativeValue;
+      d.Value<int?> nativeValue;
       if (hasNativeKey) {
         nativeValue = d.Value(payloadNative);
       } else {
@@ -199,8 +218,14 @@ extension SyncEngineApplyExt on SyncEngine {
         final oldNative = oldTx?.nativeAmount;
         if (oldNative != null && oldTx!.amount != amount) {
           nativeValue = d.Value(amount); // 旧客户端改了金额 → 退化 1:1
-        } else {
+        } else if (oldNative != null) {
           nativeValue = const d.Value.absent(); // 金额未变 → 保留本地折算
+        } else if (hasCurrencyKey && payloadCurrency != null) {
+          // 币种非空但本地无旧快照:补 1:1 快照,满足
+          // (currency_code, native_amount) 成对 CHECK 约束。
+          nativeValue = d.Value(amount);
+        } else {
+          nativeValue = const d.Value.absent();
         }
       }
       await (db.update(db.transactions)..where((t) => t.id.equals(existingId!)))
@@ -239,6 +264,13 @@ extension SyncEngineApplyExt on SyncEngine {
       logger.debug('SyncEngine', 'pull: 更新交易 $syncId');
     } else {
       // 插入
+      // currency/native 成对约束:有币种才写快照(缺键按 1:1 补 amount);
+      // 只有快照没有币种的旧 payload 退化为均不写(统计按 amount 兜底,
+      // 不引入错币种金额)。
+      final effectiveCurrency = payloadCurrency;
+      final effectiveNative = effectiveCurrency != null
+          ? (hasNativeKey ? payloadNative : amount)
+          : null;
       final id = await db.into(db.transactions).insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerIdInt,
@@ -254,8 +286,8 @@ extension SyncEngineApplyExt on SyncEngine {
               excludeFromStats: d.Value(excludeStats ?? false),
               // 缺键的旧 payload:nativeAmount = amount(隐含汇率 1);currencyCode
               // 留 NULL(检测端 LEFT JOIN 账户币种兜底)。
-              currencyCode: d.Value(payloadCurrency),
-              nativeAmount: d.Value(hasNativeKey ? payloadNative : amount),
+              currencyCode: d.Value(effectiveCurrency),
+              nativeAmount: d.Value(effectiveNative),
               // AA 字段:缺键落 null(列默认值),有键显式写入。
               // 支出人兜底:server 未下发(旧服务端缺键/显式 null)时
               // 默认与创建人一致(创建人由 server 注入),创建人缺失退编辑人,

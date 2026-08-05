@@ -5,8 +5,6 @@ import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudUser, CloudBackendType;
 
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart'
-    show purgeLocalCloudLedgersWithContainer;
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
 import '../../l10n/app_localizations.dart';

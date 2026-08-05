@@ -203,7 +203,8 @@ class AaStatisticsService {
     }
     if (participants.isEmpty) return null;
 
-    final totalDecimal = toDecimal2(tx.amount);
+    // 数据库金额为整数分,直接转 Decimal,不再经 double 归一化。
+    final totalDecimal = toDecimalFromCents(tx.amount);
     final shares = <String, double>{};
 
     switch (mode) {
@@ -253,7 +254,8 @@ class AaStatisticsService {
     return AaStatisticsTxResult(
       syncId: tx.syncId,
       txId: tx.id,
-      paidAmount: tx.amount,
+      // 实付金额按"元"输出(展示口径),数值源自整数分,除以 100 无损。
+      paidAmount: tx.amount / 100,
       paidBy: paidBy,
       mode: mode,
       shares: shares,

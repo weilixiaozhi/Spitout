@@ -9,7 +9,8 @@ import '../data/models.dart';
 // countsForLedgerProvider，故不 import 对应 providers。
 // 仍用 TransactionDisplayItem 类型别名，故保留对 ui_state_providers 的引入。
 import 'package:spitout/providers/ui/ui_state_providers.dart' show TransactionDisplayItem;
-import 'package:spitout/providers/providers.dart' show currentLedgerProvider;
+import 'package:spitout/providers/providers.dart'
+    show SpitoutCloudLedgerMember, currentLedgerProvider;
 import '../core/logging/logger_service.dart';
 // 精确导入而非 barrel 自引用，避免 biz.dart export 本文件时形成循环依赖
 import 'app_empty.dart';
@@ -295,7 +296,8 @@ class TransactionListState extends ConsumerState<TransactionList> {
             // 渲染日期头部
             final dateKey = item.$2 as String;
             final list = item.$3 as List<({Transaction t, Category? category})>;
-            double dayExpense = 0;
+            // 整数分累加,避免 double 尾差;展示时再转"元"。
+            int dayExpense = 0;
             for (final it in list) {
               // 全局仅支出模式，type 固定为 'expense'
               if (it.t.type == 'expense') {
@@ -312,7 +314,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
             // 内部的 SpitoutDivider.short 保持(每个交易项之间仍有分割线)。
             Widget header = DaySectionHeader(
               dateText: dateKey,
-              expense: dayExpense,
+              expense: dayExpense / 100,
               currencyCode: ledgerCurrency,
             );
 

@@ -169,5 +169,177 @@ void main() {
           .getSingle();
       expect(row.read<String>('keep_me'), 'a');
     });
+
+    test('参数校验：copyColumns 空/越界、主键缺失均被断言拦截', () async {
+      // 非法参数在入口断言处被拦截，不产生任何 DDL 副作用。
+      await expectLater(
+        db.dropColumnIfExists('probe', 'drop_me',
+            keepColumns: const {'id': 'INTEGER', 'keep_me': 'TEXT'},
+            copyColumns: const [],
+            primaryKey: 'id'),
+        throwsA(isA<AssertionError>()),
+      );
+      await expectLater(
+        db.dropColumnIfExists('probe', 'drop_me',
+            keepColumns: const {'id': 'INTEGER', 'keep_me': 'TEXT'},
+            copyColumns: const ['id', 'ghost'],
+            primaryKey: 'id'),
+        throwsA(isA<AssertionError>()),
+      );
+      await expectLater(
+        db.dropColumnIfExists('probe', 'drop_me',
+            keepColumns: const {'id': 'INTEGER', 'keep_me': 'TEXT'},
+            copyColumns: const ['id', 'keep_me'],
+            primaryKey: 'ghost'),
+        throwsA(isA<AssertionError>()),
+      );
+    });
+  });
+
+  group('rebuildTableIfNeeded', () {
+    /// 把 recurring_transactions 降级成 v3 形态(amount REAL)并写入一条数据,
+    /// 模拟「金额 REAL → INTEGER(分)」的待迁移旧表。
+    Future<void> createMoneyProbe() async {
+      // 新表带 ledger_id 外键,先保证被引用账本存在。
+      await db.customStatement(
+          "INSERT INTO ledgers (id, name, currency, created_at) "
+          "VALUES (1, 'L', 'CNY', 1)");
+      await db.customStatement('DROP TABLE recurring_transactions');
+      await db.customStatement(
+          'CREATE TABLE recurring_transactions ('
+          'id INTEGER PRIMARY KEY AUTOINCREMENT, '
+          'ledger_id INTEGER NOT NULL, '
+          'type TEXT NOT NULL, '
+          'amount REAL NOT NULL, '
+          'category_id INTEGER, '
+          'note TEXT, '
+          'frequency TEXT NOT NULL, '
+          'interval INTEGER NOT NULL DEFAULT 1, '
+          'day_of_month INTEGER, '
+          'day_of_week INTEGER, '
+          'month_of_year INTEGER, '
+          'start_date INTEGER NOT NULL, '
+          'end_date INTEGER, '
+          'last_generated_date INTEGER, '
+          'enabled INTEGER NOT NULL DEFAULT 1, '
+          'created_at INTEGER NOT NULL, '
+          'updated_at INTEGER NOT NULL)');
+      await db.customStatement(
+          "INSERT INTO recurring_transactions "
+          "(id, ledger_id, type, amount, frequency, interval, start_date, "
+          "created_at, updated_at) "
+          "VALUES (1, 1, 'expense', 12.5, 'monthly', 1, 1, 1, 1)");
+    }
+
+    const migratedCheckSql =
+        "SELECT 1 FROM pragma_table_info('recurring_transactions') "
+        "WHERE name='amount' AND type='INTEGER'";
+    const copySql =
+        'INSERT INTO recurring_transactions '
+        '(id, ledger_id, type, amount, category_id, note, frequency, interval, '
+        'day_of_month, day_of_week, month_of_year, start_date, end_date, '
+        'last_generated_date, enabled, created_at, updated_at) '
+        'SELECT id, ledger_id, type, CAST(ROUND(amount * 100) AS INTEGER), '
+        'category_id, note, frequency, interval, day_of_month, day_of_week, '
+        'month_of_year, start_date, end_date, last_generated_date, enabled, '
+        'created_at, updated_at FROM recurring_transactions_old;';
+
+    test('重建表:REAL 金额转 INTEGER 分且数据不丢', () async {
+      await createMoneyProbe();
+      final m = Migrator(db);
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+
+      final row = await db
+          .customSelect(
+              'SELECT amount FROM recurring_transactions WHERE id = 1')
+          .getSingle();
+      expect(row.read<int>('amount'), 1250, reason: '12.5 元应转成 1250 分');
+      final cols = await columnNames('recurring_transactions');
+      expect(cols, contains('amount'));
+    });
+
+    test('已迁移时幂等跳过(不重建不丢数据)', () async {
+      await createMoneyProbe();
+      final m = Migrator(db);
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+      // 二次调用:检测到已是 INTEGER,直接跳过。
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+      final row = await db
+          .customSelect(
+              'SELECT amount FROM recurring_transactions WHERE id = 1')
+          .getSingle();
+      expect(row.read<int>('amount'), 1250);
+    });
+
+    test('断点续跑-现场A:table 缺失但 _old 残留,先恢复现场再完成重建', () async {
+      await createMoneyProbe();
+      await db.customStatement(
+          'ALTER TABLE recurring_transactions RENAME TO recurring_transactions_old');
+      final m = Migrator(db);
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+      final row = await db
+          .customSelect(
+              'SELECT amount FROM recurring_transactions WHERE id = 1')
+          .getSingle();
+      expect(row.read<int>('amount'), 1250);
+    });
+
+    test('断点续跑-现场B:新表已建成 + _old 残留,清 _old 即完成', () async {
+      await createMoneyProbe();
+      final m = Migrator(db);
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+      // 伪造收尾 DROP 之前的残留。
+      await db.customStatement(
+          'CREATE TABLE recurring_transactions_old '
+          '(id INTEGER PRIMARY KEY, amount REAL)');
+      await db.rebuildTableIfNeeded(
+        m,
+        'recurring_transactions',
+        db.recurringTransactions,
+        migratedCheckSql: migratedCheckSql,
+        copySql: copySql,
+      );
+      final oldRows = await db
+          .customSelect(
+              "SELECT name FROM sqlite_master WHERE type='table' "
+              "AND name='recurring_transactions_old'")
+          .get();
+      expect(oldRows, isEmpty);
+      final row = await db
+          .customSelect(
+              'SELECT amount FROM recurring_transactions WHERE id = 1')
+          .getSingle();
+      expect(row.read<int>('amount'), 1250);
+    });
   });
 }

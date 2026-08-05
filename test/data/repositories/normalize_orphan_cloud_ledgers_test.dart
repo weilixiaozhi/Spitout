@@ -147,7 +147,7 @@ void main() {
           TransactionsCompanion.insert(
             ledgerId: cloudId,
             type: 'expense',
-            amount: 12.5,
+            amount: 1250,
           ),
         );
 

@@ -12,8 +12,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart';
-import 'package:spitout/core/identity/local_user_identity.dart';
 import '../../data/models.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';

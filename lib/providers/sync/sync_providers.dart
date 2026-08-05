@@ -13,7 +13,7 @@ import '../../cloud/sync/sync_engine.dart';
 import '../../cloud/sync/transactions_sync_manager.dart';
 import '../../cloud/sync/snapshot_sync_coordinator.dart';
 import '../../core/logging/logger_service.dart';
-import '../../core/identity/local_user_identity.dart';
+import '../core/local_self_id_providers.dart';
 import '../../services/data/local_identity_migration_service.dart';
 import '../../services/storage/avatar_storage.dart';
 import '../../services/backup/local_backup_service.dart';

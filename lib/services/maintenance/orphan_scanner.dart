@@ -52,7 +52,8 @@ class OrphanScanner {
     ).get();
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
-      final amount = row.readNullable<double>('amount') ?? 0;
+      // 数据库金额为整数分,展示转"元"。
+      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final catId = row.read<int>('category_id');
       return OrphanRecord(
@@ -137,7 +138,7 @@ class OrphanScanner {
     ).get();
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
-      final amount = row.readNullable<double>('amount') ?? 0;
+      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final ledgerId = row.read<int>('ledger_id');
       return OrphanRecord(
@@ -175,7 +176,7 @@ class OrphanScanner {
     ).get();
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
-      final amount = row.readNullable<double>('amount') ?? 0;
+      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final syncId = row.read<String>('sync_id');
       final ledgerId = row.read<int>('ledger_id');

@@ -45,6 +45,13 @@ class Ledgers extends Table {
   /// AA 分摊开关。关闭后入口隐藏、历史数据不展示不参与统计;重开数据仍在。
   /// 必须跨设备同步(随 ledger 同通道下发)。
   BoolColumn get aaEnabled => boolean().withDefault(const Constant(false))();
+
+  @override
+  List<String> get customConstraints => [
+        // CHECK 约束兜底:导入/云端恢复/同步 apply 写入越界值时,数据库直接拒绝,
+        // 避免统计月界算出错误范围(审计问题 7)。
+        'CHECK (month_start_day BETWEEN 1 AND 28)',
+      ];
 }
 
 /// 自动汇率本地缓存。日期键 append-only;可随时整表重建 → **不进同步**。
@@ -85,17 +92,33 @@ class Categories extends Table {
       integer().withDefault(const Constant(1))(); // 层级：1=一级，2=二级
   // 分类图标统一走 Lucide 内置图标(icon 列)，不存自定义图片/云端图标。
   TextColumn get syncId => text().nullable()(); // 跨设备同步唯一标识 (UUID)
+
+  @override
+  List<String> get customConstraints => [
+        // CHECK 约束:层级只允许 1/2,导入或同步写入非法层级时数据库直接拒绝。
+        'CHECK (level IN (1, 2))',
+      ];
 }
 
 class Transactions extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get ledgerId => integer()();
+  // 账本强引用:删账本级联删交易(与仓储层既有删除语义一致,双保险)。
+  IntColumn get ledgerId => integer()
+      .references(Ledgers, #id, onDelete: KeyAction.cascade)();
   TextColumn get type => text()(); // 全局仅支出模式，type 固定为 expense
-  RealColumn get amount => real()();
-  IntColumn get categoryId => integer().nullable()();
+  /// 交易金额,单位=最小货币单位(分),整数存储保证财务精度。
+  /// 输入/同步接口仍按"元"口径,落库前统一换算成整数分。
+  IntColumn get amount => integer()();
+  // 分类弱引用:删分类不删交易,交易回退为"未分类"(避免误删历史账目)。
+  IntColumn get categoryId => integer()
+      .nullable()
+      .references(Categories, #id, onDelete: KeyAction.setNull)();
   DateTimeColumn get happenedAt => dateTime().withDefault(currentDateAndTime)();
   TextColumn get note => text().nullable()();
-  IntColumn get recurringId => integer().nullable()(); // 关联到重复交易模板
+  // 周期模板弱引用:删模板保留已生成的历史交易。
+  IntColumn get recurringId => integer()
+      .nullable()
+      .references(RecurringTransactions, #id, onDelete: KeyAction.setNull)();
   TextColumn get syncId => text().nullable()(); // 跨设备同步唯一标识 (UUID)
   // 共享账本"谁记的"显示
   TextColumn get createdByUserId => text().nullable()();
@@ -120,7 +143,8 @@ class Transactions extends Table {
 
   /// 折算到账本本位币的金额快照(按记账时汇率,保存即定,不随汇率重算)。
   /// 单币种/未折算 == amount(隐含汇率 1.0)。账本维度统计读本列(?? amount)。
-  RealColumn get nativeAmount => real().nullable()();
+  /// 单位同 [amount]:整数分。
+  IntColumn get nativeAmount => integer().nullable()();
 
   /// 编辑版本号。创建时为 1,每次 update +1。
   /// 用于记录详情 Bottom Sheet 的编辑历史区块展示,以及并发编辑检测。
@@ -149,6 +173,16 @@ class Transactions extends Table {
   /// AA 指定分摊金额(JSON 对象,key=参与人,value=金额字符串)。
   /// 仅 aaMode=2 时有意义。
   TextColumn get aaSplits => text().nullable()();
+
+  @override
+  List<String> get customConstraints => [
+        // CHECK 约束:仅允许已定义的分摊模式,杜绝脏数据让 AA 分支全部落空。
+        'CHECK (aa_mode IS NULL OR aa_mode IN (0, 1, 2))',
+        // 多币种成对不变量:currencyCode 与 nativeAmount 必须同时为空或同时非空,
+        // 杜绝统计按 `?? amount` 回退时静默用错币种金额(审计问题 7)。
+        'CHECK ((currency_code IS NULL AND native_amount IS NULL) '
+        'OR (currency_code IS NOT NULL AND native_amount IS NOT NULL))',
+      ];
 }
 
 /// 记录编辑历史。对应记录详情 Bottom Sheet 的"编辑记录(仅供查看)"区块，
@@ -159,7 +193,9 @@ class Transactions extends Table {
 /// 时 version+1 并写入本表;Provider 暴露 recordEditHistoryProvider(recordId)。
 class RecordEditHistories extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get recordId => integer()(); // 关联 transactions.id
+  // 编辑历史从属于交易:交易删除时级联清理,避免详情页"复活"孤儿历史(审计问题 5)。
+  IntColumn get recordId => integer()
+      .references(Transactions, #id, onDelete: KeyAction.cascade)();
   IntColumn get version => integer()(); // 该次编辑后的版本号(从 2 起,1 为创建)
   TextColumn get operatorUserId => text().nullable()(); // 操作者 userId(单人账本为 null)
   TextColumn get summary => text()(); // 摘要:分类名 + 金额 + 日期的人类可读描述
@@ -169,9 +205,11 @@ class RecordEditHistories extends Table {
 
 class RecurringTransactions extends Table {
   IntColumn get id => integer().autoIncrement()();
-  IntColumn get ledgerId => integer()();
+  IntColumn get ledgerId => integer()
+      .references(Ledgers, #id, onDelete: KeyAction.cascade)();
   TextColumn get type => text()(); // 全局仅支出模式，type 固定为 expense
-  RealColumn get amount => real()();
+  /// 周期模板金额,单位=最小货币单位(分),与 [Transactions.amount] 同口径。
+  IntColumn get amount => integer()();
   IntColumn get categoryId => integer().nullable()();
   TextColumn get note => text().nullable()();
 
@@ -194,6 +232,15 @@ class RecurringTransactions extends Table {
 
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
   DateTimeColumn get updatedAt => dateTime().withDefault(currentDateAndTime)();
+
+  @override
+  List<String> get customConstraints => [
+        // CHECK 约束:重复规则的取值域在数据库层兜底,导入/同步写入非法值时直接拒绝。
+        'CHECK (interval >= 1)',
+        'CHECK (day_of_month IS NULL OR day_of_month BETWEEN 1 AND 31)',
+        'CHECK (day_of_week IS NULL OR day_of_week BETWEEN 1 AND 7)',
+        'CHECK (month_of_year IS NULL OR month_of_year BETWEEN 1 AND 12)',
+      ];
 }
 
 
@@ -378,7 +425,7 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// 用这个。
   SpitoutDatabase.forTesting(super.executor);
 
-  /// 当前 schema 结构对应的数据库版本号 = 2。
+  /// 当前 schema 结构对应的数据库版本号 = 4。
   ///
   /// drift 不允许以 0 为起始版本（已知 bug，会破坏迁移），故基线从 1 起步；
   /// 任何 schema 版本升级都从这里递增版本号。
@@ -393,12 +440,22 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// v3: 支出人兜底回填 —— 存量 NULL/空串 paidByUserId 按
   ///     created_by_user_id → last_edited_by_user_id → 空串 回填,
   ///     让「默认支出人 = 创建人」的语义在存量数据上落地。
+  /// v4: 财务精度与完整性加固 —— 金额列 REAL 改 INTEGER(分);
+  ///     Transactions/RecordEditHistories/RecurringTransactions 加外键;
+  ///     Ledgers/Categories/Transactions/ExchangeRateOverrides/
+  ///     LedgerVirtualUsers 的 sync_id 与 SyncState(device_id,provider_type)
+  ///     加唯一索引;高频查询列加二级索引;关键不变量加 CHECK 约束。
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
         // 幂等迁移工具箱见 migration_helpers.dart（扩展方法，单测可直接覆盖）。
+        beforeOpen: (details) async {
+          // SQLite 外键默认关闭,每次连接打开时显式开启,
+          // 否则 schema 里的 REFERENCES/ON DELETE 约束不会生效(审计问题 5)。
+          await customStatement('PRAGMA foreign_keys = ON');
+        },
         onUpgrade: (migrator, from, to) async {
           // 入口日志：即使未来某个迁移块忘加起止日志，线上排查用户库
           // 升级路径时也有这一行兜底。
@@ -496,10 +553,250 @@ class SpitoutDatabase extends _$SpitoutDatabase {
             );
             logger.info('DBMigration', 'v3 迁移完成');
           }
+
+          if (from < 4) {
+            // v4: 金额 REAL→INTEGER(分) + 外键 + 唯一/二级索引 + CHECK 约束。
+            logger.info('DBMigration', '开始迁移到 v4: 金额改整数分 + 完整性加固');
+
+            // ── 第 1 步:数据归一化(必须在重建表之前,否则 CHECK/FK 建表即失败) ──
+            // 1a) currencyCode/nativeAmount 成对约束:缺币种则清折算快照(统计仍
+            //     按 amount 兜底);有币种缺快照则按 1:1 补 amount。
+            await customStatement(
+              'UPDATE transactions SET native_amount = NULL '
+              'WHERE currency_code IS NULL AND native_amount IS NOT NULL;',
+            );
+            await customStatement(
+              'UPDATE transactions SET native_amount = amount '
+              'WHERE currency_code IS NOT NULL AND native_amount IS NULL;',
+            );
+            // 1b) 强引用孤儿清理:编辑历史无对应交易 → 删;
+            //     交易引用的分类/周期模板不存在 → 置空(不误删账目);
+            //     交易引用的账本不存在 → 删(幽灵数据,UI 本就不可达)。
+            await customStatement(
+              'DELETE FROM record_edit_histories '
+              'WHERE record_id NOT IN (SELECT id FROM transactions);',
+            );
+            await customStatement(
+              'UPDATE transactions SET category_id = NULL '
+              'WHERE category_id IS NOT NULL AND category_id NOT IN '
+              '(SELECT id FROM categories);',
+            );
+            await customStatement(
+              'UPDATE transactions SET recurring_id = NULL '
+              'WHERE recurring_id IS NOT NULL AND recurring_id NOT IN '
+              '(SELECT id FROM recurring_transactions);',
+            );
+            // 1c) 分类孤儿修复:父分类不存在的二级分类提升为一级(保留数据,
+            //     与分类树构建/记账选择口径一致)。
+            await customStatement(
+              'UPDATE categories SET parent_id = NULL, level = 1 '
+              'WHERE parent_id IS NOT NULL AND parent_id NOT IN '
+              '(SELECT id FROM categories);',
+            );
+            // 1d) 唯一索引前置去重:同 syncId 只保留本地 id 最小的一行
+            //     (LWW 冲突的确定性收敛),否则 UNIQUE 索引建不出来。
+            await customStatement(
+              'DELETE FROM ledgers WHERE sync_id IS NOT NULL AND id NOT IN '
+              '(SELECT MIN(id) FROM ledgers WHERE sync_id IS NOT NULL '
+              'GROUP BY sync_id);',
+            );
+            await customStatement(
+              'DELETE FROM transactions WHERE ledger_id NOT IN '
+              '(SELECT id FROM ledgers);',
+            );
+            await customStatement(
+              'DELETE FROM categories WHERE sync_id IS NOT NULL AND id NOT IN '
+              '(SELECT MIN(id) FROM categories WHERE sync_id IS NOT NULL '
+              'GROUP BY sync_id);',
+            );
+            await customStatement(
+              'UPDATE categories SET parent_id = NULL, level = 1 '
+              'WHERE parent_id IS NOT NULL AND parent_id NOT IN '
+              '(SELECT id FROM categories);',
+            );
+            await customStatement(
+              'UPDATE transactions SET category_id = NULL '
+              'WHERE category_id IS NOT NULL AND category_id NOT IN '
+              '(SELECT id FROM categories);',
+            );
+            await customStatement(
+              'DELETE FROM transactions WHERE sync_id IS NOT NULL AND id NOT IN '
+              '(SELECT MIN(id) FROM transactions WHERE sync_id IS NOT NULL '
+              'GROUP BY sync_id);',
+            );
+            await customStatement(
+              'DELETE FROM exchange_rate_overrides WHERE sync_id IS NOT NULL '
+              'AND id NOT IN (SELECT MIN(id) FROM exchange_rate_overrides '
+              'WHERE sync_id IS NOT NULL GROUP BY sync_id);',
+            );
+            await customStatement(
+              'DELETE FROM ledger_virtual_users WHERE sync_id IS NOT NULL '
+              'AND id NOT IN (SELECT MIN(id) FROM ledger_virtual_users '
+              'WHERE sync_id IS NOT NULL GROUP BY sync_id);',
+            );
+            await customStatement(
+              'DELETE FROM sync_state WHERE id NOT IN '
+              '(SELECT MIN(id) FROM sync_state GROUP BY device_id, provider_type);',
+            );
+
+            // ── 第 2 步:重建表(REAL 金额→INTEGER 分 + CHECK + FK) ──
+            // 依赖顺序:先建被引用表,再建引用表。
+            await rebuildTableIfNeeded(
+              migrator,
+              'ledgers',
+              ledgers,
+              migratedCheckSql:
+                  "SELECT 1 FROM sqlite_master WHERE type='table' "
+                  "AND name='ledgers' AND sql LIKE '%BETWEEN 1 AND 28%'",
+              copySql:
+                  'INSERT INTO ledgers (id, name, currency, type, created_at, '
+                  'sync_id, my_role, member_count, is_shared, owner_user_id, '
+                  'month_start_day, storage_mode, aa_enabled) '
+                  'SELECT id, name, currency, type, created_at, sync_id, '
+                  'my_role, member_count, is_shared, owner_user_id, '
+                  'month_start_day, storage_mode, aa_enabled FROM ledgers_old;',
+            );
+            await rebuildTableIfNeeded(
+              migrator,
+              'categories',
+              categories,
+              migratedCheckSql:
+                  "SELECT 1 FROM sqlite_master WHERE type='table' "
+                  "AND name='categories' AND sql LIKE '%level IN (1, 2)%'",
+              copySql:
+                  'INSERT INTO categories (id, name, kind, icon, sort_order, '
+                  'parent_id, level, sync_id) '
+                  'SELECT id, name, kind, icon, sort_order, parent_id, level, '
+                  'sync_id FROM categories_old;',
+            );
+            await rebuildTableIfNeeded(
+              migrator,
+              'recurring_transactions',
+              recurringTransactions,
+              migratedCheckSql:
+                  "SELECT 1 FROM pragma_table_info('recurring_transactions') "
+                  "WHERE name='amount' AND type='INTEGER'",
+              copySql:
+                  'INSERT INTO recurring_transactions (id, ledger_id, type, '
+                  'amount, category_id, note, frequency, interval, day_of_month, '
+                  'day_of_week, month_of_year, start_date, end_date, '
+                  'last_generated_date, enabled, created_at, updated_at) '
+                  'SELECT id, ledger_id, type, '
+                  'CAST(ROUND(amount * 100) AS INTEGER), category_id, note, '
+                  'frequency, interval, day_of_month, day_of_week, month_of_year, '
+                  'start_date, end_date, last_generated_date, enabled, created_at, '
+                  'updated_at FROM recurring_transactions_old;',
+            );
+            await rebuildTableIfNeeded(
+              migrator,
+              'transactions',
+              transactions,
+              migratedCheckSql:
+                  "SELECT 1 FROM pragma_table_info('transactions') "
+                  "WHERE name='amount' AND type='INTEGER'",
+              copySql:
+                  'INSERT INTO transactions (id, ledger_id, type, amount, '
+                  'category_id, happened_at, note, recurring_id, sync_id, '
+                  'created_by_user_id, last_edited_by_user_id, '
+                  'category_sync_id_override, exclude_from_stats, currency_code, '
+                  'native_amount, version, last_edited_at, paid_by_user_id, '
+                  'aa_mode, aa_participants, aa_splits) '
+                  'SELECT id, ledger_id, type, '
+                  'CAST(ROUND(amount * 100) AS INTEGER), category_id, '
+                  'happened_at, note, recurring_id, sync_id, created_by_user_id, '
+                  'last_edited_by_user_id, category_sync_id_override, '
+                  'exclude_from_stats, currency_code, '
+                  'CASE WHEN native_amount IS NULL THEN NULL '
+                  'ELSE CAST(ROUND(native_amount * 100) AS INTEGER) END, '
+                  'version, last_edited_at, paid_by_user_id, aa_mode, '
+                  'aa_participants, aa_splits FROM transactions_old;',
+            );
+            await rebuildTableIfNeeded(
+              migrator,
+              'record_edit_histories',
+              recordEditHistories,
+              migratedCheckSql:
+                  "SELECT 1 FROM pragma_foreign_key_list('record_edit_histories') "
+                  "WHERE \"table\"='transactions'",
+              copySql:
+                  'INSERT INTO record_edit_histories (id, record_id, version, '
+                  'operator_user_id, summary, created_at) '
+                  'SELECT id, record_id, version, operator_user_id, summary, '
+                  'created_at FROM record_edit_histories_old;',
+            );
+
+            // ── 第 3 步:唯一/二级索引(幂等,兼容所有升级路径) ──
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_ledgers_sync_id '
+                'ON ledgers (sync_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_sync_id '
+                'ON categories (sync_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_sync_id '
+                'ON transactions (sync_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rate_overrides_sync_id '
+                'ON exchange_rate_overrides (sync_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_virtual_users_sync_id '
+                'ON ledger_virtual_users (sync_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_state_device_provider '
+                'ON sync_state (device_id, provider_type);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_transactions_ledger_happened '
+                'ON transactions (ledger_id, happened_at);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_record_edit_histories_record_id '
+                'ON record_edit_histories (record_id);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_local_changes_pushed_at '
+                'ON local_changes (pushed_at);');
+            await customStatement(
+                'CREATE INDEX IF NOT EXISTS idx_recurring_transactions_ledger_id '
+                'ON recurring_transactions (ledger_id);');
+            await customStatement(
+                'CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_override_pair '
+                'ON exchange_rate_overrides (base_currency, quote_currency);');
+
+            logger.info('DBMigration', 'v4 迁移完成');
+          }
         },
 
         onCreate: (m) async {
           await m.createAll();
+          // 新建库直接补齐全部索引(与 v4 迁移保持同一套命名/定义)。
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_ledgers_sync_id '
+              'ON ledgers (sync_id);');
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_categories_sync_id '
+              'ON categories (sync_id);');
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_transactions_sync_id '
+              'ON transactions (sync_id);');
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rate_overrides_sync_id '
+              'ON exchange_rate_overrides (sync_id);');
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_ledger_virtual_users_sync_id '
+              'ON ledger_virtual_users (sync_id);');
+          await customStatement(
+              'CREATE UNIQUE INDEX IF NOT EXISTS idx_sync_state_device_provider '
+              'ON sync_state (device_id, provider_type);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_transactions_ledger_happened '
+              'ON transactions (ledger_id, happened_at);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_record_edit_histories_record_id '
+              'ON record_edit_histories (record_id);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_local_changes_pushed_at '
+              'ON local_changes (pushed_at);');
+          await customStatement(
+              'CREATE INDEX IF NOT EXISTS idx_recurring_transactions_ledger_id '
+              'ON recurring_transactions (ledger_id);');
           await customStatement(
               'CREATE UNIQUE INDEX IF NOT EXISTS idx_rate_override_pair '
               'ON exchange_rate_overrides (base_currency, quote_currency);');
@@ -515,42 +812,9 @@ LazyDatabase _openConnection() {
     final dir = await getApplicationDocumentsDirectory();
     final file = File(p.join(dir.path, 'spitout.sqlite'));
 
-    // 开发环境：如果检测到锁文件，尝试删除（仅用于调试）
-    try {
-      final shmFile = File(p.join(dir.path, 'spitout.sqlite-shm'));
-      final walFile = File(p.join(dir.path, 'spitout.sqlite-wal'));
-
-      if (shmFile.existsSync() || walFile.existsSync()) {
-        logger.warning('db', '检测到 SQLite 临时文件，可能存在锁定');
-        // 注意：只在开发环境中记录，不自动删除，因为可能正在使用
-      }
-    } catch (e) {
-      logger.debug('db', '检查锁文件时出错: $e');
-    }
-
+    // WAL 模式下 -wal/-shm 文件在连接关闭后仍会存在，属正常现象；
+    // 因此这里不做 existsSync“锁文件”检查（避免每次启动误报告警），
+    // 也绝不提供删除它们的工具函数——数据库仍打开时删除会销毁 WAL 里未落盘的数据。
     return NativeDatabase.createInBackground(file);
   });
-}
-
-/// 开发工具：清除数据库锁文件（仅在应用完全关闭后使用）
-Future<void> clearDatabaseLockFiles() async {
-  try {
-    final dir = await getApplicationDocumentsDirectory();
-    final shmFile = File(p.join(dir.path, 'spitout.sqlite-shm'));
-    final walFile = File(p.join(dir.path, 'spitout.sqlite-wal'));
-
-    if (shmFile.existsSync()) {
-      await shmFile.delete();
-      logger.info('db', '已删除 .sqlite-shm 文件');
-    }
-
-    if (walFile.existsSync()) {
-      await walFile.delete();
-      logger.info('db', '已删除 .sqlite-wal 文件');
-    }
-
-    logger.info('db', '数据库锁文件清理完成');
-  } catch (e) {
-    logger.error('db', '清理锁文件失败', e);
-  }
 }

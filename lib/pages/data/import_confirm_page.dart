@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:decimal/decimal.dart';
 import 'package:spitout/providers/providers.dart';
 import '../../widgets/widgets.dart';
 import '../../data/models.dart' as schema;
@@ -771,7 +772,9 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
       // 金额解析
       final amountClean = (amountStr ?? '0').replaceAll(RegExp(r'[¥$,+-]'), '');
-      final amount = double.tryParse(amountClean)?.abs() ?? 0.0;
+      // 直接用 Decimal 精确解析 CSV 金额,不经过 double(审计问题 1)。
+      final amount =
+          Decimal.tryParse(amountClean.trim())?.abs() ?? Decimal.zero;
 
       // 日期解析
       final date = DateParser.parse(dateStr);

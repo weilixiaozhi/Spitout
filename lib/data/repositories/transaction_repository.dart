@@ -4,7 +4,7 @@ import '../db.dart';
 class TransactionUpdateBySyncIdData {
   final String syncId;
   final String type;
-  final double amount;
+  final int amount; // 单位:分
   final int? categoryId;
   final DateTime happenedAt;
   final String? note;
@@ -109,7 +109,7 @@ abstract class TransactionRepository {
   Future<int> addTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,
@@ -119,7 +119,7 @@ abstract class TransactionRepository {
     // 未传时聚合层兜底(currencyCode=本位币;
     // nativeAmount 外币先按有效汇率折算,取不到才 =amount)。
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // 支出人 userId(全局交易字段,非 AA 专属;null 由 markTxAuthor 回填操作者)
     String? paidByUserId,
     // AA 分摊模式:null/0=人均,1=不分摊,2=指定
@@ -173,7 +173,7 @@ abstract class TransactionRepository {
   Future<int> updateTransaction({
     required int id,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     DateTime? happenedAt,
@@ -182,7 +182,7 @@ abstract class TransactionRepository {
     // 未传(null)= 不改动既有值;聚合层对 amount 变化
     // 做折算兜底。
     String? currencyCode,
-    double? nativeAmount,
+    int? nativeAmount,
     // 支出人/AA 分摊字段:null = 不更新保持原值
     String? paidByUserId,
     int? aaMode,
@@ -267,7 +267,7 @@ abstract class TransactionRepository {
   Future<void> updateTransactionBySyncId({
     required String syncId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     required DateTime happenedAt,
     String? note,

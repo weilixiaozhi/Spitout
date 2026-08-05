@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../data/models.dart' show SpitoutCloudLedgerMember;
+import 'package:spitout/providers/providers.dart' show SpitoutCloudLedgerMember;
 import '../l10n/app_localizations.dart';
 import 'person_avatar.dart';
 

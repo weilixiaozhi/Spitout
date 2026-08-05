@@ -61,11 +61,11 @@ void main() {
       id: 1,
       ledgerId: 1,
       type: 'expense',
-      amount: 12.0,
+      amount: 1200,
       happenedAt: DateTime.utc(2026, 7, 12),
       excludeFromStats: false,
       currencyCode: 'USD',
-      nativeAmount: 86.4,
+      nativeAmount: 8640,
       version: 1,
     );
     final payload = EntitySerializer.serializeTransaction(tx);
@@ -76,7 +76,7 @@ void main() {
       id: 2,
       ledgerId: 1,
       type: 'expense',
-      amount: 5.0,
+      amount: 500,
       happenedAt: DateTime.utc(2026, 7, 12),
       excludeFromStats: false,
       version: 1,
@@ -92,11 +92,11 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 12,
+      amount: 1200,
       happenedAt: DateTime(2026, 7, 12),
       syncId: txSyncId,
       currencyCode: 'USD',
-      nativeAmount: 86.4,
+      nativeAmount: 8640,
     );
 
     provider.pushFakeChange(
@@ -116,7 +116,7 @@ void main() {
     final tx = await txBySyncId(txSyncId);
     expect(tx.note, '旧 App 改的备注');
     expect(tx.currencyCode, 'USD', reason: '缺键不得抹掉本地币种');
-    expect(tx.nativeAmount, 86.4, reason: 'amount 未变必须保留折算快照');
+    expect(tx.nativeAmount, 8640, reason: 'amount 未变必须保留折算快照');
   });
 
   test('快照保护:旧 payload 改了金额 → nativeAmount 退化 =新 amount(补折算可捞)', () async {
@@ -125,11 +125,11 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 12,
+      amount: 1200,
       happenedAt: DateTime(2026, 7, 12),
       syncId: txSyncId,
       currencyCode: 'USD',
-      nativeAmount: 86.4,
+      nativeAmount: 8640,
     );
 
     provider.pushFakeChange(
@@ -146,8 +146,8 @@ void main() {
     await engine.pull('');
 
     final tx = await txBySyncId(txSyncId);
-    expect(tx.amount, 24);
-    expect(tx.nativeAmount, 24, reason: '旧折算对新金额失效,退化 1:1');
+    expect(tx.amount, 2400);
+    expect(tx.nativeAmount, 2400, reason: '旧折算对新金额失效,退化 1:1');
     expect(tx.currencyCode, 'USD', reason: '本地币种保留 → 补折算检测能命中');
     expect(await repo.countUnconvertedForeignTx(lid), 1);
   });
@@ -171,7 +171,7 @@ void main() {
     await engine.pull('');
     var tx = await txBySyncId('tx-mc-3');
     expect(tx.currencyCode, 'USD');
-    expect(tx.nativeAmount, 86.4);
+    expect(tx.nativeAmount, 8640);
 
     // update 路径(新 App 改金额,payload 已带联动后的折算)
     provider.pushFakeChange(
@@ -189,7 +189,7 @@ void main() {
     );
     await engine.pull('');
     tx = await txBySyncId('tx-mc-3');
-    expect(tx.nativeAmount, 172.8);
+    expect(tx.nativeAmount, 17280);
   });
 
   test('insert 旧 payload(无两键)→ nativeAmount=amount(迁移回填同口径)', () async {
@@ -208,6 +208,8 @@ void main() {
     await engine.pull('');
     final tx = await txBySyncId('tx-mc-4');
     expect(tx.currencyCode, isNull);
-    expect(tx.nativeAmount, 5.0);
+    // currency/native 成对约束:旧 payload 无币种键 → 两者皆空,
+    // 统计按 amount 兜底(不引入错币种快照)。
+    expect(tx.nativeAmount, isNull);
   });
 }

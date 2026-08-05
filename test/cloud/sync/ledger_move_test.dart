@@ -68,7 +68,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 12.5,
+        amount: 1250,
         happenedAt: DateTime(2026, 5, 1),
       );
 
@@ -148,11 +148,11 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 30,
+        amount: 3000,
         happenedAt: DateTime(2026, 5, 1),
         paidByUserId: 'aa-user-1',
         aaMode: 2,
-        aaParticipants: 'aa-user-1,aa-user-2',
+        aaParticipants: '["aa-user-1","aa-user-2"]',
         aaSplits: '{"aa-user-1":"15","aa-user-2":"15"}',
       );
       final vuId = await repo.create(ledgerId: id, name: '虚拟室友');
@@ -167,7 +167,7 @@ void main() {
           .getSingle();
       expect(tx.paidByUserId, 'aa-user-1');
       expect(tx.aaMode, 2);
-      expect(tx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(tx.aaParticipants, '["aa-user-1","aa-user-2"]');
       expect(tx.aaSplits, '{"aa-user-1":"15","aa-user-2":"15"}');
       final vus = await repo.getByLedger(id);
       expect(vus.map((v) => v.id), contains(vuId),
@@ -233,11 +233,11 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 42,
+        amount: 4200,
         happenedAt: DateTime(2026, 5, 3),
         paidByUserId: 'aa-user-1',
         aaMode: 2,
-        aaParticipants: 'aa-user-1,aa-user-2',
+        aaParticipants: '["aa-user-1","aa-user-2"]',
         aaSplits: '{"aa-user-1":"21","aa-user-2":"21"}',
       );
       final vuId = await repo.create(ledgerId: id, name: '虚拟室友');
@@ -253,7 +253,7 @@ void main() {
           .getSingle();
       expect(tx.paidByUserId, 'aa-user-1');
       expect(tx.aaMode, 2);
-      expect(tx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(tx.aaParticipants, '["aa-user-1","aa-user-2"]');
       expect(tx.aaSplits, '{"aa-user-1":"21","aa-user-2":"21"}');
       final vus = await repo.getByLedger(id);
       expect(vus.map((v) => v.id), contains(vuId),
@@ -282,7 +282,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 8.8,
+        amount: 880,
         happenedAt: DateTime(2026, 6, 1),
       );
 
@@ -430,7 +430,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 5,
+        amount: 500,
         happenedAt: DateTime(2026, 7, 1),
       );
 
@@ -528,7 +528,7 @@ void main() {
       await repo.addTransaction(
         ledgerId: id,
         type: 'expense',
-        amount: 9,
+        amount: 900,
         happenedAt: DateTime(2026, 7, 2),
       );
 
@@ -573,14 +573,14 @@ void main() {
       final txId = await repo.addTransaction(
         ledgerId: srcId,
         type: 'expense',
-        amount: 10,
+        amount: 1000,
         happenedAt: DateTime(2026, 5, 1),
         note: '早餐',
       );
       await repo.addTransaction(
         ledgerId: srcId,
         type: 'income',
-        amount: 100,
+        amount: 10000,
         happenedAt: DateTime(2026, 5, 2),
       );
       // 造一条编辑历史,验证副本连审计轨迹一起搬。
@@ -639,11 +639,11 @@ void main() {
       await repo.addTransaction(
         ledgerId: srcId,
         type: 'expense',
-        amount: 60,
+        amount: 6000,
         happenedAt: DateTime(2026, 5, 4),
         paidByUserId: 'aa-user-1',
         aaMode: 2,
-        aaParticipants: 'aa-user-1,aa-user-2',
+        aaParticipants: '["aa-user-1","aa-user-2"]',
         aaSplits: '{"aa-user-1":"30","aa-user-2":"30"}',
       );
       await repo.create(ledgerId: srcId, name: '虚拟室友');
@@ -658,7 +658,7 @@ void main() {
           .getSingle();
       expect(copiedTx.paidByUserId, 'aa-user-1');
       expect(copiedTx.aaMode, 2);
-      expect(copiedTx.aaParticipants, 'aa-user-1,aa-user-2');
+      expect(copiedTx.aaParticipants, '["aa-user-1","aa-user-2"]');
       expect(copiedTx.aaSplits, '{"aa-user-1":"30","aa-user-2":"30"}');
       // 副本虚拟用户必须是独立新行(新 id),但名称要随副本迁移过来。
       final copiedVus = await repo.getByLedger(newId);

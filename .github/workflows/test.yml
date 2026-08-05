@@ -13,7 +13,6 @@ permissions:
   contents: read
 
 env:
-  # 项目已弃用 fvm，统一使用系统全局 Flutter 稳定版。
   FLUTTER_VERSION: "3.44.6"
 
 jobs:

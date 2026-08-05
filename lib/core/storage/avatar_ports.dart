@@ -18,13 +18,21 @@ import 'dart:typed_data';
 
 /// 头像存储端口（纯存储：路径/版本号/字节落盘）。
 abstract class AvatarStoragePort {
+  /// 扩展名白名单：仅允许字母/数字，长度 1-10，可带或不带前导点。
+  static final RegExp safeExtensionPattern =
+      RegExp(r'^\.?[A-Za-z0-9]{1,10}$');
+
+  static bool isValidExtension(String extension) =>
+      safeExtensionPattern.hasMatch(extension);
+
   /// 获取用户头像完整路径；未设置或文件已不存在返回 null。
   Future<String?> getAvatarPath();
 
   /// 从字节流保存头像（云端下载后落盘）。
   ///
-  /// [extension] 指定扩展名（默认 .jpg）。返回新头像完整路径；
-  /// 字节为空返回 null。
+  /// [extension] 指定扩展名（默认 .jpg），仅允许字母/数字（可带或不带
+  /// 前导点，如 jpg / .jpg）。空字节或非法扩展名抛 [ArgumentError]，
+  /// IO 失败抛异常；成功时返回非 null 的新头像完整路径。
   Future<String?> saveAvatarFromBytes(
     Uint8List bytes, {
     String extension = '.jpg',
@@ -32,7 +40,8 @@ abstract class AvatarStoragePort {
 
   /// 从已选取的源文件复制落盘（ImagePicker 选取后使用）。
   ///
-  /// 返回新头像完整路径。源文件不存在/复制失败抛异常。
+  /// 返回新头像完整路径。源文件不存在/复制失败抛异常，源扩展名不符合
+  /// 白名单时抛 [ArgumentError]。
   Future<String?> saveAvatarFromFile(String sourcePath);
 
   /// 取上一次同步下来的远端头像版本号（未同步过返回 0）。

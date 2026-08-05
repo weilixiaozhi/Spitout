@@ -3,10 +3,14 @@
 //
 // 数据源为本地 memberExpenseStatsProvider(按 paidByUserId 聚合),
 // 含真实成员 + 虚拟用户;paidByUserId 为空的交易不计入(无法归属支出人)。
+import 'dart:io' show File;
+
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
+import 'package:spitout/providers/sync/sync_providers.dart'
+    show spitoutCloudProviderInstance;
 import 'package:spitout/providers/currency/currency_providers.dart'
     show currentLedgerCurrencyProvider;
 import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
@@ -186,7 +190,7 @@ class _MemberStatTile extends ConsumerWidget {
         ? (stat.expenseTotal / totalExpense * 100).clamp(0, 100)
         : 0;
     return ListTile(
-      leading: const _StatsAvatar(),
+      leading: _StatsAvatar(stat: stat),
       // 标题行与成员管理模块一致:本人「(我)」后缀统一走共享 MeSuffix,
       // 字号/颜色/字重相同,保证两模块本人展示统一。
       title: Row(
@@ -236,12 +240,55 @@ class _MemberStatTile extends ConsumerWidget {
   }
 }
 
-/// 成员支出头像 — 本地统计无头像数据,统一展示虚拟用户同等 person 图标。
-class _StatsAvatar extends StatelessWidget {
-  const _StatsAvatar();
+/// 成员支出头像 — 本人优先用本地头像文件，真实成员用 server avatar_url，
+/// 都没有或加载失败才回退 person 图标。
+class _StatsAvatar extends ConsumerWidget {
+  const _StatsAvatar({required this.stat});
+
+  final MemberExpenseStatItem stat;
 
   @override
-  Widget build(BuildContext context) {
-    return const PersonAvatar(size: 40, iconSize: 18);
+  Widget build(BuildContext context, WidgetRef ref) {
+    // 本人本地头像优先（离线可用、上传后即时生效）
+    final localPath = stat.localAvatarPath;
+    if (localPath != null && localPath.isNotEmpty) {
+      return ClipOval(
+        child: Image.file(
+          File(localPath),
+          width: 40,
+          height: 40,
+          fit: BoxFit.cover,
+          errorBuilder: (_, _, _) =>
+              const PersonAvatar(size: 40, iconSize: 18),
+        ),
+      );
+    }
+
+    final relativeUrl = stat.avatarUrl;
+    if (relativeUrl == null || relativeUrl.isEmpty) {
+      return const PersonAvatar(size: 40, iconSize: 18);
+    }
+    final cloudAsync = ref.watch(spitoutCloudProviderInstance);
+    final base = cloudAsync.value?.baseUrl;
+    if (base == null || base.isEmpty) {
+      return const PersonAvatar(size: 40, iconSize: 18);
+    }
+    final trimmedBase =
+        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
+    final absoluteUrl =
+        relativeUrl.startsWith('http') ? relativeUrl : '$trimmedBase$relativeUrl';
+    return ClipOval(
+      child: Image.network(
+        absoluteUrl,
+        width: 40,
+        height: 40,
+        fit: BoxFit.cover,
+        loadingBuilder: (ctx, child, progress) => progress == null
+            ? child
+            : const PersonAvatar(size: 40, iconSize: 18),
+        errorBuilder: (_, _, _) =>
+            const PersonAvatar(size: 40, iconSize: 18),
+      ),
+    );
   }
 }

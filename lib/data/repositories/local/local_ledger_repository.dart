@@ -97,15 +97,18 @@ class LocalLedgerRepository implements LedgerRepository {
     final transactionCount = rows.length;
 
     // 账本支出总额(账本维度,读折算值 nativeAmount ?? amount 兜底,
-    // 单币种账本 native==amount 结果不变)。
-    double expenseTotal = 0.0;
+    // 单币种账本 native==amount 结果不变)。整数分累加,最后转"元"。
+    int expenseTotalCents = 0;
     for (final t in rows) {
       final v = t.nativeAmount ?? t.amount;
       // 全局仅支出模式，所有交易 type 恒为 'expense'
-      expenseTotal += v;
+      expenseTotalCents += v;
     }
 
-    return (expenseTotal: expenseTotal, transactionCount: transactionCount);
+    return (
+      expenseTotal: expenseTotalCents / 100,
+      transactionCount: transactionCount,
+    );
   }
 
   @override

@@ -36,7 +36,7 @@ void main() {
     return repo.addTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 100.0,
+      amount: 10000,
       happenedAt: DateTime(2026, 1, 1),
       paidByUserId: paidByUserId,
     );

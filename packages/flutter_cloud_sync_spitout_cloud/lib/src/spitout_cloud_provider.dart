@@ -448,12 +448,25 @@ class SpitoutCloudProvider implements CloudProvider {
     return storage.listInvites(ledgerId: ledgerId);
   }
 
-  Future<void> revokeInvite({required String ledgerId, required String code}) async {
+  /// 撤销邀请。
+  ///
+  /// 新协议以 [inviteId] 为准,路径为
+  /// `DELETE /ledgers/{ledgerId}/invites/{inviteId}`;server 兼容把完整明文码
+  /// 作为 key 传入,因此旧调用方继续传 [code] 也能工作,无需改调用点。
+  Future<void> revokeInvite({
+    required String ledgerId,
+    String? inviteId,
+    String? code,
+  }) async {
     final storage = _storage;
     if (storage == null) {
       throw CloudConfigurationException('Spitout Cloud storage is not initialized.');
     }
-    return storage.revokeInvite(ledgerId: ledgerId, code: code);
+    return storage.revokeInvite(
+      ledgerId: ledgerId,
+      inviteId: inviteId,
+      code: code,
+    );
   }
 
   Future<SpitoutCloudInvitePreview> previewInvite({required String code}) async {
@@ -2343,9 +2356,21 @@ class SpitoutCloudStorageService implements CloudStorageService {
     ];
   }
 
-  Future<void> revokeInvite({required String ledgerId, required String code}) async {
+  /// 撤销邀请:优先用邀请 id,未传时回退到完整明文码(兼容旧调用)。
+  ///
+  /// 新列表接口不再返回完整码,UI 撤销必须用列表里的 id;创建响应里拿到的
+  /// 完整码仍可撤销,故保留 [code] 分支,server 对两种 key 都接受。
+  Future<void> revokeInvite({
+    required String ledgerId,
+    String? inviteId,
+    String? code,
+  }) async {
+    final key = inviteId ?? code;
+    if (key == null || key.isEmpty) {
+      throw ArgumentError('revokeInvite 需要 inviteId 或 code 其中之一');
+    }
     final response = await _authedRequest(
-      method: 'DELETE', path: '/ledgers/$ledgerId/invites/$code',
+      method: 'DELETE', path: '/ledgers/$ledgerId/invites/$key',
     );
     if (response.statusCode < 200 || response.statusCode >= 300) {
       throw CloudStorageException(
@@ -3639,36 +3664,45 @@ String _extractErrorMessage(http.Response response) {
 
 class SpitoutCloudInvite {
   const SpitoutCloudInvite({
-    required this.code,
+    required this.id,
     required this.formattedCode,
     required this.targetRole,
     required this.expiresAt,
     required this.createdAt,
-    required this.shareUrl,
+    this.code,
+    this.codePrefix,
+    this.shareUrl,
     this.invitedByUserId,
   });
 
-  /// 6 位明文邀请码(`ABC123`)。
-  final String code;
-  /// 显示用 "ABC 123"(中间空格易读)。
+  /// 邀请唯一 id:创建与列表响应都有,撤销时传这个值。
+  final String id;
+  /// 6 位明文邀请码(`ABC123`),仅创建响应返回;列表接口出于安全不再返回完整码,为 null。
+  final String? code;
+  /// 列表掩码前缀(`ABC1`),仅列表响应返回;创建响应为 null。
+  final String? codePrefix;
+  /// 显示用格式化码:创建响应 "ABC 123"(中间空格易读),列表响应 "ABC1 ••"(掩码)。
   final String formattedCode;
   final String targetRole;
   final DateTime expiresAt;
   final DateTime createdAt;
-  final String shareUrl;
+  /// 分享短链,仅创建响应返回;列表响应为 null。
+  final String? shareUrl;
   /// list endpoint 返回时带,create 不带(创建者自己即 caller)。
   final String? invitedByUserId;
 
   factory SpitoutCloudInvite.fromJson(Map<String, dynamic> json) {
     return SpitoutCloudInvite(
-      code: (json['code'] as String?)?.trim() ?? '',
+      id: (json['id'] as String?)?.trim() ?? '',
+      code: (json['code'] as String?)?.trim(),
+      codePrefix: (json['code_prefix'] as String?)?.trim(),
       formattedCode: (json['formatted_code'] as String?)?.trim() ?? '',
       targetRole: (json['target_role'] as String?)?.trim() ?? 'editor',
       expiresAt: DateTime.tryParse(json['expires_at'] as String? ?? '')?.toUtc()
           ?? DateTime.now().toUtc(),
       createdAt: DateTime.tryParse(json['created_at'] as String? ?? '')?.toUtc()
           ?? DateTime.now().toUtc(),
-      shareUrl: (json['share_url'] as String?)?.trim() ?? '',
+      shareUrl: (json['share_url'] as String?)?.trim(),
       invitedByUserId: (json['invited_by_user_id'] as String?)?.trim().isEmpty == true
           ? null
           : json['invited_by_user_id'] as String?,

@@ -1236,6 +1236,963 @@ class CategoriesCompanion extends UpdateCompanion<Category> {
   }
 }
 
+class $RecurringTransactionsTable extends RecurringTransactions
+    with TableInfo<$RecurringTransactionsTable, RecurringTransaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $RecurringTransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<int> id = GeneratedColumn<int>(
+    'id',
+    aliasedName,
+    false,
+    hasAutoIncrement: true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'PRIMARY KEY AUTOINCREMENT',
+    ),
+  );
+  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
+    'ledgerId',
+  );
+  @override
+  late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
+    'ledger_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ledgers (id) ON DELETE CASCADE',
+    ),
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
+    'categoryId',
+  );
+  @override
+  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
+    'category_id',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _noteMeta = const VerificationMeta('note');
+  @override
+  late final GeneratedColumn<String> note = GeneratedColumn<String>(
+    'note',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _frequencyMeta = const VerificationMeta(
+    'frequency',
+  );
+  @override
+  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
+    'frequency',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _intervalMeta = const VerificationMeta(
+    'interval',
+  );
+  @override
+  late final GeneratedColumn<int> interval = GeneratedColumn<int>(
+    'interval',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(1),
+  );
+  static const VerificationMeta _dayOfMonthMeta = const VerificationMeta(
+    'dayOfMonth',
+  );
+  @override
+  late final GeneratedColumn<int> dayOfMonth = GeneratedColumn<int>(
+    'day_of_month',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _dayOfWeekMeta = const VerificationMeta(
+    'dayOfWeek',
+  );
+  @override
+  late final GeneratedColumn<int> dayOfWeek = GeneratedColumn<int>(
+    'day_of_week',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _monthOfYearMeta = const VerificationMeta(
+    'monthOfYear',
+  );
+  @override
+  late final GeneratedColumn<int> monthOfYear = GeneratedColumn<int>(
+    'month_of_year',
+    aliasedName,
+    true,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _startDateMeta = const VerificationMeta(
+    'startDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
+    'start_date',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _endDateMeta = const VerificationMeta(
+    'endDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
+    'end_date',
+    aliasedName,
+    true,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+  );
+  static const VerificationMeta _lastGeneratedDateMeta = const VerificationMeta(
+    'lastGeneratedDate',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastGeneratedDate =
+      GeneratedColumn<DateTime>(
+        'last_generated_date',
+        aliasedName,
+        true,
+        type: DriftSqlType.dateTime,
+        requiredDuringInsert: false,
+      );
+  static const VerificationMeta _enabledMeta = const VerificationMeta(
+    'enabled',
+  );
+  @override
+  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
+    'enabled',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("enabled" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
+    'updatedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
+    'updated_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: false,
+    defaultValue: currentDateAndTime,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    dayOfWeek,
+    monthOfYear,
+    startDate,
+    endDate,
+    lastGeneratedDate,
+    enabled,
+    createdAt,
+    updatedAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'recurring_transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<RecurringTransaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    }
+    if (data.containsKey('ledger_id')) {
+      context.handle(
+        _ledgerIdMeta,
+        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_ledgerIdMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('category_id')) {
+      context.handle(
+        _categoryIdMeta,
+        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
+      );
+    }
+    if (data.containsKey('note')) {
+      context.handle(
+        _noteMeta,
+        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
+      );
+    }
+    if (data.containsKey('frequency')) {
+      context.handle(
+        _frequencyMeta,
+        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_frequencyMeta);
+    }
+    if (data.containsKey('interval')) {
+      context.handle(
+        _intervalMeta,
+        interval.isAcceptableOrUnknown(data['interval']!, _intervalMeta),
+      );
+    }
+    if (data.containsKey('day_of_month')) {
+      context.handle(
+        _dayOfMonthMeta,
+        dayOfMonth.isAcceptableOrUnknown(
+          data['day_of_month']!,
+          _dayOfMonthMeta,
+        ),
+      );
+    }
+    if (data.containsKey('day_of_week')) {
+      context.handle(
+        _dayOfWeekMeta,
+        dayOfWeek.isAcceptableOrUnknown(data['day_of_week']!, _dayOfWeekMeta),
+      );
+    }
+    if (data.containsKey('month_of_year')) {
+      context.handle(
+        _monthOfYearMeta,
+        monthOfYear.isAcceptableOrUnknown(
+          data['month_of_year']!,
+          _monthOfYearMeta,
+        ),
+      );
+    }
+    if (data.containsKey('start_date')) {
+      context.handle(
+        _startDateMeta,
+        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_startDateMeta);
+    }
+    if (data.containsKey('end_date')) {
+      context.handle(
+        _endDateMeta,
+        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
+      );
+    }
+    if (data.containsKey('last_generated_date')) {
+      context.handle(
+        _lastGeneratedDateMeta,
+        lastGeneratedDate.isAcceptableOrUnknown(
+          data['last_generated_date']!,
+          _lastGeneratedDateMeta,
+        ),
+      );
+    }
+    if (data.containsKey('enabled')) {
+      context.handle(
+        _enabledMeta,
+        enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    }
+    if (data.containsKey('updated_at')) {
+      context.handle(
+        _updatedAtMeta,
+        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
+      );
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  RecurringTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return RecurringTransaction(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}id'],
+      )!,
+      ledgerId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}ledger_id'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      categoryId: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}category_id'],
+      ),
+      note: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}note'],
+      ),
+      frequency: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}frequency'],
+      )!,
+      interval: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}interval'],
+      )!,
+      dayOfMonth: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_month'],
+      ),
+      dayOfWeek: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}day_of_week'],
+      ),
+      monthOfYear: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}month_of_year'],
+      ),
+      startDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}start_date'],
+      )!,
+      endDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}end_date'],
+      ),
+      lastGeneratedDate: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_generated_date'],
+      ),
+      enabled: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}enabled'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+      updatedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}updated_at'],
+      )!,
+    );
+  }
+
+  @override
+  $RecurringTransactionsTable createAlias(String alias) {
+    return $RecurringTransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class RecurringTransaction extends DataClass
+    implements Insertable<RecurringTransaction> {
+  final int id;
+  final int ledgerId;
+  final String type;
+
+  /// 周期模板金额,单位=最小货币单位(分),与 [Transactions.amount] 同口径。
+  final int amount;
+  final int? categoryId;
+  final String? note;
+  final String frequency;
+  final int interval;
+  final int? dayOfMonth;
+  final int? dayOfWeek;
+  final int? monthOfYear;
+  final DateTime startDate;
+  final DateTime? endDate;
+  final DateTime? lastGeneratedDate;
+  final bool enabled;
+  final DateTime createdAt;
+  final DateTime updatedAt;
+  const RecurringTransaction({
+    required this.id,
+    required this.ledgerId,
+    required this.type,
+    required this.amount,
+    this.categoryId,
+    this.note,
+    required this.frequency,
+    required this.interval,
+    this.dayOfMonth,
+    this.dayOfWeek,
+    this.monthOfYear,
+    required this.startDate,
+    this.endDate,
+    this.lastGeneratedDate,
+    required this.enabled,
+    required this.createdAt,
+    required this.updatedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<int>(id);
+    map['ledger_id'] = Variable<int>(ledgerId);
+    map['type'] = Variable<String>(type);
+    map['amount'] = Variable<int>(amount);
+    if (!nullToAbsent || categoryId != null) {
+      map['category_id'] = Variable<int>(categoryId);
+    }
+    if (!nullToAbsent || note != null) {
+      map['note'] = Variable<String>(note);
+    }
+    map['frequency'] = Variable<String>(frequency);
+    map['interval'] = Variable<int>(interval);
+    if (!nullToAbsent || dayOfMonth != null) {
+      map['day_of_month'] = Variable<int>(dayOfMonth);
+    }
+    if (!nullToAbsent || dayOfWeek != null) {
+      map['day_of_week'] = Variable<int>(dayOfWeek);
+    }
+    if (!nullToAbsent || monthOfYear != null) {
+      map['month_of_year'] = Variable<int>(monthOfYear);
+    }
+    map['start_date'] = Variable<DateTime>(startDate);
+    if (!nullToAbsent || endDate != null) {
+      map['end_date'] = Variable<DateTime>(endDate);
+    }
+    if (!nullToAbsent || lastGeneratedDate != null) {
+      map['last_generated_date'] = Variable<DateTime>(lastGeneratedDate);
+    }
+    map['enabled'] = Variable<bool>(enabled);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    map['updated_at'] = Variable<DateTime>(updatedAt);
+    return map;
+  }
+
+  RecurringTransactionsCompanion toCompanion(bool nullToAbsent) {
+    return RecurringTransactionsCompanion(
+      id: Value(id),
+      ledgerId: Value(ledgerId),
+      type: Value(type),
+      amount: Value(amount),
+      categoryId: categoryId == null && nullToAbsent
+          ? const Value.absent()
+          : Value(categoryId),
+      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
+      frequency: Value(frequency),
+      interval: Value(interval),
+      dayOfMonth: dayOfMonth == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dayOfMonth),
+      dayOfWeek: dayOfWeek == null && nullToAbsent
+          ? const Value.absent()
+          : Value(dayOfWeek),
+      monthOfYear: monthOfYear == null && nullToAbsent
+          ? const Value.absent()
+          : Value(monthOfYear),
+      startDate: Value(startDate),
+      endDate: endDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(endDate),
+      lastGeneratedDate: lastGeneratedDate == null && nullToAbsent
+          ? const Value.absent()
+          : Value(lastGeneratedDate),
+      enabled: Value(enabled),
+      createdAt: Value(createdAt),
+      updatedAt: Value(updatedAt),
+    );
+  }
+
+  factory RecurringTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return RecurringTransaction(
+      id: serializer.fromJson<int>(json['id']),
+      ledgerId: serializer.fromJson<int>(json['ledgerId']),
+      type: serializer.fromJson<String>(json['type']),
+      amount: serializer.fromJson<int>(json['amount']),
+      categoryId: serializer.fromJson<int?>(json['categoryId']),
+      note: serializer.fromJson<String?>(json['note']),
+      frequency: serializer.fromJson<String>(json['frequency']),
+      interval: serializer.fromJson<int>(json['interval']),
+      dayOfMonth: serializer.fromJson<int?>(json['dayOfMonth']),
+      dayOfWeek: serializer.fromJson<int?>(json['dayOfWeek']),
+      monthOfYear: serializer.fromJson<int?>(json['monthOfYear']),
+      startDate: serializer.fromJson<DateTime>(json['startDate']),
+      endDate: serializer.fromJson<DateTime?>(json['endDate']),
+      lastGeneratedDate: serializer.fromJson<DateTime?>(
+        json['lastGeneratedDate'],
+      ),
+      enabled: serializer.fromJson<bool>(json['enabled']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<int>(id),
+      'ledgerId': serializer.toJson<int>(ledgerId),
+      'type': serializer.toJson<String>(type),
+      'amount': serializer.toJson<int>(amount),
+      'categoryId': serializer.toJson<int?>(categoryId),
+      'note': serializer.toJson<String?>(note),
+      'frequency': serializer.toJson<String>(frequency),
+      'interval': serializer.toJson<int>(interval),
+      'dayOfMonth': serializer.toJson<int?>(dayOfMonth),
+      'dayOfWeek': serializer.toJson<int?>(dayOfWeek),
+      'monthOfYear': serializer.toJson<int?>(monthOfYear),
+      'startDate': serializer.toJson<DateTime>(startDate),
+      'endDate': serializer.toJson<DateTime?>(endDate),
+      'lastGeneratedDate': serializer.toJson<DateTime?>(lastGeneratedDate),
+      'enabled': serializer.toJson<bool>(enabled),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+      'updatedAt': serializer.toJson<DateTime>(updatedAt),
+    };
+  }
+
+  RecurringTransaction copyWith({
+    int? id,
+    int? ledgerId,
+    String? type,
+    int? amount,
+    Value<int?> categoryId = const Value.absent(),
+    Value<String?> note = const Value.absent(),
+    String? frequency,
+    int? interval,
+    Value<int?> dayOfMonth = const Value.absent(),
+    Value<int?> dayOfWeek = const Value.absent(),
+    Value<int?> monthOfYear = const Value.absent(),
+    DateTime? startDate,
+    Value<DateTime?> endDate = const Value.absent(),
+    Value<DateTime?> lastGeneratedDate = const Value.absent(),
+    bool? enabled,
+    DateTime? createdAt,
+    DateTime? updatedAt,
+  }) => RecurringTransaction(
+    id: id ?? this.id,
+    ledgerId: ledgerId ?? this.ledgerId,
+    type: type ?? this.type,
+    amount: amount ?? this.amount,
+    categoryId: categoryId.present ? categoryId.value : this.categoryId,
+    note: note.present ? note.value : this.note,
+    frequency: frequency ?? this.frequency,
+    interval: interval ?? this.interval,
+    dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
+    dayOfWeek: dayOfWeek.present ? dayOfWeek.value : this.dayOfWeek,
+    monthOfYear: monthOfYear.present ? monthOfYear.value : this.monthOfYear,
+    startDate: startDate ?? this.startDate,
+    endDate: endDate.present ? endDate.value : this.endDate,
+    lastGeneratedDate: lastGeneratedDate.present
+        ? lastGeneratedDate.value
+        : this.lastGeneratedDate,
+    enabled: enabled ?? this.enabled,
+    createdAt: createdAt ?? this.createdAt,
+    updatedAt: updatedAt ?? this.updatedAt,
+  );
+  RecurringTransaction copyWithCompanion(RecurringTransactionsCompanion data) {
+    return RecurringTransaction(
+      id: data.id.present ? data.id.value : this.id,
+      ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
+      type: data.type.present ? data.type.value : this.type,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      categoryId: data.categoryId.present
+          ? data.categoryId.value
+          : this.categoryId,
+      note: data.note.present ? data.note.value : this.note,
+      frequency: data.frequency.present ? data.frequency.value : this.frequency,
+      interval: data.interval.present ? data.interval.value : this.interval,
+      dayOfMonth: data.dayOfMonth.present
+          ? data.dayOfMonth.value
+          : this.dayOfMonth,
+      dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
+      monthOfYear: data.monthOfYear.present
+          ? data.monthOfYear.value
+          : this.monthOfYear,
+      startDate: data.startDate.present ? data.startDate.value : this.startDate,
+      endDate: data.endDate.present ? data.endDate.value : this.endDate,
+      lastGeneratedDate: data.lastGeneratedDate.present
+          ? data.lastGeneratedDate.value
+          : this.lastGeneratedDate,
+      enabled: data.enabled.present ? data.enabled.value : this.enabled,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringTransaction(')
+          ..write('id: $id, ')
+          ..write('ledgerId: $ledgerId, ')
+          ..write('type: $type, ')
+          ..write('amount: $amount, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('note: $note, ')
+          ..write('frequency: $frequency, ')
+          ..write('interval: $interval, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('dayOfWeek: $dayOfWeek, ')
+          ..write('monthOfYear: $monthOfYear, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('lastGeneratedDate: $lastGeneratedDate, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(
+    id,
+    ledgerId,
+    type,
+    amount,
+    categoryId,
+    note,
+    frequency,
+    interval,
+    dayOfMonth,
+    dayOfWeek,
+    monthOfYear,
+    startDate,
+    endDate,
+    lastGeneratedDate,
+    enabled,
+    createdAt,
+    updatedAt,
+  );
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is RecurringTransaction &&
+          other.id == this.id &&
+          other.ledgerId == this.ledgerId &&
+          other.type == this.type &&
+          other.amount == this.amount &&
+          other.categoryId == this.categoryId &&
+          other.note == this.note &&
+          other.frequency == this.frequency &&
+          other.interval == this.interval &&
+          other.dayOfMonth == this.dayOfMonth &&
+          other.dayOfWeek == this.dayOfWeek &&
+          other.monthOfYear == this.monthOfYear &&
+          other.startDate == this.startDate &&
+          other.endDate == this.endDate &&
+          other.lastGeneratedDate == this.lastGeneratedDate &&
+          other.enabled == this.enabled &&
+          other.createdAt == this.createdAt &&
+          other.updatedAt == this.updatedAt);
+}
+
+class RecurringTransactionsCompanion
+    extends UpdateCompanion<RecurringTransaction> {
+  final Value<int> id;
+  final Value<int> ledgerId;
+  final Value<String> type;
+  final Value<int> amount;
+  final Value<int?> categoryId;
+  final Value<String?> note;
+  final Value<String> frequency;
+  final Value<int> interval;
+  final Value<int?> dayOfMonth;
+  final Value<int?> dayOfWeek;
+  final Value<int?> monthOfYear;
+  final Value<DateTime> startDate;
+  final Value<DateTime?> endDate;
+  final Value<DateTime?> lastGeneratedDate;
+  final Value<bool> enabled;
+  final Value<DateTime> createdAt;
+  final Value<DateTime> updatedAt;
+  const RecurringTransactionsCompanion({
+    this.id = const Value.absent(),
+    this.ledgerId = const Value.absent(),
+    this.type = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.categoryId = const Value.absent(),
+    this.note = const Value.absent(),
+    this.frequency = const Value.absent(),
+    this.interval = const Value.absent(),
+    this.dayOfMonth = const Value.absent(),
+    this.dayOfWeek = const Value.absent(),
+    this.monthOfYear = const Value.absent(),
+    this.startDate = const Value.absent(),
+    this.endDate = const Value.absent(),
+    this.lastGeneratedDate = const Value.absent(),
+    this.enabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  });
+  RecurringTransactionsCompanion.insert({
+    this.id = const Value.absent(),
+    required int ledgerId,
+    required String type,
+    required int amount,
+    this.categoryId = const Value.absent(),
+    this.note = const Value.absent(),
+    required String frequency,
+    this.interval = const Value.absent(),
+    this.dayOfMonth = const Value.absent(),
+    this.dayOfWeek = const Value.absent(),
+    this.monthOfYear = const Value.absent(),
+    required DateTime startDate,
+    this.endDate = const Value.absent(),
+    this.lastGeneratedDate = const Value.absent(),
+    this.enabled = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.updatedAt = const Value.absent(),
+  }) : ledgerId = Value(ledgerId),
+       type = Value(type),
+       amount = Value(amount),
+       frequency = Value(frequency),
+       startDate = Value(startDate);
+  static Insertable<RecurringTransaction> custom({
+    Expression<int>? id,
+    Expression<int>? ledgerId,
+    Expression<String>? type,
+    Expression<int>? amount,
+    Expression<int>? categoryId,
+    Expression<String>? note,
+    Expression<String>? frequency,
+    Expression<int>? interval,
+    Expression<int>? dayOfMonth,
+    Expression<int>? dayOfWeek,
+    Expression<int>? monthOfYear,
+    Expression<DateTime>? startDate,
+    Expression<DateTime>? endDate,
+    Expression<DateTime>? lastGeneratedDate,
+    Expression<bool>? enabled,
+    Expression<DateTime>? createdAt,
+    Expression<DateTime>? updatedAt,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (ledgerId != null) 'ledger_id': ledgerId,
+      if (type != null) 'type': type,
+      if (amount != null) 'amount': amount,
+      if (categoryId != null) 'category_id': categoryId,
+      if (note != null) 'note': note,
+      if (frequency != null) 'frequency': frequency,
+      if (interval != null) 'interval': interval,
+      if (dayOfMonth != null) 'day_of_month': dayOfMonth,
+      if (dayOfWeek != null) 'day_of_week': dayOfWeek,
+      if (monthOfYear != null) 'month_of_year': monthOfYear,
+      if (startDate != null) 'start_date': startDate,
+      if (endDate != null) 'end_date': endDate,
+      if (lastGeneratedDate != null) 'last_generated_date': lastGeneratedDate,
+      if (enabled != null) 'enabled': enabled,
+      if (createdAt != null) 'created_at': createdAt,
+      if (updatedAt != null) 'updated_at': updatedAt,
+    });
+  }
+
+  RecurringTransactionsCompanion copyWith({
+    Value<int>? id,
+    Value<int>? ledgerId,
+    Value<String>? type,
+    Value<int>? amount,
+    Value<int?>? categoryId,
+    Value<String?>? note,
+    Value<String>? frequency,
+    Value<int>? interval,
+    Value<int?>? dayOfMonth,
+    Value<int?>? dayOfWeek,
+    Value<int?>? monthOfYear,
+    Value<DateTime>? startDate,
+    Value<DateTime?>? endDate,
+    Value<DateTime?>? lastGeneratedDate,
+    Value<bool>? enabled,
+    Value<DateTime>? createdAt,
+    Value<DateTime>? updatedAt,
+  }) {
+    return RecurringTransactionsCompanion(
+      id: id ?? this.id,
+      ledgerId: ledgerId ?? this.ledgerId,
+      type: type ?? this.type,
+      amount: amount ?? this.amount,
+      categoryId: categoryId ?? this.categoryId,
+      note: note ?? this.note,
+      frequency: frequency ?? this.frequency,
+      interval: interval ?? this.interval,
+      dayOfMonth: dayOfMonth ?? this.dayOfMonth,
+      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
+      monthOfYear: monthOfYear ?? this.monthOfYear,
+      startDate: startDate ?? this.startDate,
+      endDate: endDate ?? this.endDate,
+      lastGeneratedDate: lastGeneratedDate ?? this.lastGeneratedDate,
+      enabled: enabled ?? this.enabled,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<int>(id.value);
+    }
+    if (ledgerId.present) {
+      map['ledger_id'] = Variable<int>(ledgerId.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (categoryId.present) {
+      map['category_id'] = Variable<int>(categoryId.value);
+    }
+    if (note.present) {
+      map['note'] = Variable<String>(note.value);
+    }
+    if (frequency.present) {
+      map['frequency'] = Variable<String>(frequency.value);
+    }
+    if (interval.present) {
+      map['interval'] = Variable<int>(interval.value);
+    }
+    if (dayOfMonth.present) {
+      map['day_of_month'] = Variable<int>(dayOfMonth.value);
+    }
+    if (dayOfWeek.present) {
+      map['day_of_week'] = Variable<int>(dayOfWeek.value);
+    }
+    if (monthOfYear.present) {
+      map['month_of_year'] = Variable<int>(monthOfYear.value);
+    }
+    if (startDate.present) {
+      map['start_date'] = Variable<DateTime>(startDate.value);
+    }
+    if (endDate.present) {
+      map['end_date'] = Variable<DateTime>(endDate.value);
+    }
+    if (lastGeneratedDate.present) {
+      map['last_generated_date'] = Variable<DateTime>(lastGeneratedDate.value);
+    }
+    if (enabled.present) {
+      map['enabled'] = Variable<bool>(enabled.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (updatedAt.present) {
+      map['updated_at'] = Variable<DateTime>(updatedAt.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('RecurringTransactionsCompanion(')
+          ..write('id: $id, ')
+          ..write('ledgerId: $ledgerId, ')
+          ..write('type: $type, ')
+          ..write('amount: $amount, ')
+          ..write('categoryId: $categoryId, ')
+          ..write('note: $note, ')
+          ..write('frequency: $frequency, ')
+          ..write('interval: $interval, ')
+          ..write('dayOfMonth: $dayOfMonth, ')
+          ..write('dayOfWeek: $dayOfWeek, ')
+          ..write('monthOfYear: $monthOfYear, ')
+          ..write('startDate: $startDate, ')
+          ..write('endDate: $endDate, ')
+          ..write('lastGeneratedDate: $lastGeneratedDate, ')
+          ..write('enabled: $enabled, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('updatedAt: $updatedAt')
+          ..write(')'))
+        .toString();
+  }
+}
+
 class $TransactionsTable extends Transactions
     with TableInfo<$TransactionsTable, Transaction> {
   @override
@@ -1265,6 +2222,9 @@ class $TransactionsTable extends Transactions
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES ledgers (id) ON DELETE CASCADE',
+    ),
   );
   static const VerificationMeta _typeMeta = const VerificationMeta('type');
   @override
@@ -1277,11 +2237,11 @@ class $TransactionsTable extends Transactions
   );
   static const VerificationMeta _amountMeta = const VerificationMeta('amount');
   @override
-  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
     'amount',
     aliasedName,
     false,
-    type: DriftSqlType.double,
+    type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
   static const VerificationMeta _categoryIdMeta = const VerificationMeta(
@@ -1294,6 +2254,9 @@ class $TransactionsTable extends Transactions
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES categories (id) ON DELETE SET NULL',
+    ),
   );
   static const VerificationMeta _happenedAtMeta = const VerificationMeta(
     'happenedAt',
@@ -1326,6 +2289,9 @@ class $TransactionsTable extends Transactions
     true,
     type: DriftSqlType.int,
     requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES recurring_transactions (id) ON DELETE SET NULL',
+    ),
   );
   static const VerificationMeta _syncIdMeta = const VerificationMeta('syncId');
   @override
@@ -1399,11 +2365,11 @@ class $TransactionsTable extends Transactions
     'nativeAmount',
   );
   @override
-  late final GeneratedColumn<double> nativeAmount = GeneratedColumn<double>(
+  late final GeneratedColumn<int> nativeAmount = GeneratedColumn<int>(
     'native_amount',
     aliasedName,
     true,
-    type: DriftSqlType.double,
+    type: DriftSqlType.int,
     requiredDuringInsert: false,
   );
   static const VerificationMeta _versionMeta = const VerificationMeta(
@@ -1688,7 +2654,7 @@ class $TransactionsTable extends Transactions
         data['${effectivePrefix}type'],
       )!,
       amount: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
+        DriftSqlType.int,
         data['${effectivePrefix}amount'],
       )!,
       categoryId: attachedDatabase.typeMapping.read(
@@ -1732,7 +2698,7 @@ class $TransactionsTable extends Transactions
         data['${effectivePrefix}currency_code'],
       ),
       nativeAmount: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
+        DriftSqlType.int,
         data['${effectivePrefix}native_amount'],
       ),
       version: attachedDatabase.typeMapping.read(
@@ -1772,7 +2738,10 @@ class Transaction extends DataClass implements Insertable<Transaction> {
   final int id;
   final int ledgerId;
   final String type;
-  final double amount;
+
+  /// 交易金额,单位=最小货币单位(分),整数存储保证财务精度。
+  /// 输入/同步接口仍按"元"口径,落库前统一换算成整数分。
+  final int amount;
   final int? categoryId;
   final DateTime happenedAt;
   final String? note;
@@ -1792,7 +2761,8 @@ class Transaction extends DataClass implements Insertable<Transaction> {
 
   /// 折算到账本本位币的金额快照(按记账时汇率,保存即定,不随汇率重算)。
   /// 单币种/未折算 == amount(隐含汇率 1.0)。账本维度统计读本列(?? amount)。
-  final double? nativeAmount;
+  /// 单位同 [amount]:整数分。
+  final int? nativeAmount;
 
   /// 编辑版本号。创建时为 1,每次 update +1。
   /// 用于记录详情 Bottom Sheet 的编辑历史区块展示,以及并发编辑检测。
@@ -1849,7 +2819,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     map['id'] = Variable<int>(id);
     map['ledger_id'] = Variable<int>(ledgerId);
     map['type'] = Variable<String>(type);
-    map['amount'] = Variable<double>(amount);
+    map['amount'] = Variable<int>(amount);
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<int>(categoryId);
     }
@@ -1879,7 +2849,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       map['currency_code'] = Variable<String>(currencyCode);
     }
     if (!nullToAbsent || nativeAmount != null) {
-      map['native_amount'] = Variable<double>(nativeAmount);
+      map['native_amount'] = Variable<int>(nativeAmount);
     }
     map['version'] = Variable<int>(version);
     if (!nullToAbsent || lastEditedAt != null) {
@@ -1961,7 +2931,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       id: serializer.fromJson<int>(json['id']),
       ledgerId: serializer.fromJson<int>(json['ledgerId']),
       type: serializer.fromJson<String>(json['type']),
-      amount: serializer.fromJson<double>(json['amount']),
+      amount: serializer.fromJson<int>(json['amount']),
       categoryId: serializer.fromJson<int?>(json['categoryId']),
       happenedAt: serializer.fromJson<DateTime>(json['happenedAt']),
       note: serializer.fromJson<String?>(json['note']),
@@ -1976,7 +2946,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       ),
       excludeFromStats: serializer.fromJson<bool>(json['excludeFromStats']),
       currencyCode: serializer.fromJson<String?>(json['currencyCode']),
-      nativeAmount: serializer.fromJson<double?>(json['nativeAmount']),
+      nativeAmount: serializer.fromJson<int?>(json['nativeAmount']),
       version: serializer.fromJson<int>(json['version']),
       lastEditedAt: serializer.fromJson<DateTime?>(json['lastEditedAt']),
       paidByUserId: serializer.fromJson<String?>(json['paidByUserId']),
@@ -1992,7 +2962,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       'id': serializer.toJson<int>(id),
       'ledgerId': serializer.toJson<int>(ledgerId),
       'type': serializer.toJson<String>(type),
-      'amount': serializer.toJson<double>(amount),
+      'amount': serializer.toJson<int>(amount),
       'categoryId': serializer.toJson<int?>(categoryId),
       'happenedAt': serializer.toJson<DateTime>(happenedAt),
       'note': serializer.toJson<String?>(note),
@@ -2005,7 +2975,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
       ),
       'excludeFromStats': serializer.toJson<bool>(excludeFromStats),
       'currencyCode': serializer.toJson<String?>(currencyCode),
-      'nativeAmount': serializer.toJson<double?>(nativeAmount),
+      'nativeAmount': serializer.toJson<int?>(nativeAmount),
       'version': serializer.toJson<int>(version),
       'lastEditedAt': serializer.toJson<DateTime?>(lastEditedAt),
       'paidByUserId': serializer.toJson<String?>(paidByUserId),
@@ -2019,7 +2989,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     int? id,
     int? ledgerId,
     String? type,
-    double? amount,
+    int? amount,
     Value<int?> categoryId = const Value.absent(),
     DateTime? happenedAt,
     Value<String?> note = const Value.absent(),
@@ -2030,7 +3000,7 @@ class Transaction extends DataClass implements Insertable<Transaction> {
     Value<String?> categorySyncIdOverride = const Value.absent(),
     bool? excludeFromStats,
     Value<String?> currencyCode = const Value.absent(),
-    Value<double?> nativeAmount = const Value.absent(),
+    Value<int?> nativeAmount = const Value.absent(),
     int? version,
     Value<DateTime?> lastEditedAt = const Value.absent(),
     Value<String?> paidByUserId = const Value.absent(),
@@ -2201,7 +3171,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<int> id;
   final Value<int> ledgerId;
   final Value<String> type;
-  final Value<double> amount;
+  final Value<int> amount;
   final Value<int?> categoryId;
   final Value<DateTime> happenedAt;
   final Value<String?> note;
@@ -2212,7 +3182,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
   final Value<String?> categorySyncIdOverride;
   final Value<bool> excludeFromStats;
   final Value<String?> currencyCode;
-  final Value<double?> nativeAmount;
+  final Value<int?> nativeAmount;
   final Value<int> version;
   final Value<DateTime?> lastEditedAt;
   final Value<String?> paidByUserId;
@@ -2246,7 +3216,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     this.id = const Value.absent(),
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     this.categoryId = const Value.absent(),
     this.happenedAt = const Value.absent(),
     this.note = const Value.absent(),
@@ -2271,7 +3241,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<int>? id,
     Expression<int>? ledgerId,
     Expression<String>? type,
-    Expression<double>? amount,
+    Expression<int>? amount,
     Expression<int>? categoryId,
     Expression<DateTime>? happenedAt,
     Expression<String>? note,
@@ -2282,7 +3252,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Expression<String>? categorySyncIdOverride,
     Expression<bool>? excludeFromStats,
     Expression<String>? currencyCode,
-    Expression<double>? nativeAmount,
+    Expression<int>? nativeAmount,
     Expression<int>? version,
     Expression<DateTime>? lastEditedAt,
     Expression<String>? paidByUserId,
@@ -2321,7 +3291,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<int>? id,
     Value<int>? ledgerId,
     Value<String>? type,
-    Value<double>? amount,
+    Value<int>? amount,
     Value<int?>? categoryId,
     Value<DateTime>? happenedAt,
     Value<String?>? note,
@@ -2332,7 +3302,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
     Value<String?>? categorySyncIdOverride,
     Value<bool>? excludeFromStats,
     Value<String?>? currencyCode,
-    Value<double?>? nativeAmount,
+    Value<int?>? nativeAmount,
     Value<int>? version,
     Value<DateTime?>? lastEditedAt,
     Value<String?>? paidByUserId,
@@ -2379,7 +3349,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       map['type'] = Variable<String>(type.value);
     }
     if (amount.present) {
-      map['amount'] = Variable<double>(amount.value);
+      map['amount'] = Variable<int>(amount.value);
     }
     if (categoryId.present) {
       map['category_id'] = Variable<int>(categoryId.value);
@@ -2416,7 +3386,7 @@ class TransactionsCompanion extends UpdateCompanion<Transaction> {
       map['currency_code'] = Variable<String>(currencyCode.value);
     }
     if (nativeAmount.present) {
-      map['native_amount'] = Variable<double>(nativeAmount.value);
+      map['native_amount'] = Variable<int>(nativeAmount.value);
     }
     if (version.present) {
       map['version'] = Variable<int>(version.value);
@@ -2497,6 +3467,9 @@ class $RecordEditHistoriesTable extends RecordEditHistories
     false,
     type: DriftSqlType.int,
     requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'REFERENCES transactions (id) ON DELETE CASCADE',
+    ),
   );
   static const VerificationMeta _versionMeta = const VerificationMeta(
     'version',
@@ -2870,958 +3843,6 @@ class RecordEditHistoriesCompanion extends UpdateCompanion<RecordEditHistory> {
           ..write('operatorUserId: $operatorUserId, ')
           ..write('summary: $summary, ')
           ..write('createdAt: $createdAt')
-          ..write(')'))
-        .toString();
-  }
-}
-
-class $RecurringTransactionsTable extends RecurringTransactions
-    with TableInfo<$RecurringTransactionsTable, RecurringTransaction> {
-  @override
-  final GeneratedDatabase attachedDatabase;
-  final String? _alias;
-  $RecurringTransactionsTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
-  static const VerificationMeta _ledgerIdMeta = const VerificationMeta(
-    'ledgerId',
-  );
-  @override
-  late final GeneratedColumn<int> ledgerId = GeneratedColumn<int>(
-    'ledger_id',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _typeMeta = const VerificationMeta('type');
-  @override
-  late final GeneratedColumn<String> type = GeneratedColumn<String>(
-    'type',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
-  @override
-  late final GeneratedColumn<double> amount = GeneratedColumn<double>(
-    'amount',
-    aliasedName,
-    false,
-    type: DriftSqlType.double,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _categoryIdMeta = const VerificationMeta(
-    'categoryId',
-  );
-  @override
-  late final GeneratedColumn<int> categoryId = GeneratedColumn<int>(
-    'category_id',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _noteMeta = const VerificationMeta('note');
-  @override
-  late final GeneratedColumn<String> note = GeneratedColumn<String>(
-    'note',
-    aliasedName,
-    true,
-    type: DriftSqlType.string,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _frequencyMeta = const VerificationMeta(
-    'frequency',
-  );
-  @override
-  late final GeneratedColumn<String> frequency = GeneratedColumn<String>(
-    'frequency',
-    aliasedName,
-    false,
-    type: DriftSqlType.string,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _intervalMeta = const VerificationMeta(
-    'interval',
-  );
-  @override
-  late final GeneratedColumn<int> interval = GeneratedColumn<int>(
-    'interval',
-    aliasedName,
-    false,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultValue: const Constant(1),
-  );
-  static const VerificationMeta _dayOfMonthMeta = const VerificationMeta(
-    'dayOfMonth',
-  );
-  @override
-  late final GeneratedColumn<int> dayOfMonth = GeneratedColumn<int>(
-    'day_of_month',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _dayOfWeekMeta = const VerificationMeta(
-    'dayOfWeek',
-  );
-  @override
-  late final GeneratedColumn<int> dayOfWeek = GeneratedColumn<int>(
-    'day_of_week',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _monthOfYearMeta = const VerificationMeta(
-    'monthOfYear',
-  );
-  @override
-  late final GeneratedColumn<int> monthOfYear = GeneratedColumn<int>(
-    'month_of_year',
-    aliasedName,
-    true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _startDateMeta = const VerificationMeta(
-    'startDate',
-  );
-  @override
-  late final GeneratedColumn<DateTime> startDate = GeneratedColumn<DateTime>(
-    'start_date',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: true,
-  );
-  static const VerificationMeta _endDateMeta = const VerificationMeta(
-    'endDate',
-  );
-  @override
-  late final GeneratedColumn<DateTime> endDate = GeneratedColumn<DateTime>(
-    'end_date',
-    aliasedName,
-    true,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-  );
-  static const VerificationMeta _lastGeneratedDateMeta = const VerificationMeta(
-    'lastGeneratedDate',
-  );
-  @override
-  late final GeneratedColumn<DateTime> lastGeneratedDate =
-      GeneratedColumn<DateTime>(
-        'last_generated_date',
-        aliasedName,
-        true,
-        type: DriftSqlType.dateTime,
-        requiredDuringInsert: false,
-      );
-  static const VerificationMeta _enabledMeta = const VerificationMeta(
-    'enabled',
-  );
-  @override
-  late final GeneratedColumn<bool> enabled = GeneratedColumn<bool>(
-    'enabled',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("enabled" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
-  );
-  static const VerificationMeta _createdAtMeta = const VerificationMeta(
-    'createdAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
-    'created_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  static const VerificationMeta _updatedAtMeta = const VerificationMeta(
-    'updatedAt',
-  );
-  @override
-  late final GeneratedColumn<DateTime> updatedAt = GeneratedColumn<DateTime>(
-    'updated_at',
-    aliasedName,
-    false,
-    type: DriftSqlType.dateTime,
-    requiredDuringInsert: false,
-    defaultValue: currentDateAndTime,
-  );
-  @override
-  List<GeneratedColumn> get $columns => [
-    id,
-    ledgerId,
-    type,
-    amount,
-    categoryId,
-    note,
-    frequency,
-    interval,
-    dayOfMonth,
-    dayOfWeek,
-    monthOfYear,
-    startDate,
-    endDate,
-    lastGeneratedDate,
-    enabled,
-    createdAt,
-    updatedAt,
-  ];
-  @override
-  String get aliasedName => _alias ?? actualTableName;
-  @override
-  String get actualTableName => $name;
-  static const String $name = 'recurring_transactions';
-  @override
-  VerificationContext validateIntegrity(
-    Insertable<RecurringTransaction> instance, {
-    bool isInserting = false,
-  }) {
-    final context = VerificationContext();
-    final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
-    if (data.containsKey('ledger_id')) {
-      context.handle(
-        _ledgerIdMeta,
-        ledgerId.isAcceptableOrUnknown(data['ledger_id']!, _ledgerIdMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_ledgerIdMeta);
-    }
-    if (data.containsKey('type')) {
-      context.handle(
-        _typeMeta,
-        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_typeMeta);
-    }
-    if (data.containsKey('amount')) {
-      context.handle(
-        _amountMeta,
-        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_amountMeta);
-    }
-    if (data.containsKey('category_id')) {
-      context.handle(
-        _categoryIdMeta,
-        categoryId.isAcceptableOrUnknown(data['category_id']!, _categoryIdMeta),
-      );
-    }
-    if (data.containsKey('note')) {
-      context.handle(
-        _noteMeta,
-        note.isAcceptableOrUnknown(data['note']!, _noteMeta),
-      );
-    }
-    if (data.containsKey('frequency')) {
-      context.handle(
-        _frequencyMeta,
-        frequency.isAcceptableOrUnknown(data['frequency']!, _frequencyMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_frequencyMeta);
-    }
-    if (data.containsKey('interval')) {
-      context.handle(
-        _intervalMeta,
-        interval.isAcceptableOrUnknown(data['interval']!, _intervalMeta),
-      );
-    }
-    if (data.containsKey('day_of_month')) {
-      context.handle(
-        _dayOfMonthMeta,
-        dayOfMonth.isAcceptableOrUnknown(
-          data['day_of_month']!,
-          _dayOfMonthMeta,
-        ),
-      );
-    }
-    if (data.containsKey('day_of_week')) {
-      context.handle(
-        _dayOfWeekMeta,
-        dayOfWeek.isAcceptableOrUnknown(data['day_of_week']!, _dayOfWeekMeta),
-      );
-    }
-    if (data.containsKey('month_of_year')) {
-      context.handle(
-        _monthOfYearMeta,
-        monthOfYear.isAcceptableOrUnknown(
-          data['month_of_year']!,
-          _monthOfYearMeta,
-        ),
-      );
-    }
-    if (data.containsKey('start_date')) {
-      context.handle(
-        _startDateMeta,
-        startDate.isAcceptableOrUnknown(data['start_date']!, _startDateMeta),
-      );
-    } else if (isInserting) {
-      context.missing(_startDateMeta);
-    }
-    if (data.containsKey('end_date')) {
-      context.handle(
-        _endDateMeta,
-        endDate.isAcceptableOrUnknown(data['end_date']!, _endDateMeta),
-      );
-    }
-    if (data.containsKey('last_generated_date')) {
-      context.handle(
-        _lastGeneratedDateMeta,
-        lastGeneratedDate.isAcceptableOrUnknown(
-          data['last_generated_date']!,
-          _lastGeneratedDateMeta,
-        ),
-      );
-    }
-    if (data.containsKey('enabled')) {
-      context.handle(
-        _enabledMeta,
-        enabled.isAcceptableOrUnknown(data['enabled']!, _enabledMeta),
-      );
-    }
-    if (data.containsKey('created_at')) {
-      context.handle(
-        _createdAtMeta,
-        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
-      );
-    }
-    if (data.containsKey('updated_at')) {
-      context.handle(
-        _updatedAtMeta,
-        updatedAt.isAcceptableOrUnknown(data['updated_at']!, _updatedAtMeta),
-      );
-    }
-    return context;
-  }
-
-  @override
-  Set<GeneratedColumn> get $primaryKey => {id};
-  @override
-  RecurringTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
-    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
-    return RecurringTransaction(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
-      ledgerId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}ledger_id'],
-      )!,
-      type: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}type'],
-      )!,
-      amount: attachedDatabase.typeMapping.read(
-        DriftSqlType.double,
-        data['${effectivePrefix}amount'],
-      )!,
-      categoryId: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}category_id'],
-      ),
-      note: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}note'],
-      ),
-      frequency: attachedDatabase.typeMapping.read(
-        DriftSqlType.string,
-        data['${effectivePrefix}frequency'],
-      )!,
-      interval: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}interval'],
-      )!,
-      dayOfMonth: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}day_of_month'],
-      ),
-      dayOfWeek: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}day_of_week'],
-      ),
-      monthOfYear: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}month_of_year'],
-      ),
-      startDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}start_date'],
-      )!,
-      endDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}end_date'],
-      ),
-      lastGeneratedDate: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}last_generated_date'],
-      ),
-      enabled: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}enabled'],
-      )!,
-      createdAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}created_at'],
-      )!,
-      updatedAt: attachedDatabase.typeMapping.read(
-        DriftSqlType.dateTime,
-        data['${effectivePrefix}updated_at'],
-      )!,
-    );
-  }
-
-  @override
-  $RecurringTransactionsTable createAlias(String alias) {
-    return $RecurringTransactionsTable(attachedDatabase, alias);
-  }
-}
-
-class RecurringTransaction extends DataClass
-    implements Insertable<RecurringTransaction> {
-  final int id;
-  final int ledgerId;
-  final String type;
-  final double amount;
-  final int? categoryId;
-  final String? note;
-  final String frequency;
-  final int interval;
-  final int? dayOfMonth;
-  final int? dayOfWeek;
-  final int? monthOfYear;
-  final DateTime startDate;
-  final DateTime? endDate;
-  final DateTime? lastGeneratedDate;
-  final bool enabled;
-  final DateTime createdAt;
-  final DateTime updatedAt;
-  const RecurringTransaction({
-    required this.id,
-    required this.ledgerId,
-    required this.type,
-    required this.amount,
-    this.categoryId,
-    this.note,
-    required this.frequency,
-    required this.interval,
-    this.dayOfMonth,
-    this.dayOfWeek,
-    this.monthOfYear,
-    required this.startDate,
-    this.endDate,
-    this.lastGeneratedDate,
-    required this.enabled,
-    required this.createdAt,
-    required this.updatedAt,
-  });
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
-    map['ledger_id'] = Variable<int>(ledgerId);
-    map['type'] = Variable<String>(type);
-    map['amount'] = Variable<double>(amount);
-    if (!nullToAbsent || categoryId != null) {
-      map['category_id'] = Variable<int>(categoryId);
-    }
-    if (!nullToAbsent || note != null) {
-      map['note'] = Variable<String>(note);
-    }
-    map['frequency'] = Variable<String>(frequency);
-    map['interval'] = Variable<int>(interval);
-    if (!nullToAbsent || dayOfMonth != null) {
-      map['day_of_month'] = Variable<int>(dayOfMonth);
-    }
-    if (!nullToAbsent || dayOfWeek != null) {
-      map['day_of_week'] = Variable<int>(dayOfWeek);
-    }
-    if (!nullToAbsent || monthOfYear != null) {
-      map['month_of_year'] = Variable<int>(monthOfYear);
-    }
-    map['start_date'] = Variable<DateTime>(startDate);
-    if (!nullToAbsent || endDate != null) {
-      map['end_date'] = Variable<DateTime>(endDate);
-    }
-    if (!nullToAbsent || lastGeneratedDate != null) {
-      map['last_generated_date'] = Variable<DateTime>(lastGeneratedDate);
-    }
-    map['enabled'] = Variable<bool>(enabled);
-    map['created_at'] = Variable<DateTime>(createdAt);
-    map['updated_at'] = Variable<DateTime>(updatedAt);
-    return map;
-  }
-
-  RecurringTransactionsCompanion toCompanion(bool nullToAbsent) {
-    return RecurringTransactionsCompanion(
-      id: Value(id),
-      ledgerId: Value(ledgerId),
-      type: Value(type),
-      amount: Value(amount),
-      categoryId: categoryId == null && nullToAbsent
-          ? const Value.absent()
-          : Value(categoryId),
-      note: note == null && nullToAbsent ? const Value.absent() : Value(note),
-      frequency: Value(frequency),
-      interval: Value(interval),
-      dayOfMonth: dayOfMonth == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dayOfMonth),
-      dayOfWeek: dayOfWeek == null && nullToAbsent
-          ? const Value.absent()
-          : Value(dayOfWeek),
-      monthOfYear: monthOfYear == null && nullToAbsent
-          ? const Value.absent()
-          : Value(monthOfYear),
-      startDate: Value(startDate),
-      endDate: endDate == null && nullToAbsent
-          ? const Value.absent()
-          : Value(endDate),
-      lastGeneratedDate: lastGeneratedDate == null && nullToAbsent
-          ? const Value.absent()
-          : Value(lastGeneratedDate),
-      enabled: Value(enabled),
-      createdAt: Value(createdAt),
-      updatedAt: Value(updatedAt),
-    );
-  }
-
-  factory RecurringTransaction.fromJson(
-    Map<String, dynamic> json, {
-    ValueSerializer? serializer,
-  }) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return RecurringTransaction(
-      id: serializer.fromJson<int>(json['id']),
-      ledgerId: serializer.fromJson<int>(json['ledgerId']),
-      type: serializer.fromJson<String>(json['type']),
-      amount: serializer.fromJson<double>(json['amount']),
-      categoryId: serializer.fromJson<int?>(json['categoryId']),
-      note: serializer.fromJson<String?>(json['note']),
-      frequency: serializer.fromJson<String>(json['frequency']),
-      interval: serializer.fromJson<int>(json['interval']),
-      dayOfMonth: serializer.fromJson<int?>(json['dayOfMonth']),
-      dayOfWeek: serializer.fromJson<int?>(json['dayOfWeek']),
-      monthOfYear: serializer.fromJson<int?>(json['monthOfYear']),
-      startDate: serializer.fromJson<DateTime>(json['startDate']),
-      endDate: serializer.fromJson<DateTime?>(json['endDate']),
-      lastGeneratedDate: serializer.fromJson<DateTime?>(
-        json['lastGeneratedDate'],
-      ),
-      enabled: serializer.fromJson<bool>(json['enabled']),
-      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      updatedAt: serializer.fromJson<DateTime>(json['updatedAt']),
-    );
-  }
-  @override
-  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
-    serializer ??= driftRuntimeOptions.defaultSerializer;
-    return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
-      'ledgerId': serializer.toJson<int>(ledgerId),
-      'type': serializer.toJson<String>(type),
-      'amount': serializer.toJson<double>(amount),
-      'categoryId': serializer.toJson<int?>(categoryId),
-      'note': serializer.toJson<String?>(note),
-      'frequency': serializer.toJson<String>(frequency),
-      'interval': serializer.toJson<int>(interval),
-      'dayOfMonth': serializer.toJson<int?>(dayOfMonth),
-      'dayOfWeek': serializer.toJson<int?>(dayOfWeek),
-      'monthOfYear': serializer.toJson<int?>(monthOfYear),
-      'startDate': serializer.toJson<DateTime>(startDate),
-      'endDate': serializer.toJson<DateTime?>(endDate),
-      'lastGeneratedDate': serializer.toJson<DateTime?>(lastGeneratedDate),
-      'enabled': serializer.toJson<bool>(enabled),
-      'createdAt': serializer.toJson<DateTime>(createdAt),
-      'updatedAt': serializer.toJson<DateTime>(updatedAt),
-    };
-  }
-
-  RecurringTransaction copyWith({
-    int? id,
-    int? ledgerId,
-    String? type,
-    double? amount,
-    Value<int?> categoryId = const Value.absent(),
-    Value<String?> note = const Value.absent(),
-    String? frequency,
-    int? interval,
-    Value<int?> dayOfMonth = const Value.absent(),
-    Value<int?> dayOfWeek = const Value.absent(),
-    Value<int?> monthOfYear = const Value.absent(),
-    DateTime? startDate,
-    Value<DateTime?> endDate = const Value.absent(),
-    Value<DateTime?> lastGeneratedDate = const Value.absent(),
-    bool? enabled,
-    DateTime? createdAt,
-    DateTime? updatedAt,
-  }) => RecurringTransaction(
-    id: id ?? this.id,
-    ledgerId: ledgerId ?? this.ledgerId,
-    type: type ?? this.type,
-    amount: amount ?? this.amount,
-    categoryId: categoryId.present ? categoryId.value : this.categoryId,
-    note: note.present ? note.value : this.note,
-    frequency: frequency ?? this.frequency,
-    interval: interval ?? this.interval,
-    dayOfMonth: dayOfMonth.present ? dayOfMonth.value : this.dayOfMonth,
-    dayOfWeek: dayOfWeek.present ? dayOfWeek.value : this.dayOfWeek,
-    monthOfYear: monthOfYear.present ? monthOfYear.value : this.monthOfYear,
-    startDate: startDate ?? this.startDate,
-    endDate: endDate.present ? endDate.value : this.endDate,
-    lastGeneratedDate: lastGeneratedDate.present
-        ? lastGeneratedDate.value
-        : this.lastGeneratedDate,
-    enabled: enabled ?? this.enabled,
-    createdAt: createdAt ?? this.createdAt,
-    updatedAt: updatedAt ?? this.updatedAt,
-  );
-  RecurringTransaction copyWithCompanion(RecurringTransactionsCompanion data) {
-    return RecurringTransaction(
-      id: data.id.present ? data.id.value : this.id,
-      ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
-      type: data.type.present ? data.type.value : this.type,
-      amount: data.amount.present ? data.amount.value : this.amount,
-      categoryId: data.categoryId.present
-          ? data.categoryId.value
-          : this.categoryId,
-      note: data.note.present ? data.note.value : this.note,
-      frequency: data.frequency.present ? data.frequency.value : this.frequency,
-      interval: data.interval.present ? data.interval.value : this.interval,
-      dayOfMonth: data.dayOfMonth.present
-          ? data.dayOfMonth.value
-          : this.dayOfMonth,
-      dayOfWeek: data.dayOfWeek.present ? data.dayOfWeek.value : this.dayOfWeek,
-      monthOfYear: data.monthOfYear.present
-          ? data.monthOfYear.value
-          : this.monthOfYear,
-      startDate: data.startDate.present ? data.startDate.value : this.startDate,
-      endDate: data.endDate.present ? data.endDate.value : this.endDate,
-      lastGeneratedDate: data.lastGeneratedDate.present
-          ? data.lastGeneratedDate.value
-          : this.lastGeneratedDate,
-      enabled: data.enabled.present ? data.enabled.value : this.enabled,
-      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      updatedAt: data.updatedAt.present ? data.updatedAt.value : this.updatedAt,
-    );
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RecurringTransaction(')
-          ..write('id: $id, ')
-          ..write('ledgerId: $ledgerId, ')
-          ..write('type: $type, ')
-          ..write('amount: $amount, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('note: $note, ')
-          ..write('frequency: $frequency, ')
-          ..write('interval: $interval, ')
-          ..write('dayOfMonth: $dayOfMonth, ')
-          ..write('dayOfWeek: $dayOfWeek, ')
-          ..write('monthOfYear: $monthOfYear, ')
-          ..write('startDate: $startDate, ')
-          ..write('endDate: $endDate, ')
-          ..write('lastGeneratedDate: $lastGeneratedDate, ')
-          ..write('enabled: $enabled, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
-          ..write(')'))
-        .toString();
-  }
-
-  @override
-  int get hashCode => Object.hash(
-    id,
-    ledgerId,
-    type,
-    amount,
-    categoryId,
-    note,
-    frequency,
-    interval,
-    dayOfMonth,
-    dayOfWeek,
-    monthOfYear,
-    startDate,
-    endDate,
-    lastGeneratedDate,
-    enabled,
-    createdAt,
-    updatedAt,
-  );
-  @override
-  bool operator ==(Object other) =>
-      identical(this, other) ||
-      (other is RecurringTransaction &&
-          other.id == this.id &&
-          other.ledgerId == this.ledgerId &&
-          other.type == this.type &&
-          other.amount == this.amount &&
-          other.categoryId == this.categoryId &&
-          other.note == this.note &&
-          other.frequency == this.frequency &&
-          other.interval == this.interval &&
-          other.dayOfMonth == this.dayOfMonth &&
-          other.dayOfWeek == this.dayOfWeek &&
-          other.monthOfYear == this.monthOfYear &&
-          other.startDate == this.startDate &&
-          other.endDate == this.endDate &&
-          other.lastGeneratedDate == this.lastGeneratedDate &&
-          other.enabled == this.enabled &&
-          other.createdAt == this.createdAt &&
-          other.updatedAt == this.updatedAt);
-}
-
-class RecurringTransactionsCompanion
-    extends UpdateCompanion<RecurringTransaction> {
-  final Value<int> id;
-  final Value<int> ledgerId;
-  final Value<String> type;
-  final Value<double> amount;
-  final Value<int?> categoryId;
-  final Value<String?> note;
-  final Value<String> frequency;
-  final Value<int> interval;
-  final Value<int?> dayOfMonth;
-  final Value<int?> dayOfWeek;
-  final Value<int?> monthOfYear;
-  final Value<DateTime> startDate;
-  final Value<DateTime?> endDate;
-  final Value<DateTime?> lastGeneratedDate;
-  final Value<bool> enabled;
-  final Value<DateTime> createdAt;
-  final Value<DateTime> updatedAt;
-  const RecurringTransactionsCompanion({
-    this.id = const Value.absent(),
-    this.ledgerId = const Value.absent(),
-    this.type = const Value.absent(),
-    this.amount = const Value.absent(),
-    this.categoryId = const Value.absent(),
-    this.note = const Value.absent(),
-    this.frequency = const Value.absent(),
-    this.interval = const Value.absent(),
-    this.dayOfMonth = const Value.absent(),
-    this.dayOfWeek = const Value.absent(),
-    this.monthOfYear = const Value.absent(),
-    this.startDate = const Value.absent(),
-    this.endDate = const Value.absent(),
-    this.lastGeneratedDate = const Value.absent(),
-    this.enabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  });
-  RecurringTransactionsCompanion.insert({
-    this.id = const Value.absent(),
-    required int ledgerId,
-    required String type,
-    required double amount,
-    this.categoryId = const Value.absent(),
-    this.note = const Value.absent(),
-    required String frequency,
-    this.interval = const Value.absent(),
-    this.dayOfMonth = const Value.absent(),
-    this.dayOfWeek = const Value.absent(),
-    this.monthOfYear = const Value.absent(),
-    required DateTime startDate,
-    this.endDate = const Value.absent(),
-    this.lastGeneratedDate = const Value.absent(),
-    this.enabled = const Value.absent(),
-    this.createdAt = const Value.absent(),
-    this.updatedAt = const Value.absent(),
-  }) : ledgerId = Value(ledgerId),
-       type = Value(type),
-       amount = Value(amount),
-       frequency = Value(frequency),
-       startDate = Value(startDate);
-  static Insertable<RecurringTransaction> custom({
-    Expression<int>? id,
-    Expression<int>? ledgerId,
-    Expression<String>? type,
-    Expression<double>? amount,
-    Expression<int>? categoryId,
-    Expression<String>? note,
-    Expression<String>? frequency,
-    Expression<int>? interval,
-    Expression<int>? dayOfMonth,
-    Expression<int>? dayOfWeek,
-    Expression<int>? monthOfYear,
-    Expression<DateTime>? startDate,
-    Expression<DateTime>? endDate,
-    Expression<DateTime>? lastGeneratedDate,
-    Expression<bool>? enabled,
-    Expression<DateTime>? createdAt,
-    Expression<DateTime>? updatedAt,
-  }) {
-    return RawValuesInsertable({
-      if (id != null) 'id': id,
-      if (ledgerId != null) 'ledger_id': ledgerId,
-      if (type != null) 'type': type,
-      if (amount != null) 'amount': amount,
-      if (categoryId != null) 'category_id': categoryId,
-      if (note != null) 'note': note,
-      if (frequency != null) 'frequency': frequency,
-      if (interval != null) 'interval': interval,
-      if (dayOfMonth != null) 'day_of_month': dayOfMonth,
-      if (dayOfWeek != null) 'day_of_week': dayOfWeek,
-      if (monthOfYear != null) 'month_of_year': monthOfYear,
-      if (startDate != null) 'start_date': startDate,
-      if (endDate != null) 'end_date': endDate,
-      if (lastGeneratedDate != null) 'last_generated_date': lastGeneratedDate,
-      if (enabled != null) 'enabled': enabled,
-      if (createdAt != null) 'created_at': createdAt,
-      if (updatedAt != null) 'updated_at': updatedAt,
-    });
-  }
-
-  RecurringTransactionsCompanion copyWith({
-    Value<int>? id,
-    Value<int>? ledgerId,
-    Value<String>? type,
-    Value<double>? amount,
-    Value<int?>? categoryId,
-    Value<String?>? note,
-    Value<String>? frequency,
-    Value<int>? interval,
-    Value<int?>? dayOfMonth,
-    Value<int?>? dayOfWeek,
-    Value<int?>? monthOfYear,
-    Value<DateTime>? startDate,
-    Value<DateTime?>? endDate,
-    Value<DateTime?>? lastGeneratedDate,
-    Value<bool>? enabled,
-    Value<DateTime>? createdAt,
-    Value<DateTime>? updatedAt,
-  }) {
-    return RecurringTransactionsCompanion(
-      id: id ?? this.id,
-      ledgerId: ledgerId ?? this.ledgerId,
-      type: type ?? this.type,
-      amount: amount ?? this.amount,
-      categoryId: categoryId ?? this.categoryId,
-      note: note ?? this.note,
-      frequency: frequency ?? this.frequency,
-      interval: interval ?? this.interval,
-      dayOfMonth: dayOfMonth ?? this.dayOfMonth,
-      dayOfWeek: dayOfWeek ?? this.dayOfWeek,
-      monthOfYear: monthOfYear ?? this.monthOfYear,
-      startDate: startDate ?? this.startDate,
-      endDate: endDate ?? this.endDate,
-      lastGeneratedDate: lastGeneratedDate ?? this.lastGeneratedDate,
-      enabled: enabled ?? this.enabled,
-      createdAt: createdAt ?? this.createdAt,
-      updatedAt: updatedAt ?? this.updatedAt,
-    );
-  }
-
-  @override
-  Map<String, Expression> toColumns(bool nullToAbsent) {
-    final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
-    if (ledgerId.present) {
-      map['ledger_id'] = Variable<int>(ledgerId.value);
-    }
-    if (type.present) {
-      map['type'] = Variable<String>(type.value);
-    }
-    if (amount.present) {
-      map['amount'] = Variable<double>(amount.value);
-    }
-    if (categoryId.present) {
-      map['category_id'] = Variable<int>(categoryId.value);
-    }
-    if (note.present) {
-      map['note'] = Variable<String>(note.value);
-    }
-    if (frequency.present) {
-      map['frequency'] = Variable<String>(frequency.value);
-    }
-    if (interval.present) {
-      map['interval'] = Variable<int>(interval.value);
-    }
-    if (dayOfMonth.present) {
-      map['day_of_month'] = Variable<int>(dayOfMonth.value);
-    }
-    if (dayOfWeek.present) {
-      map['day_of_week'] = Variable<int>(dayOfWeek.value);
-    }
-    if (monthOfYear.present) {
-      map['month_of_year'] = Variable<int>(monthOfYear.value);
-    }
-    if (startDate.present) {
-      map['start_date'] = Variable<DateTime>(startDate.value);
-    }
-    if (endDate.present) {
-      map['end_date'] = Variable<DateTime>(endDate.value);
-    }
-    if (lastGeneratedDate.present) {
-      map['last_generated_date'] = Variable<DateTime>(lastGeneratedDate.value);
-    }
-    if (enabled.present) {
-      map['enabled'] = Variable<bool>(enabled.value);
-    }
-    if (createdAt.present) {
-      map['created_at'] = Variable<DateTime>(createdAt.value);
-    }
-    if (updatedAt.present) {
-      map['updated_at'] = Variable<DateTime>(updatedAt.value);
-    }
-    return map;
-  }
-
-  @override
-  String toString() {
-    return (StringBuffer('RecurringTransactionsCompanion(')
-          ..write('id: $id, ')
-          ..write('ledgerId: $ledgerId, ')
-          ..write('type: $type, ')
-          ..write('amount: $amount, ')
-          ..write('categoryId: $categoryId, ')
-          ..write('note: $note, ')
-          ..write('frequency: $frequency, ')
-          ..write('interval: $interval, ')
-          ..write('dayOfMonth: $dayOfMonth, ')
-          ..write('dayOfWeek: $dayOfWeek, ')
-          ..write('monthOfYear: $monthOfYear, ')
-          ..write('startDate: $startDate, ')
-          ..write('endDate: $endDate, ')
-          ..write('lastGeneratedDate: $lastGeneratedDate, ')
-          ..write('enabled: $enabled, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('updatedAt: $updatedAt')
           ..write(')'))
         .toString();
   }
@@ -8348,11 +8369,11 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
   $SpitoutDatabaseManager get managers => $SpitoutDatabaseManager(this);
   late final $LedgersTable ledgers = $LedgersTable(this);
   late final $CategoriesTable categories = $CategoriesTable(this);
+  late final $RecurringTransactionsTable recurringTransactions =
+      $RecurringTransactionsTable(this);
   late final $TransactionsTable transactions = $TransactionsTable(this);
   late final $RecordEditHistoriesTable recordEditHistories =
       $RecordEditHistoriesTable(this);
-  late final $RecurringTransactionsTable recurringTransactions =
-      $RecurringTransactionsTable(this);
   late final $LocalChangesTable localChanges = $LocalChangesTable(this);
   late final $SyncStateTable syncState = $SyncStateTable(this);
   late final $LedgerMembersTable ledgerMembers = $LedgerMembersTable(this);
@@ -8373,9 +8394,9 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     ledgers,
     categories,
+    recurringTransactions,
     transactions,
     recordEditHistories,
-    recurringTransactions,
     localChanges,
     syncState,
     ledgerMembers,
@@ -8386,6 +8407,44 @@ abstract class _$SpitoutDatabase extends GeneratedDatabase {
     snapshotDirtyLedgers,
     ledgerVirtualUsers,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ledgers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('recurring_transactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'ledgers',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('transactions', kind: UpdateKind.delete)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'categories',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('transactions', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'recurring_transactions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('transactions', kind: UpdateKind.update)],
+    ),
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'transactions',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('record_edit_histories', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$LedgersTableCreateCompanionBuilder =
@@ -8420,6 +8479,54 @@ typedef $$LedgersTableUpdateCompanionBuilder =
       Value<String> storageMode,
       Value<bool> aaEnabled,
     });
+
+final class $$LedgersTableReferences
+    extends BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger> {
+  $$LedgersTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<
+    $RecurringTransactionsTable,
+    List<RecurringTransaction>
+  >
+  _recurringTransactionsRefsTable(_$SpitoutDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.recurringTransactions,
+        aliasName: 'ledgers__id__recurring_transactions__ledger_id',
+      );
+
+  $$RecurringTransactionsTableProcessedTableManager
+  get recurringTransactionsRefs {
+    final manager = $$RecurringTransactionsTableTableManager(
+      $_db,
+      $_db.recurringTransactions,
+    ).filter((f) => f.ledgerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _recurringTransactionsRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$SpitoutDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: 'ledgers__id__transactions__ledger_id',
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.ledgerId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$LedgersTableFilterComposer
     extends Composer<_$SpitoutDatabase, $LedgersTable> {
@@ -8494,6 +8601,57 @@ class $$LedgersTableFilterComposer
     column: $table.aaEnabled,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> recurringTransactionsRefs(
+    Expression<bool> Function($$RecurringTransactionsTableFilterComposer f) f,
+  ) {
+    final $$RecurringTransactionsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.recurringTransactions,
+          getReferencedColumn: (t) => t.ledgerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecurringTransactionsTableFilterComposer(
+                $db: $db,
+                $table: $db.recurringTransactions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.ledgerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$LedgersTableOrderingComposer
@@ -8626,6 +8784,57 @@ class $$LedgersTableAnnotationComposer
 
   GeneratedColumn<bool> get aaEnabled =>
       $composableBuilder(column: $table.aaEnabled, builder: (column) => column);
+
+  Expression<T> recurringTransactionsRefs<T extends Object>(
+    Expression<T> Function($$RecurringTransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$RecurringTransactionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.recurringTransactions,
+          getReferencedColumn: (t) => t.ledgerId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecurringTransactionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.recurringTransactions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.ledgerId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$LedgersTableTableManager
@@ -8639,9 +8848,12 @@ class $$LedgersTableTableManager
           $$LedgersTableAnnotationComposer,
           $$LedgersTableCreateCompanionBuilder,
           $$LedgersTableUpdateCompanionBuilder,
-          (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
+          (Ledger, $$LedgersTableReferences),
           Ledger,
-          PrefetchHooks Function()
+          PrefetchHooks Function({
+            bool recurringTransactionsRefs,
+            bool transactionsRefs,
+          })
         > {
   $$LedgersTableTableManager(_$SpitoutDatabase db, $LedgersTable table)
     : super(
@@ -8715,9 +8927,70 @@ class $$LedgersTableTableManager
                 aaEnabled: aaEnabled,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$LedgersTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback:
+              ({recurringTransactionsRefs = false, transactionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (recurringTransactionsRefs) db.recurringTransactions,
+                    if (transactionsRefs) db.transactions,
+                  ],
+                  addJoins: null,
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (recurringTransactionsRefs)
+                        await $_getPrefetchedData<
+                          Ledger,
+                          $LedgersTable,
+                          RecurringTransaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$LedgersTableReferences
+                              ._recurringTransactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$LedgersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).recurringTransactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ledgerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          Ledger,
+                          $LedgersTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable: $$LedgersTableReferences
+                              ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$LedgersTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.ledgerId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
         ),
       );
 }
@@ -8732,9 +9005,12 @@ typedef $$LedgersTableProcessedTableManager =
       $$LedgersTableAnnotationComposer,
       $$LedgersTableCreateCompanionBuilder,
       $$LedgersTableUpdateCompanionBuilder,
-      (Ledger, BaseReferences<_$SpitoutDatabase, $LedgersTable, Ledger>),
+      (Ledger, $$LedgersTableReferences),
       Ledger,
-      PrefetchHooks Function()
+      PrefetchHooks Function({
+        bool recurringTransactionsRefs,
+        bool transactionsRefs,
+      })
     >;
 typedef $$CategoriesTableCreateCompanionBuilder =
     CategoriesCompanion Function({
@@ -8758,6 +9034,29 @@ typedef $$CategoriesTableUpdateCompanionBuilder =
       Value<int> level,
       Value<String?> syncId,
     });
+
+final class $$CategoriesTableReferences
+    extends BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category> {
+  $$CategoriesTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$SpitoutDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: 'categories__id__transactions__category_id',
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.categoryId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
 
 class $$CategoriesTableFilterComposer
     extends Composer<_$SpitoutDatabase, $CategoriesTable> {
@@ -8807,6 +9106,31 @@ class $$CategoriesTableFilterComposer
     column: $table.syncId,
     builder: (column) => ColumnFilters(column),
   );
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableOrderingComposer
@@ -8891,6 +9215,31 @@ class $$CategoriesTableAnnotationComposer
 
   GeneratedColumn<String> get syncId =>
       $composableBuilder(column: $table.syncId, builder: (column) => column);
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.categoryId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$CategoriesTableTableManager
@@ -8904,12 +9253,9 @@ class $$CategoriesTableTableManager
           $$CategoriesTableAnnotationComposer,
           $$CategoriesTableCreateCompanionBuilder,
           $$CategoriesTableUpdateCompanionBuilder,
-          (
-            Category,
-            BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>,
-          ),
+          (Category, $$CategoriesTableReferences),
           Category,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool transactionsRefs})
         > {
   $$CategoriesTableTableManager(_$SpitoutDatabase db, $CategoriesTable table)
     : super(
@@ -8963,9 +9309,43 @@ class $$CategoriesTableTableManager
                 syncId: syncId,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$CategoriesTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback: ({transactionsRefs = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [if (transactionsRefs) db.transactions],
+              addJoins: null,
+              getPrefetchedDataCallback: (items) async {
+                return [
+                  if (transactionsRefs)
+                    await $_getPrefetchedData<
+                      Category,
+                      $CategoriesTable,
+                      Transaction
+                    >(
+                      currentTable: table,
+                      referencedTable: $$CategoriesTableReferences
+                          ._transactionsRefsTable(db),
+                      managerFromTypedResult: (p0) =>
+                          $$CategoriesTableReferences(
+                            db,
+                            table,
+                            p0,
+                          ).transactionsRefs,
+                      referencedItemsForCurrentItem: (item, referencedItems) =>
+                          referencedItems.where((e) => e.categoryId == item.id),
+                      typedResults: items,
+                    ),
+                ];
+              },
+            );
+          },
         ),
       );
 }
@@ -8980,771 +9360,16 @@ typedef $$CategoriesTableProcessedTableManager =
       $$CategoriesTableAnnotationComposer,
       $$CategoriesTableCreateCompanionBuilder,
       $$CategoriesTableUpdateCompanionBuilder,
-      (Category, BaseReferences<_$SpitoutDatabase, $CategoriesTable, Category>),
+      (Category, $$CategoriesTableReferences),
       Category,
-      PrefetchHooks Function()
-    >;
-typedef $$TransactionsTableCreateCompanionBuilder =
-    TransactionsCompanion Function({
-      Value<int> id,
-      required int ledgerId,
-      required String type,
-      required double amount,
-      Value<int?> categoryId,
-      Value<DateTime> happenedAt,
-      Value<String?> note,
-      Value<int?> recurringId,
-      Value<String?> syncId,
-      Value<String?> createdByUserId,
-      Value<String?> lastEditedByUserId,
-      Value<String?> categorySyncIdOverride,
-      Value<bool> excludeFromStats,
-      Value<String?> currencyCode,
-      Value<double?> nativeAmount,
-      Value<int> version,
-      Value<DateTime?> lastEditedAt,
-      Value<String?> paidByUserId,
-      Value<int?> aaMode,
-      Value<String?> aaParticipants,
-      Value<String?> aaSplits,
-    });
-typedef $$TransactionsTableUpdateCompanionBuilder =
-    TransactionsCompanion Function({
-      Value<int> id,
-      Value<int> ledgerId,
-      Value<String> type,
-      Value<double> amount,
-      Value<int?> categoryId,
-      Value<DateTime> happenedAt,
-      Value<String?> note,
-      Value<int?> recurringId,
-      Value<String?> syncId,
-      Value<String?> createdByUserId,
-      Value<String?> lastEditedByUserId,
-      Value<String?> categorySyncIdOverride,
-      Value<bool> excludeFromStats,
-      Value<String?> currencyCode,
-      Value<double?> nativeAmount,
-      Value<int> version,
-      Value<DateTime?> lastEditedAt,
-      Value<String?> paidByUserId,
-      Value<int?> aaMode,
-      Value<String?> aaParticipants,
-      Value<String?> aaSplits,
-    });
-
-class $$TransactionsTableFilterComposer
-    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
-  $$TransactionsTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get ledgerId => $composableBuilder(
-    column: $table.ledgerId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get amount => $composableBuilder(
-    column: $table.amount,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get categoryId => $composableBuilder(
-    column: $table.categoryId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get happenedAt => $composableBuilder(
-    column: $table.happenedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get recurringId => $composableBuilder(
-    column: $table.recurringId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get syncId => $composableBuilder(
-    column: $table.syncId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get createdByUserId => $composableBuilder(
-    column: $table.createdByUserId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get lastEditedByUserId => $composableBuilder(
-    column: $table.lastEditedByUserId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get categorySyncIdOverride => $composableBuilder(
-    column: $table.categorySyncIdOverride,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get excludeFromStats => $composableBuilder(
-    column: $table.excludeFromStats,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<double> get nativeAmount => $composableBuilder(
-    column: $table.nativeAmount,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get lastEditedAt => $composableBuilder(
-    column: $table.lastEditedAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get paidByUserId => $composableBuilder(
-    column: $table.paidByUserId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get aaMode => $composableBuilder(
-    column: $table.aaMode,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get aaParticipants => $composableBuilder(
-    column: $table.aaParticipants,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get aaSplits => $composableBuilder(
-    column: $table.aaSplits,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$TransactionsTableOrderingComposer
-    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
-  $$TransactionsTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get ledgerId => $composableBuilder(
-    column: $table.ledgerId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get type => $composableBuilder(
-    column: $table.type,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get amount => $composableBuilder(
-    column: $table.amount,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get categoryId => $composableBuilder(
-    column: $table.categoryId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get happenedAt => $composableBuilder(
-    column: $table.happenedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get note => $composableBuilder(
-    column: $table.note,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get recurringId => $composableBuilder(
-    column: $table.recurringId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get syncId => $composableBuilder(
-    column: $table.syncId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get createdByUserId => $composableBuilder(
-    column: $table.createdByUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get lastEditedByUserId => $composableBuilder(
-    column: $table.lastEditedByUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get categorySyncIdOverride => $composableBuilder(
-    column: $table.categorySyncIdOverride,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<bool> get excludeFromStats => $composableBuilder(
-    column: $table.excludeFromStats,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<double> get nativeAmount => $composableBuilder(
-    column: $table.nativeAmount,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get lastEditedAt => $composableBuilder(
-    column: $table.lastEditedAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get paidByUserId => $composableBuilder(
-    column: $table.paidByUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get aaMode => $composableBuilder(
-    column: $table.aaMode,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get aaParticipants => $composableBuilder(
-    column: $table.aaParticipants,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get aaSplits => $composableBuilder(
-    column: $table.aaSplits,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$TransactionsTableAnnotationComposer
-    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
-  $$TransactionsTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get ledgerId =>
-      $composableBuilder(column: $table.ledgerId, builder: (column) => column);
-
-  GeneratedColumn<String> get type =>
-      $composableBuilder(column: $table.type, builder: (column) => column);
-
-  GeneratedColumn<double> get amount =>
-      $composableBuilder(column: $table.amount, builder: (column) => column);
-
-  GeneratedColumn<int> get categoryId => $composableBuilder(
-    column: $table.categoryId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<DateTime> get happenedAt => $composableBuilder(
-    column: $table.happenedAt,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get note =>
-      $composableBuilder(column: $table.note, builder: (column) => column);
-
-  GeneratedColumn<int> get recurringId => $composableBuilder(
-    column: $table.recurringId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get syncId =>
-      $composableBuilder(column: $table.syncId, builder: (column) => column);
-
-  GeneratedColumn<String> get createdByUserId => $composableBuilder(
-    column: $table.createdByUserId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get lastEditedByUserId => $composableBuilder(
-    column: $table.lastEditedByUserId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get categorySyncIdOverride => $composableBuilder(
-    column: $table.categorySyncIdOverride,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<bool> get excludeFromStats => $composableBuilder(
-    column: $table.excludeFromStats,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get currencyCode => $composableBuilder(
-    column: $table.currencyCode,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<double> get nativeAmount => $composableBuilder(
-    column: $table.nativeAmount,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get version =>
-      $composableBuilder(column: $table.version, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get lastEditedAt => $composableBuilder(
-    column: $table.lastEditedAt,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get paidByUserId => $composableBuilder(
-    column: $table.paidByUserId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<int> get aaMode =>
-      $composableBuilder(column: $table.aaMode, builder: (column) => column);
-
-  GeneratedColumn<String> get aaParticipants => $composableBuilder(
-    column: $table.aaParticipants,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get aaSplits =>
-      $composableBuilder(column: $table.aaSplits, builder: (column) => column);
-}
-
-class $$TransactionsTableTableManager
-    extends
-        RootTableManager<
-          _$SpitoutDatabase,
-          $TransactionsTable,
-          Transaction,
-          $$TransactionsTableFilterComposer,
-          $$TransactionsTableOrderingComposer,
-          $$TransactionsTableAnnotationComposer,
-          $$TransactionsTableCreateCompanionBuilder,
-          $$TransactionsTableUpdateCompanionBuilder,
-          (
-            Transaction,
-            BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>,
-          ),
-          Transaction,
-          PrefetchHooks Function()
-        > {
-  $$TransactionsTableTableManager(
-    _$SpitoutDatabase db,
-    $TransactionsTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$TransactionsTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$TransactionsTableOrderingComposer($db: db, $table: table),
-          createComputedFieldComposer: () =>
-              $$TransactionsTableAnnotationComposer($db: db, $table: table),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> ledgerId = const Value.absent(),
-                Value<String> type = const Value.absent(),
-                Value<double> amount = const Value.absent(),
-                Value<int?> categoryId = const Value.absent(),
-                Value<DateTime> happenedAt = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int?> recurringId = const Value.absent(),
-                Value<String?> syncId = const Value.absent(),
-                Value<String?> createdByUserId = const Value.absent(),
-                Value<String?> lastEditedByUserId = const Value.absent(),
-                Value<String?> categorySyncIdOverride = const Value.absent(),
-                Value<bool> excludeFromStats = const Value.absent(),
-                Value<String?> currencyCode = const Value.absent(),
-                Value<double?> nativeAmount = const Value.absent(),
-                Value<int> version = const Value.absent(),
-                Value<DateTime?> lastEditedAt = const Value.absent(),
-                Value<String?> paidByUserId = const Value.absent(),
-                Value<int?> aaMode = const Value.absent(),
-                Value<String?> aaParticipants = const Value.absent(),
-                Value<String?> aaSplits = const Value.absent(),
-              }) => TransactionsCompanion(
-                id: id,
-                ledgerId: ledgerId,
-                type: type,
-                amount: amount,
-                categoryId: categoryId,
-                happenedAt: happenedAt,
-                note: note,
-                recurringId: recurringId,
-                syncId: syncId,
-                createdByUserId: createdByUserId,
-                lastEditedByUserId: lastEditedByUserId,
-                categorySyncIdOverride: categorySyncIdOverride,
-                excludeFromStats: excludeFromStats,
-                currencyCode: currencyCode,
-                nativeAmount: nativeAmount,
-                version: version,
-                lastEditedAt: lastEditedAt,
-                paidByUserId: paidByUserId,
-                aaMode: aaMode,
-                aaParticipants: aaParticipants,
-                aaSplits: aaSplits,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int ledgerId,
-                required String type,
-                required double amount,
-                Value<int?> categoryId = const Value.absent(),
-                Value<DateTime> happenedAt = const Value.absent(),
-                Value<String?> note = const Value.absent(),
-                Value<int?> recurringId = const Value.absent(),
-                Value<String?> syncId = const Value.absent(),
-                Value<String?> createdByUserId = const Value.absent(),
-                Value<String?> lastEditedByUserId = const Value.absent(),
-                Value<String?> categorySyncIdOverride = const Value.absent(),
-                Value<bool> excludeFromStats = const Value.absent(),
-                Value<String?> currencyCode = const Value.absent(),
-                Value<double?> nativeAmount = const Value.absent(),
-                Value<int> version = const Value.absent(),
-                Value<DateTime?> lastEditedAt = const Value.absent(),
-                Value<String?> paidByUserId = const Value.absent(),
-                Value<int?> aaMode = const Value.absent(),
-                Value<String?> aaParticipants = const Value.absent(),
-                Value<String?> aaSplits = const Value.absent(),
-              }) => TransactionsCompanion.insert(
-                id: id,
-                ledgerId: ledgerId,
-                type: type,
-                amount: amount,
-                categoryId: categoryId,
-                happenedAt: happenedAt,
-                note: note,
-                recurringId: recurringId,
-                syncId: syncId,
-                createdByUserId: createdByUserId,
-                lastEditedByUserId: lastEditedByUserId,
-                categorySyncIdOverride: categorySyncIdOverride,
-                excludeFromStats: excludeFromStats,
-                currencyCode: currencyCode,
-                nativeAmount: nativeAmount,
-                version: version,
-                lastEditedAt: lastEditedAt,
-                paidByUserId: paidByUserId,
-                aaMode: aaMode,
-                aaParticipants: aaParticipants,
-                aaSplits: aaSplits,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$TransactionsTableProcessedTableManager =
-    ProcessedTableManager<
-      _$SpitoutDatabase,
-      $TransactionsTable,
-      Transaction,
-      $$TransactionsTableFilterComposer,
-      $$TransactionsTableOrderingComposer,
-      $$TransactionsTableAnnotationComposer,
-      $$TransactionsTableCreateCompanionBuilder,
-      $$TransactionsTableUpdateCompanionBuilder,
-      (
-        Transaction,
-        BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction>,
-      ),
-      Transaction,
-      PrefetchHooks Function()
-    >;
-typedef $$RecordEditHistoriesTableCreateCompanionBuilder =
-    RecordEditHistoriesCompanion Function({
-      Value<int> id,
-      required int recordId,
-      required int version,
-      Value<String?> operatorUserId,
-      required String summary,
-      Value<DateTime> createdAt,
-    });
-typedef $$RecordEditHistoriesTableUpdateCompanionBuilder =
-    RecordEditHistoriesCompanion Function({
-      Value<int> id,
-      Value<int> recordId,
-      Value<int> version,
-      Value<String?> operatorUserId,
-      Value<String> summary,
-      Value<DateTime> createdAt,
-    });
-
-class $$RecordEditHistoriesTableFilterComposer
-    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
-  $$RecordEditHistoriesTableFilterComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get recordId => $composableBuilder(
-    column: $table.recordId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get operatorUserId => $composableBuilder(
-    column: $table.operatorUserId,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<String> get summary => $composableBuilder(
-    column: $table.summary,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-}
-
-class $$RecordEditHistoriesTableOrderingComposer
-    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
-  $$RecordEditHistoriesTableOrderingComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get recordId => $composableBuilder(
-    column: $table.recordId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<int> get version => $composableBuilder(
-    column: $table.version,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get operatorUserId => $composableBuilder(
-    column: $table.operatorUserId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<String> get summary => $composableBuilder(
-    column: $table.summary,
-    builder: (column) => ColumnOrderings(column),
-  );
-
-  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
-    column: $table.createdAt,
-    builder: (column) => ColumnOrderings(column),
-  );
-}
-
-class $$RecordEditHistoriesTableAnnotationComposer
-    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
-  $$RecordEditHistoriesTableAnnotationComposer({
-    required super.$db,
-    required super.$table,
-    super.joinBuilder,
-    super.$addJoinBuilderToRootComposer,
-    super.$removeJoinBuilderFromRootComposer,
-  });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
-  GeneratedColumn<int> get recordId =>
-      $composableBuilder(column: $table.recordId, builder: (column) => column);
-
-  GeneratedColumn<int> get version =>
-      $composableBuilder(column: $table.version, builder: (column) => column);
-
-  GeneratedColumn<String> get operatorUserId => $composableBuilder(
-    column: $table.operatorUserId,
-    builder: (column) => column,
-  );
-
-  GeneratedColumn<String> get summary =>
-      $composableBuilder(column: $table.summary, builder: (column) => column);
-
-  GeneratedColumn<DateTime> get createdAt =>
-      $composableBuilder(column: $table.createdAt, builder: (column) => column);
-}
-
-class $$RecordEditHistoriesTableTableManager
-    extends
-        RootTableManager<
-          _$SpitoutDatabase,
-          $RecordEditHistoriesTable,
-          RecordEditHistory,
-          $$RecordEditHistoriesTableFilterComposer,
-          $$RecordEditHistoriesTableOrderingComposer,
-          $$RecordEditHistoriesTableAnnotationComposer,
-          $$RecordEditHistoriesTableCreateCompanionBuilder,
-          $$RecordEditHistoriesTableUpdateCompanionBuilder,
-          (
-            RecordEditHistory,
-            BaseReferences<
-              _$SpitoutDatabase,
-              $RecordEditHistoriesTable,
-              RecordEditHistory
-            >,
-          ),
-          RecordEditHistory,
-          PrefetchHooks Function()
-        > {
-  $$RecordEditHistoriesTableTableManager(
-    _$SpitoutDatabase db,
-    $RecordEditHistoriesTable table,
-  ) : super(
-        TableManagerState(
-          db: db,
-          table: table,
-          createFilteringComposer: () =>
-              $$RecordEditHistoriesTableFilterComposer($db: db, $table: table),
-          createOrderingComposer: () =>
-              $$RecordEditHistoriesTableOrderingComposer(
-                $db: db,
-                $table: table,
-              ),
-          createComputedFieldComposer: () =>
-              $$RecordEditHistoriesTableAnnotationComposer(
-                $db: db,
-                $table: table,
-              ),
-          updateCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                Value<int> recordId = const Value.absent(),
-                Value<int> version = const Value.absent(),
-                Value<String?> operatorUserId = const Value.absent(),
-                Value<String> summary = const Value.absent(),
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => RecordEditHistoriesCompanion(
-                id: id,
-                recordId: recordId,
-                version: version,
-                operatorUserId: operatorUserId,
-                summary: summary,
-                createdAt: createdAt,
-              ),
-          createCompanionCallback:
-              ({
-                Value<int> id = const Value.absent(),
-                required int recordId,
-                required int version,
-                Value<String?> operatorUserId = const Value.absent(),
-                required String summary,
-                Value<DateTime> createdAt = const Value.absent(),
-              }) => RecordEditHistoriesCompanion.insert(
-                id: id,
-                recordId: recordId,
-                version: version,
-                operatorUserId: operatorUserId,
-                summary: summary,
-                createdAt: createdAt,
-              ),
-          withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
-              .toList(),
-          prefetchHooksCallback: null,
-        ),
-      );
-}
-
-typedef $$RecordEditHistoriesTableProcessedTableManager =
-    ProcessedTableManager<
-      _$SpitoutDatabase,
-      $RecordEditHistoriesTable,
-      RecordEditHistory,
-      $$RecordEditHistoriesTableFilterComposer,
-      $$RecordEditHistoriesTableOrderingComposer,
-      $$RecordEditHistoriesTableAnnotationComposer,
-      $$RecordEditHistoriesTableCreateCompanionBuilder,
-      $$RecordEditHistoriesTableUpdateCompanionBuilder,
-      (
-        RecordEditHistory,
-        BaseReferences<
-          _$SpitoutDatabase,
-          $RecordEditHistoriesTable,
-          RecordEditHistory
-        >,
-      ),
-      RecordEditHistory,
-      PrefetchHooks Function()
+      PrefetchHooks Function({bool transactionsRefs})
     >;
 typedef $$RecurringTransactionsTableCreateCompanionBuilder =
     RecurringTransactionsCompanion Function({
       Value<int> id,
       required int ledgerId,
       required String type,
-      required double amount,
+      required int amount,
       Value<int?> categoryId,
       Value<String?> note,
       required String frequency,
@@ -9764,7 +9389,7 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
       Value<int> id,
       Value<int> ledgerId,
       Value<String> type,
-      Value<double> amount,
+      Value<int> amount,
       Value<int?> categoryId,
       Value<String?> note,
       Value<String> frequency,
@@ -9780,6 +9405,55 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
       Value<DateTime> updatedAt,
     });
 
+final class $$RecurringTransactionsTableReferences
+    extends
+        BaseReferences<
+          _$SpitoutDatabase,
+          $RecurringTransactionsTable,
+          RecurringTransaction
+        > {
+  $$RecurringTransactionsTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $LedgersTable _ledgerIdTable(_$SpitoutDatabase db) =>
+      db.ledgers.createAlias('recurring_transactions__ledger_id__ledgers__id');
+
+  $$LedgersTableProcessedTableManager get ledgerId {
+    final $_column = $_itemColumn<int>('ledger_id')!;
+
+    final manager = $$LedgersTableTableManager(
+      $_db,
+      $_db.ledgers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ledgerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$TransactionsTable, List<Transaction>>
+  _transactionsRefsTable(_$SpitoutDatabase db) => MultiTypedResultKey.fromTable(
+    db.transactions,
+    aliasName: 'recurring_transactions__id__transactions__recurring_id',
+  );
+
+  $$TransactionsTableProcessedTableManager get transactionsRefs {
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.recurringId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(_transactionsRefsTable($_db));
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
 class $$RecurringTransactionsTableFilterComposer
     extends Composer<_$SpitoutDatabase, $RecurringTransactionsTable> {
   $$RecurringTransactionsTableFilterComposer({
@@ -9794,17 +9468,12 @@ class $$RecurringTransactionsTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<int> get ledgerId => $composableBuilder(
-    column: $table.ledgerId,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<double> get amount => $composableBuilder(
+  ColumnFilters<int> get amount => $composableBuilder(
     column: $table.amount,
     builder: (column) => ColumnFilters(column),
   );
@@ -9873,6 +9542,54 @@ class $$RecurringTransactionsTableFilterComposer
     column: $table.updatedAt,
     builder: (column) => ColumnFilters(column),
   );
+
+  $$LedgersTableFilterComposer get ledgerId {
+    final $$LedgersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableFilterComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<bool> transactionsRefs(
+    Expression<bool> Function($$TransactionsTableFilterComposer f) f,
+  ) {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.recurringId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RecurringTransactionsTableOrderingComposer
@@ -9889,17 +9606,12 @@ class $$RecurringTransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get ledgerId => $composableBuilder(
-    column: $table.ledgerId,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<String> get type => $composableBuilder(
     column: $table.type,
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<double> get amount => $composableBuilder(
+  ColumnOrderings<int> get amount => $composableBuilder(
     column: $table.amount,
     builder: (column) => ColumnOrderings(column),
   );
@@ -9968,6 +9680,29 @@ class $$RecurringTransactionsTableOrderingComposer
     column: $table.updatedAt,
     builder: (column) => ColumnOrderings(column),
   );
+
+  $$LedgersTableOrderingComposer get ledgerId {
+    final $$LedgersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableOrderingComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
 }
 
 class $$RecurringTransactionsTableAnnotationComposer
@@ -9982,13 +9717,10 @@ class $$RecurringTransactionsTableAnnotationComposer
   GeneratedColumn<int> get id =>
       $composableBuilder(column: $table.id, builder: (column) => column);
 
-  GeneratedColumn<int> get ledgerId =>
-      $composableBuilder(column: $table.ledgerId, builder: (column) => column);
-
   GeneratedColumn<String> get type =>
       $composableBuilder(column: $table.type, builder: (column) => column);
 
-  GeneratedColumn<double> get amount =>
+  GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
 
   GeneratedColumn<int> get categoryId => $composableBuilder(
@@ -10037,6 +9769,54 @@ class $$RecurringTransactionsTableAnnotationComposer
 
   GeneratedColumn<DateTime> get updatedAt =>
       $composableBuilder(column: $table.updatedAt, builder: (column) => column);
+
+  $$LedgersTableAnnotationComposer get ledgerId {
+    final $$LedgersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  Expression<T> transactionsRefs<T extends Object>(
+    Expression<T> Function($$TransactionsTableAnnotationComposer a) f,
+  ) {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.recurringId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
 }
 
 class $$RecurringTransactionsTableTableManager
@@ -10050,16 +9830,9 @@ class $$RecurringTransactionsTableTableManager
           $$RecurringTransactionsTableAnnotationComposer,
           $$RecurringTransactionsTableCreateCompanionBuilder,
           $$RecurringTransactionsTableUpdateCompanionBuilder,
-          (
-            RecurringTransaction,
-            BaseReferences<
-              _$SpitoutDatabase,
-              $RecurringTransactionsTable,
-              RecurringTransaction
-            >,
-          ),
+          (RecurringTransaction, $$RecurringTransactionsTableReferences),
           RecurringTransaction,
-          PrefetchHooks Function()
+          PrefetchHooks Function({bool ledgerId, bool transactionsRefs})
         > {
   $$RecurringTransactionsTableTableManager(
     _$SpitoutDatabase db,
@@ -10088,7 +9861,7 @@ class $$RecurringTransactionsTableTableManager
                 Value<int> id = const Value.absent(),
                 Value<int> ledgerId = const Value.absent(),
                 Value<String> type = const Value.absent(),
-                Value<double> amount = const Value.absent(),
+                Value<int> amount = const Value.absent(),
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String> frequency = const Value.absent(),
@@ -10126,7 +9899,7 @@ class $$RecurringTransactionsTableTableManager
                 Value<int> id = const Value.absent(),
                 required int ledgerId,
                 required String type,
-                required double amount,
+                required int amount,
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 required String frequency,
@@ -10160,9 +9933,82 @@ class $$RecurringTransactionsTableTableManager
                 updatedAt: updatedAt,
               ),
           withReferenceMapper: (p0) => p0
-              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RecurringTransactionsTableReferences(db, table, e),
+                ),
+              )
               .toList(),
-          prefetchHooksCallback: null,
+          prefetchHooksCallback:
+              ({ledgerId = false, transactionsRefs = false}) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (transactionsRefs) db.transactions,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (ledgerId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.ledgerId,
+                                    referencedTable:
+                                        $$RecurringTransactionsTableReferences
+                                            ._ledgerIdTable(db),
+                                    referencedColumn:
+                                        $$RecurringTransactionsTableReferences
+                                            ._ledgerIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (transactionsRefs)
+                        await $_getPrefetchedData<
+                          RecurringTransaction,
+                          $RecurringTransactionsTable,
+                          Transaction
+                        >(
+                          currentTable: table,
+                          referencedTable:
+                              $$RecurringTransactionsTableReferences
+                                  ._transactionsRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$RecurringTransactionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).transactionsRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.recurringId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
         ),
       );
 }
@@ -10177,16 +10023,1293 @@ typedef $$RecurringTransactionsTableProcessedTableManager =
       $$RecurringTransactionsTableAnnotationComposer,
       $$RecurringTransactionsTableCreateCompanionBuilder,
       $$RecurringTransactionsTableUpdateCompanionBuilder,
-      (
-        RecurringTransaction,
+      (RecurringTransaction, $$RecurringTransactionsTableReferences),
+      RecurringTransaction,
+      PrefetchHooks Function({bool ledgerId, bool transactionsRefs})
+    >;
+typedef $$TransactionsTableCreateCompanionBuilder =
+    TransactionsCompanion Function({
+      Value<int> id,
+      required int ledgerId,
+      required String type,
+      required int amount,
+      Value<int?> categoryId,
+      Value<DateTime> happenedAt,
+      Value<String?> note,
+      Value<int?> recurringId,
+      Value<String?> syncId,
+      Value<String?> createdByUserId,
+      Value<String?> lastEditedByUserId,
+      Value<String?> categorySyncIdOverride,
+      Value<bool> excludeFromStats,
+      Value<String?> currencyCode,
+      Value<int?> nativeAmount,
+      Value<int> version,
+      Value<DateTime?> lastEditedAt,
+      Value<String?> paidByUserId,
+      Value<int?> aaMode,
+      Value<String?> aaParticipants,
+      Value<String?> aaSplits,
+    });
+typedef $$TransactionsTableUpdateCompanionBuilder =
+    TransactionsCompanion Function({
+      Value<int> id,
+      Value<int> ledgerId,
+      Value<String> type,
+      Value<int> amount,
+      Value<int?> categoryId,
+      Value<DateTime> happenedAt,
+      Value<String?> note,
+      Value<int?> recurringId,
+      Value<String?> syncId,
+      Value<String?> createdByUserId,
+      Value<String?> lastEditedByUserId,
+      Value<String?> categorySyncIdOverride,
+      Value<bool> excludeFromStats,
+      Value<String?> currencyCode,
+      Value<int?> nativeAmount,
+      Value<int> version,
+      Value<DateTime?> lastEditedAt,
+      Value<String?> paidByUserId,
+      Value<int?> aaMode,
+      Value<String?> aaParticipants,
+      Value<String?> aaSplits,
+    });
+
+final class $$TransactionsTableReferences
+    extends BaseReferences<_$SpitoutDatabase, $TransactionsTable, Transaction> {
+  $$TransactionsTableReferences(super.$_db, super.$_table, super.$_typedResult);
+
+  static $LedgersTable _ledgerIdTable(_$SpitoutDatabase db) =>
+      db.ledgers.createAlias('transactions__ledger_id__ledgers__id');
+
+  $$LedgersTableProcessedTableManager get ledgerId {
+    final $_column = $_itemColumn<int>('ledger_id')!;
+
+    final manager = $$LedgersTableTableManager(
+      $_db,
+      $_db.ledgers,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_ledgerIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $CategoriesTable _categoryIdTable(_$SpitoutDatabase db) =>
+      db.categories.createAlias('transactions__category_id__categories__id');
+
+  $$CategoriesTableProcessedTableManager? get categoryId {
+    final $_column = $_itemColumn<int>('category_id');
+    if ($_column == null) return null;
+    final manager = $$CategoriesTableTableManager(
+      $_db,
+      $_db.categories,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_categoryIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static $RecurringTransactionsTable _recurringIdTable(_$SpitoutDatabase db) =>
+      db.recurringTransactions.createAlias(
+        'transactions__recurring_id__recurring_transactions__id',
+      );
+
+  $$RecurringTransactionsTableProcessedTableManager? get recurringId {
+    final $_column = $_itemColumn<int>('recurring_id');
+    if ($_column == null) return null;
+    final manager = $$RecurringTransactionsTableTableManager(
+      $_db,
+      $_db.recurringTransactions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recurringIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+
+  static MultiTypedResultKey<$RecordEditHistoriesTable, List<RecordEditHistory>>
+  _recordEditHistoriesRefsTable(_$SpitoutDatabase db) =>
+      MultiTypedResultKey.fromTable(
+        db.recordEditHistories,
+        aliasName: 'transactions__id__record_edit_histories__record_id',
+      );
+
+  $$RecordEditHistoriesTableProcessedTableManager get recordEditHistoriesRefs {
+    final manager = $$RecordEditHistoriesTableTableManager(
+      $_db,
+      $_db.recordEditHistories,
+    ).filter((f) => f.recordId.id.sqlEquals($_itemColumn<int>('id')!));
+
+    final cache = $_typedResult.readTableOrNull(
+      _recordEditHistoriesRefsTable($_db),
+    );
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: cache),
+    );
+  }
+}
+
+class $$TransactionsTableFilterComposer
+    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
+  $$TransactionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get happenedAt => $composableBuilder(
+    column: $table.happenedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get lastEditedByUserId => $composableBuilder(
+    column: $table.lastEditedByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get categorySyncIdOverride => $composableBuilder(
+    column: $table.categorySyncIdOverride,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<bool> get excludeFromStats => $composableBuilder(
+    column: $table.excludeFromStats,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get nativeAmount => $composableBuilder(
+    column: $table.nativeAmount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastEditedAt => $composableBuilder(
+    column: $table.lastEditedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get paidByUserId => $composableBuilder(
+    column: $table.paidByUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get aaMode => $composableBuilder(
+    column: $table.aaMode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aaParticipants => $composableBuilder(
+    column: $table.aaParticipants,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get aaSplits => $composableBuilder(
+    column: $table.aaSplits,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$LedgersTableFilterComposer get ledgerId {
+    final $$LedgersTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableFilterComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableFilterComposer get categoryId {
+    final $$CategoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RecurringTransactionsTableFilterComposer get recurringId {
+    final $$RecurringTransactionsTableFilterComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.recurringId,
+          referencedTable: $db.recurringTransactions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecurringTransactionsTableFilterComposer(
+                $db: $db,
+                $table: $db.recurringTransactions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  Expression<bool> recordEditHistoriesRefs(
+    Expression<bool> Function($$RecordEditHistoriesTableFilterComposer f) f,
+  ) {
+    final $$RecordEditHistoriesTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.id,
+      referencedTable: $db.recordEditHistories,
+      getReferencedColumn: (t) => t.recordId,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$RecordEditHistoriesTableFilterComposer(
+            $db: $db,
+            $table: $db.recordEditHistories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return f(composer);
+  }
+}
+
+class $$TransactionsTableOrderingComposer
+    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
+  $$TransactionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get happenedAt => $composableBuilder(
+    column: $table.happenedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get note => $composableBuilder(
+    column: $table.note,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get syncId => $composableBuilder(
+    column: $table.syncId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get lastEditedByUserId => $composableBuilder(
+    column: $table.lastEditedByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get categorySyncIdOverride => $composableBuilder(
+    column: $table.categorySyncIdOverride,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get excludeFromStats => $composableBuilder(
+    column: $table.excludeFromStats,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get nativeAmount => $composableBuilder(
+    column: $table.nativeAmount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastEditedAt => $composableBuilder(
+    column: $table.lastEditedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get paidByUserId => $composableBuilder(
+    column: $table.paidByUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get aaMode => $composableBuilder(
+    column: $table.aaMode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aaParticipants => $composableBuilder(
+    column: $table.aaParticipants,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get aaSplits => $composableBuilder(
+    column: $table.aaSplits,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$LedgersTableOrderingComposer get ledgerId {
+    final $$LedgersTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableOrderingComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableOrderingComposer get categoryId {
+    final $$CategoriesTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableOrderingComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RecurringTransactionsTableOrderingComposer get recurringId {
+    final $$RecurringTransactionsTableOrderingComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.recurringId,
+          referencedTable: $db.recurringTransactions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecurringTransactionsTableOrderingComposer(
+                $db: $db,
+                $table: $db.recurringTransactions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+}
+
+class $$TransactionsTableAnnotationComposer
+    extends Composer<_$SpitoutDatabase, $TransactionsTable> {
+  $$TransactionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get happenedAt => $composableBuilder(
+    column: $table.happenedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get note =>
+      $composableBuilder(column: $table.note, builder: (column) => column);
+
+  GeneratedColumn<String> get syncId =>
+      $composableBuilder(column: $table.syncId, builder: (column) => column);
+
+  GeneratedColumn<String> get createdByUserId => $composableBuilder(
+    column: $table.createdByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get lastEditedByUserId => $composableBuilder(
+    column: $table.lastEditedByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get categorySyncIdOverride => $composableBuilder(
+    column: $table.categorySyncIdOverride,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<bool> get excludeFromStats => $composableBuilder(
+    column: $table.excludeFromStats,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get nativeAmount => $composableBuilder(
+    column: $table.nativeAmount,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get lastEditedAt => $composableBuilder(
+    column: $table.lastEditedAt,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get paidByUserId => $composableBuilder(
+    column: $table.paidByUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get aaMode =>
+      $composableBuilder(column: $table.aaMode, builder: (column) => column);
+
+  GeneratedColumn<String> get aaParticipants => $composableBuilder(
+    column: $table.aaParticipants,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get aaSplits =>
+      $composableBuilder(column: $table.aaSplits, builder: (column) => column);
+
+  $$LedgersTableAnnotationComposer get ledgerId {
+    final $$LedgersTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.ledgerId,
+      referencedTable: $db.ledgers,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$LedgersTableAnnotationComposer(
+            $db: $db,
+            $table: $db.ledgers,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$CategoriesTableAnnotationComposer get categoryId {
+    final $$CategoriesTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.categoryId,
+      referencedTable: $db.categories,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$CategoriesTableAnnotationComposer(
+            $db: $db,
+            $table: $db.categories,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+
+  $$RecurringTransactionsTableAnnotationComposer get recurringId {
+    final $$RecurringTransactionsTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.recurringId,
+          referencedTable: $db.recurringTransactions,
+          getReferencedColumn: (t) => t.id,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecurringTransactionsTableAnnotationComposer(
+                $db: $db,
+                $table: $db.recurringTransactions,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return composer;
+  }
+
+  Expression<T> recordEditHistoriesRefs<T extends Object>(
+    Expression<T> Function($$RecordEditHistoriesTableAnnotationComposer a) f,
+  ) {
+    final $$RecordEditHistoriesTableAnnotationComposer composer =
+        $composerBuilder(
+          composer: this,
+          getCurrentColumn: (t) => t.id,
+          referencedTable: $db.recordEditHistories,
+          getReferencedColumn: (t) => t.recordId,
+          builder:
+              (
+                joinBuilder, {
+                $addJoinBuilderToRootComposer,
+                $removeJoinBuilderFromRootComposer,
+              }) => $$RecordEditHistoriesTableAnnotationComposer(
+                $db: $db,
+                $table: $db.recordEditHistories,
+                $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+                joinBuilder: joinBuilder,
+                $removeJoinBuilderFromRootComposer:
+                    $removeJoinBuilderFromRootComposer,
+              ),
+        );
+    return f(composer);
+  }
+}
+
+class $$TransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $TransactionsTable,
+          Transaction,
+          $$TransactionsTableFilterComposer,
+          $$TransactionsTableOrderingComposer,
+          $$TransactionsTableAnnotationComposer,
+          $$TransactionsTableCreateCompanionBuilder,
+          $$TransactionsTableUpdateCompanionBuilder,
+          (Transaction, $$TransactionsTableReferences),
+          Transaction,
+          PrefetchHooks Function({
+            bool ledgerId,
+            bool categoryId,
+            bool recurringId,
+            bool recordEditHistoriesRefs,
+          })
+        > {
+  $$TransactionsTableTableManager(
+    _$SpitoutDatabase db,
+    $TransactionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$TransactionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$TransactionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$TransactionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> ledgerId = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<int?> categoryId = const Value.absent(),
+                Value<DateTime> happenedAt = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> recurringId = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                Value<String?> lastEditedByUserId = const Value.absent(),
+                Value<String?> categorySyncIdOverride = const Value.absent(),
+                Value<bool> excludeFromStats = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<int?> nativeAmount = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> lastEditedAt = const Value.absent(),
+                Value<String?> paidByUserId = const Value.absent(),
+                Value<int?> aaMode = const Value.absent(),
+                Value<String?> aaParticipants = const Value.absent(),
+                Value<String?> aaSplits = const Value.absent(),
+              }) => TransactionsCompanion(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                happenedAt: happenedAt,
+                note: note,
+                recurringId: recurringId,
+                syncId: syncId,
+                createdByUserId: createdByUserId,
+                lastEditedByUserId: lastEditedByUserId,
+                categorySyncIdOverride: categorySyncIdOverride,
+                excludeFromStats: excludeFromStats,
+                currencyCode: currencyCode,
+                nativeAmount: nativeAmount,
+                version: version,
+                lastEditedAt: lastEditedAt,
+                paidByUserId: paidByUserId,
+                aaMode: aaMode,
+                aaParticipants: aaParticipants,
+                aaSplits: aaSplits,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int ledgerId,
+                required String type,
+                required int amount,
+                Value<int?> categoryId = const Value.absent(),
+                Value<DateTime> happenedAt = const Value.absent(),
+                Value<String?> note = const Value.absent(),
+                Value<int?> recurringId = const Value.absent(),
+                Value<String?> syncId = const Value.absent(),
+                Value<String?> createdByUserId = const Value.absent(),
+                Value<String?> lastEditedByUserId = const Value.absent(),
+                Value<String?> categorySyncIdOverride = const Value.absent(),
+                Value<bool> excludeFromStats = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
+                Value<int?> nativeAmount = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<DateTime?> lastEditedAt = const Value.absent(),
+                Value<String?> paidByUserId = const Value.absent(),
+                Value<int?> aaMode = const Value.absent(),
+                Value<String?> aaParticipants = const Value.absent(),
+                Value<String?> aaSplits = const Value.absent(),
+              }) => TransactionsCompanion.insert(
+                id: id,
+                ledgerId: ledgerId,
+                type: type,
+                amount: amount,
+                categoryId: categoryId,
+                happenedAt: happenedAt,
+                note: note,
+                recurringId: recurringId,
+                syncId: syncId,
+                createdByUserId: createdByUserId,
+                lastEditedByUserId: lastEditedByUserId,
+                categorySyncIdOverride: categorySyncIdOverride,
+                excludeFromStats: excludeFromStats,
+                currencyCode: currencyCode,
+                nativeAmount: nativeAmount,
+                version: version,
+                lastEditedAt: lastEditedAt,
+                paidByUserId: paidByUserId,
+                aaMode: aaMode,
+                aaParticipants: aaParticipants,
+                aaSplits: aaSplits,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$TransactionsTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback:
+              ({
+                ledgerId = false,
+                categoryId = false,
+                recurringId = false,
+                recordEditHistoriesRefs = false,
+              }) {
+                return PrefetchHooks(
+                  db: db,
+                  explicitlyWatchedTables: [
+                    if (recordEditHistoriesRefs) db.recordEditHistories,
+                  ],
+                  addJoins:
+                      <
+                        T extends TableManagerState<
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic,
+                          dynamic
+                        >
+                      >(state) {
+                        if (ledgerId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.ledgerId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._ledgerIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._ledgerIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (categoryId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.categoryId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._categoryIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._categoryIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+                        if (recurringId) {
+                          state =
+                              state.withJoin(
+                                    currentTable: table,
+                                    currentColumn: table.recurringId,
+                                    referencedTable:
+                                        $$TransactionsTableReferences
+                                            ._recurringIdTable(db),
+                                    referencedColumn:
+                                        $$TransactionsTableReferences
+                                            ._recurringIdTable(db)
+                                            .id,
+                                  )
+                                  as T;
+                        }
+
+                        return state;
+                      },
+                  getPrefetchedDataCallback: (items) async {
+                    return [
+                      if (recordEditHistoriesRefs)
+                        await $_getPrefetchedData<
+                          Transaction,
+                          $TransactionsTable,
+                          RecordEditHistory
+                        >(
+                          currentTable: table,
+                          referencedTable: $$TransactionsTableReferences
+                              ._recordEditHistoriesRefsTable(db),
+                          managerFromTypedResult: (p0) =>
+                              $$TransactionsTableReferences(
+                                db,
+                                table,
+                                p0,
+                              ).recordEditHistoriesRefs,
+                          referencedItemsForCurrentItem:
+                              (item, referencedItems) => referencedItems.where(
+                                (e) => e.recordId == item.id,
+                              ),
+                          typedResults: items,
+                        ),
+                    ];
+                  },
+                );
+              },
+        ),
+      );
+}
+
+typedef $$TransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $TransactionsTable,
+      Transaction,
+      $$TransactionsTableFilterComposer,
+      $$TransactionsTableOrderingComposer,
+      $$TransactionsTableAnnotationComposer,
+      $$TransactionsTableCreateCompanionBuilder,
+      $$TransactionsTableUpdateCompanionBuilder,
+      (Transaction, $$TransactionsTableReferences),
+      Transaction,
+      PrefetchHooks Function({
+        bool ledgerId,
+        bool categoryId,
+        bool recurringId,
+        bool recordEditHistoriesRefs,
+      })
+    >;
+typedef $$RecordEditHistoriesTableCreateCompanionBuilder =
+    RecordEditHistoriesCompanion Function({
+      Value<int> id,
+      required int recordId,
+      required int version,
+      Value<String?> operatorUserId,
+      required String summary,
+      Value<DateTime> createdAt,
+    });
+typedef $$RecordEditHistoriesTableUpdateCompanionBuilder =
+    RecordEditHistoriesCompanion Function({
+      Value<int> id,
+      Value<int> recordId,
+      Value<int> version,
+      Value<String?> operatorUserId,
+      Value<String> summary,
+      Value<DateTime> createdAt,
+    });
+
+final class $$RecordEditHistoriesTableReferences
+    extends
         BaseReferences<
           _$SpitoutDatabase,
-          $RecurringTransactionsTable,
-          RecurringTransaction
-        >,
-      ),
-      RecurringTransaction,
-      PrefetchHooks Function()
+          $RecordEditHistoriesTable,
+          RecordEditHistory
+        > {
+  $$RecordEditHistoriesTableReferences(
+    super.$_db,
+    super.$_table,
+    super.$_typedResult,
+  );
+
+  static $TransactionsTable _recordIdTable(_$SpitoutDatabase db) => db
+      .transactions
+      .createAlias('record_edit_histories__record_id__transactions__id');
+
+  $$TransactionsTableProcessedTableManager get recordId {
+    final $_column = $_itemColumn<int>('record_id')!;
+
+    final manager = $$TransactionsTableTableManager(
+      $_db,
+      $_db.transactions,
+    ).filter((f) => f.id.sqlEquals($_column));
+    final item = $_typedResult.readTableOrNull(_recordIdTable($_db));
+    if (item == null) return manager;
+    return ProcessedTableManager(
+      manager.$state.copyWith(prefetchedData: [item]),
+    );
+  }
+}
+
+class $$RecordEditHistoriesTableFilterComposer
+    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
+  $$RecordEditHistoriesTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operatorUserId => $composableBuilder(
+    column: $table.operatorUserId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  $$TransactionsTableFilterComposer get recordId {
+    final $$TransactionsTableFilterComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableFilterComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecordEditHistoriesTableOrderingComposer
+    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
+  $$RecordEditHistoriesTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<int> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get version => $composableBuilder(
+    column: $table.version,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operatorUserId => $composableBuilder(
+    column: $table.operatorUserId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get summary => $composableBuilder(
+    column: $table.summary,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  $$TransactionsTableOrderingComposer get recordId {
+    final $$TransactionsTableOrderingComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableOrderingComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecordEditHistoriesTableAnnotationComposer
+    extends Composer<_$SpitoutDatabase, $RecordEditHistoriesTable> {
+  $$RecordEditHistoriesTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<int> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get version =>
+      $composableBuilder(column: $table.version, builder: (column) => column);
+
+  GeneratedColumn<String> get operatorUserId => $composableBuilder(
+    column: $table.operatorUserId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get summary =>
+      $composableBuilder(column: $table.summary, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+
+  $$TransactionsTableAnnotationComposer get recordId {
+    final $$TransactionsTableAnnotationComposer composer = $composerBuilder(
+      composer: this,
+      getCurrentColumn: (t) => t.recordId,
+      referencedTable: $db.transactions,
+      getReferencedColumn: (t) => t.id,
+      builder:
+          (
+            joinBuilder, {
+            $addJoinBuilderToRootComposer,
+            $removeJoinBuilderFromRootComposer,
+          }) => $$TransactionsTableAnnotationComposer(
+            $db: $db,
+            $table: $db.transactions,
+            $addJoinBuilderToRootComposer: $addJoinBuilderToRootComposer,
+            joinBuilder: joinBuilder,
+            $removeJoinBuilderFromRootComposer:
+                $removeJoinBuilderFromRootComposer,
+          ),
+    );
+    return composer;
+  }
+}
+
+class $$RecordEditHistoriesTableTableManager
+    extends
+        RootTableManager<
+          _$SpitoutDatabase,
+          $RecordEditHistoriesTable,
+          RecordEditHistory,
+          $$RecordEditHistoriesTableFilterComposer,
+          $$RecordEditHistoriesTableOrderingComposer,
+          $$RecordEditHistoriesTableAnnotationComposer,
+          $$RecordEditHistoriesTableCreateCompanionBuilder,
+          $$RecordEditHistoriesTableUpdateCompanionBuilder,
+          (RecordEditHistory, $$RecordEditHistoriesTableReferences),
+          RecordEditHistory,
+          PrefetchHooks Function({bool recordId})
+        > {
+  $$RecordEditHistoriesTableTableManager(
+    _$SpitoutDatabase db,
+    $RecordEditHistoriesTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$RecordEditHistoriesTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$RecordEditHistoriesTableOrderingComposer(
+                $db: db,
+                $table: table,
+              ),
+          createComputedFieldComposer: () =>
+              $$RecordEditHistoriesTableAnnotationComposer(
+                $db: db,
+                $table: table,
+              ),
+          updateCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                Value<int> recordId = const Value.absent(),
+                Value<int> version = const Value.absent(),
+                Value<String?> operatorUserId = const Value.absent(),
+                Value<String> summary = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecordEditHistoriesCompanion(
+                id: id,
+                recordId: recordId,
+                version: version,
+                operatorUserId: operatorUserId,
+                summary: summary,
+                createdAt: createdAt,
+              ),
+          createCompanionCallback:
+              ({
+                Value<int> id = const Value.absent(),
+                required int recordId,
+                required int version,
+                Value<String?> operatorUserId = const Value.absent(),
+                required String summary,
+                Value<DateTime> createdAt = const Value.absent(),
+              }) => RecordEditHistoriesCompanion.insert(
+                id: id,
+                recordId: recordId,
+                version: version,
+                operatorUserId: operatorUserId,
+                summary: summary,
+                createdAt: createdAt,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map(
+                (e) => (
+                  e.readTable(table),
+                  $$RecordEditHistoriesTableReferences(db, table, e),
+                ),
+              )
+              .toList(),
+          prefetchHooksCallback: ({recordId = false}) {
+            return PrefetchHooks(
+              db: db,
+              explicitlyWatchedTables: [],
+              addJoins:
+                  <
+                    T extends TableManagerState<
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic,
+                      dynamic
+                    >
+                  >(state) {
+                    if (recordId) {
+                      state =
+                          state.withJoin(
+                                currentTable: table,
+                                currentColumn: table.recordId,
+                                referencedTable:
+                                    $$RecordEditHistoriesTableReferences
+                                        ._recordIdTable(db),
+                                referencedColumn:
+                                    $$RecordEditHistoriesTableReferences
+                                        ._recordIdTable(db)
+                                        .id,
+                              )
+                              as T;
+                    }
+
+                    return state;
+                  },
+              getPrefetchedDataCallback: (items) async {
+                return [];
+              },
+            );
+          },
+        ),
+      );
+}
+
+typedef $$RecordEditHistoriesTableProcessedTableManager =
+    ProcessedTableManager<
+      _$SpitoutDatabase,
+      $RecordEditHistoriesTable,
+      RecordEditHistory,
+      $$RecordEditHistoriesTableFilterComposer,
+      $$RecordEditHistoriesTableOrderingComposer,
+      $$RecordEditHistoriesTableAnnotationComposer,
+      $$RecordEditHistoriesTableCreateCompanionBuilder,
+      $$RecordEditHistoriesTableUpdateCompanionBuilder,
+      (RecordEditHistory, $$RecordEditHistoriesTableReferences),
+      RecordEditHistory,
+      PrefetchHooks Function({bool recordId})
     >;
 typedef $$LocalChangesTableCreateCompanionBuilder =
     LocalChangesCompanion Function({
@@ -12559,12 +13682,12 @@ class $SpitoutDatabaseManager {
       $$LedgersTableTableManager(_db, _db.ledgers);
   $$CategoriesTableTableManager get categories =>
       $$CategoriesTableTableManager(_db, _db.categories);
+  $$RecurringTransactionsTableTableManager get recurringTransactions =>
+      $$RecurringTransactionsTableTableManager(_db, _db.recurringTransactions);
   $$TransactionsTableTableManager get transactions =>
       $$TransactionsTableTableManager(_db, _db.transactions);
   $$RecordEditHistoriesTableTableManager get recordEditHistories =>
       $$RecordEditHistoriesTableTableManager(_db, _db.recordEditHistories);
-  $$RecurringTransactionsTableTableManager get recurringTransactions =>
-      $$RecurringTransactionsTableTableManager(_db, _db.recurringTransactions);
   $$LocalChangesTableTableManager get localChanges =>
       $$LocalChangesTableTableManager(_db, _db.localChanges);
   $$SyncStateTableTableManager get syncState =>

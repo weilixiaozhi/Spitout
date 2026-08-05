@@ -61,7 +61,7 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       syncId: txSyncId,
       excludeFromStats: true,
@@ -85,7 +85,7 @@ void main() {
 
     final tx = await repo.getTransactionBySyncId(txSyncId);
     expect(tx, isNotNull);
-    expect(tx!.amount, 250, reason: 'amount 应被远端更新');
+    expect(tx!.amount, 25000, reason: 'amount 应被远端更新(250 元 → 25000 分)');
     expect(tx.excludeFromStats, true,
         reason: '缺键不应清空本地已有的 excludeFromStats');
   });
@@ -97,7 +97,7 @@ void main() {
     await repo.addTransaction(
       ledgerId: lid,
       type: 'expense',
-      amount: 100,
+      amount: 10000,
       happenedAt: DateTime(2026, 6, 18),
       syncId: txSyncId,
       excludeFromStats: true,

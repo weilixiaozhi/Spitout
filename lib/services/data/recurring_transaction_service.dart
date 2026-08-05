@@ -206,7 +206,7 @@ class RecurringTransactionService {
           if (nextDate == null) break;
 
           logger.info(_tag,
-              '周期交易 id=${currentRecurring.id} 生成一笔: happenedAt=$nextDate amount=${currentRecurring.amount} type=${currentRecurring.type}');
+              '周期交易 id=${currentRecurring.id} 生成一笔: happenedAt=$nextDate amount=${currentRecurring.amount / 100} type=${currentRecurring.type}');
 
           // 生成交易记录
           final transactionId = await repository.addTransaction(

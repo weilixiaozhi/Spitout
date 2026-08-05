@@ -20,6 +20,22 @@ extension _SyncEngineResolvers on SyncEngine {
     return led?.id;
   }
 
+  /// 判断本地账本是否为「共享账本 + 成员(Editor)」视角。
+  ///
+  /// Editor 视角下交易分类一律走 override，避免与成员自己的用户全局分类混淆；
+  /// Owner 视角仍走主表正数分类 id，保持各自设备内部表示一致。
+  Future<bool> _isSharedLedgerEditor(int ledgerId) async {
+    if (ledgerId <= 0) return false;
+    // pull 期间 LookupCache 已整表加载 ledger，直接查缓存避免逐条交易 SELECT
+    if (activePullCache != null) {
+      return activePullCache!.isSharedEditorLedger(ledgerId);
+    }
+    final ledger = await (db.select(db.ledgers)
+          ..where((l) => l.id.equals(ledgerId)))
+        .getSingleOrNull();
+    return ledger != null && ledger.isShared && ledger.myRole != 'owner';
+  }
+
   /// 按 syncId 查 category 的本地 int id。优先级比 name+kind 高：设备间
   /// category.syncId 是稳定的，name 可能被改过 / 有重名。
   ///

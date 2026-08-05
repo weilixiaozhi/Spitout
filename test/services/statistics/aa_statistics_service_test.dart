@@ -91,7 +91,7 @@ void main() {
     /// 构造一条交易行(不写库,仅用 data class)。
     Transaction makeTx({
       required int id,
-      double amount = 10.0,
+      int amount = 1000,
       String? paidByUserId = 'u1',
       int? aaMode,
       String? aaParticipants,
@@ -126,7 +126,7 @@ void main() {
     test('人均: 3 人 10.00,支出人 u1 实付差归 u1', () {
       final tx = makeTx(
         id: 1,
-        amount: 10.0,
+        amount: 1000,
         paidByUserId: 'u1',
         aaMode: 0, // 人均
         aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
@@ -149,7 +149,7 @@ void main() {
     test('人均: aaParticipants 空 → 展开为账本全部成员', () {
       final tx = makeTx(
         id: 1,
-        amount: 9.0,
+        amount: 900,
         paidByUserId: 'u2',
         aaMode: null, // null 视为人均
         aaParticipants: null,
@@ -179,7 +179,7 @@ void main() {
     test('指定分摊: aaSplits 即最终应摊', () {
       final tx = makeTx(
         id: 1,
-        amount: 10.0,
+        amount: 1000,
         paidByUserId: 'u1',
         aaMode: 2, // 指定
         aaParticipants: jsonEncode(['u1', 'u2']),
@@ -210,7 +210,7 @@ void main() {
     test('paidByUserId 为空(支出人未知) → 返回 null,跳过分摊', () {
       final tx = makeTx(
         id: 1,
-        amount: 10.0,
+        amount: 1000,
         paidByUserId: null,
         aaMode: 0,
         aaParticipants: jsonEncode(['u1', 'u2']),
@@ -226,7 +226,7 @@ void main() {
     test('paidByUserId 为空串 → 同样跳过分摊', () {
       final tx = makeTx(
         id: 1,
-        amount: 10.0,
+        amount: 1000,
         paidByUserId: '',
         aaMode: 0,
         aaParticipants: jsonEncode(['u1', 'u2']),
@@ -242,7 +242,7 @@ void main() {
   group('AaStatisticsService.computeLedger', () {
     Transaction makeTx({
       required int id,
-      required double amount,
+      required int amount,
       required String paidByUserId,
       int? aaMode,
       String? aaParticipants,
@@ -277,14 +277,14 @@ void main() {
       final txs = [
         makeTx(
           id: 1,
-          amount: 10.0,
+          amount: 1000,
           paidByUserId: 'u1',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
         ),
         makeTx(
           id: 2,
-          amount: 6.0,
+          amount: 600,
           paidByUserId: 'u2',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2']),
@@ -319,7 +319,7 @@ void main() {
       final txs = [
         makeTx(
           id: 1,
-          amount: 30.0,
+          amount: 3000,
           paidByUserId: 'u1',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
@@ -347,14 +347,14 @@ void main() {
       final txs = [
         makeTx(
           id: 1,
-          amount: 30.0,
+          amount: 3000,
           paidByUserId: '', // 支出人未知(如历史/导入数据缺字段)
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2', 'u3']),
         ),
         makeTx(
           id: 2,
-          amount: 6.0,
+          amount: 600,
           paidByUserId: 'u1',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2']),
@@ -384,7 +384,7 @@ void main() {
       final txs = [
         makeTx(
           id: 1,
-          amount: 10.0,
+          amount: 1000,
           paidByUserId: 'u1',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', vuSyncId]),
@@ -413,7 +413,7 @@ void main() {
       final txs = [
         makeTx(
           id: 1,
-          amount: 30.0,
+          amount: 3000,
           paidByUserId: 'u1',
           aaMode: 0,
           aaParticipants: jsonEncode(['u1', 'u2', 'u3']),

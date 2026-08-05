@@ -107,7 +107,7 @@ void main() {
       final txs = await db.select(db.transactions).get();
       expect(txs, hasLength(1));
       expect(txs.first.syncId, 'tx-A');
-      expect(txs.first.amount, 12.5);
+      expect(txs.first.amount, 1250);
       expect(txs.first.ledgerId, ledgerId);
       expect(txs.first.categoryId, catId);
     });
@@ -142,6 +142,64 @@ void main() {
       // 再次 pull 应该是空(cursor 已到末尾)
       final applied2 = await engine.pull('1');
       expect(applied2, 0);
+    });
+
+    test('共享账本 Editor 拉取交易 分类必须走 override 不绑定到成员本地同 syncId 分类', () async {
+      // 成员本地存在同 syncId 的默认分类(确定性 seed 场景)
+      final localCatId = await db.into(db.categories).insert(
+            CategoriesCompanion.insert(
+              name: '交通',
+              kind: 'expense',
+              syncId: const Value('cat-traffic'),
+            ),
+          );
+      final ledgerId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Shared',
+              syncId: const Value('shared-ledger'),
+              storageMode: const Value('cloud'),
+              isShared: const Value(true),
+              myRole: const Value('editor'),
+            ),
+          );
+      // Owner 分类镜像
+      await db.into(db.sharedLedgerCategories).insert(
+            SharedLedgerCategoriesCompanion.insert(
+              ledgerSyncId: 'shared-ledger',
+              syncId: 'cat-traffic',
+              name: '交通',
+              kind: 'expense',
+              updatedAt: DateTime.now(),
+            ),
+          );
+
+      provider.pushFakeChange(
+        entityType: 'transaction',
+        entitySyncId: 'tx-shared-1',
+        ledgerId: 'shared-ledger',
+        payload: {
+          'syncId': 'tx-shared-1',
+          'type': 'expense',
+          'amount': 20.0,
+          'happenedAt': '2026-05-02T10:00:00Z',
+          'currencyCode': 'CNY',
+          'nativeAmount': 20.0,
+          'categoryName': '交通',
+          'categoryKind': 'expense',
+          'categoryId': 'cat-traffic',
+        },
+      );
+
+      final applied = await engine.pull('shared-ledger');
+      expect(applied, 1);
+
+      final tx = (await db.select(db.transactions).get()).single;
+      expect(tx.ledgerId, ledgerId);
+      expect(tx.categoryId, isNull,
+          reason: 'Editor 视角不应把 Owner 分类绑到成员本地正数 id');
+      expect(tx.categorySyncIdOverride, 'cat-traffic');
+      expect(localCatId, isPositive,
+          reason: '前置条件: 成员本地确实存在同 syncId 分类, 旧代码会误绑');
     });
   });
 
@@ -528,7 +586,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 99.5,
+          amount: 9950,
           syncId: const Value('tx-push-1'),
         ),
       ]);
@@ -561,7 +619,7 @@ void main() {
         TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: const Value('tx-1')),
       ]);
       await engine.push(ledgerId.toString());
@@ -587,7 +645,7 @@ void main() {
             (i) => TransactionsCompanion.insert(
                   ledgerId: ledgerId,
                   type: 'expense',
-                  amount: i.toDouble(),
+                  amount: i * 100,
                   syncId: Value('fullpull-tx-$i'),
                 )),
         recordChanges: false,
@@ -609,7 +667,7 @@ void main() {
         TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: 'expense',
-            amount: 1.0,
+            amount: 100,
             syncId: const Value('normal-tx')),
       ]); // 不传 recordChanges,走默认 true
       final changes =
@@ -698,7 +756,7 @@ void main() {
             TransactionsCompanion.insert(
               ledgerId: ledgerId,
               type: 'expense',
-              amount: 8.0,
+              amount: 800,
               syncId: const Value('tx-to-delete'),
             ),
           );
@@ -737,7 +795,7 @@ void main() {
         TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: 'expense',
-            amount: 50.0,
+            amount: 5000,
             syncId: const Value('tx-full-1')),
       ]);
 
@@ -768,7 +826,7 @@ void main() {
         TransactionsCompanion.insert(
             ledgerId: ledgerId,
             type: 'expense',
-            amount: 5.0,
+            amount: 500,
             syncId: const Value('tx-incr')),
       ]);
 
@@ -841,7 +899,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: ledgerId,
           type: 'expense',
-          amount: 8.0,
+          amount: 800,
           syncId: const Value('tx-push-event'),
         ),
       ]);
@@ -970,7 +1028,7 @@ void main() {
       await db.into(db.transactions).insert(TransactionsCompanion.insert(
             ledgerId: lid,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: const Value('tx-local'),
           ));
       final before = await countTx();
@@ -1011,7 +1069,7 @@ void main() {
       await db.into(db.transactions).insert(TransactionsCompanion.insert(
             ledgerId: lid,
             type: 'expense',
-            amount: 10.0,
+            amount: 1000,
             syncId: const Value('tx-local'),
           ));
       await provider.storage.upload(path: 'ledger-1', data: snapshotJson);
@@ -1122,7 +1180,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: lid,
           type: 'expense',
-          amount: 3.0,
+          amount: 300,
           syncId: const Value('tx-local-new'),
         ),
       ]);
@@ -1351,7 +1409,9 @@ void main() {
           );
       await db.into(db.categories).insert(
             CategoriesCompanion.insert(
-              name: 'C', kind: 'expense', syncId: const Value('C1')),
+              name: 'C',
+              kind: 'expense',
+              syncId: Value('C-$ledgerSyncId')),
           );
       for (var i = 0; i < 2; i++) {
         provider.pushFakeChange(
@@ -1363,7 +1423,7 @@ void main() {
             'type': 'expense',
             'amount': 10.0,
             'happenedAt': '2026-05-01T10:00:00Z',
-            'categoryId': 'C1',
+            'categoryId': 'C-$ledgerSyncId',
             'categoryName': 'C',
             'categoryKind': 'expense',
           },
@@ -1386,7 +1446,7 @@ void main() {
         TransactionsCompanion.insert(
           ledgerId: lid2,
           type: 'expense',
-          amount: 3.0,
+          amount: 300,
           syncId: const Value('tx-local-2'),
         ),
       ]);

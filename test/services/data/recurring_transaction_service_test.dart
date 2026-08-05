@@ -49,7 +49,7 @@ void main() {
     await repo.addRecurringTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 10,
+      amount: 1000,
       frequency: 'daily',
       interval: 1,
       startDate: DateTime.now().subtract(const Duration(days: 30)),
@@ -68,7 +68,7 @@ void main() {
     await repo.addRecurringTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 10,
+      amount: 1000,
       frequency: 'daily',
       interval: 1,
       startDate: DateTime.now().subtract(const Duration(days: 1)),
@@ -85,7 +85,7 @@ void main() {
     final id = await repo.addRecurringTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 10,
+      amount: 1000,
       frequency: 'daily',
       interval: 1,
       startDate: DateTime.now().subtract(const Duration(days: 30)),
@@ -107,7 +107,7 @@ void main() {
     final id = await repo.addRecurringTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 10,
+      amount: 1000,
       frequency: 'daily',
       interval: 1,
       startDate: DateTime.now().subtract(const Duration(days: 30)),
@@ -126,7 +126,7 @@ void main() {
     await repo.addRecurringTransaction(
       ledgerId: ledgerId,
       type: 'expense',
-      amount: 10,
+      amount: 1000,
       frequency: 'daily',
       interval: 1,
       startDate: DateTime.now().add(const Duration(days: 1)),

@@ -17,7 +17,7 @@ abstract class RecurringTransactionRepository {
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,
@@ -35,7 +35,7 @@ abstract class RecurringTransactionRepository {
     required int id,
     required int ledgerId,
     required String type,
-    required double amount,
+    required int amount,
     int? categoryId,
     String? note,
     required String frequency,

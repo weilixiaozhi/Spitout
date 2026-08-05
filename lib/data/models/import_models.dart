@@ -11,6 +11,8 @@
 
 library;
 
+import 'package:decimal/decimal.dart';
+
 /// 导入分类（CSV/云端恢复统一口径）
 class ImportCategory {
   final String name;
@@ -33,7 +35,8 @@ class ImportCategory {
 /// 导入交易数据
 class ImportTransaction {
   final String type; // 全局仅支出模式，固定为 'expense'
-  final double amount;
+  /// 导入金额(元,Decimal 精确解析,杜绝 CSV/JSON 解析阶段的浮点尾差)。
+  final Decimal amount;
   final String? categoryName;
   final String? categoryKind;
   final DateTime happenedAt;
@@ -48,7 +51,7 @@ class ImportTransaction {
   /// 仅云端全量恢复路径携带:/sync/full 的 tx item 输出的 nativeAmount 是
   /// 源设备记账时按当时汇率折算的真实所见金额。null(CSV 导入/无该字段的
   /// 备份) → 落库时按本地有效汇率重算,与常规导入语义一致。
-  final double? nativeAmount;
+  final Decimal? nativeAmount;
 
   /// 不计入支出统计标记。null(JSON 无此键) → 落库默认 false,
   /// 与 server snapshot「缺键 = false」语义对齐。

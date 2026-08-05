@@ -24,12 +24,16 @@ import 'package:spitout/providers/core/refresh_ticks.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
-import 'package:spitout/core/identity/local_user_identity.dart';
+import '../core/local_self_id_providers.dart';
 import 'package:spitout/services/data/tx_author_service.dart';
 
 // sharedResourceRefreshProvider 由叶子模块 refresh_ticks.dart 定义，
 // 此处 re-export 供消费方（picker / 反查 widget）统一引用。
 export 'package:spitout/providers/core/refresh_ticks.dart';
+// 共享账本成员 / 邀请 DTO 经 providers 层 barrel 转发给 UI，
+// data 层不再反向依赖 cloud 层（分层规则：data 不得 import cloud）。
+export 'package:spitout/cloud/spitout_cloud.dart'
+    show SpitoutCloudLedgerMember, SpitoutCloudInvite;
 
 /// 列出某账本的成员(任何 member 可读)。
 /// watch sharedResourceRefreshProvider 让 WS 重连后(server 不持久化离线
@@ -117,11 +121,11 @@ Future<SpitoutCloudInvite> createInviteAndRefresh(
 Future<void> revokeInviteAndRefresh(
   WidgetRef ref, {
   required String ledgerId,
-  required String code,
+  required String inviteId,
 }) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   if (cloud == null) return;
-  await cloud.revokeInvite(ledgerId: ledgerId, code: code);
+  await cloud.revokeInvite(ledgerId: ledgerId, inviteId: inviteId);
   ref.invalidate(ledgerInvitesProvider(ledgerId));
 }
 

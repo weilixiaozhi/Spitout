@@ -40,8 +40,8 @@ class AppUpdateInfo {
   /// 检查状态（三态），UI 据此切换弹窗样式与按钮。
   final UpdateStatus status;
 
-  /// 是否存在比当前更新的版本（与 [status] 保持一致，便于旧调用方判断）。
-  final bool hasUpdate;
+  /// 是否存在比当前更新的版本（由 [status] 派生，杜绝两者构造出矛盾组合）。
+  bool get hasUpdate => status == UpdateStatus.hasUpdate;
 
   /// 远端最新版本号（去 "v" 后，如 "1.0.1"），无数据时为空。
   final String? latestVersion;
@@ -55,7 +55,6 @@ class AppUpdateInfo {
 
   const AppUpdateInfo({
     required this.status,
-    required this.hasUpdate,
     this.latestVersion,
     this.releaseUrl,
     required this.currentVersion,
