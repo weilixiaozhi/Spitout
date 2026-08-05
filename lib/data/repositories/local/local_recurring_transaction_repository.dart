@@ -5,7 +5,8 @@ import '../recurring_transaction_repository.dart';
 
 /// 本地周期记账Repository实现
 /// 基于 Drift 数据库实现
-class LocalRecurringTransactionRepository implements RecurringTransactionRepository {
+class LocalRecurringTransactionRepository
+    implements RecurringTransactionRepository {
   final SpitoutDatabase db;
 
   LocalRecurringTransactionRepository(this.db);
@@ -16,14 +17,18 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
   }
 
   @override
-  Future<List<RecurringTransaction>> getRecurringTransactionsByLedger(int ledgerId) async {
-    return await (db.select(db.recurringTransactions)
-          ..where((t) => t.ledgerId.equals(ledgerId)))
-        .get();
+  Future<List<RecurringTransaction>> getRecurringTransactionsByLedger(
+    int ledgerId,
+  ) async {
+    return await (db.select(
+      db.recurringTransactions,
+    )..where((t) => t.ledgerId.equals(ledgerId))).get();
   }
 
   @override
-  Future<List<RecurringTransaction>> getEnabledRecurringTransactions(int ledgerId) async {
+  Future<List<RecurringTransaction>> getEnabledRecurringTransactions(
+    int ledgerId,
+  ) async {
     return await (db.select(db.recurringTransactions)
           ..where((t) => t.ledgerId.equals(ledgerId) & t.enabled.equals(true)))
         .get();
@@ -45,23 +50,25 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
     DateTime? endDate,
     bool enabled = true,
   }) async {
-    return await db.into(db.recurringTransactions).insert(
-      RecurringTransactionsCompanion.insert(
-        ledgerId: ledgerId,
-        type: type,
-        amount: amount,
-        categoryId: d.Value(categoryId),
-        note: d.Value(note),
-        frequency: frequency,
-        interval: d.Value(interval),
-        dayOfMonth: d.Value(dayOfMonth),
-        dayOfWeek: d.Value(dayOfWeek),
-        monthOfYear: d.Value(monthOfYear),
-        startDate: startDate,
-        endDate: d.Value(endDate),
-        enabled: d.Value(enabled),
-      ),
-    );
+    return await db
+        .into(db.recurringTransactions)
+        .insert(
+          RecurringTransactionsCompanion.insert(
+            ledgerId: ledgerId,
+            type: type,
+            amount: amount,
+            categoryId: d.Value(categoryId),
+            note: d.Value(note),
+            frequency: frequency,
+            interval: d.Value(interval),
+            dayOfMonth: d.Value(dayOfMonth),
+            dayOfWeek: d.Value(dayOfWeek),
+            monthOfYear: d.Value(monthOfYear),
+            startDate: startDate,
+            endDate: d.Value(endDate),
+            enabled: d.Value(enabled),
+          ),
+        );
   }
 
   @override
@@ -80,10 +87,11 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
     required DateTime startDate,
     DateTime? endDate,
     bool? enabled,
-    DateTime? lastGeneratedDate,
+    bool clearLastGeneratedDate = false,
   }) async {
-    await (db.update(db.recurringTransactions)..where((t) => t.id.equals(id)))
-        .write(
+    await (db.update(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).write(
       RecurringTransactionsCompanion(
         ledgerId: d.Value(ledgerId),
         type: d.Value(type),
@@ -98,7 +106,11 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
         startDate: d.Value(startDate),
         endDate: d.Value(endDate),
         enabled: enabled != null ? d.Value(enabled) : const d.Value.absent(),
-        lastGeneratedDate: d.Value(lastGeneratedDate),
+        // 普通编辑保持 lastGeneratedDate 不变；只有显式重置时才清空，
+        // 否则用户改一次模板就会丢掉“已生成到哪天”的锚点，触发重复生成。
+        lastGeneratedDate: clearLastGeneratedDate
+            ? d.Value<DateTime?>(null)
+            : const d.Value.absent(),
         updatedAt: d.Value(DateTime.now()),
       ),
     );
@@ -106,26 +118,33 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
 
   @override
   Future<void> deleteRecurringTransaction(int id) async {
-    await (db.delete(db.recurringTransactions)..where((t) => t.id.equals(id)))
-        .go();
+    await (db.delete(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).go();
   }
 
   @override
   Future<void> toggleRecurringTransaction(int id, bool enabled) async {
-    await (db.update(db.recurringTransactions)..where((t) => t.id.equals(id)))
-        .write(RecurringTransactionsCompanion(
-      enabled: d.Value(enabled),
-      updatedAt: d.Value(DateTime.now()),
-    ));
+    await (db.update(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).write(
+      RecurringTransactionsCompanion(
+        enabled: d.Value(enabled),
+        updatedAt: d.Value(DateTime.now()),
+      ),
+    );
   }
 
   @override
   Future<void> updateLastGeneratedDate(int id, DateTime date) async {
-    await (db.update(db.recurringTransactions)..where((t) => t.id.equals(id)))
-        .write(RecurringTransactionsCompanion(
-      lastGeneratedDate: d.Value(date),
-      updatedAt: d.Value(DateTime.now()),
-    ));
+    await (db.update(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).write(
+      RecurringTransactionsCompanion(
+        lastGeneratedDate: d.Value(date),
+        updatedAt: d.Value(DateTime.now()),
+      ),
+    );
   }
 
   @override
@@ -134,15 +153,18 @@ class LocalRecurringTransactionRepository implements RecurringTransactionReposit
   }
 
   @override
-  Stream<List<RecurringTransaction>> watchRecurringTransactionsByLedger(int ledgerId) {
-    return (db.select(db.recurringTransactions)
-          ..where((t) => t.ledgerId.equals(ledgerId)))
-        .watch();
+  Stream<List<RecurringTransaction>> watchRecurringTransactionsByLedger(
+    int ledgerId,
+  ) {
+    return (db.select(
+      db.recurringTransactions,
+    )..where((t) => t.ledgerId.equals(ledgerId))).watch();
   }
 
   @override
   Future<void> batchInsertRecurringTransactions(
-      List<RecurringTransactionsCompanion> items) async {
+    List<RecurringTransactionsCompanion> items,
+  ) async {
     await db.batch((batch) {
       batch.insertAll(db.recurringTransactions, items);
     });

@@ -41,8 +41,7 @@ void main() {
     expect(d.day, now.day);
   }
 
-  test('历史开始日期(30天前)+ 从未生成 → 只产出今天一笔,不回溯补历史(#135 + 含今天)',
-      () async {
+  test('历史开始日期(30天前)+ 从未生成 → 只产出今天一笔,不回溯补历史(#135 + 含今天)', () async {
     // 修复前(老 bug):base 锁今天、daily 首笔=明天 → isAfter(now) → 一笔都不生成,
     // 且 lastGeneratedDate 永远为 null → 永久卡死("每天周期不生效")。
     // 修复后:首笔=基准日(今天),生成且仅生成"今天"这一笔,不补 30 天历史。
@@ -91,8 +90,11 @@ void main() {
       startDate: DateTime.now().subtract(const Duration(days: 30)),
     );
     final now = DateTime.now();
-    final yesterday = DateTime(now.year, now.month, now.day)
-        .subtract(const Duration(days: 1));
+    final yesterday = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 1));
     await repo.updateLastGeneratedDate(id, yesterday);
 
     final service = RecurringTransactionService(repo);
@@ -136,5 +138,54 @@ void main() {
     final generated = await service.generatePendingTransactions();
 
     expect(generated, isEmpty); // 未来开始,首笔在明天
+  });
+
+  test('编辑周期模板不清空 lastGeneratedDate,仅显式重置时清空', () async {
+    final id = await repo.addRecurringTransaction(
+      ledgerId: ledgerId,
+      type: 'expense',
+      amount: 1000,
+      frequency: 'daily',
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 30)),
+    );
+    final now = DateTime.now();
+    final yesterday = DateTime(
+      now.year,
+      now.month,
+      now.day,
+    ).subtract(const Duration(days: 1));
+    await repo.updateLastGeneratedDate(id, yesterday);
+
+    // 普通编辑不传 clearLastGeneratedDate:锚点必须保留,否则下次扫描会重生成。
+    await repo.updateRecurringTransaction(
+      id: id,
+      ledgerId: ledgerId,
+      type: 'expense',
+      amount: 1200,
+      frequency: 'daily',
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 30)),
+    );
+    var row = await (db.select(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).getSingle();
+    expect(row.lastGeneratedDate, yesterday);
+
+    // 仅当页面判定需要重置(如开始日期早于最后生成日期)时显式清空。
+    await repo.updateRecurringTransaction(
+      id: id,
+      ledgerId: ledgerId,
+      type: 'expense',
+      amount: 1200,
+      frequency: 'daily',
+      interval: 1,
+      startDate: DateTime.now().subtract(const Duration(days: 30)),
+      clearLastGeneratedDate: true,
+    );
+    row = await (db.select(
+      db.recurringTransactions,
+    )..where((t) => t.id.equals(id))).getSingle();
+    expect(row.lastGeneratedDate, isNull);
   });
 }

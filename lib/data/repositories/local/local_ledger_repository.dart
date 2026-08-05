@@ -1,13 +1,76 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 
+import '../../../core/logging/logger_service.dart';
 import '../../db.dart';
 import '../../models/ledger_kind.dart';
 import '../ledger_repository.dart';
 import '../support/change_recorder.dart';
 import '../support/snapshot_dirty_marker.dart';
+import 'local_transaction_repository.dart';
 
 const _uuid = Uuid();
+
+/// 重写 AA 参与人 JSON 数组中的虚拟用户 syncId 引用。
+///
+/// 为什么需要：复制账本会给虚拟用户生成全新 syncId，若交易里的 aaParticipants 仍保留源账本
+/// 的旧 syncId，副本会把参与人识别成陌生人/缺失成员，AA 统计语义损坏。
+String? _rewriteAaParticipants(
+  String? raw,
+  Map<String, String> virtualUserSyncIdMap,
+) {
+  if (raw == null || raw.isEmpty) return raw;
+  try {
+    final ids = jsonDecode(raw) as List<dynamic>;
+    final rewritten = <dynamic>[];
+    for (final id in ids) {
+      rewritten.add(id is String ? (virtualUserSyncIdMap[id] ?? id) : id);
+    }
+    return jsonEncode(rewritten);
+  } catch (e, st) {
+    // 历史脏数据解析失败时保留原文，避免复制流程因单笔坏 JSON 整体中断。
+    logger.warning(
+      'LocalLedgerRepository',
+      '重写 aaParticipants 失败，保留原值: $e',
+      st,
+    );
+    return raw;
+  }
+}
+
+/// 重写 AA 指定分摊 JSON 对象中的虚拟用户 key 引用。
+///
+/// key 是参与人标识（真实 userId 或虚拟用户 syncId），value 是分摊金额字符串；
+/// 只替换能命中虚拟用户映射的 key，真实用户 ID 保持原样。
+String? _rewriteAaSplitKeys(
+  String? raw,
+  Map<String, String> virtualUserSyncIdMap,
+) {
+  if (raw == null || raw.isEmpty) return raw;
+  try {
+    final splits = jsonDecode(raw) as Map<String, dynamic>;
+    final rewritten = <String, dynamic>{};
+    for (final entry in splits.entries) {
+      rewritten[virtualUserSyncIdMap[entry.key] ?? entry.key] = entry.value;
+    }
+    return jsonEncode(rewritten);
+  } catch (e, st) {
+    // 与 aaParticipants 同理：解析失败保留原文，不让复制被脏数据阻断。
+    logger.warning('LocalLedgerRepository', '重写 aaSplits 失败，保留原值: $e', st);
+    return raw;
+  }
+}
+
+/// 重写单个虚拟用户引用（支出人 paidByUserId 也可能是 AA 参与人中的虚拟用户）。
+String? _rewriteVirtualUserRef(
+  String? userId,
+  Map<String, String> virtualUserSyncIdMap,
+) {
+  if (userId == null) return null;
+  return virtualUserSyncIdMap[userId] ?? userId;
+}
 
 /// 本地账本Repository实现
 /// 基于 Drift 数据库实现
@@ -36,8 +99,9 @@ class LocalLedgerRepository implements LedgerRepository {
     this.db, {
     ChangeRecorder? Function()? trackerGetter,
     SnapshotDirtyMarker? Function()? snapshotDirtyMarkerGetter,
-  })  : _trackerGetter = trackerGetter, // ignore: prefer_initializing_formals
-        _snapshotDirtyMarkerGetter = snapshotDirtyMarkerGetter; // ignore: prefer_initializing_formals
+  }) : _trackerGetter = trackerGetter, // ignore: prefer_initializing_formals
+       // ignore: prefer_initializing_formals
+       _snapshotDirtyMarkerGetter = snapshotDirtyMarkerGetter;
 
   @override
   Stream<List<Ledger>> watchLedgers() => db.select(db.ledgers).watch();
@@ -58,20 +122,27 @@ class LocalLedgerRepository implements LedgerRepository {
   Future<({int dayCount, int txCount})> getCountsForLedger({
     required int ledgerId,
   }) async {
-    final txRow = await db.customSelect(
-        'SELECT COUNT(*) AS c FROM transactions WHERE ledger_id = ?1',
-        variables: [d.Variable.withInt(ledgerId)],
-        readsFrom: {db.transactions}).getSingle();
+    final txRow = await db
+        .customSelect(
+          'SELECT COUNT(*) AS c FROM transactions WHERE ledger_id = ?1',
+          variables: [d.Variable.withInt(ledgerId)],
+          readsFrom: {db.transactions},
+        )
+        .getSingle();
     // 计算记账天数：今天 - 第一笔记账日期 + 1
-    final dayRow = await db.customSelect("""
+    final dayRow = await db
+        .customSelect(
+          """
       SELECT CASE
         WHEN MIN(happened_at) IS NULL THEN 0
         ELSE CAST(julianday('now', 'localtime') - julianday(MIN(happened_at), 'unixepoch', 'localtime') + 1 AS INTEGER)
       END AS c
       FROM transactions WHERE ledger_id = ?1
       """,
-        variables: [d.Variable.withInt(ledgerId)],
-        readsFrom: {db.transactions}).getSingle();
+          variables: [d.Variable.withInt(ledgerId)],
+          readsFrom: {db.transactions},
+        )
+        .getSingle();
 
     int parse(dynamic v) {
       if (v is int) return v;
@@ -89,9 +160,11 @@ class LocalLedgerRepository implements LedgerRepository {
     List<Transaction>? transactions,
   }) async {
     // 如果没有传入 transactions，则查询
-    final rows = transactions ?? await (db.select(db.transactions)
-          ..where((t) => t.ledgerId.equals(ledgerId)))
-        .get();
+    final rows =
+        transactions ??
+        await (db.select(
+          db.transactions,
+        )..where((t) => t.ledgerId.equals(ledgerId))).get();
 
     // 交易数
     final transactionCount = rows.length;
@@ -131,7 +204,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // insert 与变更登记放同一事务:避免"账本落库成功但变更登记失败"留下
     // 一本云端永远推不出去的新账本(规则4:同步由 local_changes 驱动)。
     return db.transaction(() async {
-      final id = await db.into(db.ledgers).insert(
+      final id = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: name,
               currency: d.Value(currency),
@@ -187,10 +262,7 @@ class LocalLedgerRepository implements LedgerRepository {
   }
 
   @override
-  Future<void> updateLedgerSyncId({
-    required int id,
-    String? syncId,
-  }) async {
+  Future<void> updateLedgerSyncId({required int id, String? syncId}) async {
     // 传入 null 用于"移动到本地"彻底断联云端;非 null 用于补发/确认后写入。
     await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id))).write(
       LedgersCompanion(syncId: d.Value(syncId)),
@@ -219,19 +291,46 @@ class LocalLedgerRepository implements LedgerRepository {
     required int sourceLedgerId,
     required int targetLedgerId,
   }) async {
-    // 跨账本数据搬运:拷贝交易及其编辑历史。
+    // 跨账本数据搬运:先搬虚拟用户、再搬交易及其编辑历史。
     // 注意:本项目的 Categories 是全局表(无 ledgerId 列),分类被所有账本共享,
     // 故无需按账本拷贝分类——交易直接保留原 categoryId 即可,避免重复复制造成冗余。
     // 新建副本一律新 syncId、清空共享 override,独立成一份本地数据。
-    // AA 分摊字段(paidByUserId/aaMode/aaSplits 等)随交易一起拷贝,保证副本
-    // 与原账本的 AA 分摊语义一致;虚拟用户表(AA 参与人)同样整表拷贝。
+    // 交易里的 AA 引用(aaParticipants/aaSplits/paidByUserId)按 schema 存的是
+    // 虚拟用户 syncId,因此必须先拷虚拟用户并建立「旧 syncId → 新 syncId」映射,
+    // 再重写交易引用,否则副本会指向源账本已不存在的旧 id。
     // 单事务保证要么全搬要么不搬,避免半拷贝被 sync 误用。
     await db.transaction(() async {
-      final srcTxs = await (db.select(db.transactions)
-            ..where((t) => t.ledgerId.equals(sourceLedgerId)))
-          .get();
+      final srcVirtualUsers = await (db.select(
+        db.ledgerVirtualUsers,
+      )..where((v) => v.ledgerId.equals(sourceLedgerId))).get();
+      final virtualUserSyncIdMap = <String, String>{};
+      for (final vu in srcVirtualUsers) {
+        final newSyncId = _uuid.v4();
+        if (vu.syncId != null) {
+          virtualUserSyncIdMap[vu.syncId!] = newSyncId;
+        }
+        await db
+            .into(db.ledgerVirtualUsers)
+            .insert(
+              LedgerVirtualUsersCompanion.insert(
+                ledgerId: targetLedgerId,
+                syncId: d.Value(newSyncId),
+                name: vu.name,
+                createdAt: d.Value(vu.createdAt),
+                updatedAt: vu.updatedAt != null
+                    ? d.Value(vu.updatedAt!)
+                    : const d.Value.absent(),
+              ),
+            );
+      }
+
+      final srcTxs = await (db.select(
+        db.transactions,
+      )..where((t) => t.ledgerId.equals(sourceLedgerId))).get();
       for (final tx in srcTxs) {
-        final newTxId = await db.into(db.transactions).insert(
+        final newTxId = await db
+            .into(db.transactions)
+            .insert(
               TransactionsCompanion.insert(
                 ledgerId: targetLedgerId,
                 type: tx.type,
@@ -249,23 +348,34 @@ class LocalLedgerRepository implements LedgerRepository {
                 nativeAmount: d.Value(tx.nativeAmount),
                 version: d.Value(tx.version),
                 lastEditedAt: d.Value(tx.lastEditedAt),
-                // AA 分摊:整份随交易拷贝,副本账本保持与原账本一致的 AA 语义。
-                paidByUserId: d.Value(tx.paidByUserId),
+                // AA 分摊:真实用户 ID 原样保留,虚拟用户引用按映射重写为新 syncId。
+                paidByUserId: d.Value<String?>(
+                  _rewriteVirtualUserRef(tx.paidByUserId, virtualUserSyncIdMap),
+                ),
                 aaMode: d.Value(tx.aaMode),
                 aaParticipants: tx.aaParticipants != null
-                    ? d.Value(tx.aaParticipants!)
+                    ? d.Value(
+                        _rewriteAaParticipants(
+                          tx.aaParticipants,
+                          virtualUserSyncIdMap,
+                        ),
+                      )
                     : const d.Value.absent(),
                 aaSplits: tx.aaSplits != null
-                    ? d.Value(tx.aaSplits!)
+                    ? d.Value(
+                        _rewriteAaSplitKeys(tx.aaSplits, virtualUserSyncIdMap),
+                      )
                     : const d.Value.absent(),
               ),
             );
         // 拷贝该交易的编辑历史(保留 operatorUserId 作审计文本)。
-        final hist = await (db.select(db.recordEditHistories)
-              ..where((h) => h.recordId.equals(tx.id)))
-            .get();
+        final hist = await (db.select(
+          db.recordEditHistories,
+        )..where((h) => h.recordId.equals(tx.id))).get();
         for (final h in hist) {
-          await db.into(db.recordEditHistories).insert(
+          await db
+              .into(db.recordEditHistories)
+              .insert(
                 RecordEditHistoriesCompanion.insert(
                   recordId: newTxId,
                   version: h.version,
@@ -275,23 +385,6 @@ class LocalLedgerRepository implements LedgerRepository {
                 ),
               );
         }
-      }
-      // 拷贝虚拟用户(AA 分摊参与人):整表按账本维度复制,新 syncId 独立成副本。
-      final srcVirtualUsers = await (db.select(db.ledgerVirtualUsers)
-            ..where((v) => v.ledgerId.equals(sourceLedgerId)))
-          .get();
-      for (final vu in srcVirtualUsers) {
-        await db.into(db.ledgerVirtualUsers).insert(
-              LedgerVirtualUsersCompanion.insert(
-                ledgerId: targetLedgerId,
-                syncId: d.Value(_uuid.v4()),
-                name: vu.name,
-                createdAt: d.Value(vu.createdAt),
-                updatedAt: vu.updatedAt != null
-                    ? d.Value(vu.updatedAt!)
-                    : const d.Value.absent(),
-              ),
-            );
       }
     });
   }
@@ -316,7 +409,8 @@ class LocalLedgerRepository implements LedgerRepository {
           : const d.Value.absent(),
     );
     // 全部字段均未变更时直接返回:避免空 UPDATE,也不产生无意义同步信号。
-    final hasAnyChange = name != null ||
+    final hasAnyChange =
+        name != null ||
         currency != null ||
         monthStartDay != null ||
         aaEnabled != null;
@@ -333,11 +427,12 @@ class LocalLedgerRepository implements LedgerRepository {
     //     值覆盖回去(如 AA 开关"建完自动关闭");
     //   - 两者均未注入(无后端)→ no-op,仅本地生效。
     await db.transaction(() async {
-      final row = await (db.select(db.ledgers)
-            ..where((tbl) => tbl.id.equals(id)))
-          .getSingleOrNull();
-      await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id)))
-          .write(comp);
+      final row = await (db.select(
+        db.ledgers,
+      )..where((tbl) => tbl.id.equals(id))).getSingleOrNull();
+      await (db.update(
+        db.ledgers,
+      )..where((tbl) => tbl.id.equals(id))).write(comp);
 
       final syncId = row?.syncId;
       final tracker = _trackerGetter?.call();
@@ -359,25 +454,31 @@ class LocalLedgerRepository implements LedgerRepository {
 
   @override
   Stream<Ledger?> watchLedger(int id) {
-    return (db.select(db.ledgers)..where((l) => l.id.equals(id)))
-        .watchSingleOrNull();
+    return (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(id))).watchSingleOrNull();
   }
 
   @override
   Future<void> deleteLedger(int id) async {
-    // 先删除该账本下的所有交易，再删除账本本身
+    // 先删除该账本下的所有交易（连带编辑历史），再删除账本本身。
     await db.transaction(() async {
-      await (db.delete(db.transactions)..where((t) => t.ledgerId.equals(id)))
-          .go();
+      final txIds = (await (db.select(
+        db.transactions,
+      )..where((t) => t.ledgerId.equals(id))).get()).map((t) => t.id).toList();
+      await deleteTransactionsWithEditHistories(db, txIds);
       await (db.delete(db.ledgers)..where((tbl) => tbl.id.equals(id))).go();
     });
   }
 
   @override
   Future<int> getMaxLedgerId() async {
-    final row = await db.customSelect(
-        'SELECT IFNULL(MAX(id), 0) AS m FROM ledgers',
-        readsFrom: {db.ledgers}).getSingle();
+    final row = await db
+        .customSelect(
+          'SELECT IFNULL(MAX(id), 0) AS m FROM ledgers',
+          readsFrom: {db.ledgers},
+        )
+        .getSingle();
     final v = row.data['m'];
     if (v is int) return v;
     if (v is BigInt) return v.toInt();
@@ -397,9 +498,9 @@ class LocalLedgerRepository implements LedgerRepository {
     required int toId,
   }) async {
     if (fromId == toId) return;
-    final existsTo = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(toId)))
-        .getSingleOrNull();
+    final existsTo = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(toId))).getSingleOrNull();
     if (existsTo != null) {
       throw StateError('目标账本ID已存在: $toId');
     }
@@ -421,11 +522,16 @@ class LocalLedgerRepository implements LedgerRepository {
 
   @override
   Future<int> clearLedgerTransactions(int ledgerId) async {
-    // 删除该账本下的全部交易记录
-    final count = await (db.delete(db.transactions)
-          ..where((t) => t.ledgerId.equals(ledgerId)))
-        .go();
-    return count;
+    // 删除该账本下的全部交易记录，同时清理这些交易的编辑历史。
+    return db.transaction(() async {
+      final txIds =
+          (await (db.select(
+                db.transactions,
+              )..where((t) => t.ledgerId.equals(ledgerId))).get())
+              .map((t) => t.id)
+              .toList();
+      return deleteTransactionsWithEditHistories(db, txIds);
+    });
   }
 
   @override
@@ -434,9 +540,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // (供正常同步推送)。但「全局删除账本」场景下远端已先行删除,这些残留
     // change 若被 SyncCoordinator 捡起,会向已删除的远端账本推送、甚至触发
     // 快照复活,因此删除完成后必须一次性抹掉该账本的所有待推送变更。
-    await (db.delete(db.localChanges)
-          ..where((c) => c.ledgerId.equals(ledgerId)))
-        .go();
+    await (db.delete(
+      db.localChanges,
+    )..where((c) => c.ledgerId.equals(ledgerId))).go();
   }
 
   @override
@@ -447,9 +553,9 @@ class LocalLedgerRepository implements LedgerRepository {
     //    其中往往包含从未上云的个人账本,造成误删。
     final localIds = <int>{};
     if (externalId.isNotEmpty) {
-      final matched = await (db.select(db.ledgers)
-            ..where((l) => l.syncId.equals(externalId)))
-          .get();
+      final matched = await (db.select(
+        db.ledgers,
+      )..where((l) => l.syncId.equals(externalId))).get();
       localIds.addAll(matched.map((l) => l.id));
     }
     if (localId != null) localIds.add(localId);
@@ -459,22 +565,26 @@ class LocalLedgerRepository implements LedgerRepository {
     await db.transaction(() async {
       // 2a) 清 local_changes(按本地 int ledgerId),避免同步引擎之后误重放
       for (final id in localIds) {
-        await (db.delete(db.localChanges)
-              ..where((c) => c.ledgerId.equals(id)))
-            .go();
+        await (db.delete(
+          db.localChanges,
+        )..where((c) => c.ledgerId.equals(id))).go();
       }
       // 2b) SharedLedger* 镜像表按 ledgerSyncId(Text)清
-      await (db.delete(db.ledgerMembers)
-            ..where((t) => t.ledgerSyncId.equals(externalId)))
-          .go();
-      await (db.delete(db.sharedLedgerCategories)
-            ..where((t) => t.ledgerSyncId.equals(externalId)))
-          .go();
-      // 2c) 交易走 ledgers 外键级联;显式删 transactions 再删账本行(逐条含 dup)
+      await (db.delete(
+        db.ledgerMembers,
+      )..where((t) => t.ledgerSyncId.equals(externalId))).go();
+      await (db.delete(
+        db.sharedLedgerCategories,
+      )..where((t) => t.ledgerSyncId.equals(externalId))).go();
+      // 2c) 先取待删交易 id，统一入口连带清编辑历史，再删账本行（逐条含 dup）。
+      final txIds =
+          (await (db.select(
+                db.transactions,
+              )..where((t) => t.ledgerId.isIn(localIds.toList()))).get())
+              .map((t) => t.id)
+              .toList();
+      await deleteTransactionsWithEditHistories(db, txIds);
       for (final id in localIds) {
-        await (db.delete(db.transactions)
-              ..where((t) => t.ledgerId.equals(id)))
-            .go();
         await (db.delete(db.ledgers)..where((l) => l.id.equals(id))).go();
       }
     });
@@ -485,9 +595,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // 一次取出所有共享账本的本地 id 与 syncId。
     // 选择键是 isShared,与 syncId 是否为空无关——空 syncId 行也会在此被清,
     // 且只清共享账本,个人账本(syncId 可能也为空)不受影响。
-    final rows = await (db.select(db.ledgers)
-          ..where((l) => l.isShared.equals(true)))
-        .get();
+    final rows = await (db.select(
+      db.ledgers,
+    )..where((l) => l.isShared.equals(true))).get();
     if (rows.isEmpty) return; // 幂等快路径:本地没有任何共享账本
     final localIds = rows.map((r) => r.id).toList();
     // 过滤 null / 空串:镜像表按 ledgerSyncId(Text)清,null 无法参与 IN 匹配,
@@ -501,20 +611,24 @@ class LocalLedgerRepository implements LedgerRepository {
     // 单事务内按「local_changes → 镜像表 → 交易 → 账本行」级联清除,
     // 保证要么全清要么不清,避免半清状态被 sync 误用。
     await db.transaction(() async {
-      await (db.delete(db.localChanges)
-            ..where((c) => c.ledgerId.isIn(localIds)))
-          .go();
+      await (db.delete(
+        db.localChanges,
+      )..where((c) => c.ledgerId.isIn(localIds))).go();
       if (syncIds.isNotEmpty) {
-        await (db.delete(db.ledgerMembers)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
-        await (db.delete(db.sharedLedgerCategories)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
+        await (db.delete(
+          db.ledgerMembers,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
+        await (db.delete(
+          db.sharedLedgerCategories,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
       }
-      await (db.delete(db.transactions)
-            ..where((t) => t.ledgerId.isIn(localIds)))
-          .go();
+      final txIds =
+          (await (db.select(
+                db.transactions,
+              )..where((t) => t.ledgerId.isIn(localIds))).get())
+              .map((t) => t.id)
+              .toList();
+      await deleteTransactionsWithEditHistories(db, txIds);
       await (db.delete(db.ledgers)..where((l) => l.id.isIn(localIds))).go();
     });
   }
@@ -538,33 +652,27 @@ class LocalLedgerRepository implements LedgerRepository {
 
     // 先取待删交易 id,用于连带清编辑历史(record_edit_histories 引用 tx.id,
     // 只删交易会留下永远匹配不上的孤儿历史行)。
-    final txIds = (await (db.select(db.transactions)
-              ..where((t) => t.ledgerId.isIn(localIds)))
-            .get())
-        .map((t) => t.id)
-        .toList();
+    final txIds =
+        (await (db.select(
+              db.transactions,
+            )..where((t) => t.ledgerId.isIn(localIds))).get())
+            .map((t) => t.id)
+            .toList();
 
     // 单事务级联:local_changes → 编辑历史 → 镜像表 → 交易 → 账本行。
     await db.transaction(() async {
-      await (db.delete(db.localChanges)
-            ..where((c) => c.ledgerId.isIn(localIds)))
-          .go();
-      if (txIds.isNotEmpty) {
-        await (db.delete(db.recordEditHistories)
-              ..where((h) => h.recordId.isIn(txIds)))
-            .go();
-      }
+      await (db.delete(
+        db.localChanges,
+      )..where((c) => c.ledgerId.isIn(localIds))).go();
+      await deleteTransactionsWithEditHistories(db, txIds);
       if (syncIds.isNotEmpty) {
-        await (db.delete(db.ledgerMembers)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
-        await (db.delete(db.sharedLedgerCategories)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
+        await (db.delete(
+          db.ledgerMembers,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
+        await (db.delete(
+          db.sharedLedgerCategories,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
       }
-      await (db.delete(db.transactions)
-            ..where((t) => t.ledgerId.isIn(localIds)))
-          .go();
       await (db.delete(db.ledgers)..where((l) => l.id.isIn(localIds))).go();
     });
   }
@@ -602,12 +710,12 @@ class LocalLedgerRepository implements LedgerRepository {
       // 这些协作行就再也定位不到宿主账本、变成永久孤儿(共享账本的成员列表
       // 与共享分类会继续被 UI 读到,形成脏数据)。
       if (syncIds.isNotEmpty) {
-        await (db.delete(db.ledgerMembers)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
-        await (db.delete(db.sharedLedgerCategories)
-              ..where((t) => t.ledgerSyncId.isIn(syncIds)))
-            .go();
+        await (db.delete(
+          db.ledgerMembers,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
+        await (db.delete(
+          db.sharedLedgerCategories,
+        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
       }
 
       // 归属六件套一次写全:少清任何一个都会让账本卡在半云半本地态

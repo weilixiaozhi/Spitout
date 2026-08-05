@@ -7,11 +7,13 @@ abstract class RecurringTransactionRepository {
 
   /// 获取指定账本的周期记账
   Future<List<RecurringTransaction>> getRecurringTransactionsByLedger(
-      int ledgerId);
+    int ledgerId,
+  );
 
   /// 获取指定账本的启用的周期记账
   Future<List<RecurringTransaction>> getEnabledRecurringTransactions(
-      int ledgerId);
+    int ledgerId,
+  );
 
   /// 添加周期记账
   Future<int> addRecurringTransaction({
@@ -30,7 +32,10 @@ abstract class RecurringTransactionRepository {
     bool enabled = true,
   });
 
-  /// 更新周期记账
+  /// 更新周期记账。
+  ///
+  /// [clearLastGeneratedDate] 仅在需要重置“已生成到哪天”的锚点时传 true；
+  /// 默认为 false 表示普通编辑不触碰 lastGeneratedDate，避免后续扫描重复补生成历史账目。
   Future<void> updateRecurringTransaction({
     required int id,
     required int ledgerId,
@@ -46,6 +51,7 @@ abstract class RecurringTransactionRepository {
     required DateTime startDate,
     DateTime? endDate,
     bool? enabled,
+    bool clearLastGeneratedDate = false,
   });
 
   /// 删除周期记账
@@ -62,9 +68,11 @@ abstract class RecurringTransactionRepository {
 
   /// 监听指定账本的周期记账变化
   Stream<List<RecurringTransaction>> watchRecurringTransactionsByLedger(
-      int ledgerId);
+    int ledgerId,
+  );
 
   /// 批量插入周期记账
   Future<void> batchInsertRecurringTransactions(
-      List<RecurringTransactionsCompanion> items);
+    List<RecurringTransactionsCompanion> items,
+  );
 }

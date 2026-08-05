@@ -17,10 +17,12 @@ class RecurringTransactionEditPage extends ConsumerStatefulWidget {
   const RecurringTransactionEditPage({super.key, this.recurring});
 
   @override
-  ConsumerState<RecurringTransactionEditPage> createState() => _RecurringTransactionEditPageState();
+  ConsumerState<RecurringTransactionEditPage> createState() =>
+      _RecurringTransactionEditPageState();
 }
 
-class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransactionEditPage> {
+class _RecurringTransactionEditPageState
+    extends ConsumerState<RecurringTransactionEditPage> {
   final _formKey = GlobalKey<FormState>();
   final _amountController = TextEditingController();
   final _noteController = TextEditingController();
@@ -51,8 +53,9 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       _dayOfMonth = widget.recurring!.dayOfMonth;
       _enabled = widget.recurring!.enabled;
       _selectedLedgerId = widget.recurring!.ledgerId;
-      _amountController.text =
-          (widget.recurring!.amount / 100).toStringAsFixed(2);
+      _amountController.text = (widget.recurring!.amount / 100).toStringAsFixed(
+        2,
+      );
       _noteController.text = widget.recurring!.note ?? '';
       _loadCategory();
     } else {
@@ -76,7 +79,9 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
     if (_isEditing && widget.recurring!.categoryId != null) {
       final repo = ref.read(repositoryProvider);
 
-      final category = await repo.getCategoryById(widget.recurring!.categoryId!);
+      final category = await repo.getCategoryById(
+        widget.recurring!.categoryId!,
+      );
 
       setState(() {
         _selectedCategory = category;
@@ -103,12 +108,14 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                 ? l10n.recurringTransactionEdit
                 : l10n.recurringTransactionAdd,
             showBack: true,
-            actions: _isEditing ? [
-              HeaderIconAction(
-                icon: AppIcons.delete,
-                onPressed: _deleteRecurringTransaction,
-              ),
-            ] : null,
+            actions: _isEditing
+                ? [
+                    HeaderIconAction(
+                      icon: AppIcons.delete,
+                      onPressed: _deleteRecurringTransaction,
+                    ),
+                  ]
+                : null,
           ),
           Expanded(
             child: Form(
@@ -129,7 +136,9 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                     decoration: InputDecoration(
                       labelText: l10n.importFieldAmount,
                     ),
-                    keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
                     validator: (value) {
                       if (value == null || value.isEmpty) {
                         return l10n.commonError;
@@ -183,9 +192,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
                   // Note
                   TextFormField(
                     controller: _noteController,
-                    decoration: InputDecoration(
-                      labelText: l10n.commonNoteHint,
-                    ),
+                    decoration: InputDecoration(labelText: l10n.commonNoteHint),
                     maxLines: 3,
                   ),
                 ],
@@ -271,7 +278,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
 
   bool _isFormValid() {
     // 检查金额
-    if (_amountController.text.isEmpty || double.tryParse(_amountController.text) == null) {
+    if (_amountController.text.isEmpty ||
+        double.tryParse(_amountController.text) == null) {
       return false;
     }
 
@@ -347,7 +355,11 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(frequencyLabel),
-            Icon(AppIcons.chevronDown, size: 24, color: SpitoutTokens.iconTertiary(context)),
+            Icon(
+              AppIcons.chevronDown,
+              size: 24,
+              color: SpitoutTokens.iconTertiary(context),
+            ),
           ],
         ),
       ),
@@ -410,7 +422,11 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(intervalLabel),
-            Icon(AppIcons.chevronDown, size: 24, color: SpitoutTokens.iconTertiary(context)),
+            Icon(
+              AppIcons.chevronDown,
+              size: 24,
+              color: SpitoutTokens.iconTertiary(context),
+            ),
           ],
         ),
       ),
@@ -446,7 +462,11 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text('${_dayOfMonth ?? 1}'),
-            Icon(AppIcons.chevronDown, size: 24, color: SpitoutTokens.iconTertiary(context)),
+            Icon(
+              AppIcons.chevronDown,
+              size: 24,
+              color: SpitoutTokens.iconTertiary(context),
+            ),
           ],
         ),
       ),
@@ -470,10 +490,7 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
             borderSide: BorderSide.none,
           ),
           suffixIcon: allowClear && date != null
-              ? IconButton(
-                  icon: const Icon(AppIcons.close),
-                  onPressed: onClear,
-                )
+              ? IconButton(icon: const Icon(AppIcons.close), onPressed: onClear)
               : null,
         ),
         child: Text(
@@ -588,14 +605,8 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
           startDate: _startDate,
           endDate: _endDate,
           enabled: _enabled,
+          clearLastGeneratedDate: shouldResetLastGenerated,
         );
-
-        // 如果需要重置最后生成日期，单独更新
-        if (shouldResetLastGenerated) {
-          // 注意：这里需要先清空 lastGeneratedDate
-          // 由于 updateLastGeneratedDate 不支持 null，我们需要直接在 updateRecurringTransaction 中处理
-          // 暂时跳过这个步骤，后续如果需要可以扩展 Repository 接口
-        }
       } else {
         // 新建模式
         await repo.addRecurringTransaction(
@@ -632,7 +643,9 @@ class _RecurringTransactionEditPageState extends ConsumerState<RecurringTransact
       context: context,
       builder: (context) => AlertDialog(
         title: Text(AppLocalizations.of(context).commonDelete),
-        content: Text(AppLocalizations.of(context).recurringTransactionDeleteConfirm),
+        content: Text(
+          AppLocalizations.of(context).recurringTransactionDeleteConfirm,
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),

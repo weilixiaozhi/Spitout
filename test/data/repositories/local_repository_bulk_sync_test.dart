@@ -252,4 +252,91 @@ void main() {
       expect(changes, isEmpty);
     });
   });
+
+  group('删除交易清理编辑历史', () {
+    Future<int> seedTxWithHistory(int ledgerId, String syncId) async {
+      final txId = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerId,
+              type: 'expense',
+              amount: 1000,
+              syncId: Value(syncId),
+            ),
+          );
+      await db.into(db.recordEditHistories).insert(
+            RecordEditHistoriesCompanion.insert(
+              recordId: txId,
+              version: 2,
+              summary: 'seed edit',
+            ),
+          );
+      return txId;
+    }
+
+    Future<int> historyCount() =>
+        db.select(db.recordEditHistories).get().then((rows) => rows.length);
+
+    test('批量按 syncId 删除交易时同步清理编辑历史', () async {
+      final ledgerId = await repo.createLedger(name: 'history-batch');
+      await seedTxWithHistory(ledgerId, 'tx-1');
+      await seedTxWithHistory(ledgerId, 'tx-2');
+
+      final deleted =
+          await repo.deleteTransactionsBatchBySyncIds(['tx-1', 'tx-2']);
+
+      expect(deleted, 2);
+      expect(await historyCount(), 0);
+    });
+
+    test('清空账本时同步清理编辑历史', () async {
+      final ledgerId = await repo.createLedger(name: 'history-clear');
+      await seedTxWithHistory(ledgerId, 'tx-1');
+
+      final deleted = await repo.clearLedgerTransactions(ledgerId);
+
+      expect(deleted, 1);
+      expect(await historyCount(), 0);
+    });
+
+    test('删除账本时同步清理编辑历史', () async {
+      final ledgerId = await repo.createLedger(name: 'history-delete');
+      await seedTxWithHistory(ledgerId, 'tx-1');
+
+      await repo.deleteLedger(ledgerId);
+
+      expect(await historyCount(), 0);
+    });
+
+    test('purgeSharedLedger 同步清理编辑历史', () async {
+      final ledgerId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'history-purge',
+              syncId: const Value('ext-1'),
+              isShared: const Value(true),
+              myRole: const Value('owner'),
+            ),
+          );
+      await seedTxWithHistory(ledgerId, 'tx-1');
+
+      await repo.purgeSharedLedger('ext-1');
+
+      expect(await historyCount(), 0);
+    });
+
+    test('purgeAllSharedLedgers 同步清理编辑历史', () async {
+      final ledgerId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'history-purge-all',
+              syncId: const Value('ext-2'),
+              isShared: const Value(true),
+              myRole: const Value('owner'),
+            ),
+          );
+      await seedTxWithHistory(ledgerId, 'tx-1');
+
+      await repo.purgeAllSharedLedgers();
+
+      expect(await historyCount(), 0);
+    });
+  });
 }
