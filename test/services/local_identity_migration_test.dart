@@ -5,7 +5,6 @@
 //      (transactions 三字段 + ledgers.ownerUserId + record_edit_histories.operatorUserId)
 //   2. 幂等:同一 cloudUserId 第二次调用不重跑(标记位命中)
 //   3. migrateLedgerToCloudUserId: 仅迁移指定账本,不影响其他账本
-//   4. me 占位符清理:MePlaceholderMigrationService 把 'me' 改写为 localSelfId
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
@@ -14,7 +13,6 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
-import 'package:spitout/services/data/me_placeholder_migration_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -189,76 +187,6 @@ void main() {
           .getSingle();
       expect(l1.ownerUserId, cloudUserId);
       expect(l2.ownerUserId, localSelfId);
-    });
-  });
-
-  group('MePlaceholderMigrationService', () {
-    test('把历史 me 占位符改写为 localSelfId', () async {
-      const localSelfId = 'local-uuid-aaa';
-      final ledgerId = await createLedger(ownerUserId: 'me');
-      final txId = await createTx(
-        ledgerId: ledgerId,
-        paidByUserId: 'me',
-        createdByUserId: 'me',
-        lastEditedByUserId: 'me',
-      );
-
-      await MePlaceholderMigrationService.clean(
-        db: db,
-        localSelfId: localSelfId,
-      );
-
-      final tx = await (db.select(db.transactions)
-            ..where((t) => t.id.equals(txId)))
-          .getSingle();
-      expect(tx.paidByUserId, localSelfId);
-      expect(tx.createdByUserId, localSelfId);
-      expect(tx.lastEditedByUserId, localSelfId);
-
-      final ledger = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
-          .getSingle();
-      expect(ledger.ownerUserId, localSelfId);
-    });
-
-    test('幂等:已清理后第二次调用不重跑', () async {
-      const localSelfId = 'local-uuid-bbb';
-      final ledgerId = await createLedger(ownerUserId: 'me');
-
-      await MePlaceholderMigrationService.clean(
-        db: db,
-        localSelfId: localSelfId,
-      );
-      // 再次调用应跳过。
-      await MePlaceholderMigrationService.clean(
-        db: db,
-        localSelfId: localSelfId,
-      );
-
-      final ledger = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
-          .getSingle();
-      expect(ledger.ownerUserId, localSelfId);
-    });
-
-    test('非 me 的值不受影响', () async {
-      const localSelfId = 'local-uuid-ccc';
-      const realUserId = 'cloud-user-ddd';
-      final ledgerId = await createLedger(ownerUserId: realUserId);
-      final txId = await createTx(
-        ledgerId: ledgerId,
-        paidByUserId: realUserId,
-      );
-
-      await MePlaceholderMigrationService.clean(
-        db: db,
-        localSelfId: localSelfId,
-      );
-
-      final tx = await (db.select(db.transactions)
-            ..where((t) => t.id.equals(txId)))
-          .getSingle();
-      expect(tx.paidByUserId, realUserId);
     });
   });
 }

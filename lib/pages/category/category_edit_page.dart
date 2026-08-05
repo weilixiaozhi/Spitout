@@ -892,6 +892,8 @@ class _GroupedIconGrid extends StatelessWidget {
           _IconData('map'),
           _IconData('compass'),
           _IconData('timer'),
+          _IconData('calendarClock'),
+          _IconData('handCoins'),
         ]),
       ];
     } else {

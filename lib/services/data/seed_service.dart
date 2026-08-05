@@ -159,7 +159,7 @@ class SeedService {
       'book': 'bookOpen',
       'invest_loss': 'trendingDown',
       'health_products': 'pill',
-      'subscription': 'repeat',
+      'subscription': 'calendarClock',
       'lover': 'heart',
       'decoration': 'paintbrush',
       'daily_goods': 'package',
@@ -296,7 +296,7 @@ class SeedService {
       'subscription_other': 'repeat',
 
       // 转账一级与二级分类
-      'transfer': 'arrowLeftRight',
+      'transfer': 'handCoins',
       'transfer_livingcost': 'heartHandshake',
       'transfer_family': 'users',
       'transfer_parents': 'users2',

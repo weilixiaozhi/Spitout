@@ -13,7 +13,7 @@ import 'package:spitout/providers/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'widgets/widgets.dart';
 import 'services/security/app_lock_service.dart';
-import 'services/data/me_placeholder_migration_service.dart';
+import 'services/data/category_icon_migration_service.dart';
 import 'theme/colors.dart';
 import 'theme/icons/app_icons.dart';
 
@@ -70,10 +70,9 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
     // 场景，故此处补挂一次；内部按天去重，与 resumed 触发天然幂等。
     Future.microtask(() => autoBackupOnLaunch(ref.read));
 
-    // 历史数据迁移：清理遗留的 'me' 占位符 → localSelfId。
-    // 早期版本未登录记账写 'me'，现已改用 localSelfId(UUID)，
-    // 需一次性把库中 'me' 改写为当前设备 localSelfId。幂等(标记位防重跑)。
-    Future.microtask(() => migrateMePlaceholderOnLaunch(ref.read));
+    // 存量分类图标迁移：订阅服务 repeat → calendarClock、转账
+    // arrowLeftRight → handCoins。幂等（标记位 + WHERE 守卫），不覆盖手动换过的图标。
+    Future.microtask(() => migrateCategoryIconsOnLaunch(ref.read));
   }
 
   @override

@@ -160,6 +160,7 @@ final Map<String, IconData> lucideIconLibrary = {
   'playCircle': LucideIcons.playCircle,
   'cloud': LucideIcons.cloud,
   'repeat': LucideIcons.repeat,
+  'calendarClock': LucideIcons.calendarClock,
 
   // 健康医疗
   'cross': LucideIcons.cross,
@@ -230,6 +231,7 @@ final Map<String, IconData> lucideIconLibrary = {
   'walletCards': LucideIcons.walletCards,
   'banknote': LucideIcons.banknote,
   'coins': LucideIcons.coins,
+  'handCoins': LucideIcons.handCoins,
   'receipt': LucideIcons.receipt,
   'fileText': LucideIcons.fileText,
   'euro': LucideIcons.euro,
