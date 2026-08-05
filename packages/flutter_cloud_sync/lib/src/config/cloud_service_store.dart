@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -12,8 +13,9 @@ import 'cloud_service_config.dart';
 /// 1. 登录密码（Spitout Cloud / Supabase）只作为一次性输入，写入前剥离，
 ///    永不清真落盘（Android 侧 SharedPreferences 是明文 XML，且可能随系统备份带走）；
 /// 2. WebDAV / S3 的访问凭据是同步运行所必需的，通过可插拔
-///    [CloudCredentialStorage] 存放；默认实现仍是 SharedPreferences（明文取舍），
-///    生产环境可替换为 Keychain / Keystore 实现；
+///    [CloudCredentialStorage] 存放；默认实现是
+///    [FlutterSecureCredentialStorage]（Keychain / Keystore / DPAPI），
+///    旧版明文数据在读取时自动迁移并清理；
 /// 3. 业务层不得直接 `setString` 云配置键，导入 / 修改统一走本类的受控方法，
 ///    由本类内部完成剥离、占位符合并与迁移。
 class CloudServiceStore {
@@ -41,9 +43,19 @@ class CloudServiceStore {
   CloudServiceStore({
     CloudCredentialStorage? credentialStorage,
     CloudSyncLogger? logger,
-  })  : _credentialStorage =
-            credentialStorage ?? SharedPreferencesCredentialStorage(),
+  })  : _credentialStorage = credentialStorage ?? _defaultCredentialStorage(),
         _logger = logger;
+
+  /// 默认凭证存储:生产走系统安全存储;`flutter test` 环境没有平台通道,
+  /// 自动回退到 SharedPreferences 测试实现,避免每个测试都手动注入。
+  static CloudCredentialStorage _defaultCredentialStorage() {
+    // flutter test 会向测试进程注入 FLUTTER_TEST=true 环境变量
+    // (非编译期 dart-define),运行时判断即可区分测试与生产。
+    if (Platform.environment['FLUTTER_TEST'] == 'true') {
+      return SharedPreferencesCredentialStorage();
+    }
+    return FlutterSecureCredentialStorage();
+  }
 
   /// 加载当前激活的云服务配置。
   ///
@@ -246,7 +258,23 @@ class CloudServiceStore {
 
     // 合并凭据存储中的 WebDAV / S3 凭据（若存在）。
     var merged = cfg;
-    final storedSecrets = await _credentialStorage.read(type);
+    var storedSecrets = await _credentialStorage.read(type);
+
+    // 旧版明文凭证迁移：安全存储为空但 SharedPreferences 残留
+    // cloud_credential_* 明文时，先搬进安全存储再删除明文键，
+    // 避免升级后 WebDAV / S3 配置丢失或继续明文落盘。
+    if (storedSecrets == null || storedSecrets.isEmpty) {
+      final legacyKey = 'cloud_credential_${type.name}';
+      final legacyRaw = sp.getString(legacyKey);
+      if (legacyRaw != null && legacyRaw.isNotEmpty) {
+        await _credentialStorage.write(type, legacyRaw);
+        if (_credentialStorage is! SharedPreferencesCredentialStorage) {
+          await sp.remove(legacyKey);
+        }
+        storedSecrets = legacyRaw;
+      }
+    }
+
     if (storedSecrets != null && storedSecrets.isNotEmpty) {
       merged = _withSecrets(cfg, storedSecrets);
     }
@@ -325,6 +353,11 @@ class CloudServiceStore {
       key,
       encodeCloudConfig(_withoutSecrets(sanitized)),
     );
+    // 生产走安全存储时同步清理旧版明文凭证键，防止密钥继续留在
+    // SharedPreferences XML 中（测试注入的明文实现除外）。
+    if (_credentialStorage is! SharedPreferencesCredentialStorage) {
+      await sp.remove('cloud_credential_${type.name}');
+    }
   }
 
   /// 移除 WebDAV / S3 凭据字段，生成可安全写入 SharedPreferences 的配置。

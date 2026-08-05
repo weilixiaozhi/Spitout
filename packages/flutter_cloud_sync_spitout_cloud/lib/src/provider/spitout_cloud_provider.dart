@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 
 import '../auth/spitout_cloud_auth_service.dart';
+import '../auth/session_store.dart';
 import '../internal.dart';
 import '../models/spitout_cloud_models.dart';
 import '../realtime/spitout_cloud_realtime_client.dart';
@@ -309,6 +310,7 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
     final rawApiPrefix = (config['apiPrefix'] as String?)?.trim();
     final baseUrl = rawBaseUrl.replaceFirst(RegExp(r'/$'), '');
     final apiPrefix = normalizeApiPrefix(rawApiPrefix ?? '/api/v1');
+    final sessionStore = config['sessionStore'];
     final baseUri = Uri.tryParse(baseUrl);
     if (baseUri == null ||
         !baseUri.hasScheme ||
@@ -324,6 +326,8 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
       apiPrefix: apiPrefix,
       twoFactorHandler: SpitoutCloudProvider.globalTwoFactorHandler,
       logger: _logger,
+      sessionStore:
+          sessionStore is SpitoutCloudSessionStore ? sessionStore : null,
     );
     await authService.initialize();
 

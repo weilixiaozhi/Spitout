@@ -7,6 +7,7 @@ import 'supabase_auth_service.dart';
 import 'supabase_storage_service.dart';
 import 'supabase_database_service.dart';
 import 'supabase_realtime_service.dart';
+import 'supabase_secure_local_storage.dart';
 
 /// Supabase implementation of [CloudProvider].
 ///
@@ -109,8 +110,12 @@ class SupabaseProvider implements CloudProvider {
           // supabase_flutter 2.x 已将 anonKey 重命名为 publishableKey，原参数已 deprecated
           // 内部变量名 anonKey 为业务自定义，无需改动，仅替换传给 SDK 的参数名
           publishableKey: anonKey,
-          authOptions: const supabase.FlutterAuthClientOptions(
+          authOptions: supabase.FlutterAuthClientOptions(
             authFlowType: supabase.AuthFlowType.pkce,
+            // 会话与 PKCE verifier 统一走系统安全存储，避免 refresh token
+            // 明文落在 SharedPreferences（Android 明文 XML / 备份可读）。
+            localStorage: SecureSupabaseLocalStorage(),
+            pkceAsyncStorage: SecureSupabaseGotrueAsyncStorage(),
           ),
         );
         _isInitialized = true;

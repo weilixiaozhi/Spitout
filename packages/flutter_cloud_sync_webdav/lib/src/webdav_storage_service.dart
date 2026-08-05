@@ -2,7 +2,6 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
@@ -10,8 +9,11 @@ import 'package:webdav_client/webdav_client.dart' as webdav;
 class WebDAVStorageService implements CloudStorageService {
   final webdav.Client _client;
   final String _remotePath;
+  final CloudSyncLogger? _logger;
 
-  WebDAVStorageService(this._client, this._remotePath);
+  WebDAVStorageService(this._client, this._remotePath,
+      {CloudSyncLogger? logger})
+      : _logger = logger;
 
   @override
   Future<void> upload({
@@ -134,12 +136,18 @@ class WebDAVStorageService implements CloudStorageService {
       final fileName = PathHelper.basename(fullPath);
 
       final files = await _client.readDir(parentDir);
-      final file = files.firstWhere(
-        (f) => f.name == fileName,
-        orElse: () => throw CloudStorageException('File not found: $path'),
-      );
+      webdav.File? file;
+      for (final candidate in files) {
+        if (candidate.name == fileName) {
+          file = candidate;
+          break;
+        }
+      }
+      // 文件不存在属于正常情况，返回 null；不要把它包装成
+      // CloudStorageException，否则调用方无法区分“无文件”与“元数据损坏”。
+      if (file == null) return null;
 
-      // Try to load custom metadata
+      // 读取自定义元数据：损坏/权限等真实错误由 _getMetadata 向上抛。
       final customMetadata = await _getMetadata(fullPath);
 
       return CloudFile(
@@ -150,9 +158,8 @@ class WebDAVStorageService implements CloudStorageService {
         metadata: customMetadata,
       );
     } catch (e) {
-      if (_isNotFound(e) || e is CloudStorageException) {
-        return null;
-      }
+      if (_isNotFound(e)) return null;
+      if (e is CloudStorageException) rethrow;
       throw CloudStorageException('Get metadata failed: $e', e);
     }
   }
@@ -235,7 +242,9 @@ class WebDAVStorageService implements CloudStorageService {
       await _client.write(metadataPath, bytes);
     } catch (e) {
       // 指纹等元数据写入失败会导致 getStatus 信息缺失，必须可见。
-      debugPrint('WebDAVStorageService 元数据写入失败（$filePath）: $e');
+      _logger?.error('WebDAVStorageService 元数据写入失败（$filePath）: $e');
+      // 元数据是同步状态判断的依据，写失败不能让上传“假装成功”。
+      rethrow;
     }
   }
 
@@ -249,7 +258,8 @@ class WebDAVStorageService implements CloudStorageService {
     } catch (e) {
       // 旧文件没有元数据文件是正常情况；其他错误（JSON 损坏等）需要可见。
       if (!_isNotFound(e)) {
-        debugPrint('WebDAVStorageService 元数据读取失败（$filePath）: $e');
+        _logger?.error('WebDAVStorageService 元数据读取失败（$filePath）: $e');
+        rethrow;
       }
       return {};
     }
@@ -263,7 +273,8 @@ class WebDAVStorageService implements CloudStorageService {
     } catch (e) {
       // 元数据文件不存在属于正常情况；其他错误需要可见。
       if (!_isNotFound(e)) {
-        debugPrint('WebDAVStorageService 元数据删除失败（$filePath）: $e');
+        _logger?.error('WebDAVStorageService 元数据删除失败（$filePath）: $e');
+        rethrow;
       }
     }
   }

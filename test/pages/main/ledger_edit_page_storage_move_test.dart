@@ -81,7 +81,11 @@ void main() {
     // (ledgerMembersProvider watch 云同步)会抛"adapter 尚未注册"。生产 main 中也有
     // 此注册,此处补齐测试 fixture 以匹配真实运行环境。函数幂等,重复调用安全。
     if (cloudType == CloudBackendType.spitoutCloud) {
-      registerSpitoutCloudBackend();
+      // 测试环境没有安全存储平台通道,注入 SharedPreferences 实现配合
+      // resetGlobalTestState 的 mock,避免真实 provider 初始化抛 MissingPluginException。
+      registerSpitoutCloudBackend(
+        sessionStore: SharedPreferencesSessionStore(),
+      );
     }
     await tester.pumpWidget(
       MaterialApp(

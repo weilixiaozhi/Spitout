@@ -62,8 +62,7 @@ class _FakeSpitoutAuth extends CloudAuthService {
   Future<CloudUser> signUpWithEmail({
     required String email,
     required String password,
-  }) async =>
-      const CloudUser(id: 'fake-uid', email: 'fake@x.com');
+  }) async => const CloudUser(id: 'fake-uid', email: 'fake@x.com');
 
   @override
   Future<void> signOut() async {}
@@ -109,37 +108,42 @@ CloudServiceConfig _localActive() => CloudServiceConfig.localStorage();
 
 /// 已校验的 WebDAV 配置：作为激活配置时应渲染多设备同步警告。
 CloudServiceConfig _webdavActive() => const CloudServiceConfig(
-      type: CloudBackendType.webdav,
-      name: 'WebDAV',
-      webdavUrl: 'https://dav.example.com',
-      webdavUsername: 'u',
-      webdavPassword: 'p',
-    );
+  type: CloudBackendType.webdav,
+  name: 'WebDAV',
+  webdavUrl: 'https://dav.example.com',
+  webdavUsername: 'u',
+  webdavPassword: 'p',
+);
 
 /// 已校验的 S3 配置。
 CloudServiceConfig _s3Active() => const CloudServiceConfig(
-      type: CloudBackendType.s3,
-      name: 'S3',
-      s3Endpoint: 'https://s3.example.com',
-      s3AccessKey: 'ak',
-      s3SecretKey: 'sk',
-      s3Bucket: 'bucket',
-    );
+  type: CloudBackendType.s3,
+  name: 'S3',
+  s3Endpoint: 'https://s3.example.com',
+  s3AccessKey: 'ak',
+  s3SecretKey: 'sk',
+  s3Bucket: 'bucket',
+);
 
 /// 已校验的 Supabase 配置。
 CloudServiceConfig _supabaseActive() => const CloudServiceConfig(
-      type: CloudBackendType.supabase,
-      name: 'Supabase',
-      supabaseUrl: 'https://xxx.supabase.co',
-      supabaseAnonKey: 'anon-key',
-    );
+  type: CloudBackendType.supabase,
+  name: 'Supabase',
+  supabaseUrl: 'https://xxx.supabase.co',
+  supabaseAnonKey: 'anon-key',
+);
 
 /// 已校验的 Spitout Cloud 配置。
 CloudServiceConfig _spitoutActive() => const CloudServiceConfig(
-      type: CloudBackendType.spitoutCloud,
-      name: 'Spitout Cloud',
-      spitoutCloudBaseUrl: 'https://cloud.example.com',
-    );
+  type: CloudBackendType.spitoutCloud,
+  name: 'Spitout Cloud',
+  spitoutCloudBaseUrl: 'https://cloud.example.com',
+);
+
+/// 测试用 Store：凭证走 SharedPreferences 明文 mock，
+/// 避免依赖平台安全存储通道。
+CloudServiceStore _testStore() =>
+    CloudServiceStore(credentialStorage: SharedPreferencesCredentialStorage());
 
 /// 在 ProviderScope 中挂载页面，并覆盖 5 个云服务配置 Provider 的确定值。
 Future<void> _pumpPage(
@@ -199,8 +203,7 @@ Future<void> _pumpPage(
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('列表布局：三段 TAB 变为分组主标题，CapsuleSwitcher 已移除',
-      (tester) async {
+  testWidgets('列表布局：三段 TAB 变为分组主标题，CapsuleSwitcher 已移除', (tester) async {
     await _pumpPage(tester, active: _localActive());
 
     // 三个分组主标题均渲染
@@ -218,8 +221,7 @@ void main() {
     expect(find.text('多设备使用提醒'), findsNothing);
   });
 
-  testWidgets('备份同步分组：WebDAV 激活时展示多设备同步警告',
-      (tester) async {
+  testWidgets('备份同步分组：WebDAV 激活时展示多设备同步警告', (tester) async {
     await _pumpPage(tester, active: _webdavActive(), webdav: _webdavActive());
 
     // WebDAV 已激活 → 多设备同步警告出现
@@ -238,8 +240,7 @@ void main() {
     expect(find.byType(SpitoutCloudSyncSection), findsNothing);
   });
 
-  testWidgets('可见性：local 激活时两个同步区块均隐藏，5 张卡片常驻',
-      (tester) async {
+  testWidgets('可见性：local 激活时两个同步区块均隐藏，5 张卡片常驻', (tester) async {
     await _pumpPage(tester, active: _localActive());
 
     expect(find.byType(CloudSyncSection), findsNothing);
@@ -253,8 +254,7 @@ void main() {
     expect(find.text('Spitout Cloud'), findsOneWidget);
   });
 
-  testWidgets('可见性：S3 激活时显示备份同步区块（上传/下载/自动同步）',
-      (tester) async {
+  testWidgets('可见性：S3 激活时显示备份同步区块（上传/下载/自动同步）', (tester) async {
     await _pumpPage(tester, active: _s3Active(), s3: _s3Active());
 
     expect(find.byType(CloudSyncSection), findsOneWidget);
@@ -266,10 +266,12 @@ void main() {
     expect(find.text('自动同步账本'), findsOneWidget);
   });
 
-  testWidgets('可见性：Supabase 激活时显示备份同步区块且含登录行',
-      (tester) async {
-    await _pumpPage(tester,
-        active: _supabaseActive(), supabase: _supabaseActive());
+  testWidgets('可见性：Supabase 激活时显示备份同步区块且含登录行', (tester) async {
+    await _pumpPage(
+      tester,
+      active: _supabaseActive(),
+      supabase: _supabaseActive(),
+    );
 
     expect(find.byType(CloudSyncSection), findsOneWidget);
     expect(find.byType(SpitoutCloudSyncSection), findsNothing);
@@ -278,10 +280,12 @@ void main() {
     expect(find.text('登录'), findsOneWidget);
   });
 
-  testWidgets('可见性：SpitoutCloud 激活时显示云端协同区块、隐藏备份同步区块',
-      (tester) async {
-    await _pumpPage(tester,
-        active: _spitoutActive(), spitoutCloud: _spitoutActive());
+  testWidgets('可见性：SpitoutCloud 激活时显示云端协同区块、隐藏备份同步区块', (tester) async {
+    await _pumpPage(
+      tester,
+      active: _spitoutActive(),
+      spitoutCloud: _spitoutActive(),
+    );
 
     expect(find.byType(CloudSyncSection), findsNothing);
     expect(find.byType(SpitoutCloudSyncSection), findsOneWidget);
@@ -325,8 +329,7 @@ void main() {
     expect(find.byIcon(AppIcons.delete), findsNothing);
   });
 
-  testWidgets('配置弹窗改为顶部贴边弹层 AppSheet,聚焦下一字段不收起键盘',
-      (tester) async {
+  testWidgets('配置弹窗改为顶部贴边弹层 AppSheet,聚焦下一字段不收起键盘', (tester) async {
     await _pumpPage(tester, active: _localActive(), webdav: _webdavActive());
 
     // 打开 WebDAV 配置弹窗(现为顶部贴边弹层)
@@ -347,12 +350,14 @@ void main() {
     await tester.testTextInput.receiveAction(TextInputAction.next);
     await tester.pumpAndSettle();
     final secondField = tester.widget<TextField>(fields.at(1));
-    expect(secondField.focusNode?.hasFocus, isTrue,
-        reason: '点击「下一步」后焦点应移交到下一输入框,键盘不应收起');
+    expect(
+      secondField.focusNode?.hasFocus,
+      isTrue,
+      reason: '点击「下一步」后焦点应移交到下一输入框,键盘不应收起',
+    );
   });
 
-  testWidgets('配置弹窗顶部贴边且无键盘跟随动画(无 AnimatedPadding)',
-      (tester) async {
+  testWidgets('配置弹窗顶部贴边且无键盘跟随动画(无 AnimatedPadding)', (tester) async {
     await _pumpPage(tester, active: _localActive(), webdav: _webdavActive());
 
     // 打开 WebDAV 配置弹窗(顶部贴边弹层)
@@ -370,10 +375,7 @@ void main() {
     // 注:路由外层 SafeArea 本身含一个 AnimatedPadding(跟随 padding 而非 viewInsets,无键盘动画),
     // 故不采用「无 AnimatedPadding」断言,改用顶部锚定断言更精准。
     final aligns = tester.widgetList<Align>(find.byType(Align));
-    expect(
-      aligns.any((a) => a.alignment == Alignment.topCenter),
-      isTrue,
-    );
+    expect(aligns.any((a) => a.alignment == Alignment.topCenter), isTrue);
 
     // 进一步确证:弹层实际贴住屏幕顶部(顶部 y 接近 0,远小于屏高的 10%),
     // 区别于底部弹层(其顶部位于屏幕下方约 15% 处)。
@@ -384,8 +386,7 @@ void main() {
     expect(sheetTop, lessThan(logicalHeight * 0.1));
   });
 
-  testWidgets('配置弹窗保存时内联校验:缺必填项不弹窗、保留已填内容',
-      (tester) async {
+  testWidgets('配置弹窗保存时内联校验:缺必填项不弹窗、保留已填内容', (tester) async {
     // Supabase 在此入参下为「未配置」,点击卡片即打开配置弹窗且字段初始为空,
     // 便于稳定验证「缺必填项」的内联校验(已配置弹窗会预填旧值,无法触发缺项)。
     await _pumpPage(tester, active: _localActive(), webdav: _webdavActive());
@@ -393,7 +394,10 @@ void main() {
     await tester.pumpAndSettle();
 
     // 仅填入 url,key 留空(key 为必填);此时弹窗字段初始为空,不会因预填而误判通过。
-    await tester.enterText(find.byType(TextField).at(0), 'https://supabase.example.com');
+    await tester.enterText(
+      find.byType(TextField).at(0),
+      'https://supabase.example.com',
+    );
     await tester.pumpAndSettle();
 
     // 点击「保存」
@@ -403,15 +407,18 @@ void main() {
     // 关键回归:校验失败不应切换到另一个弹窗(不再出现独立错误弹窗),
     // 也不会因弹窗关闭而丢失已填内容。若改回「先 pop 再 AppDialog.error」,
     // 此处将出现 AlertDialog 且 AppSheet 消失,测试转红。
-    expect(find.byType(AlertDialog), findsNothing,
-        reason: '校验失败不应弹出独立错误弹窗');
-    expect(find.byType(AppSheet), findsOneWidget,
-        reason: '校验失败时配置弹窗应保持打开');
+    expect(find.byType(AlertDialog), findsNothing, reason: '校验失败不应弹出独立错误弹窗');
+    expect(find.byType(AppSheet), findsOneWidget, reason: '校验失败时配置弹窗应保持打开');
 
     // 内联弱提示出现在未填的必填字段下方(随文案本地化,不直接硬编码字符串)
-    final l10n = AppLocalizations.of(tester.element(find.byType(TextField).first));
-    expect(find.text(l10n.cloudConfigInvalidMessage), findsWidgets,
-        reason: '未填必填项应在字段下方显示内联弱提示');
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(TextField).first),
+    );
+    expect(
+      find.text(l10n.cloudConfigInvalidMessage),
+      findsWidgets,
+      reason: '未填必填项应在字段下方显示内联弱提示',
+    );
 
     // 已填内容被保留:url 字段文本仍在,弹窗未关闭
     final urlField = tester.widget<TextField>(find.byType(TextField).at(0));
@@ -421,12 +428,15 @@ void main() {
   testWidgets('清除配置流程：删除 → 确认 → 回到未配置状态', (tester) async {
     // 用真实 CloudServiceStore + mock SharedPreferences,验证端到端清除效果
     SharedPreferences.setMockInitialValues({});
-    await CloudServiceStore().saveOnly(_webdavActive());
+    await _testStore().saveOnly(_webdavActive());
 
     // 不 override 配置 Provider,让其读真实 store
     tester.view.physicalSize = const Size(1000, 4000);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          cloudServiceStoreProvider.overrideWith((ref) => _testStore()),
+        ],
         child: MaterialApp(
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -452,7 +462,7 @@ void main() {
     await tester.pumpAndSettle();
 
     // 配置已被清除,卡片回到未配置副标题
-    expect(await CloudServiceStore().loadWebdav(), isNull);
+    expect(await _testStore().loadWebdav(), isNull);
     expect(find.byType(AlertDialog), findsNothing);
     expect(find.text('点击配置坚果云/Nextcloud等'), findsOneWidget);
 
@@ -462,11 +472,14 @@ void main() {
 
   testWidgets('清除配置流程：取消确认 → 配置保留', (tester) async {
     SharedPreferences.setMockInitialValues({});
-    await CloudServiceStore().saveOnly(_webdavActive());
+    await _testStore().saveOnly(_webdavActive());
 
     tester.view.physicalSize = const Size(1000, 4000);
     await tester.pumpWidget(
       ProviderScope(
+        overrides: [
+          cloudServiceStoreProvider.overrideWith((ref) => _testStore()),
+        ],
         child: MaterialApp(
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
@@ -486,12 +499,11 @@ void main() {
     // 取消 → 配置仍在
     await tester.tap(find.text('取消'));
     await tester.pumpAndSettle();
-    expect(await CloudServiceStore().loadWebdav(), isNotNull);
+    expect(await _testStore().loadWebdav(), isNotNull);
   });
 
   group('测试连接（内联展示 + 持久化）', () {
-    testWidgets('WebDAV 激活：展示「测试连接」文字链与「未测试」状态，且点击不弹窗',
-        (tester) async {
+    testWidgets('WebDAV 激活：展示「测试连接」文字链与「未测试」状态，且点击不弹窗', (tester) async {
       await _pumpPage(tester, active: _webdavActive(), webdav: _webdavActive());
       // 内联「测试连接」文字链存在
       expect(find.text('测试连接'), findsOneWidget);
@@ -509,8 +521,7 @@ void main() {
       expect(find.text('未测试'), findsNothing);
     });
 
-    testWidgets('重新进入页面保留上次测试结果（持久化恢复 + 内联时间/详情）',
-        (tester) async {
+    testWidgets('重新进入页面保留上次测试结果（持久化恢复 + 内联时间/详情）', (tester) async {
       final now = DateTime(2026, 7, 19, 16, 12, 12);
       await _pumpPage(
         tester,
@@ -548,6 +559,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            cloudServiceStoreProvider.overrideWith((ref) => _testStore()),
             authServiceProvider.overrideWith((ref) async => NoopAuthService()),
             syncServiceProvider.overrideWith((ref) => LocalOnlySyncService()),
             autoSyncValueProvider.overrideWith((ref) async => false),
@@ -575,15 +587,16 @@ void main() {
 
       // 弹窗内 TextField 顺序:0=地址 1=用户名 2=密码 3=远程路径
       await tester.enterText(
-          find.byType(TextField).at(0), 'https://dav.example.com');
+        find.byType(TextField).at(0),
+        'https://dav.example.com',
+      );
       await tester.enterText(find.byType(TextField).at(1), 'user');
       await tester.enterText(find.byType(TextField).at(2), 'pass');
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
     }
 
-    testWidgets('首次创建保存后弹出引导弹窗,选「暂不切换」仅保存不激活',
-        (tester) async {
+    testWidgets('首次创建保存后弹出引导弹窗,选「暂不切换」仅保存不激活', (tester) async {
       SharedPreferences.setMockInitialValues({});
       await pumpWithRealStore(tester);
       await fillAndSaveWebdav(tester);
@@ -598,9 +611,8 @@ void main() {
       // 首次创建由引导弹窗承接反馈,不应再出现「配置已保存」toast
       // （弹窗已关闭,此时若有 toast 仍会在屏,故 findsNothing 可判定）
       expect(find.text('配置已保存'), findsNothing);
-      expect(await CloudServiceStore().loadWebdav(), isNotNull);
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.local);
+      expect(await _testStore().loadWebdav(), isNotNull);
+      expect((await _testStore().loadActive()).type, CloudBackendType.local);
       // 同步区块不应出现
       expect(find.byType(CloudSyncSection), findsNothing);
 
@@ -608,8 +620,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('首次创建保存后选「立即切换」→ 配置被激活且同步区块出现',
-        (tester) async {
+    testWidgets('首次创建保存后选「立即切换」→ 配置被激活且同步区块出现', (tester) async {
       SharedPreferences.setMockInitialValues({});
       await pumpWithRealStore(tester);
       await fillAndSaveWebdav(tester);
@@ -617,19 +628,17 @@ void main() {
       // 选「立即切换」→ 保存后自动激活为当前同步配置
       await tester.tap(find.text('立即切换'));
       await tester.pumpAndSettle();
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.webdav);
+      expect((await _testStore().loadActive()).type, CloudBackendType.webdav);
       // 激活后备份同步区块出现（卡片显示已连接状态）
       expect(find.byType(CloudSyncSection), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('编辑已有配置保存后也弹引导弹窗（新建/编辑统一）且无 toast',
-        (tester) async {
+    testWidgets('编辑已有配置保存后也弹引导弹窗（新建/编辑统一）且无 toast', (tester) async {
       SharedPreferences.setMockInitialValues({});
       // 预置已有 WebDAV 配置 → 走「编辑」场景
-      await CloudServiceStore().saveOnly(_webdavActive());
+      await _testStore().saveOnly(_webdavActive());
       await pumpWithRealStore(tester);
 
       // 已配置 → 点「配置」按钮打开编辑弹窗（第 0 个为本地存储备份入口）
@@ -647,8 +656,7 @@ void main() {
       await tester.tap(find.text('暂不切换'));
       await tester.pumpAndSettle();
       expect(find.text('配置已保存'), findsNothing);
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.local);
+      expect((await _testStore().loadActive()).type, CloudBackendType.local);
 
       await tester.pump(const Duration(seconds: 3));
     });
@@ -667,6 +675,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            cloudServiceStoreProvider.overrideWith((ref) => _testStore()),
             authServiceProvider.overrideWith((ref) async => NoopAuthService()),
             syncServiceProvider.overrideWith((ref) => LocalOnlySyncService()),
             autoSyncValueProvider.overrideWith((ref) async => false),
@@ -675,7 +684,8 @@ void main() {
             currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
             // 关键桩：让 Spitout 登录块走可覆盖工厂，返回 Fake auth
             cloudServicesFactoryProvider.overrideWith(
-              (ref) => (config) async => (provider: null, auth: fakeAuth),
+              (ref) =>
+                  (config) async => (provider: null, auth: fakeAuth),
             ),
           ],
           child: MaterialApp(
@@ -697,18 +707,14 @@ void main() {
         find.byType(TextField).at(0),
         'https://cloud.example.com',
       );
-      await tester.enterText(
-        find.byType(TextField).at(1),
-        'user@example.com',
-      );
+      await tester.enterText(find.byType(TextField).at(1), 'user@example.com');
       await tester.enterText(find.byType(TextField).at(2), 'secret');
       // 保存 → 弹出"是否立即切换"引导
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
     }
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 登录且 auto_sync 开启',
-        (tester) async {
+    testWidgets('带邮箱密码保存 + 立即切换 → 登录且 auto_sync 开启', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -730,15 +736,18 @@ void main() {
       expect(prefs.getBool('auto_sync'), isTrue);
 
       // 3) 活跃类型切到 spitoutCloud，且云端协同区块出现
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.spitoutCloud);
+      expect(
+        (await _testStore().loadActive()).type,
+        CloudBackendType.spitoutCloud,
+      );
       expect(find.byType(SpitoutCloudSyncSection), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 暂不切换 → 不登录、auto_sync 仍为 false、活跃仍是 local',
-        (tester) async {
+    testWidgets('带邮箱密码保存 + 暂不切换 → 不登录、auto_sync 仍为 false、活跃仍是 local', (
+      tester,
+    ) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -758,19 +767,17 @@ void main() {
       expect(prefs.getBool('auto_sync'), isNot(isTrue));
 
       // 3) 活跃类型仍是 local（仅保存，未切换）
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.local);
+      expect((await _testStore().loadActive()).type, CloudBackendType.local);
 
       // 4) 配置已持久化（卡片"已配置"徽标随之刷新），且同步区块不出现
-      expect(await CloudServiceStore().loadSpitoutCloud(), isNotNull);
+      expect(await _testStore().loadSpitoutCloud(), isNotNull);
       expect(find.byType(SpitoutCloudSyncSection), findsNothing);
       expect(find.byType(CloudSyncSection), findsNothing);
 
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 账号异常弹窗且不激活服务',
-        (tester) async {
+    testWidgets('带邮箱密码保存 + 立即切换 → 账号异常弹窗且不激活服务', (tester) async {
       final fakeAuth = _CloudPageAuthAccountFail();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -784,15 +791,16 @@ void main() {
       // 账号鉴权失败 → 友好文案弹窗（邮箱或密码不正确），且不激活服务。
       expect(find.text('邮箱或密码不正确。'), findsOneWidget);
       expect(fakeAuth.signInCalled, isTrue);
-      expect((await CloudServiceStore().loadActive()).type,
-          isNot(equals(CloudBackendType.spitoutCloud)));
+      expect(
+        (await _testStore().loadActive()).type,
+        isNot(equals(CloudBackendType.spitoutCloud)),
+      );
 
       // 排空弹窗（保持打开状态），测试结束无残留定时器。
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 网络异常弹窗且不激活服务',
-        (tester) async {
+    testWidgets('带邮箱密码保存 + 立即切换 → 网络异常弹窗且不激活服务', (tester) async {
       final fakeAuth = _CloudPageAuthNetworkFail();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -806,14 +814,15 @@ void main() {
       // 网络异常 → 友好文案弹窗（网络异常，请检查网络后重试），同样不激活服务。
       expect(find.text('网络异常，请检查网络后重试。'), findsOneWidget);
       expect(fakeAuth.signInCalled, isTrue);
-      expect((await CloudServiceStore().loadActive()).type,
-          isNot(equals(CloudBackendType.spitoutCloud)));
+      expect(
+        (await _testStore().loadActive()).type,
+        isNot(equals(CloudBackendType.spitoutCloud)),
+      );
 
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 登录成功且无错误弹窗、激活服务',
-        (tester) async {
+    testWidgets('带邮箱密码保存 + 立即切换 → 登录成功且无错误弹窗、激活服务', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -827,14 +836,15 @@ void main() {
       // 成功：不应出现任何错误弹窗文案，且正常激活到 spitoutCloud。
       expect(find.text('邮箱或密码不正确。'), findsNothing);
       expect(find.text('网络异常，请检查网络后重试。'), findsNothing);
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.spitoutCloud);
+      expect(
+        (await _testStore().loadActive()).type,
+        CloudBackendType.spitoutCloud,
+      );
 
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('无邮箱密码 + 立即切换 → 跳过登录直接激活（不调用登录）',
-        (tester) async {
+    testWidgets('无邮箱密码 + 立即切换 → 跳过登录直接激活（不调用登录）', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -855,8 +865,10 @@ void main() {
 
       // 无凭证 → 登录块被跳过，fakeAuth 的 signIn 未被调用，但仍激活服务。
       expect(fakeAuth.signInCalled, isFalse);
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.spitoutCloud);
+      expect(
+        (await _testStore().loadActive()).type,
+        CloudBackendType.spitoutCloud,
+      );
 
       await tester.pump(const Duration(seconds: 3));
     });
@@ -871,6 +883,7 @@ void main() {
       await tester.pumpWidget(
         ProviderScope(
           overrides: [
+            cloudServiceStoreProvider.overrideWith((ref) => _testStore()),
             authServiceProvider.overrideWith((ref) async => NoopAuthService()),
             syncServiceProvider.overrideWith((ref) => LocalOnlySyncService()),
             autoSyncValueProvider.overrideWith((ref) async => false),
@@ -893,7 +906,9 @@ void main() {
       await tester.pumpAndSettle();
 
       await tester.enterText(
-          find.byType(TextField).at(0), 'https://supabase.example.com');
+        find.byType(TextField).at(0),
+        'https://supabase.example.com',
+      );
       await tester.enterText(find.byType(TextField).at(1), 'anon-key');
       await tester.enterText(find.byType(TextField).at(2), 'bucket-1');
       // 保存 → 弹出"是否立即切换"引导
@@ -907,8 +922,7 @@ void main() {
 
       // 激活由 _activateService 接管（不再手写 invalidate active），行为等价：
       // 活跃类型切到 supabase，且通用同步区块（含登录行）出现。
-      expect((await CloudServiceStore().loadActive()).type,
-          CloudBackendType.supabase);
+      expect((await _testStore().loadActive()).type, CloudBackendType.supabase);
       expect(find.byType(CloudSyncSection), findsOneWidget);
 
       await tester.pump(const Duration(seconds: 3));

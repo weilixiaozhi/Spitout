@@ -3,6 +3,7 @@ import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
+import '../../core/logging/logger_service.dart';
 import '../../services/notification/reminder_constants.dart';
 import '../../services/notification/notification_factory.dart';
 
@@ -13,7 +14,8 @@ import '../../services/notification/notification_factory.dart';
 /// 2. 应用从后台恢复到前台时，检查提醒是否仍然有效
 /// 3. 如果提醒丢失，自动重新设置
 class ReminderMonitorService with WidgetsBindingObserver {
-  static final ReminderMonitorService _instance = ReminderMonitorService._internal();
+  static final ReminderMonitorService _instance =
+      ReminderMonitorService._internal();
   factory ReminderMonitorService() => _instance;
   ReminderMonitorService._internal();
 
@@ -28,18 +30,18 @@ class ReminderMonitorService with WidgetsBindingObserver {
   void startMonitoring({BuildContext Function()? contextProvider}) {
     _contextProvider = contextProvider;
     WidgetsBinding.instance.addObserver(this);
-    debugPrint('✅ 记账提醒监控服务已启动');
+    logger.info('ReminderMonitor', '✅ 记账提醒监控服务已启动');
   }
 
   /// 停止监控
   void stopMonitoring() {
     WidgetsBinding.instance.removeObserver(this);
-    debugPrint('🛑 记账提醒监控服务已停止');
+    logger.info('ReminderMonitor', '🛑 记账提醒监控服务已停止');
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    debugPrint('📱 应用生命周期变化: $state');
+    logger.info('ReminderMonitor', '📱 应用生命周期变化: $state');
 
     if (state == AppLifecycleState.resumed) {
       // 应用从后台恢复到前台
@@ -53,29 +55,30 @@ class ReminderMonitorService with WidgetsBindingObserver {
       // 避免频繁检查
       if (_lastCheckTime != null &&
           DateTime.now().difference(_lastCheckTime!) < _checkInterval) {
-        debugPrint('ℹ️  距离上次检查时间过短，跳过本次检查');
+        logger.info('ReminderMonitor', 'ℹ️  距离上次检查时间过短，跳过本次检查');
         return;
       }
 
-      debugPrint('🔍 开始检查记账提醒状态...');
+      logger.info('ReminderMonitor', '🔍 开始检查记账提醒状态...');
       _lastCheckTime = DateTime.now();
 
       final prefs = await SharedPreferences.getInstance();
       final isEnabled = prefs.getBool(ReminderPrefs.enabled) ?? false;
 
       if (!isEnabled) {
-        debugPrint('ℹ️  用户未启用记账提醒');
+        logger.info('ReminderMonitor', 'ℹ️  用户未启用记账提醒');
         return;
       }
 
       // 检查是否有待处理的提醒
       final notificationUtil = NotificationFactory.getInstance();
       final pending = await notificationUtil.getPendingNotifications();
-      final hasMainReminder =
-          pending.any((n) => n.id == ReminderPrefs.mainNotificationId);
+      final hasMainReminder = pending.any(
+        (n) => n.id == ReminderPrefs.mainNotificationId,
+      );
 
       if (!hasMainReminder) {
-        debugPrint('⚠️  警告：检测到记账提醒丢失，正在重新设置...');
+        logger.info('ReminderMonitor', '⚠️  警告：检测到记账提醒丢失，正在重新设置...');
 
         final hour = prefs.getInt(ReminderPrefs.hour) ?? 21;
         final minute = prefs.getInt(ReminderPrefs.minute) ?? 0;
@@ -94,12 +97,15 @@ class ReminderMonitorService with WidgetsBindingObserver {
           minute: minute,
         );
 
-        debugPrint('✅ 记账提醒已重新设置');
+        logger.info('ReminderMonitor', '✅ 记账提醒已重新设置');
       } else {
-        debugPrint('✅ 记账提醒状态正常 (待处理通知数: ${pending.length})');
+        logger.info(
+          'ReminderMonitor',
+          '✅ 记账提醒状态正常 (待处理通知数: ${pending.length})',
+        );
       }
     } catch (e) {
-      debugPrint('❌ 检查提醒状态失败: $e');
+      logger.warning('ReminderMonitor', '❌ 检查提醒状态失败: $e');
     }
   }
 }

@@ -2,7 +2,6 @@ library;
 
 import 'dart:convert';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
@@ -11,8 +10,14 @@ class SupabaseStorageService implements CloudStorageService {
   final supabase.SupabaseClient _client;
   final String _bucketName;
   final String? _pathPrefix;
+  final CloudSyncLogger? _logger;
 
-  SupabaseStorageService(this._client, this._bucketName, [this._pathPrefix]);
+  SupabaseStorageService(
+    this._client,
+    this._bucketName, [
+    this._pathPrefix,
+    CloudSyncLogger? logger,
+  ]) : _logger = logger;
 
   @override
   Future<void> upload({
@@ -195,10 +200,16 @@ class SupabaseStorageService implements CloudStorageService {
           );
 
       final fileName = PathHelper.basename(fullPath);
-      final file = files.firstWhere(
-        (f) => f.name == fileName,
-        orElse: () => throw CloudStorageException('File not found: $path'),
-      );
+      supabase.FileObject? file;
+      for (final candidate in files) {
+        if (candidate.name == fileName) {
+          file = candidate;
+          break;
+        }
+      }
+      // 文件不存在属于正常情况，返回 null；不要包装成 CloudStorageException，
+      // 否则调用方无法区分“无文件”与“元数据损坏”。
+      if (file == null) return null;
 
       // Get stored custom metadata
       final customMetadata = await _getMetadata(fullPath);
@@ -220,9 +231,8 @@ class SupabaseStorageService implements CloudStorageService {
       }
       throw CloudStorageException('Get metadata failed: ${e.message}', e);
     } catch (e) {
-      if (e is CloudNotAuthenticatedException || e is CloudStorageException) {
-        rethrow;
-      }
+      if (e is CloudNotAuthenticatedException) rethrow;
+      if (e is CloudStorageException) rethrow;
       throw CloudStorageException('Get metadata failed: $e', e);
     }
   }
@@ -260,7 +270,9 @@ class SupabaseStorageService implements CloudStorageService {
     } catch (e) {
       // 元数据表缺失 / 权限不足会导致指纹等元数据永久缺失，
       // 必须记录 warning，避免静默吞错放大 getStatus 全量下载问题。
-      debugPrint('SupabaseStorageService 元数据写入失败（path=$path）: $e');
+      _logger?.error('SupabaseStorageService 元数据写入失败（path=$path）: $e');
+      // 元数据是同步状态判断的依据，写失败不能让上传“假装成功”。
+      rethrow;
     }
   }
 
@@ -277,8 +289,8 @@ class SupabaseStorageService implements CloudStorageService {
 
       return response['metadata'] as Map<String, dynamic>? ?? {};
     } catch (e) {
-      debugPrint('SupabaseStorageService 元数据读取失败（path=$path）: $e');
-      return {};
+      _logger?.error('SupabaseStorageService 元数据读取失败（path=$path）: $e');
+      rethrow;
     }
   }
 
@@ -287,7 +299,8 @@ class SupabaseStorageService implements CloudStorageService {
     try {
       await _client.from('file_metadata').delete().eq('path', path);
     } catch (e) {
-      debugPrint('SupabaseStorageService 元数据删除失败（path=$path）: $e');
+      _logger?.error('SupabaseStorageService 元数据删除失败（path=$path）: $e');
+      rethrow;
     }
   }
 }

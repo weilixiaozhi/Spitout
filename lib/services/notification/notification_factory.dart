@@ -1,8 +1,8 @@
 import 'dart:io' show Platform;
-import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
+import '../../core/logging/logger_service.dart';
 import 'notification_util.dart';
 import 'notification_android.dart';
 
@@ -40,16 +40,19 @@ class NotificationFactory {
       final zoneName = _resolveZoneName(totalMinutes);
       try {
         tz.setLocalLocation(tz.getLocation(zoneName));
-        debugPrint('[Timezone] 设置为: $zoneName');
+        logger.info('NotificationFactory', '[Timezone] 设置为: $zoneName');
       } catch (e) {
         // 时区库缺少该标识时回退 UTC，避免调度直接崩溃。
         tz.setLocalLocation(tz.UTC);
-        debugPrint('[Timezone] 无法解析 $zoneName，回退 UTC: $e');
+        logger.warning(
+          'NotificationFactory',
+          '[Timezone] 无法解析 $zoneName，回退 UTC: $e',
+        );
       }
 
-      debugPrint('[Timezone] ✅ 时区初始化完成');
+      logger.info('NotificationFactory', '[Timezone] ✅ 时区初始化完成');
     } catch (e) {
-      debugPrint('[Timezone] ❌ 时区初始化失败: $e');
+      logger.warning('NotificationFactory', '[Timezone] ❌ 时区初始化失败: $e');
     }
   }
 

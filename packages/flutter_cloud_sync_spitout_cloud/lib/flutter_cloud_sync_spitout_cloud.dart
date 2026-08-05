@@ -16,13 +16,19 @@ export 'src/spitout_cloud_provider.dart';
 /// 插件化约定：核心包不依赖本 adapter；由主工程 Composition Root（main.dart）
 /// 调用本函数完成注册后，`createCloudServices` 才能分发到 Spitout Cloud。
 /// 重复调用安全（后者覆盖前者）。
-void registerSpitoutCloudBackend() {
+/// 把 Spitout Cloud 后端自注册到核心包的 [CloudProviderRegistry]。
+///
+/// [sessionStore] 仅在测试 / 特殊宿主需要覆盖默认安全存储时传入;
+/// 不传则生产路径默认使用系统安全存储(Keychain / Keystore)。
+void registerSpitoutCloudBackend(
+    {impl.SpitoutCloudSessionStore? sessionStore}) {
   CloudProviderRegistry.register(CloudBackendType.spitoutCloud, (config) async {
     // 创建并初始化 Spitout Cloud provider
     final provider = impl.SpitoutCloudProvider();
     await provider.initialize({
       'baseUrl': config.spitoutCloudBaseUrl!,
       'apiPrefix': config.spitoutCloudApiPrefix ?? '/api/v1',
+      if (sessionStore != null) 'sessionStore': sessionStore,
     });
 
     // Auth service 直接从 provider 获取

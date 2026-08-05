@@ -34,7 +34,9 @@ void main() {
 
   group('clearConfig 激活标记复位', () {
     test('清除当前激活的云配置后 _kActiveType 复位为 local(僵尸脏值被清理)', () async {
-      final store = CloudServiceStore();
+      final store = CloudServiceStore(
+        credentialStorage: SharedPreferencesCredentialStorage(),
+      );
       await store.saveAndActivate(_webdavCfg());
       final sp = await SharedPreferences.getInstance();
       expect(sp.getString(_kActiveTypeKey), 'webdav');
@@ -48,7 +50,9 @@ void main() {
     });
 
     test('清除非激活配置不影响现有激活状态(回归保护)', () async {
-      final store = CloudServiceStore();
+      final store = CloudServiceStore(
+        credentialStorage: SharedPreferencesCredentialStorage(),
+      );
       await store.saveAndActivate(_webdavCfg());
 
       // 清一个非激活的 supabase 配置:不得误伤当前激活的 webdav
@@ -61,7 +65,9 @@ void main() {
     });
 
     test('clearConfig(local) 为 no-op,不影响激活状态', () async {
-      final store = CloudServiceStore();
+      final store = CloudServiceStore(
+        credentialStorage: SharedPreferencesCredentialStorage(),
+      );
       await store.saveAndActivate(_webdavCfg());
 
       await store.clearConfig(CloudBackendType.local);

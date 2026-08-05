@@ -27,12 +27,12 @@
     <!-- Required for biometric authentication -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC" />
     
+    <!-- 财务数据本地优先：关闭 Android 自动备份，避免明文 SQLite/SharedPreferences
+         离开设备；备份恢复也不再可能把旧同步游标/旧身份带回（与增量同步冲突）。 -->
     <application
         android:label="@string/app_name"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher"
-        <!-- 财务数据本地优先：关闭 Android 自动备份，避免明文 SQLite/SharedPreferences
-             离开设备；备份恢复也不再可能把旧同步游标/旧身份带回（与增量同步冲突）。 -->
         android:allowBackup="false"
         android:requestLegacyExternalStorage="true">
         <activity

@@ -752,15 +752,17 @@ class ConfigExportService {
   static Future<String> exportToYaml({
     BaseRepository? repository,
     ExportOptions options = ExportOptions.all,
+    // 测试可注入明文存储；生产默认走安全存储（FlutterSecureCredentialStorage）。
+    CloudServiceStore? store,
   }) async {
     final prefs = await SharedPreferences.getInstance();
     // 云配置统一经 CloudServiceStore 读取（含凭据合并与旧数据迁移），
     // 不直接触碰云配置键，避免与存储侧安全边界分叉。
-    final store = CloudServiceStore();
+    final cloudStore = store ?? CloudServiceStore();
 
     // 读取Supabase配置
     SupabaseConfig? supabaseConfig;
-    final supabaseCfg = await store.loadSupabase();
+    final supabaseCfg = await cloudStore.loadSupabase();
     if (supabaseCfg != null &&
         supabaseCfg.supabaseUrl != null &&
         supabaseCfg.supabaseAnonKey != null) {
@@ -775,7 +777,7 @@ class ConfigExportService {
 
     // 读取WebDAV配置
     WebdavConfig? webdavConfig;
-    final webdavCfg = await store.loadWebdav();
+    final webdavCfg = await cloudStore.loadWebdav();
     if (webdavCfg != null &&
         webdavCfg.webdavUrl != null &&
         webdavCfg.webdavUsername != null &&
@@ -790,7 +792,7 @@ class ConfigExportService {
 
     // 读取S3配置
     S3Config? s3Config;
-    final s3Cfg = await store.loadS3();
+    final s3Cfg = await cloudStore.loadS3();
     if (s3Cfg != null &&
         s3Cfg.s3Endpoint != null &&
         s3Cfg.s3Region != null &&
@@ -812,7 +814,7 @@ class ConfigExportService {
     // 快速填回登录表单）；登录密码不落盘，因此导出时无明文可写；access/refresh
     // token 属于登录态，需 options 显式勾选才带上。
     SpitoutCloudConfig? spitoutCloudConfig;
-    final spitoutCfg = await store.loadSpitoutCloud();
+    final spitoutCfg = await cloudStore.loadSpitoutCloud();
     final baseUrl = spitoutCfg?.spitoutCloudBaseUrl ?? '';
     if (baseUrl.isNotEmpty) {
       spitoutCloudConfig = SpitoutCloudConfig(
@@ -1318,6 +1320,8 @@ class ConfigExportService {
     BaseRepository? repository,
     int? ledgerId,
     ExportOptions options = ExportOptions.all,
+    // 测试可注入明文存储；生产默认走安全存储（FlutterSecureCredentialStorage）。
+    CloudServiceStore? store,
   }) async {
     final doc = loadYaml(yamlContent);
 
@@ -1329,7 +1333,7 @@ class ConfigExportService {
     final prefs = await SharedPreferences.getInstance();
     // 云配置统一经 CloudServiceStore 写入（内部完成剥离、凭据合并与迁移），
     // 业务层不再直接 setString 云配置键，避免绕过安全边界。
-    final store = CloudServiceStore();
+    final cloudStore = store ?? CloudServiceStore();
 
     // 导入Supabase配置
     if (options.appSettings && config.supabase != null) {
@@ -1345,7 +1349,7 @@ class ConfigExportService {
         // 即使 YAML 显式携带密码,也由 Store 统一剥离,密码由用户在下一次登录时输入。
         supabasePassword: config.supabase!.password,
       );
-      await store.saveImported(
+      await cloudStore.saveImported(
         supabaseCfg,
         includeCredentials: options.includeCredentials,
       );
@@ -1362,7 +1366,7 @@ class ConfigExportService {
         webdavPassword: config.webdav!.password,
         webdavRemotePath: config.webdav!.remotePath,
       );
-      await store.saveImported(
+      await cloudStore.saveImported(
         webdavCfg,
         includeCredentials: options.includeCredentials,
       );
@@ -1382,7 +1386,7 @@ class ConfigExportService {
         s3UseSSL: config.s3!.useSSL,
         s3Port: config.s3!.port,
       );
-      await store.saveImported(
+      await cloudStore.saveImported(
         s3Cfg,
         includeCredentials: options.includeCredentials,
       );
@@ -1401,7 +1405,7 @@ class ConfigExportService {
         // 登录密码同样交给 Store 统一剥离，绝不落盘。
         spitoutCloudPassword: config.spitoutCloud!.password,
       );
-      await store.saveImported(
+      await cloudStore.saveImported(
         bcCfg,
         includeCredentials: options.includeCredentials,
       );
@@ -1463,7 +1467,7 @@ class ConfigExportService {
           );
         } else {
           // 激活走 Store 校验：配置缺失或不完整时不激活，避免僵尸激活标记。
-          final ok = await store.activate(matches.first);
+          final ok = await cloudStore.activate(matches.first);
           if (!ok) {
             logger.warning(
               'ConfigImport',

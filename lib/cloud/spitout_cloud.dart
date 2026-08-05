@@ -30,6 +30,7 @@ export 'package:flutter_cloud_sync/flutter_cloud_sync.dart'
         CloudSerializationException,
         CloudSyncLogger,
         CloudCredentialStorage,
+        FlutterSecureCredentialStorage,
         SharedPreferencesCredentialStorage,
         createCloudServices,
         CloudServiceStore,

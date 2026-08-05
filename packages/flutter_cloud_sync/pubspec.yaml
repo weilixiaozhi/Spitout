@@ -12,6 +12,7 @@ dependencies:
     sdk: flutter
   meta: ^1.9.0
   shared_preferences: ^2.2.2
+  flutter_secure_storage: ^9.2.4
   # 注意：核心包【禁止】依赖任何 adapter 包（flutter_cloud_sync_supabase /
   # webdav / s3 / spitout_cloud）。adapter 通过 CloudProviderRegistry 自注册，
   # 由主工程在 Composition Root（main.dart）显式装配，依赖方向保持 adapter → 核心 单向。

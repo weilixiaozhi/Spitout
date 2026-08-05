@@ -1,7 +1,7 @@
-import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
+import '../../core/logging/logger_service.dart';
 import 'notification_util.dart' as util;
 
 /// Android 特定的通知实现
@@ -16,7 +16,9 @@ class AndroidNotificationUtil implements util.NotificationUtil {
   Future<void> initialize() async {
     if (_initialized) return;
 
-    const androidSettings = AndroidInitializationSettings('@mipmap/ic_launcher');
+    const androidSettings = AndroidInitializationSettings(
+      '@mipmap/ic_launcher',
+    );
     const initSettings = InitializationSettings(android: androidSettings);
 
     // 22.x 起 initialize 改为命名参数
@@ -26,27 +28,33 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     // 通知权限延迟到用户主动开启记账提醒时再请求（见 ReminderSettingsNotifier）。
     _initialized = true;
 
-    debugPrint('[Android] 通知服务初始化完成');
+    logger.info('AndroidNotification', '[Android] 通知服务初始化完成');
   }
 
   @override
   Future<bool> requestPermissions() async {
     final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidPlugin == null) return false;
 
     // 请求基础通知权限
     final granted = await androidPlugin.requestNotificationsPermission();
-    debugPrint('[Android] 基础通知权限: ${granted ?? false}');
+    logger.info('AndroidNotification', '[Android] 基础通知权限: ${granted ?? false}');
 
     // 请求精确闹钟权限 (Android 12+)
     try {
       await androidPlugin.requestExactAlarmsPermission();
-      final canScheduleExact = await androidPlugin.canScheduleExactNotifications();
-      debugPrint('[Android] 精确闹钟权限: ${canScheduleExact ?? false}');
+      final canScheduleExact = await androidPlugin
+          .canScheduleExactNotifications();
+      logger.info(
+        'AndroidNotification',
+        '[Android] 精确闹钟权限: ${canScheduleExact ?? false}',
+      );
     } catch (e) {
-      debugPrint('[Android] 请求精确闹钟权限失败: $e');
+      logger.warning('AndroidNotification', '[Android] 请求精确闹钟权限失败: $e');
     }
 
     return granted ?? false;
@@ -105,19 +113,25 @@ class AndroidNotificationUtil implements util.NotificationUtil {
         matchDateTimeComponents: DateTimeComponents.time, // 每天重复
       );
 
-      debugPrint('[Android] ✅ 每日提醒设置成功: $hour:$minute');
-      debugPrint('[Android] ✅ 下次提醒时间: $scheduledDate');
-      debugPrint('[Android] ✅ 使用调度模式: exactAllowWhileIdle');
-      debugPrint('[Android] ✅ 每日重复: ${DateTimeComponents.time}');
+      logger.info('AndroidNotification', '[Android] ✅ 每日提醒设置成功: $hour:$minute');
+      logger.info('AndroidNotification', '[Android] ✅ 下次提醒时间: $scheduledDate');
+      logger.info(
+        'AndroidNotification',
+        '[Android] ✅ 使用调度模式: exactAllowWhileIdle',
+      );
+      logger.info(
+        'AndroidNotification',
+        '[Android] ✅ 每日重复: ${DateTimeComponents.time}',
+      );
 
       // 设置7天备用提醒（防止系统清理定时任务）
-      debugPrint('[Android] 🔄 开始设置7天备用提醒...');
+      logger.info('AndroidNotification', '[Android] 🔄 开始设置7天备用提醒...');
       await _scheduleBackupReminders(id, title, body, hour, minute);
 
       // 设置 AlarmManager 备用
       await _scheduleAlarmManagerBackup(id, title, body, scheduledDate);
     } catch (e) {
-      debugPrint('[Android] Flutter 通知设置失败: $e');
+      logger.warning('AndroidNotification', '[Android] Flutter 通知设置失败: $e');
       // 降级到 AlarmManager
       await _scheduleAlarmManagerBackup(id, title, body, scheduledDate);
     }
@@ -161,43 +175,52 @@ class AndroidNotificationUtil implements util.NotificationUtil {
       androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
     );
 
-    debugPrint('[Android] 单次提醒设置成功: $scheduledDate');
+    logger.info('AndroidNotification', '[Android] 单次提醒设置成功: $scheduledDate');
   }
 
   @override
   Future<void> cancelNotification(int id) async {
     if (!_initialized) await initialize();
 
-    debugPrint('[Android] 🗑️  开始取消所有提醒...');
+    logger.info('AndroidNotification', '[Android] 🗑️  开始取消所有提醒...');
 
     // 取消主要提醒
     await _plugin.cancel(id: id);
-    debugPrint('[Android] 🗑️  取消主要提醒 (ID: $id)');
+    logger.info('AndroidNotification', '[Android] 🗑️  取消主要提醒 (ID: $id)');
 
     // 取消所有7天备用提醒
-    debugPrint('[Android] 🗑️  取消备用提醒 (ID: ${id + 1} - ${id + 7})');
+    logger.info(
+      'AndroidNotification',
+      '[Android] 🗑️  取消备用提醒 (ID: ${id + 1} - ${id + 7})',
+    );
     for (int i = 1; i <= 7; i++) {
       await _plugin.cancel(id: id + i);
     }
 
     // 同时取消 AlarmManager 备用
     try {
-      debugPrint('[Android] 🗑️  取消AlarmManager备用提醒 (ID: ${id + 100})');
+      logger.info(
+        'AndroidNotification',
+        '[Android] 🗑️  取消AlarmManager备用提醒 (ID: ${id + 100})',
+      );
       await _channel.invokeMethod('cancelNotification', {
         'notificationId': id + 100,
       });
     } catch (e) {
-      debugPrint('[Android] 取消 AlarmManager 备用失败: $e');
+      logger.warning(
+        'AndroidNotification',
+        '[Android] 取消 AlarmManager 备用失败: $e',
+      );
     }
 
-    debugPrint('[Android] ✅ 所有提醒已取消 (包括备用提醒)');
+    logger.info('AndroidNotification', '[Android] ✅ 所有提醒已取消 (包括备用提醒)');
   }
 
   @override
   Future<void> cancelAllNotifications() async {
     if (!_initialized) await initialize();
     await _plugin.cancelAll();
-    debugPrint('[Android] 所有通知已取消');
+    logger.info('AndroidNotification', '[Android] 所有通知已取消');
   }
 
   @override
@@ -230,7 +253,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
       body: body,
       notificationDetails: notificationDetails,
     );
-    debugPrint('[Android] 即时通知已显示: $title');
+    logger.info('AndroidNotification', '[Android] 即时通知已显示: $title');
   }
 
   @override
@@ -242,7 +265,9 @@ class AndroidNotificationUtil implements util.NotificationUtil {
   @override
   Future<bool> checkPermissionStatus() async {
     final androidPlugin = _plugin
-        .resolvePlatformSpecificImplementation<AndroidFlutterLocalNotificationsPlugin>();
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
 
     if (androidPlugin == null) return false;
 
@@ -263,11 +288,20 @@ class AndroidNotificationUtil implements util.NotificationUtil {
 
       // 调度未来7天的单独提醒作为备用
       for (int i = 1; i <= 7; i++) {
-        final backupDate = DateTime(now.year, now.month, now.day + i, hour, minute);
+        final backupDate = DateTime(
+          now.year,
+          now.month,
+          now.day + i,
+          hour,
+          minute,
+        );
         final tzBackupDate = tz.TZDateTime.from(backupDate, tz.local);
         final backupId = id + i;
 
-        debugPrint('[Android] 📅 设置备用提醒 $i/7 (ID: $backupId): $backupDate');
+        logger.info(
+          'AndroidNotification',
+          '[Android] 📅 设置备用提醒 $i/7 (ID: $backupId): $backupDate',
+        );
 
         const androidDetails = AndroidNotificationDetails(
           'accounting_reminder_backup',
@@ -284,7 +318,9 @@ class AndroidNotificationUtil implements util.NotificationUtil {
           visibility: NotificationVisibility.public,
         );
 
-        const notificationDetails = NotificationDetails(android: androidDetails);
+        const notificationDetails = NotificationDetails(
+          android: androidDetails,
+        );
 
         await _plugin.zonedSchedule(
           id: backupId,
@@ -295,9 +331,9 @@ class AndroidNotificationUtil implements util.NotificationUtil {
           androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
         );
       }
-      debugPrint('[Android] ✅ 所有备用提醒设置完成 (共7天)');
+      logger.info('AndroidNotification', '[Android] ✅ 所有备用提醒设置完成 (共7天)');
     } catch (e) {
-      debugPrint('[Android] ⚠️  设置备用提醒失败: $e');
+      logger.warning('AndroidNotification', '[Android] ⚠️  设置备用提醒失败: $e');
     }
   }
 
@@ -316,19 +352,24 @@ class AndroidNotificationUtil implements util.NotificationUtil {
         'notificationId': id + 100, // 使用不同ID避免冲突
       });
 
-      debugPrint('[Android] AlarmManager 备用设置成功');
+      logger.info('AndroidNotification', '[Android] AlarmManager 备用设置成功');
     } catch (e) {
-      debugPrint('[Android] AlarmManager 备用设置失败: $e');
+      logger.warning(
+        'AndroidNotification',
+        '[Android] AlarmManager 备用设置失败: $e',
+      );
     }
   }
 
   /// 检查电池优化状态（Android 特有）
   Future<bool> isIgnoringBatteryOptimizations() async {
     try {
-      final result = await _channel.invokeMethod('isIgnoringBatteryOptimizations');
+      final result = await _channel.invokeMethod(
+        'isIgnoringBatteryOptimizations',
+      );
       return result ?? false;
     } catch (e) {
-      debugPrint('[Android] 检查电池优化状态失败: $e');
+      logger.warning('AndroidNotification', '[Android] 检查电池优化状态失败: $e');
       return false;
     }
   }
@@ -336,10 +377,12 @@ class AndroidNotificationUtil implements util.NotificationUtil {
   /// 请求忽略电池优化（Android 特有）
   Future<bool> requestIgnoreBatteryOptimizations() async {
     try {
-      final result = await _channel.invokeMethod('requestIgnoreBatteryOptimizations');
+      final result = await _channel.invokeMethod(
+        'requestIgnoreBatteryOptimizations',
+      );
       return result ?? false;
     } catch (e) {
-      debugPrint('[Android] 请求忽略电池优化失败: $e');
+      logger.warning('AndroidNotification', '[Android] 请求忽略电池优化失败: $e');
       return false;
     }
   }
@@ -349,7 +392,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     try {
       await _channel.invokeMethod('openAppSettings');
     } catch (e) {
-      debugPrint('[Android] 打开应用设置失败: $e');
+      logger.warning('AndroidNotification', '[Android] 打开应用设置失败: $e');
     }
   }
 
@@ -358,7 +401,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     try {
       await _channel.invokeMethod('openNotificationChannelSettings');
     } catch (e) {
-      debugPrint('[Android] 打开通知渠道设置失败: $e');
+      logger.warning('AndroidNotification', '[Android] 打开通知渠道设置失败: $e');
     }
   }
 
@@ -368,7 +411,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
       final result = await _channel.invokeMethod('getBatteryOptimizationInfo');
       return Map<String, dynamic>.from(result ?? {});
     } catch (e) {
-      debugPrint('[Android] 获取电池优化信息失败: $e');
+      logger.warning('AndroidNotification', '[Android] 获取电池优化信息失败: $e');
       return {
         'isIgnoring': false,
         'canRequest': false,
@@ -385,7 +428,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
       final result = await _channel.invokeMethod('getNotificationChannelInfo');
       return Map<String, dynamic>.from(result ?? {});
     } catch (e) {
-      debugPrint('[Android] 获取通知渠道信息失败: $e');
+      logger.warning('AndroidNotification', '[Android] 获取通知渠道信息失败: $e');
       return {
         'isEnabled': false,
         'importance': 'unknown',

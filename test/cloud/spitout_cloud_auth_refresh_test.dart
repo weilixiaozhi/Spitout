@@ -58,6 +58,8 @@ void main() {
       baseUrl: baseUrl,
       apiPrefix: apiPrefix,
       httpClient: client,
+      // 单测无平台安全存储通道,用 SharedPreferences mock 承载 session。
+      sessionStore: SharedPreferencesSessionStore(),
     );
     await auth.initialize();
     return auth;

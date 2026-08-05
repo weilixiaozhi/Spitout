@@ -13,6 +13,7 @@ dependencies:
   flutter_cloud_sync:
     path: ../flutter_cloud_sync
   supabase_flutter: ^2.0.0
+  flutter_secure_storage: ^9.2.4
 
 dev_dependencies:
   flutter_test:

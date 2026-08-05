@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:crypto/crypto.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -96,7 +97,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
     Duration silentRecoveryCooldown = const Duration(seconds: 30),
   })  : _httpClient = httpClient ?? defaultHttpClient(),
         _twoFactorHandler = twoFactorHandler,
-        _sessionStore = sessionStore ?? FlutterSecureStorageSessionStore(),
+        _sessionStore = sessionStore ?? _defaultSessionStore(),
         _logger = logger ?? defaultCloudLogger,
         _silentRecoveryCooldown = silentRecoveryCooldown;
 
@@ -106,6 +107,19 @@ class SpitoutCloudAuthService implements CloudAuthService {
   final TwoFactorChallengeHandler? _twoFactorHandler;
   final SpitoutCloudSessionStore _sessionStore;
   final CloudSyncLogger _logger;
+
+  /// 默认会话存储:生产走系统安全存储;`flutter test` 环境没有平台通道,
+  /// 自动回退到 SharedPreferences 测试实现,避免每个测试都手动注入。
+  ///
+  /// 仅当未显式注入 [sessionStore] 时生效;显式注入优先级最高。
+  static SpitoutCloudSessionStore _defaultSessionStore() {
+    // flutter test 会向测试进程注入 FLUTTER_TEST=true 环境变量
+    // (非编译期 dart-define),运行时判断即可区分测试与生产。
+    if (Platform.environment['FLUTTER_TEST'] == 'true') {
+      return SharedPreferencesSessionStore();
+    }
+    return FlutterSecureStorageSessionStore();
+  }
 
   final StreamController<CloudUser?> _authStateController =
       StreamController<CloudUser?>.broadcast();

@@ -53,6 +53,8 @@ void main() {
       apiPrefix: apiPrefix,
       // auth 侧不会被触达（token 未过期），给 MockClient 防止意外真实请求。
       httpClient: MockClient((_) async => http.Response('{}', 200)),
+      // 单测无平台安全存储通道,用 SharedPreferences mock 承载 session。
+      sessionStore: SharedPreferencesSessionStore(),
     );
     await auth.initialize();
     return SpitoutCloudStorageService(

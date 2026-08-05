@@ -1,6 +1,5 @@
 import 'dart:async';
 
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
@@ -24,36 +23,36 @@ import 'package:spitout/providers/core/refresh_ticks.dart';
 export 'package:spitout/providers/core/refresh_ticks.dart';
 
 // 底部导航索引（0: 明细, 3: 我的；1/2 为占位）
-final bottomTabIndexProvider =
-    NotifierProvider<SimpleStateNotifier<int>, int>(
+final bottomTabIndexProvider = NotifierProvider<SimpleStateNotifier<int>, int>(
   () => SimpleStateNotifier((ref) => 0),
 );
 
 // 首页滚动到顶部触发器（每次改变值时触发滚动）
-final homeScrollToTopProvider =
-    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
+final homeScrollToTopProvider = NotifierProvider<TickStateNotifier, int>(
+  () => TickStateNotifier((ref) => 0),
+);
 
 // Currently selected month (first day), default to now
 final selectedMonthProvider =
     NotifierProvider<SimpleStateNotifier<DateTime>, DateTime>(() {
-  return SimpleStateNotifier((ref) {
-    final now = DateTime.now();
-    return DateTime(now.year, now.month, 1);
-  });
-});
+      return SimpleStateNotifier((ref) {
+        final now = DateTime.now();
+        return DateTime(now.year, now.month, 1);
+      });
+    });
 
 // 应用初始化状态
 enum AppInitState {
   splash, // 显示启屏页
   loading, // 正在初始化
-  ready // 初始化完成，显示主应用
+  ready, // 初始化完成，显示主应用
 }
 
 // 应用初始化状态Provider
 final appInitStateProvider =
     NotifierProvider<SimpleStateNotifier<AppInitState>, AppInitState>(
-  () => SimpleStateNotifier((ref) => AppInitState.splash),
-);
+      () => SimpleStateNotifier((ref) => AppInitState.splash),
+    );
 
 // 应用初始化Provider - 管理数据预加载
 final appSplashInitProvider = FutureProvider<void>((ref) async {
@@ -76,7 +75,10 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       // 与此处并行安全)
       ref.watch(visibleCurrenciesInitProvider.future),
     ]);
-    logger.info(tag, '基础配置初始化完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms');
+    logger.info(
+      tag,
+      '基础配置初始化完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms',
+    );
     stepTime = DateTime.now();
 
     // 一次性修复共享账本历史脏数据（旧版 pull 把 Owner 分类错绑到成员本地分类）
@@ -105,7 +107,10 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     Future<T> timed<T>(String name, Future<T> future) async {
       final start = DateTime.now();
       final result = await future;
-      logger.info(tag, '$name: ${DateTime.now().difference(start).inMilliseconds}ms');
+      logger.info(
+        tag,
+        '$name: ${DateTime.now().difference(start).inMilliseconds}ms',
+      );
       return result;
     }
 
@@ -115,15 +120,27 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     final results = await Future.wait([
       timed('月度统计', ref.read(monthlyTotalsProvider(monthlyParams).future)),
       // 只查询前 N 条，而非全部
-      timed('交易列表(前$preloadLimit条)', repo.getRecentTransactionsWithCategory(ledgerId: ledgerId, limit: preloadLimit)),
+      timed(
+        '交易列表(前$preloadLimit条)',
+        repo.getRecentTransactionsWithCategory(
+          ledgerId: ledgerId,
+          limit: preloadLimit,
+        ),
+      ),
     ]);
 
     final monthlyResult = results[0] as double;
-    final transactionsWithCategory = results[1] as List<({Transaction t, Category? category})>;
+    final transactionsWithCategory =
+        results[1] as List<({Transaction t, Category? category})>;
 
-    ref.read(lastMonthlyTotalsProvider(monthlyParams).notifier).set(monthlyResult);
+    ref
+        .read(lastMonthlyTotalsProvider(monthlyParams).notifier)
+        .set(monthlyResult);
     // 不预加载完整列表，让 Stream 自己加载
-    logger.info(tag, '并行预加载完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms, 首屏${transactionsWithCategory.length}条');
+    logger.info(
+      tag,
+      '并行预加载完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms, 首屏${transactionsWithCategory.length}条',
+    );
 
     // 组装完整的交易展示数据
     final fullTransactions = transactionsWithCategory.map((item) {
@@ -136,34 +153,41 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     Future.microtask(() async {
       final start = DateTime.now();
       await ref.read(countsForLedgerProvider(ledgerId).future);
-      logger.info(tag, '账本统计(异步): ${DateTime.now().difference(start).inMilliseconds}ms');
+      logger.info(
+        tag,
+        '账本统计(异步): ${DateTime.now().difference(start).inMilliseconds}ms',
+      );
     });
 
     // 周期交易生成放到启动后异步执行：内部是「账本×模板×每笔」的 N+1 查询，
     // 同步等待会拖长首屏。改为 fire-and-forget，完成后统一走 PostProcessor
     // 刷新 + 触发同步（同步本身由数据变更驱动的 Coordinator 下沉，不依赖 UI）。
-    unawaited(Future.microtask(() async {
-      try {
-        // 微任务执行时重新解析仓库，避免捕获到启动阶段可能已失效的旧实例。
-        final freshRepo = ref.read(repositoryProvider);
-        final generatedLedgerIds =
-            await RecurringTransactionService.generatePendingTransactionsStatic(
-          repository: freshRepo,
-          verbose: false,
-        );
-        if (generatedLedgerIds.isNotEmpty) {
-          logger.info(tag,
-              '周期交易生成完成(启动后异步): ${generatedLedgerIds.length} 本账本');
-        }
+    unawaited(
+      Future.microtask(() async {
+        try {
+          // 微任务执行时重新解析仓库，避免捕获到启动阶段可能已失效的旧实例。
+          final freshRepo = ref.read(repositoryProvider);
+          final generatedLedgerIds =
+              await RecurringTransactionService.generatePendingTransactionsStatic(
+                repository: freshRepo,
+                verbose: false,
+              );
+          if (generatedLedgerIds.isNotEmpty) {
+            logger.info(
+              tag,
+              '周期交易生成完成(启动后异步): ${generatedLedgerIds.length} 本账本',
+            );
+          }
 
-        // 统一后处理：刷新UI + 触发云同步（如果有生成交易）
-        for (final genLedgerId in generatedLedgerIds) {
-          await PostProcessor.runR(ref, ledgerId: genLedgerId);
+          // 统一后处理：刷新UI + 触发云同步（如果有生成交易）
+          for (final genLedgerId in generatedLedgerIds) {
+            await PostProcessor.runR(ref, ledgerId: genLedgerId);
+          }
+        } catch (e, stackTrace) {
+          logger.error(tag, '周期交易生成失败', e, stackTrace);
         }
-      } catch (e, stackTrace) {
-        logger.error(tag, '周期交易生成失败', e, stackTrace);
-      }
-    }));
+      }),
+    );
   } catch (e, stackTrace) {
     logger.error(tag, '预加载数据失败', e, stackTrace);
   }
@@ -177,15 +201,15 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
 // 是否应该显示欢迎页面的Provider
 final shouldShowWelcomeProvider =
     NotifierProvider<SimpleStateNotifier<bool>, bool>(
-  () => SimpleStateNotifier((ref) => false),
-);
+      () => SimpleStateNotifier((ref) => false),
+    );
 
 // 初始化检查是否需要显示欢迎页面
 final welcomeCheckProvider = FutureProvider<bool>((ref) async {
   final prefs = await SharedPreferences.getInstance();
   final welcomeShown = prefs.getBool('welcome_shown') ?? false;
   if (!welcomeShown) {
-    debugPrint('👋 首次启动，需要展示欢迎页面');
+    logger.info('WelcomeCheck', '👋 首次启动，需要展示欢迎页面');
     ref.read(shouldShowWelcomeProvider.notifier).set(true);
     return true;
   }

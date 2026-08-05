@@ -2,10 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
-    show
-        CloudBackendType,
-        CloudServiceConfig,
-        CloudAuthException;
+    show CloudBackendType, CloudServiceConfig;
 import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart'
     show purgeLocalCloudLedgersWithContainer;
@@ -14,13 +11,13 @@ import '../../core/logging/logger_service.dart';
 import '../settings/local_backup_page.dart';
 import 'cloud_sync_section.dart';
 import 'spitout_cloud_sync_section.dart';
-import 'cloud_config_dialogs.dart';
 import 'cloud_help_dialogs.dart';
+import 'cloud_service_widgets.dart';
+import 'cloud_service_config_actions.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/icons/app_icons.dart';
-import '../../cloud/auth_error_localizer.dart';
 
 class CloudServicePage extends ConsumerStatefulWidget {
   const CloudServicePage({super.key});
@@ -28,7 +25,8 @@ class CloudServicePage extends ConsumerStatefulWidget {
   ConsumerState<CloudServicePage> createState() => _CloudServicePageState();
 }
 
-class _CloudServicePageState extends ConsumerState<CloudServicePage> {
+class _CloudServicePageState extends ConsumerState<CloudServicePage>
+    with CloudServiceConfigActions {
   bool _testingConnection = false;
   final Map<String, bool> _connectionTestResults = {};
 
@@ -80,12 +78,20 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               showBack: true,
               // 头部在三种激活态（本地/备份/云端）下保持一致：配置信息行始终展示
               // （本地展示「本地存储」状态），不因激活类型不同而出现缺胳膊少腿的差异。
-              // 「测试连接」入口内联到配置信息行（见 _buildConnectionStatus 的「测试连接」文字链），
+              // 「测试连接」入口内联到配置信息行（见 buildCloudServiceStatusHeader 的「测试连接」文字链），
               // 不用头部 icon 按钮，避免与内联状态重复。
               content: Padding(
                 // 底部留白 4：收紧配置信息自身底部留白，让分组标题更贴近。
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
-                child: _buildConnectionStatus(active),
+                child: buildCloudServiceStatusHeader(
+                  context: context,
+                  config: active,
+                  testResult: _connectionTestResults[active.id],
+                  testTime: _connectionTestTimes[active.id],
+                  testMessage: _connectionTestMessages[active.id],
+                  testingConnection: _testingConnection,
+                  onTest: () => _testConnection(active),
+                ),
               ),
             ),
           ),
@@ -109,11 +115,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
                       // ===== 离线模式 =====
-                      _buildSectionHeader(
+                      buildCloudServiceSectionHeader(
                         context,
                         AppLocalizations.of(context).cloudTabOffline,
                       ),
-                      _buildServiceCard(
+                      buildCloudServiceCard(
                         context: context,
                         icon: AppIcons.localStorage,
                         iconColor: SpitoutTokens.brandLocal,
@@ -135,13 +141,13 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
 
                       const SizedBox(height: 20),
                       // ===== 备份同步 =====
-                      _buildSectionHeader(
+                      buildCloudServiceSectionHeader(
                         context,
                         AppLocalizations.of(context).cloudTabBackup,
                       ),
                       if (active.type != CloudBackendType.local &&
                           active.type != CloudBackendType.spitoutCloud) ...[
-                        _buildMultiDeviceWarning(context),
+                        buildCloudMultiDeviceWarning(context),
                         const SizedBox(height: 12),
                       ],
 
@@ -152,7 +158,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           child: Center(child: CircularProgressIndicator()),
                         ),
                         error: (e, _) => const SizedBox.shrink(),
-                        data: (webdavCfg) => _buildServiceCard(
+                        data: (webdavCfg) => buildCloudServiceCard(
                           context: context,
                           icon: AppIcons.folderShared,
                           iconColor: SpitoutTokens.brandWebdav,
@@ -169,9 +175,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           isDisabled: false,
                           onTap: () => webdavCfg?.valid == true
                               ? _switchService(CloudBackendType.webdav)
-                              : _configureService(CloudBackendType.webdav),
+                              : configureService(CloudBackendType.webdav),
                           onConfigure: webdavCfg?.valid == true
-                              ? () => _configureService(CloudBackendType.webdav)
+                              ? () => configureService(CloudBackendType.webdav)
                               : null,
                           onShowGuide: () => showWebdavHelpDialog(context),
                         ),
@@ -191,7 +197,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           child: Center(child: CircularProgressIndicator()),
                         ),
                         error: (e, _) => const SizedBox.shrink(),
-                        data: (s3Cfg) => _buildServiceCard(
+                        data: (s3Cfg) => buildCloudServiceCard(
                           context: context,
                           icon: AppIcons.storage,
                           iconColor: SpitoutTokens.brandS3,
@@ -208,9 +214,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           isDisabled: false,
                           onTap: () => s3Cfg?.valid == true
                               ? _switchService(CloudBackendType.s3)
-                              : _configureService(CloudBackendType.s3),
+                              : configureService(CloudBackendType.s3),
                           onConfigure: s3Cfg?.valid == true
-                              ? () => _configureService(CloudBackendType.s3)
+                              ? () => configureService(CloudBackendType.s3)
                               : null,
                           onShowGuide: () => showS3HelpDialog(context),
                         ),
@@ -229,7 +235,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           child: Center(child: CircularProgressIndicator()),
                         ),
                         error: (e, _) => const SizedBox.shrink(),
-                        data: (supabaseCfg) => _buildServiceCard(
+                        data: (supabaseCfg) => buildCloudServiceCard(
                           context: context,
                           // Supabase 本质是数据库后端,图标语义为 database。
                           icon: AppIcons.storage,
@@ -247,10 +253,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           isDisabled: false,
                           onTap: () => supabaseCfg?.valid == true
                               ? _switchService(CloudBackendType.supabase)
-                              : _configureService(CloudBackendType.supabase),
+                              : configureService(CloudBackendType.supabase),
                           onConfigure: supabaseCfg?.valid == true
                               ? () =>
-                                    _configureService(CloudBackendType.supabase)
+                                    configureService(CloudBackendType.supabase)
                               : null,
                           onShowGuide: () => showSupabaseHelpDialog(context),
                         ),
@@ -263,7 +269,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
 
                       const SizedBox(height: 20),
                       // ===== 云端协同 (Spitout Cloud) =====
-                      _buildSectionHeader(
+                      buildCloudServiceSectionHeader(
                         context,
                         AppLocalizations.of(context).cloudTabCloudSync,
                       ),
@@ -273,7 +279,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           child: Center(child: CircularProgressIndicator()),
                         ),
                         error: (e, _) => const SizedBox.shrink(),
-                        data: (bcCfg) => _buildServiceCard(
+                        data: (bcCfg) => buildCloudServiceCard(
                           context: context,
                           // Spitout Cloud 用 cloudy 云形图标,与账本卡片图标语义对齐。
                           icon: AppIcons.cloudQueue,
@@ -292,15 +298,14 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                           isDisabled: false,
                           onTap: () => bcCfg?.valid == true
                               ? _switchService(CloudBackendType.spitoutCloud)
-                              : _configureService(
-                                  CloudBackendType.spitoutCloud,
-                                ),
+                              : configureService(CloudBackendType.spitoutCloud),
                           onConfigure: bcCfg?.valid == true
-                              ? () => _configureService(
+                              ? () => configureService(
                                   CloudBackendType.spitoutCloud,
                                 )
                               : null,
-                          onShowGuide: () => showSpitoutCloudHelpDialog(context),
+                          onShowGuide: () =>
+                              showSpitoutCloudHelpDialog(context),
                         ),
                       ),
                       // SpitoutCloud 专属同步区块：仅当前选中 SpitoutCloud 时
@@ -363,495 +368,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
     }
   }
 
-  /// 头部「当前类型 / 脱敏 URL / 连接状态」信息块。
-  ///
-  /// 设计要点：
-  /// - 「测试连接」入口内联为文字链，紧贴状态徽标左侧，不用头部 icon 按钮（避免重复）。
-  /// - 测试结果（状态/时间/详情）全部内联展示，不弹窗。
-  /// - 测试结果跨页面持久化：重新进入页面时从 SharedPreferences 恢复，
-  ///   仅当从未点过「测试连接」（无历史记录）时才显示「未测试」。
-  /// - 本地后端没有可连接的远端服务，自测无意义，故不展示测试链与状态徽标。
-  Widget _buildConnectionStatus(CloudServiceConfig config) {
-    final l10n = AppLocalizations.of(context);
-    final testResult = _connectionTestResults[config.id];
-    final testTime = _connectionTestTimes[config.id];
-    final testMessage = _connectionTestMessages[config.id];
-    final Color statusColor;
-    final String statusText;
-
-    if (testResult == null) {
-      // 未测试
-      statusColor = SpitoutTokens.warning(context);
-      statusText = l10n.cloudStatusNotTested;
-    } else if (testResult) {
-      // 测试成功
-      statusColor = SpitoutTokens.success(context);
-      statusText = l10n.cloudStatusNormal;
-    } else {
-      // 测试失败
-      statusColor = SpitoutTokens.error(context);
-      statusText = l10n.cloudStatusFailed;
-    }
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            // 长类型名（如 Spitout Cloud）在窄空间下省略号截断，
-            // 防止与状态徽标挤压导致横向溢出（可见性测试暴露的既有缺陷）
-            Expanded(
-              child: Text(
-                '${l10n.commonCurrent}: ${_getTypeName(config.type)}',
-                overflow: TextOverflow.ellipsis,
-                style: Theme.of(
-                  context,
-                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
-              ),
-            ),
-            // 本地存储没有“连接”概念，不展示未测试/成功等状态徽标与测试链，仅显示当前类型
-            if (config.type != CloudBackendType.local) ...[
-              const SizedBox(width: 12),
-              // 「测试连接」文字链紧贴状态徽标左侧
-              _buildTestConnectionLink(config, l10n),
-              const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                decoration: BoxDecoration(
-                  color: statusColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: statusColor.withValues(alpha: 0.3)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: BoxDecoration(
-                        color: statusColor,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        color: statusColor,
-                        fontSize: 12,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          config.obfuscatedUrl(),
-          style: Theme.of(context).textTheme.bodySmall?.copyWith(
-            color: SpitoutTokens.textSecondary(context),
-          ),
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-        ),
-        // 上次测试时间：仅当存在历史测试记录（点过测试连接）时展示
-        if (testTime != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            l10n.cloudLastTestTime(_formatTestTime(testTime)),
-            style: Theme.of(context).textTheme.bodySmall,
-          ),
-        ],
-        // 测试结果详情文案（成功绿 / 失败红），纯内联展示，不弹窗
-        if (testMessage != null) ...[
-          const SizedBox(height: 4),
-          Text(
-            testMessage,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-              color: testResult == true
-                  ? SpitoutTokens.success(context)
-                  : SpitoutTokens.error(context),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
-  /// 「测试连接」文字链：紧贴状态徽标左侧。
-  ///
-  /// 仅在非本地后端且配置有效时可点击；测试进行中显示转圈，不弹窗。
-  /// 配置无效（如未填 URL）时置灰禁用，与头部按钮的业务禁用条件一致。
-  Widget _buildTestConnectionLink(
-    CloudServiceConfig config,
-    AppLocalizations l10n,
-  ) {
-    final bool canTest = config.valid;
-    return TextButton(
-      onPressed: (canTest && !_testingConnection)
-          ? () => _testConnection(config)
-          : null,
-      style: TextButton.styleFrom(
-        padding: EdgeInsets.zero,
-        minimumSize: Size.zero,
-        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-      ),
-      child: _testingConnection
-          ? const SizedBox(
-              width: 14,
-              height: 14,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : Text(
-              l10n.cloudTestConnection,
-              style: TextStyle(
-                decoration: TextDecoration.underline,
-                color: canTest
-                    ? Theme.of(context).colorScheme.primary
-                    : SpitoutTokens.textTertiary(context),
-              ),
-            ),
-    );
-  }
-
-  Widget _buildMultiDeviceWarning(BuildContext context) {
-    final l10n = AppLocalizations.of(context);
-
-    // 纯动作卡片（点开多设备详情），无选中态，按统一原则补 Material+InkWell 涟漪
-    return Material(
-      color: Colors.transparent,
-      borderRadius: BorderRadius.circular(12),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => showMultiDeviceDetailDialog(context),
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: SpitoutTokens.warning(context).withValues(alpha: 0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(
-              color: SpitoutTokens.warning(context).withValues(alpha: 0.3),
-            ),
-          ),
-          child: Row(
-            children: [
-              Icon(
-                AppIcons.warning,
-                color: SpitoutTokens.warning(context),
-                size: 24,
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      l10n.cloudMultiDeviceWarningTitle,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      l10n.cloudMultiDeviceWarningMessage,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: SpitoutTokens.textSecondary(context),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 8),
-              Icon(
-                AppIcons.info,
-                color: SpitoutTokens.warning(context),
-                size: 20,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  /// 列表分组主标题，仅作视觉分组，无交互。
-  /// 左侧色条用于清晰区分不同分组（离线模式 / 备份同步 / 云端协同）。
-  ///
-  /// [subtitle] 为可选参数：仅「备份同步」分组需要副标题提示（如操作引导），
-  /// 传入时在其下方多渲染一行灰色小字；其余分组不传，保持单行标题布局，互不影响。
-  Widget _buildSectionHeader(
-    BuildContext context,
-    String title, {
-    String? subtitle,
-  }) {
-    final Widget titleRow = Row(
-      children: [
-        // 左侧色条：用主题主色区分分组边界
-        Container(
-          width: 3,
-          height: 15,
-          decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(width: 8),
-        Text(
-          title,
-          style: Theme.of(context).textTheme.titleSmall?.copyWith(
-            fontWeight: FontWeight.w700,
-            color: SpitoutTokens.textPrimary(context),
-          ),
-        ),
-      ],
-    );
-
-    // 未传入副标题时，复用单行标题的原有布局，确保最新代码逻辑完全不受影响
-    if (subtitle == null) {
-      return Padding(
-        padding: const EdgeInsets.only(top: 4, bottom: 10),
-        child: titleRow,
-      );
-    }
-
-    // 传入副标题时，在标题下方补充一行说明性文案，使用次级文字颜色降低视觉权重
-    return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 10),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          titleRow,
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Text(
-              subtitle,
-              style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                color: SpitoutTokens.textSecondary(context),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildServiceCard({
-    required BuildContext context,
-    required IconData icon,
-    required Color iconColor,
-    required String title,
-    required String subtitle,
-    required bool isSelected,
-    bool isConfigured = true,
-    bool isDisabled = false,
-    required VoidCallback onTap,
-    VoidCallback? onConfigure,
-    VoidCallback? onShowGuide,
-  }) {
-    return Opacity(
-      opacity: isDisabled ? 0.5 : 1.0,
-      child: Container(
-        decoration: BoxDecoration(
-          // 选中/未选中均保留 2px 边框占位（未选中为透明），确保固定高度下所有卡片高度完全一致，
-          // 不会因是否绘制绿色边框而产生 2px 高度差。
-          border: Border.all(
-            color: isSelected
-                ? SpitoutTokens.success(context)
-                : Colors.transparent,
-            width: 2,
-          ),
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: SectionCard(
-          margin: EdgeInsets.zero,
-          // 将 SectionCard 默认 12 内边距收窄为 5：按钮/勾选浮层 right:0 仅距卡片外边 5px（保留轻量边缘留白）。
-          // 图标与文字的间距由内部 InkWell 的 Padding(horizontal:12, vertical:10) 进一步保证。
-          padding: const EdgeInsets.all(5),
-          // Stack 让「配置 / 教程」按钮行以绝对定位浮在卡片右下角，不参与布局流，
-          // 因此卡片内容区高度可严格等于本地卡片（无按钮行）的自然高度，保证整页卡片等高一致。
-          child: Stack(
-            children: [
-              // 基础层：整卡可点击选中。高度写死为本地卡片内容自然高度（约 71，
-              // 即「上下内边距 10+10 + 图标/文案 51」），不随按钮行的有无而伸缩，
-              // 从而所有卡片（含无按钮的本地存储卡）高度完全相同、且贴合本地卡片视觉。
-              InkWell(
-                onTap: isDisabled ? null : onTap,
-                borderRadius: BorderRadius.circular(12),
-                child: SizedBox(
-                  height: 71,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        // 图标
-                        Container(
-                          width: 36,
-                          height: 36,
-                          decoration: BoxDecoration(
-                            color: iconColor.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                          child: Icon(icon, color: iconColor, size: 18),
-                        ),
-                        const SizedBox(width: 10),
-
-                        // 文字信息。副标题为单行省略（兼顾固定卡片高度与长 URL 不横向溢出），
-                        // 按钮行已下移到卡片底部右下角，与副标题在视觉上错开，无需额外右侧避让。
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: Text(
-                                      title,
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: Theme.of(context)
-                                          .textTheme
-                                          .titleMedium
-                                          ?.copyWith(
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                    ),
-                                  ),
-                                  if (isDisabled)
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 2,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: SpitoutTokens.textTertiary(
-                                          context,
-                                        ).withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '不可用',
-                                        style: TextStyle(
-                                          fontSize: 11,
-                                          color: SpitoutTokens.textTertiary(
-                                            context,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                ],
-                              ),
-                              const SizedBox(height: 7),
-                              Text(
-                                subtitle,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: Theme.of(context).textTheme.bodySmall
-                                    ?.copyWith(
-                                      color: SpitoutTokens.textSecondary(
-                                        context,
-                                      ),
-                                    ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ),
-
-              // 选中标记浮层：固定在卡片右上角，与右下角按钮行对称、互不重叠。
-              // 仅当选中且未禁用时显示，纯展示、不参与布局高度。
-              if (isSelected && !isDisabled)
-                Positioned(
-                  top: 0,
-                  right: 6,
-                  child: Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: SpitoutTokens.success(context),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(
-                      AppIcons.check,
-                      color: SpitoutTokens.textOnPrimary(context),
-                      size: 18,
-                    ),
-                  ),
-                ),
-
-              // 覆盖层：配置 / 教程按钮行浮于右下角，拥有独立点击区域，
-              // 不会触发卡片选中，也不参与布局高度（浮在卡片之上）。
-              if (!isDisabled &&
-                  ((isConfigured && onConfigure != null) ||
-                      onShowGuide != null))
-                Positioned(
-                  right: 0,
-                  bottom: 0,
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (onShowGuide != null)
-                        TextButton.icon(
-                          onPressed: onShowGuide,
-                          icon: const Icon(AppIcons.help, size: 16),
-                          label: Text(
-                            AppLocalizations.of(context).commonTutorial,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      if (isConfigured && onConfigure != null) ...[
-                        if (onShowGuide != null) const SizedBox(width: 8),
-                        TextButton.icon(
-                          onPressed: onConfigure,
-                          icon: const Icon(AppIcons.settings, size: 16),
-                          label: Text(
-                            AppLocalizations.of(context).commonConfigure,
-                            style: const TextStyle(fontSize: 12),
-                          ),
-                          style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 8,
-                            ),
-                            minimumSize: Size.zero,
-                            tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
   /// 切换到指定云端后端（带二次确认）。
-  /// 仅负责「是否切换」的确认交互,实际激活动作统一委托给 [_activateService],
+  /// 仅负责「是否切换」的确认交互,实际激活动作统一委托给 [activateService],
   /// 保证「点击卡片切换」与「首次保存后引导切换」行为完全一致。
   Future<void> _switchService(CloudBackendType type) async {
     try {
@@ -869,7 +387,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       );
       if (confirmed != true || !mounted) return;
 
-      await _activateService(type);
+      await activateService(type);
     } catch (e, st) {
       logger.error('CloudServicePage', '切换云服务失败', e, st);
       if (!mounted) return;
@@ -884,7 +402,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// 激活指定云端后端:选中并切换为当前同步配置。
   /// 不含二次确认弹窗,供 [_switchService]（切换确认后）与
   /// 首次创建配置保存后的「保存并切换」引导复用。
-  Future<void> _activateService(CloudBackendType type) async {
+  @override
+  Future<void> activateService(CloudBackendType type) async {
     // 捕获 app 级 container：页面销毁后 container 仍随 app 生命周期存活,purge
     // 不受 mounted 守卫限制,避免"退出页面即跳过清理"的僵尸账本 bug。须在首个
     // await 之前捕获,此时 context 仍安全可用(点击回调同步进入,页面必然存活)。
@@ -955,7 +474,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       if (mounted) {
         showToast(
           context,
-          AppLocalizations.of(context).cloudSwitchedTo(_getTypeName(type)),
+          AppLocalizations.of(
+            context,
+          ).cloudSwitchedTo(cloudBackendTypeName(context, type)),
         );
       }
     } catch (e, st) {
@@ -973,7 +494,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// 配置保存成功后,统一询问用户是否立即切换为当前同步配置。
   /// 新建与编辑场景都会弹出（标题即「配置已保存」,承接保存反馈,故不额外 toast）。
   /// 返回 true 表示「保存并切换」;false（含点击遮罩关闭）表示「仅保存配置」。
-  Future<bool> _confirmSaveSwitch() async {
+  @override
+  Future<bool> confirmSaveSwitch() async {
     if (!mounted) return false;
     final l10n = AppLocalizations.of(context);
     final result = await AppDialog.confirm<bool>(
@@ -986,366 +508,14 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
     return result == true;
   }
 
-  Future<void> _configureService(CloudBackendType type) async {
-    // 根据类型显示配置对话框
-    if (type == CloudBackendType.spitoutCloud) {
-      await _showSpitoutCloudConfigDialog();
-    } else if (type == CloudBackendType.supabase) {
-      await _showSupabaseConfigDialog();
-    } else if (type == CloudBackendType.webdav) {
-      await _showWebdavConfigDialog();
-    } else if (type == CloudBackendType.s3) {
-      await _showS3ConfigDialog();
-    }
-  }
-
-  Future<void> _showSpitoutCloudConfigDialog() async {
-    final existing = await ref.read(spitoutCloudConfigProvider.future);
-
-    if (!mounted) return;
-
-    // 在异步调用前提取 l10n，避免 use_build_context_synchronously 警告
-    final l10n = AppLocalizations.of(context);
-
-    final result = await showAppSheetTop<dynamic>(
-      context: context,
-      child: SpitoutCloudConfigDialog(
-        initialUrl: existing?.spitoutCloudBaseUrl ?? '',
-        initialApiPrefix: existing?.spitoutCloudApiPrefix ?? '/api/v1',
-        initialEmail: existing?.spitoutCloudEmail ?? '',
-        // 密码不持久化(见 CloudServiceStore):即使旧版本残留过密码也不回填,
-        // 避免把已失效的明文凭据再次展示/复用。
-        initialPassword: '',
-        canDelete: existing != null,
-      ),
-    );
-
-    // 删除哨兵:用户在对话框标题栏点了清除图标
-    if (result == '__DELETE__') {
-      await _deleteConfig(CloudBackendType.spitoutCloud);
-      return;
-    }
-
-    if (result != null) {
-      final url = result['url'] as String;
-      final apiPrefix = result['apiPrefix'] as String;
-      final email = result['email'] as String;
-      final password = result['password'] as String;
-
-      // 必填校验(url)已下放到弹窗内联提示(不切换弹窗、保留已填内容),此处直接组装配置。
-      final cfg = CloudServiceConfig(
-        type: CloudBackendType.spitoutCloud,
-        name: l10n.cloudSpitoutCloudTitle,
-        spitoutCloudBaseUrl: url,
-        spitoutCloudApiPrefix: apiPrefix.isEmpty ? '/api/v1' : apiPrefix,
-        spitoutCloudEmail: email.isNotEmpty ? email : null,
-      );
-
-      try {
-        // 仅持久化配置：不改动 _kActiveType，也不在此级联刷新 SyncEngine。
-        // 这样「暂不切换」时活跃服务完全不动，符合「保存 ≠ 生效」原则。
-        await ref.read(cloudServiceStoreProvider).saveOnly(cfg);
-        // 仅刷新本类型配置列表，便于「暂不切换」时也能看到刚保存的配置
-        ref.invalidate(spitoutCloudConfigProvider);
-
-        // 弹窗询问用户是否立即切换激活；只有用户确认后，所有「生效」副作用
-        // （登录、激活、同步、provider 重建）才会在下方统一执行。
-        final wantSwitch = await _confirmSaveSwitch();
-        if (wantSwitch && mounted) {
-          // 登录在用户确认激活后统一执行，不手动 invalidate 任何云端 provider，
-          // 全部交给 _activateService 经级联统一重建。
-          if (email.isNotEmpty && password.isNotEmpty) {
-            try {
-              // 走可覆盖的工厂 provider：运行时为真实 createCloudServices；
-              // Widget 测试经 overrideWith 注入桩，无需触网即可验证登录分支。
-              final services = await ref.read(cloudServicesFactoryProvider)(
-                cfg,
-              );
-              if (services.auth != null) {
-                await services.auth!.signInWithEmail(
-                  email: email,
-                  password: password,
-                );
-                // 标记自动同步开启并刷新开关状态；不 invalidate 任何云端 provider，
-                // 交给 _activateService 经级联统一重建
-                final prefs = await SharedPreferences.getInstance();
-                await prefs.setBool('auto_sync', true);
-                ref.invalidate(autoSyncValueProvider);
-
-                if (mounted) {
-                  showToast(
-                    context,
-                    AppLocalizations.of(context).cloudSpitoutCloudLoginSuccess,
-                  );
-                }
-              }
-              // 能走到这里 = 登录成功（有凭证且成功登录）或本配置无 auth 可登录
-              // （services.auth == null）。两种情况都应继续到下方激活服务。
-              // 若登录失败，会走下方 catch 的 return，不会到达此处，从而避免
-              // 「登录失败却仍激活服务」的半成品脏状态。
-            } on CloudAuthException catch (e) {
-              // 账号鉴权失败（邮箱/密码错、账号被锁等）：纯账号问题，用友好文案
-              // 弹窗告知；不激活服务、也不弹网络 toast（本就非网络问题）。
-              if (mounted) {
-                await AppDialog.error(
-                  context,
-                  title: AppLocalizations.of(
-                    context,
-                  ).cloudSpitoutCloudLoginFailed,
-                  message: friendlyAuthError(e, context),
-                );
-              }
-              return;
-            } catch (e) {
-              // 其余异常（网络超时、服务端 5xx 等）：同样不激活服务，用友好文案提示。
-              if (mounted) {
-                await AppDialog.error(
-                  context,
-                  title: AppLocalizations.of(
-                    context,
-                  ).cloudSpitoutCloudLoginFailed,
-                  message: friendlyAuthError(e, context),
-                );
-              }
-              return;
-            }
-          }
-
-          // —— 激活：修改 _kActiveType + addPostFrameCallback 级联 invalidate 所有相关
-          // provider；Bootstrap 的 auto-sync 在此之后自动接管首次同步
-          // （fullPush 会注册新账本并上传全部实体，能力严格强于原 uploadCurrentLedger）。
-          await _activateService(CloudBackendType.spitoutCloud);
-        }
-      } catch (e, st) {
-        logger.error('CloudServicePage', '保存 Spitout Cloud 配置失败', e, st);
-        if (mounted) {
-          await AppDialog.error(
-            context,
-            title: AppLocalizations.of(context).cloudSaveFailed,
-            message: AppLocalizations.of(context).commonOperationFailed,
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showSupabaseConfigDialog() async {
-    final existing = await ref.read(supabaseConfigProvider.future);
-
-    if (!mounted) return;
-
-    // 在异步调用前提取 l10n，避免 use_build_context_synchronously 警告
-    final l10n = AppLocalizations.of(context);
-
-    final result = await showAppSheetTop<dynamic>(
-      context: context,
-      child: SupabaseConfigDialog(
-        initialUrl: existing?.supabaseUrl ?? '',
-        initialKey: existing?.supabaseAnonKey ?? '',
-        initialBucket: existing?.supabaseBucket ?? '',
-        canDelete: existing != null,
-      ),
-    );
-
-    // 删除哨兵:用户在对话框标题栏点了清除图标
-    if (result == '__DELETE__') {
-      await _deleteConfig(CloudBackendType.supabase);
-      return;
-    }
-
-    if (result != null) {
-      final url = result['url'] as String;
-      final key = result['key'] as String;
-      final bucket = result['bucket'] as String;
-
-      // 必填校验(url/key)已下放到弹窗内联提示,此处直接组装配置。
-      final cfg = CloudServiceConfig(
-        type: CloudBackendType.supabase,
-        name: l10n.cloudCustomSupabaseTitle,
-        supabaseUrl: url,
-        supabaseAnonKey: key,
-        supabaseBucket: bucket.isEmpty ? 'spitout-backups' : bucket, // 业务层提供默认值
-      );
-
-      try {
-        await ref.read(cloudServiceStoreProvider).saveOnly(cfg);
-        ref.invalidate(supabaseConfigProvider);
-
-        // 保存成功后统一引导用户是否立即切换（新建与编辑均弹出）
-        // 注：不 invalidate activeCloudConfigProvider —— 「保存 ≠ 生效」，
-        // 活跃服务是否切换由下方 _activateService 在用户确认后统一处理。
-        {
-          final wantSwitch = await _confirmSaveSwitch();
-          if (wantSwitch && mounted) {
-            await _activateService(CloudBackendType.supabase);
-          }
-        }
-      } catch (e, st) {
-        logger.error('CloudServicePage', '保存 Supabase 配置失败', e, st);
-        if (mounted) {
-          await AppDialog.error(
-            context,
-            title: AppLocalizations.of(context).cloudSaveFailed,
-            message: AppLocalizations.of(context).commonOperationFailed,
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showWebdavConfigDialog() async {
-    final existing = await ref.read(webdavConfigProvider.future);
-
-    if (!mounted) return;
-
-    // 在异步调用前提取 l10n，避免 use_build_context_synchronously 警告
-    final l10n = AppLocalizations.of(context);
-
-    final result = await showAppSheetTop<dynamic>(
-      context: context,
-      child: WebdavConfigDialog(
-        initialUrl: existing?.webdavUrl ?? '',
-        initialUsername: existing?.webdavUsername ?? '',
-        initialPassword: existing?.webdavPassword ?? '',
-        initialPath: existing?.webdavRemotePath ?? '/',
-        canDelete: existing != null,
-      ),
-    );
-
-    // 删除哨兵:用户在对话框标题栏点了清除图标
-    if (result == '__DELETE__') {
-      await _deleteConfig(CloudBackendType.webdav);
-      return;
-    }
-
-    if (result != null) {
-      final url = result['url'] as String;
-      final username = result['username'] as String;
-      final password = result['password'] as String;
-      final path = result['path'] as String;
-
-      // 必填校验(url/username/password)已下放到弹窗内联提示,此处直接组装配置。
-      final cfg = CloudServiceConfig(
-        type: CloudBackendType.webdav,
-        name: l10n.cloudCustomWebdavTitle,
-        webdavUrl: url,
-        webdavUsername: username,
-        webdavPassword: password,
-        webdavRemotePath: path.isEmpty ? '/' : path,
-      );
-
-      try {
-        await ref.read(cloudServiceStoreProvider).saveOnly(cfg);
-        ref.invalidate(webdavConfigProvider);
-
-        // 保存成功后统一引导用户是否立即切换（新建与编辑均弹出）
-        // 注：不 invalidate activeCloudConfigProvider —— 「保存 ≠ 生效」，
-        // 活跃服务是否切换由下方 _activateService 在用户确认后统一处理。
-        {
-          final wantSwitch = await _confirmSaveSwitch();
-          if (wantSwitch && mounted) {
-            await _activateService(CloudBackendType.webdav);
-          }
-        }
-      } catch (e, st) {
-        logger.error('CloudServicePage', '保存 WebDAV 配置失败', e, st);
-        if (mounted) {
-          await AppDialog.error(
-            context,
-            title: AppLocalizations.of(context).cloudSaveFailed,
-            message: AppLocalizations.of(context).commonOperationFailed,
-          );
-        }
-      }
-    }
-  }
-
-  Future<void> _showS3ConfigDialog() async {
-    final existing = await ref.read(s3ConfigProvider.future);
-
-    if (!mounted) return;
-
-    // 在异步调用前提取 l10n，避免 use_build_context_synchronously 警告
-    final l10n = AppLocalizations.of(context);
-
-    final result = await showAppSheetTop<dynamic>(
-      context: context,
-      child: S3ConfigDialog(
-        initialEndpoint: existing?.s3Endpoint ?? '',
-        initialRegion: existing?.s3Region ?? 'us-east-1',
-        initialAccessKey: existing?.s3AccessKey ?? '',
-        initialSecretKey: existing?.s3SecretKey ?? '',
-        initialBucket: existing?.s3Bucket ?? '',
-        initialUseSSL: existing?.s3UseSSL ?? true,
-        initialPort: existing?.s3Port,
-        canDelete: existing != null,
-      ),
-    );
-
-    // 删除哨兵:用户在对话框标题栏点了清除图标
-    if (result == '__DELETE__') {
-      await _deleteConfig(CloudBackendType.s3);
-      return;
-    }
-
-    if (result != null) {
-      var endpoint = result['endpoint'] as String;
-      final region = result['region'] as String;
-      final accessKey = result['accessKey'] as String;
-      final secretKey = result['secretKey'] as String;
-      final bucket = result['bucket'] as String;
-      final useSSL = result['useSSL'] as bool;
-      final port = result['port'] as int?;
-
-      // 必填校验(endpoint/accessKey/secretKey/bucket)已下放到弹窗内联提示,
-      // 此处直接去除 endpoint 协议前缀并组装配置。
-      endpoint = endpoint.replaceFirst(RegExp(r'^https?://'), '');
-
-      final cfg = CloudServiceConfig(
-        type: CloudBackendType.s3,
-        name: l10n.cloudCustomS3Title,
-        s3Endpoint: endpoint,
-        s3Region: region.isEmpty ? 'us-east-1' : region,
-        s3AccessKey: accessKey,
-        s3SecretKey: secretKey,
-        s3Bucket: bucket,
-        s3UseSSL: useSSL,
-        s3Port: port,
-      );
-
-      try {
-        await ref.read(cloudServiceStoreProvider).saveOnly(cfg);
-        ref.invalidate(s3ConfigProvider);
-
-        // 保存成功后统一引导用户是否立即切换（新建与编辑均弹出）
-        // 注：不 invalidate activeCloudConfigProvider —— 「保存 ≠ 生效」，
-        // 活跃服务是否切换由下方 _activateService 在用户确认后统一处理。
-        {
-          final wantSwitch = await _confirmSaveSwitch();
-          if (wantSwitch && mounted) {
-            await _activateService(CloudBackendType.s3);
-          }
-        }
-      } catch (e, st) {
-        logger.error('CloudServicePage', '保存 S3 配置失败', e, st);
-        if (mounted) {
-          await AppDialog.error(
-            context,
-            title: AppLocalizations.of(context).cloudSaveFailed,
-            message: AppLocalizations.of(context).commonOperationFailed,
-          );
-        }
-      }
-    }
-  }
-
   /// 清除指定云端后端的本地配置,回到未配置状态。
   /// - 不删除云端已备份数据;
   /// - SpitoutCloud 先登出再清配置,避免残留 token 在下次启动自动恢复会话,
   ///   且登出必须发生在 clearConfig 之前 —— 否则 authServiceProvider 可能已
   ///   随配置缺失重建为 NoopAuthService,登出空跑;
   /// - 无需手动 activate(local):loadActive() 在配置缺失时自动回退本地存储。
-  Future<void> _deleteConfig(CloudBackendType type) async {
+  @override
+  Future<void> deleteConfig(CloudBackendType type) async {
     final l10n = AppLocalizations.of(context);
     // 捕获 app 级 container：页面销毁后仍可完成清理,绕开 mounted 守卫(兜底栅栏,
     // 宽条件防御"删 active 的非 local 云配置后 active 回退本地"的僵尸残留)。
@@ -1448,21 +618,6 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
     }
   }
 
-  String _getTypeName(CloudBackendType type) {
-    switch (type) {
-      case CloudBackendType.local:
-        return AppLocalizations.of(context).cloudLocalStorageTitle;
-      case CloudBackendType.supabase:
-        return 'Supabase';
-      case CloudBackendType.webdav:
-        return 'WebDAV';
-      case CloudBackendType.s3:
-        return 'S3';
-      case CloudBackendType.spitoutCloud:
-        return 'Spitout Cloud';
-    }
-  }
-
   // 测试连接
   Future<void> _testConnection(CloudServiceConfig config) async {
     if (!config.valid || config.type == CloudBackendType.local) return;
@@ -1521,7 +676,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// 写入「测试连接」结果到内存并持久化到 SharedPreferences。
   ///
   /// 统一处理三件套：结果(bool) / 时间(DateTime) / 详情文案(String)，
-  /// 供 _buildConnectionStatus 内联渲染。持久化失败仅记日志，不影响内存展示。
+  /// 供 buildCloudServiceStatusHeader 内联渲染。持久化失败仅记日志，不影响内存展示。
   Future<void> _setTestResult(String id, bool success, String message) async {
     final now = DateTime.now();
     _connectionTestResults[id] = success;
@@ -1559,11 +714,6 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   }
 
   /// 将时间格式化为固定的 YYYY-MM-DD HH:MM:SS（手动格式化，避免 locale 改变日期顺序）。
-  String _formatTestTime(DateTime dt) {
-    // 使用函数声明而非变量赋值来绑定函数，避免 prefer_function_declarations_over_variables 警告
-    String p(int n) => n.toString().padLeft(2, '0');
-    return '${dt.year}-${p(dt.month)}-${p(dt.day)} ${p(dt.hour)}:${p(dt.minute)}:${p(dt.second)}';
-  }
 }
 
 // Supabase配置对话框(独立Widget,避免controller生命周期问题)
