@@ -381,9 +381,9 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// 当前 schema 结构对应的数据库版本号 = 2。
   ///
   /// drift 不允许以 0 为起始版本（已知 bug，会破坏迁移），故基线从 1 起步；
-  /// 任何 schema 演进都从这里递增版本号。
+  /// 任何 schema 版本升级都从这里递增版本号。
   ///
-  /// 演进纪律：任何 schema 演进都必须 ① bump 本版本号 ② 在 onUpgrade 追加
+  /// 版本升级纪律：任何 schema 升级都必须 ① bump 本版本号 ② 在 onUpgrade 追加
   /// if (from < V) 迁移块（走 migration_helpers.dart 的幂等 helper）③ 重跑
   /// schema dump 快照 + 补升级端到端测试。绝不允许 onUpgrade 回到空实现
   /// （否则老用户升级即崩溃）。
@@ -405,7 +405,7 @@ class SpitoutDatabase extends _$SpitoutDatabase {
           logger.info('DBMigration', 'onUpgrade: from=$from to=$to');
 
           // ── 迁移范式（必读）────────────────────────────────────────────
-          // 每次 schema 演进，bump schemaVersion 到新值 V（> 当前），
+          // 每次 schema 版本升级，bump schemaVersion 到新值 V（> 当前），
           // 并在此追加一个块（块可累积，延续下方范式）：
           //
           //   if (from < V) {

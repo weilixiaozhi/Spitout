@@ -6,7 +6,7 @@
 // ────────────────────────────────────────────────────────────────
 // 统一的providers导出文件，方便统一导入所有providers
 
-// 主题相关（已去自引用，可安全 export）
+// 主题相关（叶子模块，可安全 export）
 export 'package:spitout/providers/ui/theme_providers.dart';
 
 // 数据库相关  
@@ -45,7 +45,7 @@ export 'package:spitout/providers/ui/language_provider.dart';
 // 安全相关
 export 'package:spitout/providers/security/security_providers.dart';
 
-// 日历相关（已去自引用，可安全 export）
+// 日历相关（叶子模块，可安全 export）
 export 'package:spitout/providers/statistics/calendar_providers.dart';
 
 // 记录编辑历史

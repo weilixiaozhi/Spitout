@@ -8,7 +8,7 @@ import '../../cloud/sync/change_tracker.dart';
 import '../../cloud/sync/snapshot_dirty_tracker.dart';
 import '../../core/logging/logger_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
-// 本体 —— 后者反向依赖本文件，直接互 import 会重新成环。
+// 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 // 叶子模块：仅账本列表刷新 tick，供自愈兜底监听使用，不反向依赖本文件（不成环）。
 import 'package:spitout/providers/core/refresh_ticks.dart';

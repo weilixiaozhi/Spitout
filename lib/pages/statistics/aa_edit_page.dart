@@ -106,7 +106,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   ///
   /// 设计意图:支出人必是参与人,未手选时落库层以操作者(markTxAuthor)
   /// 回填支出人。若页内不解析操作者 id,参与人行的 isPayer 判断(_paidById)
-  /// 与防反选锁定(此前兜底参与人首个)会口径不一致。
+  /// 与防反选锁定(锁定操作者「我」)会口径不一致。
   /// 此处提前把操作者 id 填充到 [_paidById],使「我」所在行置灰锁定、
   /// 防反选也锁定「我」;[_paidByManuallySet] 保持 false,确认回传仍 null
   /// 由落库层回填,不改变落库口径。

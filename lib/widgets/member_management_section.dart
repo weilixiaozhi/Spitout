@@ -442,10 +442,9 @@ class _MemberManagementSectionState
 
   /// 加载态:展示骨架行(头像 + 文本占位条)+ AA 开关区域占位。
   ///
-  /// 此前实现仅转调 [_buildContent] 渲染空成员列表,视觉上与"无成员"无法区分,
-  /// 用户感知不到正在加载。改为显式骨架(灰色占位条)让加载态可见。
-  /// 404 error 路径(云端账本尚未就绪)也复用此骨架,顶部加一行提示文案,
-  /// 让用户知道是"等云端创建中"而非"加载卡死"。
+  /// 显式渲染骨架而非空成员列表,让加载态可见;404 error 路径(云端账本
+  /// 尚未就绪)也复用此骨架,顶部加一行提示文案,让用户知道是"等云端创建中"
+  /// 而非"加载卡死"。
   Widget _buildLoadingMemberCard(BuildContext context, AppLocalizations l10n) {
     final theme = Theme.of(context);
     final placeholderColor = theme.colorScheme.surfaceContainerHighest;

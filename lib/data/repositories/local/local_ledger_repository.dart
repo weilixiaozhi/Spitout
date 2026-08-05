@@ -325,9 +325,9 @@ class LocalLedgerRepository implements LedgerRepository {
     //   - cloud 账本(syncId 非空)→ ChangeRecorder 写 local_changes,由
     //     SyncCoordinator 增量推送;
     //   - 快照型后端账本(syncId 为 null)→ SnapshotDirtyMarker 标脏整本快照
-    //     待重传。此前 updateLedger 不登记该信号,云端快照里的账本元数据
-    //     永远是旧值,任何一次快照拉取都会把本地刚改的值覆盖回去(如 AA
-    //     开关"建完自动关闭"),故必须与 createLedger 一样落信号;
+    //     待重传:updateLedger 必须与 createLedger 一样登记信号,否则云端
+    //     快照里的账本元数据停留在旧值,任何一次快照拉取都会把本地刚改的
+    //     值覆盖回去(如 AA 开关"建完自动关闭");
     //   - 两者均未注入(无后端)→ no-op,仅本地生效。
     await db.transaction(() async {
       final row = await (db.select(db.ledgers)
