@@ -3641,6 +3641,48 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsExcludedEmpty => '暂无不计入分摊的交易';
 
   @override
+  String get aaStatisticsViewDetails => '查看详情';
+
+  @override
+  String get aaStatisticsBillSummary => '账单汇总';
+
+  @override
+  String get aaStatisticsTotalCount => '总笔数';
+
+  @override
+  String get aaStatisticsTotal => '总金额';
+
+  @override
+  String get aaStatisticsAverage => '平均金额';
+
+  @override
+  String get aaStatisticsNetReceiveAmount => '应收金额';
+
+  @override
+  String get aaStatisticsNetPayAmount => '应付金额';
+
+  @override
+  String get aaStatisticsSettled => '已结清';
+
+  @override
+  String get aaStatisticsModePerPerson => 'AA分摊';
+
+  @override
+  String get aaStatisticsModeCustom => '指定金额';
+
+  @override
+  String get aaStatisticsSplitDetail => '分摊明细';
+
+  @override
+  String get aaStatisticsTxTotalPrefix => '共';
+
+  @override
+  String get aaStatisticsPayerPrefix => '付款';
+
+  @override
+  String get aaStatisticsMemberTxEmpty => '暂无该成员的账单';
+
+  @override
   String get aaEditTitle => '编辑分摊';
 
   @override
@@ -7368,6 +7410,48 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get aaStatisticsExcludedEmpty => '暫無不計入詳單的交易';
+
+  @override
+  String get aaStatisticsViewDetails => '查看詳情';
+
+  @override
+  String get aaStatisticsBillSummary => '帳單匯總';
+
+  @override
+  String get aaStatisticsTotalCount => '總筆數';
+
+  @override
+  String get aaStatisticsTotal => '總金額';
+
+  @override
+  String get aaStatisticsAverage => '平均金額';
+
+  @override
+  String get aaStatisticsNetReceiveAmount => '應收金額';
+
+  @override
+  String get aaStatisticsNetPayAmount => '應付金額';
+
+  @override
+  String get aaStatisticsSettled => '已結清';
+
+  @override
+  String get aaStatisticsModePerPerson => 'AA分攤';
+
+  @override
+  String get aaStatisticsModeCustom => '指定金額';
+
+  @override
+  String get aaStatisticsSplitDetail => '分攤明細';
+
+  @override
+  String get aaStatisticsTxTotalPrefix => '共';
+
+  @override
+  String get aaStatisticsPayerPrefix => '付款';
+
+  @override
+  String get aaStatisticsMemberTxEmpty => '暫無該成員的帳單';
 
   @override
   String get aaEditTitle => '編輯分攤';

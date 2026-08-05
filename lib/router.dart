@@ -3,9 +3,11 @@ import 'package:flutter/material.dart';
 import '../widgets/app_route.dart';
 import 'pages/category/category_manage_page.dart';
 import 'pages/statistics/aa_edit_page.dart';
+import 'pages/statistics/aa_member_detail_page.dart';
 import 'pages/statistics/aa_statistics_page.dart';
 import 'routes.dart';
 import 'services/statistics/aa_edit_models.dart';
+import 'services/statistics/aa_member_detail_models.dart';
 
 /// 全局唯一路由解析层。
 ///
@@ -24,8 +26,7 @@ Route<dynamic>? appRoute(RouteSettings settings) {
       // 就是哪个账本";缺失/类型不符(如新建态)时传 null,统计页按空数据渲染。
       final args = settings.arguments;
       return appPageRoute<void>(
-        builder: (_) =>
-            AaStatisticsPage(ledgerId: args is int ? args : null),
+        builder: (_) => AaStatisticsPage(ledgerId: args is int ? args : null),
         settings: settings,
       );
     case Routes.aaEdit:
@@ -37,6 +38,15 @@ Route<dynamic>? appRoute(RouteSettings settings) {
       if (args is! AaEditPageArgs) return null;
       return aaSlidePageRoute<AaEditResult?>(
         builder: (_) => AaEditPage(args: args),
+        settings: settings,
+      );
+    case Routes.aaMemberDetail:
+      // 参数由分摊统计页经 arguments 传入；缺失/类型不符视为非法跳转，
+      // 返回 null 走调用方回退，避免白屏。
+      final args = settings.arguments;
+      if (args is! AaMemberDetailArgs) return null;
+      return appPageRoute<void>(
+        builder: (_) => AaMemberDetailPage(args: args),
         settings: settings,
       );
     default:

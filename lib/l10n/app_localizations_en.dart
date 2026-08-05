@@ -3789,6 +3789,48 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsExcludedEmpty => 'No transactions excluded from split';
 
   @override
+  String get aaStatisticsViewDetails => 'View details';
+
+  @override
+  String get aaStatisticsBillSummary => 'Bill summary';
+
+  @override
+  String get aaStatisticsTotalCount => 'Total bills';
+
+  @override
+  String get aaStatisticsTotal => 'Total amount';
+
+  @override
+  String get aaStatisticsAverage => 'Average amount';
+
+  @override
+  String get aaStatisticsNetReceiveAmount => 'To receive';
+
+  @override
+  String get aaStatisticsNetPayAmount => 'To pay';
+
+  @override
+  String get aaStatisticsSettled => 'Settled';
+
+  @override
+  String get aaStatisticsModePerPerson => 'AA split';
+
+  @override
+  String get aaStatisticsModeCustom => 'Custom amount';
+
+  @override
+  String get aaStatisticsSplitDetail => 'Split details';
+
+  @override
+  String get aaStatisticsTxTotalPrefix => 'Total';
+
+  @override
+  String get aaStatisticsPayerPrefix => 'Paid by';
+
+  @override
+  String get aaStatisticsMemberTxEmpty => 'No bills for this member';
+
+  @override
   String get aaEditTitle => 'Edit split';
 
   @override

@@ -78,6 +78,7 @@ export 'transaction_aa_edit_utils.dart';
 export 'note_input_row.dart';
 
 // ===== AA 分摊 =====
+export 'aa_participant_avatar.dart';
 export 'aa_payer_picker_sheet.dart';
 export 'virtual_user_manage_sheet.dart';
 

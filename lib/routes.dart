@@ -17,4 +17,8 @@ class Routes {
   /// AA 分摊编辑页(纯选择器,参数经 RouteSettings.arguments 传
   /// [AaEditPageArgs],返回 [AaEditResult?],null = 取消)
   static const String aaEdit = '/statistics/aa/edit';
+
+  /// AA 分摊统计-成员账单详情页(按支出人维度汇总,
+  /// 参数经 RouteSettings.arguments 传 [AaMemberDetailArgs])
+  static const String aaMemberDetail = '/statistics/aa/member-detail';
 }

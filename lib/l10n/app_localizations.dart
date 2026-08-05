@@ -6808,6 +6808,90 @@ abstract class AppLocalizations {
   /// **'No transactions excluded from split'**
   String get aaStatisticsExcludedEmpty;
 
+  /// No description provided for @aaStatisticsViewDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'View details'**
+  String get aaStatisticsViewDetails;
+
+  /// No description provided for @aaStatisticsBillSummary.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill summary'**
+  String get aaStatisticsBillSummary;
+
+  /// No description provided for @aaStatisticsTotalCount.
+  ///
+  /// In en, this message translates to:
+  /// **'Total bills'**
+  String get aaStatisticsTotalCount;
+
+  /// No description provided for @aaStatisticsTotal.
+  ///
+  /// In en, this message translates to:
+  /// **'Total amount'**
+  String get aaStatisticsTotal;
+
+  /// No description provided for @aaStatisticsAverage.
+  ///
+  /// In en, this message translates to:
+  /// **'Average amount'**
+  String get aaStatisticsAverage;
+
+  /// No description provided for @aaStatisticsNetReceiveAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'To receive'**
+  String get aaStatisticsNetReceiveAmount;
+
+  /// No description provided for @aaStatisticsNetPayAmount.
+  ///
+  /// In en, this message translates to:
+  /// **'To pay'**
+  String get aaStatisticsNetPayAmount;
+
+  /// No description provided for @aaStatisticsSettled.
+  ///
+  /// In en, this message translates to:
+  /// **'Settled'**
+  String get aaStatisticsSettled;
+
+  /// No description provided for @aaStatisticsModePerPerson.
+  ///
+  /// In en, this message translates to:
+  /// **'AA split'**
+  String get aaStatisticsModePerPerson;
+
+  /// No description provided for @aaStatisticsModeCustom.
+  ///
+  /// In en, this message translates to:
+  /// **'Custom amount'**
+  String get aaStatisticsModeCustom;
+
+  /// No description provided for @aaStatisticsSplitDetail.
+  ///
+  /// In en, this message translates to:
+  /// **'Split details'**
+  String get aaStatisticsSplitDetail;
+
+  /// No description provided for @aaStatisticsTxTotalPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Total'**
+  String get aaStatisticsTxTotalPrefix;
+
+  /// No description provided for @aaStatisticsPayerPrefix.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid by'**
+  String get aaStatisticsPayerPrefix;
+
+  /// No description provided for @aaStatisticsMemberTxEmpty.
+  ///
+  /// In en, this message translates to:
+  /// **'No bills for this member'**
+  String get aaStatisticsMemberTxEmpty;
+
   /// No description provided for @aaEditTitle.
   ///
   /// In en, this message translates to:

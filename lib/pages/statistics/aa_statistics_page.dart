@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
+import '../../routes.dart';
+import '../../services/statistics/aa_member_detail_models.dart';
 import '../../services/statistics/aa_statistics_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
@@ -40,10 +42,7 @@ class AaStatisticsPage extends ConsumerWidget {
     return Scaffold(
       body: Column(
         children: [
-          PrimaryHeader(
-            title: l10n.aaStatisticsTitle,
-            showBack: true,
-          ),
+          PrimaryHeader(title: l10n.aaStatisticsTitle, showBack: true),
           Expanded(
             child: statisticsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
@@ -57,6 +56,7 @@ class AaStatisticsPage extends ConsumerWidget {
                 context,
                 ref,
                 l10n,
+                ledgerId,
                 statistics,
                 excludedAsync.value ?? const [],
               ),
@@ -71,6 +71,7 @@ class AaStatisticsPage extends ConsumerWidget {
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
+    int ledgerId,
     AaLedgerStatistics statistics,
     List<({Transaction t, Category? category})> excluded,
   ) {
@@ -80,8 +81,7 @@ class AaStatisticsPage extends ConsumerWidget {
         .toList();
 
     // 分摊总额 = 各参与人实付合计(每笔 AA 交易由支出人实付一次,恒等)。
-    final totalAmount =
-        active.fold(0.0, (sum, p) => sum + p.totalPaid);
+    final totalAmount = active.fold(0.0, (sum, p) => sum + p.totalPaid);
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -89,7 +89,7 @@ class AaStatisticsPage extends ConsumerWidget {
         const SizedBox(height: 20),
         _buildSectionTitle(context, l10n.aaStatisticsPerPerson),
         const SizedBox(height: 8),
-        _buildPerPersonCard(context, ref, l10n, active),
+        _buildPerPersonCard(context, ref, l10n, ledgerId, active),
         const SizedBox(height: 20),
         _buildSectionTitle(context, l10n.aaStatisticsTransferPlan),
         const SizedBox(height: 8),
@@ -104,8 +104,12 @@ class AaStatisticsPage extends ConsumerWidget {
   }
 
   /// 汇总卡:分摊总额(大字号) + 参与人数。
-  Widget _buildOverviewCard(BuildContext context, AppLocalizations l10n,
-      double totalAmount, int participantCount) {
+  Widget _buildOverviewCard(
+    BuildContext context,
+    AppLocalizations l10n,
+    double totalAmount,
+    int participantCount,
+  ) {
     return SectionCard(
       margin: EdgeInsets.zero,
       padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
@@ -145,81 +149,74 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 分摊详情表:成员 / 实付 / 应摊 / 差额(应收绿、应付红)。
-  Widget _buildPerPersonCard(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, List<AaParticipantSummary> active) {
-    final headerStyle = TextStyle(
-      fontSize: 12,
-      color: SpitoutTokens.textTertiary(context),
-    );
+  /// 分摊详情表:每位成员一个可点击模块(头像 + 名称 + 「查看详情」徽章 +
+  /// 实付 / 应摊 / 差额三列),点击模块进入该成员账单详情页。
+  Widget _buildPerPersonCard(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    int ledgerId,
+    List<AaParticipantSummary> active,
+  ) {
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          // 表头
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Row(
-              children: [
-                Expanded(flex: 3, child: Text('', style: headerStyle)),
-                Expanded(
-                  flex: 3,
-                  child: Text(l10n.aaStatisticsPaid,
-                      style: headerStyle, textAlign: TextAlign.right),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(l10n.aaStatisticsShare,
-                      style: headerStyle, textAlign: TextAlign.right),
-                ),
-                Expanded(
-                  flex: 3,
-                  child: Text(l10n.aaStatisticsNet,
-                      style: headerStyle, textAlign: TextAlign.right),
-                ),
-              ],
-            ),
-          ),
-          Divider(height: 1, color: SpitoutTokens.divider(context)),
           for (var i = 0; i < active.length; i++) ...[
             if (i > 0)
               Divider(height: 1, color: SpitoutTokens.divider(context)),
-            _buildPerPersonRow(context, ref, l10n, active[i]),
+            _buildPerPersonRow(context, ref, l10n, ledgerId, active[i]),
           ],
         ],
       ),
     );
   }
 
-  Widget _buildPerPersonRow(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, AaParticipantSummary p) {
+  Widget _buildPerPersonRow(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    int ledgerId,
+    AaParticipantSummary p,
+  ) {
     // 实付/应摊/差额统一带账本币种符号,与汇总卡口径一致。
     final currencyCode = ref.watch(currentLedgerCurrencyProvider);
     final net = p.net;
     final netColor = net.abs() < 0.005
         ? SpitoutTokens.textTertiary(context)
         : (net > 0
-            ? SpitoutTokens.success(context)
-            : SpitoutTokens.error(context));
+              ? SpitoutTokens.success(context)
+              : SpitoutTokens.error(context));
     final netLabel = net.abs() < 0.005
         ? '—'
-        : '${net > 0 ? l10n.aaStatisticsNetReceive : l10n.aaStatisticsNetPay} '
-            '${formatMoneyWithCurrency(net.abs(), currencyCode: currencyCode)}';
-    final valueStyle = TextStyle(
-      fontSize: 13,
-      color: SpitoutTokens.textPrimary(context),
-    );
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          Expanded(
-            flex: 3,
-            // 本人参与人:名称后追加共享「(我)」后缀,与 AA 记账页/成员管理/
-            // 交易详情口径一致;非本人用纯名 Text。
-            child: p.isSelf
-                ? Text.rich(
+        : '${net > 0 ? '+' : '-'}'
+              '${formatMoneyWithCurrency(net.abs(), currencyCode: currencyCode)}';
+    // 差额列标题:应收 / 应付;净额为零时退化为「差额」+ 占位符。
+    final netHeader = net.abs() < 0.005
+        ? l10n.aaStatisticsNet
+        : (net > 0 ? l10n.aaStatisticsNetReceive : l10n.aaStatisticsNetPay);
+
+    return InkWell(
+      // 整个成员模块可点击,进入该成员账单详情页。
+      onTap: () => _openMemberDetail(context, ledgerId, p),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 首行:头像 + 名称(本人带「(我)」后缀)+ 右侧「查看详情」徽章。
+            Row(
+              children: [
+                AaParticipantAvatar(
+                  ledgerId: ledgerId,
+                  participantId: p.participantId,
+                  isSelf: p.isSelf,
+                  size: 32,
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text.rich(
                     TextSpan(
                       text: p.displayName,
                       style: TextStyle(
@@ -227,46 +224,103 @@ class AaStatisticsPage extends ConsumerWidget {
                         fontWeight: FontWeight.w500,
                         color: SpitoutTokens.textPrimary(context),
                       ),
-                      children: [
-                        meSuffixSpan(context, AppLocalizations.of(context))
-                      ],
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  )
-                : Text(
-                    p.displayName,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: SpitoutTokens.textPrimary(context),
+                      children: [if (p.isSelf) meSuffixSpan(context, l10n)],
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-          ),
-          Expanded(
-            flex: 3,
-            child: _buildAmountCell(
-              formatMoneyWithCurrency(p.totalPaid,
-                  currencyCode: currencyCode),
-              valueStyle,
+                ),
+                const SizedBox(width: 8),
+                _buildViewDetailsPill(context, l10n),
+              ],
+            ),
+            const SizedBox(height: 12),
+            // 第二行:实付 / 应摊 / 差额(应收绿、应付红)三列居中。
+            Row(
+              children: [
+                _buildMemberMetric(
+                  context,
+                  l10n.aaStatisticsPaid,
+                  formatMoneyWithCurrency(
+                    p.totalPaid,
+                    currencyCode: currencyCode,
+                  ),
+                ),
+                _buildMemberMetric(
+                  context,
+                  l10n.aaStatisticsShare,
+                  formatMoneyWithCurrency(
+                    p.totalShouldPay,
+                    currencyCode: currencyCode,
+                  ),
+                ),
+                _buildMemberMetric(context, netHeader, netLabel, netColor),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  /// 成员模块的「查看详情」徽章：主题色浅底 + 主题色文字/箭头，
+  /// 与模块标题色条同源，不引入设计稿的成员专属渐变配色。
+  Widget _buildViewDetailsPill(BuildContext context, AppLocalizations l10n) {
+    final primary = Theme.of(context).colorScheme.primary;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: primary.withValues(alpha: 0.08),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.aaStatisticsViewDetails,
+            style: TextStyle(
+              fontSize: 11,
+              fontWeight: FontWeight.w500,
+              color: primary,
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: _buildAmountCell(
-              formatMoneyWithCurrency(p.totalShouldPay,
-                  currencyCode: currencyCode),
-              valueStyle,
+          const SizedBox(width: 2),
+          Icon(AppIcons.chevronRight, size: 12, color: primary),
+        ],
+      ),
+    );
+  }
+
+  /// 成员模块三列指标：标签（次色小字）在上、数值（主色小号加粗）在下。
+  ///
+  /// 金额超宽时等比缩小字号而非省略/换行，保证金额完整可见。
+  Widget _buildMemberMetric(
+    BuildContext context,
+    String label,
+    String value, [
+    Color? valueColor,
+  ]) {
+    return Expanded(
+      child: Column(
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 11,
+              color: SpitoutTokens.textTertiary(context),
             ),
           ),
-          Expanded(
-            flex: 3,
-            child: _buildAmountCell(
-              netLabel,
-              TextStyle(
-                  fontSize: 12, fontWeight: FontWeight.w600, color: netColor),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: valueColor ?? SpitoutTokens.textPrimary(context),
+              ),
             ),
           ),
         ],
@@ -274,19 +328,19 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 分摊详情表金额单元格：金额超宽时等比缩小字号而非省略/换行。
-  ///
-  /// 金额必须完整可见（否则用户无法确认自己出了多少钱），FittedBox
-  /// 在内容放得下时保持原字号、放不下时按比例缩小，单行右对齐且不拥挤。
-  Widget _buildAmountCell(String text, TextStyle style) {
-    return FittedBox(
-      fit: BoxFit.scaleDown,
-      alignment: Alignment.centerRight,
-      child: Text(
-        text,
-        style: style,
-        textAlign: TextAlign.right,
-        maxLines: 1,
+  /// 进入成员账单详情页：按路由跳转，页面间不互相 import。
+  void _openMemberDetail(
+    BuildContext context,
+    int ledgerId,
+    AaParticipantSummary p,
+  ) {
+    Navigator.of(context).pushNamed(
+      Routes.aaMemberDetail,
+      arguments: AaMemberDetailArgs(
+        ledgerId: ledgerId,
+        participantId: p.participantId,
+        displayName: p.displayName,
+        isSelf: p.isSelf,
       ),
     );
   }
@@ -295,8 +349,12 @@ class AaStatisticsPage extends ConsumerWidget {
   ///
   /// 「付给」文案使用主题色(蓝色)以突出转账动作;转账金额采用中性色
   /// (与分摊详情表实付一致),不加粗,保持视觉克制。
-  Widget _buildTransferCard(BuildContext context, WidgetRef ref,
-      AppLocalizations l10n, List<AaTransfer> transfers) {
+  Widget _buildTransferCard(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+    List<AaTransfer> transfers,
+  ) {
     // 主题色(蓝色):用于「付给」文案,突出转账动作。
     final primaryColor = Theme.of(context).colorScheme.primary;
     // 中性色:与分摊详情表实付金额一致,转账金额保持克制不加粗。
@@ -310,8 +368,11 @@ class AaStatisticsPage extends ConsumerWidget {
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(AppIcons.checkCircle,
-                      size: 16, color: SpitoutTokens.success(context)),
+                  Icon(
+                    AppIcons.checkCircle,
+                    size: 16,
+                    color: SpitoutTokens.success(context),
+                  ),
                   const SizedBox(width: 8),
                   Text(
                     l10n.aaStatisticsNoTransfers,
@@ -344,10 +405,13 @@ class AaStatisticsPage extends ConsumerWidget {
                                           text: transfers[i].fromName,
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: SpitoutTokens
-                                                .textPrimary(context),
+                                            color: SpitoutTokens.textPrimary(
+                                              context,
+                                            ),
                                           ),
-                                          children: [meSuffixSpan(context, l10n)],
+                                          children: [
+                                            meSuffixSpan(context, l10n),
+                                          ],
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -356,8 +420,9 @@ class AaStatisticsPage extends ConsumerWidget {
                                         transfers[i].fromName,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: SpitoutTokens
-                                              .textPrimary(context),
+                                          color: SpitoutTokens.textPrimary(
+                                            context,
+                                          ),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -365,7 +430,8 @@ class AaStatisticsPage extends ConsumerWidget {
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                    horizontal: 6),
+                                  horizontal: 6,
+                                ),
                                 child: Text(
                                   l10n.aaStatisticsTransferSeparator,
                                   style: TextStyle(
@@ -384,10 +450,13 @@ class AaStatisticsPage extends ConsumerWidget {
                                           text: transfers[i].toName,
                                           style: TextStyle(
                                             fontSize: 14,
-                                            color: SpitoutTokens
-                                                .textPrimary(context),
+                                            color: SpitoutTokens.textPrimary(
+                                              context,
+                                            ),
                                           ),
-                                          children: [meSuffixSpan(context, l10n)],
+                                          children: [
+                                            meSuffixSpan(context, l10n),
+                                          ],
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -396,8 +465,9 @@ class AaStatisticsPage extends ConsumerWidget {
                                         transfers[i].toName,
                                         style: TextStyle(
                                           fontSize: 14,
-                                          color: SpitoutTokens
-                                              .textPrimary(context),
+                                          color: SpitoutTokens.textPrimary(
+                                            context,
+                                          ),
                                         ),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
@@ -471,8 +541,10 @@ class AaStatisticsPage extends ConsumerWidget {
     WidgetRef ref,
     ({Transaction t, Category? category}) it,
   ) {
-    final categoryName =
-        CategoryUtils.getDisplayName(it.category?.name, context);
+    final categoryName = CategoryUtils.getDisplayName(
+      it.category?.name,
+      context,
+    );
     return TransactionListItem(
       icon: getCategoryIconData(category: it.category),
       category: it.category,
@@ -509,9 +581,9 @@ class AaStatisticsPage extends ConsumerWidget {
           Text(
             text,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: color,
-                ),
+              fontWeight: FontWeight.w700,
+              color: color,
+            ),
           ),
         ],
       ),
@@ -524,13 +596,13 @@ class AaStatisticsPage extends ConsumerWidget {
 /// 统计页「不计入分摊」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
 /// 详单行需要交易本体 + 分类(用于 icon / 分类名展示,与首页列表完全一致),
 /// 故在此单独查询带 category 的交易列表。
-final _aaExcludedTxProvider =
-    StreamProvider.autoDispose.family<List<({Transaction t, Category? category})>, int>(
-        (ref, ledgerId) {
-  // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
-  ref.watch(aaStatisticsProvider(ledgerId));
-  final repo = ref.read(repositoryProvider);
-  // 复用首页列表同款带 category 的交易流,客户端过滤 aaMode=1。
-  return repo.transactionsWithCategoryAll(ledgerId: ledgerId).map(
-      (all) => all.where((it) => it.t.aaMode == 1).toList());
-});
+final _aaExcludedTxProvider = StreamProvider.autoDispose
+    .family<List<({Transaction t, Category? category})>, int>((ref, ledgerId) {
+      // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
+      ref.watch(aaStatisticsProvider(ledgerId));
+      final repo = ref.read(repositoryProvider);
+      // 复用首页列表同款带 category 的交易流,客户端过滤 aaMode=1。
+      return repo
+          .watchTransactionsWithCategoryAll(ledgerId: ledgerId)
+          .map((all) => all.where((it) => it.t.aaMode == 1).toList());
+    });

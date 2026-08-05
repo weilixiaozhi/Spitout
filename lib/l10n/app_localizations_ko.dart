@@ -3684,6 +3684,48 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsExcludedEmpty => '분담 제외 거래가 없습니다';
 
   @override
+  String get aaStatisticsViewDetails => '상세 보기';
+
+  @override
+  String get aaStatisticsBillSummary => '청구서 요약';
+
+  @override
+  String get aaStatisticsTotalCount => '총 건수';
+
+  @override
+  String get aaStatisticsTotal => '총 금액';
+
+  @override
+  String get aaStatisticsAverage => '평균 금액';
+
+  @override
+  String get aaStatisticsNetReceiveAmount => '받을 금액';
+
+  @override
+  String get aaStatisticsNetPayAmount => '보낼 금액';
+
+  @override
+  String get aaStatisticsSettled => '정산 완료';
+
+  @override
+  String get aaStatisticsModePerPerson => 'AA 분담';
+
+  @override
+  String get aaStatisticsModeCustom => '지정 금액';
+
+  @override
+  String get aaStatisticsSplitDetail => '분담 상세';
+
+  @override
+  String get aaStatisticsTxTotalPrefix => '총';
+
+  @override
+  String get aaStatisticsPayerPrefix => '결제';
+
+  @override
+  String get aaStatisticsMemberTxEmpty => '이 멤버의 청구서가 없습니다';
+
+  @override
   String get aaEditTitle => '분담 편집';
 
   @override

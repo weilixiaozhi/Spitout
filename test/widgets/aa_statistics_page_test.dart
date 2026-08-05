@@ -11,8 +11,10 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/router.dart';
 import 'package:spitout/pages/statistics/aa_statistics_page.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/statistics/aa_member_detail_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart';
 
 import '../helpers/test_isolation.dart';
@@ -46,17 +48,58 @@ void main() {
           repositoryProvider.overrideWithValue(repo),
           // 无当前账本：货币兜底默认值，避免真实 ledger 读取。
           currentLedgerProvider.overrideWith((ref) => Stream.value(null)),
+          // 成员账单详情页数据：固定返回一笔账单，验证点击进入详情。
+          aaMemberDetailProvider.overrideWith((ref, args) async {
+            return AaMemberDetailData(
+              ledgerName: '测试账本',
+              member: stats.participants.first,
+              bills: [
+                AaMemberBill(
+                  tx: Transaction(
+                    id: 1,
+                    ledgerId: 1,
+                    type: 'expense',
+                    amount: 16800,
+                    happenedAt: DateTime(2026, 8, 3, 19, 15),
+                    note: '昱阳米粉 晚餐',
+                    excludeFromStats: false,
+                    currencyCode: 'CNY',
+                    nativeAmount: 16800,
+                    version: 1,
+                    paidByUserId: 'u1',
+                    aaMode: 0,
+                    aaParticipants: '["u1"]',
+                    aaSplits: '',
+                  ),
+                  mode: AaMode.perPerson,
+                  totalAmount: 168,
+                  myShare: 56,
+                  payerName: '张三',
+                  splits: [
+                    AaMemberSplit(
+                      participantId: 'u1',
+                      displayName: '张三',
+                      amount: 56,
+                      isSelf: true,
+                    ),
+                  ],
+                ),
+              ],
+            );
+          }),
           // 固定统计数据，不依赖真实账本/交易查询。
           aaStatisticsProvider.overrideWith((ref, ledgerId) async => stats),
           // 空头像上下文：全部参与人走占位头像。
           aaParticipantAvatarContextProvider.overrideWith(
-              (ref, ledgerId) async => const AaParticipantAvatarContext()),
+            (ref, ledgerId) async => const AaParticipantAvatarContext(),
+          ),
         ],
         child: MaterialApp(
           // 强制 zh 以渲染「(我)」等中文文案。
           locale: const Locale('zh'),
           localizationsDelegates: AppLocalizations.localizationsDelegates,
           supportedLocales: AppLocalizations.supportedLocales,
+          onGenerateRoute: appRoute,
           home: const AaStatisticsPage(ledgerId: 1),
         ),
       ),
@@ -64,8 +107,7 @@ void main() {
     await tester.pumpAndSettle();
   }
 
-  testWidgets('本人参与人在分摊明细行与转账方案卡追加「(我)」后缀，非本人保持纯名',
-      (tester) async {
+  testWidgets('本人参与人在分摊明细行与转账方案卡追加「(我)」后缀，非本人保持纯名', (tester) async {
     final stats = AaLedgerStatistics(
       participants: [
         AaParticipantSummary(
@@ -154,6 +196,41 @@ void main() {
     // 付款方本人：转账卡渲染「张三 (我)」；收款方非本人保持纯名。
     expect(find.text('张三 (我)', findRichText: true), findsWidgets);
     expect(find.text('李四 (我)', findRichText: true), findsNothing);
+
+    await unmountPage(tester);
+  });
+
+  testWidgets('点击分摊详情成员模块进入成员账单详情页并展示账单', (tester) async {
+    final stats = AaLedgerStatistics(
+      participants: [
+        AaParticipantSummary(
+          participantId: 'u1',
+          displayName: '张三',
+          totalPaid: 168,
+          totalShouldPay: 56,
+          isSelf: true,
+        ),
+      ],
+      transfers: const [],
+    );
+
+    await pumpPage(tester, stats);
+
+    // 点击成员模块的「查看详情」徽章，路由到成员账单详情页。
+    await tester.tap(find.text('查看详情'));
+    await tester.pumpAndSettle();
+
+    // 详情页头部（账本名副标题）与汇总卡标题。
+    expect(find.text('测试账本'), findsOneWidget);
+    expect(find.text('账单汇总'), findsOneWidget);
+    // 账单主行：分类名 + 备注 + 分摊明细区。
+    expect(find.text('昱阳米粉 晚餐'), findsOneWidget);
+    expect(find.text('分摊明细'), findsOneWidget);
+    // 本人应摊 / 账单总额按项目金额口径渲染。
+    expect(find.text('- ¥ 56'), findsOneWidget);
+    expect(find.text('共 ¥ 168'), findsOneWidget);
+    // 分摊明细中的本人追加「(我)」后缀。
+    expect(find.text('张三 (我)', findRichText: true), findsWidgets);
 
     await unmountPage(tester);
   });
