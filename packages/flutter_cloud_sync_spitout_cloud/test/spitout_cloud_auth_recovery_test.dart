@@ -1,6 +1,6 @@
 /// SpitoutCloudAuthService 静默恢复凭据生命周期测试。
 ///
-/// 覆盖 P0-a 修复:signOut() 必须清空 _recoveryEmail/_recoveryPassword,
+/// 覆盖 signOut() 必须清空 _recoveryEmail/_recoveryPassword,
 /// 否则登出后 provider 重建触发 currentUser → _tryRecoveryLogin,
 /// 会拿旧邮密自动 POST /auth/login 把云端账本"拉回来"——用户明明登出,
 /// 下一轮 UI rebuild 又被静默登录,这就是"复活链"的根因。
@@ -10,7 +10,7 @@
 ///   - 修复前:recovery 未清 → POST /auth/login 自动重登 → currentUser 非 null(断言失败=红);
 ///   - 修复后:recovery 已清 → 直接返 null,不再发 /auth/login(断言通过=绿)。
 ///
-/// PR-B d6:本测试随 Spitout Cloud provider 一并迁移至 adapter 包,
+/// 本测试随 Spitout Cloud provider 一并迁移至 adapter 包,
 /// import 从核心包改为本包入口。
 library;
 
@@ -53,6 +53,18 @@ MockClient _mockAuthClient(List<String> log) {
   });
 }
 
+/// 构造「所有请求都返回 401」的客户端,用于验证凭证连续被拒后的停用逻辑。
+MockClient _mockRejectingClient(List<String> log) {
+  return MockClient((request) async {
+    log.add('${request.method} ${request.url.path}');
+    return http.Response(
+      jsonEncode({'detail': 'bad credentials'}),
+      401,
+      headers: {'content-type': 'application/json'},
+    );
+  });
+}
+
 int _loginCount(List<String> log) =>
     log.where((e) => e.endsWith('/auth/login')).length;
 
@@ -70,6 +82,9 @@ void main() {
         baseUrl: 'https://cloud.example.com',
         apiPrefix: '/api/v1',
         httpClient: _mockAuthClient(log),
+        // 单测没有平台安全存储通道,注入 SharedPreferences 实现配合
+        // setMockInitialValues 完成确定性断言。
+        sessionStore: SharedPreferencesSessionStore(),
       );
 
       // 1. 显式登录,建立本地 session
@@ -87,8 +102,7 @@ void main() {
       final user = await auth.currentUser;
       final loginAfterProbe = _loginCount(log);
 
-      expect(user, isNull,
-          reason: 'signOut 后应保持未登录,而不是被恢复凭据自动登回');
+      expect(user, isNull, reason: 'signOut 后应保持未登录,而不是被恢复凭据自动登回');
       expect(loginAfterProbe, loginBeforeProbe,
           reason: 'signOut 后 recovery 凭据必须被清空,禁止静默重登(复活链)');
     });
@@ -99,6 +113,7 @@ void main() {
         baseUrl: 'https://cloud.example.com',
         apiPrefix: '/api/v1',
         httpClient: _mockAuthClient(log),
+        sessionStore: SharedPreferencesSessionStore(),
       );
 
       await auth.signInWithEmail(email: 'a@b.com', password: 'pw');
@@ -111,10 +126,36 @@ void main() {
       // 下一次鉴权探测应能走恢复登录,证明清空逻辑没有破坏"注入→恢复"能力
       final before = _loginCount(log);
       final recovered = await auth.currentUser;
-      expect(recovered, isNotNull,
-          reason: '重新注入恢复凭据后应能正常静默恢复登录');
+      expect(recovered, isNotNull, reason: '重新注入恢复凭据后应能正常静默恢复登录');
       expect(_loginCount(log), before + 1,
           reason: '重新注入后应重新允许 /auth/login 恢复请求');
+    });
+  });
+
+  group('恢复凭证连续被拒后停用', () {
+    test('连续 3 次 401 后不再触发静默登录(避免密码被改后无限重试)', () async {
+      final log = <String>[];
+      final auth = SpitoutCloudAuthService(
+        baseUrl: 'https://cloud.example.com',
+        apiPrefix: '/api/v1',
+        httpClient: _mockRejectingClient(log),
+        sessionStore: SharedPreferencesSessionStore(),
+        // 测试环境不等待真实 30s 冷却,用零冷却连续触发失败。
+        silentRecoveryCooldown: Duration.zero,
+      );
+
+      auth.setRecoveryCredentials(email: 'a@b.com', password: 'wrong-pw');
+
+      // 前 3 次各打一次 /auth/login 并被拒。
+      for (var i = 0; i < 3; i++) {
+        expect(await auth.currentUser, isNull);
+      }
+      expect(_loginCount(log), 3);
+
+      // 达到阈值后恢复凭证被清空,第 4 次探测不再发网络请求。
+      final before = _loginCount(log);
+      expect(await auth.currentUser, isNull);
+      expect(_loginCount(log), before, reason: '连续被拒达到阈值后必须停用静默恢复');
     });
   });
 }

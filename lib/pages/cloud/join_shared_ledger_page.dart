@@ -1,6 +1,6 @@
 // 加入共享账本页 — 输入 6 位邀请码 → preview → accept。
-// Phase 1 不做 QR 扫码 / 短链 deeplink;两者都推到 Phase 3。MVP 只支持手动
-// 输入邀请码。accept 成功后 sync engine 走 onInviteAccepted 拉 shared-resources。
+// 当前只支持手动输入邀请码(不做 QR 扫码 / 短链 deeplink)。
+// accept 成功后 sync engine 走 onInviteAccepted 拉 shared-resources。
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudInvitePreview;
@@ -11,6 +11,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import '../../theme/colors.dart';
 import '../../widgets/widgets.dart';
+import '../../core/logging/logger_service.dart';
 
 class JoinSharedLedgerPage extends ConsumerStatefulWidget {
   const JoinSharedLedgerPage({super.key, this.prefilledCode});
@@ -117,7 +118,9 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
     if (raw.contains('member limit')) {
       return AppLocalizations.of(context).sharedJoinMemberLimit;
     }
-    return raw;
+    // 未知错误不把原始异常抛给用户:记录日志,统一展示友好文案。
+    logger.error('JoinSharedLedger', '加入共享账本失败', error);
+    return AppLocalizations.of(context).commonOperationFailed;
   }
 
   String _formatRoleLabel(String role, AppLocalizations l10n) {
@@ -131,7 +134,9 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
     }
   }
 
-  String _formatExpiry(DateTime expiresAt, AppLocalizations l10n) {
+  String _formatExpiry(DateTime? expiresAt, AppLocalizations l10n) {
+    // server 未返回 / 返回格式异常时按不可加入处理,避免伪造"永久有效"。
+    if (expiresAt == null) return l10n.sharedJoinInvalidOrExpired;
     final now = DateTime.now().toUtc();
     final delta = expiresAt.difference(now);
     if (delta.inMinutes <= 0) return l10n.sharedJoinInvalidOrExpired;
@@ -325,13 +330,16 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
               ],
             ),
             const SizedBox(height: 8),
-            Center(
-              child: Text(
-                DateFormat('yyyy-MM-dd HH:mm').format(preview.expiresAt.toLocal()),
-                style: TextStyle(
-                    color: SpitoutTokens.textTertiary(context), fontSize: 11),
+            if (preview.expiresAt != null)
+              Center(
+                child: Text(
+                  DateFormat('yyyy-MM-dd HH:mm')
+                      .format(preview.expiresAt!.toLocal()),
+                  style: TextStyle(
+                      color: SpitoutTokens.textTertiary(context),
+                      fontSize: 11),
+                ),
               ),
-            ),
           ],
         ),
     );

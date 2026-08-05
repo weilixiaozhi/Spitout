@@ -1,4 +1,4 @@
-/// c8(fake 测试基建自包含)迁移验收用例。
+/// fake 测试基建自包含迁移验收用例。
 ///
 /// 背景:主仓 `test/cloud/sync/_fakes/fake_spitout_cloud_provider.dart` 已迁移至
 /// 本 adapter 包 `lib/src/testing/fake_spitout_cloud_provider.dart`,并经由
@@ -14,15 +14,17 @@ library;
 
 import 'dart:async';
 
+import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' show CloudProvider;
 import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  group('自包含性 & 构造(c8 验收)', () {
+  group('自包含性 & 构造', () {
     test('仅通过 testing.dart 入口即可实例化,无需宿主工程依赖', () {
       final fake = FakeSpitoutCloudProvider();
-      expect(fake, isA<SpitoutCloudProvider>());
+      expect(fake, isA<SpitoutCloudSyncBackend>());
+      expect(fake, isA<CloudProvider>());
       expect(fake.baseUrl, 'https://fake.test');
       expect(fake.apiPrefix, '/api/v1');
     });
@@ -67,8 +69,7 @@ void main() {
       final page1 = await fake.pullChanges(since: 0, limit: 1);
       expect(page1.changes.map((c) => c.changeId), [1]);
       expect(page1.hasMore, isTrue);
-      final page2 =
-          await fake.pullChanges(since: page1.serverCursor, limit: 1);
+      final page2 = await fake.pullChanges(since: page1.serverCursor, limit: 1);
       expect(page2.hasMore, isFalse);
       final call = fake.pullCalls.last;
       expect(call.since, 1);
@@ -200,7 +201,8 @@ void main() {
 
   group('写账本(fullPush) / realtime / reset', () {
     test('writeCreateLedger + autoRegister 二次确认;gate 阻塞闸门', () async {
-      final fake = FakeSpitoutCloudProvider()..autoRegisterWrittenLedgers = true;
+      final fake = FakeSpitoutCloudProvider()
+        ..autoRegisterWrittenLedgers = true;
       final meta = await fake.writeCreateLedger(
         ledgerId: 'new-1',
         ledgerName: '新账本',
@@ -216,8 +218,7 @@ void main() {
       fake.writeCreateLedgerGate = gate;
       final pending = fake.writeCreateLedger(ledgerName: '卡住');
       await Future<void>.delayed(Duration.zero);
-      expect(fake.writeCreateLedgerCalls, hasLength(1),
-          reason: 'gate 未放行前应阻塞');
+      expect(fake.writeCreateLedgerCalls, hasLength(1), reason: 'gate 未放行前应阻塞');
       gate.complete();
       await pending;
       expect(fake.writeCreateLedgerCalls, hasLength(2));

@@ -22,7 +22,7 @@ part of 'sync_engine.dart';
 class AppCursorStore {
   AppCursorStore(this._provider);
 
-  final SpitoutCloudProvider _provider;
+  final SpitoutCloudSyncBackend _provider;
 
   /// 读取当前 cursor。未登录返 0(等价"从头开始")。
   Future<int> read() async {

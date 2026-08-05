@@ -1,15 +1,15 @@
 import 'package:meta/meta.dart';
 
-/// Represents an authenticated cloud user
+/// 已认证的云用户。
 @immutable
 class CloudUser {
-  /// Unique user identifier
+  /// 用户唯一标识。
   final String id;
 
-  /// User email (optional, depends on provider)
+  /// 用户邮箱（可选，取决于提供方）。
   final String? email;
 
-  /// Additional user metadata (provider-specific)
+  /// 附加用户元数据（提供方特有）。
   final Map<String, dynamic>? metadata;
 
   const CloudUser({
@@ -21,9 +21,7 @@ class CloudUser {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is CloudUser &&
-          runtimeType == other.runtimeType &&
-          id == other.id;
+      other is CloudUser && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;
@@ -32,53 +30,53 @@ class CloudUser {
   String toString() => 'CloudUser(id: $id, email: $email)';
 }
 
-/// Abstract interface for cloud authentication services
+/// 云认证服务抽象接口。
 abstract class CloudAuthService {
-  /// Stream of authentication state changes
+  /// 认证状态变更流。
   ///
-  /// Emits the current user when authenticated, null when not authenticated.
-  /// Perfect for use with Riverpod StreamProvider.
+  /// 已登录时发出当前用户，未登录时发出 null；
+  /// 适合配合 Riverpod StreamProvider 使用。
   Stream<CloudUser?> get authStateChanges;
 
-  /// Get the currently authenticated user
+  /// 获取当前已认证用户。
   ///
-  /// Returns null if not authenticated.
+  /// 未登录时返回 null。
   Future<CloudUser?> get currentUser;
 
-  /// Sign in with email and password
+  /// 使用邮箱 + 密码登录。
   ///
-  /// Throws [CloudAuthException] if sign in fails.
+  /// 登录失败时抛出 [CloudAuthException]。
   Future<CloudUser> signInWithEmail({
     required String email,
     required String password,
   });
 
-  /// Sign up with email and password
+  /// 使用邮箱 + 密码注册。
   ///
-  /// Throws [CloudAuthException] if sign up fails.
-  /// Note: Some providers (like Supabase) require email verification.
+  /// 注册失败时抛出 [CloudAuthException]。
+  /// 注意：部分提供方（如 Supabase）要求邮箱验证。
   Future<CloudUser> signUpWithEmail({
     required String email,
     required String password,
   });
 
-  /// Sign out the current user
+  /// 退出当前用户。
   ///
-  /// Throws [CloudAuthException] if sign out fails.
+  /// 失败时抛出 [CloudAuthException]。
   Future<void> signOut();
 
-  /// Send password reset email
+  /// 发送密码重置邮件。
   ///
-  /// Throws [CloudAuthException] if operation fails.
+  /// 失败时抛出 [CloudAuthException]。
   Future<void> sendPasswordResetEmail({required String email});
 
-  /// Resend email verification
+  /// 重新发送邮箱验证邮件。
   ///
-  /// Throws [CloudAuthException] if operation fails.
+  /// 失败时抛出 [CloudAuthException]。
   Future<void> resendEmailVerification({required String email});
 }
 
-/// No-op implementation for providers that don't require authentication
+/// 无需认证的提供方使用的空实现。
 class NoopAuthService implements CloudAuthService {
   @override
   Stream<CloudUser?> get authStateChanges => Stream.value(null);

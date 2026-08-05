@@ -2,7 +2,7 @@
 class S3Exception implements Exception {
   final String message;
   final int? statusCode;
-  final Exception? originalException;
+  final Object? originalException;
 
   S3Exception(this.message, {this.statusCode, this.originalException});
 

@@ -49,11 +49,8 @@ class SupabaseDatabaseService implements CloudDatabaseService {
       }
 
       // Insert and return the created record
-      final response = await _client
-          .from(table)
-          .insert(insertData)
-          .select()
-          .single();
+      final response =
+          await _client.from(table).insert(insertData).select().single();
 
       return response;
     } on supabase.PostgrestException catch (e) {
@@ -61,33 +58,6 @@ class SupabaseDatabaseService implements CloudDatabaseService {
     } catch (e) {
       if (e is CloudNotAuthenticatedException) rethrow;
       throw CloudStorageException('Insert failed: $e', e);
-    }
-  }
-
-  /// Batch insert multiple records
-  Future<List<Map<String, dynamic>>> insertBatch({
-    required String table,
-    required List<Map<String, dynamic>> data,
-  }) async {
-    try {
-      // Check authentication
-      final user = _client.auth.currentUser;
-      if (user == null) {
-        throw CloudNotAuthenticatedException('User not authenticated');
-      }
-
-      // Batch insert and return created records
-      final response = await _client
-          .from(table)
-          .insert(data)
-          .select();
-
-      return (response as List).cast<Map<String, dynamic>>();
-    } on supabase.PostgrestException catch (e) {
-      throw CloudStorageException('Batch insert failed: ${e.message}', e);
-    } catch (e) {
-      if (e is CloudNotAuthenticatedException) rethrow;
-      throw CloudStorageException('Batch insert failed: $e', e);
     }
   }
 
@@ -106,10 +76,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
       }
 
       // Build query
-      var query = _client
-          .from(table)
-          .update(data)
-          .eq('id', id);
+      var query = _client.from(table).update(data).eq('id', id);
 
       // 自动添加用户过滤
       if (autoFilterByUser) {
@@ -142,10 +109,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
       }
 
       // Build query
-      var query = _client
-          .from(table)
-          .delete()
-          .eq('id', id);
+      var query = _client.from(table).delete().eq('id', id);
 
       // 自动添加用户过滤
       if (autoFilterByUser) {
@@ -223,6 +187,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
   Future<Map<String, dynamic>?> getById({
     required String table,
     required String id,
+    bool autoFilterByUser = true,
   }) async {
     try {
       // Check authentication
@@ -231,12 +196,12 @@ class SupabaseDatabaseService implements CloudDatabaseService {
         throw CloudNotAuthenticatedException('User not authenticated');
       }
 
-      // Get single record
-      final response = await _client
-          .from(table)
-          .select()
-          .eq('id', id)
-          .maybeSingle();
+      // 构建单条查询：默认按当前用户过滤，防止跨用户按 id 读取（IDOR）。
+      var query = _client.from(table).select().eq('id', id);
+      if (autoFilterByUser) {
+        query = query.eq('user_id', user.id);
+      }
+      final response = await query.maybeSingle();
 
       return response;
     } on supabase.PostgrestException catch (e) {
@@ -252,11 +217,12 @@ class SupabaseDatabaseService implements CloudDatabaseService {
     required String table,
     List<QueryFilter>? filters,
     String event = '*',
+    bool autoFilterByUser = true,
   }) {
-    // Note: Realtime subscriptions should be handled by SupabaseRealtimeService
-    // This method is kept for interface compatibility but delegates to realtime service
-    throw UnimplementedError(
-      'Use SupabaseRealtimeService for realtime subscriptions',
+    // 实时订阅统一由 SupabaseRealtimeService 负责，本方法仅为接口兼容占位。
+    // 实现方必须遵守 autoFilterByUser 语义：只推送当前用户的数据变更。
+    throw CloudSyncException(
+      '实时订阅请使用 SupabaseRealtimeService，本接口不直接提供订阅能力',
     );
   }
 
@@ -264,6 +230,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
   Future<List<Map<String, dynamic>>> batchInsert({
     required String table,
     required List<Map<String, dynamic>> data,
+    bool autoInjectUserId = true,
   }) async {
     try {
       // Check authentication
@@ -272,11 +239,15 @@ class SupabaseDatabaseService implements CloudDatabaseService {
         throw CloudNotAuthenticatedException('User not authenticated');
       }
 
-      // Batch insert
-      final response = await _client
-          .from(table)
-          .insert(data)
-          .select();
+      // 批量注入 user_id：与单条 insert 保持一致的越权防御语义。
+      final insertData = autoInjectUserId
+          ? data.map((record) {
+              if (record.containsKey('user_id')) return record;
+              return <String, dynamic>{...record, 'user_id': user.id};
+            }).toList()
+          : data;
+
+      final response = await _client.from(table).insert(insertData).select();
 
       return List<Map<String, dynamic>>.from(response as List);
     } on supabase.PostgrestException catch (e) {
@@ -292,6 +263,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
     required String table,
     required List<Map<String, dynamic>> data,
     String idField = 'id',
+    bool autoFilterByUser = true,
   }) async {
     try {
       // Check authentication
@@ -300,18 +272,18 @@ class SupabaseDatabaseService implements CloudDatabaseService {
         throw CloudNotAuthenticatedException('User not authenticated');
       }
 
-      // Supabase doesn't support batch update directly
-      // We need to update records one by one
+      // Supabase 不支持批量更新，逐条执行；每条都按 id + 用户过滤。
       for (final record in data) {
         final id = record[idField];
         if (id == null) {
           throw CloudStorageException('Record missing $idField field');
         }
 
-        await _client
-            .from(table)
-            .update(record)
-            .eq(idField, id);
+        var query = _client.from(table).update(record).eq(idField, id);
+        if (autoFilterByUser) {
+          query = query.eq('user_id', user.id);
+        }
+        await query;
       }
     } on supabase.PostgrestException catch (e) {
       throw CloudStorageException('Batch update failed: ${e.message}', e);
@@ -325,6 +297,7 @@ class SupabaseDatabaseService implements CloudDatabaseService {
   Future<void> batchDelete({
     required String table,
     required List<QueryFilter> filters,
+    bool autoFilterByUser = true,
   }) async {
     try {
       // Check authentication
@@ -333,8 +306,11 @@ class SupabaseDatabaseService implements CloudDatabaseService {
         throw CloudNotAuthenticatedException('User not authenticated');
       }
 
-      // Build delete query with filters
+      // 先追加用户过滤，再叠加调用方过滤器，防止误删其他用户记录。
       var query = _client.from(table).delete();
+      if (autoFilterByUser) {
+        query = query.eq('user_id', user.id);
+      }
 
       for (final filter in filters) {
         query = _applyFilter(query, filter);
@@ -351,26 +327,12 @@ class SupabaseDatabaseService implements CloudDatabaseService {
 
   @override
   Future<List<Map<String, dynamic>>> rawQuery(String query) async {
-    try {
-      // Check authentication
-      final user = _client.auth.currentUser;
-      if (user == null) {
-        throw CloudNotAuthenticatedException('User not authenticated');
-      }
-
-      // Execute raw RPC call
-      // Note: This requires a custom PostgreSQL function to be created
-      final response = await _client.rpc('execute_raw_query', params: {
-        'query_text': query,
-      });
-
-      return List<Map<String, dynamic>>.from(response as List);
-    } on supabase.PostgrestException catch (e) {
-      throw CloudStorageException('Raw query failed: ${e.message}', e);
-    } catch (e) {
-      if (e is CloudNotAuthenticatedException) rethrow;
-      throw CloudStorageException('Raw query failed: $e', e);
-    }
+    // 客户端透传任意 SQL 属于高危设计面：即使有 anon key 也无法保证服务端
+    // RPC 的权限收敛，因此本实现一律拒绝执行。需要自定义查询时，
+    // 请在服务端提供白名单 RPC（只允许预设操作）后再扩展本方法。
+    throw CloudSyncException(
+      'rawQuery 已禁用：客户端不透传任意 SQL，请改用服务端白名单 RPC',
+    );
   }
 
   /// Apply filter to query
@@ -403,7 +365,8 @@ class SupabaseDatabaseService implements CloudDatabaseService {
       case 'overlaps':
         return query.overlaps(filter.column, filter.value as List);
       default:
-        throw CloudStorageException('Unsupported filter operator: ${filter.operator}');
+        throw CloudStorageException(
+            'Unsupported filter operator: ${filter.operator}');
     }
   }
 }

@@ -5,6 +5,7 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import 'package:spitout/providers/security/security_providers.dart';
 import '../../services/security/app_lock_service.dart';
+import '../../core/logging/logger_service.dart';
 import '../../widgets/widgets.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/pin_setup_page.dart';
@@ -28,9 +29,13 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
   }
 
   Future<void> _checkBiometricSupport() async {
-    final canUse = await AppLockService.canUseBiometrics();
-    if (mounted) {
-      setState(() => _canUseBiometrics = canUse);
+    try {
+      final canUse = await AppLockService.canUseBiometrics();
+      if (mounted) {
+        setState(() => _canUseBiometrics = canUse);
+      }
+    } catch (e, st) {
+      logger.warning('AppLock', '检测生物识别支持失败,按不支持处理', '$e\n$st');
     }
   }
 
@@ -52,7 +57,16 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       final verified = await _verifyCurrentPin();
       if (!verified) return;
 
-      await AppLockService.clearPin();
+      // 先持久化成功再更新内存状态:失败时保持现状并提示,避免状态与磁盘不一致。
+      try {
+        await AppLockService.clearPin();
+      } catch (e, st) {
+        logger.error('AppLock', '关闭应用锁失败(清除 PIN)', e, st);
+        if (mounted) {
+          showToast(context, l10n.commonOperationFailed);
+        }
+        return;
+      }
       ref.read(appLockEnabledProvider.notifier).set(false);
       ref.read(appLockBiometricEnabledProvider.notifier).set(false);
       if (mounted) {
@@ -81,15 +95,25 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
   }
 
   Future<void> _toggleBiometric(bool enable) async {
+    final l10n = AppLocalizations.of(context);
     if (enable) {
       // 先验证生物识别可用
       final success = await AppLockService.authenticateWithBiometrics(
-        reason: AppLocalizations.of(context).appLockBiometricReason,
+        reason: l10n.appLockBiometricReason,
       );
       if (!success) return;
     }
+    // 先落盘再更新 provider:持久化失败时回滚,避免开关显示与磁盘不一致。
+    try {
+      await AppLockService.setBiometricEnabled(enable);
+    } catch (e, st) {
+      logger.error('AppLock', '保存生物识别设置失败', e, st);
+      if (mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
+      return;
+    }
     ref.read(appLockBiometricEnabledProvider.notifier).set(enable);
-    await AppLockService.setBiometricEnabled(enable);
   }
 
   void _showTimeoutPicker() {
@@ -135,10 +159,21 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                   trailing: isSelected
                       ? Icon(AppIcons.check, color: primaryColor)
                       : null,
-                  onTap: () {
+                  onTap: () async {
+                    // 先持久化成功再更新内存状态;失败不关闭底部弹层并提示。
+                    try {
+                      await AppLockService.setTimeoutSeconds(opt.$1);
+                    } catch (e, st) {
+                      logger.error('AppLock', '保存自动上锁超时失败', e, st);
+                      if (ctx.mounted) {
+                        showToast(ctx, l10n.commonOperationFailed);
+                      }
+                      return;
+                    }
                     ref.read(appLockTimeoutProvider.notifier).set(opt.$1);
-                    AppLockService.setTimeoutSeconds(opt.$1);
-                    Navigator.pop(ctx);
+                    if (ctx.mounted) {
+                      Navigator.pop(ctx);
+                    }
                   },
                 );
               }),

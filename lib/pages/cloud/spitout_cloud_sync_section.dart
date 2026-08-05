@@ -239,12 +239,10 @@ class SpitoutCloudSyncSectionState
           if (after != null && mounted) {
             setState(() => _latestReport = after);
           }
-        } catch (e) {
+        } catch (e, st) {
+          logger.error('CloudSyncSection', 'refresh: syncAccount 失败', e, st);
           if (mounted) {
-            showToast(
-              context,
-              '${AppLocalizations.of(context).commonFailed}: $e',
-            );
+            showToast(context, AppLocalizations.of(context).commonOperationFailed);
           }
         } finally {
           if (mounted) setState(() => _autoSyncing = false);
@@ -255,6 +253,13 @@ class SpitoutCloudSyncSectionState
       // 否则 ref.read 会抛 StateError "Cannot use ref after the widget was disposed"。
       if (mounted) {
         ref.read(syncStatusRefreshProvider.notifier).tick();
+      }
+    } catch (e, st) {
+      // 外层兜底:reconcileProfileToServer / syncMyProfile / 对账 / 健康检查
+      // 任一失败都不能成为未处理异步错误,提示用户并复位检查态。
+      logger.error('CloudSyncSection', 'refresh 流程失败', e, st);
+      if (mounted) {
+        showToast(context, AppLocalizations.of(context).commonOperationFailed);
       }
     } finally {
       if (mounted) setState(() => _checking = false);
@@ -291,7 +296,12 @@ class SpitoutCloudSyncSectionState
 
     return userAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(child: Text('$e')),
+      error: (e, st) {
+        logger.error('CloudSyncSection', '加载云账号状态失败', e, st);
+        return Center(
+          child: Text(AppLocalizations.of(context).commonOperationFailed),
+        );
+      },
       data: (user) => Column(
         // 横向交给 SectionCard 自带的 horizontal:12 margin,
         // 这里只给垂直 8 避免首尾贴屏幕。

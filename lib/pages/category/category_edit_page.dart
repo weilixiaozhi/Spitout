@@ -12,6 +12,7 @@ import 'package:spitout/providers/core/post_processor.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../theme/icons/category_icons.dart';
 import '../transaction/category_detail_page.dart';
+import '../../core/logging/logger_service.dart';
 
 class CategoryEditPage extends ConsumerStatefulWidget {
   final db.Category? category; // null表示新建
@@ -36,6 +37,8 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
   bool _saving = false;
   bool _isDuplicateName = false;
   String? _duplicateErrorMessage;
+  /// 判重查询失败标志:失败时按「不可保存」保守处理,避免重名入库后被 repo 抛错。
+  bool _duplicateCheckFailed = false;
   Timer? _debounceTimer;
 
   // 父分类相关状态
@@ -85,22 +88,37 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
   /// 有子分类 → 所属分类行置灰（状态 4.3），无法修改父分类
   Future<void> _loadHasChildren() async {
     if (widget.category == null) return;
-    final repo = ref.read(repositoryProvider);
-    final hasChildren = await repo.hasSubCategories(widget.category!.id);
-    if (mounted) {
-      setState(() {
-        _hasChildren = hasChildren;
-      });
+    try {
+      final repo = ref.read(repositoryProvider);
+      final hasChildren = await repo.hasSubCategories(widget.category!.id);
+      if (mounted) {
+        setState(() {
+          _hasChildren = hasChildren;
+        });
+      }
+    } catch (e, st) {
+      // 查询失败时保守视为「已有子分类」:禁用所属分类修改,避免把带子分类的
+      // 父分类改挂到别处造成数据错乱。
+      logger.error('CategoryEdit', '加载子分类状态失败', e, st);
+      if (mounted) {
+        setState(() => _hasChildren = true);
+        showToast(context, AppLocalizations.of(context).commonOperationFailed);
+      }
     }
   }
 
   Future<void> _loadParentCategory(int parentId) async {
-    final repo = ref.read(repositoryProvider);
-    final parent = await repo.getCategoryById(parentId);
-    if (mounted && parent != null) {
-      setState(() {
-        _selectedParentCategory = parent;
-      });
+    try {
+      final repo = ref.read(repositoryProvider);
+      final parent = await repo.getCategoryById(parentId);
+      if (mounted && parent != null) {
+        setState(() {
+          _selectedParentCategory = parent;
+        });
+      }
+    } catch (e, st) {
+      // 父分类加载失败不阻断编辑:保持初始 null(视为一级分类),记录日志便于排查。
+      logger.error('CategoryEdit', '加载父分类失败 parentId=$parentId', e, st);
     }
   }
 
@@ -122,35 +140,50 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
       setState(() {
         _isDuplicateName = false;
         _duplicateErrorMessage = null;
+        _duplicateCheckFailed = false;
       });
       return;
     }
 
-    final repo = ref.read(repositoryProvider);
-    final excludeId = isEditing ? widget.category!.id : null;
+    try {
+      final repo = ref.read(repositoryProvider);
+      final excludeId = isEditing ? widget.category!.id : null;
 
-    // 作用域判重:二级分类只和「同一父级下」的兄弟比,一级分类只和其他一级比。
-    // 跨父级允许同名(默认 seed 即有「购物>鞋子」「服装>鞋子」)。
-    final isDuplicate = await repo.isCategoryNameDuplicate(
-      name: name,
-      kind: widget.kind,
-      excludeId: excludeId,
-      // 以 _selectedParentCategory 是否为空判定子分类作用域
-      parentId: _selectedParentCategory?.id,
-    );
+      // 作用域判重:二级分类只和「同一父级下」的兄弟比,一级分类只和其他一级比。
+      // 跨父级允许同名(默认 seed 即有「购物>鞋子」「服装>鞋子」)。
+      final isDuplicate = await repo.isCategoryNameDuplicate(
+        name: name,
+        kind: widget.kind,
+        excludeId: excludeId,
+        // 以 _selectedParentCategory 是否为空判定子分类作用域
+        parentId: _selectedParentCategory?.id,
+      );
 
-    if (mounted) {
-      setState(() {
-        _isDuplicateName = isDuplicate;
-        if (isDuplicate) {
-          final l10n = AppLocalizations.of(context);
-          _duplicateErrorMessage = l10n.categoryNameDuplicate;
-        } else {
-          _duplicateErrorMessage = null;
-        }
-      });
-      // 触发表单验证更新
-      _formKey.currentState?.validate();
+      if (mounted) {
+        setState(() {
+          _isDuplicateName = isDuplicate;
+          _duplicateCheckFailed = false;
+          if (isDuplicate) {
+            final l10n = AppLocalizations.of(context);
+            _duplicateErrorMessage = l10n.categoryNameDuplicate;
+          } else {
+            _duplicateErrorMessage = null;
+          }
+        });
+        // 触发表单验证更新
+        _formKey.currentState?.validate();
+      }
+    } catch (e, st) {
+      // 判重查询失败:禁用保存并提示,避免用户保存后被 repo 抛重名错误。
+      logger.error('CategoryEdit', '检查分类名称重复失败', e, st);
+      if (mounted) {
+        setState(() {
+          _duplicateCheckFailed = true;
+          _duplicateErrorMessage =
+              AppLocalizations.of(context).commonOperationFailed;
+        });
+        _formKey.currentState?.validate();
+      }
     }
   }
 
@@ -294,7 +327,9 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             child: FilledButton(
-              onPressed: (_saving || _isDuplicateName) ? null : _saveCategory,
+              onPressed: (_saving || _isDuplicateName || _duplicateCheckFailed)
+                  ? null
+                  : _saveCategory,
               child: _saving
                   ? const SizedBox(
                       width: 20,
@@ -531,12 +566,13 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
 
       if (!mounted) return;
       Navigator.of(context).pop(true); // 返回true表示有更新
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('CategoryEdit', '保存分类失败', e, st);
       if (!mounted) return;
       await AppDialog.error(
         context,
         title: AppLocalizations.of(context).categorySaveError,
-        message: '$e',
+        message: AppLocalizations.of(context).commonOperationFailed,
       );
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -577,6 +613,10 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
       setState(() {
         _selectedParentCategory = selected;
       });
+      // 切换父分类后主动重跑判重:防抖只监听文本输入,不改名只切父时
+      // 按钮态仍停留在旧父级作用域,这里显式刷新一次。
+      _debounceTimer?.cancel();
+      _checkNameDuplicate();
     }
   }
 }
@@ -630,7 +670,7 @@ class _GroupedIconGrid extends StatelessWidget {
                 const crossAxisCount = 5;
                 const spacing = 6.0; // 横向列间距
                 const runSpacing = 8.0; // 纵向行间距
-                // 均分可用宽度得到每个格子的精确宽度，保证 6 列对齐
+                // 均分可用宽度得到每个格子的精确宽度，保证 5 列对齐
                 final itemWidth =
                     (constraints.maxWidth - (crossAxisCount - 1) * spacing) /
                         crossAxisCount;

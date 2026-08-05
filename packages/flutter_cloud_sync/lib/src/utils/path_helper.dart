@@ -1,12 +1,12 @@
-/// Path helper utilities for cloud storage paths
+/// 云存储路径工具。
 class PathHelper {
-  /// Normalize a cloud storage path
+  /// 规范化云存储路径。
   ///
-  /// - Removes leading slashes
-  /// - Removes duplicate slashes
-  /// - Removes trailing slashes
+  /// - 移除开头斜杠
+  /// - 合并重复斜杠
+  /// - 移除结尾斜杠
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.normalize('//users/123/data.json/') // 'users/123/data.json'
   /// PathHelper.normalize('users//123///data.json') // 'users/123/data.json'
@@ -14,23 +14,23 @@ class PathHelper {
   static String normalize(String path) {
     if (path.isEmpty) return path;
 
-    // Remove leading slashes
+    // 移除开头斜杠
     path = path.replaceFirst(RegExp(r'^/+'), '');
 
-    // Remove trailing slashes
+    // 移除结尾斜杠
     path = path.replaceFirst(RegExp(r'/+$'), '');
 
-    // Replace multiple slashes with single slash
+    // 合并多个连续斜杠为单个
     path = path.replaceAll(RegExp(r'/+'), '/');
 
     return path;
   }
 
-  /// Join multiple path segments
+  /// 拼接多个路径段。
   ///
-  /// Automatically normalizes the result.
+  /// 自动规范化结果。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.join('users', '123', 'data.json') // 'users/123/data.json'
   /// PathHelper.join('users/', '/123/', '/data.json') // 'users/123/data.json'
@@ -40,11 +40,11 @@ class PathHelper {
     return normalize(segments.join('/'));
   }
 
-  /// Get the directory path from a file path
+  /// 获取文件路径的目录部分。
   ///
-  /// Returns the parent directory path, or empty string if no parent.
+  /// 返回父目录路径；无父目录时返回空字符串。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.dirname('users/123/data.json') // 'users/123'
   /// PathHelper.dirname('data.json') // ''
@@ -59,11 +59,11 @@ class PathHelper {
     return path.substring(0, lastSlashIndex);
   }
 
-  /// Get the filename from a file path
+  /// 获取文件路径的文件名部分。
   ///
-  /// Returns the last segment of the path.
+  /// 返回路径的最后一个段。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.basename('users/123/data.json') // 'data.json'
   /// PathHelper.basename('data.json') // 'data.json'
@@ -78,11 +78,11 @@ class PathHelper {
     return path.substring(lastSlashIndex + 1);
   }
 
-  /// Get the file extension
+  /// 获取文件扩展名。
   ///
-  /// Returns the extension including the dot, or empty string if no extension.
+  /// 返回包含点号的扩展名；无扩展名时返回空字符串。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.extension('data.json') // '.json'
   /// PathHelper.extension('archive.tar.gz') // '.gz'
@@ -96,11 +96,11 @@ class PathHelper {
     return filename.substring(lastDotIndex);
   }
 
-  /// Build a user-specific path
+  /// 构建用户专属路径。
   ///
-  /// Convenience method for creating paths under a user directory.
+  /// 便捷方法：在用户目录下创建路径。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// PathHelper.userPath('user123', ['ledgers', '456.json'])
   /// // 'users/user123/ledgers/456.json'
@@ -109,19 +109,37 @@ class PathHelper {
     return join(['users', userId, ...segments]);
   }
 
-  /// Check if path is absolute (starts with /)
+  /// 判断路径是否为绝对路径（以 / 开头）。
   static bool isAbsolute(String path) {
     return path.startsWith('/');
   }
 
-  /// Make path absolute by adding leading slash
+  /// 为路径添加开头斜杠，使其成为绝对路径。
   static String makeAbsolute(String path) {
     if (isAbsolute(path)) return path;
     return '/$path';
   }
 
-  /// Make path relative by removing leading slash
+  /// 移除开头斜杠，使路径成为相对路径。
   static String makeRelative(String path) {
     return normalize(path);
+  }
+
+  /// 校验业务层传入的相对路径是否安全。
+  ///
+  /// 拒绝绝对路径以及包含 `..` / `.` 段（或反斜杠分隔）的路径，
+  /// 防止拼接用户前缀后逃逸到其他目录（路径穿越）。
+  ///
+  /// 示例：
+  /// ```dart
+  /// PathHelper.isSafeRelativePath('ledgers/123.json') // true
+  /// PathHelper.isSafeRelativePath('/ledgers/123.json') // false
+  /// PathHelper.isSafeRelativePath('../secret.json') // false
+  /// ```
+  static bool isSafeRelativePath(String path) {
+    if (path.isEmpty) return false;
+    if (path.startsWith('/') || path.startsWith('\\')) return false;
+    final segments = path.split(RegExp(r'[/\\]'));
+    return !segments.any((segment) => segment == '..' || segment == '.');
   }
 }

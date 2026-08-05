@@ -89,9 +89,29 @@ class FullPushAborted implements Exception {
 /// 负责 push 本地变更到服务端、pull 远程变更到本地
 class SyncEngine implements app.SyncService {
   final SpitoutDatabase db;
-  final SpitoutCloudProvider provider;
+  final SpitoutCloudSyncBackend provider;
   final ChangeTracker changeTracker;
   final BaseRepository repo;
+
+  /// 增量型引擎不走「下载后 diff 预览」:同步由 SyncCoordinator 自动驱动,
+  /// 快照型后端的预览能力不适用于本实现。
+  @override
+  bool get supportsDiffPreview => false;
+
+  @override
+  Future<({app.SyncPreview? preview, app.ImportData importData, int version})?>
+      downloadAndPreview({required int ledgerId}) {
+    throw UnsupportedError('SyncEngine 不支持下载前 diff 预览');
+  }
+
+  @override
+  Future<app.SyncApplyResult> applyPreviewChanges({
+    required int ledgerId,
+    required List<app.SyncChange> selectedChanges,
+    required app.ImportData importData,
+  }) {
+    throw UnsupportedError('SyncEngine 不支持下载前 diff 预览');
+  }
 
   /// 状态缓存
   final Map<int, app.SyncStatus> _statusCache = {};

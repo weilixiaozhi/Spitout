@@ -3,10 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../l10n/app_localizations.dart';
-import 'package:spitout/providers/core/database_providers.dart';
+import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/maintenance/maintenance_providers.dart';
-import '../../services/maintenance/orphan_record.dart';
-import '../../services/maintenance/orphan_seeder.dart';
 import '../../theme/colors.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/icons/app_icons.dart';
@@ -60,13 +58,18 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
               data: (report) => _buildBody(context, ref, l10n, report),
               loading: () =>
                   const Center(child: CircularProgressIndicator()),
-              error: (err, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('${l10n.commonError}: $err',
-                      textAlign: TextAlign.center),
-                ),
-              ),
+              error: (err, st) {
+                logger.error('OrphanCleanup', '扫描孤儿数据失败', err, st);
+                return Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      l10n.commonOperationFailed,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                );
+              },
             ),
           ),
           if (reportAsync.hasValue)
@@ -499,9 +502,10 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
       // 从选中列表中移除,刷新扫描结果
       setState(() => _selected.remove(r.uniqueKey));
       ref.invalidate(orphanScanReportProvider);
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('OrphanCleanup', '单条迁移失败', e, st);
       if (!mounted) return;
-      showToast(context, '${l10n.commonError}: $e');
+      showToast(context, l10n.commonOperationFailed);
     }
   }
 
@@ -512,7 +516,8 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     final txMissing = report.all
         .where((r) =>
             _selected.contains(r.uniqueKey) &&
-            r.type == OrphanType.txMissingLedger)
+            r.type == OrphanType.txMissingLedger &&
+            r.localId != null)
         .toList();
     if (txMissing.isEmpty) return;
 
@@ -531,14 +536,16 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
         _selected.remove(r.uniqueKey);
       }
       ref.invalidate(orphanScanReportProvider);
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('OrphanCleanup', '批量迁移失败', e, st);
       if (!mounted) return;
-      showToast(context, '${l10n.commonError}: $e');
+      showToast(context, l10n.commonOperationFailed);
     } finally {
       if (mounted) setState(() => _cleaning = false);
     }
   }
 
+  /// 清理单条孤儿记录(带二次确认)。
   Future<void> _cleanOne(OrphanRecord r) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await _showConfirm(
@@ -549,6 +556,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     await _runClean([r], l10n);
   }
 
+  /// 清理所有已勾选记录(带二次确认)。
   Future<void> _cleanSelected(OrphanScanReport report) async {
     final l10n = AppLocalizations.of(context);
     final selected = report.all
@@ -563,6 +571,9 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     await _runClean(selected, l10n);
   }
 
+  /// 执行清理:调用 cleaner 后按成功/失败刷新勾选与扫描结果。
+  ///
+  /// 异常(如 DB 损坏)不冒泡:提示用户后停留本页,便于重试。
   Future<void> _runClean(
       List<OrphanRecord> records, AppLocalizations l10n) async {
     setState(() => _cleaning = true);
@@ -585,6 +596,11 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
             context, l10n.maintenanceOrphanCleanSuccess(result.successCount));
       }
       ref.invalidate(orphanScanReportProvider);
+    } catch (e, st) {
+      logger.error('OrphanCleanup', '清理孤儿数据失败', e, st);
+      if (mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
     } finally {
       if (mounted) setState(() => _cleaning = false);
     }
@@ -615,14 +631,18 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
 
   /// debug 按钮:塞 ≥10 项孤儿到本地 DB / 磁盘,然后重扫。
   Future<void> _seedDebugOrphans() async {
+    final l10n = AppLocalizations.of(context);
     setState(() => _cleaning = true);
     try {
-      final db = ref.read(databaseProvider);
-      final seeder = OrphanSeeder(db: db);
-      final report = await seeder.seedAll();
+      final report = await seedDebugOrphans(ref);
       if (!mounted) return;
       showToast(context, '已塞入测试孤儿数据\n$report');
       ref.invalidate(orphanScanReportProvider);
+    } catch (e, st) {
+      logger.error('OrphanCleanup', '塞入测试孤儿数据失败', e, st);
+      if (mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
     } finally {
       if (mounted) setState(() => _cleaning = false);
     }

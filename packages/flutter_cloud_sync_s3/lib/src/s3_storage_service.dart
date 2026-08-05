@@ -1,4 +1,5 @@
 import 'dart:convert';
+
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 
 import 's3_client.dart';
@@ -27,18 +28,19 @@ class S3StorageService implements CloudStorageService {
   Future<bool> fileExists(String remotePath) async {
     try {
       return await client.headObject(
-        bucket: bucket,
-        key: _normalizePath(remotePath),
-      );
+            bucket: bucket,
+            key: _normalizePath(remotePath),
+          ) !=
+          null;
     } on S3Exception catch (e) {
-      throw CloudStorageException('Failed to check file existence: ${e.message}');
+      throw CloudStorageException(
+          'Failed to check file existence: ${e.message}');
     } catch (e) {
-      // 其他错误返回 false
-      return false;
+      throw CloudStorageException('Failed to check file existence: $e');
     }
   }
 
-  Future<List<String>> listFiles(String remotePath) async {
+  Future<List<S3ObjectInfo>> listFiles(String remotePath) async {
     try {
       final prefix = _normalizePath(remotePath);
       return await client.listObjects(
@@ -62,11 +64,13 @@ class S3StorageService implements CloudStorageService {
       // 将字符串数据转为字节
       final bytes = utf8.encode(data);
 
-      // 上传到 S3
+      // 上传到 S3，并把指纹等元数据写入 x-amz-meta-* 请求头，
+      // 供 HEAD 真实读取，支撑核心包 getStatus 免下载判断。
       await client.putObject(
         bucket: bucket,
         key: _normalizePath(path),
         data: bytes,
+        metadata: metadata,
       );
     } on S3Exception catch (e) {
       throw CloudStorageException('Failed to upload file: ${e.message}');
@@ -108,37 +112,48 @@ class S3StorageService implements CloudStorageService {
   @override
   Future<List<CloudFile>> list({required String path}) async {
     final files = await listFiles(path);
-    return files.map((name) => CloudFile(
-      name: name,
-      path: name,
-      size: 0, // Size not available in list operation
-      lastModified: DateTime.now(), // Not available
-    )).toList();
+    return files
+        .map((info) => CloudFile(
+              name: info.key,
+              path: info.key,
+              size: info.size,
+              lastModified: info.lastModified,
+            ))
+        .toList();
   }
 
   @override
   Future<CloudFile?> getMetadata({required String path}) async {
     try {
-      final exists = await fileExists(path);
-      if (!exists) return null;
+      // HEAD 返回真实 size / lastModified / 自定义元数据；
+      // 只有 404 返回 null，鉴权 / 网络错误向上抛出。
+      final head = await client.headObject(
+        bucket: bucket,
+        key: _normalizePath(path),
+      );
+      if (head == null) return null;
 
       return CloudFile(
         name: path.split('/').last,
         path: path,
-        size: 0, // Not implemented yet
-        lastModified: DateTime.now(), // Not implemented yet
+        size: head.size,
+        lastModified: head.lastModified,
+        metadata: head.metadata,
       );
+    } on S3Exception catch (e) {
+      throw CloudStorageException('Failed to get metadata: ${e.message}');
     } catch (e) {
-      return null;
+      throw CloudStorageException('Failed to get metadata: $e');
     }
   }
 
-  /// 标准化路径：去除开头的斜杠
+  /// 标准化路径：去除开头的斜杠，并拒绝路径穿越。
   ///
-  /// S3 的 Key 不应该以 / 开头
+  /// S3 的 Key 不应该以 / 开头，也不得包含 `..` / `.` 段，
+  /// 防止业务层误传越权路径。
   String _normalizePath(String path) {
-    if (path.startsWith('/')) {
-      return path.substring(1);
+    if (!PathHelper.isSafeRelativePath(path)) {
+      throw CloudStorageException('Invalid path: $path');
     }
     return path;
   }

@@ -79,6 +79,13 @@ void main() {
           sortOrder: any(named: 'sortOrder'),
           syncId: any(named: 'syncId'),
         )).thenAnswer((_) async => 200);
+    // 事务入口:直接执行回调,让写入继续走 mock 的 createCategory/createSubCategory。
+    // 生产调用路径的泛型实参恒为 int(executeTemplateInsertPlan 返回 Future<int>)。
+    when(() => repo.runInTransaction<int>(any())).thenAnswer((invocation) async {
+      final action =
+          invocation.positionalArguments[0] as Future<int> Function();
+      return action();
+    });
   });
 
   /// 构建测试宿主。

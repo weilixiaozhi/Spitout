@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
+import '../../core/logging/logger_service.dart';
 import '../../utils/currency/rate_math.dart';
 import '../../theme/colors.dart';
 import '../../utils/currency/currencies.dart';
@@ -485,11 +486,24 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
     if (result == null || !mounted) return; // 取消/遮罩关闭
 
     final repo = ref.read(repositoryProvider);
-    if (result.reset) {
-      await repo.removeOverride(base: base, quote: quote);
-    } else {
-      // rate 字符串原样存用户输入(trim),不二次格式化。
-      await repo.setOverride(base: base, quote: quote, rate: result.rate);
+    try {
+      if (result.reset) {
+        await repo.removeOverride(base: base, quote: quote);
+      } else {
+        // rate 字符串原样存用户输入(trim),不二次格式化。
+        await repo.setOverride(base: base, quote: quote, rate: result.rate);
+      }
+    } catch (e, st) {
+      // 写库失败不能静默:提示用户并保持页面原状态,避免与数据库不一致。
+      logger.error(
+        'ExchangeRate',
+        '保存汇率失败 base=$base quote=$quote reset=${result.reset}',
+        e,
+        st,
+      );
+      if (!context.mounted) return;
+      showToast(context, AppLocalizations.of(context).commonOperationFailed);
+      return;
     }
     ref.read(rateRefreshTickProvider.notifier).tick();
     final activeLedgerId = ref.read(currentLedgerIdProvider);
@@ -502,7 +516,16 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
   /// 与编辑弹窗内 reset 分支逻辑一致,此处为列表行「恢复自动」文字链外显。
   Future<void> _resetRate(String quote, String base) async {
     final repo = ref.read(repositoryProvider);
-    await repo.removeOverride(base: base, quote: quote);
+    try {
+      await repo.removeOverride(base: base, quote: quote);
+    } catch (e, st) {
+      // 恢复自动汇率写库失败时提示用户,不静默。
+      logger.error('ExchangeRate', '恢复自动汇率失败 base=$base quote=$quote', e, st);
+      // State.context 使用 State.mounted 守卫,满足 use_build_context_synchronously。
+      if (!mounted) return;
+      showToast(context, AppLocalizations.of(context).commonOperationFailed);
+      return;
+    }
     ref.read(rateRefreshTickProvider.notifier).tick();
     final activeLedgerId = ref.read(currentLedgerIdProvider);
     if (activeLedgerId > 0) {
@@ -653,7 +676,12 @@ class _RateRow extends ConsumerWidget {
     if (rateDate == null) return false;
     final d = DateTime.tryParse(rateDate);
     if (d == null) return false;
-    return DateTime.now().difference(d) > const Duration(days: 7);
+    // 服务端可能返回带时区的日期字符串:先取年月日构造本地零点再比较,
+    // 避免 UTC 日期在东八区被误判为"昨天"导致 7 天过期判断差 8 小时。
+    final dateOnly = DateTime(d.year, d.month, d.day);
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return today.difference(dateOnly) > const Duration(days: 7);
   }
 
   @override

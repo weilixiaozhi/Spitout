@@ -633,6 +633,8 @@ void main() {
    - 先备份现有数据
    - 测试去重逻辑
    - 验证指纹计算
+   - 登录密码永不清真落盘；WebDAV / S3 凭据默认明文存 SharedPreferences
+     （可注入 `CloudCredentialStorage` 安全实现替换），生产环境需显式决策
 
 3. **用户体验**
    - 同步速度不变或更快

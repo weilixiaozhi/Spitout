@@ -1,45 +1,46 @@
-/// Cloud Database Service
+/// 云数据库服务。
 ///
-/// Abstract interface for cloud database operations (CRUD + Realtime).
-/// This enables record-level synchronization instead of file-level.
+/// 云数据库 CRUD + Realtime 的抽象接口，用于替代文件级同步实现记录级同步。
 library;
 
-/// Database event types
+/// 数据库事件类型。
 enum DatabaseEventType {
-  /// Record inserted
+  /// 记录插入。
   insert,
 
-  /// Record updated
+  /// 记录更新。
   update,
 
-  /// Record deleted
+  /// 记录删除。
   delete,
 }
 
-/// Database event
+/// 数据库事件。
 class DatabaseEvent {
-  /// Event type
+  /// 事件类型。
   final DatabaseEventType type;
 
-  /// Table name
+  /// 表名。
   final String table;
 
-  /// New/current record data
+  /// 新 / 当前记录数据。
   final Map<String, dynamic> record;
 
-  /// Old record data (for update/delete events)
+  /// 旧记录数据（update / delete 事件）。
   final Map<String, dynamic>? oldRecord;
 
-  /// Event timestamp
-  final DateTime timestamp;
+  /// 事件时间戳（可选）。
+  ///
+  /// 缺省为 null，避免消费方把 1970-01-01 哨兵值当成真实时间。
+  final DateTime? timestamp;
 
   DatabaseEvent({
     required this.type,
     required this.table,
     required this.record,
     this.oldRecord,
-    DateTime? timestamp,
-  }) : timestamp = timestamp ?? DateTime.fromMillisecondsSinceEpoch(0);
+    this.timestamp,
+  });
 
   @override
   String toString() {
@@ -47,15 +48,15 @@ class DatabaseEvent {
   }
 }
 
-/// Query filter
+/// 查询过滤器。
 class QueryFilter {
-  /// Column name
+  /// 列名。
   final String column;
 
-  /// Operator (eq, gt, lt, gte, lte, like, in, etc.)
+  /// 操作符（eq、gt、lt、gte、lte、like、in 等）。
   final String operator;
 
-  /// Value
+  /// 值。
   final dynamic value;
 
   const QueryFilter({
@@ -64,37 +65,37 @@ class QueryFilter {
     required this.value,
   });
 
-  /// Equal filter
+  /// 等于。
   static QueryFilter eq(String column, dynamic value) {
     return QueryFilter(column: column, operator: 'eq', value: value);
   }
 
-  /// Greater than filter
+  /// 大于。
   static QueryFilter gt(String column, dynamic value) {
     return QueryFilter(column: column, operator: 'gt', value: value);
   }
 
-  /// Less than filter
+  /// 小于。
   static QueryFilter lt(String column, dynamic value) {
     return QueryFilter(column: column, operator: 'lt', value: value);
   }
 
-  /// Greater than or equal filter
+  /// 大于等于。
   static QueryFilter gte(String column, dynamic value) {
     return QueryFilter(column: column, operator: 'gte', value: value);
   }
 
-  /// Less than or equal filter
+  /// 小于等于。
   static QueryFilter lte(String column, dynamic value) {
     return QueryFilter(column: column, operator: 'lte', value: value);
   }
 
-  /// Like filter (pattern matching)
+  /// 模糊匹配。
   static QueryFilter like(String column, String pattern) {
     return QueryFilter(column: column, operator: 'like', value: pattern);
   }
 
-  /// In filter (value in list)
+  /// 值在列表中。
   static QueryFilter inList(String column, List<dynamic> values) {
     return QueryFilter(column: column, operator: 'in', value: values);
   }
@@ -105,21 +106,21 @@ class QueryFilter {
   }
 }
 
-/// Cloud database service interface
+/// 云数据库服务接口。
 ///
-/// Provides CRUD operations and realtime subscriptions for cloud databases.
+/// 提供 CRUD 与实时订阅能力。
 ///
-/// Example:
+/// 示例：
 /// ```dart
 /// final dbService = SupabaseDatabaseProvider(client);
 ///
-/// // Insert
+/// // 插入
 /// final record = await dbService.insert(
 ///   table: 'transactions',
 ///   data: {'amount': 100, 'note': 'Test'},
 /// );
 ///
-/// // Query
+/// // 查询
 /// final records = await dbService.query(
 ///   table: 'transactions',
 ///   filters: [QueryFilter.eq('user_id', userId)],
@@ -128,7 +129,7 @@ class QueryFilter {
 ///   limit: 10,
 /// );
 ///
-/// // Subscribe to changes
+/// // 订阅变更
 /// dbService.subscribe(
 ///   table: 'transactions',
 ///   filters: [QueryFilter.eq('ledger_id', ledgerId)],
@@ -137,23 +138,22 @@ class QueryFilter {
 /// });
 /// ```
 abstract class CloudDatabaseService {
-  /// Insert a record
+  /// 插入记录。
   ///
-  /// Returns the inserted record (with server-generated fields like id, timestamps).
+  /// 返回插入后的记录（含服务端生成字段，如 id、时间戳）。
   ///
-  /// - [autoInjectUserId]: 自动注入当前用户ID (默认: true)
+  /// [autoInjectUserId] - 自动注入当前用户 ID（默认 true）。
   Future<Map<String, dynamic>> insert({
     required String table,
     required Map<String, dynamic> data,
     bool autoInjectUserId = true,
   });
 
-  /// Update a record
+  /// 按 [id] 更新记录。
   ///
-  /// Uses [id] to identify the record to update.
-  /// Returns the updated record.
+  /// 返回更新后的记录。
   ///
-  /// - [autoFilterByUser]: 自动添加用户过滤(防止修改其他用户数据, 默认: true)
+  /// [autoFilterByUser] - 自动追加用户过滤，防止修改其他用户数据（默认 true）。
   Future<Map<String, dynamic>> update({
     required String table,
     required String id,
@@ -161,25 +161,23 @@ abstract class CloudDatabaseService {
     bool autoFilterByUser = true,
   });
 
-  /// Delete a record
+  /// 按 [id] 删除记录。
   ///
-  /// Uses [id] to identify the record to delete.
-  ///
-  /// - [autoFilterByUser]: 自动添加用户过滤(防止删除其他用户数据, 默认: true)
+  /// [autoFilterByUser] - 自动追加用户过滤，防止删除其他用户数据（默认 true）。
   Future<void> delete({
     required String table,
     required String id,
     bool autoFilterByUser = true,
   });
 
-  /// Query records
+  /// 查询记录。
   ///
-  /// - [filters]: List of query filters (AND logic)
-  /// - [orderBy]: Column to sort by
-  /// - [descending]: Sort descending (default: false)
-  /// - [limit]: Maximum number of records to return
-  /// - [offset]: Number of records to skip
-  /// - [autoFilterByUser]: 自动添加用户过滤(默认: true)
+  /// [filters] - 查询过滤器列表（AND 逻辑）
+  /// [orderBy] - 排序列
+  /// [descending] - 是否降序（默认 false）
+  /// [limit] - 返回上限
+  /// [offset] - 跳过的记录数
+  /// [autoFilterByUser] - 自动追加用户过滤（默认 true）
   Future<List<Map<String, dynamic>>> query({
     required String table,
     List<QueryFilter>? filters,
@@ -190,56 +188,72 @@ abstract class CloudDatabaseService {
     bool autoFilterByUser = true,
   });
 
-  /// Get a single record by ID
+  /// 按 ID 获取单条记录。
   ///
-  /// Returns null if not found.
+  /// 不存在时返回 null。
+  ///
+  /// [autoFilterByUser] - 自动追加用户过滤（默认 true），
+  /// 防止适配器直接按 id 查表造成跨用户读取（IDOR）。
   Future<Map<String, dynamic>?> getById({
     required String table,
     required String id,
+    bool autoFilterByUser = true,
   });
 
-  /// Subscribe to table changes (Realtime)
+  /// 订阅表变更（Realtime）。
   ///
-  /// Returns a stream of database events.
-  /// The stream emits events when records are inserted, updated, or deleted.
+  /// 返回数据库事件流；记录插入 / 更新 / 删除时触发。
   ///
-  /// - [filters]: Filter which events to receive
-  /// - [event]: Filter by event type (insert/update/delete), '*' for all
+  /// [filters] - 事件过滤条件
+  /// [event] - 事件类型（insert / update / delete，'*' 表示全部）
+  /// [autoFilterByUser] - 订阅流必须按当前用户过滤（默认 true），
+  /// 实现方不得把其他用户的变更推送给订阅方。
   Stream<DatabaseEvent> subscribe({
     required String table,
     List<QueryFilter>? filters,
     String event = '*',
+    bool autoFilterByUser = true,
   });
 
-  /// Batch insert multiple records
+  /// 批量插入。
   ///
-  /// Returns the inserted records.
+  /// 返回插入后的记录列表。
+  ///
+  /// [autoInjectUserId] - 自动为每条记录注入当前用户 ID（默认 true），
+  /// 与单条 [insert] 保持一致的越权防御语义。
   Future<List<Map<String, dynamic>>> batchInsert({
     required String table,
     required List<Map<String, dynamic>> data,
+    bool autoInjectUserId = true,
   });
 
-  /// Batch update multiple records
+  /// 批量更新。
   ///
-  /// Uses [idField] to identify records (default: 'id').
-  /// Each data map should contain the id field.
+  /// [idField] - 标识记录的字段（默认 'id'），每条 data 需包含该字段。
+  /// [autoFilterByUser] - 自动追加用户过滤（默认 true），
+  /// 防止凭 id 批量修改其他用户记录。
   Future<void> batchUpdate({
     required String table,
     required List<Map<String, dynamic>> data,
     String idField = 'id',
+    bool autoFilterByUser = true,
   });
 
-  /// Batch delete multiple records
+  /// 按过滤器批量删除。
   ///
-  /// Deletes all records matching the filters.
+  /// [autoFilterByUser] - 自动追加用户过滤（默认 true），
+  /// 防止删除范围意外覆盖其他用户记录。
   Future<void> batchDelete({
     required String table,
     required List<QueryFilter> filters,
+    bool autoFilterByUser = true,
   });
 
-  /// Execute a custom query (provider-specific)
+  /// 执行自定义查询（提供方特有）。
   ///
-  /// This allows executing provider-specific queries when needed.
-  /// Use with caution as it may not be portable across providers.
+  /// 安全约束：
+  /// - 仅限服务端内部 / 受信任调用方使用，禁止把用户输入直接拼进 [query]；
+  /// - 适配器实现必须使用参数化绑定，避免 SQL 注入；
+  /// - 接口不可移植，跨提供方行为不保证一致。
   Future<List<Map<String, dynamic>>> rawQuery(String query);
 }

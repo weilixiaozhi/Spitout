@@ -71,6 +71,7 @@ class MockCloudAuthService implements CloudAuthService {
 
 class MockCloudStorageService implements CloudStorageService {
   final Map<String, _StoredFile> _files = {};
+  int downloadCalls = 0;
 
   @override
   Future<void> upload({
@@ -83,6 +84,7 @@ class MockCloudStorageService implements CloudStorageService {
 
   @override
   Future<String?> download({required String path}) async {
+    downloadCalls++;
     return _files[path]?.data;
   }
 
@@ -128,8 +130,13 @@ class _StoredFile {
 }
 
 class MockDataSerializer implements DataSerializer<int> {
+  bool failSerialize = false;
+
   @override
   Future<String> serialize(int data) async {
+    if (failSerialize) {
+      throw StateError('serialize boom');
+    }
     return jsonEncode({'id': data});
   }
 
@@ -159,6 +166,7 @@ void main() {
     mockAuth = mockProvider.auth as MockCloudAuthService;
     mockStorage = mockProvider.storage as MockCloudStorageService;
     mockSerializer = MockDataSerializer();
+    mockSerializer.failSerialize = false;
 
     syncManager = CloudSyncManager<int>(
       provider: mockProvider,
@@ -221,6 +229,20 @@ void main() {
       expect(metadata!.metadata!['version'], equals('1.0'));
       expect(metadata.metadata!['app'], equals('MyApp'));
       expect(metadata.metadata!['fingerprint'], isNotNull);
+    });
+
+    test('should throw CloudSerializationException when serializer fails',
+        () async {
+      // Arrange
+      const testUser = CloudUser(id: 'user123');
+      mockAuth.setCurrentUser(testUser);
+      mockSerializer.failSerialize = true;
+
+      // Act & Assert
+      expect(
+        () => syncManager.upload(data: 123, path: 'test.json'),
+        throwsA(isA<CloudSerializationException>()),
+      );
     });
   });
 
@@ -394,6 +416,73 @@ void main() {
       );
 
       // Assert - should detect out of sync
+      expect(status.state, equals(SyncState.outOfSync));
+    });
+
+    test('should not download cloud data when metadata fingerprint matches',
+        () async {
+      // Arrange
+      const testUser = CloudUser(id: 'user123');
+      const testData = 123;
+      const testPath = 'test.json';
+
+      mockAuth.setCurrentUser(testUser);
+      await syncManager.upload(data: testData, path: testPath);
+
+      // Act
+      mockStorage.downloadCalls = 0;
+      final status = await syncManager.getStatus(
+        data: testData,
+        path: testPath,
+        forceRefresh: true,
+      );
+
+      // Assert - 指纹一致时仅用 metadata 判断，无需下载正文。
+      expect(status.state, equals(SyncState.synced));
+      expect(mockStorage.downloadCalls, 0);
+    });
+
+    test('should return unknown when local data is missing', () async {
+      // Arrange
+      const testUser = CloudUser(id: 'user123');
+      const testData = 123;
+      const testPath = 'test.json';
+
+      mockAuth.setCurrentUser(testUser);
+      await syncManager.upload(data: testData, path: testPath);
+
+      // Act - 不传 data，本地无可比对的指纹。
+      final status = await syncManager.getStatus(path: testPath);
+
+      // Assert - 不得误报 synced。
+      expect(status.state, equals(SyncState.unknown));
+    });
+
+    test('cache is isolated per user', () async {
+      // Arrange
+      const userA = CloudUser(id: 'userA');
+      const userB = CloudUser(id: 'userB');
+      const testData = 123;
+      const testPath = 'test.json';
+
+      mockAuth.setCurrentUser(userA);
+      await syncManager.upload(data: testData, path: testPath);
+      // 填充 userA 的缓存（synced）。
+      await syncManager.getStatus(data: testData, path: testPath);
+
+      // 云端改为不同指纹。
+      await mockStorage.upload(
+        path: testPath,
+        data: '{"id": 999}',
+        metadata: {'fingerprint': 'different'},
+      );
+
+      // Act - 切换账号后同一 path 再次查询。
+      mockAuth.setCurrentUser(userB);
+      final status =
+          await syncManager.getStatus(data: testData, path: testPath);
+
+      // Assert - 若命中 userA 缓存会误报 synced；正确行为是 outOfSync。
       expect(status.state, equals(SyncState.outOfSync));
     });
   });

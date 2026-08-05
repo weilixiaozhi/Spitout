@@ -15,17 +15,42 @@ library;
 
 // 核心包类型（Spitout Cloud 之外的通用云同步类型）
 export 'package:flutter_cloud_sync/flutter_cloud_sync.dart'
-    show CloudBackendType, CloudServiceConfig, CloudUser, CloudAuthException,
-        CloudProvider, CloudAuthService, NoopAuthService, CloudSyncException,
-        CloudNotAuthenticatedException, CloudConfigurationException,
-        CloudStorageException, createCloudServices, CloudServiceStore,
-        encodeCloudConfig, decodeCloudConfig;
+    show
+        CloudBackendType,
+        CloudServiceConfig,
+        CloudUser,
+        CloudAuthException,
+        CloudProvider,
+        CloudAuthService,
+        NoopAuthService,
+        CloudSyncException,
+        CloudNotAuthenticatedException,
+        CloudConfigurationException,
+        CloudStorageException,
+        CloudSerializationException,
+        CloudSyncLogger,
+        CloudCredentialStorage,
+        SharedPreferencesCredentialStorage,
+        createCloudServices,
+        CloudServiceStore,
+        encodeCloudConfig,
+        decodeCloudConfig;
 
 // Spitout Cloud adapter 类型（白名单，随 analyze 实测收敛）
 export 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart'
-    show SpitoutCloudProvider, SpitoutCloudLedgerMember, SpitoutCloudInvite,
-        SpitoutCloudInvitePreview, SpitoutCloudMemberStats,
-        SpitoutCloudMemberStatItem, TwoFactorChallengeRequest, TwoFactorStatus,
-        SpitoutCloudAuthService, SpitoutCloudRealtimeEvent, SpitoutCloudReadLedger,
-        SpitoutCloudPullResult, SpitoutCloudSyncChange,
+    show
+        SpitoutCloudProvider,
+        SpitoutCloudSyncBackend,
+        SpitoutCloudLedgerMember,
+        SpitoutCloudInvite,
+        SpitoutCloudInvitePreview,
+        SpitoutCloudMemberStats,
+        SpitoutCloudMemberStatItem,
+        TwoFactorChallengeRequest,
+        TwoFactorStatus,
+        SpitoutCloudAuthService,
+        SpitoutCloudRealtimeEvent,
+        SpitoutCloudReadLedger,
+        SpitoutCloudPullResult,
+        SpitoutCloudSyncChange,
         SpitoutCloudInviteAcceptResult;

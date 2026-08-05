@@ -23,6 +23,14 @@ import '../../core/logging/logger_service.dart';
 
 // --- 数据导入服务 ---
 
+/// 导入被用户取消时抛出。
+///
+/// 由 UI 层的进度回调在批次间隙抛出,导入服务循环据此中止,
+/// 已落库的批次保留、未处理的批次不再写入。
+class ImportCancelledException implements Exception {
+  const ImportCancelledException();
+}
+
 /// 校验单个导入分类；返回空列表表示合法，否则返回错误原因列表。
 ///
 /// 全局仅支出模式，分类必须是 expense；level 只允许 1/2，二级必须带父分类名。

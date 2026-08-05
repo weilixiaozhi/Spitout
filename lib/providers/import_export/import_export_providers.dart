@@ -1,8 +1,15 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
 import '../../services/export/config_export_service.dart';
+import '../../services/export/detail_export_service.dart';
+
+// 页面统一经 providers 门面引用服务层模型类型,不直接 import services 文件。
+export '../../services/export/config_export_service.dart'
+    show ExportOptions, ConfigContentInfo;
+export '../../services/export/detail_export_service.dart' show DetailExportResult;
 
 // 导入任务进度：用于显示"后台导入中"状态与进度
 class ImportProgress {
@@ -64,10 +71,44 @@ final importProgressProvider =
     );
 
 /// 配置导入动作门面：页面只依赖 providers，不直接触碰服务层。
-final importConfigFromYamlProvider =
-    Provider<Future<void> Function(String yamlContent)>((ref) {
-      return (yamlContent) => ConfigExportService.importFromYaml(
-        yamlContent,
-        repository: ref.read(repositoryProvider),
-      );
-    });
+///
+/// [options] 控制导入哪些内容与是否覆盖凭据(见 [ExportOptions.includeCredentials])。
+Future<void> importConfigFromYaml(
+  WidgetRef ref,
+  String yamlContent,
+  ExportOptions options,
+) {
+  return ConfigExportService.importFromYaml(
+    yamlContent,
+    repository: ref.read(repositoryProvider),
+    options: options,
+  );
+}
+
+/// 配置导出动作门面：按选项生成 YAML 字符串。
+Future<String> exportConfigToYaml(WidgetRef ref, ExportOptions options) {
+  return ConfigExportService.exportToYaml(
+    repository: ref.read(repositoryProvider),
+    options: options,
+  );
+}
+
+/// 检测 YAML 中包含哪些配置项（纯函数门面）。
+ConfigContentInfo detectConfigContent(String yamlContent) =>
+    ConfigExportService.detectContent(yamlContent);
+
+/// 明细导出动作门面：导出指定账本 CSV 并返回保存路径。
+Future<DetailExportResult> exportDetailCsvFromUi(
+  WidgetRef ref, {
+  required int ledgerId,
+  DateTimeRange? dateRange,
+  required void Function(double) onProgress,
+}) {
+  return exportDetailCsv(
+    context: ref.context,
+    repo: ref.read(repositoryProvider),
+    ledgerId: ledgerId,
+    dateRange: dateRange,
+    onProgress: onProgress,
+  );
+}

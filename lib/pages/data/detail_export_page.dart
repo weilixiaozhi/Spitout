@@ -6,9 +6,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../services/export/detail_export_service.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
+import '../../core/logging/logger_service.dart';
 import '../../widgets/widgets.dart';
 
 /// 将「起始日 ~ 结束日」展开为导出时间范围（闭区间）。
@@ -60,12 +60,29 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
 
   /// 账本列表请求缓存在 state 中，避免 setState 触发重复查询
   late final Future<List<Ledger>> _ledgersFuture;
+  /// 账本列表加载完成且为空:用于空态渲染与禁用导出,避免 Dropdown 断言。
+  bool _ledgersEmpty = false;
 
   @override
   void initState() {
     super.initState();
     _ledgerId = ref.read(currentLedgerIdProvider);
     _ledgersFuture = ref.read(repositoryProvider).getAllLedgers();
+    _ledgersFuture.then((ledgers) {
+      if (!mounted) return;
+      setState(() {
+        _ledgersEmpty = ledgers.isEmpty;
+        // 当前账本不在列表中(如已被删除)时回退到首个账本。
+        if (ledgers.isNotEmpty && !ledgers.any((l) => l.id == _ledgerId)) {
+          _ledgerId = ledgers.first.id;
+        }
+      });
+    }).catchError((Object e, StackTrace st) {
+      logger.error('DetailExportPage', '加载账本列表失败', e, st);
+      if (mounted) {
+        setState(() => _ledgersEmpty = true);
+      }
+    });
     final now = DateTime.now();
     _startDate =
         widget.initialStartDate ?? DateTime(now.year, 1, 1);
@@ -135,7 +152,9 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
         child: Padding(
           padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 12.0),
           child: FilledButton(
-            onPressed: _exporting || _rangeInvalid ? null : _export,
+            onPressed: _exporting || _rangeInvalid || _ledgersEmpty
+                ? null
+                : _export,
             child: _exporting
                 ? const SizedBox(
                     width: 18,
@@ -158,11 +177,33 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
       future: _ledgersFuture,
       builder: (context, snapshot) {
         final ledgers = snapshot.data ?? const <Ledger>[];
-        // 防御：当前账本 ID 不在列表中时（理论上不会发生），回退到首个账本，
-        // 避免 DropdownButton 的 value 不在 items 中断言失败
-        final effectiveId = ledgers.any((l) => l.id == _ledgerId)
-            ? _ledgerId
-            : (ledgers.isNotEmpty ? ledgers.first.id : _ledgerId);
+        // 空账本:不渲染 DropdownButton(其 value 不在 items 会断言崩溃),
+        // 改为空态提示,导出按钮同步禁用。
+        if (snapshot.connectionState == ConnectionState.done &&
+            ledgers.isEmpty) {
+          return Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            child: Row(
+              children: [
+                Text(
+                  l10n.detailExportLedgerLabel,
+                  style: TextStyle(
+                    fontSize: 15,
+                    color: SpitoutTokens.textPrimary(context),
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  l10n.ledgersEmpty,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: SpitoutTokens.textTertiary(context),
+                  ),
+                ),
+              ],
+            ),
+          );
+        }
 
         return Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
@@ -184,7 +225,7 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
                 )
               else
                 DropdownButton<int>(
-                  value: effectiveId,
+                  value: _ledgerId,
                   underline: const SizedBox.shrink(),
                   items: [
                     for (final ledger in ledgers)
@@ -314,6 +355,8 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
   }
 
   /// 拉起年-月-日滚轮选择器，确认后更新起止日期。
+  ///
+  /// 仅非全选模式下可用;选择器返回 null(取消)时不改动日期。
   Future<void> _pickDate({required bool isStart}) async {
     final picked = await showWheelDatePicker(
       context,
@@ -335,7 +378,6 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
   /// 否则将起止日期展开为闭区间后导出；结果以弹窗反馈。
   Future<void> _export() async {
     final l10n = AppLocalizations.of(context);
-    final repo = ref.read(repositoryProvider);
 
     // Android 11+ 写公共 Download 需「所有文件访问」授权：导出前引导一次，
     // 未授权也不阻断，服务层会自动降级到应用专属目录。
@@ -347,9 +389,8 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
 
     setState(() => _exporting = true);
     try {
-      final result = await exportDetailCsv(
-        context: context,
-        repo: repo,
+      final result = await exportDetailCsvFromUi(
+        ref,
         ledgerId: _ledgerId,
         dateRange:
             _selectAll ? null : buildDetailExportRange(_startDate, _endDate),
@@ -359,14 +400,18 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
       await AppDialog.info(
         context,
         title: l10n.exportSuccessTitle,
-        message: l10n.exportSuccessMessageAndroid(result.displayPath),
+        // iOS 走应用文档目录,展示平台对应文案,不沿用 Android 专用提示。
+        message: Platform.isAndroid
+            ? l10n.exportSuccessMessageAndroid(result.displayPath)
+            : l10n.exportSuccessMessageIos(result.displayPath),
       );
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('DetailExportPage', '导出明细失败', e, st);
       if (!mounted) return;
       await AppDialog.error(
         context,
         title: l10n.exportFailedTitle,
-        message: e.toString(),
+        message: l10n.commonOperationFailed,
       );
     } finally {
       if (mounted) {

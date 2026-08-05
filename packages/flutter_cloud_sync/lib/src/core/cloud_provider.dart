@@ -1,51 +1,50 @@
 import 'auth_service.dart';
 import 'storage_service.dart';
 
-/// Abstract interface for cloud service providers
+/// 云服务提供方抽象接口。
 ///
-/// Each cloud service (Supabase, WebDAV, S3, etc.) implements this interface
-/// to provide a unified way to access authentication and storage services.
+/// 每个云服务（Supabase、WebDAV、S3 等）实现本接口，
+/// 以统一方式暴露认证与存储服务。
 abstract class CloudProvider {
-  /// Unique provider identifier
+  /// 提供方唯一标识。
   ///
-  /// Used for configuration storage, logging, etc.
-  /// Examples: 'supabase', 'webdav', 's3'
+  /// 用于配置存储、日志等场景。
+  /// 示例：'supabase'、'webdav'、's3'。
   String get providerId;
 
-  /// Provider display name
+  /// 提供方展示名称。
   ///
-  /// Used for UI display.
-  /// Examples: 'Supabase', 'WebDAV', 'AWS S3'
+  /// 用于 UI 展示。
+  /// 示例：'Supabase'、'WebDAV'、'AWS S3'。
   String get providerName;
 
-  /// Authentication service instance
+  /// 认证服务实例。
   CloudAuthService get auth;
 
-  /// Storage service instance
+  /// 存储服务实例。
   CloudStorageService get storage;
 
-  /// Initialize the provider with configuration
+  /// 使用配置初始化提供方。
   ///
-  /// [config] - Configuration parameters (provider-specific)
+  /// [config] - 配置参数（提供方特有）。
   ///
-  /// Different providers require different configurations:
+  /// 不同提供方需要不同配置：
   /// - Supabase: {'url': String, 'anonKey': String, 'bucket': String?}
   /// - WebDAV: {'url': String, 'username': String, 'password': String, 'remotePath': String?}
   /// - S3: {'region': String, 'accessKey': String, 'secretKey': String, 'bucket': String}
   ///
-  /// Throws [CloudConfigurationException] if configuration is invalid.
+  /// 配置无效时抛出 [CloudConfigurationException]。
   Future<void> initialize(Map<String, dynamic> config);
 
-  /// Validate configuration before initialization
+  /// 初始化前校验配置。
   ///
-  /// Call this before [initialize] to avoid runtime errors.
+  /// 在 [initialize] 之前调用可避免运行时错误。
   ///
-  /// Returns true if configuration is valid, false otherwise.
+  /// 配置有效返回 true，否则返回 false。
   bool validateConfig(Map<String, dynamic> config);
 
-  /// Dispose resources
+  /// 释放资源。
   ///
-  /// Close connections, clear caches, etc.
-  /// Should be called when switching providers or app shutdown.
+  /// 关闭连接、清理缓存等；切换提供方或应用退出时应调用。
   Future<void> dispose();
 }

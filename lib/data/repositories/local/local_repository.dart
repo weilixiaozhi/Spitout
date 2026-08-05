@@ -50,6 +50,10 @@ class LocalRepository extends BaseRepository {
   late final LocalExchangeRateRepository _exchangeRateRepo;
   late final LocalLedgerVirtualUserRepository _virtualUserRepo;
 
+  @override
+  Future<T> runInTransaction<T>(Future<T> Function() action) =>
+      db.transaction(action);
+
   LocalRepository(this.db, {this.changeTracker, this.snapshotDirtyMarker}) {
     // 注入 trackerGetter / snapshotDirtyMarkerGetter:createLedger 在数据层直接
     // 登记变更(增量走 local_changes / 快照走 snapshot_dirty_ledgers),由各自

@@ -22,6 +22,12 @@ class CategoryPickerTree {
 /// 分类Repository接口
 /// 定义分类相关的所有数据操作
 abstract class CategoryRepository {
+  /// 在单个事务中执行分类写入动作。
+  ///
+  /// 模板批量写入等「父+子必须整体成功」的场景使用:任一步失败整体回滚,
+  /// 不会留下只有父没有子的半套数据。实现方用底层数据库事务包装 [action]。
+  Future<T> runInTransaction<T>(Future<T> Function() action);
+
   /// 创建分类。撞同名抛 [DuplicateNameException]。
   ///
   /// 唯一性契约(作用域内唯一):

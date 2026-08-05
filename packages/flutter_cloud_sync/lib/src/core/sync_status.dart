@@ -1,81 +1,84 @@
 import 'package:meta/meta.dart';
 
-/// Sync state enumeration
+/// 同步状态枚举。
 enum SyncState {
-  /// Cloud service not configured
+  /// 云服务未配置。
   notConfigured,
 
-  /// User not authenticated
+  /// 用户未登录。
   notAuthenticated,
 
-  /// Only local data exists, no cloud backup
+  /// 仅存在本地数据，无云端备份。
   localOnly,
 
-  /// Data is synchronized (local and cloud match)
+  /// 本地与云端数据一致。
   synced,
 
-  /// Data is out of sync (local and cloud differ)
+  /// 本地与云端数据不一致。
   outOfSync,
 
-  /// Upload in progress
+  /// 上传进行中。
   uploading,
 
-  /// Download in progress
+  /// 下载进行中。
   downloading,
 
-  /// Error occurred
+  /// 发生错误。
   error,
 
-  /// Unknown state
+  /// 无法判断（例如无本地数据可比对）。
   unknown,
 }
 
-/// Sync direction when data is out of sync
+/// 数据不一致时的同步方向。
 enum SyncDirection {
-  /// Local data is newer than cloud
+  /// 本地数据较新。
   localNewer,
 
-  /// Cloud data is newer than local
+  /// 云端数据较新。
   cloudNewer,
 
-  /// Cannot determine which is newer
+  /// 无法判断哪边较新。
   unknown,
 }
 
-/// Sync status information
+/// 同步状态信息。
+///
+/// 不可变对象；`==` 比较全部字段，保证上层（Riverpod / StateNotifier）用
+/// 相等性判断状态变化时，计数、方向、进度等任一字段变化都能触发刷新。
 @immutable
 class SyncStatus {
-  /// Current sync state
+  /// 当前同步状态。
   final SyncState state;
 
-  /// Local data fingerprint (optional)
+  /// 本地数据指纹（可选）。
   final String? localFingerprint;
 
-  /// Cloud data fingerprint (optional)
+  /// 云端数据指纹（可选）。
   final String? cloudFingerprint;
 
-  /// Last sync timestamp (optional)
+  /// 最近一次同步时间（可选）。
   final DateTime? lastSyncedAt;
 
-  /// Local data updated timestamp (optional)
+  /// 本地数据更新时间（可选）。
   final DateTime? localUpdatedAt;
 
-  /// Cloud data updated timestamp (optional)
+  /// 云端数据更新时间（可选）。
   final DateTime? cloudUpdatedAt;
 
-  /// Sync direction when out of sync (optional)
+  /// 不一致时的同步方向（可选）。
   final SyncDirection? direction;
 
-  /// Local data count (optional)
+  /// 本地数据条数（可选）。
   final int? localCount;
 
-  /// Cloud data count (optional)
+  /// 云端数据条数（可选）。
   final int? cloudCount;
 
-  /// Status message or error description (optional)
+  /// 状态文案或错误描述（可选）。
   final String? message;
 
-  /// Progress percentage (0.0 - 1.0, optional)
+  /// 进度（0.0 - 1.0，可选）。
   final double? progress;
 
   const SyncStatus({
@@ -92,28 +95,28 @@ class SyncStatus {
     this.progress,
   });
 
-  /// Whether data is synchronized
+  /// 是否已同步。
   bool get isSynced => state == SyncState.synced;
 
-  /// Whether sync is needed
+  /// 是否需要同步（不一致或仅本地）。
   bool get needsSync =>
       state == SyncState.outOfSync || state == SyncState.localOnly;
 
-  /// Whether sync is possible
+  /// 是否具备执行同步的条件。
   bool get canSync =>
       state != SyncState.notConfigured &&
       state != SyncState.notAuthenticated &&
       state != SyncState.uploading &&
       state != SyncState.downloading;
 
-  /// Whether an operation is in progress
+  /// 是否有操作进行中。
   bool get isLoading =>
       state == SyncState.uploading || state == SyncState.downloading;
 
-  /// Whether local data is newer than cloud
+  /// 本地数据是否较新。
   bool get isLocalNewer => direction == SyncDirection.localNewer;
 
-  /// Whether cloud data is newer than local
+  /// 云端数据是否较新。
   bool get isCloudNewer => direction == SyncDirection.cloudNewer;
 
   @override
@@ -123,16 +126,35 @@ class SyncStatus {
           runtimeType == other.runtimeType &&
           state == other.state &&
           localFingerprint == other.localFingerprint &&
-          cloudFingerprint == other.cloudFingerprint;
+          cloudFingerprint == other.cloudFingerprint &&
+          lastSyncedAt == other.lastSyncedAt &&
+          localUpdatedAt == other.localUpdatedAt &&
+          cloudUpdatedAt == other.cloudUpdatedAt &&
+          direction == other.direction &&
+          localCount == other.localCount &&
+          cloudCount == other.cloudCount &&
+          message == other.message &&
+          progress == other.progress;
 
   @override
-  int get hashCode =>
-      state.hashCode ^ localFingerprint.hashCode ^ cloudFingerprint.hashCode;
+  int get hashCode => Object.hash(
+        state,
+        localFingerprint,
+        cloudFingerprint,
+        lastSyncedAt,
+        localUpdatedAt,
+        cloudUpdatedAt,
+        direction,
+        localCount,
+        cloudCount,
+        message,
+        progress,
+      );
 
   @override
   String toString() => 'SyncStatus(state: $state, message: $message)';
 
-  /// Create a copy with modified fields
+  /// 创建副本并修改指定字段。
   SyncStatus copyWith({
     SyncState? state,
     String? localFingerprint,

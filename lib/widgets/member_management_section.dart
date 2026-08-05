@@ -908,16 +908,19 @@ class _MemberManagementSectionState
             ),
           ),
         ),
-        const SizedBox(height: 8),
-        Center(
-          child: Text(
-            l10n.sharedInviteExpiresAt(
-              invite.expiresAt.toLocal().toString().split('.').first,
+        // server 缺 / 坏 expires_at 时隐藏有效期行,不伪造时间展示。
+        if (invite.expiresAt != null) ...[
+          const SizedBox(height: 8),
+          Center(
+            child: Text(
+              l10n.sharedInviteExpiresAt(
+                invite.expiresAt!.toLocal().toString().split('.').first,
+              ),
+              style: TextStyle(
+                  color: SpitoutTokens.textTertiary(context), fontSize: 12),
             ),
-            style: TextStyle(
-                color: SpitoutTokens.textTertiary(context), fontSize: 12),
           ),
-        ),
+        ],
         const SizedBox(height: 24),
         Row(
           children: [

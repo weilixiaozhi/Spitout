@@ -30,7 +30,8 @@ class S3Provider implements CloudProvider {
   @override
   CloudAuthService get auth {
     if (_authService == null) {
-      throw StateError('S3Provider not initialized. Call initialize() first.');
+      throw CloudConfigurationException(
+          'S3Provider not initialized. Call initialize() first.');
     }
     return _authService!;
   }
@@ -38,15 +39,24 @@ class S3Provider implements CloudProvider {
   @override
   CloudStorageService get storage {
     if (_storageService == null) {
-      throw StateError('S3Provider not initialized. Call initialize() first.');
+      throw CloudConfigurationException(
+          'S3Provider not initialized. Call initialize() first.');
     }
     return _storageService!;
   }
 
   @override
   Future<void> initialize(Map<String, dynamic> config) async {
+    // 与接口契约一致：先校验再解析，避免缺失 key 直接抛 TypeError。
+    if (!validateConfig(config)) {
+      throw CloudConfigurationException(
+        'Invalid S3 configuration. '
+        'Required keys: endpoint, accessKey, secretKey, bucket',
+      );
+    }
+
     // 解析配置
-    final endpoint = config['endpoint'] as String;
+    final rawEndpoint = config['endpoint'] as String;
     final region = config['region'] as String? ?? 'us-east-1';
     final accessKey = config['accessKey'] as String;
     final secretKey = config['secretKey'] as String;
@@ -54,16 +64,8 @@ class S3Provider implements CloudProvider {
     final useSSL = config['useSSL'] as bool? ?? true;
     final port = config['port'] as int?;
 
-    // 解析 endpoint（可能包含端口）
-    String host;
-    int? finalPort = port;
-    if (endpoint.contains(':') && port == null) {
-      final parts = endpoint.split(':');
-      host = parts[0];
-      finalPort = int.tryParse(parts[1]);
-    } else {
-      host = endpoint;
-    }
+    // 解析 endpoint：兼容「带协议 URL」「host:port」「IPv6 字面量」。
+    final (host, finalPort) = _parseEndpoint(rawEndpoint, port);
 
     // 创建 S3 客户端
     _client = S3Client(
@@ -103,6 +105,28 @@ class S3Provider implements CloudProvider {
     _storageService = S3StorageService(_client!, _bucket!);
   }
 
+  /// 解析 endpoint 为 host + port。
+  ///
+  /// 支持：
+  /// - `s3.example.com` / `s3.example.com:9000`
+  /// - `http://s3.example.com:9000`（协议前缀会被剥离，scheme 由 [useSSL] 决定）
+  /// - `[::1]:9000` 这类 IPv6 字面量（只在最后一个冒号后是数字时拆端口）
+  (String, int?) _parseEndpoint(String endpoint, int? port) {
+    if (endpoint.contains('://')) {
+      final uri = Uri.parse(endpoint);
+      return (uri.host, uri.hasPort ? uri.port : port);
+    }
+
+    final colonIndex = endpoint.lastIndexOf(':');
+    final afterColon =
+        colonIndex >= 0 ? endpoint.substring(colonIndex + 1) : '';
+    final parsedPort = int.tryParse(afterColon);
+    if (colonIndex > 0 && parsedPort != null) {
+      return (endpoint.substring(0, colonIndex), parsedPort);
+    }
+    return (endpoint, port);
+  }
+
   @override
   bool validateConfig(Map<String, dynamic> config) {
     // 必需字段验证
@@ -119,10 +143,14 @@ class S3Provider implements CloudProvider {
     final secretKey = config['secretKey'] as String?;
     final bucket = config['bucket'] as String?;
 
-    return endpoint != null && endpoint.isNotEmpty &&
-           accessKey != null && accessKey.isNotEmpty &&
-           secretKey != null && secretKey.isNotEmpty &&
-           bucket != null && bucket.isNotEmpty;
+    return endpoint != null &&
+        endpoint.isNotEmpty &&
+        accessKey != null &&
+        accessKey.isNotEmpty &&
+        secretKey != null &&
+        secretKey.isNotEmpty &&
+        bucket != null &&
+        bucket.isNotEmpty;
   }
 
   @override

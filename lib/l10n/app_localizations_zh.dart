@@ -119,6 +119,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonOperationFailed => '操作失败，请稍后重试';
 
   @override
+  String get commonRetry => '重试';
+
+  @override
   String get commonBack => '返回';
 
   @override
@@ -479,6 +482,14 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get importNoDataParsed => '未解析到任何数据，请返回上一页检查 CSV 内容或分隔符。';
+
+  @override
+  String get importNoLedger => '请先创建账本再导入';
+
+  @override
+  String importInvalidRowsSkipped(int count) {
+    return '无法解析的 $count 行已跳过（金额或日期无效）';
+  }
 
   @override
   String get importFieldDate => '日期';
@@ -1459,6 +1470,11 @@ class AppLocalizationsZh extends AppLocalizations {
   String get exportTypeExpense => '支出';
 
   @override
+  String exportSuccessMessageIos(String path) {
+    return '已导出到应用文档目录：\n$path';
+  }
+
+  @override
   String get currencyCNY => '人民币';
 
   @override
@@ -1833,6 +1849,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get cloudSpitoutCloudPasswordHint => '输入密码';
+
+  @override
+  String get cloudSpitoutCloudPasswordNotSavedHint => '密码仅用于本次登录，不会保存到本机';
 
   @override
   String get cloudSpitoutCloudLoginSuccess => '登录成功';
@@ -2226,6 +2245,30 @@ class AppLocalizationsZh extends AppLocalizations {
   String get logCenterCopied => '已复制到剪贴板';
 
   @override
+  String get logCenterDetailTime => '时间';
+
+  @override
+  String get logCenterDetailLevel => '级别';
+
+  @override
+  String get logCenterDetailPlatform => '平台';
+
+  @override
+  String get logCenterDetailError => '错误';
+
+  @override
+  String get logCenterDetailStackTrace => '堆栈';
+
+  @override
+  String get logCenterCopy => '复制';
+
+  @override
+  String get logCenterClose => '关闭';
+
+  @override
+  String get logCenterExportSubject => 'Spitout 日志导出';
+
+  @override
   String get configImportExportTitle => '配置导入导出';
 
   @override
@@ -2437,6 +2480,11 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get calendarNoTransactions => '当天无交易';
+
+  @override
+  String calendarViewAllTransactions(int count) {
+    return 'View all $count transactions';
+  }
 
   @override
   String get calendarAddTransaction => '在该日记账';
@@ -3918,6 +3966,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get commonOperationFailed => '操作失敗，請稍後重試';
 
   @override
+  String get commonRetry => '重試';
+
+  @override
   String get commonBack => '返回';
 
   @override
@@ -4278,6 +4329,14 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get importNoDataParsed => '未解析到任何資料，請返回上一頁檢查 CSV 內容或分隔符。';
+
+  @override
+  String get importNoLedger => '請先建立帳本再匯入';
+
+  @override
+  String importInvalidRowsSkipped(int count) {
+    return '無法解析的 $count 行已跳過（金額或日期無效）';
+  }
 
   @override
   String get importFieldDate => '日期';
@@ -5258,6 +5317,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get exportTypeExpense => '支出';
 
   @override
+  String exportSuccessMessageIos(String path) {
+    return '已匯出到應用程式文件目錄：\n$path';
+  }
+
+  @override
   String get currencyCNY => '人民幣';
 
   @override
@@ -5632,6 +5696,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get cloudSpitoutCloudPasswordHint => '輸入密碼';
+
+  @override
+  String get cloudSpitoutCloudPasswordNotSavedHint => '密碼僅用於本次登入，不會儲存到本機';
 
   @override
   String get cloudSpitoutCloudLoginSuccess => '登入成功';
@@ -6024,6 +6091,30 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get logCenterCopied => '已複製到剪貼簿';
 
   @override
+  String get logCenterDetailTime => '時間';
+
+  @override
+  String get logCenterDetailLevel => '級別';
+
+  @override
+  String get logCenterDetailPlatform => '平台';
+
+  @override
+  String get logCenterDetailError => '錯誤';
+
+  @override
+  String get logCenterDetailStackTrace => '堆疊';
+
+  @override
+  String get logCenterCopy => '複製';
+
+  @override
+  String get logCenterClose => '關閉';
+
+  @override
+  String get logCenterExportSubject => 'Spitout 日誌匯出';
+
+  @override
   String get configImportExportTitle => '配置匯入匯出';
 
   @override
@@ -6235,6 +6326,11 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get calendarNoTransactions => '當天無交易';
+
+  @override
+  String calendarViewAllTransactions(int count) {
+    return '查看全部 $count 筆';
+  }
 
   @override
   String get calendarAddTransaction => '在該日記帳';

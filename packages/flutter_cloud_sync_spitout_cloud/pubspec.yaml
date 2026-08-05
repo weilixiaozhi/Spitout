@@ -16,6 +16,8 @@ dependencies:
   crypto: ^3.0.3
   # 13 系列要求 win32 ^6，与 file_picker 11.x 冲突，暂保持 12.x
   device_info_plus: ^12.0.0
+  # 会话 token 默认落系统安全存储(Keychain / Keystore),禁止明文写 SharedPreferences。
+  flutter_secure_storage: ^9.2.4
   http: ^1.2.2
   package_info_plus: ^9.0.0
   shared_preferences: ^2.2.2

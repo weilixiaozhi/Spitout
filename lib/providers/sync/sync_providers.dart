@@ -120,7 +120,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   LocalOnlySyncService buildLocalOnly() =>
       LocalOnlySyncService(repoResolver: () => ref.read(repositoryProvider));
 
-  // P0-b 闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧
+  // 云失活闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧
   // Spitout 配置,也必须立即降级本地 —— 不得重建 SyncEngine / 重连 WS,
   // 否则静默重登会把已登出的账号拉回来。
   if (ref.watch(cloudDeactivationInProgressProvider)) return buildLocalOnly();
@@ -450,7 +450,7 @@ final spitoutCloudServerVersionProvider =
 /// 参数 [read] 接受 Ref.read 或 WidgetRef.read(两者签名相同,共用实现),
 /// 这样 bootstrap FutureProvider 和 UI 下拉刷新都能调。
 Future<void> reconcileProfileToServer({
-  required Future<SpitoutCloudProvider?> cloudProviderFuture,
+  required Future<SpitoutCloudSyncBackend?> cloudProviderFuture,
   required String currentDisplayName,
   required String currentExpenseColorScheme,
 }) async {

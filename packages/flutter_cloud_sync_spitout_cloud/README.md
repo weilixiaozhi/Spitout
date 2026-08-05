@@ -13,6 +13,20 @@ synchronization using the Spitout private cloud protocol.
 - ✅ Type-safe CloudProvider implementation
 - ✅ 通过 `CloudProviderRegistry` 自注册，核心包保持零反向依赖
 
+## Security
+
+- access / refresh token 默认经 `flutter_secure_storage` 写入系统安全存储
+  （Android Keystore / iOS Keychain / Windows DPAPI / macOS Keychain），
+  不会明文写入 SharedPreferences；旧版本明文 session 会在首次初始化时
+  自动迁移并清理。
+- 远程 `baseUrl` 强制使用 https；http 仅允许 localhost / 私网测试地址，
+  防止邮箱 + 密码 / token 明文走网络。
+- WebSocket 鉴权通过握手后首帧消息携带 token，token 不会出现在 URL query /
+  代理日志中。
+- 已知风险：服务端头像下载端点当前不校验 auth（为 Web `<img>` 无头加载而
+  设计），按用户 id 可枚举公开头像；服务端补鉴权或签名 URL 属于独立的
+  服务端改造项。
+
 ## Installation
 
 Add this to your package's `pubspec.yaml`:

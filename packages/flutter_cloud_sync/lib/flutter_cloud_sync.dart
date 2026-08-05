@@ -1,23 +1,23 @@
 /// Flutter Cloud Sync
 ///
-/// A modular cloud sync framework for Flutter with pluggable backend providers.
+/// 模块化云同步框架，支持可插拔后端提供方。
 ///
-/// ## Features
+/// ## 特性
 ///
-/// - 🔌 Pluggable architecture - Choose your cloud provider (Supabase, WebDAV, S3, etc.)
-/// - 🔄 Auto sync - Automatic detection and synchronization of local/cloud changes
-/// - 🎯 Business agnostic - Works with any data model through serialization interface
-/// - 🔐 Authentication - Built-in authentication service abstraction
-/// - 📦 Type-safe - Generic design with full type safety
-/// - 🎭 State management - Designed for Riverpod integration
-/// - 📝 Comprehensive logging - Hook into your existing logging framework
+/// - 🔌 可插拔架构 - 自由选择云提供方（Supabase、WebDAV、S3 等）
+/// - 🔄 自动同步 - 自动检测并同步本地 / 云端变更
+/// - 🎯 业务无关 - 通过序列化接口适配任意数据模型
+/// - 🔐 认证 - 内置认证服务抽象
+/// - 📦 类型安全 - 泛型设计，全类型安全
+/// - 🎭 状态管理 - 面向 Riverpod 集成设计
+/// - 📝 完备日志 - 可接入现有日志框架
 ///
-/// ## Quick Start
+/// ## 快速开始
 ///
 /// ```dart
 /// import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 ///
-/// // 1. Define your data serializer
+/// // 1. 定义数据序列化器
 /// class MyDataSerializer implements DataSerializer<int> {
 ///   @override
 ///   Future<String> serialize(int ledgerId) async {
@@ -37,14 +37,14 @@
 ///   }
 /// }
 ///
-/// // 2. Initialize cloud provider
-/// final provider = SupabaseProvider(); // From flutter_cloud_sync_supabase
+/// // 2. 初始化云提供方
+/// final provider = SupabaseProvider(); // 来自 flutter_cloud_sync_supabase
 /// await provider.initialize({
 ///   'url': 'https://your-project.supabase.co',
 ///   'anonKey': 'your-anon-key',
 /// });
 ///
-/// // 3. Create sync manager
+/// // 3. 创建同步管理器
 /// final syncManager = CloudSyncManager<int>(
 ///   provider: provider,
 ///   serializer: MyDataSerializer(),
@@ -53,18 +53,19 @@
 ///   }),
 /// );
 ///
-/// // 4. Use it!
+/// // 4. 使用
 /// await syncManager.upload(ledgerId: 123, path: 'ledgers/123.json');
 /// final status = await syncManager.getStatus(ledgerId: 123, path: 'ledgers/123.json');
 /// ```
 ///
-/// ## Available Providers
+/// ## 可用提供方
 ///
-/// Install only the providers you need:
+/// 按需安装所需提供方：
 ///
-/// - `flutter_cloud_sync_supabase` - Supabase backend
-/// - `flutter_cloud_sync_webdav` - WebDAV backend
-/// - `flutter_cloud_sync_s3` - AWS S3 backend
+/// - `flutter_cloud_sync_supabase` - Supabase 后端
+/// - `flutter_cloud_sync_webdav` - WebDAV 后端
+/// - `flutter_cloud_sync_s3` - AWS S3 后端
+/// - `flutter_cloud_sync_spitout_cloud` - Spitout Cloud 后端
 ///
 library;
 
@@ -82,6 +83,7 @@ export 'src/core/sync_status.dart';
 
 // Configuration
 export 'src/config/cloud_service_config.dart';
+export 'src/config/cloud_credential_storage.dart';
 export 'src/config/cloud_service_store.dart';
 export 'src/config/cloud_provider_registry.dart';
 export 'src/config/provider_factory.dart';

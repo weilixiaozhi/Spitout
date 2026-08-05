@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,6 +20,12 @@ class LogCenterPage extends ConsumerStatefulWidget {
 }
 
 class _LogCenterPageState extends ConsumerState<LogCenterPage> {
+  /// 日志刷新合并定时器:高频日志写入时合并为最多 500ms 一次重建。
+  Timer? _logDebounce;
+
+  /// 列表最多展示的日志条数:超出只取最近 N 条,避免大日志量下反复全量重算。
+  static const int _maxShownLogs = 500;
+
   // 过滤条件
   final Set<LogLevel> _selectedLevels = LogLevel.values.toSet();
   final Set<LogPlatform> _selectedPlatforms = LogPlatform.values.toSet();
@@ -36,20 +43,27 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
 
   @override
   void dispose() {
+    _logDebounce?.cancel();
     logger.removeListener(_onLogsChanged);
     _searchController.dispose();
     super.dispose();
   }
 
   void _onLogsChanged() {
-    if (mounted) {
-      setState(() {});
-    }
+    // 节流:网络/同步高频日志时不逐条重建列表,合并到 500ms 内最后一次。
+    _logDebounce?.cancel();
+    _logDebounce = Timer(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {});
+      }
+    });
   }
 
-  /// 获取过滤后的日志
+  /// 获取过滤后的日志(仅最近 [_maxShownLogs] 条,最新在前)。
   List<LogEntry> get _filteredLogs {
-    return logger.logs
+    final all = logger.logs;
+    final start = all.length > _maxShownLogs ? all.length - _maxShownLogs : 0;
+    return all.sublist(start)
         .where((log) {
           // 级别过滤
           if (!_selectedLevels.contains(log.level)) return false;
@@ -281,17 +295,19 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
 
   /// 导出日志
   Future<void> _exportLogs() async {
+    final l10n = AppLocalizations.of(context);
     try {
       final text = await logger.exportAsText();
       await SharePlus.instance.share(
         ShareParams(
           text: text,
-          subject: 'Spitout 日志导出',
+          subject: l10n.logCenterExportSubject,
         ),
       );
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('LogCenter', '导出日志失败', e, st);
       if (mounted) {
-        showToast(context, AppLocalizations.of(context).logCenterExportFailed);
+        showToast(context, l10n.logCenterExportFailed);
       }
     }
   }
@@ -427,7 +443,8 @@ class _LogEntryCard extends ConsumerWidget {
               if (log.error != null) ...[
                 SizedBox(height: 4.0),
                 Text(
-                  'Error: ${log.error}',
+                  '${AppLocalizations.of(context).logCenterDetailError}: '
+                  '${log.error}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: Colors.red,
                       ),
@@ -454,6 +471,7 @@ class _LogEntryCard extends ConsumerWidget {
 
   /// 显示日志详情
   void _showLogDetail(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -463,9 +481,12 @@ class _LogEntryCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _DetailRow('时间', log.timestamp.toString()),
-              _DetailRow('级别', log.level.displayName),
-              _DetailRow('平台', log.platform.displayName),
+              _DetailRow(l10n.logCenterDetailTime, log.timestamp.toString()),
+              _DetailRow(l10n.logCenterDetailLevel, log.level.displayName),
+              _DetailRow(
+                l10n.logCenterDetailPlatform,
+                log.platform.displayName,
+              ),
               const Divider(),
               Text(
                 log.message,
@@ -474,14 +495,14 @@ class _LogEntryCard extends ConsumerWidget {
               if (log.error != null) ...[
                 const Divider(),
                 Text(
-                  'Error: ${log.error}',
+                  '${l10n.logCenterDetailError}: ${log.error}',
                   style: const TextStyle(color: Colors.red, fontSize: 12),
                 ),
               ],
               if (log.stackTrace != null) ...[
                 const Divider(),
                 Text(
-                  'Stack Trace:\n${log.stackTrace}',
+                  '${l10n.logCenterDetailStackTrace}:\n${log.stackTrace}',
                   style: const TextStyle(fontSize: 10),
                 ),
               ],
@@ -491,11 +512,11 @@ class _LogEntryCard extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => _copyLog(context),
-            child: const Text('复制'),
+            child: Text(l10n.logCenterCopy),
           ),
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: const Text('关闭'),
+            child: Text(l10n.logCenterClose),
           ),
         ],
       ),

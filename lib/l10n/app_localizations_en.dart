@@ -120,6 +120,9 @@ class AppLocalizationsEn extends AppLocalizations {
       'Operation failed, please try again later';
 
   @override
+  String get commonRetry => 'Retry';
+
+  @override
   String get commonBack => 'Back';
 
   @override
@@ -491,6 +494,14 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get importNoDataParsed =>
       'No data parsed. Please return to previous page to check CSV content or separator.';
+
+  @override
+  String get importNoLedger => 'Please create a ledger before importing';
+
+  @override
+  String importInvalidRowsSkipped(int count) {
+    return '$count unparsable row(s) skipped (invalid amount or date)';
+  }
 
   @override
   String get importFieldDate => 'Date';
@@ -1521,6 +1532,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get exportTypeExpense => 'Expense';
 
   @override
+  String exportSuccessMessageIos(String path) {
+    return 'Exported to app documents:\n$path';
+  }
+
+  @override
   String get currencyCNY => 'Chinese Yuan';
 
   @override
@@ -1912,6 +1928,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudSpitoutCloudPasswordHint => 'Enter password';
+
+  @override
+  String get cloudSpitoutCloudPasswordNotSavedHint =>
+      'Password is only used for this sign-in and is not saved on this device';
 
   @override
   String get cloudSpitoutCloudLoginSuccess => 'Login successful';
@@ -2332,6 +2352,30 @@ class AppLocalizationsEn extends AppLocalizations {
   String get logCenterCopied => 'Copied to clipboard';
 
   @override
+  String get logCenterDetailTime => 'Time';
+
+  @override
+  String get logCenterDetailLevel => 'Level';
+
+  @override
+  String get logCenterDetailPlatform => 'Platform';
+
+  @override
+  String get logCenterDetailError => 'Error';
+
+  @override
+  String get logCenterDetailStackTrace => 'Stack Trace';
+
+  @override
+  String get logCenterCopy => 'Copy';
+
+  @override
+  String get logCenterClose => 'Close';
+
+  @override
+  String get logCenterExportSubject => 'Spitout Log Export';
+
+  @override
   String get configImportExportTitle => 'Config Import/Export';
 
   @override
@@ -2551,6 +2595,11 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get calendarNoTransactions => 'No transactions';
+
+  @override
+  String calendarViewAllTransactions(int count) {
+    return 'View all $count transactions';
+  }
 
   @override
   String get calendarAddTransaction => 'Add entry on this day';

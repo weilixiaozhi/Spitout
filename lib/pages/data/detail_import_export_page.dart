@@ -1,6 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
+import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../services/import/file_reader.dart';
 import '../../services/import/xlsx_reader.dart';
@@ -308,7 +309,9 @@ class _DetailImportExportPageState
         type: FileType.custom,
         allowedExtensions: ['csv', 'tsv', 'txt', 'xlsx'],
         allowMultiple: false,
-        withData: true, // iOS 模拟器/沙盒下读取 bytes
+        // 优先走文件路径流式读取,避免把整个文件 bytes 拉进内存;
+        // FileReaderService 在 path 缺失时才回退 bytes。
+        withData: false,
       );
       if (!context.mounted) return;
       if (res == null || res.files.isEmpty) return;
@@ -327,10 +330,10 @@ class _DetailImportExportPageState
           ),
         ),
       );
-    } on Exception catch (e) {
+    } on Exception catch (e, st) {
+      logger.error('DetailImport', '选择/读取导入文件失败', e, st);
       if (!mounted) return;
-      showToast(
-          context, AppLocalizations.of(context).importFileOpenError(e.toString()));
+      showToast(context, AppLocalizations.of(context).commonOperationFailed);
     }
   }
 
@@ -347,6 +350,7 @@ class _DetailImportExportPageState
     try {
       final text = await FileReaderService.readFile(
         picked,
+        isCancelled: () => _cancelRead,
         onProgress: (progress) {
           if (_cancelRead) return;
           if (mounted) {
@@ -358,17 +362,23 @@ class _DetailImportExportPageState
         xlsxConverter: (bytes) {
           try {
             return XlsxReader.convertXlsxToCSV(bytes);
-          } catch (e) {
+          } catch (e, st) {
+            logger.error('DetailImport', 'XLSX 转 CSV 失败', e, st);
             if (mounted) {
               showToast(
                 context,
-                AppLocalizations.of(context).importFileOpenError(e.toString()),
+                AppLocalizations.of(context).commonOperationFailed,
               );
             }
             return '';
           }
         },
       );
+
+      if (_cancelRead) {
+        // 读取被取消:丢弃已读内容,不进入映射页。
+        throw const FileReadCancelledException();
+      }
 
       if (mounted) {
         setState(() {
@@ -378,7 +388,18 @@ class _DetailImportExportPageState
       }
 
       return text;
+    } on FileReadCancelledException {
+      if (mounted) {
+        setState(() {
+          _reading = false;
+          _readProgress = null;
+          _cancelRead = false;
+        });
+        showToast(context, AppLocalizations.of(context).importCancelled);
+      }
+      return '';
     } catch (e) {
+      logger.error('DetailImport', '读取文件失败', e);
       if (mounted) {
         setState(() {
           _reading = false;
@@ -386,7 +407,7 @@ class _DetailImportExportPageState
         });
         showToast(
           context,
-          AppLocalizations.of(context).importFileOpenError(e.toString()),
+          AppLocalizations.of(context).commonOperationFailed,
         );
       }
       return '';

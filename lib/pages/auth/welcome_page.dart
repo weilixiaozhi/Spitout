@@ -438,16 +438,14 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
       logger.info('welcome', '开始导入配置文件');
 
-      // 导入配置走 providers 门面，页面不直接触碰服务层。
-      final repo = ref.read(repositoryProvider);
-
       // 导入配置
-      await ref.read(importConfigFromYamlProvider)(yamlContent);
+      await importConfigFromYaml(ref, yamlContent, ExportOptions.all);
 
       logger.info('welcome', '配置文件导入成功');
 
       // 不自动创建默认账本 — 即使配置不含账本也尊重用户意图(可能就是想从
       // 空状态开始)。没账本时进入应用,LedgersPage 空态会引导新建。
+      final repo = ref.read(repositoryProvider);
       final ledgers = await repo.getAllLedgers();
       logger.info('welcome', '配置包含 ${ledgers.length} 个账本');
 

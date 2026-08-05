@@ -52,6 +52,22 @@ final transactionsByDateProvider = FutureProvider.autoDispose.family<
   },
 );
 
+/// 日历可翻到的最早月份:账本最早支出交易所在月的 1 号。
+///
+/// 无数据/无账本时保守回退 2020-01-01,避免历史交易早于硬编码下限时
+/// 无法翻页查看(数据仍在,用户会误以为丢失)。
+final calendarEarliestDateProvider = FutureProvider<DateTime>((ref) async {
+  // 监听刷新触发:导入/同步历史数据后最早日期需要重算。
+  ref.watch(calendarRefreshProvider);
+  final ledger = ref.watch(currentLedgerProvider).value;
+  if (ledger == null) return DateTime(2020, 1, 1);
+  final earliest = await ref
+      .watch(repositoryProvider)
+      .earliestExpenseDate(ledgerId: ledger.id);
+  if (earliest == null) return DateTime(2020, 1, 1);
+  return DateTime(earliest.year, earliest.month, 1);
+});
+
 /// 日历刷新触发器（添加/删除交易后触发）
 final calendarRefreshProvider =
     NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));

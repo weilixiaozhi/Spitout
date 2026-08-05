@@ -317,6 +317,12 @@ abstract class AppLocalizations {
   /// **'Operation failed, please try again later'**
   String get commonOperationFailed;
 
+  /// No description provided for @commonRetry.
+  ///
+  /// In en, this message translates to:
+  /// **'Retry'**
+  String get commonRetry;
+
   /// No description provided for @commonBack.
   ///
   /// In en, this message translates to:
@@ -970,6 +976,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No data parsed. Please return to previous page to check CSV content or separator.'**
   String get importNoDataParsed;
+
+  /// No description provided for @importNoLedger.
+  ///
+  /// In en, this message translates to:
+  /// **'Please create a ledger before importing'**
+  String get importNoLedger;
+
+  /// No description provided for @importInvalidRowsSkipped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} unparsable row(s) skipped (invalid amount or date)'**
+  String importInvalidRowsSkipped(int count);
 
   /// No description provided for @importFieldDate.
   ///
@@ -2764,6 +2782,12 @@ abstract class AppLocalizations {
   /// **'Expense'**
   String get exportTypeExpense;
 
+  /// No description provided for @exportSuccessMessageIos.
+  ///
+  /// In en, this message translates to:
+  /// **'Exported to app documents:\n{path}'**
+  String exportSuccessMessageIos(String path);
+
   /// No description provided for @currencyCNY.
   ///
   /// In en, this message translates to:
@@ -3489,6 +3513,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Enter password'**
   String get cloudSpitoutCloudPasswordHint;
+
+  /// No description provided for @cloudSpitoutCloudPasswordNotSavedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Password is only used for this sign-in and is not saved on this device'**
+  String get cloudSpitoutCloudPasswordNotSavedHint;
 
   /// No description provided for @cloudSpitoutCloudLoginSuccess.
   ///
@@ -4240,6 +4270,54 @@ abstract class AppLocalizations {
   /// **'Copied to clipboard'**
   String get logCenterCopied;
 
+  /// No description provided for @logCenterDetailTime.
+  ///
+  /// In en, this message translates to:
+  /// **'Time'**
+  String get logCenterDetailTime;
+
+  /// No description provided for @logCenterDetailLevel.
+  ///
+  /// In en, this message translates to:
+  /// **'Level'**
+  String get logCenterDetailLevel;
+
+  /// No description provided for @logCenterDetailPlatform.
+  ///
+  /// In en, this message translates to:
+  /// **'Platform'**
+  String get logCenterDetailPlatform;
+
+  /// No description provided for @logCenterDetailError.
+  ///
+  /// In en, this message translates to:
+  /// **'Error'**
+  String get logCenterDetailError;
+
+  /// No description provided for @logCenterDetailStackTrace.
+  ///
+  /// In en, this message translates to:
+  /// **'Stack Trace'**
+  String get logCenterDetailStackTrace;
+
+  /// No description provided for @logCenterCopy.
+  ///
+  /// In en, this message translates to:
+  /// **'Copy'**
+  String get logCenterCopy;
+
+  /// No description provided for @logCenterClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Close'**
+  String get logCenterClose;
+
+  /// No description provided for @logCenterExportSubject.
+  ///
+  /// In en, this message translates to:
+  /// **'Spitout Log Export'**
+  String get logCenterExportSubject;
+
   /// No description provided for @configImportExportTitle.
   ///
   /// In en, this message translates to:
@@ -4629,6 +4707,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No transactions'**
   String get calendarNoTransactions;
+
+  /// No description provided for @calendarViewAllTransactions.
+  ///
+  /// In en, this message translates to:
+  /// **'View all {count} transactions'**
+  String calendarViewAllTransactions(int count);
 
   /// No description provided for @calendarAddTransaction.
   ///

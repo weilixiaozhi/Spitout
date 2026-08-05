@@ -301,8 +301,11 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   /// - "清空未使用分类"：独立逻辑，不与复选选中关联，直接清空交易数为 0 的分类
   /// 下方为三个删除策略单选项（仅作用于"确认删除"）。
   Widget _buildDeleteFooter(BuildContext context, AppLocalizations l10n) {
-    // 0 选中时确认删除不可点击（禁用色 + 不响应点击）
-    final isDisabled = _selectedCategoryIds.isEmpty;
+    // 0 选中或分类数据未就绪(加载中/失败)时确认删除不可点击:
+    // 未就绪时弹窗列表为空,若仍按 _selectedCategoryIds 执行会变成盲删。
+    final categoriesAsync = ref.watch(categoriesWithCountProvider);
+    final isDisabled =
+        _selectedCategoryIds.isEmpty || !categoriesAsync.hasValue;
     final confirmColor = isDisabled
         ? SpitoutTokens.textDisabled(context)
         : SpitoutTokens.error(context);
@@ -491,8 +494,14 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   Future<void> _confirmDelete() async {
     if (_selectedCategoryIds.isEmpty) return;
 
-    final categoriesWithCount =
-        ref.read(categoriesWithCountProvider).value ?? [];
+    final categoriesWithCount = ref.read(categoriesWithCountProvider).value;
+    if (categoriesWithCount == null) {
+      // 双保险:按钮已按就绪态禁用,此处再拦一次异常路径(如 provider 出错)。
+      if (mounted) {
+        showToast(context, AppLocalizations.of(context).commonOperationFailed);
+      }
+      return;
+    }
 
     if (_deleteOption == 1) {
       // 迁移模式：选择目标分类
@@ -1779,6 +1788,8 @@ class _SubcategoryDialog extends ConsumerStatefulWidget {
 class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
   List<({db.Category category, int transactionCount})>? _subCategories;
   bool _isLoading = true;
+  /// 加载失败标志:失败时展示重试入口,避免弹窗永久转圈。
+  bool _loadFailed = false;
 
   /// 是否处于删除模式
   bool _isDeleteMode = false;
@@ -1801,27 +1812,46 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
   /// 笔数优先取 provider 最新值（删除刷新后仍能拿到正确笔数），
   /// provider 未就绪时回退到打开弹窗时传入的快照。
   Future<void> _loadSubCategories() async {
-    final repo = ref.read(repositoryProvider);
-    final subCategories = await repo.getSubCategories(widget.parentCategory.id);
+    try {
+      final repo = ref.read(repositoryProvider);
+      final subCategories = await repo.getSubCategories(
+        widget.parentCategory.id,
+      );
 
-    final countsSource = ref.read(categoriesWithCountProvider).value ??
-        widget.categoriesWithCount;
-    final result = <({db.Category category, int transactionCount})>[];
-    for (final subCat in subCategories) {
-      final subCount = countsSource
-          .firstWhere(
-            (item) => item.category.id == subCat.id,
-            orElse: () => (category: subCat, transactionCount: 0),
-          )
-          .transactionCount;
-      result.add((category: subCat, transactionCount: subCount));
-    }
+      final countsSource = ref.read(categoriesWithCountProvider).value ??
+          widget.categoriesWithCount;
+      final result = <({db.Category category, int transactionCount})>[];
+      for (final subCat in subCategories) {
+        final subCount = countsSource
+            .firstWhere(
+              (item) => item.category.id == subCat.id,
+              orElse: () => (category: subCat, transactionCount: 0),
+            )
+            .transactionCount;
+        result.add((category: subCat, transactionCount: subCount));
+      }
 
-    if (mounted) {
-      setState(() {
-        _subCategories = result;
-        _isLoading = false;
-      });
+      if (mounted) {
+        setState(() {
+          _subCategories = result;
+          _isLoading = false;
+          _loadFailed = false;
+        });
+      }
+    } catch (e, st) {
+      // 加载失败不再永久转圈:进入失败态,用户可点重试重新查询。
+      logger.error(
+        'CategoryManage',
+        '加载子分类失败 parentId=${widget.parentCategory.id}',
+        e,
+        st,
+      );
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _loadFailed = true;
+        });
+      }
     }
   }
 
@@ -1896,6 +1926,35 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
               const Padding(
                 padding: EdgeInsets.all(32),
                 child: Center(child: CircularProgressIndicator()),
+              )
+            else if (_loadFailed)
+              // 失败态:提示重试,避免弹窗永久转圈。
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
+                child: Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.commonOperationFailed,
+                        style: TextStyle(
+                          color: SpitoutTokens.textSecondary(context),
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      FilledButton(
+                        onPressed: () {
+                          setState(() {
+                            _isLoading = true;
+                            _loadFailed = false;
+                          });
+                          _loadSubCategories();
+                        },
+                        child: Text(l10n.commonRetry),
+                      ),
+                    ],
+                  ),
+                ),
               )
             else if (_subCategories?.isEmpty ?? true)
               // 空态：全部子分类被删除后保留弹窗，便于继续添加

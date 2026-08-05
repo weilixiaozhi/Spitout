@@ -1,23 +1,23 @@
 import 'package:meta/meta.dart';
 
-/// Represents a file in cloud storage
+/// 云端存储中的文件。
 @immutable
 class CloudFile {
-  /// File name
+  /// 文件名。
   final String name;
 
-  /// Full file path
+  /// 完整文件路径。
   final String path;
 
-  /// File size in bytes (optional)
+  /// 文件大小（字节，可选）。
   final int? size;
 
-  /// Last modified timestamp (optional)
+  /// 最后修改时间（可选）。
   final DateTime? lastModified;
 
-  /// Custom metadata (optional)
+  /// 自定义元数据（可选）。
   ///
-  /// Used to store fingerprint, version, etc.
+  /// 用于存放指纹、版本等信息。
   final Map<String, dynamic>? metadata;
 
   const CloudFile({
@@ -42,59 +42,59 @@ class CloudFile {
   String toString() => 'CloudFile(name: $name, path: $path, size: $size)';
 }
 
-/// Abstract interface for cloud storage services
+/// 云存储服务抽象接口。
 abstract class CloudStorageService {
-  /// Upload data to cloud storage
+  /// 上传数据到云端存储。
   ///
-  /// [path] - File path (e.g., 'users/123/data.json')
-  /// [data] - File content as string
-  /// [metadata] - Optional metadata map
+  /// [path] - 文件路径（如 'users/123/data.json'）
+  /// [data] - 文件内容字符串
+  /// [metadata] - 可选元数据
   ///
-  /// Throws [CloudStorageException] if upload fails.
-  /// If file exists, it will be overwritten (upsert semantics).
+  /// 上传失败时抛出 [CloudStorageException]。
+  /// 文件已存在时将被覆盖（upsert 语义）。
   Future<void> upload({
     required String path,
     required String data,
     Map<String, String>? metadata,
   });
 
-  /// Download data from cloud storage
+  /// 从云端存储下载数据。
   ///
-  /// [path] - File path
+  /// [path] - 文件路径。
   ///
-  /// Returns file content as string, or null if file doesn't exist.
-  /// Throws [CloudStorageException] if download fails (except 404).
+  /// 返回文件内容字符串；文件不存在时返回 null。
+  /// 下载失败时抛出 [CloudStorageException]（404 除外）。
   Future<String?> download({required String path});
 
-  /// Delete file from cloud storage
+  /// 从云端存储删除文件。
   ///
-  /// [path] - File path
+  /// [path] - 文件路径。
   ///
-  /// Throws [CloudStorageException] if deletion fails.
-  /// Should be idempotent (no error if file doesn't exist).
+  /// 删除失败时抛出 [CloudStorageException]。
+  /// 应具备幂等性（文件不存在时不报错）。
   Future<void> delete({required String path});
 
-  /// List files in a directory
+  /// 列出目录下的文件。
   ///
-  /// [path] - Directory path (e.g., 'users/123/')
+  /// [path] - 目录路径（如 'users/123/'）。
   ///
-  /// Returns list of files in the directory.
-  /// Throws [CloudStorageException] if listing fails.
+  /// 返回目录内文件列表。
+  /// 失败时抛出 [CloudStorageException]。
   Future<List<CloudFile>> list({required String path});
 
-  /// Check if file exists
+  /// 检查文件是否存在。
   ///
-  /// [path] - File path
+  /// [path] - 文件路径。
   ///
-  /// Returns true if file exists, false otherwise.
-  /// Throws [CloudStorageException] if check fails.
+  /// 存在返回 true，否则返回 false。
+  /// 失败时抛出 [CloudStorageException]。
   Future<bool> exists({required String path});
 
-  /// Get file metadata
+  /// 获取文件元数据。
   ///
-  /// [path] - File path
+  /// [path] - 文件路径。
   ///
-  /// Returns file metadata, or null if file doesn't exist.
-  /// Throws [CloudStorageException] if operation fails.
+  /// 返回文件元数据；文件不存在时返回 null。
+  /// 失败时抛出 [CloudStorageException]。
   Future<CloudFile?> getMetadata({required String path});
 }

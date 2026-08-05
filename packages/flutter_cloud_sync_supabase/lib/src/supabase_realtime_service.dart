@@ -9,8 +9,13 @@ import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 class SupabaseRealtimeChannel implements RealtimeChannel {
   final supabase.RealtimeChannel _channel;
   final String _channelName;
+  final void Function(RealtimeConnectionState state)? _onStateChanged;
 
-  SupabaseRealtimeChannel(this._channel, this._channelName);
+  SupabaseRealtimeChannel(
+    this._channel,
+    this._channelName, {
+    void Function(RealtimeConnectionState state)? onStateChanged,
+  }) : _onStateChanged = onStateChanged;
 
   @override
   RealtimeChannel onPostgresChanges({
@@ -24,13 +29,7 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
       event: _parsePostgresEvent(event),
       schema: schema,
       table: table,
-      filter: filter != null
-          ? supabase.PostgresChangeFilter(
-              type: supabase.PostgresChangeFilterType.eq,
-              column: filter.split('=').first,
-              value: filter.split('=').last,
-            )
-          : null,
+      filter: parsePostgresFilter(filter),
       callback: (payload) {
         // Convert Supabase payload to our format
         final data = <String, dynamic>{
@@ -76,14 +75,51 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
 
   @override
   Future<void> subscribe() async {
-    // RealtimeChannel.subscribe() returns RealtimeChannel, not Future<void>.
-    // Calling sync, but method signature requires Future<void> for interface compatibility.
-    _channel.subscribe();
+    // 通过订阅状态回调等待真正就绪（SUBSCRIBED / 失败），
+    // 避免调用方在连接建立前就继续执行。
+    final completer = Completer<void>();
+    void fail(Object error) {
+      _onStateChanged?.call(RealtimeConnectionState.error);
+      if (!completer.isCompleted) {
+        completer.completeError(
+          error is CloudSyncException
+              ? error
+              : CloudSyncException('Realtime 频道订阅失败: $error', error),
+        );
+      }
+    }
+
+    try {
+      _channel.subscribe((status, error) {
+        switch (status) {
+          case supabase.RealtimeSubscribeStatus.subscribed:
+            _onStateChanged?.call(RealtimeConnectionState.connected);
+            if (!completer.isCompleted) completer.complete();
+            break;
+          case supabase.RealtimeSubscribeStatus.closed:
+            _onStateChanged?.call(RealtimeConnectionState.disconnected);
+            if (!completer.isCompleted) {
+              completer.completeError(
+                CloudSyncException('Realtime 频道已关闭', error),
+              );
+            }
+            break;
+          case supabase.RealtimeSubscribeStatus.timedOut:
+          case supabase.RealtimeSubscribeStatus.channelError:
+            fail(error ?? CloudSyncException('订阅失败: ${status.name}'));
+            break;
+        }
+      }, const Duration(seconds: 15));
+    } catch (e) {
+      fail(e);
+    }
+    await completer.future;
   }
 
   @override
   Future<void> unsubscribe() async {
     await supabase.Supabase.instance.client.removeChannel(_channel);
+    _onStateChanged?.call(RealtimeConnectionState.disconnected);
   }
 
   @override
@@ -96,6 +132,55 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
       return 'subscribed';
     }
     return 'closed';
+  }
+
+  /// 解析 Postgres 变更过滤器（`column=op.value` 三段格式）。
+  ///
+  /// 支持 `eq` / `neq` / `gt` / `gte` / `lt` / `lte` / `in` / `is` /
+  /// `like` / `ilike` 等操作符，以及 `not.` 取反前缀。
+  /// 旧实现用 `split('=')` 会把 `eq.123` 整体当作 value，导致过滤恒不匹配。
+  static supabase.PostgresChangeFilter? parsePostgresFilter(String? filter) {
+    if (filter == null || filter.isEmpty) return null;
+
+    final eqIndex = filter.indexOf('=');
+    if (eqIndex <= 0 || eqIndex == filter.length - 1) {
+      throw ArgumentError('无效的 Realtime 过滤器: $filter');
+    }
+    final column = filter.substring(0, eqIndex);
+    var rest = filter.substring(eqIndex + 1);
+
+    // 支持 not. 取反前缀。
+    var negate = false;
+    if (rest.startsWith('not.')) {
+      negate = true;
+      rest = rest.substring(4);
+    }
+
+    final dotIndex = rest.indexOf('.');
+    if (dotIndex <= 0 || dotIndex == rest.length - 1) {
+      throw ArgumentError('无效的 Realtime 过滤器（缺少操作符或值）: $filter');
+    }
+    final op = rest.substring(0, dotIndex);
+    final value = rest.substring(dotIndex + 1);
+
+    // 操作符白名单：优先精确匹配，其次匹配 inFilter / isFilter 这类带后缀枚举。
+    supabase.PostgresChangeFilterType? type;
+    for (final candidate in supabase.PostgresChangeFilterType.values) {
+      if (candidate.name == op || candidate.name == '${op}Filter') {
+        type = candidate;
+        break;
+      }
+    }
+    if (type == null) {
+      throw ArgumentError('不支持的 Realtime 过滤操作符: $op');
+    }
+
+    return supabase.PostgresChangeFilter(
+      type: type,
+      column: column,
+      value: value,
+      negate: negate,
+    );
   }
 
   /// Parse event string to Supabase event type
@@ -187,8 +272,12 @@ class SupabaseRealtimeService implements CloudRealtimeService {
     // Create new Supabase channel
     final supabaseChannel = _client.channel(channelName);
 
-    // Wrap in our interface
-    final channel = SupabaseRealtimeChannel(supabaseChannel, channelName);
+    // Wrap in our interface，并把频道状态联动到服务级连接状态。
+    final channel = SupabaseRealtimeChannel(
+      supabaseChannel,
+      channelName,
+      onStateChanged: (state) => _updateConnectionState(state),
+    );
 
     // Cache channel
     _channels[channelName] = channel;

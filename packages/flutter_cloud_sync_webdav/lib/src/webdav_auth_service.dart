@@ -49,7 +49,7 @@ class WebDAVAuthService implements CloudAuthService {
     required String email,
     required String password,
   }) async {
-    throw UnsupportedError('WebDAV does not support email sign in');
+    throw CloudAuthException('WebDAV does not support email sign in');
   }
 
   @override
@@ -57,17 +57,17 @@ class WebDAVAuthService implements CloudAuthService {
     required String email,
     required String password,
   }) async {
-    throw UnsupportedError('WebDAV does not support sign up');
+    throw CloudAuthException('WebDAV does not support sign up');
   }
 
   @override
   Future<void> sendPasswordResetEmail({required String email}) async {
-    throw UnsupportedError('WebDAV does not support password reset');
+    throw CloudAuthException('WebDAV does not support password reset');
   }
 
   @override
   Future<void> resendEmailVerification({required String email}) async {
-    throw UnsupportedError('WebDAV does not support email verification');
+    throw CloudAuthException('WebDAV does not support email verification');
   }
 
   void dispose() {

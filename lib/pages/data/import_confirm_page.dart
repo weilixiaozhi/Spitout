@@ -6,6 +6,7 @@ import 'package:spitout/providers/providers.dart';
 import '../../widgets/widgets.dart';
 import '../../data/models.dart' as schema;
 import '../../l10n/app_localizations.dart';
+import '../../core/logging/logger_service.dart';
 import '../../services/import/csv_parser.dart';
 import '../../utils/category_utils.dart';
 import '../../services/import/bill_parser.dart';
@@ -31,6 +32,7 @@ class ImportConfirmPage extends ConsumerStatefulWidget {
 class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
   List<List<String>> rows = const [];
   bool parsing = true;
+  bool _parseError = false;
   // 自动识别到的表头所在行（仅当 hasHeader 为 true 时使用）
   int headerRow = 0;
   final Map<String, int?> mapping = {
@@ -47,10 +49,12 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
   int ok = 0, fail = 0, skipped = 0; // skipped: 跳过的非支出类型记录
   int step = 0; // 0: 字段映射, 1: 分类映射
   bool _cancelled = false;
+  int _sessionSeq = 0; // 导入会话号:延迟清空进度时校验仍是最新会话
   List<String> distinctCategories = [];
   Map<String, int?> categoryMapping = {}; // 源分类名 -> 目标分类ID（null表示保持原名）
   Future<List<schema.Category>>? allCategoriesFuture;
   late final BillParser _billParser;
+  final Map<String, int> _badRows = {}; // 解析失败原因 -> 行数
 
   @override
   void initState() {
@@ -60,7 +64,20 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
     // 解析在后台 isolate 完成，避免主线程卡顿
     () async {
-      final parsed = await compute(_parseRowsIsolate, widget.csvText);
+      List<List<String>> parsed;
+      try {
+        parsed = await compute(_parseRowsIsolate, widget.csvText);
+      } catch (e, st) {
+        // isolate 解析异常(畸形 CSV/内存不足等)不能停在加载态:
+        // 置错误态并提示用户返回,而不是永久转圈。
+        logger.error('ImportConfirmPage', 'CSV 后台解析失败', e, st);
+        if (!mounted) return;
+        setState(() {
+          parsing = false;
+          _parseError = true;
+        });
+        return;
+      }
       if (!mounted) return;
       setState(() {
         rows = parsed;
@@ -107,6 +124,39 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                 child: CircularProgressIndicator(),
               ),
             )
+          ],
+        ),
+      );
+    }
+    if (_parseError) {
+      final l10n = AppLocalizations.of(context);
+      return Scaffold(
+        body: Column(
+          children: [
+            PrimaryHeader(
+              title: l10n.importPreparing,
+              showBack: true,
+            ),
+            Expanded(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      l10n.commonOperationFailed,
+                      style: TextStyle(
+                        color: SpitoutTokens.textSecondary(context),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    FilledButton(
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      child: Text(l10n.commonBack),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       );
@@ -247,30 +297,6 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                           );
                         }),
                       ];
-                      // 为每个源分类预设自动匹配（仅在首次加载时执行）
-                      if (categoryMapping.values.every((v) => v == null) &&
-                          cats.isNotEmpty) {
-                        bool hasMatch = false;
-                        for (final sourceName in distinctCategories) {
-                          // 直接使用源分类名称查找匹配
-                          try {
-                            final matchingCategory = cats.firstWhere(
-                              (c) => c.name == sourceName,
-                            );
-                            categoryMapping[sourceName] = matchingCategory.id;
-                            hasMatch = true;
-                          } catch (e) {
-                            // 没有找到匹配的分类，保持为null
-                          }
-                        }
-                        // 如果有自动匹配，触发重建以显示预设的匹配
-                        if (hasMatch) {
-                          WidgetsBinding.instance.addPostFrameCallback((_) {
-                            if (mounted) setState(() {});
-                          });
-                        }
-                      }
-
                       return Column(
                         children: [
                           for (final name in distinctCategories)
@@ -371,20 +397,40 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
   }
 
   Future<void> _startImport() async {
+    // 无当前账本时阻断:避免交易落到无效账本,引导先创建账本。
+    final ledgerId = ref.read(currentLedgerIdProvider);
+    if (ledgerId == 0) {
+      if (mounted) {
+        showToast(
+          context,
+          AppLocalizations.of(context).importNoLedger,
+        );
+      }
+      return;
+    }
+
     // 使用根容器，保证页面被销毁后仍可更新全局进度供"我的"页展示
     final container = ProviderScope.containerOf(context, listen: false);
     final currentContext = context;
+    final session = ++_sessionSeq;
+    _cancelled = false;
     setState(() {
       importing = true;
       ok = 0;
       fail = 0;
     });
     final repo = ref.read(repositoryProvider);
-    final ledgerId = ref.read(currentLedgerIdProvider);
 
     // 获取当前账本的币种信息
     final currentLedger = await repo.getLedgerById(ledgerId);
-    final ledgerCurrency = currentLedger?.currency ?? 'CNY';
+    if (currentLedger == null) {
+      if (mounted) {
+        showToast(context, AppLocalizations.of(context).importNoLedger);
+      }
+      setState(() => importing = false);
+      return;
+    }
+    final ledgerCurrency = currentLedger.currency;
 
     final dataStart = widget.hasHeader ? (headerRow + 1) : 0;
     final total = rows.length - dataStart;
@@ -459,11 +505,13 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
     // 定义进度变量
     int done = 0;
+    _badRows.clear();
 
     // 收集跳过的类型（用于提示用户）
     final Map<String, int> skippedTypes = {};
 
     try {
+      if (_cancelled) return;
       // 使用统一导入服务：将CSV数据转换为ImportData格式
       final importData = _buildImportDataFromCsv(
         rows: rows,
@@ -471,6 +519,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         mapping: mapping,
         categoryMapping: categoryMapping,
         skippedTypes: skippedTypes,
+        badRows: _badRows,
         ledgerCurrency: ledgerCurrency,
       );
 
@@ -481,6 +530,10 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         importData,
         defaultCurrency: ledgerCurrency,
         onProgress: (processed, progressTotal) {
+          // 批次间隙检查取消:抛异常中止导入服务,未处理批次不再写入。
+          if (_cancelled) {
+            throw const ImportCancelledException();
+          }
           done = processed;
           // 更新全局进度
           container.read(importProgressProvider.notifier).set(ImportProgress(
@@ -495,7 +548,8 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
       );
 
       ok = result.inserted;
-      fail = result.failed;
+      fail = result.failed +
+          _badRows.values.fold(0, (sum, count) => sum + count);
       skipped = skippedTypes.values.fold(0, (a, b) => a + b);
       done = total;
 
@@ -509,10 +563,22 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
       } catch (_) {
         // 忽略同步触发错误,导入本身已经成功
       }
-    } catch (e) {
-      // 导入失败
+    } on ImportCancelledException {
+      // 用户取消:已落库的批次保留,未处理批次不再写入;清空全局进度
+      // 并提示,不展示完成弹窗、不跳转。
+      try {
+        container.read(importProgressProvider.notifier).set(ImportProgress.empty);
+      } catch (_) {}
       if (mounted) {
-        showToast(context, AppLocalizations.of(context).importTransactionFailed('$e'));
+        showToast(context, AppLocalizations.of(context).importCancelled);
+        setState(() => importing = false);
+      }
+      return;
+    } catch (e, st) {
+      // 导入失败:原始异常只进日志,页面展示统一友好文案。
+      logger.error('ImportConfirmPage', '明细导入失败', e, st);
+      if (mounted) {
+        showToast(context, AppLocalizations.of(context).commonOperationFailed);
       }
       fail = total - ok; // 更新失败数
     }
@@ -537,6 +603,8 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     // 延迟清空和刷新（不依赖页面状态，即使页面销毁也要执行）
     if (!_cancelled) {
       Future<void>.delayed(const Duration(seconds: 5), () {
+        // 会话号校验:期间若发起了新导入,旧回调不得清掉新进度。
+        if (session != _sessionSeq) return;
         // 延长到5秒，让用户看到动画
         try {
           container
@@ -566,6 +634,11 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
     // 构建提示信息
     String message = l10nToast.importCompleted(cancelledText, fail, ok);
+    final badRowCount =
+        _badRows.values.fold(0, (sum, count) => sum + count);
+    if (badRowCount > 0) {
+      message += '\n${l10nToast.importInvalidRowsSkipped(badRowCount)}';
+    }
     bool hasSkipped = skipped > 0;
 
     if (hasSkipped) {
@@ -630,6 +703,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     required Map<String, int?> mapping,
     required Map<String, int?> categoryMapping,
     required Map<String, int> skippedTypes,
+    required Map<String, int> badRows,
     required String ledgerCurrency,
   }) {
     final categories = <schema.ImportCategory>[];
@@ -770,14 +844,31 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         continue;
       }
 
-      // 金额解析
-      final amountClean = (amountStr ?? '0').replaceAll(RegExp(r'[¥$,+-]'), '');
+      // 金额解析:缺失或无法解析的行按失败计数并跳过,
+      // 禁止把坏行静默当作 0 元交易写入账本。
+      if (amountStr == null) {
+        badRows['amount'] = (badRows['amount'] ?? 0) + 1;
+        continue;
+      }
+      final amountClean = amountStr.replaceAll(RegExp(r'[¥$,+-]'), '');
       // 直接用 Decimal 精确解析 CSV 金额,不经过 double(审计问题 1)。
-      final amount =
-          Decimal.tryParse(amountClean.trim())?.abs() ?? Decimal.zero;
+      final parsedAmount = Decimal.tryParse(amountClean.trim());
+      if (parsedAmount == null) {
+        badRows['amount'] = (badRows['amount'] ?? 0) + 1;
+        continue;
+      }
+      final amount = parsedAmount.abs();
+      if (amount <= Decimal.zero) {
+        badRows['amount'] = (badRows['amount'] ?? 0) + 1;
+        continue;
+      }
 
-      // 日期解析
-      final date = DateParser.parse(dateStr);
+      // 日期解析:缺失或格式无法识别同样按失败处理,不静默回退当前时间。
+      final date = DateParser.tryParse(dateStr);
+      if (date == null) {
+        badRows['date'] = (badRows['date'] ?? 0) + 1;
+        continue;
+      }
 
       // 无标签和附件解析
 
@@ -842,8 +933,37 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     }
     distinctCategories = set.toList()..sort();
 
-    // 初始化分类映射为null，后续在FutureBuilder中进行自动匹配
+    // 初始化分类映射为 null,自动匹配由 _autoMatchCategories 在数据到达后执行。
     categoryMapping = {for (final n in distinctCategories) n: null};
+    // 自动匹配移到数据回调中执行,不在 build 内改写状态。
+    _autoMatchCategories();
+  }
+
+  /// 分类数据就绪后为源分类预设同名匹配。
+  ///
+  /// 设计意图:自动匹配属于数据到达后的初始化,若在 FutureBuilder 的 build
+  /// 内直接改 categoryMapping 是 build 期副作用;这里由 [_buildDistinctCategories]
+  /// 触发,await 分类列表后一次性计算并 setState。
+  Future<void> _autoMatchCategories() async {
+    final future = allCategoriesFuture;
+    if (future == null) return;
+    final cats = await future;
+    if (!mounted || cats.isEmpty) return;
+
+    var hasMatch = false;
+    for (final sourceName in distinctCategories) {
+      // 直接使用源分类名称查找匹配
+      try {
+        final matchingCategory = cats.firstWhere((c) => c.name == sourceName);
+        categoryMapping[sourceName] = matchingCategory.id;
+        hasMatch = true;
+      } catch (_) {
+        // 没有找到匹配的分类，保持为null
+      }
+    }
+    if (hasMatch && mounted) {
+      setState(() {});
+    }
   }
 }
 
@@ -855,18 +975,9 @@ List<List<String>> _parseRowsIsolate(String input) {
 Future<List<schema.Category>> _loadAllCategories(WidgetRef ref) async {
   final repo = ref.read(repositoryProvider);
   // 全局仅支出模式，只查 expense 分类。
-  final expenseTopLevel = await repo.getTopLevelCategories('expense');
-
-  final allCategories = <schema.Category>[];
-  allCategories.addAll(expenseTopLevel);
-
-  // 获取所有子分类
-  for (final category in expenseTopLevel) {
-    final subCategories = await repo.getSubCategories(category.id);
-    allCategories.addAll(subCategories);
-  }
-
-  return allCategories;
+  // 一次全量查询后按 kind 过滤,避免每个一级分类一次子分类查询(N+1)。
+  final all = await repo.getAllCategories();
+  return all.where((c) => c.kind == 'expense').toList();
 }
 
 /// 将分类列表按「先一级、再其下二级、再下个一级」的顺序重排。

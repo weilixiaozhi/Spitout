@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/reminder/reminder_providers.dart';
 import '../../services/notification/notification_factory.dart';
 import '../../services/notification/notification_android.dart';
+import '../../core/logging/logger_service.dart';
 import '../../theme/colors.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/icons/app_icons.dart';
@@ -122,18 +123,25 @@ class ReminderSettingsPage extends ConsumerWidget {
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
-                final notificationUtil = NotificationFactory.getInstance();
-                // 在 async gap 之前缓存本地化实例，避免跨越 await 使用 BuildContext
                 final l10n = AppLocalizations.of(context);
-                // 用户主动测试通知时请求权限，确保通知能正常发出
-                await notificationUtil.requestPermissions();
-                await notificationUtil.showNotification(
-                  id: 9999,
-                  title: l10n.reminderTestTitle,
-                  body: l10n.reminderTestBody,
-                );
-                if (context.mounted) {
-                  showToast(context, l10n.reminderTestSent);
+                try {
+                  final notificationUtil = NotificationFactory.getInstance();
+                  // 在 async gap 之前缓存本地化实例，避免跨越 await 使用 BuildContext
+                  // 用户主动测试通知时请求权限，确保通知能正常发出
+                  await notificationUtil.requestPermissions();
+                  await notificationUtil.showNotification(
+                    id: 9999,
+                    title: l10n.reminderTestTitle,
+                    body: l10n.reminderTestBody,
+                  );
+                  if (context.mounted) {
+                    showToast(context, l10n.reminderTestSent);
+                  }
+                } catch (e, st) {
+                  logger.error('ReminderSettings', '发送测试通知失败', e, st);
+                  if (context.mounted) {
+                    showToast(context, l10n.commonOperationFailed);
+                  }
                 }
               },
               style: ElevatedButton.styleFrom(
@@ -165,25 +173,36 @@ class ReminderSettingsPage extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
-                  final androidUtil = NotificationFactory.getInstance() as AndroidNotificationUtil;
-                  final batteryInfo = await androidUtil.getBatteryOptimizationInfo();
+                  final util = NotificationFactory.getInstance();
+                  if (util is! AndroidNotificationUtil) return;
+                  final l10n = AppLocalizations.of(context);
+                  Map<String, dynamic> batteryInfo;
+                  try {
+                    batteryInfo = await util.getBatteryOptimizationInfo();
+                  } catch (e, st) {
+                    logger.error('ReminderSettings', '获取电池优化状态失败', e, st);
+                    if (context.mounted) {
+                      showToast(context, l10n.commonOperationFailed);
+                    }
+                    return;
+                  }
                   if (context.mounted) {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(AppLocalizations.of(context).reminderBatteryStatus),
+                        title: Text(l10n.reminderBatteryStatus),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(AppLocalizations.of(context).reminderManufacturer(batteryInfo['manufacturer'] ?? 'Unknown')),
-                            Text(AppLocalizations.of(context).reminderModel(batteryInfo['model'] ?? 'Unknown')),
-                            Text(AppLocalizations.of(context).reminderAndroidVersion(batteryInfo['androidVersion'] ?? 'Unknown')),
+                            Text(l10n.reminderManufacturer(batteryInfo['manufacturer'] ?? 'Unknown')),
+                            Text(l10n.reminderModel(batteryInfo['model'] ?? 'Unknown')),
+                            Text(l10n.reminderAndroidVersion(batteryInfo['androidVersion'] ?? 'Unknown')),
                             const SizedBox(height: 8),
                             Text(
                               (batteryInfo['isIgnoring'] == true)
-                                  ? AppLocalizations.of(context).reminderBatteryIgnored
-                                  : AppLocalizations.of(context).reminderBatteryNotIgnored,
+                                  ? l10n.reminderBatteryIgnored
+                                  : l10n.reminderBatteryNotIgnored,
                               style: TextStyle(
                                 color: (batteryInfo['isIgnoring'] == true) ? Colors.green : Colors.orange,
                                 fontWeight: FontWeight.w500,
@@ -192,7 +211,7 @@ class ReminderSettingsPage extends ConsumerWidget {
                             if (batteryInfo['isIgnoring'] != true) ...[
                               const SizedBox(height: 8),
                               Text(
-                                AppLocalizations.of(context).reminderBatteryAdvice,
+                                l10n.reminderBatteryAdvice,
                                 style: const TextStyle(fontSize: 12, color: Colors.red),
                               ),
                             ],
@@ -200,17 +219,27 @@ class ReminderSettingsPage extends ConsumerWidget {
                         ),
                         actions: [
                           if (batteryInfo['isIgnoring'] != true && batteryInfo['canRequest'] == true)
-                            TextButton(
-                              onPressed: () async {
-                                Navigator.of(context).pop();
-                                final androidUtil = NotificationFactory.getInstance() as AndroidNotificationUtil;
-                                await androidUtil.requestIgnoreBatteryOptimizations();
-                              },
-                              child: Text(AppLocalizations.of(context).commonSettings),
-                            ),
+                              TextButton(
+                                onPressed: () async {
+                                  Navigator.of(context).pop();
+                                  final u = NotificationFactory.getInstance();
+                                  if (u is! AndroidNotificationUtil) return;
+                                  try {
+                                    await u.requestIgnoreBatteryOptimizations();
+                                  } catch (e, st) {
+                                    logger.error(
+                                      'ReminderSettings',
+                                      '请求忽略电池优化失败',
+                                      e,
+                                      st,
+                                    );
+                                  }
+                                },
+                                child: Text(l10n.commonSettings),
+                              ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text(AppLocalizations.of(context).commonConfirm),
+                            child: Text(l10n.commonConfirm),
                           ),
                         ],
                       ),
@@ -241,47 +270,58 @@ class ReminderSettingsPage extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
-                  final androidUtil = NotificationFactory.getInstance() as AndroidNotificationUtil;
-                  final channelInfo = await androidUtil.getNotificationChannelInfo();
+                  final util = NotificationFactory.getInstance();
+                  if (util is! AndroidNotificationUtil) return;
+                  final l10n = AppLocalizations.of(context);
+                  Map<String, dynamic> channelInfo;
+                  try {
+                    channelInfo = await util.getNotificationChannelInfo();
+                  } catch (e, st) {
+                    logger.error('ReminderSettings', '获取通知渠道状态失败', e, st);
+                    if (context.mounted) {
+                      showToast(context, l10n.commonOperationFailed);
+                    }
+                    return;
+                  }
                   if (context.mounted) {
                     showDialog(
                       context: context,
                       builder: (context) => AlertDialog(
-                        title: Text(AppLocalizations.of(context).reminderChannelStatus),
+                        title: Text(l10n.reminderChannelStatus),
                         content: Column(
                           mainAxisSize: MainAxisSize.min,
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text((channelInfo['isEnabled'] == true)
-                                ? AppLocalizations.of(context).reminderChannelEnabled
-                                : AppLocalizations.of(context).reminderChannelDisabled),
-                            Text(AppLocalizations.of(context).reminderChannelImportance(channelInfo['importance'] ?? 'unknown')),
+                                ? l10n.reminderChannelEnabled
+                                : l10n.reminderChannelDisabled),
+                            Text(l10n.reminderChannelImportance(channelInfo['importance'] ?? 'unknown')),
                             Text((channelInfo['sound'] == true)
-                                ? AppLocalizations.of(context).reminderChannelSoundOn
-                                : AppLocalizations.of(context).reminderChannelSoundOff),
+                                ? l10n.reminderChannelSoundOn
+                                : l10n.reminderChannelSoundOff),
                             Text((channelInfo['vibration'] == true)
-                                ? AppLocalizations.of(context).reminderChannelVibrationOn
-                                : AppLocalizations.of(context).reminderChannelVibrationOff),
+                                ? l10n.reminderChannelVibrationOn
+                                : l10n.reminderChannelVibrationOff),
                             if (channelInfo['bypassDnd'] != null)
                               Text((channelInfo['bypassDnd'] == true)
-                                  ? AppLocalizations.of(context).reminderChannelDndBypass
-                                  : AppLocalizations.of(context).reminderChannelDndNoBypass),
+                                  ? l10n.reminderChannelDndBypass
+                                  : l10n.reminderChannelDndNoBypass),
                             const SizedBox(height: 8),
                             if (channelInfo['isEnabled'] != true ||
                                 channelInfo['importance'] == 'none' ||
                                 channelInfo['importance'] == 'min' ||
                                 channelInfo['importance'] == 'low') ...[
                               Text(
-                                AppLocalizations.of(context).reminderChannelAdvice,
+                                l10n.reminderChannelAdvice,
                                 style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
                               ),
-                              Text(AppLocalizations.of(context).reminderChannelAdviceImportance),
-                              Text(AppLocalizations.of(context).reminderChannelAdviceSound),
-                              Text(AppLocalizations.of(context).reminderChannelAdviceBanner),
-                              Text(AppLocalizations.of(context).reminderChannelAdviceXiaomi),
+                              Text(l10n.reminderChannelAdviceImportance),
+                              Text(l10n.reminderChannelAdviceSound),
+                              Text(l10n.reminderChannelAdviceBanner),
+                              Text(l10n.reminderChannelAdviceXiaomi),
                             ] else ...[
                               Text(
-                                AppLocalizations.of(context).reminderChannelGood,
+                                l10n.reminderChannelGood,
                                 style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
                               ),
                             ],
@@ -291,14 +331,24 @@ class ReminderSettingsPage extends ConsumerWidget {
                           TextButton(
                             onPressed: () async {
                               Navigator.of(context).pop();
-                              final androidUtil = NotificationFactory.getInstance() as AndroidNotificationUtil;
-                              await androidUtil.openNotificationChannelSettings();
+                              final u = NotificationFactory.getInstance();
+                              if (u is! AndroidNotificationUtil) return;
+                              try {
+                                await u.openNotificationChannelSettings();
+                              } catch (e, st) {
+                                logger.error(
+                                  'ReminderSettings',
+                                  '打开通知渠道设置失败',
+                                  e,
+                                  st,
+                                );
+                              }
                             },
-                            child: Text(AppLocalizations.of(context).commonSettings),
+                            child: Text(l10n.commonSettings),
                           ),
                           TextButton(
                             onPressed: () => Navigator.of(context).pop(),
-                            child: Text(AppLocalizations.of(context).commonConfirm),
+                            child: Text(l10n.commonConfirm),
                           ),
                         ],
                       ),
@@ -329,8 +379,20 @@ class ReminderSettingsPage extends ConsumerWidget {
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
-                  final androidUtil = NotificationFactory.getInstance() as AndroidNotificationUtil;
-                  await androidUtil.openAppSettings();
+                  final util = NotificationFactory.getInstance();
+                  if (util is! AndroidNotificationUtil) return;
+                  try {
+                    await util.openAppSettings();
+                  } catch (e, st) {
+                    logger.error('ReminderSettings', '打开应用设置失败', e, st);
+                    if (context.mounted) {
+                      showToast(
+                        context,
+                        AppLocalizations.of(context).commonOperationFailed,
+                      );
+                    }
+                    return;
+                  }
                   if (context.mounted) {
                     showToast(context, AppLocalizations.of(context).reminderAppSettingsMessage);
                   }

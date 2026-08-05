@@ -116,4 +116,61 @@ void main() {
       expect(await store.loadS3(), isNotNull);
     });
   });
+
+  group('saveImported 凭据合并与剥离', () {
+    test('脱敏占位符不会覆盖本机 WebDAV 密码', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_webdavCfg()); // 本机密码 'p'
+
+      final masked = CloudServiceConfig(
+        type: CloudBackendType.webdav,
+        name: 'WebDAV',
+        webdavUrl: 'https://dav.example.com',
+        webdavUsername: 'u',
+        webdavPassword: '***',
+      );
+      // 即使显式勾选「包含凭据」，占位符也必须被忽略。
+      await store.saveImported(masked, includeCredentials: true);
+
+      expect((await store.loadWebdav())!.webdavPassword, 'p');
+    });
+
+    test('显式携带真实凭据的导入覆盖 WebDAV 密码', () async {
+      final store = CloudServiceStore();
+      await store.saveOnly(_webdavCfg());
+
+      final incoming = CloudServiceConfig(
+        type: CloudBackendType.webdav,
+        name: 'WebDAV',
+        webdavUrl: 'https://dav.example.com',
+        webdavUsername: 'u',
+        webdavPassword: 'new-password',
+      );
+      await store.saveImported(incoming, includeCredentials: true);
+
+      expect((await store.loadWebdav())!.webdavPassword, 'new-password');
+    });
+
+    test('Supabase 登录密码导入后仍被剥离且不落盘', () async {
+      final store = CloudServiceStore();
+      final incoming = CloudServiceConfig(
+        type: CloudBackendType.supabase,
+        name: 'Supabase',
+        supabaseUrl: 'https://xxx.supabase.co',
+        supabaseAnonKey: 'anon-key',
+        supabaseEmail: 'a@b.com',
+        supabasePassword: 'super-secret',
+      );
+      await store.saveImported(incoming, includeCredentials: true);
+
+      final loaded = await store.loadSupabase();
+      expect(loaded, isNotNull);
+      expect(loaded!.supabasePassword, isNull);
+      expect(loaded.supabaseEmail, 'a@b.com');
+
+      final sp = await SharedPreferences.getInstance();
+      final raw = sp.getString('cloud_supabase_cfg')!;
+      expect(raw, isNot(contains('super-secret')));
+    });
+  });
 }

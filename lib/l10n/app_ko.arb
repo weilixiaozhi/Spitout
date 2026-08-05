@@ -72,6 +72,7 @@
     "commonError": "오류",
     "commonFailed": "실패",
     "commonOperationFailed": "작업에 실패했습니다. 잠시 후 다시 시도해 주세요",
+    "commonRetry": "다시 시도",
     "commonBack": "뒤로",
     "commonNext": "다음",
     "commonFinish": "완료",
@@ -221,6 +222,15 @@
     "importConfirmMapping": "매핑 확인",
     "importCategoryMapping": "카테고리 매핑",
     "importNoDataParsed": "파싱된 데이터가 없습니다. 이전 페이지로 돌아가 CSV 내용이나 구분자를 확인해 주세요.",
+    "importNoLedger": "가져오기 전에 가계부를 먼저 만들어 주세요",
+    "importInvalidRowsSkipped": "해석할 수 없는 {count}개 행을 건너뛰었습니다(금액 또는 날짜가 잘못됨)",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "importFieldDate": "날짜",
     "importFieldType": "유형",
     "importFieldAmount": "금액",
@@ -545,6 +555,7 @@
     "exportCsvHeaderTime": "시간",
     "exportSuccessTitle": "내보내기 성공",
     "exportSuccessMessageAndroid": "저장 위치:\n{path}",
+    "exportSuccessMessageIos": "앱 문서 폴더에 저장됨:\n{path}",
     "exportFailedTitle": "내보내기 실패",
     "exportTypeExpense": "지출",
     "currencyCNY": "중국 위안",
@@ -778,6 +789,7 @@
     "cloudSpitoutCloudEmailHint": "your@email.com",
     "cloudSpitoutCloudPasswordLabel": "비밀번호",
     "cloudSpitoutCloudPasswordHint": "비밀번호를 입력하세요",
+    "cloudSpitoutCloudPasswordNotSavedHint": "비밀번호는 이번 로그인에만 사용되며 기기에 저장되지 않습니다",
     "cloudSpitoutCloudLoginSuccess": "로그인 성공",
     "cloudSpitoutCloudLoginFailed": "로그인 실패",
     "cloudTabOffline": "오프라인",
@@ -903,6 +915,14 @@
     "logCenterClearConfirmMessage": "모든 로그를 지우시겠습니까? 이 작업은 되돌릴 수 없습니다.",
     "logCenterCleared": "로그가 지워졌습니다",
     "logCenterCopied": "클립보드에 복사되었습니다",
+    "logCenterDetailTime": "시간",
+    "logCenterDetailLevel": "수준",
+    "logCenterDetailPlatform": "플랫폼",
+    "logCenterDetailError": "오류",
+    "logCenterDetailStackTrace": "스택 트레이스",
+    "logCenterCopy": "복사",
+    "logCenterClose": "닫기",
+    "logCenterExportSubject": "Spitout 로그 내보내기",
     "configImportExportTitle": "설정 가져오기/내보내기",
     "configImportExportSubtitle": "앱 설정을 백업하고 복원하세요",
     "configImportExportInfoTitle": "기능 설명",
@@ -968,6 +988,22 @@
     "calendarTitle": "캘린더",
     "calendarToday": "오늘로 돌아가기",
     "calendarNoTransactions": "거래 없음",
+    "calendarViewAllTransactions": "전체 {count}건 보기",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "calendarViewAllTransactions": "전체 {count}건 보기",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "calendarAddTransaction": "이 날짜에 기록 추가",
     "commonUncategorized": "미분류",
     "syncPreviewTitle": "동기화 미리보기",

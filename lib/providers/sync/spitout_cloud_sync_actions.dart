@@ -80,7 +80,7 @@ class SpitoutCloudSyncActions {
   /// 薄包装 `sync_providers.dart` 的同名顶层函数，避免造成第二份实现
   /// （该函数内部依赖 `spitoutCloudProviderInstance` 等 provider）。
   Future<void> reconcileProfileToServer({
-    required Future<SpitoutCloudProvider?> cloudProviderFuture,
+    required Future<SpitoutCloudSyncBackend?> cloudProviderFuture,
     required String currentDisplayName,
     required String currentExpenseColorScheme,
   }) {

@@ -149,4 +149,27 @@ void main() {
       expect(PathHelper.makeRelative('users/123'), equals('users/123'));
     });
   });
+
+  group('PathHelper - isSafeRelativePath', () {
+    test('should accept plain relative path', () {
+      expect(PathHelper.isSafeRelativePath('ledgers/123.json'), isTrue);
+    });
+
+    test('should reject absolute path', () {
+      expect(PathHelper.isSafeRelativePath('/ledgers/123.json'), isFalse);
+      expect(PathHelper.isSafeRelativePath('\\ledgers\\123.json'), isFalse);
+    });
+
+    test('should reject path traversal segments', () {
+      expect(PathHelper.isSafeRelativePath('../secret.json'), isFalse);
+      expect(
+          PathHelper.isSafeRelativePath('ledgers/../../secret.json'), isFalse);
+      expect(PathHelper.isSafeRelativePath('ledgers/..\\secret.json'), isFalse);
+    });
+
+    test('should reject empty path and dot segments', () {
+      expect(PathHelper.isSafeRelativePath(''), isFalse);
+      expect(PathHelper.isSafeRelativePath('./ledgers/123.json'), isFalse);
+    });
+  });
 }

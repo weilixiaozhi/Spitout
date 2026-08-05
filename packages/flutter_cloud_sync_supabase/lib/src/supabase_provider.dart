@@ -26,6 +26,9 @@ import 'supabase_realtime_service.dart';
 ///   'bucket': 'user-data',
 /// });
 /// ```
+///
+/// 注意：supabase_flutter 使用进程级全局单例，同一进程仅允许一个 Supabase
+/// 后端；切换配置前必须先 dispose 旧实例，避免静态初始化状态互相污染。
 class SupabaseProvider implements CloudProvider {
   supabase.SupabaseClient? _client;
   SupabaseAuthService? _authService;
@@ -119,7 +122,8 @@ class SupabaseProvider implements CloudProvider {
 
       // Create service instances
       _authService = SupabaseAuthService(_client!);
-      _storageService = SupabaseStorageService(_client!, _bucketName, _pathPrefix);
+      _storageService =
+          SupabaseStorageService(_client!, _bucketName, _pathPrefix);
       _databaseService = SupabaseDatabaseService(_client!);
       _realtimeService = SupabaseRealtimeService(_client!);
     } catch (e) {
@@ -128,7 +132,8 @@ class SupabaseProvider implements CloudProvider {
           e.toString().contains('LateInitializationError')) {
         _client = supabase.Supabase.instance.client;
         _authService = SupabaseAuthService(_client!);
-        _storageService = SupabaseStorageService(_client!, _bucketName, _pathPrefix);
+        _storageService =
+            SupabaseStorageService(_client!, _bucketName, _pathPrefix);
         _databaseService = SupabaseDatabaseService(_client!);
         _realtimeService = SupabaseRealtimeService(_client!);
         _isInitialized = true;
@@ -158,10 +163,16 @@ class SupabaseProvider implements CloudProvider {
 
   @override
   Future<void> dispose() async {
+    // 关闭 Realtime 的 StreamController，避免资源泄漏。
+    _realtimeService?.dispose();
     _authService = null;
     _storageService = null;
     _databaseService = null;
     _realtimeService = null;
     _client = null;
+    // 复位进程级静态状态，保证下次 initialize 能按新配置重建。
+    _isInitialized = false;
+    _currentUrl = null;
+    _currentAnonKey = null;
   }
 }

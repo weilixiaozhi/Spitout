@@ -2,6 +2,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:webdav_client/webdav_client.dart' as webdav;
 
@@ -52,8 +53,8 @@ class WebDAVStorageService implements CloudStorageService {
       // Convert bytes to string
       return utf8.decode(bytes);
     } catch (e) {
-      // Return null if file not found
-      if (e.toString().contains('404') || e.toString().contains('not found')) {
+      // 优先按 HTTP 状态码判断 404；无法取到状态码时再回退字符串匹配。
+      if (_isNotFound(e)) {
         return null;
       }
       throw CloudStorageException('Download failed: $e', e);
@@ -116,8 +117,9 @@ class WebDAVStorageService implements CloudStorageService {
       final files = await _client.readDir(parentDir);
       return files.any((f) => f.name == fileName);
     } catch (e) {
-      // If error (e.g. directory doesn't exist), file doesn't exist
-      return false;
+      // 目录不存在 / 文件不存在视为 false；鉴权等真实错误必须上抛。
+      if (_isNotFound(e)) return false;
+      throw CloudStorageException('Exists check failed: $e', e);
     }
   }
 
@@ -148,9 +150,7 @@ class WebDAVStorageService implements CloudStorageService {
         metadata: customMetadata,
       );
     } catch (e) {
-      if (e.toString().contains('404') ||
-          e.toString().contains('not found') ||
-          e is CloudStorageException) {
+      if (_isNotFound(e) || e is CloudStorageException) {
         return null;
       }
       throw CloudStorageException('Get metadata failed: $e', e);
@@ -159,7 +159,34 @@ class WebDAVStorageService implements CloudStorageService {
 
   /// Builds the full path with remote path prefix.
   String _buildPath(String path) {
+    // 拒绝绝对路径与 .. 段，防止拼接 remotePath 后逃逸到其他目录。
+    if (!PathHelper.isSafeRelativePath(path)) {
+      throw CloudStorageException('Invalid path: $path');
+    }
     return PathHelper.join([_remotePath, path]);
+  }
+
+  /// 判断异常是否为 404（优先取 HTTP 状态码，兜底字符串匹配）。
+  bool _isNotFound(Object error) {
+    final statusCode = _statusCodeOf(error);
+    if (statusCode != null) return statusCode == 404;
+    final text = error.toString().toLowerCase();
+    return text.contains('404') || text.contains('not found');
+  }
+
+  /// 从 webdav_client 的异常（基于 dio）中读取状态码。
+  ///
+  /// 通过 dynamic 读取，避免本包直接依赖 dio。
+  int? _statusCodeOf(Object error) {
+    try {
+      final response = (error as dynamic).response;
+      if (response != null) {
+        return (response as dynamic).statusCode as int?;
+      }
+    } catch (_) {
+      // 非 dio 异常，返回 null 走字符串兜底。
+    }
+    return null;
   }
 
   /// Ensures a directory exists, creating it if necessary.
@@ -207,8 +234,8 @@ class WebDAVStorageService implements CloudStorageService {
       final bytes = utf8.encode(metadataJson);
       await _client.write(metadataPath, bytes);
     } catch (e) {
-      // Silently fail if metadata storage fails
-      // This is optional functionality
+      // 指纹等元数据写入失败会导致 getStatus 信息缺失，必须可见。
+      debugPrint('WebDAVStorageService 元数据写入失败（$filePath）: $e');
     }
   }
 
@@ -220,7 +247,10 @@ class WebDAVStorageService implements CloudStorageService {
       final json = jsonDecode(utf8.decode(bytes)) as Map<String, dynamic>;
       return json['metadata'] as Map<String, dynamic>? ?? {};
     } catch (e) {
-      // Return empty map if metadata file doesn't exist
+      // 旧文件没有元数据文件是正常情况；其他错误（JSON 损坏等）需要可见。
+      if (!_isNotFound(e)) {
+        debugPrint('WebDAVStorageService 元数据读取失败（$filePath）: $e');
+      }
       return {};
     }
   }
@@ -231,7 +261,10 @@ class WebDAVStorageService implements CloudStorageService {
       final metadataPath = '$filePath.metadata.json';
       await _client.remove(metadataPath);
     } catch (e) {
-      // Silently fail if metadata file doesn't exist
+      // 元数据文件不存在属于正常情况；其他错误需要可见。
+      if (!_isNotFound(e)) {
+        debugPrint('WebDAVStorageService 元数据删除失败（$filePath）: $e');
+      }
     }
   }
 }

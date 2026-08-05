@@ -28,7 +28,7 @@ import 'package:spitout/services/data/tx_author_service.dart';
 ///
 /// 三种归属操作都必须与服务端交互(推送 / 删除 / 确认),离线或未登录时
 /// 不能只改本地 storage_mode —— 那会立刻制造"本地标记与云端实际不一致"的孤岛。
-Future<SpitoutCloudProvider> _requireCloud(WidgetRef ref) async {
+Future<SpitoutCloudSyncBackend> _requireCloud(WidgetRef ref) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   if (cloud == null) {
     throw CloudSyncException('请先登录 Spitout Cloud 再移动账本');
@@ -62,6 +62,35 @@ Future<void> moveLedgerToCloudProvider(
   _refreshAfterMove(ref);
 }
 
+/// 登录 Spitout Cloud 后执行全库本地身份迁移(方案 B)。
+///
+/// 把库中所有 localSelfId 引用改写为云 userId,使本地账本的「我」与云身份统一。
+/// 幂等(标记位防重跑),失败仅记日志不阻塞 UI。
+/// 用 [ProviderContainer] 而非 WidgetRef:页面销毁后迁移仍可完成。
+Future<void> migrateLocalIdentityAfterLoginWithContainer(
+  ProviderContainer container,
+) async {
+  try {
+    final cloud = await container.read(spitoutCloudProviderInstance.future);
+    if (cloud == null) return;
+    final cloudUserId = await TxAuthorService.currentUserId(cloud.auth);
+    if (cloudUserId == null || cloudUserId.isEmpty) return;
+    final localSelfId = await container.read(localSelfIdProvider.future);
+    final db = container.read(databaseProvider);
+    await LocalIdentityMigrationService.migrateToCloudUserId(
+      db: db,
+      cloudUserId: cloudUserId,
+      localSelfId: localSelfId,
+    );
+  } catch (e, st) {
+    logger.warning(
+      'LedgerStorage',
+      '登录后本地身份迁移失败(非阻塞,下次登录会重试)',
+      '$e\n$st',
+    );
+  }
+}
+
 /// 转云端前把指定账本内的 localSelfId 引用改写为云 userId。
 ///
 /// 仅改写该账本下的交易/编辑历史,以及该账本行的 ownerUserId。
@@ -69,7 +98,7 @@ Future<void> moveLedgerToCloudProvider(
 Future<void> _migrateLedgerIdentityBeforeCloudMove(
   WidgetRef ref,
   int ledgerId,
-  SpitoutCloudProvider cloud,
+  SpitoutCloudSyncBackend cloud,
 ) async {
   try {
     final cloudUserId = await TxAuthorService.currentUserId(cloud.auth);

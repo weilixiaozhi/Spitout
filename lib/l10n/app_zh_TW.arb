@@ -213,6 +213,7 @@
     "cloudSpitoutCloudEmailHint": "your@email.com",
     "cloudSpitoutCloudPasswordLabel": "密碼",
     "cloudSpitoutCloudPasswordHint": "輸入密碼",
+    "cloudSpitoutCloudPasswordNotSavedHint": "密碼僅用於本次登入，不會儲存到本機",
     "cloudSpitoutCloudLoginSuccess": "登入成功",
     "cloudSpitoutCloudLoginFailed": "登入失敗",
     "cloudTabOffline": "離線模式",
@@ -433,6 +434,7 @@
     "commonError": "錯誤",
     "commonFailed": "失敗",
     "commonOperationFailed": "操作失敗，請稍後重試",
+    "commonRetry": "重試",
     "commonFinish": "完成",
     "commonNext": "下一步",
     "commonNoteHint": "備註…",
@@ -583,6 +585,7 @@
             }
         }
     },
+    "exportSuccessMessageIos": "已匯出到應用程式文件目錄：\n{path}",
     "exportSuccessTitle": "匯出成功",
     "exportTypeExpense": "支出",
     "homeExpense": "支出",
@@ -621,6 +624,15 @@
     "importKeepOriginalName": "保持原名（自動建立/合併）",
     "importNextStep": "下一步",
     "importNoDataParsed": "未解析到任何資料，請返回上一頁檢查 CSV 內容或分隔符。",
+    "importNoLedger": "請先建立帳本再匯入",
+    "importInvalidRowsSkipped": "無法解析的 {count} 行已跳過（金額或日期無效）",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "importPreparing": "準備中…",
     "importPreview": "資料預覽",
     "importPreviewLimit": "僅預覽前 {shown} 行，共 {total} 行",
@@ -729,6 +741,14 @@
     "logCenterClearConfirmTitle": "清空日誌",
     "logCenterCleared": "日誌已清空",
     "logCenterCopied": "已複製到剪貼簿",
+    "logCenterDetailTime": "時間",
+    "logCenterDetailLevel": "級別",
+    "logCenterDetailPlatform": "平台",
+    "logCenterDetailError": "錯誤",
+    "logCenterDetailStackTrace": "堆疊",
+    "logCenterCopy": "複製",
+    "logCenterClose": "關閉",
+    "logCenterExportSubject": "Spitout 日誌匯出",
     "logCenterEmpty": "暫無日誌",
     "logCenterExport": "匯出",
     "logCenterExportFailed": "匯出失敗",
@@ -920,6 +940,14 @@
     "calendarTitle": "日曆",
     "calendarToday": "回到今天",
     "calendarNoTransactions": "當天無交易",
+    "calendarViewAllTransactions": "查看全部 {count} 筆",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "calendarAddTransaction": "在該日記帳",
     "commonUncategorized": "未分類",
     "syncPreviewTitle": "同步預覽",

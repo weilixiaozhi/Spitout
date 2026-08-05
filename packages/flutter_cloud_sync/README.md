@@ -30,6 +30,7 @@ dependencies:
   flutter_cloud_sync_supabase: ^0.1.0  # For Supabase
   flutter_cloud_sync_webdav: ^0.1.0    # For WebDAV
   flutter_cloud_sync_s3: ^0.1.0        # For AWS S3
+  flutter_cloud_sync_spitout_cloud: ^0.1.0  # For Spitout Cloud (self-hosted)
 ```
 
 ## Quick Start
@@ -162,6 +163,23 @@ final syncStatusProvider = FutureProvider.family<SyncStatus, int>((ref, ledgerId
 | Supabase | `flutter_cloud_sync_supabase` | ✅ Email/Password | ✅ Storage API |
 | WebDAV | `flutter_cloud_sync_webdav` | ✅ Basic Auth | ✅ WebDAV |
 | AWS S3 | `flutter_cloud_sync_s3` | ❌ Uses IAM | ✅ S3 API |
+| Spitout Cloud | `flutter_cloud_sync_spitout_cloud` | ✅ Email/Password + Session | ✅ Sync Engine |
+
+## Security Notes
+
+- **Login passwords are never persisted.** Spitout Cloud / Supabase passwords are
+  treated as one-time input: `CloudServiceStore` strips them before writing to
+  storage, so they never land in `SharedPreferences` (plaintext XML on Android).
+- **WebDAV / S3 credentials use a pluggable credential backend.** These
+  credentials are required for sync and are stored through
+  `CloudCredentialStorage`. The default `SharedPreferencesCredentialStorage`
+  keeps the historical plaintext behavior for compatibility; for production,
+  inject a secure implementation (e.g. based on `flutter_secure_storage`) via
+  `CloudServiceStore(credentialStorage: ...)`.
+- **All cloud config writes go through `CloudServiceStore`.** Business code must
+  not call `SharedPreferences.setString` on cloud config keys directly. Imports
+  use `saveImported(...)`, which merges credentials and ignores the `***`
+  redaction placeholder so a sanitized export can never overwrite real secrets.
 
 ## Architecture
 
@@ -207,6 +225,7 @@ See [API documentation](https://pub.dev/documentation/flutter_cloud_sync/latest/
 - `CloudNotAuthenticatedException` - User not authenticated
 - `CloudConfigurationException` - Invalid configuration
 - `CloudStorageException` - Storage operation failed
+- `CloudSerializationException` - Serialization / deserialization failed
 - `CloudAuthException` - Authentication failed
 
 ## Example

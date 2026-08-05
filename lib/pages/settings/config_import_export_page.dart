@@ -11,7 +11,6 @@ import '../../theme/colors.dart';
 import '../../utils/file_picker_helper.dart';
 import 'package:spitout/providers/providers.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/export/config_export_service.dart';
 import '../../core/logging/logger_service.dart';
 import '../../theme/icons/app_icons.dart';
 
@@ -38,7 +37,7 @@ class _ConfigImportExportPageState
     // Step 1: 显示选择导出内容对话框
     final options = await showDialog<ExportOptions>(
       context: context,
-      builder: (context) => _ExportOptionsDialog(ref: ref),
+      builder: (context) => const _ExportOptionsDialog(),
     );
 
     if (options == null || !mounted) return;
@@ -49,14 +48,8 @@ class _ConfigImportExportPageState
     });
 
     try {
-      // 获取仓库
-      final repo = ref.read(repositoryProvider);
-
       // Step 2: 生成预览内容
-      final yamlContent = await ConfigExportService.exportToYaml(
-        repository: repo,
-        options: options,
-      );
+      final yamlContent = await exportConfigToYaml(ref, options);
 
       if (!mounted) return;
 
@@ -108,27 +101,37 @@ class _ConfigImportExportPageState
         final file = File(filePath);
         await file.writeAsString(yamlContent);
 
-        if (!mounted) return;
-
-        final result = await SharePlus.instance.share(
-          ShareParams(
-            files: [XFile(filePath)],
-            subject: AppLocalizations.of(context).configExportShareSubject,
-          ),
-        );
-
-        if (result.status == ShareResultStatus.success) {
+        try {
           if (!mounted) return;
-          showToast(context, AppLocalizations.of(context).configExportSuccess);
+          final result = await SharePlus.instance.share(
+            ShareParams(
+              files: [XFile(filePath)],
+              subject: AppLocalizations.of(context).configExportShareSubject,
+            ),
+          );
+
+          if (result.status == ShareResultStatus.success) {
+            if (!mounted) return;
+            showToast(context, AppLocalizations.of(context).configExportSuccess);
+          }
+        } finally {
+          // 分享完成后清理临时文件,避免残留敏感配置。
+          try {
+            if (file.existsSync()) {
+              await file.delete();
+            }
+          } catch (e) {
+            logger.warning('ConfigExport', '清理临时导出文件失败: $e');
+          }
         }
       }
-    } catch (e) {
-      logger.error('ConfigExport', '导出配置失败: $e');
+    } catch (e, st) {
+      logger.error('ConfigExport', '导出配置失败', e, st);
       if (!mounted) return;
       await AppDialog.error(
         context,
         title: AppLocalizations.of(context).configExportFailed,
-        message: e.toString(),
+        message: AppLocalizations.of(context).commonOperationFailed,
       );
     } finally {
       if (mounted) {
@@ -194,14 +197,13 @@ class _ConfigImportExportPageState
       final yamlContent = await file.readAsString();
 
       // 检测文件中包含哪些配置项
-      final contentInfo = ConfigExportService.detectContent(yamlContent);
+      final contentInfo = detectConfigContent(yamlContent);
 
       // Step 3: 显示预览并选择导入内容的对话框
       if (!mounted) return;
       final options = await showDialog<ExportOptions>(
         context: context,
         builder: (context) => _ImportPreviewDialog(
-          ref: ref,
           yamlContent: yamlContent,
           contentInfo: contentInfo,
         ),
@@ -212,16 +214,10 @@ class _ConfigImportExportPageState
         return;
       }
 
-      // Step 4: 执行导入
+      // Step 4: 执行导入（页面已持有 yamlContent,直接走内存导入,避免重复读盘）
       // 注意：不传入 ledgerId，让导入逻辑使用 yml 中指定的账本名称
       // 这样预算等数据会导入到正确的账本，而不是当前账本
-      final repo = ref.read(repositoryProvider);
-
-      await ConfigExportService.importFromFile(
-        filePath,
-        repository: repo,
-        options: options,
-      );
+      await importConfigFromYaml(ref, yamlContent, options);
 
       // 导入后立即刷新相关的 Provider 状态
       if (options.appSettings) {
@@ -238,12 +234,13 @@ class _ConfigImportExportPageState
         title: AppLocalizations.of(context).configImportRestartTitle,
         message: AppLocalizations.of(context).configImportRestartMessage,
       );
-    } catch (e) {
+    } catch (e, st) {
+      logger.error('ConfigImport', '导入配置失败', e, st);
       if (!mounted) return;
       await AppDialog.error(
         context,
         title: AppLocalizations.of(context).configImportFailed,
-        message: e.toString(),
+        message: AppLocalizations.of(context).commonOperationFailed,
       );
     } finally {
       if (mounted) {
@@ -620,9 +617,7 @@ class _ConfigContentDialog extends StatelessWidget {
 
 /// 导出选项选择对话框
 class _ExportOptionsDialog extends StatefulWidget {
-  final WidgetRef ref;
-
-  const _ExportOptionsDialog({required this.ref});
+  const _ExportOptionsDialog();
 
   @override
   State<_ExportOptionsDialog> createState() => _ExportOptionsDialogState();
@@ -912,12 +907,10 @@ class _ExportPreviewDialog extends StatelessWidget {
 
 /// 导入预览对话框（先预览内容，再选择导入项）
 class _ImportPreviewDialog extends StatefulWidget {
-  final WidgetRef ref;
   final String yamlContent;
   final ConfigContentInfo contentInfo;
 
   const _ImportPreviewDialog({
-    required this.ref,
     required this.yamlContent,
     required this.contentInfo,
   });
@@ -932,6 +925,8 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
   late bool _categories;
   late bool _recurringTransactions;
   late bool _appSettings;
+  // 凭据默认不导入:未勾选时服务层跳过密码/密钥/token,保留本机现值。
+  bool _includeCredentials = false;
 
   @override
   void initState() {
@@ -1105,6 +1100,24 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                       contentPadding: EdgeInsets.zero,
                       dense: true,
                     ),
+                  if (info.hasAppSettings)
+                    CheckboxListTile(
+                      value: _includeCredentials,
+                      onChanged: (v) =>
+                          setState(() => _includeCredentials = v ?? false),
+                      title: Text(l10n.configIncludeCredentials),
+                      subtitle: Text(
+                        l10n.configIncludeCredentialsSubtitle,
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: SpitoutTokens.textSecondary(context),
+                        ),
+                      ),
+                      secondary: Icon(AppIcons.warning, color: primary),
+                      controlAffinity: ListTileControlAffinity.trailing,
+                      contentPadding: EdgeInsets.zero,
+                      dense: true,
+                    ),
                 ],
               ),
             ),
@@ -1134,6 +1147,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                       categories: _categories,
                       recurringTransactions: _recurringTransactions,
                       appSettings: _appSettings,
+                      includeCredentials: _includeCredentials,
                     );
                     Navigator.pop(context, options);
                   },

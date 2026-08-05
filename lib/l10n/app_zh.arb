@@ -36,6 +36,7 @@
     "commonError": "错误",
     "commonFailed": "失败",
     "commonOperationFailed": "操作失败，请稍后重试",
+    "commonRetry": "重试",
     "commonBack": "返回",
     "commonNext": "下一步",
     "commonFinish": "完成",
@@ -413,6 +414,15 @@
     "importConfirmMapping": "确认映射",
     "importCategoryMapping": "分类映射",
     "importNoDataParsed": "未解析到任何数据，请返回上一页检查 CSV 内容或分隔符。",
+    "importNoLedger": "请先创建账本再导入",
+    "importInvalidRowsSkipped": "无法解析的 {count} 行已跳过（金额或日期无效）",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "importFieldDate": "日期",
     "importFieldType": "类型",
     "importFieldAmount": "金额",
@@ -551,6 +561,14 @@
             }
         }
     },
+    "exportSuccessMessageIos": "已导出到应用文档目录：\n{path}",
+    "@exportSuccessMessageIos": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
     "currencyCNY": "人民币",
     "currencyUSD": "美元",
     "currencyEUR": "欧元",
@@ -680,6 +698,7 @@
     "cloudSpitoutCloudEmailHint": "your@email.com",
     "cloudSpitoutCloudPasswordLabel": "密码",
     "cloudSpitoutCloudPasswordHint": "输入密码",
+    "cloudSpitoutCloudPasswordNotSavedHint": "密码仅用于本次登录，不会保存到本机",
     "cloudSpitoutCloudLoginSuccess": "登录成功",
     "cloudSpitoutCloudLoginFailed": "登录失败",
     "cloudTabOffline": "离线模式",
@@ -816,6 +835,14 @@
     "logCenterClearConfirmMessage": "确定要清空所有日志吗？此操作不可恢复。",
     "logCenterCleared": "日志已清空",
     "logCenterCopied": "已复制到剪贴板",
+    "logCenterDetailTime": "时间",
+    "logCenterDetailLevel": "级别",
+    "logCenterDetailPlatform": "平台",
+    "logCenterDetailError": "错误",
+    "logCenterDetailStackTrace": "堆栈",
+    "logCenterCopy": "复制",
+    "logCenterClose": "关闭",
+    "logCenterExportSubject": "Spitout 日志导出",
     "configImportExportTitle": "配置导入导出",
     "configImportExportSubtitle": "备份和恢复应用配置",
     "configImportExportInfoTitle": "功能说明",

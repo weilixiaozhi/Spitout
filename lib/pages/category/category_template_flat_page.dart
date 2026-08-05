@@ -8,7 +8,7 @@ import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import '../../core/logging/logger_service.dart';
-import '../../services/data/category_template_logic.dart';
+import '../../providers/category/category_template_providers.dart';
 import '../../widgets/widgets.dart';
 import 'category_template_widgets.dart';
 
@@ -50,8 +50,12 @@ class _CategoryTemplateFlatPageState
           Expanded(
             child: catsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) =>
-                  Center(child: Text(l10n.categoryLoadFailed(e.toString()))),
+              error: (e, st) {
+                logger.error('categoryTemplate', 'flat 分类加载失败', e, st);
+                return Center(
+                  child: Text(l10n.commonOperationFailed),
+                );
+              },
               data: (cats) => _buildBody(context, l10n, cats),
             ),
           ),
@@ -138,9 +142,8 @@ class _CategoryTemplateFlatPageState
 
     setState(() => _isAdding = true);
     try {
-      final repo = ref.read(repositoryProvider);
-      final added = await executeTemplateInsertPlan(
-        repo: repo,
+      final added = await executeTemplateInsertPlanFromUi(
+        ref,
         plan: plan,
         existingCategories: [for (final c in cats) c.category],
       );
@@ -160,7 +163,10 @@ class _CategoryTemplateFlatPageState
       // 常见冲突：同作用域存在同名自定义分类（DuplicateNameException）
       logger.error('categoryTemplate', 'flat 模板写入失败', e, st);
       if (mounted) {
-        showToast(context, l10n.categoryTemplateAddFailed(e.toString()));
+        showToast(
+          context,
+          l10n.categoryTemplateAddFailed(l10n.commonOperationFailed),
+        );
       }
     } finally {
       if (mounted) setState(() => _isAdding = false);

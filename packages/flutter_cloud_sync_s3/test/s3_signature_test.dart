@@ -37,7 +37,8 @@ void main() {
       final payload = utf8.encode('hello');
       final headers = doSign(payloadBytes: payload);
       // 与 crypto 包自带 hex（Digest.toString）交叉验证，防止手写 _toHex 引入偏差
-      expect(headers['x-amz-content-sha256'], sha256.convert(payload).toString());
+      expect(
+          headers['x-amz-content-sha256'], sha256.convert(payload).toString());
       // "hello" 的 SHA256 固定向量
       expect(
         headers['x-amz-content-sha256'],
@@ -60,6 +61,14 @@ void main() {
     test('x-amz-date 为 AWS 标准格式', () {
       final headers = doSign();
       expect(headers['x-amz-date'], matches(RegExp(r'^\d{8}T\d{6}Z$')));
+    });
+
+    test('encodePath 对非 ASCII / 特殊字符分段编码（保留 /）', () {
+      expect(
+        S3SignatureV4.encodePath('ledgers/中文账本/a+b.json'),
+        'ledgers/%E4%B8%AD%E6%96%87%E8%B4%A6%E6%9C%AC/a%2Bb.json',
+      );
+      expect(S3SignatureV4.encodePath('a b/c%d'), 'a%20b/c%25d');
     });
   });
 }

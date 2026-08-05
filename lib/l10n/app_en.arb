@@ -39,6 +39,7 @@
     "commonError": "Error",
     "commonFailed": "Failed",
     "commonOperationFailed": "Operation failed, please try again later",
+    "commonRetry": "Retry",
     "commonBack": "Back",
     "commonNext": "Next",
     "commonFinish": "Finish",
@@ -259,6 +260,15 @@
     "importConfirmMapping": "Confirm Mapping",
     "importCategoryMapping": "Category Mapping",
     "importNoDataParsed": "No data parsed. Please return to previous page to check CSV content or separator.",
+    "importNoLedger": "Please create a ledger before importing",
+    "importInvalidRowsSkipped": "{count} unparsable row(s) skipped (invalid amount or date)",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "importFieldDate": "Date",
     "importFieldType": "Type",
     "importFieldAmount": "Amount",
@@ -644,6 +654,14 @@
             }
         }
     },
+    "exportSuccessMessageIos": "Exported to app documents:\n{path}",
+    "@exportSuccessMessageIos": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
     "currencyCNY": "Chinese Yuan",
     "currencyUSD": "US Dollar",
     "currencyEUR": "Euro",
@@ -800,6 +818,7 @@
     "cloudSpitoutCloudEmailHint": "your@email.com",
     "cloudSpitoutCloudPasswordLabel": "Password",
     "cloudSpitoutCloudPasswordHint": "Enter password",
+    "cloudSpitoutCloudPasswordNotSavedHint": "Password is only used for this sign-in and is not saved on this device",
     "cloudSpitoutCloudLoginSuccess": "Login successful",
     "cloudSpitoutCloudLoginFailed": "Login failed",
     "cloudTabOffline": "Offline",
@@ -953,6 +972,14 @@
     "logCenterClearConfirmMessage": "Are you sure you want to clear all logs? This action cannot be undone.",
     "logCenterCleared": "Logs cleared",
     "logCenterCopied": "Copied to clipboard",
+    "logCenterDetailTime": "Time",
+    "logCenterDetailLevel": "Level",
+    "logCenterDetailPlatform": "Platform",
+    "logCenterDetailError": "Error",
+    "logCenterDetailStackTrace": "Stack Trace",
+    "logCenterCopy": "Copy",
+    "logCenterClose": "Close",
+    "logCenterExportSubject": "Spitout Log Export",
     "configImportExportTitle": "Config Import/Export",
     "configImportExportSubtitle": "Backup and restore app configurations",
     "configImportExportInfoTitle": "Feature Description",
@@ -1075,6 +1102,22 @@
     "calendarTitle": "Calendar",
     "calendarToday": "Back to Today",
     "calendarNoTransactions": "No transactions",
+    "calendarViewAllTransactions": "View all {count} transactions",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "calendarViewAllTransactions": "View all {count} transactions",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "calendarAddTransaction": "Add entry on this day",
     "commonUncategorized": "Uncategorized",
     "syncPreviewTitle": "Sync Preview",

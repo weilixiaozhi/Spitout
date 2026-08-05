@@ -3,18 +3,43 @@ library;
 
 import '../../core/logging/logger_service.dart';
 import '../../data/repositories/ledger_repository.dart';
+import 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 
 // 状态模型定义于 data/models/sync_models.dart。
 // 注意:import 用于本库内使用(接口签名引用 PullOutcome/SyncStatus/SyncDiff);
 // export 用于对外 re-export —— sync_engine.dart 以 `app.SyncStatus` 前缀
 // 方式引用本库符号,Dart 的 `as app` 只能看到本库定义或 re-export 的名字,
 // import 进来的符号对 `app.` 前缀不可见,所以二者缺一不可。
-import '../../data/models.dart' show PullOutcome, SyncDiff, SyncStatus;
-export '../../data/models.dart' show PullOutcome, SyncDiff, SyncStatus;
+import '../../data/models.dart'
+    show PullOutcome, SyncDiff, SyncStatus, ImportData;
+export '../../data/models.dart'
+    show PullOutcome, SyncDiff, SyncStatus, ImportData;
+export 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 
 // ---- 同步服务接口 ----
 
 abstract class SyncService {
+  /// 是否支持「下载前 diff 预览」。
+  ///
+  /// 快照型后端（TransactionsSyncManager）支持:先下载云端数据并计算
+  /// 增删改预览,由用户勾选后再落库;纯本地实现不支持。UI 只按本能力
+  /// 分支,不依赖具体实现类。
+  bool get supportsDiffPreview;
+
+  /// 下载云端数据并计算 diff 预览;仅 [supportsDiffPreview] 为 true 时可用。
+  ///
+  /// 返回 null 表示云端无备份;preview 为 null 表示旧格式无法计算 diff,
+  /// 调用方应退回全量替换流程。
+  Future<({SyncPreview? preview, ImportData importData, int version})?>
+      downloadAndPreview({required int ledgerId});
+
+  /// 应用预览中选中的变更;仅 [supportsDiffPreview] 为 true 时可用。
+  Future<SyncApplyResult> applyPreviewChanges({
+    required int ledgerId,
+    required List<SyncChange> selectedChanges,
+    required ImportData importData,
+  });
+
   Future<void> uploadCurrentLedger({required int ledgerId});
 
   /// 下载并导入到当前账本
@@ -102,6 +127,24 @@ class LocalOnlySyncService implements SyncService {
       : _repoResolver = repoResolver; // ignore: prefer_initializing_formals
 
   final LedgerRepository Function()? _repoResolver;
+
+  @override
+  bool get supportsDiffPreview => false;
+
+  @override
+  Future<({SyncPreview? preview, ImportData importData, int version})?>
+      downloadAndPreview({required int ledgerId}) {
+    throw UnsupportedError('Cloud sync not configured');
+  }
+
+  @override
+  Future<SyncApplyResult> applyPreviewChanges({
+    required int ledgerId,
+    required List<SyncChange> selectedChanges,
+    required ImportData importData,
+  }) {
+    throw UnsupportedError('Cloud sync not configured');
+  }
 
   @override
   Future<({int inserted, int deletedDup})>

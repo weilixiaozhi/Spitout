@@ -1,29 +1,29 @@
-/// Cloud Realtime Service
+/// 云实时服务。
 ///
-/// Abstract interface for realtime communication (WebSocket-based).
-/// Supports both database change subscriptions and custom events.
+/// 实时通信（基于 WebSocket）的抽象接口，
+/// 支持数据库变更订阅与自定义事件。
 library;
 
-/// Realtime connection state
+/// 实时连接状态。
 enum RealtimeConnectionState {
-  /// Connecting to server
+  /// 连接中。
   connecting,
 
-  /// Connected and ready
+  /// 已连接并可用。
   connected,
 
-  /// Disconnected
+  /// 已断开。
   disconnected,
 
-  /// Connection error
+  /// 连接出错。
   error,
 }
 
-/// Realtime channel
+/// 实时频道。
 ///
-/// Represents a pub/sub channel for realtime communication.
+/// 表示实时通信的发布 / 订阅频道。
 ///
-/// Example:
+/// 示例：
 /// ```dart
 /// final channel = realtimeService.channel('room:123')
 ///   .onPostgresChanges(
@@ -41,23 +41,23 @@ enum RealtimeConnectionState {
 ///
 /// await channel.subscribe();
 ///
-/// // Send custom event
+/// // 发送自定义事件
 /// await channel.send(
 ///   event: 'user-typing',
 ///   payload: {'user': 'John'},
 /// );
 ///
-/// // Clean up
+/// // 清理
 /// await channel.unsubscribe();
 /// ```
 abstract class RealtimeChannel {
-  /// Subscribe to PostgreSQL database changes
+  /// 订阅 PostgreSQL 数据库变更。
   ///
-  /// - [event]: Event type (INSERT, UPDATE, DELETE, or * for all)
-  /// - [schema]: Database schema (usually 'public')
-  /// - [table]: Table name
-  /// - [filter]: Optional filter (e.g., 'user_id=eq.123')
-  /// - [callback]: Function called when event occurs
+  /// [event] - 事件类型（INSERT、UPDATE、DELETE，或 * 表示全部）
+  /// [schema] - 数据库 schema（通常为 'public'）
+  /// [table] - 表名
+  /// [filter] - 可选过滤条件（如 'user_id=eq.123'）
+  /// [callback] - 事件发生时的回调
   RealtimeChannel onPostgresChanges({
     required String event,
     required String schema,
@@ -66,58 +66,58 @@ abstract class RealtimeChannel {
     required void Function(Map<String, dynamic> payload) callback,
   });
 
-  /// Subscribe to custom events (broadcast)
+  /// 订阅自定义事件（广播）。
   ///
-  /// - [event]: Event name
-  /// - [callback]: Function called when event occurs
+  /// [event] - 事件名
+  /// [callback] - 事件发生时的回调
   RealtimeChannel on(
     String event,
     void Function(Map<String, dynamic> payload) callback,
   );
 
-  /// Send a custom event to all subscribers
+  /// 向所有订阅者发送自定义事件。
   ///
-  /// - [event]: Event name
-  /// - [payload]: Event data
+  /// [event] - 事件名
+  /// [payload] - 事件数据
   Future<void> send({
     required String event,
     required Map<String, dynamic> payload,
   });
 
-  /// Subscribe to the channel
+  /// 订阅频道。
   ///
-  /// Must be called after setting up listeners.
+  /// 必须在设置好监听器之后调用。
   Future<void> subscribe();
 
-  /// Unsubscribe from the channel
+  /// 取消订阅频道。
   ///
-  /// Removes all listeners and closes the channel.
+  /// 移除全部监听器并关闭频道。
   Future<void> unsubscribe();
 
-  /// Channel name
+  /// 频道名称。
   String get name;
 
-  /// Channel state
+  /// 频道状态。
   String get state;
 }
 
-/// Cloud realtime service interface
+/// 云实时服务接口。
 ///
-/// Provides realtime communication capabilities using WebSockets.
+/// 基于 WebSocket 提供实时通信能力。
 ///
-/// Example:
+/// 示例：
 /// ```dart
 /// final realtimeService = SupabaseRealtimeProvider(client);
 ///
-/// // Monitor connection state
+/// // 监听连接状态
 /// realtimeService.connectionState.listen((state) {
 ///   print('Realtime connection: $state');
 /// });
 ///
-/// // Create a channel
+/// // 创建频道
 /// final channel = realtimeService.channel('my-channel');
 ///
-/// // Listen to database changes
+/// // 监听数据库变更
 /// channel.onPostgresChanges(
 ///   event: '*',
 ///   schema: 'public',
@@ -133,45 +133,44 @@ abstract class RealtimeChannel {
 /// await channel.subscribe();
 /// ```
 abstract class CloudRealtimeService {
-  /// Connection state stream
+  /// 连接状态流。
   ///
-  /// Emits connection state changes.
+  /// 发出连接状态变化。
   Stream<RealtimeConnectionState> get connectionState;
 
-  /// Current connection state
+  /// 当前连接状态。
   RealtimeConnectionState get currentState;
 
-  /// Create or get a realtime channel
+  /// 创建或获取实时频道。
   ///
-  /// Channels are cached by name. Multiple calls with the same name
-  /// return the same channel instance.
+  /// 频道按名称缓存；同名多次调用返回同一实例。
   ///
-  /// - [channelName]: Unique channel identifier
+  /// [channelName] - 唯一频道标识
   RealtimeChannel channel(String channelName);
 
-  /// Remove a specific channel
+  /// 移除指定频道。
   ///
-  /// Unsubscribes and removes the channel from cache.
+  /// 取消订阅并从缓存中移除。
   Future<void> removeChannel(String channelName);
 
-  /// Remove all channels
+  /// 移除全部频道。
   ///
-  /// Unsubscribes and removes all channels.
+  /// 取消订阅并移除全部频道。
   Future<void> removeAllChannels();
 
-  /// Get all active channels
+  /// 获取全部活跃频道。
   List<RealtimeChannel> get channels;
 
-  /// Check if a channel exists
+  /// 检查频道是否存在。
   bool hasChannel(String channelName);
 
-  /// Connect to realtime server
+  /// 连接实时服务器。
   ///
-  /// Usually called automatically when creating the first channel.
+  /// 通常在创建第一个频道时自动调用。
   Future<void> connect();
 
-  /// Disconnect from realtime server
+  /// 断开实时服务器连接。
   ///
-  /// Removes all channels and closes the connection.
+  /// 移除全部频道并关闭连接。
   Future<void> disconnect();
 }

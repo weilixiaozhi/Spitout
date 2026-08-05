@@ -18,6 +18,10 @@ class LocalCategoryRepository implements CategoryRepository {
   LocalCategoryRepository(this.db);
 
   @override
+  Future<T> runInTransaction<T>(Future<T> Function() action) =>
+      db.transaction(action);
+
+  @override
   Future<int> createCategory({
     required String name,
     required String kind,

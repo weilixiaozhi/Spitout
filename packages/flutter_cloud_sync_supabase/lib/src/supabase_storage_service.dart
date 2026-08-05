@@ -2,6 +2,7 @@ library;
 
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
@@ -231,6 +232,11 @@ class SupabaseStorageService implements CloudStorageService {
   /// If pathPrefix is provided, it will be used as the prefix (supports {userId} placeholder).
   /// Otherwise, defaults to 'users/{userId}/' for backward compatibility.
   String _buildUserPath(String userId, String path) {
+    // 拒绝绝对路径与 .. 段，防止拼接用户前缀后逃逸到其他目录。
+    if (!PathHelper.isSafeRelativePath(path)) {
+      throw CloudStorageException('Invalid path: $path');
+    }
+
     // If no prefix configured, use default 'users/{userId}/' pattern
     final prefix = _pathPrefix ?? 'users/{userId}';
 
@@ -244,8 +250,7 @@ class SupabaseStorageService implements CloudStorageService {
   /// Stores custom metadata in a separate database table.
   /// Since Supabase Storage doesn't support custom metadata directly,
   /// we store it in a metadata table.
-  Future<void> _storeMetadata(
-      String path, Map<String, String> metadata) async {
+  Future<void> _storeMetadata(String path, Map<String, String> metadata) async {
     try {
       await _client.from('file_metadata').upsert({
         'path': path,
@@ -253,8 +258,9 @@ class SupabaseStorageService implements CloudStorageService {
         'updated_at': DateTime.now().toIso8601String(),
       });
     } catch (e) {
-      // Silently fail if metadata table doesn't exist
-      // This is optional functionality
+      // 元数据表缺失 / 权限不足会导致指纹等元数据永久缺失，
+      // 必须记录 warning，避免静默吞错放大 getStatus 全量下载问题。
+      debugPrint('SupabaseStorageService 元数据写入失败（path=$path）: $e');
     }
   }
 
@@ -271,7 +277,7 @@ class SupabaseStorageService implements CloudStorageService {
 
       return response['metadata'] as Map<String, dynamic>? ?? {};
     } catch (e) {
-      // Return empty map if metadata table doesn't exist
+      debugPrint('SupabaseStorageService 元数据读取失败（path=$path）: $e');
       return {};
     }
   }
@@ -281,7 +287,7 @@ class SupabaseStorageService implements CloudStorageService {
     try {
       await _client.from('file_metadata').delete().eq('path', path);
     } catch (e) {
-      // Silently fail if metadata table doesn't exist
+      debugPrint('SupabaseStorageService 元数据删除失败（path=$path）: $e');
     }
   }
 }

@@ -7,6 +7,11 @@ import 'package:gbk_codec/gbk_codec.dart';
 /// 文件读取进度回调
 typedef ProgressCallback = void Function(double progress);
 
+/// 文件读取被用户取消时抛出,调用方据此丢弃已读内容、不进入后续流程。
+class FileReadCancelledException implements Exception {
+  const FileReadCancelledException();
+}
+
 /// 文件读取服务
 class FileReaderService {
   /// 读取文件内容为文本
@@ -18,11 +23,19 @@ class FileReaderService {
   /// [file] 要读取的文件
   /// [onProgress] 进度回调 (0.0 - 1.0)
   /// [xlsxConverter] XLSX 转 CSV 的转换器函数
+  /// [isCancelled] 取消探测函数:分块循环中每次读取前检查,
+  ///   返回 true 时抛 [FileReadCancelledException] 中止读取。
   static Future<String> readFile(
     PlatformFile file, {
     ProgressCallback? onProgress,
     String Function(Uint8List)? xlsxConverter,
+    bool Function()? isCancelled,
   }) async {
+    // 入口先探测一次:用户在文件选择后立即取消也能及时中止。
+    if (isCancelled != null && isCancelled()) {
+      throw const FileReadCancelledException();
+    }
+
     // 检查文件扩展名
     final fileName = file.name.toLowerCase();
     final isXlsx = fileName.endsWith('.xlsx');
@@ -36,6 +49,7 @@ class FileReaderService {
       bytes = await _readFileWithProgress(
         file.path!,
         onProgress: onProgress,
+        isCancelled: isCancelled,
       );
     }
 
@@ -56,6 +70,7 @@ class FileReaderService {
   static Future<List<int>> _readFileWithProgress(
     String filePath, {
     ProgressCallback? onProgress,
+    bool Function()? isCancelled,
   }) async {
     final file = File(filePath);
     final exists = await file.exists();
@@ -72,6 +87,10 @@ class FileReaderService {
       int offset = 0;
 
       while (offset < length) {
+        // 每块读取前检查取消标志:大文件读取可及时中断,不再整文件读入。
+        if (isCancelled != null && isCancelled()) {
+          throw const FileReadCancelledException();
+        }
         final toRead =
             (length - offset) < chunkSize ? (length - offset) : chunkSize;
         final bytes = await raf.read(toRead);

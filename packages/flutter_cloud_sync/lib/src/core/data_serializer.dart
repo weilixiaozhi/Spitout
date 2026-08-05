@@ -1,16 +1,15 @@
-/// Abstract interface for data serialization
+/// 数据序列化抽象接口。
 ///
-/// Implemented by business layer to convert domain data to/from strings.
-/// This allows the cloud sync package to be completely decoupled from
-/// business logic.
+/// 由业务层实现，负责领域数据与字符串之间的互转，
+/// 使云同步包与业务逻辑完全解耦。
 abstract class DataSerializer<T> {
-  /// Serialize business data to string
+  /// 将业务数据序列化为字符串。
   ///
-  /// [data] - Domain data to serialize
+  /// [data] - 待序列化的领域数据。
   ///
-  /// Returns serialized string (typically JSON).
+  /// 返回序列化后的字符串（通常是 JSON）。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// @override
   /// Future<String> serialize(int ledgerId) async {
@@ -20,13 +19,13 @@ abstract class DataSerializer<T> {
   /// ```
   Future<String> serialize(T data);
 
-  /// Deserialize string to business data
+  /// 将字符串反序列化为业务数据。
   ///
-  /// [data] - Serialized string
+  /// [data] - 序列化字符串。
   ///
-  /// Returns deserialized domain data.
+  /// 返回反序列化后的领域数据。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// @override
   /// Future<int> deserialize(String data) async {
@@ -36,14 +35,13 @@ abstract class DataSerializer<T> {
   /// ```
   Future<T> deserialize(String data);
 
-  /// Calculate data fingerprint
+  /// 计算数据指纹。
   ///
-  /// [data] - Serialized string
+  /// [data] - 序列化字符串。
   ///
-  /// Returns fingerprint (e.g., SHA256 hash).
-  /// Used to determine if local and cloud data are identical.
+  /// 返回指纹（如 SHA256 哈希），用于判断本地与云端数据是否一致。
   ///
-  /// Example:
+  /// 示例：
   /// ```dart
   /// @override
   /// String fingerprint(String data) {

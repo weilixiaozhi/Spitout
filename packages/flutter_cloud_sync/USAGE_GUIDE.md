@@ -34,6 +34,9 @@ dependencies:
 
   # For AWS S3
   flutter_cloud_sync_s3: ^0.1.0
+
+  # For Spitout Cloud (self-hosted)
+  flutter_cloud_sync_spitout_cloud: ^0.1.0
 ```
 
 ### 3. Install Dependencies
@@ -357,11 +360,31 @@ try {
 } on CloudStorageException catch (e) {
   // Show retry option
   showDialog(/* ... */);
+} on CloudSerializationException catch (e) {
+  // Serializer bug or malformed cloud data - fix the serializer, not retry
+  print('Serialization failed: ${e.message}');
 } on CloudSyncException catch (e) {
   // Generic error handling
   print('Sync failed: ${e.message}');
 }
 ```
+
+### 6. Credential Security
+
+- Login passwords (Spitout Cloud / Supabase) are one-time input and are never
+  persisted by `CloudServiceStore`.
+- WebDAV / S3 credentials go through `CloudCredentialStorage`. The default
+  backend is `SharedPreferences` (plaintext); inject a secure implementation in
+  production:
+
+```dart
+final store = CloudServiceStore(
+  credentialStorage: MySecureCredentialStorage(), // e.g. flutter_secure_storage
+);
+```
+
+- Import sanitized exports safely: `saveImported(...)` ignores the `***`
+  placeholder and keeps the existing local secret instead of overwriting it.
 
 ### 2. Cache Management
 

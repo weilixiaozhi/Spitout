@@ -7,11 +7,25 @@ import 'package:spitout/providers/core/simple_state_notifier.dart';
 import '../../cloud/sync/change_tracker.dart';
 import '../../cloud/sync/sync_engine.dart';
 import '../../core/logging/logger_service.dart';
+import '../../services/cloud/cloud_connection_tester.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 
 // 云用户 DTO 经 providers 层 barrel 转发给 UI，data 层不再反向依赖 cloud 层。
 export 'package:spitout/cloud/spitout_cloud.dart' show CloudUser;
+// 连接测试服务经本文件暴露,页面只 import providers,不直接触碰 services/http。
+export '../../services/cloud/cloud_connection_tester.dart'
+    show
+        CloudConnectionTester,
+        CloudConnectionTestResult,
+        CloudConnectionTestError,
+        CloudConnectionTestErrorType;
+
+/// 云服务连接测试器 provider:页面读取后调用 [CloudConnectionTester.test],
+/// 网络探测逻辑在 services 层,可复用、可单测。
+final cloudConnectionTesterProvider = Provider<CloudConnectionTester>(
+  (_) => CloudConnectionTester(),
+);
 
 // providers 层「叶子」模块：云客户端基础设施 provider。
 //
@@ -28,7 +42,7 @@ final changeTrackerProvider = Provider<ChangeTracker>((ref) {
   return ChangeTracker(db);
 });
 
-/// SyncEngine provider（需要已认证的 SpitoutCloudProvider）。
+/// SyncEngine provider（需要已认证的 SpitoutCloudSyncBackend）。
 ///
 /// 全 app 唯一来源。`syncServiceProvider`、`shared_ledger_providers.dart`、
 /// `join_shared_ledger_page.dart` 都通过这个 family 拿同一个 engine 实例
@@ -44,7 +58,7 @@ final changeTrackerProvider = Provider<ChangeTracker>((ref) {
 ///   但它们在云激活态下必然有 `syncServiceProvider` 这个常驻 watcher 保活，
 ///   不会被中途 dispose；测试经 overrideWith 注入桩引擎时无 onDispose，同样安全。
 final syncEngineProvider = Provider.autoDispose
-    .family<SyncEngine, SpitoutCloudProvider>((ref, provider) {
+    .family<SyncEngine, SpitoutCloudSyncBackend>((ref, provider) {
       final db = ref.watch(databaseProvider);
       final tracker = ref.watch(changeTrackerProvider);
       final repo = ref.watch(repositoryProvider);
@@ -146,17 +160,17 @@ Stream<CloudUser?> _seedThenFollow(CloudAuthService auth) async* {
   yield* auth.authStateChanges; // 后续实时事件：登录 / 登出 / token 静默恢复
 }
 
-/// 已初始化的 SpitoutCloudProvider 实例
+/// 已初始化的 SpitoutCloudSyncBackend 实例
 /// 用于 SyncEngine 和其他需要直接访问 Spitout Cloud API 的场景
 ///
 /// 保持非 autoDispose：它不是 family，单槽位重建不会累积旧实例；且大量 UI
 /// 组件 watch 它，autoDispose 反而会造成频繁重建。旧云客户端的释放由
 /// [syncEngineProvider]（以实例为 key 的 autoDispose family）负责——旧 entry
 /// 被 GC 时即不再持有该实例引用。
-final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudProvider?>((
+final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
   ref,
 ) async {
-  // P0-b 闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧
+  // 云失活闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧
   // Spitout 配置,也必须直接降级 null —— 绝不重建云客户端。否则
   // setRecoveryCredentials + currentUser 会用旧邮密静默重登,
   // 把已登出的账号拉回来(复活链)。
@@ -175,8 +189,8 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudProvider?>((
     // 测试经 cloudServicesFactoryProvider.overrideWith 注入桩,无需触网即可
     // 断言"闸门开启期间工厂不被调用"。
     final services = await ref.read(cloudServicesFactoryProvider)(config);
-    if (services.provider is! SpitoutCloudProvider) return null;
-    final provider = services.provider as SpitoutCloudProvider;
+    if (services.provider is! SpitoutCloudSyncBackend) return null;
+    final provider = services.provider as SpitoutCloudSyncBackend;
 
     final email = config.spitoutCloudEmail;
 

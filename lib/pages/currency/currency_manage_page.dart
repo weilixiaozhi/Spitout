@@ -147,7 +147,11 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
                             ),
                           _CurrencyManageRow(
                             info: filtered[i],
-                            isBase: filtered[i].code == base,
+                            // 本位币锁定按大小写不敏感比较,与 pinned 口径一致,
+                            // 避免数据异常(小写/混合大小写)时基准币种行不再锁定。
+                            isBase:
+                                filtered[i].code.toUpperCase() ==
+                                base.toUpperCase(),
                             isVisible: visible.contains(filtered[i].code),
                           ),
                         ],

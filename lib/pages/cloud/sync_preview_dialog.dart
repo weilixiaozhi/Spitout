@@ -4,6 +4,7 @@ import 'package:intl/intl.dart';
 import '../../cloud/sync/sync_diff_service.dart';
 import '../../theme/colors.dart';
 import '../../l10n/app_localizations.dart';
+import '../../widgets/amount_text.dart';
 
 /// 同步预览弹窗
 ///
@@ -38,22 +39,27 @@ class _SyncPreviewDialog extends StatefulWidget {
 }
 
 class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
-  late List<SyncChange> changes;
+  late final List<SyncChange> _changes;
+
+  /// 弹窗内的勾选状态副本:key 为 SyncChange 对象(默认按身份比较),
+  /// 不直接改写 preview.changes 里共享的 selected 字段,避免影响调用方数据。
+  late final Map<SyncChange, bool> _selected;
 
   @override
   void initState() {
     super.initState();
-    changes = widget.preview.changes;
+    _changes = widget.preview.changes;
+    _selected = {for (final c in _changes) c: c.selected};
   }
 
-  int get selectedCount => changes.where((c) => c.selected).length;
-  bool get allSelected => changes.every((c) => c.selected);
+  int get selectedCount => _changes.where((c) => _selected[c] ?? true).length;
+  bool get allSelected => _changes.every((c) => _selected[c] ?? true);
 
   void _toggleAll() {
     setState(() {
       final newValue = !allSelected;
-      for (final c in changes) {
-        c.selected = newValue;
+      for (final c in _changes) {
+        _selected[c] = newValue;
       }
     });
   }
@@ -63,11 +69,11 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
     final l10n = AppLocalizations.of(context);
 
     final addedChanges =
-        changes.where((c) => c.type == SyncChangeType.added).toList();
+        _changes.where((c) => c.type == SyncChangeType.added).toList();
     final modifiedChanges =
-        changes.where((c) => c.type == SyncChangeType.modified).toList();
+        _changes.where((c) => c.type == SyncChangeType.modified).toList();
     final deletedChanges =
-        changes.where((c) => c.type == SyncChangeType.deleted).toList();
+        _changes.where((c) => c.type == SyncChangeType.deleted).toList();
 
     return AlertDialog(
       backgroundColor: SpitoutTokens.surface(context),
@@ -162,7 +168,9 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
         FilledButton(
           onPressed: selectedCount > 0
               ? () {
-                  final selected = changes.where((c) => c.selected).toList();
+                  final selected = _changes
+                      .where((c) => _selected[c] ?? true)
+                      .toList();
                   Navigator.pop(context, selected);
                 }
               : null,
@@ -241,40 +249,60 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
 
   Widget _buildChangeItem(BuildContext context, SyncChange change) {
     final dateFormat = DateFormat('MM-dd');
-    String summary;
+    String? summary;
     String? detail;
+    double? amountValue;
+    String? currencyCode;
 
     switch (change.type) {
       case SyncChangeType.added:
-        final tx = change.cloudTransaction!;
-        summary =
-            '${dateFormat.format(tx.happenedAt)} ${tx.categoryName ?? tx.type} -¥${tx.amount.toStringAsFixed(2)}';
-        if (tx.note != null && tx.note!.isNotEmpty) {
-          summary += ' ${tx.note}';
+        final tx = change.cloudTransaction;
+        if (tx != null) {
+          summary =
+              '${dateFormat.format(tx.happenedAt)} ${tx.categoryName ?? tx.type}';
+          if (tx.note != null && tx.note!.isNotEmpty) {
+            summary += ' ${tx.note}';
+          }
+          amountValue = tx.amount.toDouble();
+          currencyCode = tx.currencyCode;
         }
         break;
       case SyncChangeType.modified:
-        final tx = change.cloudTransaction!;
-        summary =
-            '${dateFormat.format(tx.happenedAt)} ${tx.categoryName ?? tx.type} -¥${tx.amount.toStringAsFixed(2)}';
-        if (change.diffDetails.isNotEmpty) {
-          detail = change.diffDetails.join(', ');
+        final tx = change.cloudTransaction;
+        if (tx != null) {
+          summary =
+              '${dateFormat.format(tx.happenedAt)} ${tx.categoryName ?? tx.type}';
+          if (tx.note != null && tx.note!.isNotEmpty) {
+            summary += ' ${tx.note}';
+          }
+          amountValue = tx.amount.toDouble();
+          currencyCode = tx.currencyCode;
+          if (change.diffDetails.isNotEmpty) {
+            detail = change.diffDetails.join(', ');
+          }
         }
         break;
       case SyncChangeType.deleted:
-        final tx = change.localTransaction!;
-        summary =
-            '${dateFormat.format(tx.happenedAt)} ${tx.type} -¥${tx.amount.toStringAsFixed(2)}';
-        if (tx.note != null && tx.note!.isNotEmpty) {
-          summary += ' ${tx.note}';
+        final tx = change.localTransaction;
+        if (tx != null) {
+          summary = '${dateFormat.format(tx.happenedAt)} ${tx.type}';
+          if (tx.note != null && tx.note!.isNotEmpty) {
+            summary += ' ${tx.note}';
+          }
+          // 本地金额单位为分,展示时统一换算为元。
+          amountValue = tx.amount / 100.0;
+          currencyCode = tx.currencyCode;
         }
         break;
     }
 
+    // 数据异常(两侧交易均缺失)时兜底展示类型名,不让解包崩溃。
+    final title = summary ?? change.type.name;
+
     return InkWell(
       onTap: () {
         setState(() {
-          change.selected = !change.selected;
+          _selected[change] = !(_selected[change] ?? true);
         });
       },
       child: Padding(
@@ -285,10 +313,10 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
               width: 24,
               height: 24,
               child: Checkbox(
-                value: change.selected,
+                value: _selected[change] ?? true,
                 onChanged: (v) {
                   setState(() {
-                    change.selected = v ?? false;
+                    _selected[change] = v ?? false;
                   });
                 },
                 activeColor: widget.primaryColor,
@@ -300,7 +328,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    summary,
+                    title,
                     style: TextStyle(
                       color: SpitoutTokens.textPrimary(context),
                       fontSize: 13,
@@ -317,10 +345,26 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                       ),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                    ),
+                  ),
                 ],
               ),
             ),
+            if (amountValue != null) ...[
+              const SizedBox(width: 8),
+              // 金额按交易自身币种展示:非本位币交易显示原币种符号,
+              // 未携带币种时回退到当前账本本位币(AmountText 内置兜底)。
+              AmountText(
+                value: -amountValue,
+                signed: true,
+                showCurrency: true,
+                currencyCode: currencyCode,
+                decimals: 2,
+                style: TextStyle(
+                  color: SpitoutTokens.textPrimary(context),
+                  fontSize: 13,
+                ),
+              ),
+            ],
           ],
         ),
       ),

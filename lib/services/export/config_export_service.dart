@@ -67,9 +67,7 @@ class AppConfig {
     final map = <String, dynamic>{};
 
     if (supabase != null) {
-      map['supabase'] = supabase!.toMap(
-        includeCredentials: includeCredentials,
-      );
+      map['supabase'] = supabase!.toMap(includeCredentials: includeCredentials);
     }
 
     if (spitoutCloud != null) {
@@ -79,15 +77,11 @@ class AppConfig {
     }
 
     if (webdav != null) {
-      map['webdav'] = webdav!.toMap(
-        includeCredentials: includeCredentials,
-      );
+      map['webdav'] = webdav!.toMap(includeCredentials: includeCredentials);
     }
 
     if (s3 != null) {
-      map['s3'] = s3!.toMap(
-        includeCredentials: includeCredentials,
-      );
+      map['s3'] = s3!.toMap(includeCredentials: includeCredentials);
     }
 
     if (appSettings != null) {
@@ -113,35 +107,41 @@ class AppConfig {
     return AppConfig(
       supabase: yaml.containsKey('supabase')
           ? SupabaseConfig.fromMap(
-              Map<String, dynamic>.from(yaml['supabase'] as Map))
+              Map<String, dynamic>.from(yaml['supabase'] as Map),
+            )
           : null,
       webdav: yaml.containsKey('webdav')
           ? WebdavConfig.fromMap(
-              Map<String, dynamic>.from(yaml['webdav'] as Map))
+              Map<String, dynamic>.from(yaml['webdav'] as Map),
+            )
           : null,
       s3: yaml.containsKey('s3')
-          ? S3Config.fromMap(
-              Map<String, dynamic>.from(yaml['s3'] as Map))
+          ? S3Config.fromMap(Map<String, dynamic>.from(yaml['s3'] as Map))
           : null,
       spitoutCloud: yaml.containsKey('spitout_cloud')
           ? SpitoutCloudConfig.fromMap(
-              Map<String, dynamic>.from(yaml['spitout_cloud'] as Map))
+              Map<String, dynamic>.from(yaml['spitout_cloud'] as Map),
+            )
           : null,
       appSettings: yaml.containsKey('app_settings')
           ? AppSettingsConfig.fromMap(
-              Map<String, dynamic>.from(yaml['app_settings'] as Map))
+              Map<String, dynamic>.from(yaml['app_settings'] as Map),
+            )
           : null,
       ledgers: yaml.containsKey('ledgers')
           ? LedgersConfig.fromMap(
-              Map<String, dynamic>.from(yaml['ledgers'] as Map))
+              Map<String, dynamic>.from(yaml['ledgers'] as Map),
+            )
           : null,
       recurringTransactions: yaml.containsKey('recurring_transactions')
           ? RecurringTransactionsConfig.fromMap(
-              Map<String, dynamic>.from(yaml['recurring_transactions'] as Map))
+              Map<String, dynamic>.from(yaml['recurring_transactions'] as Map),
+            )
           : null,
       categories: yaml.containsKey('categories')
           ? CategoriesConfig.fromMap(
-              Map<String, dynamic>.from(yaml['categories'] as Map))
+              Map<String, dynamic>.from(yaml['categories'] as Map),
+            )
           : null,
     );
   }
@@ -164,10 +164,7 @@ class SupabaseConfig {
   });
 
   Map<String, dynamic> toMap({bool includeCredentials = false}) {
-    final map = <String, dynamic>{
-      'url': url,
-      'anon_key': anonKey,
-    };
+    final map = <String, dynamic>{'url': url, 'anon_key': anonKey};
     if (bucket != null && bucket!.isNotEmpty) {
       map['bucket'] = bucket;
     }
@@ -182,12 +179,12 @@ class SupabaseConfig {
   }
 
   static SupabaseConfig fromMap(Map<String, dynamic> map) => SupabaseConfig(
-        url: map['url'] as String,
-        anonKey: map['anon_key'] as String,
-        bucket: map['bucket'] as String?,
-        email: map['email'] as String?,
-        password: map['password'] as String?,
-      );
+    url: map['url'] as String,
+    anonKey: map['anon_key'] as String,
+    bucket: map['bucket'] as String?,
+    email: map['email'] as String?,
+    password: map['password'] as String?,
+  );
 }
 
 /// Spitout Cloud 配置（自部署 FastAPI 后端的 base URL + 可选登录态）
@@ -215,20 +212,21 @@ class SpitoutCloudConfig {
   });
 
   Map<String, dynamic> toMap({bool includeCredentials = false}) {
-    final map = <String, dynamic>{
-      'base_url': baseUrl,
-    };
+    final map = <String, dynamic>{'base_url': baseUrl};
     if (email != null && email!.isNotEmpty) map['email'] = email;
     if (password != null && password!.isNotEmpty) {
       map['password'] = includeCredentials ? password : '***';
     }
     if (accessToken != null && accessToken!.isNotEmpty) {
-      map['access_token'] = accessToken;
+      // 登录态 token 与密码同级敏感:未勾选凭据导出时一律脱敏。
+      map['access_token'] = includeCredentials ? accessToken : '***';
     }
     if (refreshToken != null && refreshToken!.isNotEmpty) {
-      map['refresh_token'] = refreshToken;
+      map['refresh_token'] = includeCredentials ? refreshToken : '***';
     }
-    if (deviceId != null && deviceId!.isNotEmpty) map['device_id'] = deviceId;
+    if (deviceId != null && deviceId!.isNotEmpty) {
+      map['device_id'] = includeCredentials ? deviceId : '***';
+    }
     return map;
   }
 
@@ -270,11 +268,11 @@ class WebdavConfig {
   }
 
   static WebdavConfig fromMap(Map<String, dynamic> map) => WebdavConfig(
-        url: map['url'] as String,
-        username: map['username'] as String,
-        password: map['password'] as String,
-        remotePath: map['remote_path'] as String?,
-      );
+    url: map['url'] as String,
+    username: map['username'] as String,
+    password: map['password'] as String,
+    remotePath: map['remote_path'] as String?,
+  );
 }
 
 /// S3配置
@@ -315,14 +313,14 @@ class S3Config {
   }
 
   static S3Config fromMap(Map<String, dynamic> map) => S3Config(
-        endpoint: map['endpoint'] as String,
-        region: map['region'] as String,
-        accessKey: map['access_key'] as String,
-        secretKey: map['secret_key'] as String,
-        bucket: map['bucket'] as String,
-        useSSL: map['use_ssl'] as bool?,
-        port: map['port'] as int?,
-      );
+    endpoint: map['endpoint'] as String,
+    region: map['region'] as String,
+    accessKey: map['access_key'] as String,
+    secretKey: map['secret_key'] as String,
+    bucket: map['bucket'] as String,
+    useSSL: map['use_ssl'] as bool?,
+    port: map['port'] as int?,
+  );
 }
 
 /// 应用设置配置
@@ -420,17 +418,17 @@ class LedgersConfig {
   const LedgersConfig({required this.items});
 
   Map<String, dynamic> toMap() {
-    return {
-      'items': items.map((item) => item.toMap()).toList(),
-    };
+    return {'items': items.map((item) => item.toMap()).toList()};
   }
 
   static LedgersConfig fromMap(Map<String, dynamic> map) {
     final itemsList = map['items'] as List<dynamic>? ?? [];
     return LedgersConfig(
       items: itemsList
-          .map((item) =>
-              LedgerItem.fromMap(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) =>
+                LedgerItem.fromMap(Map<String, dynamic>.from(item as Map)),
+          )
           .toList(),
     );
   }
@@ -451,10 +449,7 @@ class LedgerItem {
   });
 
   Map<String, dynamic> toMap() {
-    final map = <String, dynamic>{
-      'name': name,
-      'currency': currency,
-    };
+    final map = <String, dynamic>{'name': name, 'currency': currency};
     if (type != null && type!.isNotEmpty) map['type'] = type;
     if (createdAt != null) map['created_at'] = createdAt;
     return map;
@@ -486,17 +481,18 @@ class RecurringTransactionsConfig {
   const RecurringTransactionsConfig({required this.items});
 
   Map<String, dynamic> toMap() {
-    return {
-      'items': items.map((item) => item.toMap()).toList(),
-    };
+    return {'items': items.map((item) => item.toMap()).toList()};
   }
 
   static RecurringTransactionsConfig fromMap(Map<String, dynamic> map) {
     final itemsList = map['items'] as List<dynamic>? ?? [];
     return RecurringTransactionsConfig(
       items: itemsList
-          .map((item) =>
-              RecurringTransactionItem.fromMap(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) => RecurringTransactionItem.fromMap(
+              Map<String, dynamic>.from(item as Map),
+            ),
+          )
           .toList(),
     );
   }
@@ -582,7 +578,9 @@ class RecurringTransactionItem {
       type: rt.type,
       // 数据库为整数分,配置文件沿用"元"口径。
       amount: rt.amount / 100,
-      categoryName: rt.categoryId != null ? categoryIdToName[rt.categoryId] : null,
+      categoryName: rt.categoryId != null
+          ? categoryIdToName[rt.categoryId]
+          : null,
       note: rt.note,
       frequency: rt.frequency,
       interval: rt.interval,
@@ -603,17 +601,17 @@ class CategoriesConfig {
   const CategoriesConfig({required this.items});
 
   Map<String, dynamic> toMap() {
-    return {
-      'items': items.map((item) => item.toMap()).toList(),
-    };
+    return {'items': items.map((item) => item.toMap()).toList()};
   }
 
   static CategoriesConfig fromMap(Map<String, dynamic> map) {
     final itemsList = map['items'] as List<dynamic>? ?? [];
     return CategoriesConfig(
       items: itemsList
-          .map((item) =>
-              CategoryItem.fromMap(Map<String, dynamic>.from(item as Map)))
+          .map(
+            (item) =>
+                CategoryItem.fromMap(Map<String, dynamic>.from(item as Map)),
+          )
           .toList(),
     );
   }
@@ -677,8 +675,6 @@ class CategoryItem {
   }
 }
 
-
-
 /// 配置内容检测结果
 class ConfigContentInfo {
   final bool hasLedgers;
@@ -708,9 +704,11 @@ class ConfigExportService {
         hasLedgers: doc.containsKey('ledgers'),
         hasCategories: doc.containsKey('categories'),
         hasRecurringTransactions: doc.containsKey('recurring_transactions'),
-        hasAppSettings: doc.containsKey('supabase') ||
+        hasAppSettings:
+            doc.containsKey('supabase') ||
             doc.containsKey('webdav') ||
             doc.containsKey('s3') ||
+            doc.containsKey('spitout_cloud') ||
             doc.containsKey('app_settings'),
       );
     } catch (_) {
@@ -744,7 +742,7 @@ class ConfigExportService {
     final scope = item.parentName == null
         ? '${item.kind}|${item.name.toLowerCase()}'
         : '${item.kind}|${item.parentName!.toLowerCase()}|'
-            '${item.name.toLowerCase()}';
+              '${item.name.toLowerCase()}';
     return const Uuid().v5(Namespace.url.value, 'spitout:category:$scope');
   }
 
@@ -756,99 +754,73 @@ class ConfigExportService {
     ExportOptions options = ExportOptions.all,
   }) async {
     final prefs = await SharedPreferences.getInstance();
+    // 云配置统一经 CloudServiceStore 读取（含凭据合并与旧数据迁移），
+    // 不直接触碰云配置键，避免与存储侧安全边界分叉。
+    final store = CloudServiceStore();
 
     // 读取Supabase配置
     SupabaseConfig? supabaseConfig;
-    final supabaseCfgRaw = prefs.getString('cloud_supabase_cfg');
-    if (supabaseCfgRaw != null) {
-      try {
-        final cfg = decodeCloudConfig(supabaseCfgRaw);
-        if (cfg.supabaseUrl != null && cfg.supabaseAnonKey != null) {
-          supabaseConfig = SupabaseConfig(
-            url: cfg.supabaseUrl!,
-            anonKey: cfg.supabaseAnonKey!,
-            bucket: cfg.supabaseBucket,
-            email: cfg.supabaseEmail,
-            password: cfg.supabasePassword,
-          );
-        }
-      } catch (e) {
-        logger.warning('ConfigExport', '读取Supabase配置失败: $e');
-      }
+    final supabaseCfg = await store.loadSupabase();
+    if (supabaseCfg != null &&
+        supabaseCfg.supabaseUrl != null &&
+        supabaseCfg.supabaseAnonKey != null) {
+      supabaseConfig = SupabaseConfig(
+        url: supabaseCfg.supabaseUrl!,
+        anonKey: supabaseCfg.supabaseAnonKey!,
+        bucket: supabaseCfg.supabaseBucket,
+        email: supabaseCfg.supabaseEmail,
+        password: supabaseCfg.supabasePassword,
+      );
     }
 
     // 读取WebDAV配置
     WebdavConfig? webdavConfig;
-    final webdavCfgRaw = prefs.getString('cloud_webdav_cfg');
-    if (webdavCfgRaw != null) {
-      try {
-        final cfg = decodeCloudConfig(webdavCfgRaw);
-        if (cfg.webdavUrl != null &&
-            cfg.webdavUsername != null &&
-            cfg.webdavPassword != null) {
-          webdavConfig = WebdavConfig(
-            url: cfg.webdavUrl!,
-            username: cfg.webdavUsername!,
-            password: cfg.webdavPassword!,
-            remotePath: cfg.webdavRemotePath,
-          );
-        }
-      } catch (e) {
-        logger.warning('ConfigExport', '读取WebDAV配置失败: $e');
-      }
+    final webdavCfg = await store.loadWebdav();
+    if (webdavCfg != null &&
+        webdavCfg.webdavUrl != null &&
+        webdavCfg.webdavUsername != null &&
+        webdavCfg.webdavPassword != null) {
+      webdavConfig = WebdavConfig(
+        url: webdavCfg.webdavUrl!,
+        username: webdavCfg.webdavUsername!,
+        password: webdavCfg.webdavPassword!,
+        remotePath: webdavCfg.webdavRemotePath,
+      );
     }
 
     // 读取S3配置
     S3Config? s3Config;
-    final s3CfgRaw = prefs.getString('cloud_s3_cfg');
-    if (s3CfgRaw != null) {
-      try {
-        final cfg = decodeCloudConfig(s3CfgRaw);
-        if (cfg.s3Endpoint != null &&
-            cfg.s3Region != null &&
-            cfg.s3AccessKey != null &&
-            cfg.s3SecretKey != null &&
-            cfg.s3Bucket != null) {
-          s3Config = S3Config(
-            endpoint: cfg.s3Endpoint!,
-            region: cfg.s3Region!,
-            accessKey: cfg.s3AccessKey!,
-            secretKey: cfg.s3SecretKey!,
-            bucket: cfg.s3Bucket!,
-            useSSL: cfg.s3UseSSL,
-            port: cfg.s3Port,
-          );
-        }
-      } catch (e) {
-        logger.warning('ConfigExport', '读取S3配置失败: $e');
-      }
+    final s3Cfg = await store.loadS3();
+    if (s3Cfg != null &&
+        s3Cfg.s3Endpoint != null &&
+        s3Cfg.s3Region != null &&
+        s3Cfg.s3AccessKey != null &&
+        s3Cfg.s3SecretKey != null &&
+        s3Cfg.s3Bucket != null) {
+      s3Config = S3Config(
+        endpoint: s3Cfg.s3Endpoint!,
+        region: s3Cfg.s3Region!,
+        accessKey: s3Cfg.s3AccessKey!,
+        secretKey: s3Cfg.s3SecretKey!,
+        bucket: s3Cfg.s3Bucket!,
+        useSSL: s3Cfg.s3UseSSL,
+        port: s3Cfg.s3Port,
+      );
     }
 
     // 读取 Spitout Cloud 配置。base_url + email 总是导出（方便 B 设备导入
-    // 快速填回登录表单）；access/refresh token 属于登录态，需 options 显式
-    // 勾选才带上。当前实现：cloud_spitout_cloud_cfg 里只存 base_url+email，
-    // session token 另一把 SharedPreferences key 管 —— 导出 yaml 只取前者。
+    // 快速填回登录表单）；登录密码不落盘，因此导出时无明文可写；access/refresh
+    // token 属于登录态，需 options 显式勾选才带上。
     SpitoutCloudConfig? spitoutCloudConfig;
-    final spitoutCfgRaw = prefs.getString('cloud_spitout_cloud_cfg');
-    if (spitoutCfgRaw != null) {
-      try {
-        final cfg = decodeCloudConfig(spitoutCfgRaw);
-        final baseUrl = cfg.spitoutCloudBaseUrl ?? '';
-        if (baseUrl.isNotEmpty) {
-          spitoutCloudConfig = SpitoutCloudConfig(
-            baseUrl: baseUrl,
-            email: cfg.spitoutCloudEmail,
-            // 跟 Supabase 一样：如果用户在 mobile 勾过 "记住账号密码"，
-            // spitoutCloudPassword 就会在 SharedPreferences 里，带上它方便
-            // B 设备导入后无感登录。没勾就是 null，yaml 也不写这一行。
-            password: cfg.spitoutCloudPassword,
-            // access/refresh token 走独立 session storage（key 里带 baseUrl
-            // sha1），跨设备迁移风险高，导出 yaml 不带。
-          );
-        }
-      } catch (e) {
-        logger.warning('ConfigExport', '读取 Spitout Cloud 配置失败: $e');
-      }
+    final spitoutCfg = await store.loadSpitoutCloud();
+    final baseUrl = spitoutCfg?.spitoutCloudBaseUrl ?? '';
+    if (baseUrl.isNotEmpty) {
+      spitoutCloudConfig = SpitoutCloudConfig(
+        baseUrl: baseUrl,
+        email: spitoutCfg?.spitoutCloudEmail,
+        // 密码不持久化（见 CloudServiceStore），此处恒为 null，yaml 不写。
+        password: spitoutCfg?.spitoutCloudPassword,
+      );
     }
 
     // 预先获取所有账本、分类的名称映射（用于关联数据导出）
@@ -886,7 +858,7 @@ class ConfigExportService {
     final autoSync = prefs.getBool('auto_sync');
 
     // 如果有任何应用设置，就创建配置对象
-    if (        reminderEnabled != null ||
+    if (reminderEnabled != null ||
         reminderHour != null ||
         reminderMinute != null ||
         languageCode != null ||
@@ -927,11 +899,13 @@ class ConfigExportService {
 
           recurringConfig = RecurringTransactionsConfig(
             items: recurringList
-                .map((rt) => RecurringTransactionItem.fromDb(
-                      rt,
+                .map(
+                  (rt) => RecurringTransactionItem.fromDb(
+                    rt,
                     ledgerIdToName: ledgerIdToName,
                     categoryIdToName: categoryIdToName,
-                    ))
+                  ),
+                )
                 .toList(),
           );
         }
@@ -942,7 +916,8 @@ class ConfigExportService {
 
     // 读取账本配置（导出全部账本，或强制导出关联的账本）
     LedgersConfig? ledgersConfig;
-    if (repository != null && (options.ledgers || requiredLedgerIds.isNotEmpty)) {
+    if (repository != null &&
+        (options.ledgers || requiredLedgerIds.isNotEmpty)) {
       try {
         final ledgersList = await repository.getAllLedgers();
 
@@ -951,7 +926,9 @@ class ConfigExportService {
           // 如果用户没有选择但有关联数据需要账本，则只导出关联的账本
           final itemsToExport = options.ledgers
               ? ledgersList
-              : ledgersList.where((l) => requiredLedgerIds.contains(l.id)).toList();
+              : ledgersList
+                    .where((l) => requiredLedgerIds.contains(l.id))
+                    .toList();
 
           if (itemsToExport.isNotEmpty) {
             ledgersConfig = LedgersConfig(
@@ -968,10 +945,13 @@ class ConfigExportService {
 
     // 读取分类配置（导出全部分类，或强制导出关联的分类）
     CategoriesConfig? categoriesConfig;
-    if (repository != null && (options.categories || requiredCategoryIds.isNotEmpty)) {
+    if (repository != null &&
+        (options.categories || requiredCategoryIds.isNotEmpty)) {
       try {
         // 全局仅支出模式，只导出 expense 分类。
-        final expenseCategories = await repository.getTopLevelCategories('expense');
+        final expenseCategories = await repository.getTopLevelCategories(
+          'expense',
+        );
         final categoriesList = <Category>[];
         categoriesList.addAll(expenseCategories);
 
@@ -984,7 +964,7 @@ class ConfigExportService {
         if (categoriesList.isNotEmpty) {
           // 构建 ID 到分类的映射，用于查找父分类名称
           final categoryMap = <int, Category>{
-            for (var cat in categoriesList) cat.id: cat
+            for (var cat in categoriesList) cat.id: cat,
           };
 
           // 如果用户选择了导出分类，则导出全部
@@ -1005,7 +985,9 @@ class ConfigExportService {
                 }
               }
             }
-            itemsToExport = categoriesList.where((c) => idsToExport.contains(c.id)).toList();
+            itemsToExport = categoriesList
+                .where((c) => idsToExport.contains(c.id))
+                .toList();
           }
 
           if (itemsToExport.isNotEmpty) {
@@ -1013,7 +995,8 @@ class ConfigExportService {
               items: itemsToExport.map((category) {
                 // 查找父分类名称
                 String? parentName;
-                if (category.parentId != null && categoryMap.containsKey(category.parentId)) {
+                if (category.parentId != null &&
+                    categoryMap.containsKey(category.parentId)) {
                   parentName = categoryMap[category.parentId]!.name;
                 }
                 return CategoryItem.fromDb(category, parentName);
@@ -1030,8 +1013,7 @@ class ConfigExportService {
     final exportSupabase = options.appSettings ? supabaseConfig : null;
     final exportWebdav = options.appSettings ? webdavConfig : null;
     final exportS3 = options.appSettings ? s3Config : null;
-    final exportSpitoutCloud =
-        options.appSettings ? spitoutCloudConfig : null;
+    final exportSpitoutCloud = options.appSettings ? spitoutCloudConfig : null;
     final exportAppSettings = options.appSettings ? appSettings : null;
 
     final config = AppConfig(
@@ -1046,7 +1028,9 @@ class ConfigExportService {
     );
 
     // 转换为YAML格式；凭据默认脱敏，仅显式勾选“包含凭据”时写入明文。
-    final yamlMap = config.toYaml(includeCredentials: options.includeCredentials);
+    final yamlMap = config.toYaml(
+      includeCredentials: options.includeCredentials,
+    );
 
     // 手动构建YAML字符串以保持良好格式
     final buffer = StringBuffer();
@@ -1143,25 +1127,33 @@ class ConfigExportService {
         buffer.writeln('  # 记账提醒');
         if (settings.containsKey(ReminderPrefs.enabled)) {
           buffer.writeln(
-              '  ${ReminderPrefs.enabled}: ${settings[ReminderPrefs.enabled]}');
+            '  ${ReminderPrefs.enabled}: ${settings[ReminderPrefs.enabled]}',
+          );
         }
         if (settings.containsKey(ReminderPrefs.hour)) {
           buffer.writeln(
-              '  ${ReminderPrefs.hour}: ${settings[ReminderPrefs.hour]}');
+            '  ${ReminderPrefs.hour}: ${settings[ReminderPrefs.hour]}',
+          );
         }
         if (settings.containsKey(ReminderPrefs.minute)) {
           buffer.writeln(
-              '  ${ReminderPrefs.minute}: ${settings[ReminderPrefs.minute]}');
+            '  ${ReminderPrefs.minute}: ${settings[ReminderPrefs.minute]}',
+          );
         }
       }
 
-      if (settings.containsKey('language_code') || settings.containsKey('country_code')) {
+      if (settings.containsKey('language_code') ||
+          settings.containsKey('country_code')) {
         buffer.writeln('  # 语言设置');
         if (settings.containsKey('language_code')) {
-          buffer.writeln('  language_code: ${_yamlQuote(settings['language_code'])}');
+          buffer.writeln(
+            '  language_code: ${_yamlQuote(settings['language_code'])}',
+          );
         }
         if (settings.containsKey('country_code')) {
-          buffer.writeln('  country_code: ${_yamlQuote(settings['country_code'])}');
+          buffer.writeln(
+            '  country_code: ${_yamlQuote(settings['country_code'])}',
+          );
         }
       }
 
@@ -1172,7 +1164,9 @@ class ConfigExportService {
           buffer.writeln('  font_scale_level: ${settings['font_scale_level']}');
         }
         if (settings.containsKey('custom_font_scale')) {
-          buffer.writeln('  custom_font_scale: ${settings['custom_font_scale']}');
+          buffer.writeln(
+            '  custom_font_scale: ${settings['custom_font_scale']}',
+          );
         }
       }
 
@@ -1186,14 +1180,13 @@ class ConfigExportService {
         buffer.writeln('  # 云服务');
         if (settings.containsKey('cloud_service_type')) {
           buffer.writeln(
-              '  cloud_service_type: ${_yamlQuote(settings['cloud_service_type'])}');
+            '  cloud_service_type: ${_yamlQuote(settings['cloud_service_type'])}',
+          );
         }
         if (settings.containsKey('auto_sync')) {
           buffer.writeln('  auto_sync: ${settings['auto_sync']}');
         }
       }
-
-
     }
 
     // 账本
@@ -1212,8 +1205,11 @@ class ConfigExportService {
           if (itemMap.containsKey('type') && itemMap['type'] != null) {
             buffer.writeln('      type: ${_yamlQuote(itemMap['type'])}');
           }
-          if (itemMap.containsKey('created_at') && itemMap['created_at'] != null) {
-            buffer.writeln('      created_at: ${_yamlQuote(itemMap['created_at'])}');
+          if (itemMap.containsKey('created_at') &&
+              itemMap['created_at'] != null) {
+            buffer.writeln(
+              '      created_at: ${_yamlQuote(itemMap['created_at'])}',
+            );
           }
         }
       }
@@ -1224,26 +1220,33 @@ class ConfigExportService {
     if (yamlMap.containsKey('recurring_transactions')) {
       buffer.writeln('# 周期账单');
       buffer.writeln('recurring_transactions:');
-      final recurring = yamlMap['recurring_transactions'] as Map<String, dynamic>;
+      final recurring =
+          yamlMap['recurring_transactions'] as Map<String, dynamic>;
       final items = recurring['items'] as List;
 
       if (items.isNotEmpty) {
         buffer.writeln('  items:');
         for (final item in items) {
           final itemMap = item as Map<String, dynamic>;
-          buffer.writeln('    - ledger_name: ${_yamlQuote(itemMap['ledger_name'])}');
+          buffer.writeln(
+            '    - ledger_name: ${_yamlQuote(itemMap['ledger_name'])}',
+          );
           buffer.writeln('      type: ${_yamlQuote(itemMap['type'])}');
           buffer.writeln('      amount: ${itemMap['amount']}');
 
-          if (itemMap.containsKey('category_name') && itemMap['category_name'] != null) {
+          if (itemMap.containsKey('category_name') &&
+              itemMap['category_name'] != null) {
             buffer.writeln(
-                '      category_name: ${_yamlQuote(itemMap['category_name'])}');
+              '      category_name: ${_yamlQuote(itemMap['category_name'])}',
+            );
           }
           if (itemMap.containsKey('note') && itemMap['note'] != null) {
             buffer.writeln('      note: ${_yamlQuote(itemMap['note'])}');
           }
 
-          buffer.writeln('      frequency: ${_yamlQuote(itemMap['frequency'])}');
+          buffer.writeln(
+            '      frequency: ${_yamlQuote(itemMap['frequency'])}',
+          );
           buffer.writeln('      interval: ${itemMap['interval']}');
 
           if (itemMap.containsKey('day_of_month')) {
@@ -1256,9 +1259,13 @@ class ConfigExportService {
             buffer.writeln('      month_of_year: ${itemMap['month_of_year']}');
           }
 
-          buffer.writeln('      start_date: ${_yamlQuote(itemMap['start_date'])}');
+          buffer.writeln(
+            '      start_date: ${_yamlQuote(itemMap['start_date'])}',
+          );
           if (itemMap.containsKey('end_date') && itemMap['end_date'] != null) {
-            buffer.writeln('      end_date: ${_yamlQuote(itemMap['end_date'])}');
+            buffer.writeln(
+              '      end_date: ${_yamlQuote(itemMap['end_date'])}',
+            );
           }
           buffer.writeln('      enabled: ${itemMap['enabled']}');
         }
@@ -1286,16 +1293,17 @@ class ConfigExportService {
             buffer.writeln('      icon: ${_yamlQuote(itemMap['icon'])}');
           }
           buffer.writeln('      sort_order: ${itemMap['sort_order']}');
-          if (itemMap.containsKey('parent_name') && itemMap['parent_name'] != null) {
-            buffer.writeln('      parent_name: ${_yamlQuote(itemMap['parent_name'])}');
+          if (itemMap.containsKey('parent_name') &&
+              itemMap['parent_name'] != null) {
+            buffer.writeln(
+              '      parent_name: ${_yamlQuote(itemMap['parent_name'])}',
+            );
           }
           buffer.writeln('      level: ${itemMap['level']}');
         }
       }
       buffer.writeln();
     }
-
-
 
     return buffer.toString();
   }
@@ -1319,6 +1327,9 @@ class ConfigExportService {
 
     final config = AppConfig.fromYaml(doc);
     final prefs = await SharedPreferences.getInstance();
+    // 云配置统一经 CloudServiceStore 写入（内部完成剥离、凭据合并与迁移），
+    // 业务层不再直接 setString 云配置键，避免绕过安全边界。
+    final store = CloudServiceStore();
 
     // 导入Supabase配置
     if (options.appSettings && config.supabase != null) {
@@ -1327,12 +1338,17 @@ class ConfigExportService {
         name: 'Supabase',
         supabaseUrl: config.supabase!.url,
         supabaseAnonKey: config.supabase!.anonKey,
-        supabaseBucket: config.supabase!.bucket ?? 'spitout-backups',  // 导入时也提供默认值
+        supabaseBucket:
+            config.supabase!.bucket ?? 'spitout-backups', // 导入时也提供默认值
         supabaseEmail: config.supabase!.email,
+        // 登录密码与 CloudServiceStore 的落盘策略一致:永不清真存储,
+        // 即使 YAML 显式携带密码,也由 Store 统一剥离,密码由用户在下一次登录时输入。
         supabasePassword: config.supabase!.password,
       );
-      await prefs.setString(
-          'cloud_supabase_cfg', encodeCloudConfig(supabaseCfg));
+      await store.saveImported(
+        supabaseCfg,
+        includeCredentials: options.includeCredentials,
+      );
       logger.info('ConfigImport', 'Supabase配置已导入');
     }
 
@@ -1346,7 +1362,10 @@ class ConfigExportService {
         webdavPassword: config.webdav!.password,
         webdavRemotePath: config.webdav!.remotePath,
       );
-      await prefs.setString('cloud_webdav_cfg', encodeCloudConfig(webdavCfg));
+      await store.saveImported(
+        webdavCfg,
+        includeCredentials: options.includeCredentials,
+      );
       logger.info('ConfigImport', 'WebDAV配置已导入');
     }
 
@@ -1363,28 +1382,35 @@ class ConfigExportService {
         s3UseSSL: config.s3!.useSSL,
         s3Port: config.s3!.port,
       );
-      await prefs.setString('cloud_s3_cfg', encodeCloudConfig(s3Cfg));
+      await store.saveImported(
+        s3Cfg,
+        includeCredentials: options.includeCredentials,
+      );
       logger.info('ConfigImport', 'S3配置已导入');
     }
 
-    // 导入 Spitout Cloud 配置（base_url + 可选 email/password）。
-    // 有 email+password 时跟 Supabase 一样，导入后 app 启动可自动登录；
-    // 只有 email 时登录页预填邮箱，等用户输密码。
+    // 导入 Spitout Cloud 配置（base_url + 可选 email）。
+    // 登录密码不落盘（与 CloudServiceStore 一致）:导入后登录页预填邮箱,
+    // 密码由用户输入;自动登录依赖 session token,不依赖明文密码。
     if (options.appSettings && config.spitoutCloud != null) {
       final bcCfg = CloudServiceConfig(
         type: CloudBackendType.spitoutCloud,
         name: 'Spitout Cloud',
         spitoutCloudBaseUrl: config.spitoutCloud!.baseUrl,
         spitoutCloudEmail: config.spitoutCloud!.email,
+        // 登录密码同样交给 Store 统一剥离，绝不落盘。
         spitoutCloudPassword: config.spitoutCloud!.password,
       );
-      await prefs.setString(
-          'cloud_spitout_cloud_cfg', encodeCloudConfig(bcCfg));
+      await store.saveImported(
+        bcCfg,
+        includeCredentials: options.includeCredentials,
+      );
       logger.info(
-          'ConfigImport',
-          'Spitout Cloud 配置已导入 url=${config.spitoutCloud!.baseUrl} '
-              'hasEmail=${config.spitoutCloud!.email != null} '
-              'hasPassword=${config.spitoutCloud!.password != null}');
+        'ConfigImport',
+        'Spitout Cloud 配置已导入 url=${config.spitoutCloud!.baseUrl} '
+            'hasEmail=${config.spitoutCloud!.email != null} '
+            'password=skipped',
+      );
     }
 
     // 导入应用设置
@@ -1407,7 +1433,10 @@ class ConfigExportService {
         await prefs.setString('selected_language', settings.languageCode!);
       }
       if (settings.countryCode != null) {
-        await prefs.setString('selected_language_country', settings.countryCode!);
+        await prefs.setString(
+          'selected_language_country',
+          settings.countryCode!,
+        );
       }
 
       // 个性化设置
@@ -1424,7 +1453,24 @@ class ConfigExportService {
       }
       // 云服务
       if (settings.cloudServiceType != null) {
-        await prefs.setString('cloud_active_type', settings.cloudServiceType!);
+        final matches = CloudBackendType.values.where(
+          (e) => e.name == settings.cloudServiceType,
+        );
+        if (matches.isEmpty) {
+          logger.warning(
+            'ConfigImport',
+            '未知的云服务类型: ${settings.cloudServiceType}',
+          );
+        } else {
+          // 激活走 Store 校验：配置缺失或不完整时不激活，避免僵尸激活标记。
+          final ok = await store.activate(matches.first);
+          if (!ok) {
+            logger.warning(
+              'ConfigImport',
+              '导入后激活 ${matches.first.name} 失败:配置缺失或不完整',
+            );
+          }
+        }
       }
       if (settings.autoSync != null) {
         await prefs.setBool('auto_sync', settings.autoSync!);
@@ -1441,12 +1487,14 @@ class ConfigExportService {
 
         // 获取现有账本名称集合
         final existingLedgers = await repository.getAllLedgers();
-        final existingNames = existingLedgers.map((l) => l.name.toLowerCase()).toSet();
+        final existingNames = existingLedgers
+            .map((l) => l.name.toLowerCase())
+            .toSet();
 
         // 过滤掉已存在的账本（按名称去重）
-        final newItems = items.where((item) =>
-          !existingNames.contains(item.name.toLowerCase())
-        ).toList();
+        final newItems = items
+            .where((item) => !existingNames.contains(item.name.toLowerCase()))
+            .toList();
 
         if (newItems.isNotEmpty) {
           for (final item in newItems) {
@@ -1460,7 +1508,10 @@ class ConfigExportService {
               storageMode: 'local',
             );
           }
-          logger.info('ConfigImport', '账本已导入: ${newItems.length}条 (跳过已存在: ${items.length - newItems.length}条)');
+          logger.info(
+            'ConfigImport',
+            '账本已导入: ${newItems.length}条 (跳过已存在: ${items.length - newItems.length}条)',
+          );
         } else {
           logger.info('ConfigImport', '账本全部已存在，跳过导入');
         }
@@ -1488,23 +1539,33 @@ class ConfigExportService {
             .toSet();
 
         // 第一步：过滤并批量插入一级分类（仅与根作用域已有行去重）
-        final level1Items = items.where((item) => item.parentName == null).toList();
-        final newLevel1Items = level1Items.where((item) =>
-          !existingLevel1Keys.contains('${item.name.toLowerCase()}|${item.kind}')
-        ).toList();
+        final level1Items = items
+            .where((item) => item.parentName == null)
+            .toList();
+        final newLevel1Items = level1Items
+            .where(
+              (item) => !existingLevel1Keys.contains(
+                '${item.name.toLowerCase()}|${item.kind}',
+              ),
+            )
+            .toList();
 
         if (newLevel1Items.isNotEmpty) {
-          final level1Companions = newLevel1Items.map((item) => CategoriesCompanion.insert(
-            name: item.name,
-            kind: item.kind,
-            icon: d.Value(item.icon),
-            sortOrder: d.Value(item.sortOrder),
-            parentId: const d.Value(null),
-            level: d.Value(item.level),
-            syncId: d.Value(
-              item.syncId ?? _deterministicCategorySyncId(item),
-            ),
-          )).toList();
+          final level1Companions = newLevel1Items
+              .map(
+                (item) => CategoriesCompanion.insert(
+                  name: item.name,
+                  kind: item.kind,
+                  icon: d.Value(item.icon),
+                  sortOrder: d.Value(item.sortOrder),
+                  parentId: const d.Value(null),
+                  level: d.Value(item.level),
+                  syncId: d.Value(
+                    item.syncId ?? _deterministicCategorySyncId(item),
+                  ),
+                ),
+              )
+              .toList();
 
           await repository.batchInsertCategories(level1Companions);
         }
@@ -1517,7 +1578,7 @@ class ConfigExportService {
         final keyToId = <String, int>{
           for (var cat in allCategories)
             if (cat.parentId == null)
-              '${cat.name.toLowerCase()}|${cat.kind}': cat.id
+              '${cat.name.toLowerCase()}|${cat.kind}': cat.id,
         };
 
         // 二级已有 key 集合（含刚插入的一级下的二级），按 (parentName, name, kind)。
@@ -1536,31 +1597,41 @@ class ConfigExportService {
         }
 
         // 第三步：过滤并批量插入二级分类，去重 key 为 (parentName, name, kind)
-        final level2Items = items.where((item) => item.parentName != null).toList();
-        final newLevel2Items = level2Items.where((item) =>
-          !updatedLevel2Keys.contains(
-            '${item.parentName!.toLowerCase()}|${item.name.toLowerCase()}|${item.kind}',
-          )
-        ).toList();
+        final level2Items = items
+            .where((item) => item.parentName != null)
+            .toList();
+        final newLevel2Items = level2Items
+            .where(
+              (item) => !updatedLevel2Keys.contains(
+                '${item.parentName!.toLowerCase()}|${item.name.toLowerCase()}|${item.kind}',
+              ),
+            )
+            .toList();
         final level2Companions = <CategoriesCompanion>[];
 
         for (final item in newLevel2Items) {
           // 父分类与子分类同 kind,按 (parentName, kind) 在 keyToId(只装一级)中查父 id
-          final parentId = keyToId['${item.parentName?.toLowerCase()}|${item.kind}'];
+          final parentId =
+              keyToId['${item.parentName?.toLowerCase()}|${item.kind}'];
           if (parentId != null) {
-            level2Companions.add(CategoriesCompanion.insert(
-              name: item.name,
-              kind: item.kind,
-              icon: d.Value(item.icon),
-              sortOrder: d.Value(item.sortOrder),
-              parentId: d.Value(parentId),
-              level: d.Value(item.level),
-              syncId: d.Value(
-                item.syncId ?? _deterministicCategorySyncId(item),
+            level2Companions.add(
+              CategoriesCompanion.insert(
+                name: item.name,
+                kind: item.kind,
+                icon: d.Value(item.icon),
+                sortOrder: d.Value(item.sortOrder),
+                parentId: d.Value(parentId),
+                level: d.Value(item.level),
+                syncId: d.Value(
+                  item.syncId ?? _deterministicCategorySyncId(item),
+                ),
               ),
-            ));
+            );
           } else {
-            logger.warning('ConfigImport', '找不到父分类 "${item.parentName}"，跳过二级分类: ${item.name}');
+            logger.warning(
+              'ConfigImport',
+              '找不到父分类 "${item.parentName}"，跳过二级分类: ${item.name}',
+            );
           }
         }
 
@@ -1568,18 +1639,23 @@ class ConfigExportService {
           await repository.batchInsertCategories(level2Companions);
         }
 
-        final skippedCount = (level1Items.length - newLevel1Items.length) +
-                             (level2Items.length - newLevel2Items.length);
-        logger.info('ConfigImport',
+        final skippedCount =
+            (level1Items.length - newLevel1Items.length) +
+            (level2Items.length - newLevel2Items.length);
+        logger.info(
+          'ConfigImport',
           '分类已批量导入: 一级${newLevel1Items.length}条, 二级${level2Companions.length}条'
-          '${skippedCount > 0 ? ' (跳过已存在: $skippedCount条)' : ''}');
+              '${skippedCount > 0 ? ' (跳过已存在: $skippedCount条)' : ''}',
+        );
       } catch (e) {
         logger.error('ConfigImport', '导入分类失败: $e');
       }
     }
 
     // 3. 导入周期账单（依赖账本、分类）
-    if (options.recurringTransactions && config.recurringTransactions != null && repository != null) {
+    if (options.recurringTransactions &&
+        config.recurringTransactions != null &&
+        repository != null) {
       try {
         final items = config.recurringTransactions!.items;
 
@@ -1589,7 +1665,9 @@ class ConfigExportService {
 
         final categories = await repository.getAllCategories();
         // 按 (name, kind) 映射,跨 kind 同名各自命中
-        final catKeyToId = {for (var c in categories) '${c.name.toLowerCase()}|${c.kind}': c.id};
+        final catKeyToId = {
+          for (var c in categories) '${c.name.toLowerCase()}|${c.kind}': c.id,
+        };
 
         int importedCount = 0;
         int skippedCount = 0;
@@ -1607,9 +1685,13 @@ class ConfigExportService {
           int? categoryId;
           if (item.categoryName != null) {
             // 周期账单 type 即分类 kind
-            categoryId = catKeyToId['${item.categoryName!.toLowerCase()}|${item.type}'];
+            categoryId =
+                catKeyToId['${item.categoryName!.toLowerCase()}|${item.type}'];
             if (categoryId == null) {
-              logger.warning('ConfigImport', '找不到分类: ${item.categoryName}，跳过周期账单');
+              logger.warning(
+                'ConfigImport',
+                '找不到分类: ${item.categoryName}，跳过周期账单',
+              );
               skippedCount++;
               continue;
             }
@@ -1628,18 +1710,22 @@ class ConfigExportService {
             dayOfWeek: item.dayOfWeek,
             monthOfYear: item.monthOfYear,
             startDate: DateTime.parse(item.startDate),
-            endDate: item.endDate != null ? DateTime.parse(item.endDate!) : null,
+            endDate: item.endDate != null
+                ? DateTime.parse(item.endDate!)
+                : null,
             enabled: item.enabled,
           );
           importedCount++;
         }
 
-        logger.info('ConfigImport', '周期账单已导入: $importedCount条${skippedCount > 0 ? '，跳过: $skippedCount条' : ''}');
+        logger.info(
+          'ConfigImport',
+          '周期账单已导入: $importedCount条${skippedCount > 0 ? '，跳过: $skippedCount条' : ''}',
+        );
       } catch (e) {
         logger.error('ConfigImport', '导入周期账单失败: $e');
       }
     }
-
   }
 
   /// 导出配置到文件
@@ -1670,7 +1756,12 @@ class ConfigExportService {
     }
 
     final yamlContent = await file.readAsString();
-    await importFromYaml(yamlContent, repository: repository, ledgerId: ledgerId, options: options);
+    await importFromYaml(
+      yamlContent,
+      repository: repository,
+      ledgerId: ledgerId,
+      options: options,
+    );
     logger.info('ConfigImport', '配置已从文件导入: $filePath');
   }
 }

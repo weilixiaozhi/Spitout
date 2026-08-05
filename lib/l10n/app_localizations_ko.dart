@@ -119,6 +119,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonOperationFailed => '작업에 실패했습니다. 잠시 후 다시 시도해 주세요';
 
   @override
+  String get commonRetry => '다시 시도';
+
+  @override
   String get commonBack => '뒤로';
 
   @override
@@ -485,6 +488,14 @@ class AppLocalizationsKo extends AppLocalizations {
   @override
   String get importNoDataParsed =>
       '파싱된 데이터가 없습니다. 이전 페이지로 돌아가 CSV 내용이나 구분자를 확인해 주세요.';
+
+  @override
+  String get importNoLedger => '가져오기 전에 가계부를 먼저 만들어 주세요';
+
+  @override
+  String importInvalidRowsSkipped(int count) {
+    return '해석할 수 없는 $count개 행을 건너뛰었습니다(금액 또는 날짜가 잘못됨)';
+  }
 
   @override
   String get importFieldDate => '날짜';
@@ -1471,6 +1482,11 @@ class AppLocalizationsKo extends AppLocalizations {
   String get exportTypeExpense => '지출';
 
   @override
+  String exportSuccessMessageIos(String path) {
+    return '앱 문서 폴더에 저장됨:\n$path';
+  }
+
+  @override
   String get currencyCNY => '중국 위안';
 
   @override
@@ -1848,6 +1864,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cloudSpitoutCloudPasswordHint => '비밀번호를 입력하세요';
+
+  @override
+  String get cloudSpitoutCloudPasswordNotSavedHint =>
+      '비밀번호는 이번 로그인에만 사용되며 기기에 저장되지 않습니다';
 
   @override
   String get cloudSpitoutCloudLoginSuccess => '로그인 성공';
@@ -2250,6 +2270,30 @@ class AppLocalizationsKo extends AppLocalizations {
   String get logCenterCopied => '클립보드에 복사되었습니다';
 
   @override
+  String get logCenterDetailTime => '시간';
+
+  @override
+  String get logCenterDetailLevel => '수준';
+
+  @override
+  String get logCenterDetailPlatform => '플랫폼';
+
+  @override
+  String get logCenterDetailError => '오류';
+
+  @override
+  String get logCenterDetailStackTrace => '스택 트레이스';
+
+  @override
+  String get logCenterCopy => '복사';
+
+  @override
+  String get logCenterClose => '닫기';
+
+  @override
+  String get logCenterExportSubject => 'Spitout 로그 내보내기';
+
+  @override
   String get configImportExportTitle => '설정 가져오기/내보내기';
 
   @override
@@ -2464,6 +2508,11 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get calendarNoTransactions => '거래 없음';
+
+  @override
+  String calendarViewAllTransactions(int count) {
+    return '전체 $count건 보기';
+  }
 
   @override
   String get calendarAddTransaction => '이 날짜에 기록 추가';

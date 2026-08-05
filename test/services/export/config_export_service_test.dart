@@ -122,4 +122,114 @@ void main() {
     final items = (doc['ledgers'] as Map)['items'] as List;
     expect((items.single as Map)['name'], '引号"账本\n新行');
   });
+
+  test('Spitout Cloud 登录态 token 与密码同级受凭据开关控制', () async {
+    const cfg = SpitoutCloudConfig(
+      baseUrl: 'https://cloud.example.com',
+      email: 'a@b.c',
+      password: 'pw',
+      accessToken: 'at',
+      refreshToken: 'rt',
+      deviceId: 'dev-1',
+    );
+    final masked = cfg.toMap(includeCredentials: false);
+    expect(masked['password'], '***');
+    expect(masked['access_token'], '***');
+    expect(masked['refresh_token'], '***');
+    expect(masked['device_id'], '***');
+
+    final plain = cfg.toMap(includeCredentials: true);
+    expect(plain['password'], 'pw');
+    expect(plain['access_token'], 'at');
+    expect(plain['refresh_token'], 'rt');
+    expect(plain['device_id'], 'dev-1');
+  });
+
+  test('导入脱敏文件时跳过 *** 占位符,未勾选凭据时不覆盖本机密码/密钥', () async {
+    // 本机已有有效凭据。
+    SharedPreferences.setMockInitialValues({
+      'cloud_webdav_cfg': encodeCloudConfig(
+        const CloudServiceConfig(
+          type: CloudBackendType.webdav,
+          name: 'WebDAV',
+          webdavUrl: 'https://dav.example.com',
+          webdavUsername: 'user',
+          webdavPassword: 'current-pass',
+          webdavRemotePath: '/remote',
+        ),
+      ),
+      'cloud_s3_cfg': encodeCloudConfig(
+        const CloudServiceConfig(
+          type: CloudBackendType.s3,
+          name: 'S3',
+          s3Endpoint: 'https://s3.example.com',
+          s3Region: 'us-east-1',
+          s3AccessKey: 'AK',
+          s3SecretKey: 'current-secret',
+          s3Bucket: 'bucket',
+        ),
+      ),
+    });
+
+    // 导入一份脱敏导出的配置(密码/密钥为 ***,且未勾选包含凭据)。
+    const maskedYaml = '''
+webdav:
+  url: "https://dav.example.com"
+  username: "user"
+  password: "***"
+s3:
+  endpoint: "https://s3.example.com"
+  region: "us-east-1"
+  access_key: "AK"
+  secret_key: "***"
+  bucket: "bucket"
+''';
+    await ConfigExportService.importFromYaml(
+      maskedYaml,
+      repository: repo,
+      options: const ExportOptions(includeCredentials: false),
+    );
+
+    final prefs = await SharedPreferences.getInstance();
+    final webdavAfter = decodeCloudConfig(prefs.getString('cloud_webdav_cfg')!);
+    expect(webdavAfter.webdavPassword, 'current-pass');
+    final s3After = decodeCloudConfig(prefs.getString('cloud_s3_cfg')!);
+    expect(s3After.s3SecretKey, 'current-secret');
+
+    // 同一份脱敏文件即使勾选包含凭据,占位符也不得覆盖本机值。
+    await ConfigExportService.importFromYaml(
+      maskedYaml,
+      repository: repo,
+      options: const ExportOptions(includeCredentials: true),
+    );
+    final webdavAfter2 =
+        decodeCloudConfig(prefs.getString('cloud_webdav_cfg')!);
+    expect(webdavAfter2.webdavPassword, 'current-pass');
+
+    // 未勾选凭据时,即使 yaml 含明文密码也不导入,保留本机值。
+    const plainYaml = '''
+webdav:
+  url: "https://dav.example.com"
+  username: "user"
+  password: "new-pass"
+''';
+    await ConfigExportService.importFromYaml(
+      plainYaml,
+      repository: repo,
+      options: const ExportOptions(includeCredentials: false),
+    );
+    final webdavAfter3 =
+        decodeCloudConfig(prefs.getString('cloud_webdav_cfg')!);
+    expect(webdavAfter3.webdavPassword, 'current-pass');
+
+    // 勾选包含凭据后,明文密码才会覆盖本机值。
+    await ConfigExportService.importFromYaml(
+      plainYaml,
+      repository: repo,
+      options: const ExportOptions(includeCredentials: true),
+    );
+    final webdavAfter4 =
+        decodeCloudConfig(prefs.getString('cloud_webdav_cfg')!);
+    expect(webdavAfter4.webdavPassword, 'new-pass');
+  });
 }

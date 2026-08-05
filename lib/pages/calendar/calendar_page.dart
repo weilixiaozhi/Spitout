@@ -9,6 +9,7 @@ import '../../core/logging/logger_service.dart';
 import '../../utils/currency/currencies.dart';
 import 'package:spitout/providers/providers.dart';
 import '../../l10n/app_localizations.dart';
+import '../../data/models.dart' show Category, Transaction;
 
 import '../../theme/icons/app_icons.dart';
 
@@ -28,7 +29,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     super.initState();
     final now = DateTime.now();
     _focusedMonth = DateTime(now.year, now.month, 1);
-    _selectedDay = now;
+    // 选中日统一归一化为当日零点,与日历点选返回的日期语义一致,
+    // 避免下游直接比较 DateTime 时被时分秒干扰。
+    _selectedDay = DateTime(now.year, now.month, now.day);
 
     // 同步到 Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -40,8 +43,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   void _onDaySelected(DateTime selectedDay, DateTime focusedDay) {
     setState(() {
       _selectedDay = selectedDay;
+      // 点击上/下月补充日期时,头部月份与查询月份同步切换,
+      // 避免"选中日落在相邻月、统计仍按原月"的口径不一致。
+      _focusedMonth = DateTime(selectedDay.year, selectedDay.month, 1);
     });
     ref.read(calendarSelectedDateProvider.notifier).set(selectedDay);
+    ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
   }
 
   void _onPageChanged(DateTime focusedMonth) {
@@ -58,7 +65,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final now = DateTime.now();
     setState(() {
       _focusedMonth = DateTime(now.year, now.month, 1);
-      _selectedDay = now;
+      _selectedDay = DateTime(now.year, now.month, now.day);
     });
     ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
     ref.read(calendarSelectedDateProvider.notifier).set(_selectedDay);
@@ -102,10 +109,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     ref.watch(calendarRefreshProvider);
 
     // 获取当月统计数据
-    logger.debug('Calendar', '查询参数: ledgerId=$ledgerId, month=$_focusedMonth');
     final dailyTotalsAsync = ref.watch(
       dailyTotalsByMonthProvider((ledgerId: ledgerId, month: _focusedMonth)),
     );
+    // 日历最早可翻月份:按账本最早支出交易动态生成,无数据回退 2020-01-01。
+    final earliestMonthAsync = ref.watch(calendarEarliestDateProvider);
 
     return Scaffold(
       backgroundColor: SpitoutTokens.scaffoldBackground(context),
@@ -139,14 +147,23 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                     // 旧统计保留,等新数据来无缝替换 — 避免日历整页 spinner 闪烁
                     skipLoadingOnReload: true,
                     data: (dailyTotals) =>
-                        _buildCalendar(context, dailyTotals, primaryColor, currencySymbol),
+                        _buildCalendar(
+                          context,
+                          dailyTotals,
+                          primaryColor,
+                          currencySymbol,
+                          earliestMonthAsync.value ?? DateTime(2020, 1, 1),
+                        ),
                     loading: () => _buildCalendarSkeleton(context),
-                    error: (err, stack) => Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(20),
-                        child: Text('Error: $err'),
-                      ),
-                    ),
+                    error: (err, stack) {
+                      logger.error('Calendar', '加载当月统计失败', err, stack);
+                      return Center(
+                        child: Padding(
+                          padding: const EdgeInsets.all(20),
+                          child: Text(l10n.commonOperationFailed),
+                        ),
+                      );
+                    },
                   ),
                 ),
 
@@ -163,23 +180,22 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
+  /// 构建月历主体。
+  ///
+  /// [dailyTotals] 为当月每日支出(键为 yyyy-MM-dd),[firstDay] 是允许翻页的
+  /// 最早月份 1 号(由账本最早交易动态计算,避免历史数据早于硬编码下限)。
   Widget _buildCalendar(
     BuildContext context,
     Map<String, double> dailyTotals,
     Color primaryColor,
     String currencySymbol,
+    DateTime firstDay,
   ) {
     final locale = Localizations.localeOf(context);
 
-    logger.debug('Calendar', '_buildCalendar: dailyTotals.length=${dailyTotals.length}');
-    logger.debug('Calendar', 'locale=${locale.toString()}');
-    if (dailyTotals.isNotEmpty) {
-      logger.debug('Calendar', '数据样例: ${dailyTotals.entries.take(5).map((e) => '${e.key}: 支出=${e.value}').join(', ')}');
-    }
-
     return TableCalendar(
       locale: locale.toString(),
-      firstDay: DateTime(2020, 1, 1),
+      firstDay: firstDay,
       lastDay: DateTime.now().add(const Duration(days: 365)),
       focusedDay: _focusedMonth,
       selectedDayPredicate: (day) {
@@ -289,6 +305,9 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
+  /// 构建单个日期单元格:日期数字(选中/今天带圆形背景)+ 当日支出缩写。
+  ///
+  /// [isOutside] 表示上/下月的补充日期,只渲染弱化数字、不渲染支出标记。
   Widget _buildDateCell(
     BuildContext context,
     DateTime day,
@@ -301,14 +320,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   ) {
     final dateKey = _formatDate(day);
     final expense = dailyTotals[dateKey] ?? 0.0;
+    // 标记口径:仅"有支出且金额 > 0"的日子显示圆点/金额缩写,
+    // 0 元与收入日不标记。当前全局仅支出模式(type 恒为 expense)下成立,
+    // 若未来引入收入,此处需按收入/支出分别判定。
     final hasTransaction = expense > 0;
-
-    // 调试：打印前3天的数据
-    if (day.day <= 3 && day.month == _focusedMonth.month) {
-      logger.debug('Calendar', '_buildDateCell: day=${day.day}, dateKey=$dateKey, '
-          'totals=${dailyTotals[dateKey]}, expense=$expense, hasTransaction=$hasTransaction, '
-          'isOutside=$isOutside');
-    }
 
     // 文字颜色
     Color textColor;
@@ -382,7 +397,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
-  // 构建选中日期的交易列表（上方含"日期 + 在该日记账"紧凑头）
+  /// 构建选中日期的交易列表(上方含"日期 + 在该日记账"紧凑头)。
+  ///
+  /// 单日交易可能很多(如批量导入):内联只渲染前 50 条,超出时提供
+  /// "查看全部"入口走懒加载弹层,避免整列 Widget 全量构建卡顿。
   Widget _buildDateTransactionsList(BuildContext context, int ledgerId, DateTime date) {
     final l10n = AppLocalizations.of(context);
     final primaryColor = Theme.of(context).colorScheme.primary;
@@ -474,14 +492,27 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             );
           }
 
-          // 直接显示交易列表
+          // 直接显示交易列表;超限时截断并追加"查看全部"入口。
+          const maxInline = 50;
+          final hasMore = transactions.length > maxInline;
+          final visible = hasMore
+              ? transactions.sublist(0, maxInline)
+              : transactions;
           return ListView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
-            itemCount: transactions.length,
+            itemCount: visible.length + (hasMore ? 1 : 0),
             itemBuilder: (context, index) {
-              final item = transactions[index];
+              if (hasMore && index == visible.length) {
+                return _buildViewAllFooter(
+                  context,
+                  l10n,
+                  transactions,
+                  dateLabel,
+                );
+              }
+              final item = visible[index];
               final category = item.category;
               final isExpense = item.t.type == 'expense';
 
@@ -516,10 +547,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           );
         },
         loading: () => _buildTransactionsSkeleton(context),
-        error: (err, stack) => Padding(
-          padding: const EdgeInsets.all(24),
-          child: Center(child: Text('Error: $err')),
-        ),
+        error: (err, stack) {
+          logger.error('Calendar', '加载当日交易失败', err, stack);
+          return Padding(
+            padding: const EdgeInsets.all(24),
+            child: Center(child: Text(l10n.commonOperationFailed)),
+          );
+        },
       ),
     );
 
@@ -529,6 +563,83 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
   }
 
+  /// 内联列表超限时的"查看全部"入口:点击弹出懒加载的完整交易列表。
+  Widget _buildViewAllFooter(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<({Transaction t, Category? category})> transactions,
+    String dateLabel,
+  ) {
+    final primaryColor = Theme.of(context).colorScheme.primary;
+    return InkWell(
+      onTap: () => _showAllTransactionsSheet(
+        context,
+        l10n,
+        transactions,
+        dateLabel,
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 12),
+        child: Center(
+          child: Text(
+            l10n.calendarViewAllTransactions(transactions.length),
+            style: TextStyle(
+              color: primaryColor,
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  /// 弹出完整当日交易列表:AppSheet 内容区为懒加载 ListView,支持大量交易。
+  Future<void> _showAllTransactionsSheet(
+    BuildContext context,
+    AppLocalizations l10n,
+    List<({Transaction t, Category? category})> transactions,
+    String dateLabel,
+  ) async {
+    await showAppSheet<void>(
+      context: context,
+      child: AppSheet(
+        title: dateLabel,
+        child: ListView.builder(
+          padding: EdgeInsets.zero,
+          itemCount: transactions.length,
+          itemBuilder: (context, index) {
+            final item = transactions[index];
+            final category = item.category;
+            final isExpense = item.t.type == 'expense';
+            final categoryName = category?.name ?? l10n.commonUncategorized;
+            final subtitle = item.t.note ?? '';
+            return TransactionListItem(
+              icon: getCategoryIconData(category: category),
+              category: category,
+              title: subtitle.isNotEmpty ? subtitle : categoryName,
+              categoryName: subtitle.isNotEmpty ? categoryName : null,
+              amount: item.t.amount,
+              currencyCode: item.t.currencyCode,
+              nativeAmount: item.t.nativeAmount,
+              isExpense: isExpense,
+              happenedAt: item.t.happenedAt,
+              onTap: () async {
+                await TransactionEditUtils.editTransaction(
+                  context,
+                  ref,
+                  item.t,
+                  item.category,
+                );
+              },
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  /// 把日期格式化为 yyyy-MM-dd,与每日统计/查询的键口径一致。
   String _formatDate(DateTime date) {
     return '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
   }

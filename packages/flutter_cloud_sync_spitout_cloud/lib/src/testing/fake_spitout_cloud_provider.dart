@@ -7,21 +7,17 @@
 // 保证拿到本包即可独立跑测,无需依赖宿主工程的 test/ 目录。
 //
 // 设计:
-//   - extends SpitoutCloudProvider 真类(默认构造无副作用,_auth/_storage
-//     在 initialize() 调用后才被设)
-//   - 覆盖 baseUrl / apiPrefix / auth / storage getter 返 fake 实例
-//   - 覆盖 SyncEngine 实际用到的 ~20 个方法,内存模拟 server 状态
+//   - implements SpitoutCloudSyncBackend 门面接口,不继承真类实现;
+//     接口新增方法时本类必须同步补齐(编译期强制),避免测试替身漂移
+//   - 覆盖 SyncEngine 实际用到的方法,内存模拟 server 状态
 //   - 未实现的方法抛 UnimplementedError,测试碰到说明该补
 //
-// 用法:见新包内 `test/fake_provider_migration_test.dart`(c8 自包含迁移用例)
+// 用法:见新包内 `test/fake_provider_migration_test.dart`(自包含迁移用例)
 // 及主仓 `test/cloud/sync/sync_engine_e2e_test.dart`。
-//
-// Day 1 范围:pull / push / readLedgers / storage.list + basic auth getter,
-// 足够覆盖核心 pull/apply 测试场景。其它方法(附件 / WS / profile / shared
-// resources)留待 Day 2 按需补。
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show Uint8List;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart'
     show CloudAuthService, CloudFile, CloudStorageService, CloudUser;
 import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';
@@ -55,7 +51,8 @@ class FakeSpitoutCloudAuthService extends SpitoutCloudAuthService {
       _userId == null ? null : CloudUser(id: _userId!);
 
   /// 测试入口:模拟用户登录 / 登出
-  void setLoggedIn({String? userId = 'test-user-id', String? deviceId = 'test-device-id'}) {
+  void setLoggedIn(
+      {String? userId = 'test-user-id', String? deviceId = 'test-device-id'}) {
     _userId = userId;
     _deviceId = deviceId;
   }
@@ -120,7 +117,7 @@ class FakeSpitoutCloudStorageService implements CloudStorageService {
 // FakeSpitoutCloudProvider — 主入口
 // =====================================================================
 
-class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
+class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
   FakeSpitoutCloudProvider({
     String? userId = 'test-user-id',
     String? deviceId = 'test-device-id',
@@ -134,6 +131,25 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
 
   late final FakeSpitoutCloudAuthService _fakeAuth;
   late final FakeSpitoutCloudStorageService _fakeStorage;
+
+  @override
+  String get providerId => 'spitout_cloud';
+
+  @override
+  String get providerName => 'Spitout Cloud (fake)';
+
+  @override
+  Future<void> initialize(Map<String, dynamic> config) async {
+    // no-op:测试替身不初始化真实服务。
+  }
+
+  @override
+  bool validateConfig(Map<String, dynamic> config) => true;
+
+  @override
+  Future<void> dispose() async {
+    // no-op:测试替身没有真实连接 / 事件流外的资源。
+  }
 
   /// In-memory server 状态:全部 sync_changes 流。
   /// 测试通过 [pushFakeChange] 往里塞;[pullChanges] 按 since 切片返回。
@@ -180,6 +196,9 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
 
   @override
   String? get apiPrefix => '/api/v1';
+
+  @override
+  Duration? get remainingRecoveryCooldown => null;
 
   @override
   CloudAuthService get auth => _fakeAuth;
@@ -237,6 +256,11 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
 
   @override
   Future<void> startRealtime() async {
+    // no-op:测试不真起 WS
+  }
+
+  @override
+  Future<void> stopRealtime() async {
     // no-op:测试不真起 WS
   }
 
@@ -508,8 +532,7 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
       }
     }
     final txCount = liveTxPerLedger[ledgerId]?.length ?? 0;
-    final txTotal =
-        liveTxPerLedger.values.fold<int>(0, (a, s) => a + s.length);
+    final txTotal = liveTxPerLedger.values.fold<int>(0, (a, s) => a + s.length);
     return SpitoutCloudLedgerStats(
       transactionCount: txCount,
       transactionTotal: txTotal,
@@ -523,6 +546,277 @@ class FakeSpitoutCloudProvider extends SpitoutCloudProvider {
     required String ledgerId,
   }) async {
     throw UnimplementedError('FakeProvider.fetchSharedResources');
+  }
+
+  // ====== 未在 e2e 测试中使用的接口方法:统一抛 UnimplementedError ======
+  // 测试碰到 UnimplementedError 说明新场景需要补内存模拟,而不是静默继承
+  // 真类占位实现。
+
+  @override
+  Future<TwoFactorStatus> getTwoFactorStatus() async {
+    throw UnimplementedError('FakeProvider.getTwoFactorStatus');
+  }
+
+  @override
+  Future<SpitoutCloudProfile> updateMyProfileDisplayName({
+    required String displayName,
+  }) async {
+    throw UnimplementedError('FakeProvider.updateMyProfileDisplayName');
+  }
+
+  @override
+  Future<SpitoutCloudProfile> updateMyProfileBaseCurrency({
+    required String primaryCurrency,
+  }) async {
+    throw UnimplementedError('FakeProvider.updateMyProfileBaseCurrency');
+  }
+
+  @override
+  Future<Map<String, dynamic>?> fetchExchangeRates(
+      {required String base}) async {
+    throw UnimplementedError('FakeProvider.fetchExchangeRates');
+  }
+
+  @override
+  Future<SpitoutCloudAvatarUploadResult> uploadMyAvatar({
+    required Uint8List bytes,
+    required String fileName,
+    String? mimeType,
+  }) async {
+    throw UnimplementedError('FakeProvider.uploadMyAvatar');
+  }
+
+  @override
+  Future<SpitoutCloudProfile> updateMyProfileAppearance({
+    required Map<String, dynamic> appearance,
+  }) async {
+    throw UnimplementedError('FakeProvider.updateMyProfileAppearance');
+  }
+
+  @override
+  Future<SpitoutCloudProfile> updateMyProfileAiConfig({
+    required Map<String, dynamic> aiConfig,
+  }) async {
+    throw UnimplementedError('FakeProvider.updateMyProfileAiConfig');
+  }
+
+  @override
+  Future<Uint8List> downloadMyAvatar({
+    required String userId,
+    int? version,
+  }) async {
+    throw UnimplementedError('FakeProvider.downloadMyAvatar');
+  }
+
+  @override
+  Future<void> deleteMyAvatar() async {
+    throw UnimplementedError('FakeProvider.deleteMyAvatar');
+  }
+
+  @override
+  Future<List<SpitoutCloudDevice>> listDevices({
+    String view = 'deduped',
+    int activeWithinDays = 30,
+  }) async {
+    throw UnimplementedError('FakeProvider.listDevices');
+  }
+
+  @override
+  Future<void> revokeDevice({required String deviceId}) async {
+    throw UnimplementedError('FakeProvider.revokeDevice');
+  }
+
+  @override
+  Future<SpitoutCloudReadLedgerDetail> readLedgerDetail({
+    required String ledgerId,
+  }) async {
+    throw UnimplementedError('FakeProvider.readLedgerDetail');
+  }
+
+  @override
+  Future<SpitoutCloudServerVersion> fetchServerVersion() async {
+    throw UnimplementedError('FakeProvider.fetchServerVersion');
+  }
+
+  @override
+  Future<List<SpitoutCloudInvite>> listInvites(
+      {required String ledgerId}) async {
+    throw UnimplementedError('FakeProvider.listInvites');
+  }
+
+  @override
+  Future<void> revokeInvite({
+    required String ledgerId,
+    String? inviteId,
+    String? code,
+  }) async {
+    throw UnimplementedError('FakeProvider.revokeInvite');
+  }
+
+  @override
+  Future<SpitoutCloudInvitePreview> previewInvite(
+      {required String code}) async {
+    throw UnimplementedError('FakeProvider.previewInvite');
+  }
+
+  @override
+  Future<SpitoutCloudInviteAcceptResult> acceptInvite(
+      {required String code}) async {
+    throw UnimplementedError('FakeProvider.acceptInvite');
+  }
+
+  @override
+  Future<List<SpitoutCloudLedgerMember>> listMembers(
+      {required String ledgerId}) async {
+    throw UnimplementedError('FakeProvider.listMembers');
+  }
+
+  @override
+  Future<SpitoutCloudLedgerMember> updateMemberRole({
+    required String ledgerId,
+    required String userId,
+    required String role,
+  }) async {
+    throw UnimplementedError('FakeProvider.updateMemberRole');
+  }
+
+  @override
+  Future<void> removeMember({
+    required String ledgerId,
+    required String userId,
+  }) async {
+    throw UnimplementedError('FakeProvider.removeMember');
+  }
+
+  @override
+  Future<SpitoutCloudMemberStats> fetchMemberStats({
+    required String ledgerId,
+    String scope = 'month',
+    String? period,
+    int? tzOffsetMinutes,
+  }) async {
+    throw UnimplementedError('FakeProvider.fetchMemberStats');
+  }
+
+  @override
+  Future<List<SpitoutCloudReadTransaction>> readTransactions({
+    required String ledgerId,
+    String? txType,
+    String? query,
+    DateTime? startAt,
+    DateTime? endAt,
+    int limit = 200,
+    int offset = 0,
+  }) async {
+    throw UnimplementedError('FakeProvider.readTransactions');
+  }
+
+  @override
+  Future<List<SpitoutCloudReadCategory>> readCategories(
+      {required String ledgerId}) async {
+    throw UnimplementedError('FakeProvider.readCategories');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeLedgerMeta({
+    required String ledgerId,
+    required int baseChangeId,
+    String? ledgerName,
+    String? currency,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeLedgerMeta');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeCreateTransaction({
+    required String ledgerId,
+    required int baseChangeId,
+    required String txType,
+    required double amount,
+    required DateTime happenedAt,
+    String? note,
+    String? categoryName,
+    String? categoryKind,
+    String? categoryId,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeCreateTransaction');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeUpdateTransaction({
+    required String ledgerId,
+    required String txId,
+    required int baseChangeId,
+    String? txType,
+    double? amount,
+    DateTime? happenedAt,
+    String? note,
+    String? categoryName,
+    String? categoryKind,
+    String? categoryId,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeUpdateTransaction');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeDeleteTransaction({
+    required String ledgerId,
+    required String txId,
+    required int baseChangeId,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeDeleteTransaction');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeCreateCategory({
+    required String ledgerId,
+    required int baseChangeId,
+    required String name,
+    required String kind,
+    int? level,
+    int? sortOrder,
+    String? icon,
+    String? parentName,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeCreateCategory');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeUpdateCategory({
+    required String ledgerId,
+    required String categoryId,
+    required int baseChangeId,
+    String? name,
+    String? kind,
+    int? level,
+    int? sortOrder,
+    String? icon,
+    String? parentName,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeUpdateCategory');
+  }
+
+  @override
+  Future<SpitoutCloudWriteCommitMeta> writeDeleteCategory({
+    required String ledgerId,
+    required String categoryId,
+    required int baseChangeId,
+    String? requestId,
+    String? idempotencyKey,
+  }) async {
+    throw UnimplementedError('FakeProvider.writeDeleteCategory');
   }
 }
 

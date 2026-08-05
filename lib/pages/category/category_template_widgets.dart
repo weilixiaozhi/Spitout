@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../data/models.dart' as db;
-import '../../data/repositories/category_repository.dart';
 import '../../l10n/app_localizations.dart';
 import '../../widgets/category_icon.dart';
 import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
-import '../../services/data/category_template_logic.dart';
+import '../../providers/category/category_template_providers.dart';
 
 /// 模板条目卡片（flat / hierarchical 两个模板页共用）
 ///
@@ -197,101 +195,4 @@ class TemplateBottomBar extends StatelessWidget {
       ),
     );
   }
-}
-
-/// 执行写入计划（flat / hierarchical 两个模板页共用）
-///
-/// 先建父（拿 db id），再建子（父 id 优先取新建父，其次解析已在表中的父：
-/// syncId 命中优先、同名兜底——手动创建的父与模板 syncId 不同源时仍能挂接，
-/// 避免误新建同名父触发 DuplicateNameException）。
-/// sortOrder 策略：新父追加到现有最大一级 sortOrder 之后，避免与既有排序交错；
-/// 子分类在"新父下从 0 起 / 已有父下追加到既有兄弟之后"。
-///
-/// 防御性去重：计划生成阶段已被 alreadyAdded 拦截的条目正常不会走到这里，
-/// 但写入前仍按"同名已存在则复用/跳过"兜底，保证整个计划幂等可重入。
-/// 返回实际写入的条目数（复用/跳过的条目不计入）。
-Future<int> executeTemplateInsertPlan({
-  required CategoryRepository repo,
-  required TemplateInsertPlan plan,
-  required List<db.Category> existingCategories,
-}) async {
-  final index = ExistingCategoryIndex([
-    for (final c in existingCategories)
-      (
-        id: c.id,
-        syncId: c.syncId,
-        name: c.name,
-        kind: c.kind,
-        level: c.level,
-        parentId: c.parentId,
-      ),
-  ]);
-
-  var topSort = 0;
-  for (final c in existingCategories) {
-    if (c.level == 1 && c.sortOrder > topSort) topSort = c.sortOrder;
-  }
-
-  var inserted = 0;
-
-  // 1. 先建一级分类（同名已存在 → 复用其 id，不重复创建）
-  final resolvedIdBySyncId = <String, int>{};
-  for (final p in plan.parentsToCreate) {
-    final existingId = index.resolveLevel1Id(syncId: p.syncId, name: p.name);
-    if (existingId != null) {
-      resolvedIdBySyncId[p.syncId] = existingId;
-      continue;
-    }
-    topSort += 1;
-    final id = await repo.createCategory(
-      name: p.name,
-      kind: 'expense',
-      icon: p.iconName,
-      sortOrder: topSort,
-      syncId: p.syncId,
-    );
-    resolvedIdBySyncId[p.syncId] = id;
-    inserted++;
-  }
-
-  // 2. 再建二级分类
-  final childSortByParentId = <int, int>{};
-  for (final entry in plan.childrenToCreate) {
-    final parentId = resolvedIdBySyncId[entry.parentSyncId] ??
-        index.resolveLevel1Id(
-            syncId: entry.parentSyncId, name: entry.parentName);
-    // 父既未新建也不在表中（防御性跳过，理论上计划层补父后不会发生）
-    if (parentId == null) continue;
-
-    // 同父下已存在同名二级 → 跳过（正常路径已被 alreadyAdded 拦截，此处兜底）
-    if (index.level2ExistsUnder(parentId: parentId, name: entry.child.name)) {
-      continue;
-    }
-
-    // 同一父级下连续写入时，sortOrder 在已用最大值上递增
-    var base = childSortByParentId[parentId];
-    if (base == null) {
-      var maxExisting = -1;
-      for (final c in existingCategories) {
-        if (c.parentId == parentId && c.sortOrder > maxExisting) {
-          maxExisting = c.sortOrder;
-        }
-      }
-      base = maxExisting;
-    }
-    final sort = base + 1;
-    childSortByParentId[parentId] = sort;
-
-    await repo.createSubCategory(
-      parentId: parentId,
-      name: entry.child.name,
-      kind: 'expense',
-      icon: entry.child.iconName,
-      sortOrder: sort,
-      syncId: entry.child.syncId,
-    );
-    inserted++;
-  }
-
-  return inserted;
 }

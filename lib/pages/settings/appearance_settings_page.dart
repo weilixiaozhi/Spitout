@@ -287,26 +287,39 @@ class AppearanceSettingsPage extends ConsumerWidget {
                             .read(expenseColorSchemeProvider.notifier)
                             .set(selected);
                       }
-                if (!pageContext.mounted) return;
-                // 仅关闭颜色选择弹窗,停留在外观设置页(不跳转首页)。
-                Navigator.of(dialogCtx).pop();
-                // 弱化 loading：去掉了遮罩，仅居中展示细线条、浅颜色的
-                // CircularProgressIndicator，1s 过渡反馈后弹 toast「已更换」。
-                final overlayEntry = OverlayEntry(
-                  builder: (_) => const Center(
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.0,
-                      strokeCap: StrokeCap.round,
-                      valueColor:
-                          AlwaysStoppedAnimation<Color>(Colors.grey),
-                    ),
-                  ),
-                );
-                Overlay.of(pageContext).insert(overlayEntry);
-                await Future.delayed(const Duration(milliseconds: 1000));
-                if (!pageContext.mounted) return;
-                overlayEntry.remove();
-                showToast(pageContext, l10n.appearanceExpenseColorApplied);
+                      if (!pageContext.mounted) return;
+                      // 仅关闭颜色选择弹窗,停留在外观设置页(不跳转首页)。
+                      Navigator.of(dialogCtx).pop();
+                      // 弱化 loading：去掉了遮罩，仅居中展示细线条、浅颜色的
+                      // CircularProgressIndicator，1s 过渡反馈后弹 toast「已更换」。
+                      final overlayEntry = OverlayEntry(
+                        builder: (_) => const Center(
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.0,
+                            strokeCap: StrokeCap.round,
+                            valueColor:
+                                AlwaysStoppedAnimation<Color>(Colors.grey),
+                          ),
+                        ),
+                      );
+                      Overlay.of(pageContext).insert(overlayEntry);
+                      try {
+                        await Future.delayed(
+                          const Duration(milliseconds: 1000),
+                        );
+                        if (pageContext.mounted) {
+                          showToast(
+                            pageContext,
+                            l10n.appearanceExpenseColorApplied,
+                          );
+                        }
+                      } finally {
+                        // 页面在等待期间被退出也要移除 overlay,
+                        // 避免根 Overlay 上残留全屏转圈指示器。
+                        if (overlayEntry.mounted) {
+                          overlayEntry.remove();
+                        }
+                      }
               },
               child: saving
                   ? const SizedBox(

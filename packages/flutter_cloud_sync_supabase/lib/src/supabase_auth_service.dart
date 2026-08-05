@@ -34,7 +34,13 @@ class SupabaseAuthService implements CloudAuthService {
       email: email,
       password: password,
     );
-    final u = res.user!;
+    final u = res.user;
+    if (u == null) {
+      // 邮箱验证未完成或服务端未返回会话时 user 为 null，不能强解包。
+      throw CloudAuthException(
+        '登录成功但未返回用户会话，请检查邮箱验证状态或稍后重试',
+      );
+    }
     return CloudUser(id: u.id, email: u.email);
   }
 
@@ -44,7 +50,13 @@ class SupabaseAuthService implements CloudAuthService {
     required String password,
   }) async {
     final res = await client.auth.signUp(email: email, password: password);
-    final u = res.user!;
+    final u = res.user;
+    if (u == null) {
+      // 邮箱验证未完成或服务端未返回会话时 user 为 null，不能强解包。
+      throw CloudAuthException(
+        '注册成功但未返回用户会话，请先完成邮箱验证后再登录',
+      );
+    }
     return CloudUser(id: u.id, email: u.email);
   }
 

@@ -6,7 +6,6 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 
 import '../../data/db.dart';
-import '../../data/models.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../core/logging/logger_service.dart';
 import 'sync_diff_service.dart';
@@ -283,6 +282,7 @@ class TransactionsSyncManager implements SyncService {
   /// 返回 (preview, importData, jsonVersion) 或 null（云端无数据）
   /// - preview 为 null 表示无法计算 diff（旧格式），应走全量替换
   /// - preview 不为 null 表示可以预览
+  @override
   Future<({SyncPreview? preview, ImportData importData, int version})?> downloadAndPreview({
     required int ledgerId,
   }) async {
@@ -325,6 +325,7 @@ class TransactionsSyncManager implements SyncService {
   }
 
   /// 应用预览中选中的变更
+  @override
   Future<SyncApplyResult> applyPreviewChanges({
     required int ledgerId,
     required List<SyncChange> selectedChanges,
@@ -344,6 +345,9 @@ class TransactionsSyncManager implements SyncService {
 
     return result;
   }
+
+  @override
+  bool get supportsDiffPreview => true;
 
   @override
   Future<SyncStatus> getStatus({required int ledgerId}) async {

@@ -106,6 +106,11 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
           logger.error('LocalBackup', '恢复失败: ${result.error}');
           showToast(context, l10n.localBackupRestoreFailed);
       }
+    } catch (e, st) {
+      // 恢复服务异常(文件损坏/磁盘错误等)不得冒泡:提示并停留本页可重试。
+      logger.error('LocalBackup', '恢复备份异常', e, st);
+      if (!mounted) return;
+      showToast(context, l10n.localBackupRestoreFailed);
     } finally {
       if (mounted) setState(() => _restoring = false);
     }

@@ -10,10 +10,10 @@ import '../../theme/colors.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import '../../data/models.dart';
-import '../../cloud/sync/transactions_sync_manager.dart';
 import '../auth/login_page.dart';
 import 'sync_preview_dialog.dart';
 import '../../theme/icons/app_icons.dart';
+import '../../core/logging/logger_service.dart';
 
 /// 备份同步操作区块（原 CloudSyncPage 改造为可嵌入组件）。
 ///
@@ -57,9 +57,12 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
 
     return authAsync.when(
       loading: () => const Center(child: CircularProgressIndicator()),
-      error: (e, _) => Center(
-        child: Text('${AppLocalizations.of(context).commonError}: $e'),
-      ),
+      error: (e, st) {
+        logger.error('CloudSyncSection', '加载认证服务失败', e, st);
+        return Center(
+          child: Text(AppLocalizations.of(context).commonOperationFailed),
+        );
+      },
       data: (auth) => FutureBuilder<CloudUser?>(
         future: auth.currentUser,
         builder: (ctx, snap) {
@@ -335,12 +338,15 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                 ref.read(ledgerListRefreshProvider.notifier).tick();
                               } catch (_) {}
                             });
-                          } catch (e) {
+                          } catch (e, st) {
+                            logger.error('CloudSyncSection', '上传失败', e, st);
                             if (!context.mounted) return;
                             await AppDialog.info(context,
                                 title:
                                     AppLocalizations.of(context).commonFailed,
-                                message: '$e');
+                                message: AppLocalizations.of(
+                                    context,
+                                ).commonOperationFailed);
                           } finally {
                             if (mounted) setState(() => uploadBusy = false);
                             // 移除上传中标记
@@ -388,13 +394,10 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                         onTap: () async {
                           setState(() => downloadBusy = true);
                           try {
-                            // 尝试使用 diff 预览模式
-                            final syncManager = sync is TransactionsSyncManager
-                                ? sync
-                                : null;
-
-                            if (syncManager != null) {
-                              final previewResult = await syncManager.downloadAndPreview(
+                            // 按接口能力分支:只有支持 diff 预览的后端才走预览流程,
+                            // 不依赖具体同步实现类(后续新增后端无需改本页)。
+                            if (sync.supportsDiffPreview) {
+                              final previewResult = await sync.downloadAndPreview(
                                 ledgerId: ledgerId,
                               );
 
@@ -421,7 +424,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                   );
 
                                   if (selected != null && selected.isNotEmpty && context.mounted) {
-                                    final result = await syncManager.applyPreviewChanges(
+                                    final result = await sync.applyPreviewChanges(
                                       ledgerId: ledgerId,
                                       selectedChanges: selected,
                                       importData: previewResult.importData,
@@ -455,7 +458,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                 }
                               }
                             } else {
-                              // 非 TransactionsSyncManager，走常规下载路径
+                              // 无 diff 预览能力的后端,走常规全量下载路径。
                               final res = await sync.downloadAndRestoreToCurrentLedger(
                                   ledgerId: ledgerId);
                               if (!context.mounted) return;
@@ -464,12 +467,15 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                   message: AppLocalizations.of(context).mineDownloadResult(res.inserted));
                               PostProcessor.runAfterDownload(ref);
                             }
-                          } catch (e) {
+                          } catch (e, st) {
+                            logger.error('CloudSyncSection', '下载失败', e, st);
                             if (!context.mounted) return;
                             await AppDialog.error(context,
                                 title:
                                     AppLocalizations.of(context).commonFailed,
-                                message: '$e');
+                                message: AppLocalizations.of(
+                                    context,
+                                ).commonOperationFailed);
                           } finally {
                             if (mounted) setState(() => downloadBusy = false);
                           }
