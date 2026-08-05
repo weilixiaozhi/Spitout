@@ -995,6 +995,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get reminderTitle => '记账提醒';
 
   @override
+  String get reminderBody => '别忘了记录今天的收支哦 💰';
+
+  @override
   String get reminderSubtitle => '设置每日记账提醒时间';
 
   @override
@@ -2323,6 +2326,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get configIncludeOtherSettingsSubtitle => '包含云服务配置和应用设置';
 
   @override
+  String get configIncludeCredentials => '包含密码/密钥';
+
+  @override
+  String get configIncludeCredentialsSubtitle => '密码和密钥将以明文写入文件';
+
+  @override
   String get configExportSelectTitle => '选择导出内容';
 
   @override
@@ -2330,6 +2339,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get configExportConfirmTitle => '确认导出';
+
+  @override
+  String get configExportContainsSecretsWarning => '此文件包含密码/密钥，请勿分享或提交到版本库！';
 
   @override
   String get configImportSelectTitle => '选择导入内容';
@@ -4767,6 +4779,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get reminderTitle => '記帳提醒';
 
   @override
+  String get reminderBody => '別忘了記錄今天的收支哦 💰';
+
+  @override
   String get reminderSubtitle => '設定每日記帳提醒時間';
 
   @override
@@ -6094,6 +6109,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get configIncludeOtherSettingsSubtitle => '包含雲端服務配置和應用程式設定';
 
   @override
+  String get configIncludeCredentials => '包含密碼/金鑰';
+
+  @override
+  String get configIncludeCredentialsSubtitle => '密碼和金鑰將以明文寫入檔案';
+
+  @override
   String get configExportSelectTitle => '選擇匯出內容';
 
   @override
@@ -6101,6 +6122,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get configExportConfirmTitle => '確認匯出';
+
+  @override
+  String get configExportContainsSecretsWarning => '此檔案包含密碼/金鑰，請勿分享或提交到版本庫！';
 
   @override
   String get configImportSelectTitle => '選擇匯入內容';

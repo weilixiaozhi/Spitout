@@ -1,3 +1,4 @@
+import '../db.dart';
 import 'ledger_repository.dart';
 import 'transaction_repository.dart';
 import 'category_repository.dart';
@@ -31,7 +32,13 @@ abstract class BaseRepository
 
   /// 本位币变更后全量重算该账本交易的 nativeAmount(用当前有效汇率,历史
   /// 汇率不可得)。逐笔记 change,确保云端投影同步更新。返回实际改动条数。
-  Future<int> recalcNativeAmountsForLedger(int ledgerId, String newBase);
+  /// [recordChanges] 为 false 时只写数据库、不登记 local_changes；
+  /// pull 路径应用远端币种变更时必须传 false，避免重算结果被反向推回 server。
+  Future<int> recalcNativeAmountsForLedger(
+    int ledgerId,
+    String newBase, {
+    bool recordChanges = true,
+  });
 
   /// 存量补折算:只重算「currencyCode≠本位币 且 nativeAmount==amount」
   /// 的外币交易(缺汇率的跳过留待用户)。逐笔记 change。
@@ -51,4 +58,13 @@ abstract class BaseRepository
 
   /// 全局已使用的币种集合(从 transactions.currency_code distinct 查询)。
   Future<Set<String>> getUsedCurrencies();
+
+  /// 原子生成一笔周期交易并推进 lastGeneratedDate 锚点。
+  ///
+  /// 交易写入与锚点更新必须在同一事务内完成：锚点更新失败时整体回滚，
+  /// 避免下次扫描按旧锚点重复生成同一天交易。返回新交易 id。
+  Future<int> generateRecurringTransaction({
+    required RecurringTransaction recurring,
+    required DateTime happenedAt,
+  });
 }

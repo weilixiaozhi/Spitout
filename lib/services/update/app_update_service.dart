@@ -39,7 +39,7 @@ class AppUpdateService {
       final resp = await httpClient.get(
         uri,
         headers: {'Accept': 'application/vnd.github+json'},
-      );
+      ).timeout(const Duration(seconds: 10));
       // 非 200 不抛错：私有仓库匿名请求会返回 401，限流会返回 403，
       // 这两种都应降级为 unknown，统一引导去 GitHub，而非报错。
       if (resp.statusCode != 200) {

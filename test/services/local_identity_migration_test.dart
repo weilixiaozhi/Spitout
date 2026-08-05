@@ -45,6 +45,8 @@ void main() {
     String? paidByUserId,
     String? createdByUserId,
     String? lastEditedByUserId,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     return db.into(db.transactions).insert(
           TransactionsCompanion.insert(
@@ -60,6 +62,12 @@ void main() {
                 : const Value.absent(),
             lastEditedByUserId: lastEditedByUserId != null
                 ? Value(lastEditedByUserId)
+                : const Value.absent(),
+            aaParticipants: aaParticipants != null
+                ? Value(aaParticipants)
+                : const Value.absent(),
+            aaSplits: aaSplits != null
+                ? Value(aaSplits)
                 : const Value.absent(),
           ),
         );
@@ -94,6 +102,54 @@ void main() {
             ..where((l) => l.id.equals(ledgerId)))
           .getSingle();
       expect(ledger.ownerUserId, cloudUserId);
+    });
+
+    test('aaParticipants/aaSplits 里的 localSelfId 一并改写', () async {
+      const localSelfId = 'local-uuid-aa';
+      const cloudUserId = 'cloud-user-aa';
+      final ledgerId = await createLedger();
+      await createTx(
+        ledgerId: ledgerId,
+        paidByUserId: localSelfId,
+        aaParticipants: '["$localSelfId","u2","vu-1"]',
+        aaSplits: '{"$localSelfId":"20.00","u2":"20.00","vu-1":"10.00"}',
+      );
+
+      await LocalIdentityMigrationService.migrateToCloudUserId(
+        db: db,
+        cloudUserId: cloudUserId,
+        localSelfId: localSelfId,
+      );
+
+      final tx = (await db.select(db.transactions).get()).single;
+      expect(tx.aaParticipants, '["$cloudUserId","u2","vu-1"]',
+          reason: 'aaParticipants 中的本地身份应改写为云身份');
+      expect(tx.aaSplits,
+          '{"u2":"20.00","vu-1":"10.00","$cloudUserId":"20.00"}',
+          reason: 'aaSplits 的 key 应改写为云身份且金额不变');
+    });
+
+    test('aa 字段中 localSelfId 与 cloudUserId 并存时去重且不丢云端金额', () async {
+      const localSelfId = 'local-uuid-dup';
+      const cloudUserId = 'cloud-user-dup';
+      final ledgerId = await createLedger();
+      await createTx(
+        ledgerId: ledgerId,
+        aaParticipants: '["$localSelfId","$cloudUserId"]',
+        aaSplits: '{"$localSelfId":"5.00","$cloudUserId":"7.00"}',
+      );
+
+      await LocalIdentityMigrationService.migrateToCloudUserId(
+        db: db,
+        cloudUserId: cloudUserId,
+        localSelfId: localSelfId,
+      );
+
+      final tx = (await db.select(db.transactions).get()).single;
+      expect(tx.aaParticipants, '["$cloudUserId"]',
+          reason: '并存时替换后应去重，避免同一参与人出现两次');
+      expect(tx.aaSplits, '{"$cloudUserId":"7.00"}',
+          reason: '云端已有金额应保留，不覆盖为本地旧值');
     });
 
     test('幂等:同一 cloudUserId 第二次调用不重跑', () async {
@@ -187,6 +243,39 @@ void main() {
           .getSingle();
       expect(l1.ownerUserId, cloudUserId);
       expect(l2.ownerUserId, localSelfId);
+    });
+
+    test('仅改写指定账本的 aa 字段,不影响其他账本', () async {
+      const localSelfId = 'local-uuid-aa-ledger';
+      const cloudUserId = 'cloud-user-aa-ledger';
+      final ledger1 = await createLedger();
+      final ledger2 = await createLedger();
+      await createTx(
+        ledgerId: ledger1,
+        aaParticipants: '["$localSelfId"]',
+        aaSplits: '{"$localSelfId":"30.00"}',
+      );
+      await createTx(
+        ledgerId: ledger2,
+        aaParticipants: '["$localSelfId"]',
+        aaSplits: '{"$localSelfId":"30.00"}',
+      );
+
+      await LocalIdentityMigrationService.migrateLedgerToCloudUserId(
+        db: db,
+        ledgerId: ledger1,
+        cloudUserId: cloudUserId,
+        localSelfId: localSelfId,
+      );
+
+      final txs = await db.select(db.transactions).get();
+      final t1 = txs.firstWhere((t) => t.ledgerId == ledger1);
+      final t2 = txs.firstWhere((t) => t.ledgerId == ledger2);
+      expect(t1.aaParticipants, '["$cloudUserId"]');
+      expect(t1.aaSplits, '{"$cloudUserId":"30.00"}');
+      expect(t2.aaParticipants, '["$localSelfId"]',
+          reason: '其他账本的 aa 引用不应被改写');
+      expect(t2.aaSplits, '{"$localSelfId":"30.00"}');
     });
   });
 }

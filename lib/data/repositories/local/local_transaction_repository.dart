@@ -22,9 +22,9 @@ Future<int> deleteTransactionsWithEditHistories(
   if (ids.isEmpty) return 0;
 
   // 先清编辑历史，再删交易主表；顺序保证即使外键未开启也不会残留孤儿历史。
-  await (db.delete(db.recordEditHistories)
-        ..where((h) => h.recordId.isIn(ids)))
-      .go();
+  await (db.delete(
+    db.recordEditHistories,
+  )..where((h) => h.recordId.isIn(ids))).go();
   return (db.delete(db.transactions)..where((t) => t.id.isIn(ids))).go();
 }
 
@@ -191,6 +191,46 @@ class LocalTransactionRepository implements TransactionRepository {
   /// Editor 在共享账本下记的 tx,主表 JOIN 不到 category 行,
   /// 字段是 null。这里二次查 SharedLedgerCategories 按 syncId 找,
   /// 转 synthetic 实体回填,UI 不用区分。
+  Future<
+    ({
+      Map<int, String> ledgerSyncByLocalId,
+      Map<String, SharedLedgerCategory> sharedByLedgerAndSync,
+    })
+  >
+  _loadSharedHydrationContext(
+    Iterable<({Transaction t, Category? category})> rows,
+    Set<String> catSyncIds,
+  ) async {
+    final ledgerIds = rows.map((r) => r.t.ledgerId).toSet().toList();
+    final ledgers = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.isIn(ledgerIds))).get();
+    final ledgerSyncByLocalId = <int, String>{
+      for (final l in ledgers)
+        if (l.syncId != null) l.id: l.syncId!,
+    };
+    final validLedgerSyncIds = ledgerSyncByLocalId.values.toList();
+    if (validLedgerSyncIds.isEmpty) {
+      return (
+        ledgerSyncByLocalId: ledgerSyncByLocalId,
+        sharedByLedgerAndSync: <String, SharedLedgerCategory>{},
+      );
+    }
+    final shared =
+        await (db.select(db.sharedLedgerCategories)..where(
+              (t) =>
+                  t.syncId.isIn(catSyncIds.toList()) &
+                  t.ledgerSyncId.isIn(validLedgerSyncIds),
+            ))
+            .get();
+    return (
+      ledgerSyncByLocalId: ledgerSyncByLocalId,
+      sharedByLedgerAndSync: {
+        for (final s in shared) '${s.ledgerSyncId}|${s.syncId}': s,
+      },
+    );
+  }
+
   Future<List<({Transaction t, Category? category})>> _hydrateSharedOverrides(
     List<({Transaction t, Category? category})> rows,
   ) async {
@@ -204,16 +244,8 @@ class LocalTransactionRepository implements TransactionRepository {
     }
     if (catSyncIds.isEmpty) return rows;
 
-    // 批量查 SharedLedgerCategories 镜像表
-    final catBySyncId = <String, SharedLedgerCategory>{};
-    if (catSyncIds.isNotEmpty) {
-      final shared = await (db.select(
-        db.sharedLedgerCategories,
-      )..where((t) => t.syncId.isIn(catSyncIds.toList()))).get();
-      for (final s in shared) {
-        catBySyncId[s.syncId] = s;
-      }
-    }
+    // 按交易所属账本的 ledgerSyncId 过滤,避免跨账本 synthetic id 碰撞取错分类。
+    final ctx = await _loadSharedHydrationContext(rows, catSyncIds);
 
     // 回填到每行
     return rows.map((r) {
@@ -221,7 +253,10 @@ class LocalTransactionRepository implements TransactionRepository {
 
       final cOv = r.t.categorySyncIdOverride;
       if (category == null && cOv != null && cOv.isNotEmpty) {
-        final s = catBySyncId[cOv];
+        final ledgerSyncId = ctx.ledgerSyncByLocalId[r.t.ledgerId];
+        final s = ledgerSyncId == null
+            ? null
+            : ctx.sharedByLedgerAndSync['$ledgerSyncId|$cOv'];
         if (s != null) category = _syntheticCategoryFromShared(s);
       }
 
@@ -463,7 +498,10 @@ class LocalTransactionRepository implements TransactionRepository {
     // 先读旧 version 再 +1:本地单用户/共享账本 LWW 场景并发风险低,先读后写可接受。
     _validateAaJson(aaParticipants, aaSplits);
     final existing = await getTransactionById(id);
-    final newVersion = (existing?.version ?? 1) + 1;
+    if (existing == null) {
+      throw StateError('交易不存在，无法更新: $id');
+    }
+    final newVersion = existing.version + 1;
     await (db.update(db.transactions)..where((t) => t.id.equals(id))).write(
       TransactionsCompanion(
         type: d.Value(type),
@@ -595,6 +633,11 @@ class LocalTransactionRepository implements TransactionRepository {
     String? operatorUserId,
     required String summary,
   }) async {
+    // 追加历史前校验交易仍存在,避免竞态/脏引用把历史写成一个孤儿行。
+    final tx = await getTransactionById(recordId);
+    if (tx == null) {
+      throw StateError('交易不存在，无法追加编辑历史: $recordId');
+    }
     return db
         .into(db.recordEditHistories)
         .insert(
@@ -629,9 +672,27 @@ class LocalTransactionRepository implements TransactionRepository {
   }
 
   @override
-  Stream<List<({Transaction t, Category? category})>>
-  transactionsWithCategoryAll({int? ledgerId}) =>
-      watchTransactionsWithCategoryAll(ledgerId: ledgerId);
+  Future<List<({Transaction t, Category? category})>>
+  transactionsWithCategoryAll({int? ledgerId}) async {
+    final select = db.select(db.transactions);
+    if (ledgerId != null) {
+      select.where((t) => t.ledgerId.equals(ledgerId));
+    }
+    select.orderBy([
+      (t) =>
+          d.OrderingTerm(expression: t.happenedAt, mode: d.OrderingMode.desc),
+    ]);
+    final rows = await select.join(_txJoins()).get();
+    final out = rows
+        .map(
+          (r) => (
+            t: r.readTable(db.transactions),
+            category: r.readTableOrNull(db.categories),
+          ),
+        )
+        .toList();
+    return _hydrateSharedOverrides(out);
+  }
 
   @override
   Future<List<({Transaction t, Category? category})>>
@@ -761,7 +822,8 @@ class LocalTransactionRepository implements TransactionRepository {
     required DateTime month,
   }) async {
     final startDate = DateTime(month.year, month.month, 1);
-    final endDate = DateTime(month.year, month.month + 1, 0, 23, 59, 59);
+    // 半开区间 [月初, 下月1日):避免 23:59:59 边界漏掉带毫秒的交易。
+    final endDate = DateTime(month.year, month.month + 1, 1);
 
     // 全局仅支出模式，SQL 简化只聚合支出
     final query = '''
@@ -771,7 +833,7 @@ class LocalTransactionRepository implements TransactionRepository {
       FROM transactions
       WHERE ledger_id = ?
         AND happened_at >= ?
-        AND happened_at <= ?
+        AND happened_at < ?
       GROUP BY date
       ORDER BY date DESC
     ''';
@@ -792,8 +854,14 @@ class LocalTransactionRepository implements TransactionRepository {
       final date = row.read<String?>('date');
       if (date == null) continue; // 跳过null日期
       // SQL 聚合的是整数分,除以 100 转成"元"供日历展示。
-      final expense = (row.read<num?>('expense') ?? 0).toDouble() / 100;
-      map[date] = expense;
+      final rawExpense = row.data['expense'];
+      if (rawExpense is num) {
+        map[date] = rawExpense.toDouble() / 100;
+      } else if (rawExpense is BigInt) {
+        map[date] = rawExpense.toDouble() / 100;
+      } else {
+        map[date] = 0;
+      }
     }
 
     return map;
@@ -806,7 +874,8 @@ class LocalTransactionRepository implements TransactionRepository {
     required DateTime date,
   }) async {
     final startOfDay = DateTime(date.year, date.month, date.day);
-    final endOfDay = DateTime(date.year, date.month, date.day, 23, 59, 59);
+    // 半开区间 [当天0点, 次日0点):包含 23:59:59.xxx 的毫秒交易。
+    final endOfDay = DateTime(date.year, date.month, date.day + 1);
 
     // 查询当天的所有交易
     final transactions =
@@ -814,7 +883,8 @@ class LocalTransactionRepository implements TransactionRepository {
               ..where(
                 (t) =>
                     t.ledgerId.equals(ledgerId) &
-                    t.happenedAt.isBetweenValues(startOfDay, endOfDay),
+                    t.happenedAt.isBiggerOrEqualValue(startOfDay) &
+                    t.happenedAt.isSmallerThanValue(endOfDay),
               )
               ..orderBy([
                 (t) => d.OrderingTerm(
@@ -877,21 +947,18 @@ class LocalTransactionRepository implements TransactionRepository {
     }
     if (catSyncIds.isEmpty) return rows;
 
-    // 批量查共享分类
-    final sharedCatBySyncId = <String, SharedLedgerCategory>{};
-    final list = await (db.select(
-      db.sharedLedgerCategories,
-    )..where((t) => t.syncId.isIn(catSyncIds.toList()))).get();
-    for (final s in list) {
-      sharedCatBySyncId[s.syncId] = s;
-    }
+    // 按交易所属账本的 ledgerSyncId 过滤,避免跨账本 synthetic id 碰撞取错分类。
+    final ctx = await _loadSharedHydrationContext(rows, catSyncIds);
 
     return rows.map((r) {
       Category? category = r.category;
       if (category == null) {
         final cov = r.t.categorySyncIdOverride;
         if (cov != null && cov.isNotEmpty) {
-          final s = sharedCatBySyncId[cov];
+          final ledgerSyncId = ctx.ledgerSyncByLocalId[r.t.ledgerId];
+          final s = ledgerSyncId == null
+              ? null
+              : ctx.sharedByLedgerAndSync['$ledgerSyncId|$cov'];
           if (s != null) {
             category = Category(
               id: syntheticIdForSyncId(s.syncId),
@@ -959,6 +1026,15 @@ class LocalTransactionRepository implements TransactionRepository {
     return db.transaction(() async {
       await db.batch((b) {
         for (final u in updates) {
+          // currency/native 成对约束：币种为空时折算快照必须一并清空；
+          // 币种非空且云端缺 nativeAmount 时按 1:1 兜底，避免 CHECK 拒绝。
+          final effectiveCurrency =
+              u.overwriteSnapshot ? u.currencyCode : null;
+          final effectiveNative = u.overwriteSnapshot
+              ? (effectiveCurrency != null
+                  ? (u.nativeAmount ?? u.amount)
+                  : null)
+              : null;
           b.update(
             db.transactions,
             TransactionsCompanion(
@@ -967,6 +1043,27 @@ class LocalTransactionRepository implements TransactionRepository {
               categoryId: d.Value(u.categoryId),
               happenedAt: d.Value(u.happenedAt),
               note: d.Value(u.note),
+              currencyCode: u.overwriteSnapshot
+                  ? d.Value(effectiveCurrency)
+                  : const d.Value.absent(),
+              nativeAmount: u.overwriteSnapshot
+                  ? d.Value(effectiveNative)
+                  : const d.Value.absent(),
+              excludeFromStats: u.overwriteSnapshot
+                  ? d.Value(u.excludeFromStats ?? false)
+                  : const d.Value.absent(),
+              paidByUserId: u.overwriteSnapshot
+                  ? d.Value(u.paidByUserId)
+                  : const d.Value.absent(),
+              aaMode: u.overwriteSnapshot
+                  ? d.Value(u.aaMode)
+                  : const d.Value.absent(),
+              aaParticipants: u.overwriteSnapshot
+                  ? d.Value(u.aaParticipants)
+                  : const d.Value.absent(),
+              aaSplits: u.overwriteSnapshot
+                  ? d.Value(u.aaSplits)
+                  : const d.Value.absent(),
             ),
             where: (t) => t.syncId.equals(u.syncId),
           );

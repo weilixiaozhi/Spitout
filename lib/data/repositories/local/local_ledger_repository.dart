@@ -185,6 +185,40 @@ class LocalLedgerRepository implements LedgerRepository {
   }
 
   @override
+  Future<Map<int, ({double expenseTotal, int transactionCount})>>
+      getAllLedgerStats() async {
+    // 单条聚合 SQL 一次查回全部账本的 COUNT + SUM，避免账本列表循环内逐本
+    // SELECT 全部交易行的 N+1 放大；口径与 getLedgerStats 一致（全部交易行，
+    // 金额取 nativeAmount ?? amount 的整数分，最后统一转"元"）。
+    final rows = await db.customSelect(
+      '''
+      SELECT
+        ledger_id AS ledgerId,
+        COUNT(*) AS c,
+        COALESCE(SUM(COALESCE(native_amount, amount)), 0) AS total
+      FROM transactions
+      GROUP BY ledger_id
+      ''',
+      readsFrom: {db.transactions},
+    ).get();
+
+    int parse(dynamic v) {
+      if (v is int) return v;
+      if (v is BigInt) return v.toInt();
+      if (v is num) return v.toInt();
+      return 0;
+    }
+
+    return {
+      for (final row in rows)
+        parse(row.data['ledgerId']): (
+          expenseTotal: parse(row.data['total']) / 100,
+          transactionCount: parse(row.data['c']),
+        ),
+    };
+  }
+
+  @override
   Future<int> createLedger({
     required String name,
     String currency = 'CNY',
@@ -338,7 +372,9 @@ class LocalLedgerRepository implements LedgerRepository {
                 categoryId: d.Value(tx.categoryId),
                 happenedAt: d.Value(tx.happenedAt),
                 note: d.Value(tx.note),
-                recurringId: d.Value(tx.recurringId),
+                // 副本不复制周期模板,recurringId 必须清空,否则会指向源账本
+                // 的模板 id,源账本删除后副本交易产生悬空引用。
+                recurringId: const d.Value.absent(),
                 // 本地副本:新 syncId + 清共享 override(走本地 int categoryId)。
                 syncId: d.Value(_uuid.v4()),
                 createdByUserId: d.Value(tx.createdByUserId),
@@ -505,11 +541,36 @@ class LocalLedgerRepository implements LedgerRepository {
       throw StateError('目标账本ID已存在: $toId');
     }
     await db.transaction(() async {
-      // 先迁移子表中的外键引用
+      // 重排 ID 时先更新子表、再更新主表,中途必然出现子表引用尚未存在的新 id;
+      // 推迟外键检查到事务提交时统一校验,避免裸 UPDATE 被 FOREIGN KEY 拦住。
+      await db.customStatement('PRAGMA defer_foreign_keys = ON');
+      // 先迁移所有按本地 ledger_id 关联的子表:交易、周期模板、待推送变更、
+      // 虚拟用户、快照脏账本信号;漏掉任何一张都会让该表的数据脱离账本,
+      // 例如 local_changes 按新 ledgerId 永远查不到,导致同步永久滞留。
       await db.customUpdate(
         'UPDATE transactions SET ledger_id = ?1 WHERE ledger_id = ?2',
         variables: [d.Variable<int>(toId), d.Variable<int>(fromId)],
         updates: {db.transactions},
+      );
+      await db.customUpdate(
+        'UPDATE recurring_transactions SET ledger_id = ?1 WHERE ledger_id = ?2',
+        variables: [d.Variable<int>(toId), d.Variable<int>(fromId)],
+        updates: {db.recurringTransactions},
+      );
+      await db.customUpdate(
+        'UPDATE local_changes SET ledger_id = ?1 WHERE ledger_id = ?2',
+        variables: [d.Variable<int>(toId), d.Variable<int>(fromId)],
+        updates: {db.localChanges},
+      );
+      await db.customUpdate(
+        'UPDATE ledger_virtual_users SET ledger_id = ?1 WHERE ledger_id = ?2',
+        variables: [d.Variable<int>(toId), d.Variable<int>(fromId)],
+        updates: {db.ledgerVirtualUsers},
+      );
+      await db.customUpdate(
+        'UPDATE snapshot_dirty_ledgers SET ledger_id = ?1 WHERE ledger_id = ?2',
+        variables: [d.Variable<int>(toId), d.Variable<int>(fromId)],
+        updates: {db.snapshotDirtyLedgers},
       );
       // 再更新主表ID（SQLite 允许更新 INTEGER PRIMARY KEY 的值）
       await db.customUpdate(
@@ -682,7 +743,9 @@ class LocalLedgerRepository implements LedgerRepository {
     // 选区与 purgeAllCloudLedgers 同源(cloudLedgerFilter),但动作相反:
     // purge 是「退出登录,云端数据不该滞留」→ 删行;
     // normalize 是「未登录恢复出的云端账本无法转本地」→ 只改归属字段、一行不删。
-    // 恢复出来的账本里躺着用户的真实流水,任何删除都是数据损失。
+    // 恢复出来的账本里躺着用户的真实流水,主表一行不删;镜像表(ledger_members /
+    // shared_ledger_categories)因 syncId 清空后无法再关联宿主编,只能一并删除,
+    // 否则会留下永远定位不到的孤儿镜像行。
     final rows = await (db.select(db.ledgers)..where(cloudLedgerFilter)).get();
     if (rows.isEmpty) return (personal: 0, shared: 0); // 幂等快路径:不进事务
 

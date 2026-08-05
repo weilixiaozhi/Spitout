@@ -17,11 +17,14 @@
 /// 3. 开闸后恢复正常装配(回归保护,防闸门"只关不开"卡死全量同步)。
 library;
 
+import 'package:drift/native.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/cloud/sync/sync_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/providers/providers.dart';
 
 /// 合法的 Spitout Cloud 激活配置:让未守卫时下游必走 Spitout 分支、必然触达云工厂。
@@ -85,6 +88,37 @@ void main() {
     expect(sync, isA<LocalOnlySyncService>(),
         reason: '闸门开启期间 sync 必须立即降级本地,不得重建 SyncEngine/连 WS');
     expect(calls[0], 0, reason: '闸门开启期间不得触达云工厂');
+  });
+
+  test('闸门开启期间: repositoryProvider 以无 tracker 装配，不注入 ChangeTracker', () async {
+    final calls = [0];
+    final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
+    final container = ProviderContainer(overrides: [
+      databaseProvider.overrideWithValue(db),
+      activeCloudConfigProvider.overrideWith((ref) async => _spitoutActive()),
+      cloudServicesFactoryProvider.overrideWith(
+        (ref) => (config) async {
+          calls[0]++;
+          return (provider: null, auth: null);
+        },
+      ),
+    ]);
+    addTearDown(container.dispose);
+    addTearDown(() => db.close());
+
+    // 先让 active 进入 data 态，制造 invalidate 的"旧值窗口"
+    await container.read(activeCloudConfigProvider.future);
+    container.read(cloudDeactivationInProgressProvider.notifier).set(true);
+    container.invalidate(activeCloudConfigProvider);
+    await container.read(activeCloudConfigProvider.future);
+
+    final repo = container.read(repositoryProvider);
+    expect(repo, isA<LocalRepository>());
+    final local = repo as LocalRepository;
+    expect(local.changeTracker, isNull,
+        reason: '失活窗口内仓库不得注入 ChangeTracker，本地写不会登记到失效通道');
+    expect(local.snapshotDirtyMarker, isNull);
+    expect(calls[0], 0, reason: '仓库降级路径同样不得触达云工厂');
   });
 
   test('开闸后恢复正常装配(回归保护:闸门不得只关不开)', () async {

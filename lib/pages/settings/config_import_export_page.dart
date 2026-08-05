@@ -49,14 +49,12 @@ class _ConfigImportExportPageState
     });
 
     try {
-      // 获取仓库和当前账本ID
+      // 获取仓库
       final repo = ref.read(repositoryProvider);
-      final ledgerId = ref.read(currentLedgerIdProvider);
 
       // Step 2: 生成预览内容
       final yamlContent = await ConfigExportService.exportToYaml(
         repository: repo,
-        ledgerId: ledgerId,
         options: options,
       );
 
@@ -65,7 +63,10 @@ class _ConfigImportExportPageState
       // Step 3: 显示预览并确认导出
       final confirm = await showDialog<bool>(
         context: context,
-        builder: (context) => _ExportPreviewDialog(yamlContent: yamlContent),
+        builder: (context) => _ExportPreviewDialog(
+          yamlContent: yamlContent,
+          includeCredentials: options.includeCredentials,
+        ),
       );
 
       if (confirm != true || !mounted) {
@@ -633,6 +634,8 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
   bool _categories = true;
   bool _recurringTransactions = true;
   bool _appSettings = true;
+  // 凭据默认不导出（脱敏），仅用户显式勾选才写入明文。
+  bool _includeCredentials = false;
 
   @override
   Widget build(BuildContext context) {
@@ -722,6 +725,22 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
                   controlAffinity: ListTileControlAffinity.trailing,
                   contentPadding: EdgeInsets.zero,
                 ),
+                CheckboxListTile(
+                  value: _includeCredentials,
+                  onChanged: (v) =>
+                      setState(() => _includeCredentials = v ?? false),
+                  title: Text(l10n.configIncludeCredentials),
+                  subtitle: Text(
+                    l10n.configIncludeCredentialsSubtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: SpitoutTokens.textSecondary(context),
+                    ),
+                  ),
+                  secondary: Icon(AppIcons.warning, color: primary),
+                  controlAffinity: ListTileControlAffinity.trailing,
+                  contentPadding: EdgeInsets.zero,
+                ),
               ],
             ),
           ),
@@ -744,6 +763,7 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
                       categories: _categories,
                       recurringTransactions: _recurringTransactions,
                       appSettings: _appSettings,
+                      includeCredentials: _includeCredentials,
                     );
                     Navigator.pop(context, options);
                   },
@@ -761,8 +781,12 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
 /// 导出预览对话框
 class _ExportPreviewDialog extends StatelessWidget {
   final String yamlContent;
+  final bool includeCredentials;
 
-  const _ExportPreviewDialog({required this.yamlContent});
+  const _ExportPreviewDialog({
+    required this.yamlContent,
+    this.includeCredentials = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -810,22 +834,55 @@ class _ExportPreviewDialog extends StatelessWidget {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(16),
-              child: Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: SpitoutTokens.surface(context),
-                  borderRadius: BorderRadius.circular(8),
-                  border: Border.all(color: SpitoutTokens.border(context)),
-                ),
-                child: SelectableText(
-                  yamlContent,
-                  style: TextStyle(
-                    fontSize: 12,
-                    height: 1.5,
-                    color: SpitoutTokens.textPrimary(context),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (includeCredentials)
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: Colors.red.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(
+                          color: Colors.red.withValues(alpha: 0.35),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Icon(AppIcons.warning, color: Colors.red[700]),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              l10n.configExportContainsSecretsWarning,
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Colors.red[900],
+                                height: 1.4,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  const SizedBox(height: 12),
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: SpitoutTokens.surface(context),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: SpitoutTokens.border(context)),
+                    ),
+                    child: SelectableText(
+                      yamlContent,
+                      style: TextStyle(
+                        fontSize: 12,
+                        height: 1.5,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
           ),

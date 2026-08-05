@@ -65,6 +65,36 @@ void main() {
         ));
   }
 
+  Future<int> insertVirtualUser({
+    required int ledgerId,
+    String name = '室友',
+    String? syncId,
+  }) async {
+    return db.into(db.ledgerVirtualUsers).insert(
+          LedgerVirtualUsersCompanion.insert(
+            ledgerId: ledgerId,
+            name: name,
+            syncId: d.Value(syncId),
+          ),
+        );
+  }
+
+  Future<int> insertExchangeRateOverride({
+    String baseCurrency = 'USD',
+    String quoteCurrency = 'CNY',
+    String rate = '7.2',
+    String? syncId,
+  }) async {
+    return db.into(db.exchangeRateOverrides).insert(
+          ExchangeRateOverridesCompanion.insert(
+            baseCurrency: baseCurrency,
+            quoteCurrency: quoteCurrency,
+            rate: rate,
+            syncId: d.Value(syncId),
+          ),
+        );
+  }
+
   group('A 类 — DB 孤儿', () {
     test('A6 tx 失主 category 被外键 SET NULL 兜底', () async {
       final lid = await insertLedger();
@@ -136,6 +166,74 @@ void main() {
 
       final report = await scanner.scanAll();
       expect(report.syncOrphans.length, 0);
+    });
+
+    test('virtual_user 未推送变更且实体存在 → 不算孤儿', () async {
+      final lid = await insertLedger();
+      await insertVirtualUser(ledgerId: lid, syncId: 'vu-sync-1');
+      await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
+            entityType: 'virtual_user',
+            entityId: 1,
+            entitySyncId: 'vu-sync-1',
+            ledgerId: lid,
+            action: 'create',
+          ));
+
+      final report = await scanner.scanAll();
+      expect(report.syncOrphans.length, 0,
+          reason: '虚拟用户实体存在时，待推送变更不是孤儿');
+    });
+
+    test('virtual_user 实体已删且未推送 → 报孤儿', () async {
+      final lid = await insertLedger();
+      final vuId = await insertVirtualUser(ledgerId: lid, syncId: 'vu-ghost');
+      await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
+            entityType: 'virtual_user',
+            entityId: vuId,
+            entitySyncId: 'vu-ghost',
+            ledgerId: lid,
+            action: 'update',
+          ));
+      await (db.delete(db.ledgerVirtualUsers)
+            ..where((v) => v.id.equals(vuId)))
+          .go();
+
+      final report = await scanner.scanAll();
+      expect(report.syncOrphans.length, 1);
+    });
+
+    test('exchange_rate_override 未推送变更且实体存在 → 不算孤儿', () async {
+      final lid = await insertLedger();
+      await insertExchangeRateOverride(syncId: 'ero-sync-1');
+      await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
+            entityType: 'exchange_rate_override',
+            entityId: 1,
+            entitySyncId: 'ero-sync-1',
+            ledgerId: lid,
+            action: 'create',
+          ));
+
+      final report = await scanner.scanAll();
+      expect(report.syncOrphans.length, 0,
+          reason: '汇率覆盖实体存在时，待推送变更不是孤儿');
+    });
+
+    test('exchange_rate_override 实体已删且未推送 → 报孤儿', () async {
+      final lid = await insertLedger();
+      final eroId = await insertExchangeRateOverride(syncId: 'ero-ghost');
+      await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
+            entityType: 'exchange_rate_override',
+            entityId: eroId,
+            entitySyncId: 'ero-ghost',
+            ledgerId: lid,
+            action: 'update',
+          ));
+      await (db.delete(db.exchangeRateOverrides)
+            ..where((e) => e.id.equals(eroId)))
+          .go();
+
+      final report = await scanner.scanAll();
+      expect(report.syncOrphans.length, 1);
     });
 
     test('A_dup 同账本 syncId 重复被唯一索引拒绝(数据库层兜底)', () async {

@@ -8,6 +8,19 @@ class TransactionUpdateBySyncIdData {
   final int? categoryId;
   final DateTime happenedAt;
   final String? note;
+  // 全字段快照契约:云端恢复/下载预览把远端交易完整落本地,
+  // 这些字段 null 表示“清空/未设置”，非 null 表示显式覆盖。
+  final String? currencyCode;
+  final int? nativeAmount; // 单位:分
+  final bool? excludeFromStats;
+  final String? paidByUserId;
+  final int? aaMode;
+  final String? aaParticipants;
+  final String? aaSplits;
+  /// 是否按“云端快照全字段覆盖”语义写入。
+  /// true 时上述扩展字段 null = 清空、非 null = 覆盖；
+  /// false 时保持旧语义（只更新 5 个基础字段）。
+  final bool overwriteSnapshot;
 
   const TransactionUpdateBySyncIdData({
     required this.syncId,
@@ -16,6 +29,14 @@ class TransactionUpdateBySyncIdData {
     this.categoryId,
     required this.happenedAt,
     this.note,
+    this.currencyCode,
+    this.nativeAmount,
+    this.excludeFromStats,
+    this.paidByUserId,
+    this.aaMode,
+    this.aaParticipants,
+    this.aaSplits,
+    this.overwriteSnapshot = false,
   });
 }
 
@@ -39,33 +60,17 @@ abstract class TransactionRepository {
 
   /// 获取所有交易记录（带分类信息）
   /// [ledgerId] 可选，不传则获取所有账本的交易
-  Stream<
-      List<
-          ({
-            Transaction t,
-            Category? category,
-          })>> watchTransactionsWithCategoryAll({
-    int? ledgerId,
-  });
+  Stream<List<({Transaction t, Category? category})>>
+  watchTransactionsWithCategoryAll({int? ledgerId});
 
-  /// 获取所有交易记录（带分类信息）- 非 Stream 版本
+  /// 获取所有交易记录（带分类信息）- 一次性 Future 版本
   /// [ledgerId] 可选，不传则获取所有账本的交易
-  Stream<
-      List<
-          ({
-            Transaction t,
-            Category? category,
-          })>> transactionsWithCategoryAll({
-    int? ledgerId,
-  });
+  Future<List<({Transaction t, Category? category})>>
+  transactionsWithCategoryAll({int? ledgerId});
 
   /// 获取最近的交易记录（带分类信息）- 用于预加载
-  Future<
-      List<
-          ({
-            Transaction t,
-            Category? category,
-          })>> getRecentTransactionsWithCategory({
+  Future<List<({Transaction t, Category? category})>>
+  getRecentTransactionsWithCategory({
     required int ledgerId,
     required int limit,
   });
@@ -77,19 +82,22 @@ abstract class TransactionRepository {
   ///
   /// [month] 为周期标签,约定传 DateTime(year, month, 1);实际范围由账本
   /// monthStartDay 决定:[y-m-起始日, y-(m+1)-起始日)。
-  Stream<List<({Transaction t, Category? category})>> watchTransactionsWithCategoryInMonth({
+  Stream<List<({Transaction t, Category? category})>>
+  watchTransactionsWithCategoryInMonth({
     required int ledgerId,
     required DateTime month,
   });
 
   /// 获取指定年份的交易记录（带分类信息）
-  Stream<List<({Transaction t, Category? category})>> watchTransactionsWithCategoryInYear({
+  Stream<List<({Transaction t, Category? category})>>
+  watchTransactionsWithCategoryInYear({
     required int ledgerId,
     required int year,
   });
 
   /// 获取指定分类和时间范围的交易记录（带分类信息）
-  Stream<List<({Transaction t, Category? category})>> watchTransactionsForCategoryInRange({
+  Stream<List<({Transaction t, Category? category})>>
+  watchTransactionsForCategoryInRange({
     required int ledgerId,
     required DateTime start,
     required DateTime end,
@@ -254,8 +262,7 @@ abstract class TransactionRepository {
   });
 
   /// 获取指定日期的所有交易（含分类）
-  Future<List<({Transaction t, Category? category})>>
-      getTransactionsByDate({
+  Future<List<({Transaction t, Category? category})>> getTransactionsByDate({
     required int ledgerId,
     required DateTime date,
   });
@@ -293,5 +300,4 @@ abstract class TransactionRepository {
     List<TransactionUpdateBySyncIdData> updates, {
     bool recordChanges = true,
   });
-
 }

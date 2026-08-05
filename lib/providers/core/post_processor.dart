@@ -1,7 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../cloud/sync/sync_engine.dart';
 import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/statistics/calendar_providers.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
@@ -101,46 +99,29 @@ class PostProcessor {
     logger.info('PostProcessor', '云端下载后刷新完成');
   }
 
-  /// 同步触发核心：标记本地变更 → bump 刷新信号 → 视后端类型后台同步。
+  /// 同步触发核心：标记本地变更 → bump 刷新信号。
+  ///
+  /// 规则 4（同步触发下沉）：自动同步由数据变更驱动，[SyncCoordinator] /
+  /// [SnapshotSyncCoordinator] 已在 syncServiceProvider 装配，分别监听
+  /// local_changes / snapshot_dirty_ledgers 信号表（250/500ms 防抖后触发）。
+  /// 这里只负责清空同步状态缓存并刷新 UI 信号，绝不直接调 sync.sync() /
+  /// uploadCurrentLedger()——否则会与两个 Coordinator 形成双触发，每次本地
+  /// 写操作都会产生两轮重复网络请求。
   static Future<void> _doSync(_Read read, int ledgerId) async {
     final sync = read(syncServiceProvider);
     try {
       sync.markLocalChanged(ledgerId: ledgerId);
-    } catch (_) {}
+    } catch (e, st) {
+      // markLocalChanged 只清状态缓存，失败不应阻断 UI 刷新，但必须留痕，
+      // 否则后续同步状态显示会失真且无从排查。
+      logger.warning(
+        'PostProcessor',
+        'markLocalChanged 失败 ledgerId=$ledgerId',
+        '$e\n$st',
+      );
+    }
 
     read(syncStatusRefreshProvider.notifier).tick();
     read(ledgerListRefreshProvider.notifier).tick();
-
-    // Spitout Cloud：始终自动双向同步
-    if (sync is SyncEngine) {
-      final refresh = read(syncStatusRefreshProvider.notifier);
-      Future(() async {
-        try {
-          await sync.sync(ledgerId: ledgerId.toString());
-          refresh.tick();
-          logger.info(
-              'PostProcessor', 'Spitout Cloud 自动同步完成', 'ledgerId=$ledgerId');
-        } catch (e) {
-          logger.error('PostProcessor', 'Spitout Cloud 自动同步失败', e);
-        }
-      });
-      return;
-    }
-
-    // 其他 provider（webdav/s3/supabase 等快照型后端）：受 auto_sync 开关约束，
-    // 开关关闭时仅完成 markLocalChanged + 刷新信号，不会真正上传快照。
-    final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool('auto_sync') ?? false) {
-      final refresh = read(syncStatusRefreshProvider.notifier);
-      Future(() async {
-        try {
-          await sync.uploadCurrentLedger(ledgerId: ledgerId);
-          refresh.tick();
-          logger.info('PostProcessor', '后台同步完成', 'ledgerId=$ledgerId');
-        } catch (e) {
-          logger.error('PostProcessor', '后台同步失败', e);
-        }
-      });
-    }
   }
 }

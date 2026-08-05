@@ -6,6 +6,8 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
+import 'package:spitout/cloud/sync/change_tracker.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/services/maintenance/orphan_cleaner.dart';
 import 'package:spitout/services/maintenance/orphan_record.dart';
 import 'package:spitout/services/maintenance/orphan_scanner.dart';
@@ -123,6 +125,95 @@ void main() {
           .get();
       expect(remaining, hasLength(1));
       expect(remaining.first.id, id1);
+    });
+  });
+
+  group('交易删除与迁移', () {
+    test('删除失主交易时一并清理编辑历史', () async {
+      final lid = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(name: 'L', syncId: d.Value('ledger-1')));
+      final txId = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: lid,
+              type: 'expense',
+              amount: 1000,
+              syncId: const d.Value('tx-1'),
+              happenedAt: d.Value(DateTime(2026, 7, 1)),
+            ),
+          );
+      await db.into(db.recordEditHistories).insert(
+            RecordEditHistoriesCompanion.insert(
+              recordId: txId,
+              version: 1,
+              operatorUserId: const d.Value('u1'),
+              summary: '初始创建',
+            ),
+          );
+
+      final record = OrphanRecord(
+        type: OrphanType.txMissingLedger,
+        localId: txId,
+        title: '交易 #$txId',
+        subtitle: '',
+      );
+      final result = await cleaner.clean([record]);
+      expect(result.successCount, 1);
+
+      final remainingTx = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(txId)))
+          .get();
+      final remainingHistory = await (db.select(db.recordEditHistories)
+            ..where((h) => h.recordId.equals(txId)))
+          .get();
+      expect(remainingTx, isEmpty);
+      expect(remainingHistory, isEmpty,
+          reason: '删除交易必须同步清理编辑历史，避免孤儿历史残留');
+    });
+
+    test('迁移交易到账本走统一重算并登记同步变更', () async {
+      // 目标账本位币 CNY；交易 currencyCode=null 按本位币兜底，
+      // 旧 nativeAmount 故意写错，迁移后应被重算为 amount。
+      final sourceLedgerId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(name: '源', syncId: d.Value('ledger-source')),
+          );
+      final targetLedgerId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: '目标',
+              currency: const d.Value('CNY'),
+              storageMode: const d.Value('cloud'),
+              syncId: d.Value('ledger-target'),
+            ),
+          );
+      final txId = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: sourceLedgerId,
+              type: 'expense',
+              amount: 12345,
+              currencyCode: const d.Value('USD'),
+              nativeAmount: const d.Value(9999),
+              syncId: const d.Value('tx-move'),
+              happenedAt: d.Value(DateTime(2026, 7, 1)),
+            ),
+          );
+      final tracker = ChangeTracker(db);
+      final repo = LocalRepository(db, changeTracker: tracker);
+      final movingCleaner = OrphanCleaner(db: db, repository: repo);
+
+      await movingCleaner.moveTxToLedger(txId, targetLedgerId);
+
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(txId)))
+          .getSingle();
+      expect(tx.ledgerId, targetLedgerId);
+      expect(tx.nativeAmount, 12345,
+          reason: '迁入 CNY 账本后 nativeAmount 应重算为 amount，而非保留旧值');
+
+      final changes = await (db.select(db.localChanges)
+            ..where((c) => c.entitySyncId.equals('tx-move')))
+          .get();
+      expect(changes, hasLength(1));
+      expect(changes.single.action, 'update');
+      expect(changes.single.ledgerId, targetLedgerId);
     });
   });
 }

@@ -30,19 +30,55 @@ class NotificationFactory {
     try {
       tz.initializeTimeZones();
 
-      // 尝试设置为 Asia/Shanghai
+      // 按设备当前 UTC 偏移推导时区，不再硬编码 Asia/Shanghai：
+      // 整小时偏移映射到 Etc/GMT±X（注意 Etc/GMT 的符号与 UTC 偏移相反），
+      // 常见的半小时/45 分钟偏移映射到对应 IANA 时区。
+      // 局限：跨夏令时的地区在切换日前后会差 1 小时，完整方案需
+      // flutter_timezone 读取系统 IANA 标识，这里先消除“固定北京时间”的偏差。
+      final offset = DateTime.now().timeZoneOffset;
+      final totalMinutes = offset.inMinutes;
+      final zoneName = _resolveZoneName(totalMinutes);
       try {
-        tz.setLocalLocation(tz.getLocation('Asia/Shanghai'));
-        debugPrint('[Timezone] 设置为: Asia/Shanghai');
+        tz.setLocalLocation(tz.getLocation(zoneName));
+        debugPrint('[Timezone] 设置为: $zoneName');
       } catch (e) {
-        // 降级到系统时区
-        debugPrint('[Timezone] 使用系统时区: ${tz.local.name}');
+        // 时区库缺少该标识时回退 UTC，避免调度直接崩溃。
+        tz.setLocalLocation(tz.UTC);
+        debugPrint('[Timezone] 无法解析 $zoneName，回退 UTC: $e');
       }
 
       debugPrint('[Timezone] ✅ 时区初始化完成');
     } catch (e) {
       debugPrint('[Timezone] ❌ 时区初始化失败: $e');
     }
+  }
+
+  /// 由设备 UTC 偏移（分钟）推导时区标识。
+  static String _resolveZoneName(int totalMinutes) {
+    if (totalMinutes == 0) return 'UTC';
+
+    const halfHourZones = <int, String>{
+      3 * 60 + 30: 'Asia/Tehran',
+      4 * 60 + 30: 'Asia/Kabul',
+      5 * 60 + 30: 'Asia/Kolkata',
+      5 * 60 + 45: 'Asia/Kathmandu',
+      6 * 60 + 30: 'Asia/Yangon',
+      9 * 60 + 30: 'Australia/Darwin',
+      8 * 60 + 45: 'Australia/Eucla',
+      -(3 * 60 + 30): 'America/St_Johns',
+      -(9 * 60 + 30): 'Pacific/Marquesas',
+    };
+    final mapped = halfHourZones[totalMinutes];
+    if (mapped != null) return mapped;
+
+    if (totalMinutes % 60 == 0) {
+      final hours = totalMinutes ~/ 60;
+      // Etc/GMT 的符号与 UTC 偏移相反：UTC+8 → Etc/GMT-8。
+      final sign = hours >= 0 ? '-' : '+';
+      return 'Etc/GMT$sign${hours.abs()}';
+    }
+    // 无法映射的非常规偏移回退 UTC（极端罕见）。
+    return 'UTC';
   }
 
   /// 重置实例（用于测试）

@@ -250,7 +250,7 @@ class MemberExpenseStatItem {
   /// 统一渲染,保证与成员管理模块的字号/颜色/空格一致。
   final String displayName;
 
-  /// 该成员作为支出人的支出金额合计。
+  /// 该成员作为支出人的支出金额合计（单位：元；数据库存整数分，输出前已 /100）。
   final double expenseTotal;
 
   /// 该成员作为支出人的支出笔数。
@@ -293,6 +293,8 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       final expenseTx = allTx.where((t) => t.type == 'expense').toList();
 
       // 按 paidByUserId 聚合:金额合计 + 笔数。paidByUserId 为空跳过(无法归属)。
+      // amountMap 累加的是数据库"整数分"，输出时统一 /100 转"元"——与
+      // AaStatisticsService / 账本卡片的口径一致，避免 UI 直接展示放大 100 倍。
       final amountMap = <String, double>{};
       final countMap = <String, int>{};
       for (final t in expenseTx) {
@@ -362,7 +364,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
           MemberExpenseStatItem(
             participantId: pid,
             displayName: displayNameMap[pid] ?? pid,
-            expenseTotal: total,
+            expenseTotal: total / 100,
             txCount: countMap[pid] ?? 0,
             isSelf: isSelf,
             avatarUrl: avatarUrlMap[pid],

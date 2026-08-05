@@ -6,10 +6,7 @@ import '../db.dart';
 /// 由 [CategoryRepository.getCategoryTree]（主表）或共享账本等效查询
 /// （SharedLedgerCategories，synthetic id）一次性构建。
 class CategoryPickerTree {
-  const CategoryPickerTree({
-    required this.topLevel,
-    required this.children,
-  });
+  const CategoryPickerTree({required this.topLevel, required this.children});
 
   /// 一级分类（按 sortOrder 升序）
   final List<Category> topLevel;
@@ -69,7 +66,11 @@ abstract class CategoryRepository {
     int? level,
   });
 
-  /// 删除分类
+  /// 删除分类。
+  ///
+  /// 仅允许删除“无子分类且无关联交易”的空分类;否则抛 [StateError],调用方
+  /// 必须先通过 [deleteTransactionsByCategoryIds] / [promoteSubCategoriesToTopLevel]
+  /// 或 [deleteCategoriesByIds] 显式编排,避免静默留下孤儿交易/子分类。
   Future<void> deleteCategory(int id);
 
   /// 批量删除分类
@@ -90,7 +91,7 @@ abstract class CategoryRepository {
   /// 注意:作用域唯一契约下 (name,kind) 可能命中多行(跨父级同名),此时取
   /// id 最小的一行(seed 插入顺序稳定,结果确定)。import 等按名匹配的调用方
   /// 天然无法区分同名分类,该歧义可接受。
-  Future<int> upsertCategory({
+  Future<({int id, bool created})> upsertCategory({
     required String name,
     required String kind,
     String? icon,
@@ -108,7 +109,7 @@ abstract class CategoryRepository {
   /// 放在接口的原因:UI 统一走 `repo.findCategoryBySyntheticId`,
   /// 不依赖 LocalRepository 的 Drift 具体实现,遵循
   /// 「查询一律走 repositoryProvider」的分层约定。
-  Future<Category?> findCategoryBySyntheticId(int id);
+  Future<Category?> findCategoryBySyntheticId(int id, {String? ledgerSyncId});
 
   /// 共享账本 picker 过滤:Editor + 共享账本 → 用 SharedLedger* 表数据
   /// 替换主表结果(synthetic id < 0);单人账本 / Owner → 原样返回 [all]。
@@ -171,8 +172,8 @@ abstract class CategoryRepository {
   Future<Map<int, int>> getAllCategoryTransactionCounts();
 
   /// 获取分类汇总信息（总笔数、总金额、平均金额）
-  Future<({int totalCount, double totalAmount, double averageAmount})> getCategorySummary(
-      int categoryId);
+  Future<({int totalCount, double totalAmount, double averageAmount})>
+  getCategorySummary(int categoryId);
 
   /// 获取分类下的所有交易记录
   Future<List<Transaction>> getTransactionsByCategory(int categoryId);
@@ -191,7 +192,8 @@ abstract class CategoryRepository {
   });
 
   /// 迁移分类下的所有交易和子分类
-  Future<({int migratedTransactions, int migratedSubCategories})> migrateCategoryTransactions({
+  Future<({int migratedTransactions, int migratedSubCategories})>
+  migrateCategoryTransactions({
     required int fromCategoryId,
     required int toCategoryId,
   });
@@ -203,13 +205,15 @@ abstract class CategoryRepository {
   });
 
   /// 批量更新分类排序
-  Future<void> updateCategorySortOrders(List<({int id, int sortOrder})> updates);
+  Future<void> updateCategorySortOrders(
+    List<({int id, int sortOrder})> updates,
+  );
 
   /// 获取分类的完整路径名称（一级/二级）
   Future<String> getCategoryFullName(int categoryId);
 
   /// 响应式监听分类信息变化
-  Stream<Category?> watchCategory(int categoryId);
+  Stream<Category?> watchCategory(int categoryId, {String? ledgerSyncId});
 
   /// 响应式监听分类下的交易变化
   ///
@@ -226,7 +230,8 @@ abstract class CategoryRepository {
   Stream<List<Category>> watchCategoryWithSubs(int categoryId);
 
   /// 响应式监听所有分类及其交易数量变化
-  Stream<List<({Category category, int transactionCount})>> watchCategoriesWithCount();
+  Stream<List<({Category category, int transactionCount})>>
+  watchCategoriesWithCount();
 
   /// 批量插入分类
   Future<void> batchInsertCategories(List<CategoriesCompanion> categories);

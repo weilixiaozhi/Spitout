@@ -64,6 +64,22 @@ class XlsxReader {
             final dt = value.asDateTimeLocal();
             text =
                 '${dt.year}-${dt.month.toString().padLeft(2, '0')}-${dt.day.toString().padLeft(2, '0')} ${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}:${dt.second.toString().padLeft(2, '0')}';
+          } else if (value is FormulaCellValue) {
+            // excel 包对数值公式只暴露公式串，取不到缓存结果。
+            // 字面量公式（如 "3.14"）可直接当值；真正的表达式无法计算，
+            // 抛清晰错误让用户先在 Excel 中另存为值，避免 =SUM(...) 混入导入。
+            final raw = value.formula.trim();
+            if (raw.isEmpty) {
+              text = '';
+            } else if (RegExp(r'^[+-]?\d+(\.\d+)?$').hasMatch(raw)) {
+              text = raw;
+            } else if (RegExp(r'^".*"$').hasMatch(raw)) {
+              text = raw.substring(1, raw.length - 1);
+            } else {
+              throw Exception(
+                '公式单元格无法取到计算结果: $raw，请先在 Excel 中另存为值',
+              );
+            }
           } else {
             text = value.toString();
           }

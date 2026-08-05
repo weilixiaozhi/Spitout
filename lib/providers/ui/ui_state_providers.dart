@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -122,7 +124,6 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     ref.read(lastMonthlyTotalsProvider(monthlyParams).notifier).set(monthlyResult);
     // 不预加载完整列表，让 Stream 自己加载
     logger.info(tag, '并行预加载完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms, 首屏${transactionsWithCategory.length}条');
-    stepTime = DateTime.now();
 
     // 组装完整的交易展示数据
     final fullTransactions = transactionsWithCategory.map((item) {
@@ -138,21 +139,31 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       logger.info(tag, '账本统计(异步): ${DateTime.now().difference(start).inMilliseconds}ms');
     });
 
-    // 生成待处理的周期交易
-    try {
-      final generatedLedgerIds = await RecurringTransactionService.generatePendingTransactionsStatic(
-        repository: repo,
-        verbose: false,
-      );
-      logger.info(tag, '周期交易生成完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms');
+    // 周期交易生成放到启动后异步执行：内部是「账本×模板×每笔」的 N+1 查询，
+    // 同步等待会拖长首屏。改为 fire-and-forget，完成后统一走 PostProcessor
+    // 刷新 + 触发同步（同步本身由数据变更驱动的 Coordinator 下沉，不依赖 UI）。
+    unawaited(Future.microtask(() async {
+      try {
+        // 微任务执行时重新解析仓库，避免捕获到启动阶段可能已失效的旧实例。
+        final freshRepo = ref.read(repositoryProvider);
+        final generatedLedgerIds =
+            await RecurringTransactionService.generatePendingTransactionsStatic(
+          repository: freshRepo,
+          verbose: false,
+        );
+        if (generatedLedgerIds.isNotEmpty) {
+          logger.info(tag,
+              '周期交易生成完成(启动后异步): ${generatedLedgerIds.length} 本账本');
+        }
 
-      // 统一后处理：刷新UI + 触发云同步（如果有生成交易）
-      for (final genLedgerId in generatedLedgerIds) {
-        await PostProcessor.runR(ref, ledgerId: genLedgerId);
+        // 统一后处理：刷新UI + 触发云同步（如果有生成交易）
+        for (final genLedgerId in generatedLedgerIds) {
+          await PostProcessor.runR(ref, ledgerId: genLedgerId);
+        }
+      } catch (e, stackTrace) {
+        logger.error(tag, '周期交易生成失败', e, stackTrace);
       }
-    } catch (e, stackTrace) {
-      logger.error(tag, '周期交易生成失败', e, stackTrace);
-    }
+    }));
   } catch (e, stackTrace) {
     logger.error(tag, '预加载数据失败', e, stackTrace);
   }

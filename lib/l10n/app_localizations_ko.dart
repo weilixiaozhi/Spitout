@@ -1001,6 +1001,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get reminderTitle => '기록 알림';
 
   @override
+  String get reminderBody => '오늘의 수입과 지출을 기록하는 것을 잊지 마세요 💰';
+
+  @override
   String get reminderSubtitle => '매일 기록 알림 시간을 설정하세요';
 
   @override
@@ -2348,6 +2351,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get configIncludeOtherSettingsSubtitle => '클라우드 서비스 설정 및 앱 설정 포함';
 
   @override
+  String get configIncludeCredentials => '자격 증명 포함';
+
+  @override
+  String get configIncludeCredentialsSubtitle => '비밀번호와 비밀 키가 일반 텍스트로 기록됩니다';
+
+  @override
   String get configExportSelectTitle => '내보낼 내용 선택';
 
   @override
@@ -2355,6 +2364,10 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get configExportConfirmTitle => '내보내기 확인';
+
+  @override
+  String get configExportContainsSecretsWarning =>
+      '이 파일에는 비밀번호/비밀 키가 포함되어 있습니다. 공유하거나 버전 관리에 커밋하지 마세요!';
 
   @override
   String get configImportSelectTitle => '가져올 내용 선택';

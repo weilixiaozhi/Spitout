@@ -27,29 +27,37 @@ Future<DetailExportResult> exportDetailCsv({
   required int ledgerId,
   DateTimeRange? dateRange,
   required void Function(double) onProgress,
+  // 测试注入点：非空时跳过系统目录解析，直接写入该目录。
+  Directory? outputDirOverride,
 }) async {
   final l10n = AppLocalizations.of(context);
 
   // 统一目录解析：Android 优先公共 Download（能力探测，未授权自动降级）；
   // 非 Android 落到应用文档目录（公共 Download 语义在 iOS/桌面端不存在）
-  final resolved = await const PublicExportDirService().resolve();
-  final Directory dir;
-  final String displayDirPath;
-  if (resolved != null) {
-    dir = resolved.dir;
-    displayDirPath = resolved.displayPath;
-  } else if (!Platform.isAndroid) {
-    dir = await getApplicationDocumentsDirectory();
+  late final Directory dir;
+  late final String displayDirPath;
+  if (outputDirOverride != null) {
+    dir = outputDirOverride;
     displayDirPath = dir.path;
   } else {
-    // 外部存储整体不可用（如 SD 卡被卸载）
-    throw StateError(l10n.exportStorageUnavailable);
+    final resolved = await const PublicExportDirService().resolve();
+    if (resolved != null) {
+      dir = resolved.dir;
+      displayDirPath = resolved.displayPath;
+    } else if (!Platform.isAndroid) {
+      dir = await getApplicationDocumentsDirectory();
+      displayDirPath = dir.path;
+    } else {
+      // 外部存储整体不可用（如 SD 卡被卸载）
+      throw StateError(l10n.exportStorageUnavailable);
+    }
   }
   final directory = dir.path;
 
   // 获取交易和分类数据
-  final transactionsWithCategory =
-      await repo.transactionsWithCategoryAll(ledgerId: ledgerId).first;
+  final transactionsWithCategory = await repo.transactionsWithCategoryAll(
+    ledgerId: ledgerId,
+  );
 
   // 按时间范围过滤(为空则全部)
   final list = dateRange == null
@@ -75,7 +83,9 @@ Future<DetailExportResult> exportDetailCsv({
   // 多币种:账本本位币(currencyCode 为 NULL 的行按本位币兜底)
   final ledgerData = await repo.getLedgerById(ledgerId);
   final ledgerBase =
-      ((ledgerData?.currency.isNotEmpty ?? false) ? ledgerData!.currency : 'CNY')
+      ((ledgerData?.currency.isNotEmpty ?? false)
+              ? ledgerData!.currency
+              : 'CNY')
           .toUpperCase();
 
   // 缓存所有分类信息(包括父分类),用于回填分类名
@@ -114,7 +124,10 @@ Future<DetailExportResult> exportDetailCsv({
       if (c.level == 2 && c.parentId != null) {
         // 二级分类:分类列填一级分类名,二级分类列填当前分类名
         final parentCategory = allCategories[c.parentId];
-        categoryName = CategoryUtils.getDisplayName(parentCategory?.name, context);
+        categoryName = CategoryUtils.getDisplayName(
+          parentCategory?.name,
+          context,
+        );
         subCategoryName = CategoryUtils.getDisplayName(c.name, context);
       } else {
         categoryName = CategoryUtils.getDisplayName(c.name, context);
@@ -130,7 +143,8 @@ Future<DetailExportResult> exportDetailCsv({
       typeStr,
       categoryName,
       subCategoryName,
-      t.amount.toStringAsFixed(2),
+      // 数据库金额为整数分，导出统一换算成“元”再保留两位小数。
+      (t.amount / 100).toStringAsFixed(2),
       currencyStr,
       t.note ?? '',
       timeStr,
@@ -148,8 +162,9 @@ Future<DetailExportResult> exportDetailCsv({
 
   // 添加 UTF-8 BOM 标记,确保 Excel 正确识别中文编码
   const utf8Bom = '\uFEFF';
-  await File(path).writeAsString(utf8Bom + csvStr,
-      encoding: Encoding.getByName('utf-8')!);
+  await File(
+    path,
+  ).writeAsString(utf8Bom + csvStr, encoding: Encoding.getByName('utf-8')!);
 
   onProgress(1);
   return (path: path, displayPath: '$displayDirPath/$fileName');

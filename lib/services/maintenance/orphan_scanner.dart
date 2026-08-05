@@ -200,6 +200,8 @@ class OrphanScanner {
   /// - transaction → transactions.sync_id
   /// - category → categories.sync_id
   /// - ledger_snapshot / ledger → ledgers.sync_id
+  /// - virtual_user → ledger_virtual_users.sync_id
+  /// - exchange_rate_override → exchange_rate_overrides.sync_id
   ///
   /// 注:`action = 'delete'` 的 change 不算孤儿(它的语义就是删除,实体本来该
   /// 不在了)。
@@ -221,6 +223,14 @@ class OrphanScanner {
           SELECT 1 FROM ledgers l
             WHERE lc.entity_type IN ('ledger', 'ledger_snapshot')
               AND l.sync_id = lc.entity_sync_id
+          UNION ALL
+          SELECT 1 FROM ledger_virtual_users vu
+            WHERE lc.entity_type = 'virtual_user'
+              AND vu.sync_id = lc.entity_sync_id
+          UNION ALL
+          SELECT 1 FROM exchange_rate_overrides ero
+            WHERE lc.entity_type = 'exchange_rate_override'
+              AND ero.sync_id = lc.entity_sync_id
         )
       ''',
       readsFrom: {
@@ -228,6 +238,8 @@ class OrphanScanner {
         db.transactions,
         db.categories,
         db.ledgers,
+        db.ledgerVirtualUsers,
+        db.exchangeRateOverrides,
       },
     ).get();
     return rows.map((row) {

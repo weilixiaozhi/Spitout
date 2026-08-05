@@ -23,6 +23,14 @@ abstract class LedgerRepository {
     List<Transaction>? transactions,
   });
 
+  /// 批量获取全部账本的统计信息（单条聚合 SQL，消除账本列表的 N+1 查询）。
+  ///
+  /// 与 [getLedgerStats] 口径完全一致：COUNT(*) 计全部交易行，支出总额按
+  /// `COALESCE(native_amount, amount)` 整数分累加后转"元"；没有交易的账本
+  /// 不在返回 Map 中，调用方按 0/0 兜底。
+  Future<Map<int, ({double expenseTotal, int transactionCount})>>
+      getAllLedgerStats();
+
   /// 创建账本。
   /// [storageMode] 归属模式:cloud 才分配跨设备 syncId;local 账本 syncId 为 null,
   /// 从源头断开云端关联。默认 'cloud' 以兼容现有调用方;未登录用户由 UI 显式传 'local'。

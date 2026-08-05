@@ -66,7 +66,9 @@ class FileReaderService {
     final raf = await file.open();
 
     try {
-      final chunks = <List<int>>[];
+      // 用 BytesBuilder 直接累积分块，避免先把所有 chunk 收进列表、
+      // 再 addAll 合并导致峰值内存达到文件大小的 2 倍。
+      final builder = BytesBuilder(copy: false);
       int offset = 0;
 
       while (offset < length) {
@@ -75,7 +77,7 @@ class FileReaderService {
         final bytes = await raf.read(toRead);
         if (bytes.isEmpty) break;
 
-        chunks.add(bytes);
+        builder.add(bytes);
         offset += bytes.length;
 
         if (onProgress != null) {
@@ -85,11 +87,7 @@ class FileReaderService {
         await Future<void>.delayed(Duration.zero);
       }
 
-      final all = <int>[];
-      for (final c in chunks) {
-        all.addAll(c);
-      }
-      return all;
+      return builder.takeBytes();
     } finally {
       await raf.close();
     }

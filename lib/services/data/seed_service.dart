@@ -364,7 +364,9 @@ class SeedService {
 
     final index = keys.indexOf(key);
     if (index >= 0 && index < names.length) {
-      return names[index].trim();
+      final name = names[index].trim();
+      // 多语言清单缺段时回退到 key，避免创建空名分类。
+      if (name.isNotEmpty) return name;
     }
 
     return key; // fallback

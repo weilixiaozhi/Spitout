@@ -5,7 +5,6 @@ import 'package:uuid/uuid.dart';
 
 import '../../db.dart';
 import '../../models/category_node.dart';
-import '../../../core/logging/logger_service.dart';
 import '../support/shared_ledger_picker_filter.dart';
 import '../category_repository.dart';
 import '../support/exceptions.dart';
@@ -51,17 +50,19 @@ class LocalCategoryRepository implements CategoryRepository {
         existingId: existing.first.id,
       );
     }
-    return await db.into(db.categories).insert(
-      CategoriesCompanion.insert(
-        name: name,
-        kind: kind,
-        icon: d.Value(icon),
-        sortOrder: d.Value(sortOrder ?? 0),
-        level: d.Value(level),
-        parentId: d.Value(parentId),
-        syncId: d.Value(syncId ?? _uuid.v4()),
-      ),
-    );
+    return await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: name,
+            kind: kind,
+            icon: d.Value(icon),
+            sortOrder: d.Value(sortOrder ?? 0),
+            level: d.Value(level),
+            parentId: d.Value(parentId),
+            syncId: d.Value(syncId ?? _uuid.v4()),
+          ),
+        );
   }
 
   @override
@@ -74,12 +75,14 @@ class LocalCategoryRepository implements CategoryRepository {
     String? syncId,
   }) async {
     // 作用域唯一:仅在同一 parentId 下判重,跨父级允许同名二级分类
-    final existing = await (db.select(db.categories)
-          ..where((c) =>
-              c.name.equals(name) &
-              c.kind.equals(kind) &
-              c.parentId.equals(parentId)))
-        .get();
+    final existing =
+        await (db.select(db.categories)..where(
+              (c) =>
+                  c.name.equals(name) &
+                  c.kind.equals(kind) &
+                  c.parentId.equals(parentId),
+            ))
+            .get();
     if (existing.isNotEmpty) {
       throw DuplicateNameException(
         entityType: 'category',
@@ -87,17 +90,19 @@ class LocalCategoryRepository implements CategoryRepository {
         existingId: existing.first.id,
       );
     }
-    return await db.into(db.categories).insert(
-      CategoriesCompanion.insert(
-        name: name,
-        kind: kind,
-        icon: d.Value(icon),
-        parentId: d.Value(parentId),
-        level: d.Value(2),
-        sortOrder: d.Value(sortOrder ?? 0),
-        syncId: d.Value(syncId ?? _uuid.v4()),
-      ),
-    );
+    return await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: name,
+            kind: kind,
+            icon: d.Value(icon),
+            parentId: d.Value(parentId),
+            level: d.Value(2),
+            sortOrder: d.Value(sortOrder ?? 0),
+            syncId: d.Value(syncId ?? _uuid.v4()),
+          ),
+        );
   }
 
   @override
@@ -123,8 +128,25 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<void> deleteCategory(int id) async {
-    // 先删直接子分类行，再删自身，无需清理关联图标文件。
-    await (db.delete(db.categories)..where((c) => c.parentId.equals(id))).go();
+    // 直接删分类必须 fail-loud:有子分类或交易时静默删分类会让交易 category_id
+    // 指向已删除行,统计里变成“未分类”。调用方应先显式编排删除交易/提升子分类。
+    final hasSub =
+        await (db.select(db.categories)
+              ..where((c) => c.parentId.equals(id))
+              ..limit(1))
+            .getSingleOrNull();
+    final hasTx =
+        await (db.select(db.transactions)
+              ..where((t) => t.categoryId.equals(id))
+              ..limit(1))
+            .getSingleOrNull();
+    if (hasSub != null || hasTx != null) {
+      throw StateError(
+        '分类(id=$id)存在子分类或关联交易,禁止直接删除;'
+        '请先调用 deleteTransactionsByCategoryIds / promoteSubCategoriesToTopLevel / '
+        'deleteCategoriesByIds 显式编排。',
+      );
+    }
     await (db.delete(db.categories)..where((c) => c.id.equals(id))).go();
   }
 
@@ -141,9 +163,9 @@ class LocalCategoryRepository implements CategoryRepository {
     // 批量删除指定分类 ID 关联的所有交易记录
     // 设计意图：与 deleteCategoriesByIds 分离，让 UI 层能灵活组合
     // "先删交易 → 再删分类"或"先删交易 → 提升子分类 → 再删分类"的流程
-    return await (db.delete(db.transactions)
-          ..where((t) => t.categoryId.isIn(categoryIds)))
-        .go();
+    return await (db.delete(
+      db.transactions,
+    )..where((t) => t.categoryId.isIn(categoryIds))).go();
   }
 
   @override
@@ -154,23 +176,30 @@ class LocalCategoryRepository implements CategoryRepository {
       if (subCategories.isEmpty) return 0;
 
       // 查当前一级分类的最大 sortOrder，确保提升后的分类排在已有分类之后
-      final topLevel = await (db.select(db.categories)
-            ..where((c) => c.parentId.isNull() & c.level.equals(1))
-            ..orderBy([
-              (c) => d.OrderingTerm(expression: c.sortOrder, mode: d.OrderingMode.desc)
-            ]))
-          .get();
+      final topLevel =
+          await (db.select(db.categories)
+                ..where((c) => c.parentId.isNull() & c.level.equals(1))
+                ..orderBy([
+                  (c) => d.OrderingTerm(
+                    expression: c.sortOrder,
+                    mode: d.OrderingMode.desc,
+                  ),
+                ]))
+              .get();
       // 从最大 sortOrder + 1 开始递增分配
       int nextSortOrder = topLevel.isEmpty ? 0 : topLevel.first.sortOrder + 1;
 
       int promoted = 0;
       for (final sub in subCategories) {
-        await (db.update(db.categories)..where((c) => c.id.equals(sub.id)))
-            .write(CategoriesCompanion(
-          parentId: const d.Value(null),
-          level: const d.Value(1),
-          sortOrder: d.Value(nextSortOrder++),
-        ));
+        await (db.update(
+          db.categories,
+        )..where((c) => c.id.equals(sub.id))).write(
+          CategoriesCompanion(
+            parentId: const d.Value(null),
+            level: const d.Value(1),
+            sortOrder: d.Value(nextSortOrder++),
+          ),
+        );
         promoted++;
       }
       return promoted;
@@ -178,7 +207,7 @@ class LocalCategoryRepository implements CategoryRepository {
   }
 
   @override
-  Future<int> upsertCategory({
+  Future<({int id, bool created})> upsertCategory({
     required String name,
     required String kind,
     String? icon,
@@ -187,25 +216,33 @@ class LocalCategoryRepository implements CategoryRepository {
     // 按 (name,kind) 找;有则复用,无则用给定 icon/sortOrder 建。
     // 作用域唯一契约下可能命中多行(跨父级同名,如两个「鞋子」),
     // 取 id 最小的一行保证结果确定 —— import 等按名调用方本就无法区分同名。
-    final existing = await (db.select(db.categories)
-          ..where((c) => c.name.equals(name) & c.kind.equals(kind))
-          ..orderBy([(c) => d.OrderingTerm.asc(c.id)]))
-        .get();
-    if (existing.isNotEmpty) return existing.first.id;
-    return db.into(db.categories).insert(CategoriesCompanion.insert(
-      name: name,
-      kind: kind,
-      icon: d.Value(icon),
-      sortOrder: d.Value(sortOrder ?? 0),
-      syncId: d.Value(_uuid.v4()),
-    ));
+    final existing =
+        await (db.select(db.categories)
+              ..where((c) => c.name.equals(name) & c.kind.equals(kind))
+              ..orderBy([(c) => d.OrderingTerm.asc(c.id)]))
+            .get();
+    if (existing.isNotEmpty) {
+      return (id: existing.first.id, created: false);
+    }
+    final id = await db
+        .into(db.categories)
+        .insert(
+          CategoriesCompanion.insert(
+            name: name,
+            kind: kind,
+            icon: d.Value(icon),
+            sortOrder: d.Value(sortOrder ?? 0),
+            syncId: d.Value(_uuid.v4()),
+          ),
+        );
+    return (id: id, created: true);
   }
 
   @override
   Future<Category?> getCategoryById(int categoryId) async {
-    return await (db.select(db.categories)
-          ..where((c) => c.id.equals(categoryId)))
-        .getSingleOrNull();
+    return await (db.select(
+      db.categories,
+    )..where((c) => c.id.equals(categoryId))).getSingleOrNull();
   }
 
   // 共享账本 synthetic 反查 / picker 过滤:直接委托 SpitoutDatabase 扩展
@@ -213,8 +250,8 @@ class LocalCategoryRepository implements CategoryRepository {
   // 此处只做透传——分层上属于数据层内部实现细节,不泄漏到 UI。
 
   @override
-  Future<Category?> findCategoryBySyntheticId(int id) =>
-      db.findCategoryBySyntheticId(id);
+  Future<Category?> findCategoryBySyntheticId(int id, {String? ledgerSyncId}) =>
+      db.findCategoryBySyntheticId(id, ledgerSyncId: ledgerSyncId);
 
   @override
   Future<List<Category>> filterCategoriesForLedgerPicker(
@@ -237,16 +274,19 @@ class LocalCategoryRepository implements CategoryRepository {
     final idList = ids.toList();
     if (idList.isEmpty) return const {};
     // 批量查询避免 N+1：单次 SELECT ... WHERE id IN (...) 取回全部
-    final rows = await (db.select(db.categories)
-          ..where((c) => c.id.isIn(idList)))
-        .get();
+    final rows = await (db.select(
+      db.categories,
+    )..where((c) => c.id.isIn(idList))).get();
     return {for (final r in rows) r.id: r};
   }
 
   @override
   Future<List<Category>> getTopLevelCategories(String kind) async {
     return await (db.select(db.categories)
-          ..where((c) => c.kind.equals(kind) & c.level.equals(1) & c.parentId.isNull())
+          ..where(
+            (c) =>
+                c.kind.equals(kind) & c.level.equals(1) & c.parentId.isNull(),
+          )
           ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
         .get();
   }
@@ -263,10 +303,11 @@ class LocalCategoryRepository implements CategoryRepository {
   Future<CategoryPickerTree> getCategoryTree(String kind) async {
     // 一次查询取回该 kind 的全部 level 1+2 记录，按 sortOrder 排序后内存
     // 拆分一级/二级分组，避免 N+1 查询。
-    final rows = await (db.select(db.categories)
-          ..where((c) => c.kind.equals(kind))
-          ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
-        .get();
+    final rows =
+        await (db.select(db.categories)
+              ..where((c) => c.kind.equals(kind))
+              ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
+            .get();
     final topLevel = <Category>[];
     final children = <int, List<Category>>{};
     for (final row in rows) {
@@ -281,10 +322,11 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<List<Category>> getUsableCategories(String kind) async {
-    final allCategories = await (db.select(db.categories)
-          ..where((c) => c.kind.equals(kind))
-          ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
-        .get();
+    final allCategories =
+        await (db.select(db.categories)
+              ..where((c) => c.kind.equals(kind))
+              ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
+            .get();
     return CategoryHierarchy.getUsableCategories(allCategories);
   }
 
@@ -317,11 +359,13 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<bool> hasSubCategories(int categoryId) async {
-    final count = await db.customSelect(
-      'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
-      variables: [d.Variable.withInt(categoryId)],
-      readsFrom: {db.categories},
-    ).getSingle();
+    final count = await db
+        .customSelect(
+          'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
+          variables: [d.Variable.withInt(categoryId)],
+          readsFrom: {db.categories},
+        )
+        .getSingle();
 
     final c = count.data['count'];
     if (c is int) return c > 0;
@@ -332,11 +376,13 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<int> getSubCategoryCount(int categoryId) async {
-    final result = await db.customSelect(
-      'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
-      variables: [d.Variable.withInt(categoryId)],
-      readsFrom: {db.categories},
-    ).getSingle();
+    final result = await db
+        .customSelect(
+          'SELECT COUNT(*) as count FROM categories WHERE parent_id = ?',
+          variables: [d.Variable.withInt(categoryId)],
+          readsFrom: {db.categories},
+        )
+        .getSingle();
 
     final count = result.data['count'];
     if (count is int) return count;
@@ -347,11 +393,13 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<int> getTransactionCountByCategory(int categoryId) async {
-    final result = await db.customSelect(
-      'SELECT COUNT(*) AS count FROM transactions WHERE category_id = ?1',
-      variables: [d.Variable.withInt(categoryId)],
-      readsFrom: {db.transactions},
-    ).getSingle();
+    final result = await db
+        .customSelect(
+          'SELECT COUNT(*) AS count FROM transactions WHERE category_id = ?1',
+          variables: [d.Variable.withInt(categoryId)],
+          readsFrom: {db.transactions},
+        )
+        .getSingle();
 
     final count = result.data['count'];
     if (count is int) return count;
@@ -362,8 +410,9 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<Map<int, int>> getAllCategoryTransactionCounts() async {
-    final result = await db.customSelect(
-      '''
+    final result = await db
+        .customSelect(
+          '''
       SELECT
         c.id as category_id,
         COALESCE(COUNT(t.id), 0) as transaction_count
@@ -371,8 +420,9 @@ class LocalCategoryRepository implements CategoryRepository {
       LEFT JOIN transactions t ON c.id = t.category_id
       GROUP BY c.id
       ''',
-      readsFrom: {db.categories, db.transactions},
-    ).get();
+          readsFrom: {db.categories, db.transactions},
+        )
+        .get();
 
     final Map<int, int> counts = {};
     for (final row in result) {
@@ -398,9 +448,10 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<({int totalCount, double totalAmount, double averageAmount})>
-      getCategorySummary(int categoryId) async {
-    final result = await db.customSelect(
-      '''
+  getCategorySummary(int categoryId) async {
+    final result = await db
+        .customSelect(
+          '''
       SELECT
         COUNT(*) as count,
         SUM(CASE WHEN exclude_from_stats = 0 THEN COALESCE(native_amount, amount) ELSE 0 END) as total,
@@ -408,9 +459,10 @@ class LocalCategoryRepository implements CategoryRepository {
       FROM transactions
       WHERE category_id = ?1
       ''',
-      variables: [d.Variable.withInt(categoryId)],
-      readsFrom: {db.transactions},
-    ).getSingle();
+          variables: [d.Variable.withInt(categoryId)],
+          readsFrom: {db.transactions},
+        )
+        .getSingle();
 
     int parseCount(dynamic v) {
       if (v is int) return v;
@@ -433,23 +485,20 @@ class LocalCategoryRepository implements CategoryRepository {
     final total = parseAmount(result.data['total']) / 100;
     final average = parseAmount(result.data['average']) / 100;
 
-    return (
-      totalCount: count,
-      totalAmount: total,
-      averageAmount: average,
-    );
+    return (totalCount: count, totalAmount: total, averageAmount: average);
   }
 
   @override
   Future<List<Transaction>> getTransactionsByCategory(int categoryId) async {
     return await (db.select(db.transactions)
-      ..where((t) => t.categoryId.equals(categoryId))
-      ..orderBy([
-        (t) => d.OrderingTerm(
-          expression: t.happenedAt,
-          mode: d.OrderingMode.desc,
-        )
-      ])).get();
+          ..where((t) => t.categoryId.equals(categoryId))
+          ..orderBy([
+            (t) => d.OrderingTerm(
+              expression: t.happenedAt,
+              mode: d.OrderingMode.desc,
+            ),
+          ]))
+        .get();
   }
 
   @override
@@ -458,7 +507,8 @@ class LocalCategoryRepository implements CategoryRepository {
     String sortBy = 'time',
     bool ascending = false,
   }) async {
-    final query = db.select(db.transactions)..where((t) => t.categoryId.equals(categoryId));
+    final query = db.select(db.transactions)
+      ..where((t) => t.categoryId.equals(categoryId));
 
     if (sortBy == 'amount') {
       query.orderBy([
@@ -467,14 +517,14 @@ class LocalCategoryRepository implements CategoryRepository {
           // 因原币面值大而排在 300 CNY 之前(与年报 largest 比较同口径)。
           expression: d.coalesce([t.nativeAmount, t.amount]),
           mode: ascending ? d.OrderingMode.asc : d.OrderingMode.desc,
-        )
+        ),
       ]);
     } else {
       query.orderBy([
         (t) => d.OrderingTerm(
           expression: t.happenedAt,
           mode: ascending ? d.OrderingMode.asc : d.OrderingMode.desc,
-        )
+        ),
       ]);
     }
 
@@ -489,25 +539,22 @@ class LocalCategoryRepository implements CategoryRepository {
     final beforeCount = await getTransactionCountByCategory(fromCategoryId);
 
     await (db.update(db.transactions)
-      ..where((t) => t.categoryId.equals(fromCategoryId))).write(
-      TransactionsCompanion(
-        categoryId: d.Value(toCategoryId),
-      ),
-    );
+          ..where((t) => t.categoryId.equals(fromCategoryId)))
+        .write(TransactionsCompanion(categoryId: d.Value(toCategoryId)));
 
     return beforeCount;
   }
 
   @override
   Future<({int migratedTransactions, int migratedSubCategories})>
-      migrateCategoryTransactions({
+  migrateCategoryTransactions({
     required int fromCategoryId,
     required int toCategoryId,
   }) async {
     return await db.transaction(() async {
-      final fromCategory = await (db.select(db.categories)
-            ..where((c) => c.id.equals(fromCategoryId)))
-          .getSingle();
+      final fromCategory = await (db.select(
+        db.categories,
+      )..where((c) => c.id.equals(fromCategoryId))).getSingle();
 
       int migratedTransactions = 0;
       int migratedSubCategories = 0;
@@ -519,49 +566,55 @@ class LocalCategoryRepository implements CategoryRepository {
         if (subCategories.isNotEmpty) {
           for (final sub in subCategories) {
             // 检查目标分类是否已有同名子分类
-            final existingSub = await (db.select(db.categories)
-                  ..where((c) =>
-                      c.parentId.equals(toCategoryId) &
-                      c.name.equals(sub.name) &
-                      c.kind.equals(sub.kind)))
-                .getSingleOrNull();
+            final existingSub =
+                await (db.select(db.categories)..where(
+                      (c) =>
+                          c.parentId.equals(toCategoryId) &
+                          c.name.equals(sub.name) &
+                          c.kind.equals(sub.kind),
+                    ))
+                    .getSingleOrNull();
 
             if (existingSub != null) {
               // 合并到已有的同名子分类
-              final count = await (db.update(db.transactions)
-                    ..where((t) => t.categoryId.equals(sub.id)))
-                  .write(TransactionsCompanion(
-                categoryId: d.Value(existingSub.id),
-              ));
+              final count =
+                  await (db.update(
+                    db.transactions,
+                  )..where((t) => t.categoryId.equals(sub.id))).write(
+                    TransactionsCompanion(categoryId: d.Value(existingSub.id)),
+                  );
               migratedTransactions += count;
 
               // 删除源子分类
-              await (db.delete(db.categories)..where((c) => c.id.equals(sub.id))).go();
+              await (db.delete(
+                db.categories,
+              )..where((c) => c.id.equals(sub.id))).go();
             } else {
               // 将子分类移动到新的父分类下
-              await (db.update(db.categories)..where((c) => c.id.equals(sub.id)))
-                  .write(CategoriesCompanion(
-                parentId: d.Value(toCategoryId),
-              ));
+              await (db.update(db.categories)
+                    ..where((c) => c.id.equals(sub.id)))
+                  .write(CategoriesCompanion(parentId: d.Value(toCategoryId)));
               migratedSubCategories++;
             }
           }
         }
 
         // 迁移一级分类自身的交易
-        final directCount = await (db.update(db.transactions)
-              ..where((t) => t.categoryId.equals(fromCategoryId)))
-            .write(TransactionsCompanion(
-          categoryId: d.Value(toCategoryId),
-        ));
+        final directCount =
+            await (db.update(
+              db.transactions,
+            )..where((t) => t.categoryId.equals(fromCategoryId))).write(
+              TransactionsCompanion(categoryId: d.Value(toCategoryId)),
+            );
         migratedTransactions += directCount;
       } else {
         // 二级分类：直接迁移交易
-        final count = await (db.update(db.transactions)
-              ..where((t) => t.categoryId.equals(fromCategoryId)))
-            .write(TransactionsCompanion(
-          categoryId: d.Value(toCategoryId),
-        ));
+        final count =
+            await (db.update(
+              db.transactions,
+            )..where((t) => t.categoryId.equals(fromCategoryId))).write(
+              TransactionsCompanion(categoryId: d.Value(toCategoryId)),
+            );
         migratedTransactions = count;
       }
 
@@ -577,19 +630,26 @@ class LocalCategoryRepository implements CategoryRepository {
     required int fromCategoryId,
     required int toCategoryId,
   }) async {
-    final transactionCount = await getTransactionCountByCategory(fromCategoryId);
+    final transactionCount = await getTransactionCountByCategory(
+      fromCategoryId,
+    );
 
-    final targetCategory = await (db.select(db.categories)
-      ..where((c) => c.id.equals(toCategoryId))).getSingleOrNull();
+    final targetCategory = await (db.select(
+      db.categories,
+    )..where((c) => c.id.equals(toCategoryId))).getSingleOrNull();
 
-    final canMigrate = transactionCount > 0 && targetCategory != null && fromCategoryId != toCategoryId;
+    final canMigrate =
+        transactionCount > 0 &&
+        targetCategory != null &&
+        fromCategoryId != toCategoryId;
 
     return (transactionCount: transactionCount, canMigrate: canMigrate);
   }
 
   @override
   Future<void> updateCategorySortOrders(
-      List<({int id, int sortOrder})> updates) async {
+    List<({int id, int sortOrder})> updates,
+  ) async {
     await db.transaction(() async {
       for (final update in updates) {
         await (db.update(db.categories)..where((c) => c.id.equals(update.id)))
@@ -600,42 +660,54 @@ class LocalCategoryRepository implements CategoryRepository {
 
   @override
   Future<String> getCategoryFullName(int categoryId) async {
-    final category = await (db.select(db.categories)
-          ..where((c) => c.id.equals(categoryId)))
-        .getSingle();
+    final category = await (db.select(
+      db.categories,
+    )..where((c) => c.id.equals(categoryId))).getSingleOrNull();
+    if (category == null) return '';
 
     if (category.level == 1 || category.parentId == null) {
       return category.name;
     }
 
-    final parent = await (db.select(db.categories)
-          ..where((c) => c.id.equals(category.parentId!)))
-        .getSingle();
+    final parent = await (db.select(
+      db.categories,
+    )..where((c) => c.id.equals(category.parentId!))).getSingleOrNull();
+    if (parent == null) {
+      // 父分类缺失时降级返回子分类名,避免直接抛 StateError。
+      return category.name;
+    }
 
     return '${parent.name} / ${category.name}';
   }
 
   @override
-  Stream<Category?> watchCategory(int categoryId) {
+  Stream<Category?> watchCategory(int categoryId, {String? ledgerSyncId}) {
     // 负 id 是 SharedLedgerCategories 的 synthetic id
     // (syntheticIdForSyncId 派生)。分类详情页传过来时,要去 shared 表反查
     // 转 synthetic Category 返回,跟 picker / 洞察 路径一致。
     if (categoryId < 0) {
-      return _watchSharedCategoryBySyntheticId(categoryId);
+      return _watchSharedCategoryBySyntheticId(categoryId, ledgerSyncId);
     }
-    return (db.select(db.categories)
-      ..where((c) => c.id.equals(categoryId))
-    ).watchSingleOrNull();
+    return (db.select(
+      db.categories,
+    )..where((c) => c.id.equals(categoryId))).watchSingleOrNull();
   }
 
   /// SharedLedgerCategories 表变化时 re-emit。用 tableUpdates 监听 + 每次
   /// 重查找匹配的 syncId(synthetic id 是 hashCode 派生,反查只能扫表)。
-  Stream<Category?> _watchSharedCategoryBySyntheticId(int syntheticId) {
+  Stream<Category?> _watchSharedCategoryBySyntheticId(
+    int syntheticId,
+    String? ledgerSyncId,
+  ) {
     final ctrl = StreamController<Category?>();
     StreamSubscription? sub;
 
     Future<void> emit() async {
-      final rows = await db.select(db.sharedLedgerCategories).get();
+      final q = db.select(db.sharedLedgerCategories);
+      if (ledgerSyncId != null && ledgerSyncId.isNotEmpty) {
+        q.where((t) => t.ledgerSyncId.equals(ledgerSyncId));
+      }
+      final rows = await q.get();
       for (final s in rows) {
         if (syntheticIdForSyncId(s.syncId) == syntheticId) {
           if (!ctrl.isClosed) {
@@ -645,16 +717,18 @@ class LocalCategoryRepository implements CategoryRepository {
             final parentSyntheticId = (pSyncId != null && pSyncId.isNotEmpty)
                 ? syntheticIdForSyncId(pSyncId)
                 : null;
-            ctrl.add(Category(
-              id: syntheticId,
-              name: s.name,
-              kind: s.kind,
-              icon: s.icon,
-              sortOrder: s.sortOrder,
-              parentId: parentSyntheticId,
-              level: s.level,
-              syncId: s.syncId,
-            ));
+            ctrl.add(
+              Category(
+                id: syntheticId,
+                name: s.name,
+                kind: s.kind,
+                icon: s.icon,
+                sortOrder: s.sortOrder,
+                parentId: parentSyntheticId,
+                level: s.level,
+                syncId: s.syncId,
+              ),
+            );
           }
           return;
         }
@@ -702,17 +776,17 @@ class LocalCategoryRepository implements CategoryRepository {
     }
 
     query.orderBy([
-      (t) => d.OrderingTerm(
-        expression: t.happenedAt,
-        mode: d.OrderingMode.desc,
-      )
+      (t) =>
+          d.OrderingTerm(expression: t.happenedAt, mode: d.OrderingMode.desc),
     ]);
 
     return query.watch();
   }
 
   Stream<List<Transaction>> _watchTxByCategorySyntheticId(
-      int syntheticId, int? ledgerId) {
+    int syntheticId,
+    int? ledgerId,
+  ) {
     final ctrl = StreamController<List<Transaction>>();
     StreamSubscription? sub;
     String? matchedSyncId;
@@ -738,7 +812,9 @@ class LocalCategoryRepository implements CategoryRepository {
         ..where((t) => t.categorySyncIdOverride.equals(matchedSyncId!))
         ..orderBy([
           (t) => d.OrderingTerm(
-              expression: t.happenedAt, mode: d.OrderingMode.desc),
+            expression: t.happenedAt,
+            mode: d.OrderingMode.desc,
+          ),
         ]);
       if (ledgerId != null) {
         q.where((t) => t.ledgerId.equals(ledgerId));
@@ -750,10 +826,14 @@ class LocalCategoryRepository implements CategoryRepository {
     ctrl.onListen = () {
       emit();
       // 监听 tx 表变化(新增/删除 tx)+ SharedLedgerCategories(分类被删/重命名)
-      sub = db.tableUpdates(d.TableUpdateQuery.onAllTables([
-        db.transactions,
-        db.sharedLedgerCategories,
-      ])).listen((_) => emit());
+      sub = db
+          .tableUpdates(
+            d.TableUpdateQuery.onAllTables([
+              db.transactions,
+              db.sharedLedgerCategories,
+            ]),
+          )
+          .listen((_) => emit());
     };
     ctrl.onCancel = () async {
       await sub?.cancel();
@@ -768,15 +848,17 @@ class LocalCategoryRepository implements CategoryRepository {
   /// 列表（categories 表变化时重查），再用 `categoryId.isIn(ids)` 查交易，
   /// 监听 transactions + categories 表保证子分类增删后列表实时刷新。
   Stream<List<Transaction>> _watchTxByCategoryWithSubs(
-      int categoryId, int? ledgerId) {
+    int categoryId,
+    int? ledgerId,
+  ) {
     final ctrl = StreamController<List<Transaction>>();
     StreamSubscription? sub;
 
     Future<void> emit() async {
       // 查询该一级分类的所有二级分类 id
-      final subCats = await (db.select(db.categories)
-            ..where((c) => c.parentId.equals(categoryId) & c.level.equals(2)))
-          .get();
+      final subCats = await (db.select(
+        db.categories,
+      )..where((c) => c.parentId.equals(categoryId) & c.level.equals(2))).get();
       // 聚合 id 集合：自身 + 所有子分类
       final ids = <int>[categoryId, ...subCats.map((c) => c.id)];
 
@@ -784,7 +866,9 @@ class LocalCategoryRepository implements CategoryRepository {
         ..where((t) => t.categoryId.isIn(ids))
         ..orderBy([
           (t) => d.OrderingTerm(
-              expression: t.happenedAt, mode: d.OrderingMode.desc),
+            expression: t.happenedAt,
+            mode: d.OrderingMode.desc,
+          ),
         ]);
       if (ledgerId != null) {
         q.where((t) => t.ledgerId.equals(ledgerId));
@@ -796,10 +880,11 @@ class LocalCategoryRepository implements CategoryRepository {
     ctrl.onListen = () {
       emit();
       // 监听 tx 表(交易增删改)+ categories 表(子分类增删，需重算 id 列表)
-      sub = db.tableUpdates(d.TableUpdateQuery.onAllTables([
-        db.transactions,
-        db.categories,
-      ])).listen((_) => emit());
+      sub = db
+          .tableUpdates(
+            d.TableUpdateQuery.onAllTables([db.transactions, db.categories]),
+          )
+          .listen((_) => emit());
     };
     ctrl.onCancel = () async {
       await sub?.cancel();
@@ -814,7 +899,9 @@ class LocalCategoryRepository implements CategoryRepository {
   /// 及其子分类 syncId 列表，按 `categorySyncIdOverride.isIn(syncIds)` 查交易。
   /// 监听 transactions + sharedLedgerCategories 表保证实时刷新。
   Stream<List<Transaction>> _watchTxByCategorySyntheticIdWithSubs(
-      int syntheticId, int? ledgerId) {
+    int syntheticId,
+    int? ledgerId,
+  ) {
     final ctrl = StreamController<List<Transaction>>();
     StreamSubscription? sub;
 
@@ -844,7 +931,9 @@ class LocalCategoryRepository implements CategoryRepository {
         ..where((t) => t.categorySyncIdOverride.isIn(allSyncIds))
         ..orderBy([
           (t) => d.OrderingTerm(
-              expression: t.happenedAt, mode: d.OrderingMode.desc),
+            expression: t.happenedAt,
+            mode: d.OrderingMode.desc,
+          ),
         ]);
       if (ledgerId != null) {
         q.where((t) => t.ledgerId.equals(ledgerId));
@@ -856,10 +945,14 @@ class LocalCategoryRepository implements CategoryRepository {
     ctrl.onListen = () {
       emit();
       // 监听 tx 表(交易增删改)+ SharedLedgerCategories(分类增删，需重算 syncId 列表)
-      sub = db.tableUpdates(d.TableUpdateQuery.onAllTables([
-        db.transactions,
-        db.sharedLedgerCategories,
-      ])).listen((_) => emit());
+      sub = db
+          .tableUpdates(
+            d.TableUpdateQuery.onAllTables([
+              db.transactions,
+              db.sharedLedgerCategories,
+            ]),
+          )
+          .listen((_) => emit());
     };
     ctrl.onCancel = () async {
       await sub?.cancel();
@@ -874,27 +967,34 @@ class LocalCategoryRepository implements CategoryRepository {
     if (categoryId < 0) {
       return _watchSharedCategoryWithSubs(categoryId);
     }
-    return db.customSelect(
-      '''
+    return db
+        .customSelect(
+          '''
       SELECT * FROM categories
       WHERE id = ? OR parent_id = ?
       ORDER BY level, sort_order
       ''',
-      variables: [d.Variable.withInt(categoryId), d.Variable.withInt(categoryId)],
-      readsFrom: {db.categories},
-    ).watch().map((rows) {
-      return rows.map((row) {
-        return Category(
-          id: row.read<int>('id'),
-          name: row.read<String>('name'),
-          kind: row.read<String>('kind'),
-          icon: row.read<String?>('icon'),
-          sortOrder: row.read<int>('sort_order'),
-          parentId: row.read<int?>('parent_id'),
-          level: row.read<int>('level'),
-        );
-      }).toList();
-    });
+          variables: [
+            d.Variable.withInt(categoryId),
+            d.Variable.withInt(categoryId),
+          ],
+          readsFrom: {db.categories},
+        )
+        .watch()
+        .map((rows) {
+          return rows.map((row) {
+            return Category(
+              id: row.read<int>('id'),
+              name: row.read<String>('name'),
+              kind: row.read<String>('kind'),
+              icon: row.read<String?>('icon'),
+              sortOrder: row.read<int>('sort_order'),
+              parentId: row.read<int?>('parent_id'),
+              level: row.read<int>('level'),
+              syncId: row.read<String?>('sync_id'),
+            );
+          }).toList();
+        });
   }
 
   /// 监听共享账本 synthetic 一级分类及其所有二级分类。
@@ -926,16 +1026,16 @@ class LocalCategoryRepository implements CategoryRepository {
       final matchedParentSyncId = matchedParent.parentSyncId;
       final parentCategory = _sharedCategoryAsSynthetic(
         matchedParent,
-        parentId: (matchedParentSyncId != null && matchedParentSyncId.isNotEmpty)
+        parentId:
+            (matchedParentSyncId != null && matchedParentSyncId.isNotEmpty)
             ? syntheticIdForSyncId(matchedParentSyncId)
             : null,
       );
       final children = rows
           .where((s) => s.parentSyncId == matchedParent.syncId)
-          .map((s) => _sharedCategoryAsSynthetic(
-                s,
-                parentId: parentSyntheticId,
-              ))
+          .map(
+            (s) => _sharedCategoryAsSynthetic(s, parentId: parentSyntheticId),
+          )
           .toList();
       if (!ctrl.isClosed) ctrl.add([parentCategory, ...children]);
     }
@@ -971,9 +1071,12 @@ class LocalCategoryRepository implements CategoryRepository {
   }
 
   @override
-  Stream<List<({Category category, int transactionCount})>> watchCategoriesWithCount() async* {
-    await for (final rows in db.customSelect(
-      '''
+  Stream<List<({Category category, int transactionCount})>>
+  watchCategoriesWithCount() async* {
+    await for (final rows
+        in db
+            .customSelect(
+              '''
       SELECT
         c.id as category_id,
         c.name as category_name,
@@ -982,63 +1085,48 @@ class LocalCategoryRepository implements CategoryRepository {
         c.sort_order as category_sort_order,
         c.parent_id as category_parent_id,
         c.level as category_level,
-        COALESCE(COUNT(t.id), 0) as transaction_count
+        c.sync_id as category_sync_id,
+        COUNT(t.id) as direct_count,
+        (
+          SELECT COUNT(t2.id)
+          FROM transactions t2
+          JOIN categories child ON child.id = t2.category_id
+          WHERE child.parent_id = c.id
+        ) as child_count
       FROM categories c
       LEFT JOIN transactions t ON t.category_id = c.id
       WHERE c.kind != 'transfer'
-      GROUP BY c.id, c.name, c.kind, c.icon, c.sort_order, c.parent_id, c.level
+      GROUP BY c.id, c.name, c.kind, c.icon, c.sort_order, c.parent_id, c.level, c.sync_id
       ORDER BY c.sort_order
       ''',
-      readsFrom: {db.categories, db.transactions},
-    ).watch()) {
-      final startTime = DateTime.now();
-      final results = <({Category category, int transactionCount})>[];
-      final categoryMap = <int, ({Category category, int directCount})>{};
-
-      // 第一遍：构建分类映射，记录直接交易数
-      for (final row in rows) {
-        final category = Category(
-          id: row.read<int>('category_id'),
-          name: row.read<String>('category_name'),
-          kind: row.read<String>('category_kind'),
-          icon: row.read<String?>('category_icon'),
-          sortOrder: row.read<int>('category_sort_order'),
-          parentId: row.read<int?>('category_parent_id'),
-          level: row.read<int>('category_level'),
-        );
-        final directCount = row.read<int>('transaction_count');
-        categoryMap[category.id] = (category: category, directCount: directCount);
-      }
-
-      // 第二遍：计算包含子分类的总交易数
-      for (final entry in categoryMap.values) {
-        final category = entry.category;
-        var totalCount = entry.directCount;
-
-        // 如果是父分类（level=1），累加所有子分类的交易数
-        if (category.level == 1) {
-          for (final child in categoryMap.values) {
-            if (child.category.parentId == category.id && child.category.level == 2) {
-              totalCount += child.directCount;
-            }
-          }
-        }
-
-        results.add((category: category, transactionCount: totalCount));
-      }
-
-      final totalTime = DateTime.now().difference(startTime);
-      logger.debug('CategoryQuery', '分类数据查询完成，耗时: ${totalTime.inMilliseconds}ms, 返回${results.length}条记录');
-
-      yield results;
+              readsFrom: {db.categories, db.transactions},
+            )
+            .watch()) {
+      yield [
+        for (final row in rows)
+          (
+            category: Category(
+              id: row.read<int>('category_id'),
+              name: row.read<String>('category_name'),
+              kind: row.read<String>('category_kind'),
+              icon: row.read<String?>('category_icon'),
+              sortOrder: row.read<int>('category_sort_order'),
+              parentId: row.read<int?>('category_parent_id'),
+              level: row.read<int>('category_level'),
+              syncId: row.read<String?>('category_sync_id'),
+            ),
+            transactionCount:
+                row.read<int>('direct_count') + row.read<int>('child_count'),
+          ),
+      ];
     }
   }
 
   @override
   Future<List<Category>> getAllCategories() async {
-    return await (db.select(db.categories)
-          ..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)]))
-        .get();
+    return await (db.select(
+      db.categories,
+    )..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)])).get();
   }
 
   @override
@@ -1055,22 +1143,26 @@ class LocalCategoryRepository implements CategoryRepository {
       final parentSyntheticId = (pSyncId != null && pSyncId.isNotEmpty)
           ? syntheticIdForSyncId(pSyncId)
           : null;
-      result.add(Category(
-        id: synthId,
-        name: s.name,
-        kind: s.kind,
-        icon: s.icon,
-        sortOrder: s.sortOrder,
-        parentId: parentSyntheticId,
-        level: s.level,
-        syncId: s.syncId,
-      ));
+      result.add(
+        Category(
+          id: synthId,
+          name: s.name,
+          kind: s.kind,
+          icon: s.icon,
+          sortOrder: s.sortOrder,
+          parentId: parentSyntheticId,
+          level: s.level,
+          syncId: s.syncId,
+        ),
+      );
     }
     return result;
   }
 
   @override
-  Future<void> batchInsertCategories(List<CategoriesCompanion> categories) async {
+  Future<void> batchInsertCategories(
+    List<CategoriesCompanion> categories,
+  ) async {
     await db.batch((batch) {
       batch.insertAll(db.categories, categories);
     });
@@ -1081,4 +1173,3 @@ class LocalCategoryRepository implements CategoryRepository {
     return await db.into(db.categories).insert(category);
   }
 }
-

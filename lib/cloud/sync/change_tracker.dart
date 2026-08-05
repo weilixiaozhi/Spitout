@@ -34,7 +34,10 @@ class ChangeTracker implements ChangeRecorder {
 
   /// 已知的 user-global 实体类型。recordUserGlobalChange 用白名单校验防止
   /// 调用方误用(把 transaction 之类传进来也能通过,但被 assert 拦住)。
-  static const Set<String> _userGlobalEntityTypes = {'category', 'exchange_rate_override'};
+  static const Set<String> _userGlobalEntityTypes = {
+    'category',
+    'exchange_rate_override',
+  };
 
   /// 公开 read-only 视图给 sync_engine 的 push 路径用,判断"这条 change 是否
   /// 是 user-global 类型",决定 push 时 scope 字段。
@@ -97,12 +100,14 @@ class ChangeTracker implements ChangeRecorder {
     // 未知 ledgerId 一律按"需要同步"处理(生产环境变更必然对应已存在账本);
     // 判定统一走 ledger_kind.dart 的 isLocalLedger,与 sync 引擎
     // 保持一致,共享账本(storageMode 缺失也不会翻转)不拦截。
-    final ledger = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledger = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     if (ledger != null && ledger.isLocalLedger) {
-      logger.debug('ChangeTracker',
-          '丢弃本地账本($ledgerId)变更:storage_mode=${ledger.storageMode},不写 local_changes');
+      logger.debug(
+        'ChangeTracker',
+        '丢弃本地账本($ledgerId)变更:storage_mode=${ledger.storageMode},不写 local_changes',
+      );
       return;
     }
     await _insert(
@@ -115,6 +120,105 @@ class ChangeTracker implements ChangeRecorder {
     );
   }
 
+  @override
+  Future<void> recordLedgerChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        int ledgerId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  }) async {
+    if (changes.isEmpty) return;
+    for (final c in changes) {
+      assert(
+        !_userGlobalEntityTypes.contains(c.entityType),
+        'recordLedgerChanges 不接受 user-global 实体 '
+        '($_userGlobalEntityTypes),实际传入 "${c.entityType}"。',
+      );
+      assert(
+        c.ledgerId > 0,
+        'recordLedgerChanges 需要具体 ledgerId(>0),实际传入 ${c.ledgerId}。',
+      );
+    }
+
+    // 与单条路径一致:纯本地账本不写 local_changes;一次查回所有涉及账本,
+    // 避免逐条 SELECT。
+    final ledgerIds = changes.map((c) => c.ledgerId).toSet().toList();
+    final ledgers = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.isIn(ledgerIds))).get();
+    final localLedgerIds = ledgers
+        .where((l) => l.isLocalLedger)
+        .map((l) => l.id)
+        .toSet();
+    final effective = changes
+        .where((c) => !localLedgerIds.contains(c.ledgerId))
+        .toList();
+    if (effective.isEmpty) return;
+
+    await db.batch((b) {
+      for (final c in effective) {
+        b.insert(
+          db.localChanges,
+          LocalChangesCompanion.insert(
+            entityType: c.entityType,
+            entityId: c.entityId,
+            entitySyncId: c.entitySyncId,
+            ledgerId: c.ledgerId,
+            action: c.action,
+            payloadJson: d.Value(c.payloadJson),
+          ),
+        );
+      }
+    });
+    logger.debug('ChangeTracker', '批量登记 ${effective.length} 条 ledger 变更');
+  }
+
+  @override
+  Future<void> recordUserGlobalChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  }) async {
+    if (changes.isEmpty) return;
+    for (final c in changes) {
+      assert(
+        _userGlobalEntityTypes.contains(c.entityType),
+        'recordUserGlobalChanges 只接受 user-global 实体 '
+        '($_userGlobalEntityTypes),实际传入 "${c.entityType}"。',
+      );
+    }
+    await db.batch((b) {
+      for (final c in changes) {
+        b.insert(
+          db.localChanges,
+          LocalChangesCompanion.insert(
+            entityType: c.entityType,
+            entityId: c.entityId,
+            entitySyncId: c.entitySyncId,
+            ledgerId: 0,
+            action: c.action,
+            payloadJson: d.Value(c.payloadJson),
+          ),
+        );
+      }
+    });
+    logger.debug('ChangeTracker', '批量登记 ${changes.length} 条 user-global 变更');
+  }
+
   /// 低层 insert,不对外暴露。路径统一:所有 record*Change 走这条,行为
   /// (日志 / insert 语义)一处维护。
   Future<void> _insert({
@@ -125,14 +229,18 @@ class ChangeTracker implements ChangeRecorder {
     required String action,
     String? payloadJson,
   }) async {
-    await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
-      entityType: entityType,
-      entityId: entityId,
-      entitySyncId: entitySyncId,
-      ledgerId: ledgerId,
-      action: action,
-      payloadJson: d.Value(payloadJson),
-    ));
+    await db
+        .into(db.localChanges)
+        .insert(
+          LocalChangesCompanion.insert(
+            entityType: entityType,
+            entityId: entityId,
+            entitySyncId: entitySyncId,
+            ledgerId: ledgerId,
+            action: action,
+            payloadJson: d.Value(payloadJson),
+          ),
+        );
     logger.debug('ChangeTracker', '$action $entityType($entitySyncId)');
   }
 
@@ -155,25 +263,34 @@ class ChangeTracker implements ChangeRecorder {
     required String entitySyncId,
     required int ledgerId,
   }) async {
-    final existing = await (db.select(db.localChanges)
-          ..where((c) =>
-              c.entityType.equals(entityType) &
-              c.entitySyncId.equals(entitySyncId))
-          ..limit(1))
-        .getSingleOrNull();
+    final existing =
+        await (db.select(db.localChanges)
+              ..where(
+                (c) =>
+                    c.entityType.equals(entityType) &
+                    c.entitySyncId.equals(entitySyncId),
+              )
+              ..limit(1))
+            .getSingleOrNull();
     if (existing != null) return;
 
     final now = DateTime.now();
-    await db.into(db.localChanges).insert(LocalChangesCompanion.insert(
-      entityType: entityType,
-      entityId: entityId,
-      entitySyncId: entitySyncId,
-      ledgerId: ledgerId,
-      action: 'upsert',
-      pushedAt: d.Value(now),
-    ));
-    logger.debug('ChangeTracker',
-        'pulled-from-server marker: $entityType($entitySyncId)');
+    await db
+        .into(db.localChanges)
+        .insert(
+          LocalChangesCompanion.insert(
+            entityType: entityType,
+            entityId: entityId,
+            entitySyncId: entitySyncId,
+            ledgerId: ledgerId,
+            action: 'upsert',
+            pushedAt: d.Value(now),
+          ),
+        );
+    logger.debug(
+      'ChangeTracker',
+      'pulled-from-server marker: $entityType($entitySyncId)',
+    );
   }
 
   /// 获取所有未推送的变更
@@ -196,18 +313,23 @@ class ChangeTracker implements ChangeRecorder {
   Future<void> markPushed(List<int> changeIds) async {
     if (changeIds.isEmpty) return;
     final now = DateTime.now();
-    await (db.update(db.localChanges)
-          ..where((c) => c.id.isIn(changeIds)))
+    await (db.update(db.localChanges)..where((c) => c.id.isIn(changeIds)))
         .write(LocalChangesCompanion(pushedAt: d.Value(now)));
     logger.debug('ChangeTracker', '标记 ${changeIds.length} 条变更已推送');
   }
 
   /// 清理已推送的旧变更（保留最近 7 天）
-  Future<int> cleanupPushedChanges({Duration retention = const Duration(days: 7)}) async {
+  Future<int> cleanupPushedChanges({
+    Duration retention = const Duration(days: 7),
+  }) async {
     final cutoff = DateTime.now().subtract(retention);
-    final count = await (db.delete(db.localChanges)
-          ..where((c) => c.pushedAt.isNotNull() & c.pushedAt.isSmallerThanValue(cutoff)))
-        .go();
+    final count =
+        await (db.delete(db.localChanges)..where(
+              (c) =>
+                  c.pushedAt.isNotNull() &
+                  c.pushedAt.isSmallerThanValue(cutoff),
+            ))
+            .go();
     if (count > 0) {
       logger.info('ChangeTracker', '清理 $count 条已推送的旧变更');
     }
@@ -216,9 +338,11 @@ class ChangeTracker implements ChangeRecorder {
 
   /// 获取未推送变更数量
   Future<int> getUnpushedCount() async {
-    final result = await (db.select(db.localChanges)
-          ..where((c) => c.pushedAt.isNull()))
-        .get();
-    return result.length;
+    // 全表查进内存再数长度在表膨胀后会很慢；用 COUNT(*) 只回传一个数字。
+    final row = await db.customSelect(
+      'SELECT COUNT(*) AS c FROM local_changes WHERE pushed_at IS NULL',
+      readsFrom: {db.localChanges},
+    ).getSingle();
+    return row.read<int>('c');
   }
 }

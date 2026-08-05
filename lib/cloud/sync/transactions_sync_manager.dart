@@ -376,6 +376,9 @@ class TransactionsSyncManager implements SyncService {
       final localCount = (localMap['count'] as num).toInt();
 
       // 若刚刚上传成功且在短时间窗口内（15秒），且本地指纹与上传时一致，直接认定已同步
+      // 权衡：窗口期只是 CDN 缓存延迟补偿，指纹已覆盖全字段快照契约
+      // （币种/折算/统计排除/AA 等），因此不会掩盖真实差异；窗口内若真有
+      // 远端变更，15 秒后下一次 getStatus 会做真实云侧校验并纠正。
       final ru = _recentUpload[ledgerId];
       if (ru != null) {
         final age = DateTime.now().difference(ru.at);
@@ -516,46 +519,6 @@ class TransactionsSyncManager implements SyncService {
     logger.info('CloudSync', '标记本地变更: $ledgerId');
   }
 
-  /// 从 JSON payload 计算内容指纹
-  String _contentFingerprintFromMap(Map<String, dynamic> payload) {
-    final items = (payload['items'] as List).cast<Map<String, dynamic>>();
-    final canon = items
-        .map((it) {
-          // type 恒为 'expense',不需要区分分类是否参与指纹。
-          final type = it['type'] as String? ?? '';
-
-          return {
-            'happenedAt': it['happenedAt'] as String? ?? '',
-            'type': type,
-            'amount': (it['amount'] as num?)?.toDouble().toString() ?? '0.0',
-            'categoryName': it['categoryName'] as String? ?? '',
-            'categoryKind': it['categoryKind'] as String? ?? '',
-            'note': it['note'] as String? ?? '',
-          };
-        })
-        .toList();
-    canon.sort((a, b) {
-      final c1 =
-          (a['happenedAt'] as String).compareTo(b['happenedAt'] as String);
-      if (c1 != 0) return c1;
-      final c2 = (a['type'] as String).compareTo(b['type'] as String);
-      if (c2 != 0) return c2;
-      final c3 = (a['amount'] as String).compareTo(b['amount'] as String);
-      if (c3 != 0) return c3;
-      final c4 =
-          (a['categoryName'] as String).compareTo(b['categoryName'] as String);
-      if (c4 != 0) return c4;
-      final c5 =
-          (a['categoryKind'] as String).compareTo(b['categoryKind'] as String);
-      if (c5 != 0) return c5;
-      return (a['note'] as String).compareTo(b['note'] as String);
-    });
-    final bytes = utf8.encode(jsonEncode(canon));
-    final fp = sha256.convert(bytes).toString();
-    logger.debug('Fingerprint', '交易数: ${canon.length}, 指纹: ${fp.substring(0, 16)}...');
-    return fp;
-  }
-
   @override
   Future<void> deleteRemoteBackup({required int ledgerId}) async {
     await _ensureInitialized();
@@ -658,46 +621,60 @@ class _TransactionSerializer implements fcs.DataSerializer<int> {
     final json = jsonDecode(data) as Map<String, dynamic>;
     return _contentFingerprintFromMap(json);
   }
+}
 
-  /// 从 payload 计算内容指纹（Serializer 版本）
-  String _contentFingerprintFromMap(Map<String, dynamic> payload) {
-    final items = (payload['items'] as List).cast<Map<String, dynamic>>();
-    final canon = items
-        .map((it) {
-          // type 恒为 'expense',不需要区分分类是否参与指纹。
-          final type = it['type'] as String? ?? '';
-
-          return {
-            'happenedAt': it['happenedAt'] as String? ?? '',
-            'type': type,
-            'amount': (it['amount'] as num?)?.toDouble().toString() ?? '0.0',
-            'categoryName': it['categoryName'] as String? ?? '',
-            'categoryKind': it['categoryKind'] as String? ?? '',
-            'note': it['note'] as String? ?? '',
-          };
-        })
-        .toList();
-    canon.sort((a, b) {
-      final c1 =
-          (a['happenedAt'] as String).compareTo(b['happenedAt'] as String);
-      if (c1 != 0) return c1;
-      final c2 = (a['type'] as String).compareTo(b['type'] as String);
-      if (c2 != 0) return c2;
-      final c3 = (a['amount'] as String).compareTo(b['amount'] as String);
-      if (c3 != 0) return c3;
-      final c4 =
-          (a['categoryName'] as String).compareTo(b['categoryName'] as String);
-      if (c4 != 0) return c4;
-      final c5 =
-          (a['categoryKind'] as String).compareTo(b['categoryKind'] as String);
-      if (c5 != 0) return c5;
-      return (a['note'] as String).compareTo(b['note'] as String);
-    });
-    final bytes = utf8.encode(jsonEncode(canon));
-    final fp = sha256.convert(bytes).toString();
-    logger.debug('Fingerprint-Serializer', '交易数: ${canon.length}, 指纹: ${fp.substring(0, 16)}...');
-    return fp;
-  }
+/// 从快照 JSON payload 计算内容指纹（全字段快照契约）。
+///
+/// 快照栈用指纹判定“本地/云端是否一致”，必须覆盖币种、折算金额、
+/// 统计排除、支出人与 AA 分摊字段——否则其他设备只改这些字段时，
+/// 本端会静默判定“已同步”并保留旧值。
+String _contentFingerprintFromMap(Map<String, dynamic> payload) {
+  final items = (payload['items'] as List).cast<Map<String, dynamic>>();
+  final canon = items
+      .map((it) {
+        final type = it['type'] as String? ?? '';
+        return {
+          'syncId': it['syncId'] as String? ?? '',
+          'happenedAt': it['happenedAt'] as String? ?? '',
+          'type': type,
+          'amount': (it['amount'] as num?)?.toDouble().toString() ?? '0.0',
+          'categoryName': it['categoryName'] as String? ?? '',
+          'categoryKind': it['categoryKind'] as String? ?? '',
+          'note': it['note'] as String? ?? '',
+          'currencyCode': it['currencyCode'] as String? ?? '',
+          'nativeAmount':
+              (it['nativeAmount'] as num?)?.toDouble().toString() ?? '',
+          'excludeFromStats':
+              (it['excludeFromStats'] as bool? ?? false).toString(),
+          'createdByUserId': it['createdByUserId'] as String? ?? '',
+          'paidByUserId': it['paidByUserId'] as String? ?? '',
+          'aaMode': (it['aaMode'] as num?)?.toString() ?? '',
+          'aaParticipants': it['aaParticipants'] as String? ?? '',
+          'aaSplits': it['aaSplits'] as String? ?? '',
+        };
+      })
+      .toList();
+  canon.sort((a, b) {
+    final c1 =
+        (a['happenedAt'] as String).compareTo(b['happenedAt'] as String);
+    if (c1 != 0) return c1;
+    final c2 = (a['syncId'] as String).compareTo(b['syncId'] as String);
+    if (c2 != 0) return c2;
+    final c3 = (a['type'] as String).compareTo(b['type'] as String);
+    if (c3 != 0) return c3;
+    final c4 = (a['amount'] as String).compareTo(b['amount'] as String);
+    if (c4 != 0) return c4;
+    final c5 =
+        (a['categoryName'] as String).compareTo(b['categoryName'] as String);
+    if (c5 != 0) return c5;
+    return (a['categoryKind'] as String)
+        .compareTo(b['categoryKind'] as String);
+  });
+  final bytes = utf8.encode(jsonEncode(canon));
+  final fp = sha256.convert(bytes).toString();
+  logger.debug(
+      'Fingerprint', '交易数: ${canon.length}, 指纹: ${fp.substring(0, 16)}...');
+  return fp;
 }
 
 /// 近期上传记录（用于处理 CDN 缓存延迟）

@@ -87,6 +87,12 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     const notificationDetails = NotificationDetails(android: androidDetails);
 
     try {
+      // 先取消旧的 7 天备用通知（id+1..id+7），避免改时间/重复后
+      // 旧备用仍挂着，用户收到旧时间的重复提醒。
+      for (int i = 1; i <= 7; i++) {
+        await _plugin.cancel(id: id + i);
+      }
+
       // 使用 exactAllowWhileIdle 确保休眠时也能触发；
       // flutter_local_notifications 22.x 起全部为命名参数
       await _plugin.zonedSchedule(

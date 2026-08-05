@@ -395,12 +395,30 @@ class LocalBackupService {
     }
   }
 
-  /// 原子复制：先写临时文件，再删目标、rename，保证"要么整体替换成功，要么原文件不动"
+  /// 原子复制：先写同目录临时文件，再通过「旧文件先改名退避」的方式落位。
+  ///
+  /// 目标存在时直接 rename 在 Windows 上会失败，且"先删目标再 rename"
+  /// 存在目标缺失窗口；改为先把旧文件改名 .old，再 rename 新文件，
+  /// 新文件落位失败时把 .old 换回，保证任意时刻目标路径要么是旧文件、
+  /// 要么是新文件。
   Future<void> _copyAtomic(File source, File target) async {
     final tmp = File('${target.path}.tmp');
     await source.copy(tmp.path);
-    if (await target.exists()) await target.delete();
-    await tmp.rename(target.path);
+    if (!await target.exists()) {
+      await tmp.rename(target.path);
+      return;
+    }
+    final backup = File('${target.path}.old');
+    if (await backup.exists()) await backup.delete(); // 清理上次残留
+    await target.rename(backup.path);
+    try {
+      await tmp.rename(target.path);
+    } catch (_) {
+      // 新文件落位失败：把旧文件换回，绝不留下目标缺失窗口。
+      await backup.rename(target.path);
+      rethrow;
+    }
+    await backup.delete();
   }
 
   /// 按前缀清理超量备份文件（跨全部候选目录聚合后，全局保留最近 keep 个）

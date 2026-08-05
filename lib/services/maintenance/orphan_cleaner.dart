@@ -16,13 +16,22 @@ library;
 import 'package:drift/drift.dart' as d;
 
 import '../../data/db.dart';
+import '../../data/repositories/base_repository.dart';
+import '../../data/repositories/local/local_transaction_repository.dart'
+    show deleteTransactionsWithEditHistories;
 import '../../core/logging/logger_service.dart';
 import 'orphan_record.dart';
 
 class OrphanCleaner {
-  OrphanCleaner({required this.db});
+  OrphanCleaner({
+    required this.db,
+    // 移动交易到账本时用于走统一的重算/变更登记路径；
+    // 为空时仅做 DB 层字段更新（测试或未注入场景）。
+    this.repository,
+  });
 
   final SpitoutDatabase db;
+  final BaseRepository? repository;
 
   /// 批量清理。返回 (成功数,失败列表)。
   Future<OrphanCleanResult> clean(List<OrphanRecord> records) async {
@@ -137,7 +146,9 @@ class OrphanCleaner {
   Future<void> _deleteTxMissingLedger(OrphanRecord r) async {
     final id = r.localId;
     if (id == null) throw StateError('tx missing ledger 缺 localId');
-    await (db.delete(db.transactions)..where((t) => t.id.equals(id))).go();
+    // 复用统一删除入口：先清编辑历史再删交易，避免残留孤儿历史。
+    // 账本已不存在，变更无处挂载，跳过变更登记（与下方重复行一致）。
+    await deleteTransactionsWithEditHistories(db, [id]);
   }
 
   /// A_dup:删除 sync_id 重复的多余交易行(扫描时已保证保留组内 MIN(id))。
@@ -148,7 +159,9 @@ class OrphanCleaner {
   Future<void> _deleteDuplicateTx(OrphanRecord r) async {
     final id = r.localId;
     if (id == null) throw StateError('duplicate tx record 缺 localId');
-    await (db.delete(db.transactions)..where((t) => t.id.equals(id))).go();
+    // 统一删除入口会先清编辑历史；同时必须绕过变更追踪，否则
+    // 被删行与保留行共用同一 syncId，删除变更会误删云端真实记录。
+    await deleteTransactionsWithEditHistories(db, [id]);
   }
 
   /// 将一条无账本孤儿交易迁移到指定账本。
@@ -157,6 +170,15 @@ class OrphanCleaner {
   /// `targetLedgerId` 必须指向一个现存账本,调用方应在打开账本选择器
   /// 时即确保目标合法。
   Future<void> moveTxToLedger(int txId, int targetLedgerId) async {
+    if (repository != null) {
+      // 统一迁移入口：更新 ledger_id + 按新账本位币重算 nativeAmount +
+      // 登记同步变更，避免跨账本移动后统计口径与同步队列不一致。
+      await repository!.updateTransactionLedger(
+        id: txId,
+        ledgerId: targetLedgerId,
+      );
+      return;
+    }
     await (db.update(db.transactions)..where((t) => t.id.equals(txId)))
         .write(TransactionsCompanion(ledgerId: d.Value(targetLedgerId)));
   }
@@ -167,8 +189,7 @@ class OrphanCleaner {
     var count = 0;
     await db.transaction(() async {
       for (final id in txIds) {
-        await (db.update(db.transactions)..where((t) => t.id.equals(id)))
-            .write(TransactionsCompanion(ledgerId: d.Value(targetLedgerId)));
+        await moveTxToLedger(id, targetLedgerId);
         count++;
       }
     });

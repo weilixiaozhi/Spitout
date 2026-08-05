@@ -133,12 +133,7 @@ class _HomePageState extends ConsumerState<HomePage>
   /// 点击账本胶囊 → 进入账本管理页（LedgersPage）。
   /// 空状态也只进管理页，由用户在内部主动新建。
   void _onTapLedgerCapsule() {
-    Navigator.push(
-      context,
-      appPageRoute(
-        builder: (_) => const LedgersPage(),
-      ),
-    );
+    Navigator.push(context, appPageRoute(builder: (_) => const LedgersPage()));
   }
 
   /// 点击左上角日期拉起统一日期滚轮(年-月),视觉与 AppSheet 一致。
@@ -167,7 +162,7 @@ class _HomePageState extends ConsumerState<HomePage>
     }
   }
 
-    /// debug 包专用：弹窗选择范围（年/月/周/日），一键填充统计页测试数据。
+  /// debug 包专用：弹窗选择范围（年/月/周/日），一键填充统计页测试数据。
   /// 填充后刷新统计相关 provider，使进入统计页立即呈现数据。
   Future<void> _onTapFillTestData() async {
     final scope = await showDialog<TestDataScope>(
@@ -213,8 +208,9 @@ class _HomePageState extends ConsumerState<HomePage>
       final cloud = await ref.read(spitoutCloudProviderInstance.future);
       final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
       final localSelfId = await ref.read(localSelfIdProvider.future);
-      paidByUserId =
-          (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;
+      paidByUserId = (cloudUserId != null && cloudUserId.isNotEmpty)
+          ? cloudUserId
+          : localSelfId;
     } catch (e) {
       // 未配置/未登录时跳过,seeder 侧不传支出人(仅 debug 数据,不影响生产)。
       paidByUserId = null;
@@ -290,8 +286,10 @@ class _HomePageState extends ConsumerState<HomePage>
         outcome = await sync.pullIncrementalWithHeal(ledgerId: ledgerId);
         isCloud = true;
         cloudOk = true;
-        logger.info('HomePage',
-            '下拉刷新云端成功: ledgerId=$ledgerId pulled=${outcome.incremental} healed=${outcome.healed} gap=${outcome.gapRemaining} circuit=${outcome.circuitBroken}');
+        logger.info(
+          'HomePage',
+          '下拉刷新云端成功: ledgerId=$ledgerId pulled=${outcome.incremental} healed=${outcome.healed} gap=${outcome.gapRemaining} circuit=${outcome.circuitBroken}',
+        );
       } on UnsupportedError {
         // 未配置云同步（LocalOnlySyncService 抛此异常）：按纯本地刷新处理。
         isCloud = false;
@@ -318,8 +316,8 @@ class _HomePageState extends ConsumerState<HomePage>
     // 成功结果文案（原 toast 文案），失败分支已在 catch 中写入 resultText。
     resultText ??= isCloud
         ? (cloudOk
-            ? _cloudRefreshMessage(l10n, outcome)
-            : l10n.homePullCloudFailedButLocalOk)
+              ? _cloudRefreshMessage(l10n, outcome)
+              : l10n.homePullCloudFailedButLocalOk)
         : l10n.homePullLocalSuccess;
 
     // 停止 icon 旋转并归位到自然角度，避免结果展示阶段 icon 停留在半旋转角（视觉异常）。
@@ -381,13 +379,19 @@ class _HomePageState extends ConsumerState<HomePage>
       final unconvertedCount = await repo.countUnconvertedForeignTx(ledgerId);
       if (unconvertedCount > 0) {
         // 先拉取涉及外币的汇率（force 确保不跳过 24h 节流）
-        final foreignCurrencies =
-            await repo.getLedgerForeignCurrencies(ledgerId);
-        final rateOk = await refreshExchangeRatesFromUi(ref,
-            force: true, extraQuotes: foreignCurrencies);
+        final foreignCurrencies = await repo.getLedgerForeignCurrencies(
+          ledgerId,
+        );
+        final rateOk = await refreshExchangeRatesFromUi(
+          ref,
+          force: true,
+          extraQuotes: foreignCurrencies,
+        );
         final recalcCount = await repo.recomputeForeignTxForLedger(ledgerId);
-        logger.info('HomePage',
-            '本地刷新补折算: 未折算=$unconvertedCount 拉取汇率=$rateOk 补折算=$recalcCount');
+        logger.info(
+          'HomePage',
+          '本地刷新补折算: 未折算=$unconvertedCount 拉取汇率=$rateOk 补折算=$recalcCount',
+        );
         if (recalcCount > 0) {
           // 折算成功 → invalidate currentLedgerProvider 强制 _MonthPage
           // 重建 stream（StreamBuilder 的 key 依赖 ledgerId，重新订阅 Drift 流），
@@ -450,9 +454,7 @@ class _HomePageState extends ConsumerState<HomePage>
           _buildHeader(),
           // 左右滑切月列表(下拉刷新指示器以 Stack 叠层方式在 _buildPageView 内部渲染，
           // 避免指示器高度变化影响列表 viewport 导致抖动)
-          Expanded(
-            child: _buildPageView(),
-          ),
+          Expanded(child: _buildPageView()),
         ],
       ),
     );
@@ -542,15 +544,15 @@ class _HomePageState extends ConsumerState<HomePage>
                       label: Text(l10n.ledgerAaStatisticsEntry),
                       onPressed: () {
                         // 从首页进入即当前账本的分摊统计，直接传账本 id。
-                        Navigator.of(context).pushNamed(
-                          Routes.aaStatistics,
-                          arguments: ledger.id,
-                        );
+                        Navigator.of(
+                          context,
+                        ).pushNamed(Routes.aaStatistics, arguments: ledger.id);
                       },
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 40.0),
                         shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10)),
+                          borderRadius: BorderRadius.circular(10),
+                        ),
                       ),
                     ),
                   ),
@@ -600,11 +602,7 @@ class _HomePageState extends ConsumerState<HomePage>
             // 刷新 icon：刷新期间自然旋转，拖拽阶段静止
             RotationTransition(
               turns: _spinCtrl,
-              child: Icon(
-                AppIcons.refresh,
-                size: 12,
-                color: primary,
-              ),
+              child: Icon(AppIcons.refresh, size: 12, color: primary),
             ),
             // Figma：icon 与文案间距 8px
             const SizedBox(width: 8),
@@ -660,125 +658,135 @@ class _HomePageState extends ConsumerState<HomePage>
     return Stack(
       children: [
         Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 8),
-      child: NotificationListener<ScrollNotification>(
-        onNotification: (notification) {
-        // ── 1. PageView 自身横向滚动（depth==0）──
-        // 仅响应 PageView 自身的滚动结束，据此判定松手后视图落点，决定是否提交月份切换。
-        if (notification is ScrollEndNotification && notification.depth == 0) {
-          _onPageScrollSettled();
-        }
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: NotificationListener<ScrollNotification>(
+            onNotification: (notification) {
+              // ── 1. PageView 自身横向滚动（depth==0）──
+              // 仅响应 PageView 自身的滚动结束，据此判定松手后视图落点，决定是否提交月份切换。
+              if (notification is ScrollEndNotification &&
+                  notification.depth == 0) {
+                _onPageScrollSettled();
+              }
 
-        // ── 2. 内部列表竖向滚动（depth>0）──
-        // 跟踪列表 overscroll 实现自定义下拉刷新指示器。
-        // 仅在非刷新态（!_isPulling）时跟踪，避免刷新期间的滚动通知干扰指示器。
-        if (notification.depth > 0 && !_isPulling) {
-          if (notification is ScrollUpdateNotification) {
-            final pixels = notification.metrics.pixels;
-            if (pixels < 0) {
-              // 列表顶部 overscroll（向下拉）
-              // 区分"用户在拉"（pixels 变得更负）vs"松手回弹"（pixels 变得更接近 0）：
-              // 仅用户主动下拉时更新指示器高度，回弹阶段冻结以避免指示器跟随回弹缩放。
-              if (pixels <= _lastPullPixels) {
-                _pullOffset = -pixels;
-                // 跟踪本次拖拽的最大偏移（回弹后仍保留峰值用于阈值判定）
-                if (_pullOffset > _maxPullOffsetThisDrag) {
-                  _maxPullOffsetThisDrag = _pullOffset;
-                }
-                // 直接设值（非 animateTo），实现跟手展开
-                _indicatorCtrl.value =
-                    (_pullOffset / _kIndicatorHeight).clamp(0.0, 1.0);
-                // 拉拽阶段即启动 icon 旋转，不等刷新确定才转
-                if (!_spinCtrl.isAnimating) {
-                  _spinCtrl.repeat();
+              // ── 2. 内部列表竖向滚动（depth>0）──
+              // 跟踪列表 overscroll 实现自定义下拉刷新指示器。
+              // 仅在非刷新态（!_isPulling）时跟踪，避免刷新期间的滚动通知干扰指示器。
+              if (notification.depth > 0 && !_isPulling) {
+                if (notification is ScrollUpdateNotification) {
+                  final pixels = notification.metrics.pixels;
+                  if (pixels < 0) {
+                    // 列表顶部 overscroll（向下拉）
+                    // 区分"用户在拉"（pixels 变得更负）vs"松手回弹"（pixels 变得更接近 0）：
+                    // 仅用户主动下拉时更新指示器高度，回弹阶段冻结以避免指示器跟随回弹缩放。
+                    if (pixels <= _lastPullPixels) {
+                      _pullOffset = -pixels;
+                      // 跟踪本次拖拽的最大偏移（回弹后仍保留峰值用于阈值判定）
+                      if (_pullOffset > _maxPullOffsetThisDrag) {
+                        _maxPullOffsetThisDrag = _pullOffset;
+                      }
+                      // 直接设值（非 animateTo），实现跟手展开
+                      _indicatorCtrl.value = (_pullOffset / _kIndicatorHeight)
+                          .clamp(0.0, 1.0);
+                      // 拉拽阶段即启动 icon 旋转，不等刷新确定才转
+                      if (!_spinCtrl.isAnimating) {
+                        _spinCtrl.repeat();
+                      }
+                    }
+                    // else: 回弹阶段，不更新 _indicatorCtrl，让指示器停留在松手时的高度
+                  } else if (_maxPullOffsetThisDrag > 0) {
+                    // overscroll 回弹到 0 → 结束本次下拉会话
+                    _handlePullEnd();
+                  }
+                  _lastPullPixels = pixels;
+                } else if (notification is ScrollEndNotification) {
+                  // 滚动完全停止 → 确保下拉会话结束（兜底：防止某些场景下
+                  // pixels 未精确回 0 就收到 ScrollEnd 导致会话悬挂）
+                  if (_maxPullOffsetThisDrag > 0) {
+                    _handlePullEnd();
+                  }
                 }
               }
-              // else: 回弹阶段，不更新 _indicatorCtrl，让指示器停留在松手时的高度
-            } else if (_maxPullOffsetThisDrag > 0) {
-              // overscroll 回弹到 0 → 结束本次下拉会话
-              _handlePullEnd();
-            }
-            _lastPullPixels = pixels;
-          } else if (notification is ScrollEndNotification) {
-            // 滚动完全停止 → 确保下拉会话结束（兜底：防止某些场景下
-            // pixels 未精确回 0 就收到 ScrollEnd 导致会话悬挂）
-            if (_maxPullOffsetThisDrag > 0) {
-              _handlePullEnd();
-            }
-          }
-        }
 
-        return false;
-      },
-      child: PageView.builder(
-        controller: _monthPager,
-        // 高阈值翻页物理：松手时偏移超过屏宽 80% 才切到相邻页，否则回弹至中页，避免误触频繁刷新。
-        physics: const _HighThresholdPagePhysics(),
-        itemCount: 3,
-        itemBuilder: (context, pageIndex) {
-          // 相邻页（0=上月、2=下月）始终渲染骨架屏：
-          // 拖动过程中作为"目标月份"占位（左侧当前月真实内容 + 右侧目标月骨架屏），模拟平滑加载；
-          // 提交后通过 jumpToPage 重置回中页，由中页加载真实数据，相邻页保持骨架屏等待下一次滑动。
-          if (pageIndex != _centerPageIndex) {
-            return const _MonthSkeleton();
-          }
-          // 中页按 selectedMonth 渲染当前月份真实交易列表。
-          final month = ref.watch(selectedMonthProvider);
-          return _MonthPage(
-            ledgerId: ledgerId,
-            month: month,
-            getStream: () => repo.transactionsWithCategoryAll(ledgerId: ledgerId),
-            onEdit: (tx, cat) async {
-              await TransactionEditUtils.editTransaction(
-                context,
-                ref,
-                tx,
-                cat,
-              );
+              return false;
             },
-            onDelete: (tx) async {
-              // 设计稿删除确认:标题 + 含"分类名"的描述(恒定分类值,不用备注)
-              final l10n = AppLocalizations.of(context);
-              String categoryName = l10n.categoryEmpty;
-              if (tx.categoryId != null) {
-                final cat = await repo.getCategoryById(tx.categoryId!);
-                if (cat != null && cat.name.isNotEmpty) {
-                  // 在 await 之后使用 context,先做 mounted 校验避免跨异步间隙使用 BuildContext
-                  if (!context.mounted) return;
-                  categoryName = CategoryUtils.getDisplayName(cat.name, context);
+            child: PageView.builder(
+              controller: _monthPager,
+              // 高阈值翻页物理：松手时偏移超过屏宽 80% 才切到相邻页，否则回弹至中页，避免误触频繁刷新。
+              physics: const _HighThresholdPagePhysics(),
+              itemCount: 3,
+              itemBuilder: (context, pageIndex) {
+                // 相邻页（0=上月、2=下月）始终渲染骨架屏：
+                // 拖动过程中作为"目标月份"占位（左侧当前月真实内容 + 右侧目标月骨架屏），模拟平滑加载；
+                // 提交后通过 jumpToPage 重置回中页，由中页加载真实数据，相邻页保持骨架屏等待下一次滑动。
+                if (pageIndex != _centerPageIndex) {
+                  return const _MonthSkeleton();
                 }
-              }
-              if (!context.mounted) return;
-              final ok = await AppDialog.confirm<bool>(
-                context,
-                title: l10n.homeDeleteDetailTitle,
-                message: l10n.homeDeleteDetailMessage(categoryName),
-              );
-              if (ok != true) return;
-              await repo.deleteTransaction(tx.id);
-              if (!context.mounted) return;
-              ref.invalidate(countsForLedgerProvider(ledgerId));
-              ref.read(statsRefreshProvider.notifier).tick();
-              PostProcessor.sync(ref, ledgerId: ledgerId);
-              if (context.mounted) showToast(context, l10n.ledgersDeleted);
-            },
-            onCategoryTap: (cat) async {
-              // 点击分类图标跳到分类详情。
-              ref.read(homeSwitchToStreamProvider.notifier).tick();
-              if (!context.mounted) return;
-              await Navigator.of(context).push(
-                appPageRoute(
-                  builder: (_) => CategoryDetailPage(
-                    categoryId: cat.id,
-                    categoryName: CategoryUtils.getDisplayName(cat.name, context),
-                  ),
-                ),
-              );
-            },
-          );
-        },
-      ),
-      ),
+                // 中页按 selectedMonth 渲染当前月份真实交易列表。
+                final month = ref.watch(selectedMonthProvider);
+                return _MonthPage(
+                  ledgerId: ledgerId,
+                  month: month,
+                  getStream: () =>
+                      repo.watchTransactionsWithCategoryAll(ledgerId: ledgerId),
+                  onEdit: (tx, cat) async {
+                    await TransactionEditUtils.editTransaction(
+                      context,
+                      ref,
+                      tx,
+                      cat,
+                    );
+                  },
+                  onDelete: (tx) async {
+                    // 设计稿删除确认:标题 + 含"分类名"的描述(恒定分类值,不用备注)
+                    final l10n = AppLocalizations.of(context);
+                    String categoryName = l10n.categoryEmpty;
+                    if (tx.categoryId != null) {
+                      final cat = await repo.getCategoryById(tx.categoryId!);
+                      if (cat != null && cat.name.isNotEmpty) {
+                        // 在 await 之后使用 context,先做 mounted 校验避免跨异步间隙使用 BuildContext
+                        if (!context.mounted) return;
+                        categoryName = CategoryUtils.getDisplayName(
+                          cat.name,
+                          context,
+                        );
+                      }
+                    }
+                    if (!context.mounted) return;
+                    final ok = await AppDialog.confirm<bool>(
+                      context,
+                      title: l10n.homeDeleteDetailTitle,
+                      message: l10n.homeDeleteDetailMessage(categoryName),
+                    );
+                    if (ok != true) return;
+                    await repo.deleteTransaction(tx.id);
+                    if (!context.mounted) return;
+                    ref.invalidate(countsForLedgerProvider(ledgerId));
+                    ref.read(statsRefreshProvider.notifier).tick();
+                    PostProcessor.sync(ref, ledgerId: ledgerId);
+                    if (context.mounted) {
+                      showToast(context, l10n.ledgersDeleted);
+                    }
+                  },
+                  onCategoryTap: (cat) async {
+                    // 点击分类图标跳到分类详情。
+                    ref.read(homeSwitchToStreamProvider.notifier).tick();
+                    if (!context.mounted) return;
+                    await Navigator.of(context).push(
+                      appPageRoute(
+                        builder: (_) => CategoryDetailPage(
+                          categoryId: cat.id,
+                          categoryName: CategoryUtils.getDisplayName(
+                            cat.name,
+                            context,
+                          ),
+                        ),
+                      ),
+                    );
+                  },
+                );
+              },
+            ),
+          ),
         ),
         // 刷新指示器叠层（Figma 2035:81）：从列表顶部（卡片底部）向下展开。
         // 以 Positioned 覆盖在 PageView 上方，不影响列表 viewport。
@@ -805,10 +813,13 @@ class _HomePageState extends ConsumerState<HomePage>
 /// - 金额统一带主币种符号,且不以 + 号开头(为 0 时直接显示 0)。
 class _HeaderSummary extends ConsumerWidget {
   final DateTime month;
+
   /// 整张卡片点击回调(由调用方决定跳转目标:有账本跳账本管理,无账本跳新建)。
   final VoidCallback onTapLedger;
+
   /// 账本显示名(已翻译/已回退到 ledgersNew)。
   final String ledgerName;
+
   /// 是否为无账本状态(无账本时只展示"新建账本"文字,语义和点击目标不同)。
   final bool isEmpty;
 
@@ -825,8 +836,7 @@ class _HeaderSummary extends ConsumerWidget {
     final now = DateTime.now();
     // "今日/本周"天生指真实当前日/周,与所选查看月无关:仅当月显示真实数值,
     // 非当月金额显示为 "-" 占位。该行常驻不隐藏,确保切页时卡片高度固定。
-    final isCurrentMonth =
-        month.year == now.year && month.month == now.month;
+    final isCurrentMonth = month.year == now.year && month.month == now.month;
     final ledgerId = ref.watch(currentLedgerIdProvider);
     // 当前账本本位币:徽章币种码与汇总金额符号的同一来源(折算基准 = 账本本位币)
     final currency =
@@ -974,7 +984,8 @@ class _HeaderSummary extends ConsumerWidget {
                   decoration: BoxDecoration(
                     color: onPrimary.withValues(alpha: 0.18),
                     borderRadius: const BorderRadius.horizontal(
-                        left: Radius.circular(5)),
+                      left: Radius.circular(5),
+                    ),
                   ),
                   child: _LedgerEntryInCard(
                     ledgerName: ledgerName,
@@ -1022,10 +1033,7 @@ class _LedgerEntryInCard extends StatelessWidget {
           Container(
             width: 24,
             height: 24,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: iconBg,
-            ),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: iconBg),
             alignment: Alignment.center,
             child: Icon(AppIcons.people, size: 13, color: onPrimary),
           ),
@@ -1083,14 +1091,12 @@ class _LedgerEntryInCard extends StatelessWidget {
   }
 }
 
-
-
 /// 单月页：单月交易 stream + 骨架屏。
 class _MonthPage extends ConsumerStatefulWidget {
   final int ledgerId;
   final DateTime month;
   final Stream<List<({Transaction t, Category? category})>> Function()
-      getStream;
+  getStream;
   final Future<void> Function(Transaction, Category?) onEdit;
   final Future<void> Function(Transaction) onDelete;
   final Future<void> Function(Category) onCategoryTap;
@@ -1173,10 +1179,12 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
         // UnsupportedError（"Cannot set value in an unmodifiable Map"）。
         // 只要成员列表非空、回调执行一次就会崩，故使用 <String, SpitoutCloudLedgerMember>{} 作为可写种子。
         memberMap = loaded.fold<Map<String, SpitoutCloudLedgerMember>>(
-            <String, SpitoutCloudLedgerMember>{}, (m, mem) {
-          m[mem.userId] = mem;
-          return m;
-        });
+          <String, SpitoutCloudLedgerMember>{},
+          (m, mem) {
+            m[mem.userId] = mem;
+            return m;
+          },
+        );
         // 加载成功则缓存,供刷新(重新进入 loading)时复用,保持头像/首字母稳定不闪。
         _cachedMemberMap = memberMap;
       } else if (_cachedMemberMap != null) {
@@ -1282,7 +1290,9 @@ class _HighThresholdPagePhysics extends PageScrollPhysics {
 
   @override
   Simulation? createBallisticSimulation(
-      ScrollMetrics position, double velocity) {
+    ScrollMetrics position,
+    double velocity,
+  ) {
     // overscroll(超出 [minScrollExtent, maxScrollExtent])时弹回中页(page 1),
     // 而非交给父级 PageScrollPhysics 弹回边界页(page 0/2)。
     // 设计意图:三页 PageView 以中页为基准,左/右页仅为滑动占位;用户在边界页

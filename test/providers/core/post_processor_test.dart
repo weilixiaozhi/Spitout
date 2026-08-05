@@ -8,7 +8,8 @@ import 'package:spitout/providers/providers.dart';
 
 import '../../helpers/test_isolation.dart';
 
-/// 记录调用的同步服务替身（非 SyncEngine → PostProcessor 走 auto_sync 分支）。
+/// 记录调用的同步服务替身：锁定 PostProcessor 只标记本地变更 + 刷新信号，
+/// 不再直接上传（上传统一由 SyncCoordinator / SnapshotSyncCoordinator 数据驱动）。
 class _RecordingSyncService extends LocalOnlySyncService {
   final List<int> marked = [];
   final List<int> uploaded = [];
@@ -54,7 +55,7 @@ void main() {
       );
 
   group('syncC（ProviderContainer 载体）', () {
-    test('标记本地变更 + bump 日历/同步状态/账本列表；auto_sync 关闭时不上传', () async {
+    test('标记本地变更 + bump 日历/同步状态/账本列表；不直接上传（数据驱动）', () async {
       final before = ticks();
       await PostProcessor.syncC(container, ledgerId: 7);
       // 让内部 fire-and-forget 的后台 Future 有机会执行
@@ -66,18 +67,20 @@ void main() {
       expect(after.syncStatus, before.syncStatus + 1);
       expect(after.ledgerList, before.ledgerList + 1);
       expect(after.stats, before.stats, reason: 'sync 系列不刷统计');
-      expect(sync.uploaded, isEmpty, reason: 'auto_sync 关闭不应上传');
+      expect(sync.uploaded, isEmpty,
+          reason: 'PostProcessor 不得直接上传，触发权交给 SnapshotSyncCoordinator');
     });
 
-    test('auto_sync 开启时后台上传当前账本，完成后再 bump 同步状态', () async {
+    test('即使 auto_sync 开启也不再直接上传，同步状态只 bump 一次', () async {
       SharedPreferences.setMockInitialValues({'auto_sync': true});
       final before = ticks();
       await PostProcessor.syncC(container, ledgerId: 9);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      expect(sync.uploaded, [9]);
-      // 同步前 bump 1 次 + 上传完成后 bump 1 次
-      expect(container.read(syncStatusRefreshProvider), before.syncStatus + 2);
+      expect(sync.uploaded, isEmpty,
+          reason: '上传由 SnapshotSyncCoordinator 基于脏信号触发，与开关无关');
+      // 不再有「上传完成后再 bump 一次」的第二轮刷新。
+      expect(container.read(syncStatusRefreshProvider), before.syncStatus + 1);
     });
 
     test('markLocalChanged 抛错被吞掉，不影响刷新信号', () async {

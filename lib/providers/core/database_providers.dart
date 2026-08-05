@@ -8,6 +8,7 @@ import '../../data/repositories/base_repository.dart';
 import '../../cloud/sync/change_tracker.dart';
 import '../../cloud/sync/snapshot_dirty_tracker.dart';
 import '../../core/logging/logger_service.dart';
+import '../../services/data/category_icon_migration_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
 // 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
@@ -32,6 +33,14 @@ final databaseProvider = Provider<SpitoutDatabase>((ref) {
 // 采用「本地优先 + 推送」范式,不存在数据全存 Supabase 的 Cloud* 仓库。
 final repositoryProvider = Provider<BaseRepository>((ref) {
   final db = ref.watch(databaseProvider);
+
+  // P0-b 闸门：云失活流程进行中（invalidate 旧值窗口）即使 active 仍持旧
+  // Spitout 配置，也必须以「无 tracker」装配仓库——绝不重建带 ChangeTracker
+  // 的实例，防止失活窗口内的本地写登记到已失效的同步通道（与
+  // spitoutCloudProviderInstance / syncServiceProvider 的闸门语义一致）。
+  if (ref.watch(cloudDeactivationInProgressProvider)) {
+    return LocalRepository(db);
+  }
 
   final config = ref.watch(activeCloudConfigProvider).value;
 
@@ -100,8 +109,8 @@ final currentMonthStartDayProvider = Provider<int>((ref) {
 /// 选中本地第一个账本并把 id 写回 prefs（仅当前选中无效时才生效，幂等）。
 ///
 /// 为什么需要独立函数而不能只靠 currentLedgerPersistProvider：
-/// 该 provider 的解析 IIFE 在 main() 启动预加载阶段只执行一次；新用户引导流程
-/// （欢迎页 seed / 导入配置）在其之后才创建账本，IIFE 执行时库还是空的，
+/// 该 provider 的启动解析在 main() 启动预加载阶段只执行一次；新用户引导流程
+/// （欢迎页 seed / 导入配置）在其之后才创建账本，解析执行时库还是空的，
 /// currentLedgerId 会永远停留在哨兵 0——这正是「重装应用走引导后默认账本
 /// 未被选中」回归的根因。因此账本创建完成后必须显式调用本函数选中账本，
 /// 不能依赖启动时序。
@@ -153,33 +162,16 @@ Future<void> selectFirstLedger(T Function<T>(ProviderListenable<T>) read) async 
 //   - 本地确实无任何账本 → 保持哨兵 0，由 currentLedgerProvider 返回 null
 //     触发真正的「无账本」空状态，而非误判。
 //
-// ⚠️ 时序边界：本 IIFE 只在首次被读取时执行一次，不感知「账本从无到有」。
+// 实现为 FutureProvider：调用方（测试 / 启动编排）可
+// `await container.read(provider.future)` 等待解析完成，消除 fire-and-forget
+// 的时序断言盲区。
+//
+// ⚠️ 时序边界：本 provider 只在首次被读取时执行一次，不感知「账本从无到有」。
 // 新用户引导（seed / 导入配置）在其之后才建账本，须由引导完成处显式调用
 // selectFirstLedger 兜底选中（见 welcome_page.dart）。
-final currentLedgerPersistProvider = Provider<void>((ref) {
-  // load on first read
-  () async {
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final repo = ref.read(repositoryProvider);
-      final saved = prefs.getInt('current_ledger_id');
-
-      if (saved != null && await repo.getLedgerById(saved) != null) {
-        // 持久化的账本仍然有效：沿用用户上次选择。
-        final st = ref.read(currentLedgerIdProvider);
-        if (st != saved) {
-          ref.read(currentLedgerIdProvider.notifier).set(saved);
-        }
-      } else {
-        // 账本已不存在（被删 / 首次安装未选 / 覆盖更新清空 prefs）：
-        // 回退到本地第一个账本并写回 prefs，避免首页空状态误判。
-        await selectFirstLedger(ref.read);
-      }
-    } catch (_) {
-      // 读取或校验失败时保持现状，不阻断首页渲染（最坏只是空状态，可手动重选）。
-    }
-  }();
-  // persist on change
+final currentLedgerPersistProvider = FutureProvider<void>((ref) async {
+  // 先注册持久化 / 自愈监听（同步执行，不依赖本次解析完成），保证任意路径的
+  // 账本切换 / 失效都能被捕获。
   ref.listen<int>(currentLedgerIdProvider, (prev, next) async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -198,8 +190,8 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
     if (!next.hasValue) return;
     if (next.value != null) return; // 有账本：尊重用户当前选择，不干预。
     // 捕获触发时刻的 id：启动瞬间 id=0 的 watchLedger(0) 也会真实发射 null，
-    // 与 IIFE 的 prefs 恢复并发竞跑。异步查询后必须重校验 id 未被他处改走
-    // （IIFE 恢复 / selectFirstLedger / 用户手动切换），否则会把用户保存的
+    // 与启动解析的 prefs 恢复并发竞跑。异步查询后必须重校验 id 未被他处改走
+    // （启动解析恢复 / selectFirstLedger / 用户手动切换），否则会把用户保存的
     // 非首个账本抢先覆盖成第一个。
     final triggerId = ref.read(currentLedgerIdProvider);
     Future(() async {
@@ -219,7 +211,7 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
         }
         final first = ledgers.first.id;
         if (triggerId == first) return; // 幂等保护。
-        // 启动窗口期（id 仍为哨兵 0）不抢跑：把 prefs 恢复权留给 IIFE——
+        // 启动窗口期（id 仍为哨兵 0）不抢跑：把 prefs 恢复权留给启动解析——
         // 它校验 saved 有效即沿用、无效则走 selectFirstLedger，两者都能收敛；
         // 此处若抢先选 first 会覆盖用户保存的非首个账本。
         if (triggerId == 0) return;
@@ -251,6 +243,27 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
       }
     });
   });
+
+  // 启动解析：恢复持久化账本，失效 / 缺失则回退本地第一个账本。
+  try {
+    final prefs = await SharedPreferences.getInstance();
+    final repo = ref.read(repositoryProvider);
+    final saved = prefs.getInt('current_ledger_id');
+
+    if (saved != null && await repo.getLedgerById(saved) != null) {
+      // 持久化的账本仍然有效：沿用用户上次选择。
+      final st = ref.read(currentLedgerIdProvider);
+      if (st != saved) {
+        ref.read(currentLedgerIdProvider.notifier).set(saved);
+      }
+    } else {
+      // 账本已不存在（被删 / 首次安装未选 / 覆盖更新清空 prefs）：
+      // 回退到本地第一个账本并写回 prefs，避免首页空状态误判。
+      await selectFirstLedger(ref.read);
+    }
+  } catch (_) {
+    // 读取或校验失败时保持现状，不阻断首页渲染（最坏只是空状态，可手动重选）。
+  }
 });
 
 // 当账本切换时，顺便触发一次设置页状态刷新（确保"我的"页及时反映）
@@ -275,6 +288,30 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final repo = ref.watch(repositoryProvider);
   return await repo.getAllCategories();
 });
+
+/// App 启动时触发一次分类图标迁移（失败仅记日志，不阻塞启动）。
+///
+/// 变更登记与 repositoryProvider 使用同一注入口径：仅 Spitout Cloud 后端
+/// 注入 ChangeTracker，快照型后端 / 未配置后端时跳过登记（与仓库空实现
+/// 语义一致），避免 services 层直连 providers 或直写 local_changes。
+Future<void> migrateCategoryIconsOnLaunch(
+  T Function<T>(ProviderListenable<T> listenable) read,
+) async {
+  try {
+    final db = read(databaseProvider);
+    final config = read(activeCloudConfigProvider).value;
+    final ChangeTracker? tracker =
+        (config != null && config.valid && config.type == CloudBackendType.spitoutCloud)
+            ? ChangeTracker(db)
+            : null;
+    await CategoryIconMigrationService.migrate(
+      db: db,
+      changeRecorder: tracker,
+    );
+  } catch (e, st) {
+    logger.warning('CategoryIconMigration', '启动迁移触发失败(非阻塞)', '$e\n$st');
+  }
+}
 
 // 分类与交易笔数组合Provider（响应式版本）
 // 使用 autoDispose 在页面关闭时自动取消订阅

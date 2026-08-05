@@ -83,6 +83,7 @@ class DataImportService {
     // 0. 入口统一校验：导入（CSV/云恢复）是脏数据的主要入口，
     // 非法分类/交易在这里拦截并计入 failed，不进入落库流程。
     int validationFailed = 0;
+    int failedCount = 0;
     final validCategories = <ImportCategory>[];
     for (final c in data.categories) {
       final errors = validateImportCategory(c);
@@ -91,7 +92,9 @@ class DataImportService {
       } else {
         validationFailed++;
         logger.warning(
-            'ImportValidation', '分类校验失败，跳过: ${c.name} -> ${errors.join('; ')}');
+          'ImportValidation',
+          '分类校验失败，跳过: ${c.name} -> ${errors.join('; ')}',
+        );
       }
     }
     final validTransactions = <ImportTransaction>[];
@@ -101,19 +104,21 @@ class DataImportService {
         validTransactions.add(t);
       } else {
         validationFailed++;
-        logger.warning(
-            'ImportValidation', '交易校验失败，跳过: ${errors.join('; ')}');
+        logger.warning('ImportValidation', '交易校验失败，跳过: ${errors.join('; ')}');
       }
     }
 
     // 1. 更新账本信息（如果提供）
-    if (data.ledgerName != null || data.currency != null || data.aaEnabled != null) {
+    if (data.ledgerName != null ||
+        data.currency != null ||
+        data.aaEnabled != null) {
       // 币种变更前先记下旧币种,用于变更后重算 nativeAmount。
       // 导入数据中可能携带不同于当前账本的 currency 字段(如从另一个币种
       // 的备份恢复),不重算会导致副行换算显示错误的旧口径金额。
       final String? oldCurrency = data.currency != null
           ? (await repo.getLedgerById(ledgerId))?.currency
           : null;
+      var ledgerUpdateFailed = false;
       try {
         await repo.updateLedger(
           id: ledgerId,
@@ -121,13 +126,26 @@ class DataImportService {
           currency: data.currency,
           aaEnabled: data.aaEnabled,
         );
-      } catch (_) {}
-      // 币种确实变更(忽略大小写差异)后全量重算 nativeAmount
-      if (data.currency != null &&
+      } catch (e, st) {
+        // 账本元数据更新失败不能静默吞掉：记日志并计入失败数，
+        // 否则用户看到“导入成功”但账本名/币种实际未生效。
+        ledgerUpdateFailed = true;
+        logger.error(
+          'ImportData',
+          '更新账本元数据失败 ledgerId=$ledgerId',
+          e,
+          st,
+        );
+      }
+      // 更新成功且币种确实变更(忽略大小写差异)后才全量重算 nativeAmount；
+      // 更新失败时按旧币种继续，避免用未生效的新币种重算。
+      if (!ledgerUpdateFailed &&
+          data.currency != null &&
           oldCurrency != null &&
           data.currency!.toUpperCase() != oldCurrency.toUpperCase()) {
         await repo.recalcNativeAmountsForLedger(ledgerId, data.currency!);
       }
+      if (ledgerUpdateFailed) failedCount++;
     }
 
     // 2. 导入分类
@@ -149,7 +167,7 @@ class DataImportService {
 
     return ImportResult(
       inserted: result.inserted,
-      failed: validationFailed + result.failed,
+      failed: validationFailed + result.failed + failedCount,
     );
   }
 
@@ -181,16 +199,11 @@ class DataImportService {
           skipped++;
           continue;
         }
-        await repo.create(
-          ledgerId: ledgerId,
-          name: vu.name,
-          syncId: sid,
-        );
+        await repo.create(ledgerId: ledgerId, name: vu.name, syncId: sid);
         if (sid != null && sid.isNotEmpty) existingSyncIds.add(sid);
         inserted++;
       }
-      logger.info('VirtualUserImport',
-          '虚拟用户导入完成: 新增=$inserted 跳过重复=$skipped');
+      logger.info('VirtualUserImport', '虚拟用户导入完成: 新增=$inserted 跳过重复=$skipped');
     } catch (e, st) {
       logger.error('VirtualUserImport', '虚拟用户导入失败', e, st);
     }
@@ -210,7 +223,8 @@ class DataImportService {
     BaseRepository repo,
     List<ImportCategory> categories,
   ) async {
-    final categoryCache = <String, int>{}; // key: kind|name 或 kind|parentName|name
+    final categoryCache =
+        <String, int>{}; // key: kind|name 或 kind|parentName|name
 
     if (categories.isEmpty) return categoryCache;
     // 入口校验：非法分类（level 越界 / 二级缺父 / 非支出类）直接跳过；
@@ -219,8 +233,10 @@ class DataImportService {
         .where((c) => validateImportCategory(c).isEmpty)
         .toList(growable: false);
     if (validCategories.length != categories.length) {
-      logger.warning('CategoryImport',
-          '跳过 ${categories.length - validCategories.length} 条非法分类');
+      logger.warning(
+        'CategoryImport',
+        '跳过 ${categories.length - validCategories.length} 条非法分类',
+      );
     }
     logger.info('CategoryImport', '开始导入分类: ${validCategories.length} 个');
     final sw = Stopwatch()..start();
@@ -258,14 +274,20 @@ class DataImportService {
         if (existingCategoryMap.containsKey(key)) {
           categoryCache[key] = existingCategoryMap[key]!;
         } else {
-          final id = await repo.createCategory(
-            name: cat.name,
-            kind: cat.kind,
-            icon: cat.icon,
-            sortOrder: cat.sortOrder,
-          );
-          categoryCache[key] = id;
-          created++;
+          try {
+            final id = await repo.createCategory(
+              name: cat.name,
+              kind: cat.kind,
+              icon: cat.icon,
+              sortOrder: cat.sortOrder,
+            );
+            categoryCache[key] = id;
+            created++;
+          } catch (e, st) {
+            // 单条分类落库失败只跳过该分类，不中断整批导入；
+            // 后续交易引用不到该分类时会回退为未分类。
+            logger.error('CategoryImport', '创建一级分类失败: ${cat.name}', e, st);
+          }
         }
       }
 
@@ -280,19 +302,30 @@ class DataImportService {
           final parentKey = '${cat.kind}|${cat.parentName}';
           final parentId = categoryCache[parentKey];
           if (parentId != null) {
-            final id = await repo.createSubCategory(
-              parentId: parentId,
-              name: cat.name,
-              kind: cat.kind,
-              icon: cat.icon,
-              sortOrder: cat.sortOrder,
-            );
-            categoryCache[key] = id;
+            try {
+              final id = await repo.createSubCategory(
+                parentId: parentId,
+                name: cat.name,
+                kind: cat.kind,
+                icon: cat.icon,
+                sortOrder: cat.sortOrder,
+              );
+              categoryCache[key] = id;
+            } catch (e, st) {
+              logger.error(
+                'CategoryImport',
+                '创建二级分类失败: ${cat.parentName}/${cat.name}',
+                e,
+                st,
+              );
+            }
           }
         }
       }
-      logger.info('CategoryImport',
-          '分类导入完成: 新增=$created 已存在=${validCategories.length - created} 耗时=${sw.elapsedMilliseconds}ms');
+      logger.info(
+        'CategoryImport',
+        '分类导入完成: 新增=$created 已存在=${validCategories.length - created} 耗时=${sw.elapsedMilliseconds}ms',
+      );
     } catch (e, st) {
       logger.error('CategoryImport', '分类导入失败', e, st);
     }
@@ -320,8 +353,7 @@ class DataImportService {
     int processed = 0;
     int skippedDup = 0;
     final total = transactions.length;
-    logger.info('TxImport',
-        '开始导入交易: $total 条 (recordChanges=$recordChanges)');
+    logger.info('TxImport', '开始导入交易: $total 条 (recordChanges=$recordChanges)');
 
     // 入口统一校验：同步 apply 等直接调用路径同样可能收到脏数据，
     // 非法交易计入 failed 并跳过，不再拼进 SQL。
@@ -363,10 +395,9 @@ class DataImportService {
     // 逐条填 currencyCode + nativeAmount,不落 NULL(NULL 行补折算检测
     // 需 join 兜底)。
     final ledger = await repo.getLedgerById(ledgerId);
-    final ledgerBase = ((ledger?.currency.isNotEmpty ?? false)
-            ? ledger!.currency
-            : 'CNY')
-        .toUpperCase();
+    final ledgerBase =
+        ((ledger?.currency.isNotEmpty ?? false) ? ledger!.currency : 'CNY')
+            .toUpperCase();
     Map<String, EffectiveRate> importRates = const {};
     try {
       final autos = await repo.getLatestAutoRates(ledgerBase);
@@ -374,10 +405,10 @@ class DataImportService {
       importRates = mergeEffectiveRates(
         autoRates: [
           for (final r in autos)
-            (quote: r.quoteCurrency, rate: r.rate, rateDate: r.rateDate)
+            (quote: r.quoteCurrency, rate: r.rate, rateDate: r.rateDate),
         ],
         overrides: [
-          for (final o in overrides) (quote: o.quoteCurrency, rate: o.rate)
+          for (final o in overrides) (quote: o.quoteCurrency, rate: o.rate),
         ],
       );
     } catch (e) {
@@ -390,10 +421,9 @@ class DataImportService {
     //   列表和统计全部显示 ¥100，数据严重失真）。
     final missingCurrencies = <String>{};
     for (final tx in validTransactions) {
-      final cur = ((tx.currencyCode?.isNotEmpty ?? false)
-              ? tx.currencyCode!
-              : null)
-          ?.toUpperCase();
+      final cur =
+          ((tx.currencyCode?.isNotEmpty ?? false) ? tx.currencyCode! : null)
+              ?.toUpperCase();
       if (cur != null && cur != ledgerBase && !importRates.containsKey(cur)) {
         missingCurrencies.add(cur);
       }
@@ -432,11 +462,15 @@ class DataImportService {
             fetchedAt: DateTime.now().toUtc(),
           );
         }
-        logger.info('TxImport',
-            '导入补拉汇率: base=$ledgerBase 缺失=${missingCurrencies.length} 补齐=$filled source=${result.source}');
+        logger.info(
+          'TxImport',
+          '导入补拉汇率: base=$ledgerBase 缺失=${missingCurrencies.length} 补齐=$filled source=${result.source}',
+        );
       } catch (e) {
-        logger.warning('TxImport',
-            '导入补拉汇率失败,缺失币种(${missingCurrencies.join(",")})将按 1:1 入账待补折算捞回: $e');
+        logger.warning(
+          'TxImport',
+          '导入补拉汇率失败,缺失币种(${missingCurrencies.join(",")})将按 1:1 入账待补折算捞回: $e',
+        );
       }
     }
 
@@ -459,8 +493,10 @@ class DataImportService {
           recordChanges: recordChanges,
         );
         inserted += ids.length;
-        logger.info('TxImport',
-            'flush 批次: size=$size 耗时=${batchSw.elapsedMilliseconds}ms 累计=${processed + size}/$total');
+        logger.info(
+          'TxImport',
+          'flush 批次: size=$size 耗时=${batchSw.elapsedMilliseconds}ms 累计=${processed + size}/$total',
+        );
       } catch (e, st) {
         logger.error('TxImport', '批次 flush 失败,本批 $size 条算 failed', e, st);
         failed += size;
@@ -501,10 +537,11 @@ class DataImportService {
         // 命中失败时直接 upsertCategory 兜底创建。
         if (categoryId == null) {
           try {
-            categoryId = await repo.upsertCategory(
+            final upserted = await repo.upsertCategory(
               name: tx.categoryName!,
               kind: tx.categoryKind!,
             );
+            categoryId = upserted.id;
             localCategoryCache[key] = categoryId;
           } catch (_) {}
         }
@@ -512,9 +549,8 @@ class DataImportService {
 
       // 交易币种 = CSV 币种列(显式) ?? 本位币;
       // 折算快照同币种 = amount,外币按有效汇率,取不到 = amount。
-      final txCurrency = ((tx.currencyCode?.isNotEmpty ?? false)
-              ? tx.currencyCode!
-              : null) ??
+      final txCurrency =
+          ((tx.currencyCode?.isNotEmpty ?? false) ? tx.currencyCode! : null) ??
           ledgerBase;
       // 云端全量恢复保真:源端 nativeAmount 快照是源设备记账时的真实折算结果,
       // 本地重算会因汇率时点不同而失真,故快照有值时优先采用;
@@ -568,9 +604,11 @@ class DataImportService {
     // 刷剩余
     await flush();
 
-    logger.info('TxImport',
-        '交易导入完成: 总数=$total 成功=$inserted 失败=$failed '
-        '跳过重复(syncId)=$skippedDup 总耗时=${overallSw.elapsedMilliseconds}ms');
+    logger.info(
+      'TxImport',
+      '交易导入完成: 总数=$total 成功=$inserted 失败=$failed '
+          '跳过重复(syncId)=$skippedDup 总耗时=${overallSw.elapsedMilliseconds}ms',
+    );
     return ImportResult(inserted: inserted, failed: failed);
   }
 }

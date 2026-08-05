@@ -17,25 +17,35 @@ void main() {
   tearDown(() async => db.close());
 
   Future<int> seedLedger({int monthStartDay = 1}) {
-    return db.into(db.ledgers).insert(LedgersCompanion.insert(
-          name: '测试账本',
-          monthStartDay: Value(monthStartDay),
-        ));
+    return db
+        .into(db.ledgers)
+        .insert(
+          LedgersCompanion.insert(
+            name: '测试账本',
+            monthStartDay: Value(monthStartDay),
+          ),
+        );
   }
 
   Future<void> addTx(int lid, String type, int amount, DateTime at) =>
       repo.addTransaction(
-          ledgerId: lid, type: type, amount: amount, happenedAt: at);
+        ledgerId: lid,
+        type: type,
+        amount: amount,
+        happenedAt: at,
+      );
 
   test('monthlyTotals 按起始日聚合: 6月标签 = [6.15, 7.15)', () async {
     final lid = await seedLedger(monthStartDay: 15);
     await addTx(lid, 'expense', 1000, DateTime(2026, 6, 14, 23, 59)); // 5月周期
-    await addTx(lid, 'expense', 2000, DateTime(2026, 6, 15));         // 6月周期
+    await addTx(lid, 'expense', 2000, DateTime(2026, 6, 15)); // 6月周期
     await addTx(lid, 'expense', 4000, DateTime(2026, 7, 14, 23, 59)); // 6月周期
-    await addTx(lid, 'expense', 8000, DateTime(2026, 7, 15));         // 7月周期
+    await addTx(lid, 'expense', 8000, DateTime(2026, 7, 15)); // 7月周期
 
-    final expense =
-        await repo.monthlyTotals(ledgerId: lid, month: DateTime(2026, 6, 1));
+    final expense = await repo.monthlyTotals(
+      ledgerId: lid,
+      month: DateTime(2026, 6, 1),
+    );
     expect(expense, 60); // 20 + 40
   });
 
@@ -44,8 +54,10 @@ void main() {
     await addTx(lid, 'expense', 1000, DateTime(2026, 6, 1));
     await addTx(lid, 'expense', 2000, DateTime(2026, 6, 30, 23, 59));
     await addTx(lid, 'expense', 4000, DateTime(2026, 7, 1));
-    final expense =
-        await repo.monthlyTotals(ledgerId: lid, month: DateTime(2026, 6, 1));
+    final expense = await repo.monthlyTotals(
+      ledgerId: lid,
+      month: DateTime(2026, 6, 1),
+    );
     expect(expense, 30);
   });
 
@@ -55,8 +67,11 @@ void main() {
     await addTx(lid, 'expense', 9900, DateTime(2026, 1, 9)); // 2025-12 标签 → 范围外
     await addTx(lid, 'expense', 700, DateTime(2026, 1, 10)); // 2026-01 标签
 
-    final rows =
-        await repo.totalsByMonth(ledgerId: lid, type: 'expense', year: 2026);
+    final rows = await repo.totalsByMonth(
+      ledgerId: lid,
+      type: 'expense',
+      year: 2026,
+    );
     expect(rows.length, 12);
     expect(rows.firstWhere((r) => r.month.month == 1).total, 7);
     expect(rows.firstWhere((r) => r.month.month == 12).total, 30);
@@ -83,4 +98,25 @@ void main() {
     expect(txs.single.amount, 2000);
   });
 
+  test('getDailyTotalsByMonth 半开区间包含 23:59:59.500', () async {
+    final lid = await seedLedger();
+    await addTx(lid, 'expense', 1000, DateTime(2026, 8, 5, 23, 59, 59, 500));
+
+    final totals = await repo.getDailyTotalsByMonth(
+      ledgerId: lid,
+      month: DateTime(2026, 8, 1),
+    );
+    expect(totals['2026-08-05'], 10.0);
+  });
+
+  test('getTransactionsByDate 包含毫秒边界交易', () async {
+    final lid = await seedLedger();
+    await addTx(lid, 'expense', 1000, DateTime(2026, 8, 5, 23, 59, 59, 500));
+
+    final txs = await repo.getTransactionsByDate(
+      ledgerId: lid,
+      date: DateTime(2026, 8, 5),
+    );
+    expect(txs, hasLength(1));
+  });
 }

@@ -24,6 +24,7 @@ import '../../helpers/test_isolation.dart';
 import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/repositories/support/change_recorder.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -72,8 +73,9 @@ void main() {
       final changes = await tracker.getUnpushedChangesForLedger(ledgerId);
       // ledger 创建本身也会登记一条 ledger:update —— 数据库仓库层 createLedger
       // 走的子仓库直接 insert 没经过 wrapper,所以这里只看到 transaction:create 三条
-      final txChanges =
-          changes.where((c) => c.entityType == 'transaction').toList();
+      final txChanges = changes
+          .where((c) => c.entityType == 'transaction')
+          .toList();
       expect(txChanges.length, 3);
       for (final c in txChanges) {
         expect(c.action, 'create');
@@ -114,8 +116,7 @@ void main() {
       ]);
 
       final changes = await tracker.getUnpushedChangesForLedger(ledgerId);
-      final txChange =
-          changes.firstWhere((c) => c.entityType == 'transaction');
+      final txChange = changes.firstWhere((c) => c.entityType == 'transaction');
       expect(txChange.entitySyncId, presetSyncId);
     });
   });
@@ -170,9 +171,9 @@ void main() {
       final ledgerId = await repo.createLedger(name: 'test');
       // 取出 ledger.syncId,后面验证 ledger_snapshot:delete 的 entitySyncId
       // 必须等于这个值,不能是 id.toString() —— 否则 server 找不到要删的 ledger。
-      final ledgerRow = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
-          .getSingle();
+      final ledgerRow = await (db.select(
+        db.ledgers,
+      )..where((l) => l.id.equals(ledgerId))).getSingle();
       final expectedLedgerSyncId = ledgerRow.syncId!;
 
       await repo.insertTransactionsBatch([
@@ -200,14 +201,17 @@ void main() {
           .where((c) => c.entityType == 'transaction' && c.action == 'delete')
           .toList();
       final snapshotDeletes = changes
-          .where((c) =>
-              c.entityType == 'ledger_snapshot' && c.action == 'delete')
+          .where(
+            (c) => c.entityType == 'ledger_snapshot' && c.action == 'delete',
+          )
           .toList();
 
-      expect(txDeletes.length, 2,
-          reason: '级联删除的 2 条交易需要登记 transaction:delete');
-      expect(snapshotDeletes.length, 1,
-          reason: '账本本身需要登记 1 条 ledger_snapshot:delete');
+      expect(txDeletes.length, 2, reason: '级联删除的 2 条交易需要登记 transaction:delete');
+      expect(
+        snapshotDeletes.length,
+        1,
+        reason: '账本本身需要登记 1 条 ledger_snapshot:delete',
+      );
       // 关键:必须用 ledger.syncId 作为 entity_sync_id,server 才能按
       // external_id 找到要删的 ledger;用本地 id 无法定位远端账本。
       expect(snapshotDeletes.first.entitySyncId, expectedLedgerSyncId);
@@ -230,10 +234,13 @@ void main() {
       final creates = changes
           .where((c) => c.entityType == 'transaction' && c.action == 'create')
           .toList();
-      expect(creates.length, 1,
-          reason:
-              'data_import_service 给带标签/附件的交易走这条单条插入路径,'
-              '必须登记 transaction:create change 才能同步到云端');
+      expect(
+        creates.length,
+        1,
+        reason:
+            'data_import_service 给带标签/附件的交易走这条单条插入路径,'
+            '必须登记 transaction:create change 才能同步到云端',
+      );
     });
 
     test('changeTracker 为 null 时不记录、不抛错', () async {
@@ -255,7 +262,9 @@ void main() {
 
   group('删除交易清理编辑历史', () {
     Future<int> seedTxWithHistory(int ledgerId, String syncId) async {
-      final txId = await db.into(db.transactions).insert(
+      final txId = await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerId,
               type: 'expense',
@@ -263,7 +272,9 @@ void main() {
               syncId: Value(syncId),
             ),
           );
-      await db.into(db.recordEditHistories).insert(
+      await db
+          .into(db.recordEditHistories)
+          .insert(
             RecordEditHistoriesCompanion.insert(
               recordId: txId,
               version: 2,
@@ -281,8 +292,10 @@ void main() {
       await seedTxWithHistory(ledgerId, 'tx-1');
       await seedTxWithHistory(ledgerId, 'tx-2');
 
-      final deleted =
-          await repo.deleteTransactionsBatchBySyncIds(['tx-1', 'tx-2']);
+      final deleted = await repo.deleteTransactionsBatchBySyncIds([
+        'tx-1',
+        'tx-2',
+      ]);
 
       expect(deleted, 2);
       expect(await historyCount(), 0);
@@ -308,7 +321,9 @@ void main() {
     });
 
     test('purgeSharedLedger 同步清理编辑历史', () async {
-      final ledgerId = await db.into(db.ledgers).insert(
+      final ledgerId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'history-purge',
               syncId: const Value('ext-1'),
@@ -324,7 +339,9 @@ void main() {
     });
 
     test('purgeAllSharedLedgers 同步清理编辑历史', () async {
-      final ledgerId = await db.into(db.ledgers).insert(
+      final ledgerId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'history-purge-all',
               syncId: const Value('ext-2'),
@@ -339,4 +356,139 @@ void main() {
       expect(await historyCount(), 0);
     });
   });
+
+  group('单条写路径写库与变更登记同事务', () {
+    test('addTransaction 登记变更失败时回滚交易', () async {
+      final repoNoFail = LocalRepository(db);
+      final ledgerId = await repoNoFail.createLedger(name: 'atomic-add');
+      repoNoFail.changeTracker = _ThrowingChangeRecorder();
+
+      await expectLater(
+        repoNoFail.addTransaction(
+          ledgerId: ledgerId,
+          type: 'expense',
+          amount: 1000,
+          happenedAt: DateTime(2026, 8, 5),
+        ),
+        throwsA(isA<StateError>()),
+      );
+
+      expect(await db.select(db.transactions).get(), isEmpty);
+      expect(await db.select(db.localChanges).get(), isEmpty);
+    });
+
+    test('updateTransaction 登记变更失败时回滚金额与版本', () async {
+      final repoNoFail = LocalRepository(db);
+      final ledgerId = await repoNoFail.createLedger(name: 'atomic-update');
+      final id = await repoNoFail.addTransaction(
+        ledgerId: ledgerId,
+        type: 'expense',
+        amount: 1000,
+        happenedAt: DateTime(2026, 8, 5),
+      );
+      repoNoFail.changeTracker = _ThrowingChangeRecorder();
+
+      await expectLater(
+        repoNoFail.updateTransaction(id: id, type: 'expense', amount: 2000),
+        throwsA(isA<StateError>()),
+      );
+
+      final tx = await repoNoFail.getTransactionById(id);
+      expect(tx!.amount, 1000);
+      expect(tx.version, 1);
+      expect(await db.select(db.localChanges).get(), isEmpty);
+    });
+  });
+
+  group('upsertCategory / insertCategory 变更登记', () {
+    test('upsertCategory 新建时登记 create,命中已有时不重复登记', () async {
+      final first = await repo.upsertCategory(name: '同步分类', kind: 'expense');
+      expect(first.created, isTrue);
+      final changesAfterCreate = await tracker.getUnpushedChangesForLedger(0);
+      expect(
+        changesAfterCreate.where((c) => c.entityType == 'category'),
+        hasLength(1),
+      );
+
+      final second = await repo.upsertCategory(name: '同步分类', kind: 'expense');
+      expect(second.id, first.id);
+      expect(second.created, isFalse);
+      final changesAfterHit = await tracker.getUnpushedChangesForLedger(0);
+      expect(
+        changesAfterHit.where((c) => c.entityType == 'category'),
+        hasLength(1),
+      );
+    });
+
+    test('insertCategory 缺 syncId 时预填并登记 create', () async {
+      final id = await repo.insertCategory(
+        CategoriesCompanion.insert(name: '单插分类', kind: 'expense'),
+      );
+      final cat = await repo.getCategoryById(id);
+      expect(cat!.syncId, isNotNull);
+      final changes = await tracker.getUnpushedChangesForLedger(0);
+      expect(changes, hasLength(1));
+      expect(changes.single.entityType, 'category');
+      expect(changes.single.action, 'create');
+    });
+  });
+
+  test('updateTransaction 不存在的 id 抛 StateError,不返回假版本号', () async {
+    await expectLater(
+      repo.updateTransaction(id: 9999, type: 'expense', amount: 100),
+      throwsA(isA<StateError>()),
+    );
+    expect(await db.select(db.recordEditHistories).get(), isEmpty);
+  });
+}
+
+/// 用于注入“登记变更必定失败”的测试替身:验证写库与登记在同一事务内。
+class _ThrowingChangeRecorder implements ChangeRecorder {
+  @override
+  Future<void> recordUserGlobalChange({
+    required String entityType,
+    required int entityId,
+    required String entitySyncId,
+    required String action,
+    String? payloadJson,
+  }) => throw StateError('injected record failure');
+
+  @override
+  Future<void> recordLedgerChange({
+    required String entityType,
+    required int entityId,
+    required String entitySyncId,
+    required int ledgerId,
+    required String action,
+    String? payloadJson,
+  }) => throw StateError('injected record failure');
+
+  @override
+  Future<void> recordLedgerChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        int ledgerId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  }) => throw StateError('injected record failure');
+
+  @override
+  Future<void> recordUserGlobalChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  }) => throw StateError('injected record failure');
 }

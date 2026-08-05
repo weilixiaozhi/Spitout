@@ -3,9 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:yaml/yaml.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:drift/drift.dart' as d;
+import 'package:uuid/uuid.dart';
 import '../../data/db.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../core/logging/logger_service.dart';
+import '../notification/reminder_constants.dart';
 
 // 导入 OrderingTerm
 typedef OrderingTerm = d.OrderingTerm;
@@ -16,12 +18,14 @@ class ExportOptions {
   final bool categories;
   final bool recurringTransactions;
   final bool appSettings; // 包含云服务配置等
+  final bool includeCredentials; // 是否在导出文件中写入密码/密钥
 
   const ExportOptions({
     this.ledgers = true,
     this.categories = true,
     this.recurringTransactions = true,
     this.appSettings = true,
+    this.includeCredentials = false,
   });
 
   /// 全选
@@ -33,6 +37,7 @@ class ExportOptions {
     categories: false,
     recurringTransactions: false,
     appSettings: false,
+    includeCredentials: false,
   );
 }
 
@@ -58,23 +63,31 @@ class AppConfig {
     this.categories,
   });
 
-  Map<String, dynamic> toYaml() {
+  Map<String, dynamic> toYaml({bool includeCredentials = false}) {
     final map = <String, dynamic>{};
 
     if (supabase != null) {
-      map['supabase'] = supabase!.toMap();
+      map['supabase'] = supabase!.toMap(
+        includeCredentials: includeCredentials,
+      );
     }
 
     if (spitoutCloud != null) {
-      map['spitout_cloud'] = spitoutCloud!.toMap();
+      map['spitout_cloud'] = spitoutCloud!.toMap(
+        includeCredentials: includeCredentials,
+      );
     }
 
     if (webdav != null) {
-      map['webdav'] = webdav!.toMap();
+      map['webdav'] = webdav!.toMap(
+        includeCredentials: includeCredentials,
+      );
     }
 
     if (s3 != null) {
-      map['s3'] = s3!.toMap();
+      map['s3'] = s3!.toMap(
+        includeCredentials: includeCredentials,
+      );
     }
 
     if (appSettings != null) {
@@ -150,7 +163,7 @@ class SupabaseConfig {
     this.password,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({bool includeCredentials = false}) {
     final map = <String, dynamic>{
       'url': url,
       'anon_key': anonKey,
@@ -162,7 +175,8 @@ class SupabaseConfig {
       map['email'] = email;
     }
     if (password != null && password!.isNotEmpty) {
-      map['password'] = password;
+      // 默认脱敏：只有显式勾选“包含凭据”才写入明文密码。
+      map['password'] = includeCredentials ? password : '***';
     }
     return map;
   }
@@ -200,12 +214,14 @@ class SpitoutCloudConfig {
     this.deviceId,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({bool includeCredentials = false}) {
     final map = <String, dynamic>{
       'base_url': baseUrl,
     };
     if (email != null && email!.isNotEmpty) map['email'] = email;
-    if (password != null && password!.isNotEmpty) map['password'] = password;
+    if (password != null && password!.isNotEmpty) {
+      map['password'] = includeCredentials ? password : '***';
+    }
     if (accessToken != null && accessToken!.isNotEmpty) {
       map['access_token'] = accessToken;
     }
@@ -241,11 +257,11 @@ class WebdavConfig {
     this.remotePath,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({bool includeCredentials = false}) {
     final map = <String, dynamic>{
       'url': url,
       'username': username,
-      'password': password,
+      'password': includeCredentials ? password : '***',
     };
     if (remotePath != null && remotePath!.isNotEmpty) {
       map['remote_path'] = remotePath;
@@ -281,12 +297,12 @@ class S3Config {
     this.port,
   });
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> toMap({bool includeCredentials = false}) {
     final map = <String, dynamic>{
       'endpoint': endpoint,
       'region': region,
       'access_key': accessKey,
-      'secret_key': secretKey,
+      'secret_key': includeCredentials ? secretKey : '***',
       'bucket': bucket,
     };
     if (useSSL != null) {
@@ -348,13 +364,13 @@ class AppSettingsConfig {
     final map = <String, dynamic>{};
 
     if (reminderEnabled != null) {
-      map['reminder_enabled'] = reminderEnabled;
+      map[ReminderPrefs.enabled] = reminderEnabled;
     }
     if (reminderHour != null) {
-      map['reminder_hour'] = reminderHour;
+      map[ReminderPrefs.hour] = reminderHour;
     }
     if (reminderMinute != null) {
-      map['reminder_minute'] = reminderMinute;
+      map[ReminderPrefs.minute] = reminderMinute;
     }
     if (languageCode != null && languageCode!.isNotEmpty) {
       map['language_code'] = languageCode;
@@ -382,9 +398,9 @@ class AppSettingsConfig {
 
   static AppSettingsConfig fromMap(Map<String, dynamic> map) =>
       AppSettingsConfig(
-        reminderEnabled: map['reminder_enabled'] as bool?,
-        reminderHour: map['reminder_hour'] as int?,
-        reminderMinute: map['reminder_minute'] as int?,
+        reminderEnabled: map[ReminderPrefs.enabled] as bool?,
+        reminderHour: map[ReminderPrefs.hour] as int?,
+        reminderMinute: map[ReminderPrefs.minute] as int?,
         languageCode: map['language_code'] as String?,
         countryCode: map['country_code'] as String?,
         fontScaleLevel: map['font_scale_level'] as int?,
@@ -611,6 +627,7 @@ class CategoryItem {
   final int sortOrder;
   final String? parentName; // 使用父分类名称而非ID
   final int level;
+  final String? syncId; // 跨设备收敛用确定性标识
 
   const CategoryItem({
     required this.name,
@@ -619,6 +636,7 @@ class CategoryItem {
     required this.sortOrder,
     this.parentName,
     required this.level,
+    this.syncId,
   });
 
   Map<String, dynamic> toMap() {
@@ -630,6 +648,7 @@ class CategoryItem {
     };
     if (icon != null) map['icon'] = icon;
     if (parentName != null) map['parent_name'] = parentName;
+    if (syncId != null) map['sync_id'] = syncId;
     return map;
   }
 
@@ -641,6 +660,7 @@ class CategoryItem {
       sortOrder: map['sort_order'] as int? ?? 0,
       parentName: map['parent_name'] as String?,
       level: map['level'] as int? ?? 1,
+      syncId: map['sync_id'] as String?,
     );
   }
 
@@ -652,6 +672,7 @@ class CategoryItem {
       sortOrder: category.sortOrder,
       parentName: parentName,
       level: category.level,
+      syncId: category.syncId,
     );
   }
 }
@@ -697,13 +718,41 @@ class ConfigExportService {
     }
   }
 
+  /// 将字符串输出为 YAML 双引号标量，并做标准转义。
+  ///
+  /// 手工拼接时必须经过这里：账本名/备注/密码可能包含引号、反斜杠、
+  /// 换行等字符，直接插值会生成非法 YAML 或被篡改结构。
+  static String _yamlQuote(Object? value) {
+    final s = value?.toString() ?? '';
+    final escaped = s
+        .replaceAll('\\', '\\\\')
+        .replaceAll('"', '\\"')
+        .replaceAll('\n', '\\n')
+        .replaceAll('\r', '\\r')
+        .replaceAll('\t', '\\t')
+        .replaceAll('\u0008', '\\b')
+        .replaceAll('\u000C', '\\f');
+    return '"$escaped"';
+  }
+
+  /// 分类配置缺失 syncId 时生成确定性 UUID。
+  ///
+  /// 同一份配置在两台设备导入后分类 syncId 一致，云端按 syncId 收敛，
+  /// 避免同分类在云端重复出现。key 取「父级作用域 + kind + 名称小写」，
+  /// 与导入去重契约（父级作用域内唯一）保持一致。
+  static String _deterministicCategorySyncId(CategoryItem item) {
+    final scope = item.parentName == null
+        ? '${item.kind}|${item.name.toLowerCase()}'
+        : '${item.kind}|${item.parentName!.toLowerCase()}|'
+            '${item.name.toLowerCase()}';
+    return const Uuid().v5(Namespace.url.value, 'spitout:category:$scope');
+  }
+
   /// 导出配置到YAML字符串
   /// [repository] 数据仓库实例，用于导出周期账单等数据
-  /// [ledgerId] 账本ID，用于过滤导出的周期账单
   /// [options] 导出选项，控制导出哪些内容
   static Future<String> exportToYaml({
     BaseRepository? repository,
-    int? ledgerId,
     ExportOptions options = ExportOptions.all,
   }) async {
     final prefs = await SharedPreferences.getInstance();
@@ -824,9 +873,9 @@ class ConfigExportService {
 
     // 读取应用设置
     AppSettingsConfig? appSettings;
-    final reminderEnabled = prefs.getBool('reminder_enabled');
-    final reminderHour = prefs.getInt('reminder_hour');
-    final reminderMinute = prefs.getInt('reminder_minute');
+    final reminderEnabled = prefs.getBool(ReminderPrefs.enabled);
+    final reminderHour = prefs.getInt(ReminderPrefs.hour);
+    final reminderMinute = prefs.getInt(ReminderPrefs.minute);
     final languageCode = prefs.getString('selected_language');
     final countryCode = prefs.getString('selected_language_country');
     final fontScaleLevel = prefs.getInt('fontScaleLevel');
@@ -996,32 +1045,35 @@ class ConfigExportService {
       categories: categoriesConfig,
     );
 
-    // 转换为YAML格式
-    final yamlMap = config.toYaml();
+    // 转换为YAML格式；凭据默认脱敏，仅显式勾选“包含凭据”时写入明文。
+    final yamlMap = config.toYaml(includeCredentials: options.includeCredentials);
 
     // 手动构建YAML字符串以保持良好格式
     final buffer = StringBuffer();
     buffer.writeln('# Spitout 应用配置');
     buffer.writeln('# 导出时间: ${DateTime.now().toIso8601String()}');
+    if (options.includeCredentials) {
+      buffer.writeln('# 警告：本文件包含密码/密钥，请勿分享或提交到版本库');
+    }
     buffer.writeln();
 
     if (yamlMap.containsKey('supabase')) {
       buffer.writeln('supabase:');
       final sb = yamlMap['supabase'] as Map<String, dynamic>;
-      buffer.writeln('  url: "${sb['url']}"');
-      buffer.writeln('  anon_key: "${sb['anon_key']}"');
+      buffer.writeln('  url: ${_yamlQuote(sb['url'])}');
+      buffer.writeln('  anon_key: ${_yamlQuote(sb['anon_key'])}');
       if (sb.containsKey('bucket')) {
         buffer.writeln('  # Storage bucket 名称，留空则使用默认值 spitout-backups');
-        buffer.writeln('  bucket: "${sb['bucket']}"');
+        buffer.writeln('  bucket: ${_yamlQuote(sb['bucket'])}');
       }
       if (sb.containsKey('email') || sb.containsKey('password')) {
         buffer.writeln('  # 记住账号密码功能：导入后登录页面会自动填充');
       }
       if (sb.containsKey('email')) {
-        buffer.writeln('  email: "${sb['email']}"');
+        buffer.writeln('  email: ${_yamlQuote(sb['email'])}');
       }
       if (sb.containsKey('password')) {
-        buffer.writeln('  password: "${sb['password']}"');
+        buffer.writeln('  password: ${_yamlQuote(sb['password'])}');
       }
       buffer.writeln();
     }
@@ -1029,11 +1081,11 @@ class ConfigExportService {
     if (yamlMap.containsKey('webdav')) {
       buffer.writeln('webdav:');
       final wd = yamlMap['webdav'] as Map<String, dynamic>;
-      buffer.writeln('  url: "${wd['url']}"');
-      buffer.writeln('  username: "${wd['username']}"');
-      buffer.writeln('  password: "${wd['password']}"');
+      buffer.writeln('  url: ${_yamlQuote(wd['url'])}');
+      buffer.writeln('  username: ${_yamlQuote(wd['username'])}');
+      buffer.writeln('  password: ${_yamlQuote(wd['password'])}');
       if (wd.containsKey('remote_path')) {
-        buffer.writeln('  remote_path: "${wd['remote_path']}"');
+        buffer.writeln('  remote_path: ${_yamlQuote(wd['remote_path'])}');
       }
       buffer.writeln();
     }
@@ -1041,11 +1093,11 @@ class ConfigExportService {
     if (yamlMap.containsKey('s3')) {
       buffer.writeln('s3:');
       final s3 = yamlMap['s3'] as Map<String, dynamic>;
-      buffer.writeln('  endpoint: "${s3['endpoint']}"');
-      buffer.writeln('  region: "${s3['region']}"');
-      buffer.writeln('  access_key: "${s3['access_key']}"');
-      buffer.writeln('  secret_key: "${s3['secret_key']}"');
-      buffer.writeln('  bucket: "${s3['bucket']}"');
+      buffer.writeln('  endpoint: ${_yamlQuote(s3['endpoint'])}');
+      buffer.writeln('  region: ${_yamlQuote(s3['region'])}');
+      buffer.writeln('  access_key: ${_yamlQuote(s3['access_key'])}');
+      buffer.writeln('  secret_key: ${_yamlQuote(s3['secret_key'])}');
+      buffer.writeln('  bucket: ${_yamlQuote(s3['bucket'])}');
       if (s3.containsKey('use_ssl')) {
         buffer.writeln('  use_ssl: ${s3['use_ssl']}');
       }
@@ -1059,24 +1111,24 @@ class ConfigExportService {
       buffer.writeln('spitout_cloud:');
       final bc = yamlMap['spitout_cloud'] as Map<String, dynamic>;
       buffer.writeln('  # Spitout Cloud 自部署后端配置');
-      buffer.writeln('  base_url: "${bc['base_url']}"');
+      buffer.writeln('  base_url: ${_yamlQuote(bc['base_url'])}');
       if (bc.containsKey('email') || bc.containsKey('password')) {
         buffer.writeln('  # 记住账号密码功能：导入后登录页面会自动填充');
       }
       if (bc.containsKey('email')) {
-        buffer.writeln('  email: "${bc['email']}"');
+        buffer.writeln('  email: ${_yamlQuote(bc['email'])}');
       }
       if (bc.containsKey('password')) {
-        buffer.writeln('  password: "${bc['password']}"');
+        buffer.writeln('  password: ${_yamlQuote(bc['password'])}');
       }
       if (bc.containsKey('access_token')) {
-        buffer.writeln('  access_token: "${bc['access_token']}"');
+        buffer.writeln('  access_token: ${_yamlQuote(bc['access_token'])}');
       }
       if (bc.containsKey('refresh_token')) {
-        buffer.writeln('  refresh_token: "${bc['refresh_token']}"');
+        buffer.writeln('  refresh_token: ${_yamlQuote(bc['refresh_token'])}');
       }
       if (bc.containsKey('device_id')) {
-        buffer.writeln('  device_id: "${bc['device_id']}"');
+        buffer.writeln('  device_id: ${_yamlQuote(bc['device_id'])}');
       }
       buffer.writeln();
     }
@@ -1085,28 +1137,31 @@ class ConfigExportService {
       buffer.writeln('app_settings:');
       final settings = yamlMap['app_settings'] as Map<String, dynamic>;
 
-      if (settings.containsKey('reminder_enabled') ||
-          settings.containsKey('reminder_hour') ||
-          settings.containsKey('reminder_minute')) {
+      if (settings.containsKey(ReminderPrefs.enabled) ||
+          settings.containsKey(ReminderPrefs.hour) ||
+          settings.containsKey(ReminderPrefs.minute)) {
         buffer.writeln('  # 记账提醒');
-        if (settings.containsKey('reminder_enabled')) {
-          buffer.writeln('  reminder_enabled: ${settings['reminder_enabled']}');
+        if (settings.containsKey(ReminderPrefs.enabled)) {
+          buffer.writeln(
+              '  ${ReminderPrefs.enabled}: ${settings[ReminderPrefs.enabled]}');
         }
-        if (settings.containsKey('reminder_hour')) {
-          buffer.writeln('  reminder_hour: ${settings['reminder_hour']}');
+        if (settings.containsKey(ReminderPrefs.hour)) {
+          buffer.writeln(
+              '  ${ReminderPrefs.hour}: ${settings[ReminderPrefs.hour]}');
         }
-        if (settings.containsKey('reminder_minute')) {
-          buffer.writeln('  reminder_minute: ${settings['reminder_minute']}');
+        if (settings.containsKey(ReminderPrefs.minute)) {
+          buffer.writeln(
+              '  ${ReminderPrefs.minute}: ${settings[ReminderPrefs.minute]}');
         }
       }
 
       if (settings.containsKey('language_code') || settings.containsKey('country_code')) {
         buffer.writeln('  # 语言设置');
         if (settings.containsKey('language_code')) {
-          buffer.writeln('  language_code: "${settings['language_code']}"');
+          buffer.writeln('  language_code: ${_yamlQuote(settings['language_code'])}');
         }
         if (settings.containsKey('country_code')) {
-          buffer.writeln('  country_code: "${settings['country_code']}"');
+          buffer.writeln('  country_code: ${_yamlQuote(settings['country_code'])}');
         }
       }
 
@@ -1123,14 +1178,15 @@ class ConfigExportService {
 
       if (settings.containsKey('theme_mode')) {
         buffer.writeln('  # 外观设置');
-        buffer.writeln('  theme_mode: "${settings['theme_mode']}"');
+        buffer.writeln('  theme_mode: ${_yamlQuote(settings['theme_mode'])}');
       }
 
       if (settings.containsKey('cloud_service_type') ||
           settings.containsKey('auto_sync')) {
         buffer.writeln('  # 云服务');
         if (settings.containsKey('cloud_service_type')) {
-          buffer.writeln('  cloud_service_type: "${settings['cloud_service_type']}"');
+          buffer.writeln(
+              '  cloud_service_type: ${_yamlQuote(settings['cloud_service_type'])}');
         }
         if (settings.containsKey('auto_sync')) {
           buffer.writeln('  auto_sync: ${settings['auto_sync']}');
@@ -1151,13 +1207,13 @@ class ConfigExportService {
         buffer.writeln('  items:');
         for (final item in items) {
           final itemMap = item as Map<String, dynamic>;
-          buffer.writeln('    - name: "${itemMap['name']}"');
-          buffer.writeln('      currency: "${itemMap['currency']}"');
+          buffer.writeln('    - name: ${_yamlQuote(itemMap['name'])}');
+          buffer.writeln('      currency: ${_yamlQuote(itemMap['currency'])}');
           if (itemMap.containsKey('type') && itemMap['type'] != null) {
-            buffer.writeln('      type: "${itemMap['type']}"');
+            buffer.writeln('      type: ${_yamlQuote(itemMap['type'])}');
           }
           if (itemMap.containsKey('created_at') && itemMap['created_at'] != null) {
-            buffer.writeln('      created_at: "${itemMap['created_at']}"');
+            buffer.writeln('      created_at: ${_yamlQuote(itemMap['created_at'])}');
           }
         }
       }
@@ -1175,18 +1231,19 @@ class ConfigExportService {
         buffer.writeln('  items:');
         for (final item in items) {
           final itemMap = item as Map<String, dynamic>;
-          buffer.writeln('    - ledger_name: "${itemMap['ledger_name']}"');
-          buffer.writeln('      type: "${itemMap['type']}"');
+          buffer.writeln('    - ledger_name: ${_yamlQuote(itemMap['ledger_name'])}');
+          buffer.writeln('      type: ${_yamlQuote(itemMap['type'])}');
           buffer.writeln('      amount: ${itemMap['amount']}');
 
           if (itemMap.containsKey('category_name') && itemMap['category_name'] != null) {
-            buffer.writeln('      category_name: "${itemMap['category_name']}"');
+            buffer.writeln(
+                '      category_name: ${_yamlQuote(itemMap['category_name'])}');
           }
           if (itemMap.containsKey('note') && itemMap['note'] != null) {
-            buffer.writeln('      note: "${itemMap['note']}"');
+            buffer.writeln('      note: ${_yamlQuote(itemMap['note'])}');
           }
 
-          buffer.writeln('      frequency: "${itemMap['frequency']}"');
+          buffer.writeln('      frequency: ${_yamlQuote(itemMap['frequency'])}');
           buffer.writeln('      interval: ${itemMap['interval']}');
 
           if (itemMap.containsKey('day_of_month')) {
@@ -1199,9 +1256,9 @@ class ConfigExportService {
             buffer.writeln('      month_of_year: ${itemMap['month_of_year']}');
           }
 
-          buffer.writeln('      start_date: "${itemMap['start_date']}"');
+          buffer.writeln('      start_date: ${_yamlQuote(itemMap['start_date'])}');
           if (itemMap.containsKey('end_date') && itemMap['end_date'] != null) {
-            buffer.writeln('      end_date: "${itemMap['end_date']}"');
+            buffer.writeln('      end_date: ${_yamlQuote(itemMap['end_date'])}');
           }
           buffer.writeln('      enabled: ${itemMap['enabled']}');
         }
@@ -1220,14 +1277,17 @@ class ConfigExportService {
         buffer.writeln('  items:');
         for (final item in items) {
           final itemMap = item as Map<String, dynamic>;
-          buffer.writeln('    - name: "${itemMap['name']}"');
-          buffer.writeln('      kind: "${itemMap['kind']}"');
+          buffer.writeln('    - name: ${_yamlQuote(itemMap['name'])}');
+          buffer.writeln('      kind: ${_yamlQuote(itemMap['kind'])}');
+          if (itemMap.containsKey('sync_id') && itemMap['sync_id'] != null) {
+            buffer.writeln('      sync_id: ${_yamlQuote(itemMap['sync_id'])}');
+          }
           if (itemMap.containsKey('icon') && itemMap['icon'] != null) {
-            buffer.writeln('      icon: "${itemMap['icon']}"');
+            buffer.writeln('      icon: ${_yamlQuote(itemMap['icon'])}');
           }
           buffer.writeln('      sort_order: ${itemMap['sort_order']}');
           if (itemMap.containsKey('parent_name') && itemMap['parent_name'] != null) {
-            buffer.writeln('      parent_name: "${itemMap['parent_name']}"');
+            buffer.writeln('      parent_name: ${_yamlQuote(itemMap['parent_name'])}');
           }
           buffer.writeln('      level: ${itemMap['level']}');
         }
@@ -1333,13 +1393,13 @@ class ConfigExportService {
 
       // 记账提醒
       if (settings.reminderEnabled != null) {
-        await prefs.setBool('reminder_enabled', settings.reminderEnabled!);
+        await prefs.setBool(ReminderPrefs.enabled, settings.reminderEnabled!);
       }
       if (settings.reminderHour != null) {
-        await prefs.setInt('reminder_hour', settings.reminderHour!);
+        await prefs.setInt(ReminderPrefs.hour, settings.reminderHour!);
       }
       if (settings.reminderMinute != null) {
-        await prefs.setInt('reminder_minute', settings.reminderMinute!);
+        await prefs.setInt(ReminderPrefs.minute, settings.reminderMinute!);
       }
 
       // 语言设置
@@ -1441,6 +1501,9 @@ class ConfigExportService {
             sortOrder: d.Value(item.sortOrder),
             parentId: const d.Value(null),
             level: d.Value(item.level),
+            syncId: d.Value(
+              item.syncId ?? _deterministicCategorySyncId(item),
+            ),
           )).toList();
 
           await repository.batchInsertCategories(level1Companions);
@@ -1492,6 +1555,9 @@ class ConfigExportService {
               sortOrder: d.Value(item.sortOrder),
               parentId: d.Value(parentId),
               level: d.Value(item.level),
+              syncId: d.Value(
+                item.syncId ?? _deterministicCategorySyncId(item),
+              ),
             ));
           } else {
             logger.warning('ConfigImport', '找不到父分类 "${item.parentName}"，跳过二级分类: ${item.name}');
@@ -1580,12 +1646,10 @@ class ConfigExportService {
   static Future<void> exportToFile(
     String filePath, {
     BaseRepository? repository,
-    int? ledgerId,
     ExportOptions options = ExportOptions.all,
   }) async {
     final yamlContent = await exportToYaml(
       repository: repository,
-      ledgerId: ledgerId,
       options: options,
     );
     final file = File(filePath);

@@ -82,6 +82,12 @@ class CategorySyncBeforeInviteException implements Exception {
 /// sync_engine.dart L1549),失败时重试一次——单飞锁在 finally 已复位,重试
 /// 安全;重试仍失败则抛 [CategorySyncBeforeInviteException] 阻断邀请,
 /// 调用方(member_list_page.dart)catch 兜底显示友好错误,不让残缺邀请发出。
+///
+/// 规则 4 豁免说明（请勿误删）：这里的直接推送是「发邀请」业务前置——必须
+/// 在邀请生效前让云端分类就绪，且邀请是用户显式动作、需要同步等待结果来
+/// 决定是否放行，无法改由数据变更驱动的 250ms 后台同步兜底。它与
+/// PostProcessor 的写后自动同步是两条职责不同的路径：后者负责常规数据变更，
+/// 这里负责邀请前的强一致前置校验，并非可删除的冗余。
 Future<SpitoutCloudInvite> createInviteAndRefresh(
   WidgetRef ref, {
   required String ledgerId,

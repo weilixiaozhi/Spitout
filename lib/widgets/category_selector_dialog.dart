@@ -115,11 +115,14 @@ class _ParentCategorySelectorSheetState
     extends ConsumerState<_ParentCategorySelectorSheet> {
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
+
   /// 用户在 sheet 内临时选中的分类（点击行高亮，点确定才返回）
   /// 初始化为 [widget.initialSelection]，用户不改动则原样返回
   late Category? _tempSelected;
+
   /// 过滤器结果缓存，避免每次 build 都重新异步计算
   Map<int, bool> _filterResults = {};
+
   /// 已加载的分类列表缓存（只在首次 build 时异步加载一次，
   /// 搜索过滤在内存中进行，避免每次按键都查 DB）
   List<Category>? _cachedCategories;
@@ -253,8 +256,10 @@ class _ParentCategorySelectorSheetState
                 final filtered = _searchText.isEmpty
                     ? categories
                     : categories.where((c) {
-                        final name = CategoryUtils.getDisplayName(c.name, context)
-                            .toLowerCase();
+                        final name = CategoryUtils.getDisplayName(
+                          c.name,
+                          context,
+                        ).toLowerCase();
                         return name.contains(_searchText);
                       }).toList();
 
@@ -370,9 +375,7 @@ class _ParentCategoryTile extends StatelessWidget {
               ? primaryColor.withValues(alpha: 0.08)
               : Colors.transparent,
           border: Border.all(
-            color: isSelected
-                ? primaryColor
-                : Colors.transparent,
+            color: isSelected ? primaryColor : Colors.transparent,
             width: 1,
           ),
           borderRadius: BorderRadius.circular(4),
@@ -408,12 +411,7 @@ class _ParentCategoryTile extends StatelessWidget {
               ),
             ),
             // 选中勾
-            if (isSelected)
-              Icon(
-                AppIcons.check,
-                size: 18,
-                color: primaryColor,
-              ),
+            if (isSelected) Icon(AppIcons.check, size: 18, color: primaryColor),
           ],
         ),
       ),
@@ -450,10 +448,12 @@ class CategorySelectorDialog extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<CategorySelectorDialog> createState() => _CategorySelectorDialogState();
+  ConsumerState<CategorySelectorDialog> createState() =>
+      _CategorySelectorDialogState();
 }
 
-class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog> {
+class _CategorySelectorDialogState
+    extends ConsumerState<CategorySelectorDialog> {
   final TextEditingController _searchController = TextEditingController();
   String _searchText = '';
   Map<int, int> _transactionCounts = {};
@@ -530,7 +530,9 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
       final repo = ref.read(repositoryProvider);
 
       // 获取交易（ledgerId 可选，不传则获取所有账本）
-      final transactions = await repo.transactionsWithCategoryAll(ledgerId: widget.ledgerId).first;
+      final transactions = await repo.transactionsWithCategoryAll(
+        ledgerId: widget.ledgerId,
+      );
 
       // 统计每个分类的笔数
       final counts = <int, int>{};
@@ -553,8 +555,9 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
   /// 构建分类分组数据
   List<_CategoryGroup> _buildCategoryGroups(List<Category> allCategories) {
     // 全局仅支出模式，按 kind 过滤（type 固定为 'expense'）。
-    final typedCategories =
-        allCategories.where((c) => c.kind == widget.type).toList();
+    final typedCategories = allCategories
+        .where((c) => c.kind == widget.type)
+        .toList();
 
     // 应用排除规则
     final filteredCategories = typedCategories.where((c) {
@@ -599,36 +602,48 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
       // 判断父分类是否可选
       bool isParentSelectable = !hasChildren || widget.includeParentCategories;
       // 如果有过滤器，应用过滤器结果
-      if (widget.categoryFilter != null && _categoryFilterResults.containsKey(parent.id)) {
-        isParentSelectable = isParentSelectable && _categoryFilterResults[parent.id]!;
+      if (widget.categoryFilter != null &&
+          _categoryFilterResults.containsKey(parent.id)) {
+        isParentSelectable =
+            isParentSelectable && _categoryFilterResults[parent.id]!;
       }
 
       // 应用搜索过滤
       if (_searchText.isNotEmpty) {
-        final parentName = CategoryUtils.getDisplayName(parent.name, context).toLowerCase();
+        final parentName = CategoryUtils.getDisplayName(
+          parent.name,
+          context,
+        ).toLowerCase();
         final parentMatches = parentName.contains(_searchText);
 
         final matchedChildren = children.where((c) {
-          final childName = CategoryUtils.getDisplayName(c.name, context).toLowerCase();
+          final childName = CategoryUtils.getDisplayName(
+            c.name,
+            context,
+          ).toLowerCase();
           return childName.contains(_searchText);
         }).toList();
 
         // 如果父分类匹配，显示所有子分类
         if (parentMatches) {
-          groups.add(_CategoryGroup(
-            parent: parent,
-            children: children,
-            isExpanded: true,
-            isParentSelectable: isParentSelectable,
-          ));
+          groups.add(
+            _CategoryGroup(
+              parent: parent,
+              children: children,
+              isExpanded: true,
+              isParentSelectable: isParentSelectable,
+            ),
+          );
         } else if (matchedChildren.isNotEmpty) {
           // 如果只有子分类匹配，只显示匹配的子分类
-          groups.add(_CategoryGroup(
-            parent: parent,
-            children: matchedChildren,
-            isExpanded: true,
-            isParentSelectable: isParentSelectable,
-          ));
+          groups.add(
+            _CategoryGroup(
+              parent: parent,
+              children: matchedChildren,
+              isExpanded: true,
+              isParentSelectable: isParentSelectable,
+            ),
+          );
         }
       } else {
         // 无搜索时，显示所有
@@ -639,12 +654,14 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
           shouldExpand = children.any((c) => c.id == widget.currentCategoryId);
         }
 
-        groups.add(_CategoryGroup(
-          parent: parent,
-          children: children,
-          isExpanded: shouldExpand,
-          isParentSelectable: isParentSelectable,
-        ));
+        groups.add(
+          _CategoryGroup(
+            parent: parent,
+            children: children,
+            isExpanded: shouldExpand,
+            isParentSelectable: isParentSelectable,
+          ),
+        );
       }
     }
 
@@ -660,9 +677,7 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       backgroundColor: SpitoutTokens.scaffoldBackground(context),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
@@ -672,21 +687,23 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
           borderRadius: BorderRadius.circular(16),
         ),
         child: Column(
-        children: [
-          // 顶部栏
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(
-              color: SpitoutTokens.surfaceElevated(context),
-              borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-              border: Border(
-                bottom: BorderSide(
-                  color: SpitoutTokens.divider(context),
-                  width: 0.5,
+          children: [
+            // 顶部栏
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              decoration: BoxDecoration(
+                color: SpitoutTokens.surfaceElevated(context),
+                borderRadius: const BorderRadius.vertical(
+                  top: Radius.circular(16),
+                ),
+                border: Border(
+                  bottom: BorderSide(
+                    color: SpitoutTokens.divider(context),
+                    width: 0.5,
+                  ),
                 ),
               ),
-            ),
-            child: Column(
+              child: Column(
                 children: [
                   Row(
                     children: [
@@ -739,63 +756,63 @@ class _CategorySelectorDialogState extends ConsumerState<CategorySelectorDialog>
                 ],
               ),
             ),
-          // 分类列表
-          Expanded(
-            child: FutureBuilder<List<Category>>(
-              future: _loadAllCategories(),
-              builder: (context, snapshot) {
-                if (!snapshot.hasData) {
-                  return const Center(child: CircularProgressIndicator());
-                }
+            // 分类列表
+            Expanded(
+              child: FutureBuilder<List<Category>>(
+                future: _loadAllCategories(),
+                builder: (context, snapshot) {
+                  if (!snapshot.hasData) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                final groups = _buildCategoryGroups(snapshot.data!);
+                  final groups = _buildCategoryGroups(snapshot.data!);
 
-                if (groups.isEmpty) {
-                  return Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          AppIcons.searchOff,
-                          size: 64,
-                          color: SpitoutTokens.textTertiary(context),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _searchText.isNotEmpty
-                              ? l10n.commonEmpty
-                              : l10n.categoryEmpty,
-                          style: TextStyle(
+                  if (groups.isEmpty) {
+                    return Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            AppIcons.searchOff,
+                            size: 64,
                             color: SpitoutTokens.textTertiary(context),
-                            fontSize: 16,
                           ),
-                        ),
-                      ],
-                    ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
-                  itemCount: groups.length,
-                  itemBuilder: (context, index) {
-                    final group = groups[index];
-                    return _CategoryGroupItem(
-                      group: group,
-                      currentCategoryId: widget.currentCategoryId,
-                      showTransactionCount: widget.showTransactionCount,
-                      transactionCounts: _transactionCounts,
-                      primaryColor: Theme.of(context).colorScheme.primary,
-                      onCategorySelected: (category) {
-                        Navigator.pop(context, category);
-                      },
+                          const SizedBox(height: 16),
+                          Text(
+                            _searchText.isNotEmpty
+                                ? l10n.commonEmpty
+                                : l10n.categoryEmpty,
+                            style: TextStyle(
+                              color: SpitoutTokens.textTertiary(context),
+                              fontSize: 16,
+                            ),
+                          ),
+                        ],
+                      ),
                     );
-                  },
-                );
-              },
+                  }
+
+                  return ListView.builder(
+                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    itemCount: groups.length,
+                    itemBuilder: (context, index) {
+                      final group = groups[index];
+                      return _CategoryGroupItem(
+                        group: group,
+                        currentCategoryId: widget.currentCategoryId,
+                        showTransactionCount: widget.showTransactionCount,
+                        transactionCounts: _transactionCounts,
+                        primaryColor: Theme.of(context).colorScheme.primary,
+                        onCategorySelected: (category) {
+                          Navigator.pop(context, category);
+                        },
+                      );
+                    },
+                  );
+                },
+              ),
             ),
-          ),
-        ],
+          ],
         ),
       ),
     );
@@ -860,7 +877,8 @@ class _CategoryGroupItemState extends State<_CategoryGroupItem> {
           category: widget.group.parent,
           isSelected: widget.currentCategoryId == widget.group.parent.id,
           showTransactionCount: widget.showTransactionCount,
-          transactionCount: widget.transactionCounts[widget.group.parent.id] ?? 0,
+          transactionCount:
+              widget.transactionCounts[widget.group.parent.id] ?? 0,
           primaryColor: widget.primaryColor,
           isParent: hasChildren,
           isExpanded: _isExpanded,
@@ -935,9 +953,7 @@ class _CategoryTile extends StatelessWidget {
         child: Container(
           decoration: BoxDecoration(
             // 选中状态背景色（通栏）
-            color: isSelected
-                ? primaryColor.withValues(alpha: 0.08)
-                : null,
+            color: isSelected ? primaryColor.withValues(alpha: 0.08) : null,
             border: Border(
               bottom: BorderSide(
                 color: SpitoutTokens.divider(context),
@@ -948,7 +964,7 @@ class _CategoryTile extends StatelessWidget {
           child: Padding(
             // 子分类添加左边距，父分类正常边距
             padding: EdgeInsets.fromLTRB(
-              isChild ? 56 : 16,  // 左边距：子分类56，父分类16
+              isChild ? 56 : 16, // 左边距：子分类56，父分类16
               12,
               16,
               12,
@@ -994,13 +1010,18 @@ class _CategoryTile extends StatelessWidget {
                 // 交易笔数
                 if (showTransactionCount && transactionCount > 0)
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
                       borderRadius: BorderRadius.circular(12),
                     ),
                     child: Text(
-                      AppLocalizations.of(context).categoryMigrationTransactionLabel(transactionCount),
+                      AppLocalizations.of(
+                        context,
+                      ).categoryMigrationTransactionLabel(transactionCount),
                       style: TextStyle(
                         fontSize: 12,
                         color: SpitoutTokens.textSecondary(context),

@@ -18,6 +18,8 @@ import '../../data/models.dart' show SyncAccountResult, SyncCountPair, SyncHealt
 export '../../data/models.dart' show SyncAccountResult, SyncCountPair, SyncHealthReport;
 import '../../data/models/ledger_kind.dart';
 import '../../data/repositories/base_repository.dart';
+import '../../data/repositories/local/local_transaction_repository.dart'
+    show deleteTransactionsWithEditHistories;
 import '../../core/logging/logger_service.dart';
 import '../../services/storage/avatar_storage.dart';
 import 'sync_service.dart' as app;
@@ -256,6 +258,9 @@ class SyncEngine implements app.SyncService {
   /// 全 session 只跑一次 user-global push,后续 caller 复用第一个的 future,
   /// 拿到的时候 ChangeTracker 已经 markPushed,再各自处理 ledger-scoped 部分。
   Completer<void>? _userGlobalPushInFlight;
+
+  /// 上次清理已推送 local_changes 的时间（节流，至少间隔 1 小时）。
+  DateTime? _lastPushedCleanupAt;
 
   /// fullPull 的 in-flight 单飞锁。**per-ledger**,跟 fullPush 同款。
   ///
@@ -995,11 +1000,29 @@ class SyncEngine implements app.SyncService {
       if (pushed > 0) {
         _emit(PushCompleted(ledgerId: ledgerId, pushed: pushed));
       }
+      // 已推送行按 7 天保留期周期清理，防止 local_changes 无限膨胀。
+      await _maybeCleanupPushedChanges();
       logger.info('SyncEngine', '同步完成: $result');
       return result;
     } catch (e, st) {
       logger.error('SyncEngine', '同步失败', e, st);
+      _emit(SyncFailed(ledgerId: ledgerId, error: e.toString()));
       return SyncResult(error: e.toString());
+    }
+  }
+
+  /// 周期性清理已推送 7 天以上的 local_changes（节流 1 小时）。
+  Future<void> _maybeCleanupPushedChanges() async {
+    final now = DateTime.now();
+    if (_lastPushedCleanupAt != null &&
+        now.difference(_lastPushedCleanupAt!) < const Duration(hours: 1)) {
+      return;
+    }
+    _lastPushedCleanupAt = now;
+    try {
+      await changeTracker.cleanupPushedChanges();
+    } catch (e, st) {
+      logger.warning('SyncEngine', '清理已推送变更失败(忽略): $e', st);
     }
   }
 
@@ -1010,7 +1033,8 @@ class SyncEngine implements app.SyncService {
   /// - Phase 1(用户级一次性,跨账本共享):syncMyProfile → storage.list →
   ///   pull('') → pushUserGlobalEntities;
   /// - Phase 2(每个云端账本):复用同一次 storage.list 结果做 fullPush/增量
-  ///   决策,无待推 + 已绑定(fast-skip)直接跳过,最后逐账本 pull。
+  ///   决策,无待推 + 已绑定(fast-skip)直接跳过;pull 是用户级全局流,
+  ///   不再逐账本空探针,统一由收尾处的单次 pull('') 覆盖。
   ///
   /// 为什么自实现决策循环而不是循环调 [sync]:
   /// - 保持"一次 list 复用全部账本"的请求优化;
@@ -1109,7 +1133,6 @@ class SyncEngine implements app.SyncService {
           totalPushed += await push(ledger.id.toString());
         }
 
-        totalPulled += await pull(ledger.id.toString());
       } catch (e, st) {
         logger.error('SyncEngine', 'syncAccount: $tag 同步异常', e, st);
       }
@@ -1130,6 +1153,9 @@ class SyncEngine implements app.SyncService {
         logger.error('SyncEngine', 'syncAccount: 收尾 pull(用户级) 失败', e, st);
       }
     }
+
+    // 周期清理已推送的旧变更（与 sync() 同节流）。
+    await _maybeCleanupPushedChanges();
 
     final elapsedMs = DateTime.now().difference(overallStart).inMilliseconds;
     logger.info('SyncEngine',
@@ -1643,10 +1669,12 @@ class SyncEngine implements app.SyncService {
       }
     }
 
+    var pushedCount = 0;
     // 主批(category):照常规推送 + 标记已推。
     if (mainSyncChanges.isNotEmpty) {
       await provider.pushChanges(changes: mainSyncChanges);
       await changeTracker.markPushed(mainChanges.map((c) => c.id).toList());
+      pushedCount += mainChanges.length;
     }
 
     // exchange_rate_override 独立批:旧服务器白名单会拒绝该 entity_type,
@@ -1657,6 +1685,7 @@ class SyncEngine implements app.SyncService {
         await provider.pushChanges(changes: overrideSyncChanges);
         await changeTracker
             .markPushed(overrideChanges.map((c) => c.id).toList());
+        pushedCount += overrideChanges.length;
       } catch (e, st) {
         logger.warning(
             'SyncEngine', 'override 批推送失败(server 可能未升级),跳过本轮不阻塞: $e', st);
@@ -1665,7 +1694,8 @@ class SyncEngine implements app.SyncService {
 
     logger.info('SyncEngine',
         'pushUserGlobalEntities: 推送 ${mainChanges.length} 条主批 + ${overrideChanges.length} 条 override 批 user-global change');
-    return globalChanges.length;
+    // 只计成功批次：override 批失败时不计入，避免 SyncAccountResult.pushed 虚高。
+    return pushedCount;
   }
 
   /// 扫 categories,给 local_changes 里没登记过的 legacy 实体
@@ -1674,11 +1704,15 @@ class SyncEngine implements app.SyncService {
   /// 兼顾兜底两件事:
   /// 1. 实体 syncId 为 NULL(migration 没覆盖到的脏数据)→ 生成 v4 UUID 写回
   /// 2. 已有 syncId 但 local_changes 表里完全没记录该实体的 change → 补 upsert
+  ///
+  /// 同时覆盖 categories 与 exchange_rate_override 两类 user-global 实体。
   Future<void> _backfillLegacyUserGlobalChanges() async {
     // 预拉:local_changes 表里所有 user-global 实体 syncId,做 in-memory dedup,
-    // 避免逐 entity SELECT。,扫描范围按白名单收紧。
+    // 避免逐 entity SELECT。注意 local_changes 没有唯一约束,
+    // recordUserGlobalChange 是纯 insert —— 不能依赖数据库拦住重复,
+    // 这个 in-memory Set 是唯一的防重手段。
     final existingChanges = await (db.select(db.localChanges)
-          ..where((c) => c.entityType.isIn(['category'])))
+          ..where((c) => c.entityType.isIn(['category', 'exchange_rate_override'])))
         .get();
     final knownSyncIds = existingChanges.map((c) => c.entitySyncId).toSet();
 
@@ -1697,6 +1731,28 @@ class SyncEngine implements app.SyncService {
         await changeTracker.recordUserGlobalChange(
           entityType: 'category',
           entityId: c.id,
+          entitySyncId: syncId,
+          action: 'upsert',
+        );
+        backfilled++;
+      }
+    }
+
+    // exchange_rate_override:与 category 同属 user-global 实体,
+    // 老版本若漏登记同样需要补(syncId null 时生成 UUID 写回)。
+    final overrides = await db.select(db.exchangeRateOverrides).get();
+    for (final o in overrides) {
+      var syncId = o.syncId;
+      if (syncId == null) {
+        syncId = _uuid.v4();
+        await (db.update(db.exchangeRateOverrides)
+              ..where((row) => row.id.equals(o.id)))
+            .write(ExchangeRateOverridesCompanion(syncId: d.Value(syncId)));
+      }
+      if (!knownSyncIds.contains(syncId)) {
+        await changeTracker.recordUserGlobalChange(
+          entityType: 'exchange_rate_override',
+          entityId: o.id,
           entitySyncId: syncId,
           action: 'upsert',
         );

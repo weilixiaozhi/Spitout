@@ -13,7 +13,6 @@ import 'package:spitout/providers/providers.dart';
 import 'l10n/app_localizations.dart';
 import 'widgets/widgets.dart';
 import 'services/security/app_lock_service.dart';
-import 'services/data/category_icon_migration_service.dart';
 import 'theme/colors.dart';
 import 'theme/icons/app_icons.dart';
 
@@ -392,4 +391,3 @@ class SpitoutBottomBar extends StatelessWidget {
     );
   }
 }
-

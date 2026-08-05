@@ -207,6 +207,12 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           if (pushed > 0) {
             ref.read(syncStatusRefreshProvider.notifier).tick();
           }
+        case SyncFailed(:final error):
+          // 同步失败通常已返回 SyncResult(error:)，但调用方可能不检查
+          // hasError；这里 bump 状态刷新让 UI 重读同步状态（会显示 error），
+          // 并保留错误日志便于排查。
+          logger.warning('SyncProvider', '同步失败事件: $error');
+          ref.read(syncStatusRefreshProvider.notifier).tick();
         case LedgersPurged():
           // 云端下线已全量清共享账本:当前账本可能刚被删,重指第一个。
           // listener 是 sync:true 广播的同步回调,不能 await;用 catchError

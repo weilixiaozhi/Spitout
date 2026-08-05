@@ -36,6 +36,17 @@ class PushCompleted extends SyncEvent {
   final int pushed;
 }
 
+/// 同步失败（网络错误 / 服务端异常等）。
+///
+/// [sync] 会返回 `SyncResult(error:)` 但调用方可能只 await 不检查
+/// `hasError`，因此同步失败时额外广播事件，让 UI 侧订阅者能感知并提示用户。
+class SyncFailed extends SyncEvent {
+  const SyncFailed({required this.ledgerId, required this.error});
+
+  final String ledgerId;
+  final String error;
+}
+
 /// 共享账本资源(分类 / 账户 / 标签)变化。比 PullCompleted 精确 — 只在
 /// 真有 SharedLedger* 镜像表更新时 fire,避免 HomePage 全局刷新。
 class SharedResourceChanged extends SyncEvent {

@@ -79,9 +79,9 @@ extension SyncEngineApplyExt on SyncEngine {
         existingId = existing?.id;
       }
       if (existingId != null) {
-        await (db.delete(db.transactions)
-              ..where((t) => t.id.equals(existingId!)))
-            .go();
+        // 统一删除入口：先清编辑历史再删交易，避免 server 删除同步到本地后
+        // 留下 record_edit_histories 孤儿行（与仓储层删除语义一致）。
+        await deleteTransactionsWithEditHistories(db, [existingId]);
         activePullCache?.removeTransaction(syncId);
         logger.debug('SyncEngine', 'pull: 删除交易 $syncId');
       }
@@ -97,6 +97,13 @@ extension SyncEngineApplyExt on SyncEngine {
     final ledgerIdInt = await _resolveLedgerIdBySyncId(change.ledgerId) ??
         int.tryParse(change.ledgerId) ??
         -1;
+    // 账本 change 先于 ledger 行到达、或 server payload 解析不到本地账本时，
+    // 直接跳过该交易，避免落库 ledger_id=-1 的孤儿交易（A_new 类）。
+    if (ledgerIdInt <= 0) {
+      logger.warning('SyncEngine',
+          'pull: 交易 $syncId 解析 ledgerId 失败(${change.ledgerId}),跳过');
+      return;
+    }
 
     // 解析 payload 字段
     final type = payload['type'] as String? ?? 'expense';
@@ -311,18 +318,36 @@ extension SyncEngineApplyExt on SyncEngine {
     final syncId = change.entitySyncId;
 
     if (change.action == 'delete') {
-      final existing = await (db.select(db.categories)
-            ..where((c) => c.syncId.equals(syncId)))
-          .getSingleOrNull();
-      if (existing != null) {
-        // 先删子分类再删自身(跟 LocalCategoryRepository 一致)
+      await db.transaction(() async {
+        final existing = await (db.select(db.categories)
+              ..where((c) => c.syncId.equals(syncId)))
+            .getSingleOrNull();
+        if (existing == null) return;
+
+        // 先删子分类再删自身(跟 LocalCategoryRepository 一致)。
+        final childRows = await (db.select(db.categories)
+              ..where((c) => c.parentId.equals(existing.id)))
+            .get();
+        final idsToDelete = [existing.id, ...childRows.map((c) => c.id)];
+
+        // 清理悬空引用：本地交易挂着的 category_id（命中自身与子分类）置空，
+        // 共享账本 Editor 的 categorySyncIdOverride 同步清掉，避免 A6 孤儿数据。
+        await (db.update(db.transactions)
+              ..where((t) => t.categoryId.isIn(idsToDelete)))
+            .write(const TransactionsCompanion(categoryId: d.Value<int?>(null)));
+        await (db.update(db.transactions)
+              ..where((t) => t.categorySyncIdOverride.equals(syncId)))
+            .write(
+          const TransactionsCompanion(categorySyncIdOverride: d.Value<String?>(null)),
+        );
+
         await (db.delete(db.categories)
               ..where((c) => c.parentId.equals(existing.id)))
             .go();
         await (db.delete(db.categories)..where((c) => c.id.equals(existing.id)))
             .go();
-        logger.debug('SyncEngine', 'pull: 删除分类 $syncId');
-      }
+        logger.debug('SyncEngine', 'pull: 删除分类 $syncId(含子分类与交易引用清理)');
+      });
       return;
     }
 
@@ -540,6 +565,11 @@ extension SyncEngineApplyExt on SyncEngine {
     final payloadAaEnabled = aaEnabledKey
         ? (payload['aaEnabled'] as bool? ?? false)
         : null;
+    // 归属/角色字段：web 端新建账本的 change 通常不带这些键，
+    // 显式兜底为 cloud/非共享/owner，避免被三路闸门当纯本地账本拦截。
+    final payloadStorageMode = payload['storageMode'] as String?;
+    final payloadIsShared = payload['isShared'] as bool?;
+    final payloadMyRole = payload['myRole'] as String?;
     if (ledgerList.isEmpty) {
       // 本地未就绪时,若 payload 至少有 name + currency,主动 insert 一行本地
       // ledger,避免 web 端新建账本后 app 拉到 ledger change 却不落库。
@@ -559,6 +589,9 @@ extension SyncEngineApplyExt on SyncEngine {
             monthStartDay: d.Value(monthStartDay ?? 1),
             // aaEnabled 缺键落默认 false;有键显式写入。
             aaEnabled: d.Value(payloadAaEnabled ?? false),
+            storageMode: d.Value(payloadStorageMode ?? 'cloud'),
+            isShared: d.Value(payloadIsShared ?? false),
+            myRole: d.Value(payloadMyRole ?? 'owner'),
           ));
       logger.info('SyncEngine',
           'pull: 新增账本 syncId=$syncId name=$name currency=${currency ?? "CNY"} aaEnabled=${payloadAaEnabled ?? false}');
@@ -601,7 +634,13 @@ extension SyncEngineApplyExt on SyncEngine {
     // 云同步拉取到币种变更时全量重算 nativeAmount，
     // 否则多设备场景下其他设备拉到的交易 nativeAmount 仍是旧币种口径。
     if (currency != null) {
-      await repo.recalcNativeAmountsForLedger(ledger.id, currency);
+      // pull 路径是“把远端状态落到本地”，重算产生的 update 不应再登记
+      // local_changes 反向推回 server（避免跨设备 churn）。
+      await repo.recalcNativeAmountsForLedger(
+        ledger.id,
+        currency,
+        recordChanges: false,
+      );
     }
   }
 

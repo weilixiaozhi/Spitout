@@ -1900,6 +1900,12 @@ abstract class AppLocalizations {
   /// **'Recording Reminder'**
   String get reminderTitle;
 
+  /// No description provided for @reminderBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Don\'t forget to record today\'s income and expenses 💰'**
+  String get reminderBody;
+
   /// No description provided for @reminderSubtitle.
   ///
   /// In en, this message translates to:
@@ -4426,6 +4432,18 @@ abstract class AppLocalizations {
   /// **'Including cloud service configs and app settings'**
   String get configIncludeOtherSettingsSubtitle;
 
+  /// No description provided for @configIncludeCredentials.
+  ///
+  /// In en, this message translates to:
+  /// **'Include credentials'**
+  String get configIncludeCredentials;
+
+  /// No description provided for @configIncludeCredentialsSubtitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Passwords and secret keys will be written in plain text'**
+  String get configIncludeCredentialsSubtitle;
+
   /// No description provided for @configExportSelectTitle.
   ///
   /// In en, this message translates to:
@@ -4443,6 +4461,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Confirm Export'**
   String get configExportConfirmTitle;
+
+  /// No description provided for @configExportContainsSecretsWarning.
+  ///
+  /// In en, this message translates to:
+  /// **'This file contains passwords/secret keys. Do not share it or commit it to version control!'**
+  String get configExportContainsSecretsWarning;
 
   /// No description provided for @configImportSelectTitle.
   ///

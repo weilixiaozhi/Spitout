@@ -37,7 +37,7 @@ Future<void> _deleteLedger(SpitoutDatabase db, int id) async {
   await (db.delete(db.ledgers)..where((t) => t.id.equals(id))).go();
 }
 
-/// 激活 currentLedgerPersistProvider（含启动解析 IIFE + 自愈监听），
+/// 激活 currentLedgerPersistProvider（含启动解析 + 自愈监听），
 /// 并让出事件循环等待异步链路（prefs 读取 → db 校验 → state 写入 → 自愈
 /// 二次查询）彻底收敛。in-memory 库单次往返在毫秒级，400ms 足够覆盖多轮。
 Future<void> _activateAndSettle(
@@ -50,6 +50,8 @@ Future<void> _activateAndSettle(
   // Riverpod 3 下 read 一次后 provider 会被暂停，内部 ref.listen 自愈监听不会触发；
   // 仿照 app.dart 根组件的常驻 watch，保持一个真实监听直到 container dispose。
   container.listen(currentLedgerPersistProvider, (_, _) {});
+  // 显式等待启动解析完成（FutureProvider 可直接 await），再等待监听链路收敛。
+  await container.read(currentLedgerPersistProvider.future);
   await Future.delayed(const Duration(milliseconds: 400));
 }
 
@@ -89,7 +91,7 @@ void main() {
       overrides: [databaseProvider.overrideWithValue(db)],
     );
 
-    // 启动解析：prefs 指向第二个账本（有效），IIFE 沿用用户选择。
+    // 启动解析：prefs 指向第二个账本（有效），沿用用户选择。
     await _activateAndSettle(container,
         initialPrefs: {'current_ledger_id': second});
     expect(container.read(currentLedgerIdProvider), second);
@@ -158,7 +160,7 @@ void main() {
     );
 
     // 启动瞬间 id=0，watchLedger(0) 会真实发射 AsyncData(null)（非 Loading），
-    // 自愈与 IIFE 的 prefs 恢复并发竞跑——无论谁先完成，最终必须收敛到 saved。
+    // 自愈与启动解析的 prefs 恢复并发竞跑——无论谁先完成，最终必须收敛到 saved。
     await _activateAndSettle(container,
         initialPrefs: {'current_ledger_id': saved});
 

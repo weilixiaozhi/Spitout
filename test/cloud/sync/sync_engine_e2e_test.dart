@@ -775,6 +775,231 @@ void main() {
       final remaining = await db.select(db.transactions).get();
       expect(remaining, isEmpty);
     });
+
+    test('server 推 transaction:delete → 编辑历史一并清理', () async {
+      final ledgerId = await db.into(db.ledgers).insert(
+          LedgersCompanion.insert(name: 'L', syncId: const Value('L1'), storageMode: const Value('cloud')));
+      final txId = await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerId,
+              type: 'expense',
+              amount: 800,
+              syncId: const Value('tx-del-hist'),
+            ),
+          );
+      await db.into(db.recordEditHistories).insert(
+            RecordEditHistoriesCompanion.insert(
+              recordId: txId,
+              version: 1,
+              operatorUserId: const Value('u1'),
+              summary: '初始创建',
+            ),
+          );
+
+      provider.pushFakeChange(
+        entityType: 'transaction',
+        entitySyncId: 'tx-del-hist',
+        ledgerId: 'L1',
+        action: 'delete',
+      );
+
+      await engine.pull('');
+
+      expect(await db.select(db.transactions).get(), isEmpty);
+      expect(await db.select(db.recordEditHistories).get(), isEmpty,
+          reason: 'pull 删除交易必须同步清理编辑历史，避免孤儿历史残留');
+    });
+
+    test('server 推 category:delete → 引用它的交易 category_id 置空', () async {
+      final ledgerId = await db.into(db.ledgers).insert(
+          LedgersCompanion.insert(name: 'L', syncId: const Value('L1'), storageMode: const Value('cloud')));
+      final parentId = await db.into(db.categories).insert(
+            CategoriesCompanion.insert(
+              name: '交通',
+              kind: 'expense',
+              syncId: const Value('cat-del'),
+            ),
+          );
+      final childId = await db.into(db.categories).insert(
+            CategoriesCompanion.insert(
+              name: '打车',
+              kind: 'expense',
+              parentId: Value(parentId),
+              level: const Value(2),
+              syncId: const Value('cat-del-child'),
+            ),
+          );
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerId,
+              type: 'expense',
+              amount: 1000,
+              categoryId: Value(childId),
+              syncId: const Value('tx-cat-ref'),
+            ),
+          );
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerId,
+              type: 'expense',
+              amount: 2000,
+              categorySyncIdOverride: const Value('cat-del'),
+              syncId: const Value('tx-override-ref'),
+            ),
+          );
+
+      provider.pushFakeChange(
+        entityType: 'category',
+        entitySyncId: 'cat-del',
+        ledgerId: '',
+        action: 'delete',
+      );
+
+      await engine.pull('');
+
+      final cats = await db.select(db.categories).get();
+      expect(cats.where((c) => c.syncId == 'cat-del' || c.syncId == 'cat-del-child'),
+          isEmpty, reason: '父分类与子分类都应被删除');
+
+      final txs = await db.select(db.transactions).get();
+      expect(txs.firstWhere((t) => t.syncId == 'tx-cat-ref').categoryId, isNull,
+          reason: '引用已删分类的交易 category_id 应置空，避免 A6 孤儿');
+      expect(
+          txs.firstWhere((t) => t.syncId == 'tx-override-ref').categorySyncIdOverride,
+          isNull, reason: '共享账本 override 引用也应同步清空');
+    });
+  });
+
+  group('apply 边界', () {
+    test('交易 ledgerId 本地解析不到 → 跳过不落库孤儿行', () async {
+      provider.pushFakeChange(
+        entityType: 'transaction',
+        entitySyncId: 'tx-orphan',
+        ledgerId: 'no-such-ledger',
+        payload: {
+          'syncId': 'tx-orphan',
+          'type': 'expense',
+          'amount': 10.0,
+          'happenedAt': '2026-05-01T10:00:00Z',
+        },
+      );
+
+      await engine.pull('');
+
+      expect(await db.select(db.transactions).get(), isEmpty,
+          reason: '解析不到账本的交易必须跳过，不能落 ledger_id=-1 孤儿行');
+    });
+
+    test('pull 新建账本显式写 cloud 归属，不被闸门当纯本地账本', () async {
+      provider.pushFakeChange(
+        entityType: 'ledger',
+        entitySyncId: 'ledger-web',
+        ledgerId: '',
+        payload: {
+          'ledgerName': 'Web Ledger',
+          'currency': 'USD',
+          'monthStartDay': 5,
+          'aaEnabled': true,
+        },
+      );
+
+      await engine.pull('');
+
+      final ledgers = await db.select(db.ledgers).get();
+      expect(ledgers, hasLength(1));
+      expect(ledgers.single.storageMode, 'cloud',
+          reason: 'pull 新建账本应显式标记 cloud，避免三路闸门拦截同步');
+      expect(ledgers.single.currency, 'USD');
+      expect(ledgers.single.monthStartDay, 5);
+      expect(ledgers.single.aaEnabled, isTrue);
+    });
+
+    test('pull 账本币种变更重算 nativeAmount 但不登记 local_changes', () async {
+      final ledgerId = await db.into(db.ledgers).insert(
+          LedgersCompanion.insert(
+              name: 'L',
+              syncId: const Value('L1'),
+              storageMode: const Value('cloud'),
+              currency: const Value('CNY')));
+      // 经 repo 插入会登记一条 create change，用于确认重算不会追加 update change。
+      await repo.insertTransactionsBatch([
+        TransactionsCompanion.insert(
+          ledgerId: ledgerId,
+          type: 'expense',
+          amount: 10000,
+          currencyCode: const Value('USD'),
+          nativeAmount: const Value(9999),
+          syncId: const Value('tx-currency'),
+        ),
+      ]);
+
+      provider.pushFakeChange(
+        entityType: 'ledger',
+        entitySyncId: 'L1',
+        ledgerId: '',
+        payload: {
+          'ledgerName': 'L',
+          'currency': 'USD',
+        },
+      );
+
+      await engine.pull('');
+
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.syncId.equals('tx-currency')))
+          .getSingle();
+      expect(tx.nativeAmount, 10000,
+          reason: '账本改为 USD 后，USD 交易 nativeAmount 应重算为 amount');
+
+      final changes = await db.select(db.localChanges).get();
+      expect(changes, hasLength(1));
+      expect(changes.single.action, 'create',
+          reason: 'pull 重算不得登记 update change 反向推回 server');
+    });
+  });
+
+  group('legacy backfill', () {
+    test('exchange_rate_override 无变更记录时补登记 upsert', () async {
+      await db.into(db.exchangeRateOverrides).insert(
+            ExchangeRateOverridesCompanion.insert(
+              baseCurrency: 'USD',
+              quoteCurrency: 'EUR',
+              rate: '0.92',
+              syncId: const Value('ero-legacy'),
+            ),
+          );
+
+      final pushed = await engine.pushUserGlobalEntities();
+      expect(pushed, 1);
+
+      final changes = await (db.select(db.localChanges)
+            ..where((c) => c.entityType.equals('exchange_rate_override')))
+          .get();
+      expect(changes, hasLength(1));
+      expect(changes.single.entitySyncId, 'ero-legacy');
+      expect(changes.single.action, 'upsert');
+    });
+
+    test('syncId 为 null 的汇率覆盖先补 UUID 再登记', () async {
+      await db.into(db.exchangeRateOverrides).insert(
+            ExchangeRateOverridesCompanion.insert(
+              baseCurrency: 'USD',
+              quoteCurrency: 'EUR',
+              rate: '0.92',
+            ),
+          );
+
+      final pushed = await engine.pushUserGlobalEntities();
+      expect(pushed, 1);
+
+      final row = await db.select(db.exchangeRateOverrides).getSingle();
+      expect(row.syncId, isNotNull, reason: '漏 syncId 的老实体应补生成 UUID');
+
+      final changes = await (db.select(db.localChanges)
+            ..where((c) => c.entityType.equals('exchange_rate_override')))
+          .get();
+      expect(changes.single.entitySyncId, row.syncId);
+    });
   });
 
   group('fullPush 路径', () {

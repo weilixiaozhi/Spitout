@@ -96,6 +96,22 @@ class SyncDiffService {
     final local = localTransactions ??
         await repo.getTransactionsByLedger(ledgerId);
 
+    // 账本本位币：币种比较时双方 NULL 都按本位币兜底。
+    final ledger = await repo.getLedgerById(ledgerId);
+    final ledgerBase =
+        ((ledger?.currency.isNotEmpty ?? false) ? ledger!.currency : 'CNY')
+            .toUpperCase();
+
+    // 本地分类 id → (name, kind) 映射，用于分类差异比较
+    // （本地只有 int id，云端只有 name/kind）。
+    final categoryMap = <int, ({String name, String kind})>{};
+    for (final c in await repo.getTopLevelCategories('expense')) {
+      categoryMap[c.id] = (name: c.name, kind: c.kind);
+      for (final sub in await repo.getSubCategories(c.id)) {
+        categoryMap[sub.id] = (name: sub.name, kind: sub.kind);
+      }
+    }
+
     // 建立映射：syncId → 交易
     final localBySyncId = <String, Transaction>{};
     for (final tx in local) {
@@ -130,6 +146,8 @@ class SyncDiffService {
         final diffs = _compareTx(
           localTx,
           cloudTx,
+          categoryMap,
+          ledgerBase,
         );
         if (diffs.isNotEmpty) {
           changes.add(SyncChange(
@@ -170,6 +188,8 @@ class SyncDiffService {
   List<String> _compareTx(
     Transaction local,
     ImportTransaction cloud,
+    Map<int, ({String name, String kind})> categoryMap,
+    String ledgerBase,
   ) {
     final diffs = <String>[];
 
@@ -204,6 +224,60 @@ class SyncDiffService {
     }
     if ((local.note ?? '') != (cloud.note ?? '')) {
       diffs.add('备注: "${local.note ?? ''}" → "${cloud.note ?? ''}"');
+    }
+
+    // 分类：本地按 int id 反查名称，云端按 name/kind（云端只有 id 时跳过，
+    // 兼容旧快照）。
+    if (cloud.categoryName != null || cloud.categoryKind != null) {
+      final localCat =
+          local.categoryId != null ? categoryMap[local.categoryId] : null;
+      final localName = localCat?.name ?? '';
+      final localKind = localCat?.kind ?? '';
+      final cloudName = cloud.categoryName ?? '';
+      final cloudKind = cloud.categoryKind ?? '';
+      if (localName != cloudName || localKind != cloudKind) {
+        diffs.add(
+            '分类: ${localName.isEmpty ? "未分类" : localName} → ${cloudName.isEmpty ? "未分类" : cloudName}');
+      }
+    }
+
+    // 多币种：双方 NULL 都按账本位币兜底。
+    final localCurrency = (local.currencyCode ?? ledgerBase).toUpperCase();
+    final cloudCurrency = (cloud.currencyCode ?? ledgerBase).toUpperCase();
+    if (localCurrency != cloudCurrency) {
+      diffs.add('币种: $localCurrency → $cloudCurrency');
+    }
+
+    // 折算快照（云端有值才比较；缺键的旧快照不制造差异）。
+    final cloudNativeCents = cloud.nativeAmount != null
+        ? yuanToCents(cloud.nativeAmount!)
+        : null;
+    if (cloudNativeCents != null && local.nativeAmount != cloudNativeCents) {
+      diffs.add(
+          '折算金额: ${(local.nativeAmount ?? 0) / 100} → ${cloud.nativeAmount}');
+    }
+
+    // 统计排除标记（云端缺键按 false 兜底）。
+    final cloudExclude = cloud.excludeFromStats ?? false;
+    if (local.excludeFromStats != cloudExclude) {
+      diffs.add('统计排除: ${local.excludeFromStats} → $cloudExclude');
+    }
+
+    // 支出人（云端缺键按创建人兜底，与导入路径一致）。
+    final cloudPaidBy = cloud.paidByUserId ?? cloud.createdByUserId ?? '';
+    if ((local.paidByUserId ?? '') != cloudPaidBy) {
+      diffs.add('支出人变更');
+    }
+
+    // AA 分摊三字段。
+    if (local.aaMode != cloud.aaMode) {
+      diffs.add('分摊模式: ${local.aaMode} → ${cloud.aaMode}');
+    }
+    if ((local.aaParticipants ?? '') != (cloud.aaParticipants ?? '')) {
+      diffs.add('分摊参与人变更');
+    }
+    if ((local.aaSplits ?? '') != (cloud.aaSplits ?? '')) {
+      diffs.add('分摊金额变更');
     }
 
     return diffs;
@@ -285,6 +359,17 @@ class SyncDiffService {
           categoryId: categoryId,
           happenedAt: cloud.happenedAt,
           note: cloud.note,
+          // 全字段快照契约：币种/折算/统计标记/支出人/AA 与云端对齐。
+          currencyCode: cloud.currencyCode,
+          nativeAmount: cloud.nativeAmount != null
+              ? yuanToCents(cloud.nativeAmount!)
+              : null,
+          excludeFromStats: cloud.excludeFromStats ?? false,
+          paidByUserId: cloud.paidByUserId ?? cloud.createdByUserId ?? '',
+          aaMode: cloud.aaMode,
+          aaParticipants: cloud.aaParticipants,
+          aaSplits: cloud.aaSplits,
+          overwriteSnapshot: true,
         ));
       }
       try {

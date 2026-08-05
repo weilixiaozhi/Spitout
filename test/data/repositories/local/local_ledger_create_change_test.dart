@@ -9,6 +9,7 @@
 library;
 
 import 'package:drift/native.dart';
+import 'package:drift/drift.dart' show Value;
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/cloud/sync/change_tracker.dart';
@@ -42,8 +43,11 @@ void main() {
       final id = await repo.createLedger(name: '云账本', storageMode: 'cloud');
 
       final changes = await tracker.getUnpushedChangesForLedger(id);
-      expect(changes, hasLength(1),
-          reason: '新建云端账本必须登记变更,SyncCoordinator 才能感知并自动同步');
+      expect(
+        changes,
+        hasLength(1),
+        reason: '新建云端账本必须登记变更,SyncCoordinator 才能感知并自动同步',
+      );
 
       final change = changes.single;
       expect(change.entityType, 'ledger');
@@ -62,8 +66,11 @@ void main() {
       final id = await repo.createLedger(name: '本地账本', storageMode: 'local');
 
       final changes = await tracker.getUnpushedChangesForLedger(id);
-      expect(changes, isEmpty,
-          reason: '本地账本 syncId 为 null,不应产生 local_changes 记录');
+      expect(
+        changes,
+        isEmpty,
+        reason: '本地账本 syncId 为 null,不应产生 local_changes 记录',
+      );
 
       final ledger = await repo.getLedgerById(id);
       expect(ledger!.syncId, isNull);
@@ -82,5 +89,123 @@ void main() {
       final rows = await db.select(db.localChanges).get();
       expect(rows, isEmpty, reason: '无 ChangeRecorder 时不应写 local_changes');
     });
+  });
+
+  group('reassignLedgerId 迁移全部引用表', () {
+    test('交易/周期模板/local_changes/虚拟用户/脏账本信号都跟随新 id', () async {
+      final repo = LocalRepository(db);
+      final fromId = await repo.createLedger(name: '重排本', storageMode: 'cloud');
+      await repo.addTransaction(
+        ledgerId: fromId,
+        type: 'expense',
+        amount: 1000,
+        happenedAt: DateTime(2026, 8, 5),
+      );
+      await repo.addRecurringTransaction(
+        ledgerId: fromId,
+        type: 'expense',
+        amount: 1000,
+        frequency: 'monthly',
+        interval: 1,
+        startDate: DateTime(2026, 8, 5),
+      );
+      await repo.create(ledgerId: fromId, name: '室友');
+      await db
+          .into(db.snapshotDirtyLedgers)
+          .insert(
+            SnapshotDirtyLedgersCompanion.insert(ledgerId: Value(fromId)),
+          );
+      await db
+          .into(db.localChanges)
+          .insert(
+            LocalChangesCompanion.insert(
+              entityType: 'ledger',
+              entityId: fromId,
+              entitySyncId: 'ledger-sync',
+              ledgerId: fromId,
+              action: 'upsert',
+            ),
+          );
+
+      final toId = 999;
+      await repo.reassignLedgerId(fromId: fromId, toId: toId);
+
+      expect(
+        await (db.select(
+          db.transactions,
+        )..where((t) => t.ledgerId.equals(toId))).get(),
+        hasLength(1),
+      );
+      expect(
+        await (db.select(
+          db.recurringTransactions,
+        )..where((t) => t.ledgerId.equals(toId))).get(),
+        hasLength(1),
+      );
+      expect(
+        await (db.select(
+          db.localChanges,
+        )..where((c) => c.ledgerId.equals(toId))).get(),
+        isNotEmpty,
+      );
+      expect(
+        await (db.select(
+          db.ledgerVirtualUsers,
+        )..where((t) => t.ledgerId.equals(toId))).get(),
+        hasLength(1),
+      );
+      expect(
+        await (db.select(
+          db.snapshotDirtyLedgers,
+        )..where((t) => t.ledgerId.equals(toId))).get(),
+        hasLength(1),
+      );
+      // 旧 id 下所有引用表都应清空。
+      expect(
+        await (db.select(
+          db.transactions,
+        )..where((t) => t.ledgerId.equals(fromId))).get(),
+        isEmpty,
+      );
+      expect(
+        await (db.select(
+          db.recurringTransactions,
+        )..where((t) => t.ledgerId.equals(fromId))).get(),
+        isEmpty,
+      );
+    });
+  });
+
+  test('copyLedgerData 副本交易清空 recurringId,不指向源账本模板', () async {
+    final repo = LocalRepository(db);
+    final srcId = await repo.createLedger(name: '源本', storageMode: 'cloud');
+    final targetId = await repo.createLedger(name: '副本', storageMode: 'local');
+    final recurringId = await repo.addRecurringTransaction(
+      ledgerId: srcId,
+      type: 'expense',
+      amount: 1000,
+      frequency: 'monthly',
+      interval: 1,
+      startDate: DateTime(2026, 8, 5),
+    );
+    await db
+        .into(db.transactions)
+        .insert(
+          TransactionsCompanion.insert(
+            ledgerId: srcId,
+            type: 'expense',
+            amount: 1000,
+            happenedAt: Value(DateTime(2026, 8, 5)),
+            syncId: Value('src-tx'),
+            recurringId: Value(recurringId),
+          ),
+        );
+
+    await repo.copyLedgerData(sourceLedgerId: srcId, targetLedgerId: targetId);
+
+    final copiedTx = await (db.select(
+      db.transactions,
+    )..where((t) => t.ledgerId.equals(targetId))).getSingle();
+    expect(copiedTx.recurringId, isNull);
   });
 }

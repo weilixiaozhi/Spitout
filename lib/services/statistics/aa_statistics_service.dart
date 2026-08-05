@@ -213,12 +213,20 @@ class AaStatisticsService {
         return null;
 
       case AaMode.perPerson:
-        // 人均:floor(实付×100/n)/100,支出人实付差归支出人。
         final payerIndex = participants.indexOf(paidBy);
+        // 人均:floor(实付×100/n)/100,支出人实付差归支出人。
+        // 支出人不在参与人列表(虚拟用户已删/旧脏数据)时无法把余数
+        // 归给支出人,若强行归给第 0 个参与人会扭曲净额,与「支出人
+        // 未知」口径一致直接跳过,不参与 AA 统计。
+        if (payerIndex < 0) {
+          logger.warning('AaStatistics',
+              '人均分摊支出人不在参与人列表 tx=${tx.id} paidBy=$paidBy');
+          return null;
+        }
         final splits = splitEvenly(
           total: totalDecimal,
           participantCount: participants.length,
-          payerIndex: payerIndex >= 0 ? payerIndex : 0,
+          payerIndex: payerIndex,
         );
         for (var i = 0; i < participants.length; i++) {
           shares[participants[i]] = toDouble(splits[i]);

@@ -101,12 +101,23 @@ class ExchangeRateService {
       try {
         final resp =
             await _client.get(Uri.parse(src.url(base))).timeout(_timeout);
+        // 404/500 等错误页也会返回可解析的 HTML/JSON，必须先用状态码拦截，
+        // 避免把错误页误当汇率数据。
+        if (resp.statusCode != 200) {
+          throw RateFetchException('HTTP ${resp.statusCode}');
+        }
         final data = jsonDecode(resp.body) as Map<String, dynamic>;
         if (data.isEmpty) throw RateFetchException('empty body');
         final result = src.isFrankfurter
             ? parseFrankfurter(base, data)
             : parseFawaz(base, data, source: src.id);
-        await prefs.setInt(_prefKeyLastSource, idx);
+        try {
+          await prefs.setInt(_prefKeyLastSource, idx);
+        } catch (e, st) {
+          // prefs 写入失败只影响下次轮询起点，降级为警告，
+          // 不能把“成功拉取”误判为源失败。
+          logger.warning('ExchangeRate', '记录上次源失败(忽略): $e', st);
+        }
         logger.info(
             'ExchangeRate',
             '汇率获取成功 source=${src.id} date=${result.rateDate} '

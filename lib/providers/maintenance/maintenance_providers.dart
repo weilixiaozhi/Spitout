@@ -25,7 +25,8 @@ final orphanScannerProvider = Provider<OrphanScanner>((ref) {
 
 final orphanCleanerProvider = Provider<OrphanCleaner>((ref) {
   final db = ref.watch(databaseProvider);
-  return OrphanCleaner(db: db);
+  final repository = ref.watch(repositoryProvider);
+  return OrphanCleaner(db: db, repository: repository);
 });
 
 final sharedLedgerCategoryRepairProvider =

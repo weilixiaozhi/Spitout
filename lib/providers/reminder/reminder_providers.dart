@@ -1,6 +1,11 @@
+import 'dart:ui' as ui;
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../l10n/app_localizations.dart';
+import '../../services/notification/reminder_constants.dart';
 import '../../services/notification/notification_factory.dart';
+import '../ui/language_provider.dart';
 
 /// 记账提醒设置
 class ReminderSettings {
@@ -62,9 +67,18 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
     return ReminderSettings.defaultSettings();
   }
 
-  static const String _keyEnabled = 'reminder_enabled';
-  static const String _keyHour = 'reminder_hour';
-  static const String _keyMinute = 'reminder_minute';
+  // prefs 键统一引用服务层常量（与 main / 监控服务 / 配置导入导出共用），
+  // 避免字符串散落导致改名后静默失联。
+  static const String _keyEnabled = ReminderPrefs.enabled;
+  static const String _keyHour = ReminderPrefs.hour;
+  static const String _keyMinute = ReminderPrefs.minute;
+
+  /// 当前语言下的提醒文案（无 BuildContext，按语言 provider / 系统语言解析）。
+  AppLocalizations get _l10n {
+    final locale =
+        ref.read(languageProvider) ?? ui.PlatformDispatcher.instance.locale;
+    return lookupAppLocalizations(locale);
+  }
 
   /// 加载设置
   Future<void> _loadSettings() async {
@@ -106,14 +120,14 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
       // 用户主动开启提醒时才请求通知权限，避免应用首次安装即弹出权限请求
       await notificationUtil.requestPermissions();
       await notificationUtil.scheduleDailyReminder(
-        id: 1001,
-        title: '记账提醒',
-        body: '别忘了记录今天的收支哦 💰',
+        id: ReminderPrefs.mainNotificationId,
+        title: _l10n.reminderTitle,
+        body: _l10n.reminderBody,
         hour: state.hour,
         minute: state.minute,
       );
     } else {
-      await notificationUtil.cancelNotification(1001);
+      await notificationUtil.cancelNotification(ReminderPrefs.mainNotificationId);
     }
   }
 
@@ -125,10 +139,13 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
     // 如果提醒已启用，重新设置通知
     if (state.isEnabled) {
       final notificationUtil = NotificationFactory.getInstance();
+      // 先取消旧的完整通知链（主通知 + 7 天备用 + AlarmManager 备用），
+      // 再按新时间重建，避免旧备用通知残留旧时间造成重复提醒。
+      await notificationUtil.cancelNotification(ReminderPrefs.mainNotificationId);
       await notificationUtil.scheduleDailyReminder(
-        id: 1001,
-        title: '记账提醒',
-        body: '别忘了记录今天的收支哦 💰',
+        id: ReminderPrefs.mainNotificationId,
+        title: _l10n.reminderTitle,
+        body: _l10n.reminderBody,
         hour: hour,
         minute: minute,
       );
@@ -145,14 +162,14 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
       // 用户主动开启提醒时才请求通知权限，避免应用首次安装即弹出权限请求
       await notificationUtil.requestPermissions();
       await notificationUtil.scheduleDailyReminder(
-        id: 1001,
-        title: '记账提醒',
-        body: '别忘了记录今天的收支哦 💰',
+        id: ReminderPrefs.mainNotificationId,
+        title: _l10n.reminderTitle,
+        body: _l10n.reminderBody,
         hour: settings.hour,
         minute: settings.minute,
       );
     } else {
-      await notificationUtil.cancelNotification(1001);
+      await notificationUtil.cancelNotification(ReminderPrefs.mainNotificationId);
     }
   }
 }

@@ -36,12 +36,14 @@ final localLedgersProvider =
     final repo = ref.watch(repositoryProvider);
 
     final localLedgers = await repo.getAllLedgers();
+    // 批量统计：单条聚合 SQL 一次查回全部账本，避免逐本 getLedgerStats 的
+    // N+1 全量扫描（账本多 / 交易多时列表刷新成本线性放大）。
+    final statsMap = await repo.getAllLedgerStats();
 
     final result = <LedgerDisplayItem>[];
     for (final ledger in localLedgers) {
-      final stats = await repo.getLedgerStats(
-        ledgerId: ledger.id,
-      );
+      final stats = statsMap[ledger.id] ??
+          (expenseTotal: 0, transactionCount: 0);
 
       result.add(LedgerDisplayItem.fromLocal(
         id: ledger.id,

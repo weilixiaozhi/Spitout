@@ -183,7 +183,12 @@ class _TransactionEditorSheetState
     final id = widget.initialCategoryId!;
     // 共享账本:synthetic id(< 0)走 SharedLedger* 表反查,正数 id 查主表
     // —— 接口方法内部已统一分派,UI 无需 is 判断下探 LocalRepository.db。
-    final c = await repo.findCategoryBySyntheticId(id);
+    // 传当前账本 syncId 限定反查范围,避免不同共享账本 synthetic id 碰撞时取错分类。
+    final ledger = ref.read(currentLedgerProvider).value;
+    final c = await repo.findCategoryBySyntheticId(
+      id,
+      ledgerSyncId: ledger?.syncId,
+    );
     if (c != null && mounted) {
       setState(() => _selectedCategory = c);
     }
@@ -217,8 +222,11 @@ class _TransactionEditorSheetState
     if (rates.containsKey(txCurrency)) return; // 已有汇率
     _rateFetchAttemptedFor = txCurrency;
     setState(() => _fetchingRate = true);
-    refreshExchangeRatesFromUi(ref, force: true, extraQuotes: {txCurrency})
-        .whenComplete(() {
+    refreshExchangeRatesFromUi(
+      ref,
+      force: true,
+      extraQuotes: {txCurrency},
+    ).whenComplete(() {
       if (mounted) setState(() => _fetchingRate = false);
     });
   }
@@ -243,8 +251,9 @@ class _TransactionEditorSheetState
     );
     if (picked == null || !mounted) return;
     setState(() {
-      _pickedCurrency =
-          picked.toUpperCase() == base ? null : picked.toUpperCase();
+      _pickedCurrency = picked.toUpperCase() == base
+          ? null
+          : picked.toUpperCase();
       // 换币种后隐含/手改汇率作废，重新带有效汇率
       _rateStr = null;
       _rateManuallySet = false;
@@ -254,7 +263,8 @@ class _TransactionEditorSheetState
   Future<void> _editRate() async {
     final l10n = AppLocalizations.of(context);
     final ctrl = TextEditingController(
-        text: _rateStr ?? _currentRate()?.toStringAsPrecision(6) ?? '');
+      text: _rateStr ?? _currentRate()?.toStringAsPrecision(6) ?? '',
+    );
     final entered = await showDialog<String>(
       context: context,
       builder: (dctx) => AlertDialog(
@@ -262,8 +272,7 @@ class _TransactionEditorSheetState
         content: TextField(
           controller: ctrl,
           autofocus: true,
-          keyboardType:
-              const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
           decoration: InputDecoration(
             hintText:
                 '1 ${_txCurrency()} = ? ${ref.read(currentLedgerCurrencyProvider)}',
@@ -364,8 +373,9 @@ class _TransactionEditorSheetState
         break;
       case '÷':
         if (db == Decimal.zero) return a; // 除零保护：保持被除数不变
-        r = (da.toRational() / db.toRational())
-            .toDecimal(scaleOnInfinitePrecision: 12);
+        r = (da.toRational() / db.toRational()).toDecimal(
+          scaleOnInfinitePrecision: 12,
+        );
         break;
       default:
         return b;
@@ -484,10 +494,16 @@ class _TransactionEditorSheetState
   ///
   /// 清空语义:updateTransaction 的 aa* 参数 null = 不更新,故编辑模式下
   /// 「指定 → 人均」「部分参与人 → 全部成员」需显式传空串清空旧值。
-  Future<({int? aaMode, String? aaParticipants, String? aaSplits, String? paidByUserId})?>
-      _resolveAaFields(double total, String txCurrency, Category c) async {
-    final aaEnabled =
-        ref.read(currentLedgerProvider).value?.aaEnabled ?? false;
+  Future<
+    ({
+      int? aaMode,
+      String? aaParticipants,
+      String? aaSplits,
+      String? paidByUserId,
+    })?
+  >
+  _resolveAaFields(double total, String txCurrency, Category c) async {
+    final aaEnabled = ref.read(currentLedgerProvider).value?.aaEnabled ?? false;
     // 未开启 AA 的账本:aa* 与 paidByUserId 恒 null。update 语义下 null =
     // 不更新,开关关闭后编辑历史交易不会清掉旧分摊/支出人数据,重开仍在。
     if (!aaEnabled) {
@@ -504,23 +520,25 @@ class _TransactionEditorSheetState
     // 人均/指定分摊:提交时统一跳 AaEditPage 配置——人均可改参与人/支出人,
     // 指定再逐人填金额;跳页前不落库,AaEditPage 是纯选择器,pop 返回 result。
     if (_aaMode == AaMode.perPerson || _aaMode == AaMode.custom) {
-      final result = await Navigator.of(context).pushNamed(
-        Routes.aaEdit,
-        arguments: AaEditPageArgs(
-          ledgerId: _ledgerId,
-          amount: total,
-          currencyCode: txCurrency,
-          categoryName: CategoryUtils.getDisplayName(c.name, context),
-          categoryIconName: c.icon,
-          date: _date,
-          mode: _aaMode,
-          // 支出人初值仅作分摊编辑页回显(编辑模式回填已保存值);编辑器本身
-          // 不维护支出人状态,最终是否写入由 AaEditPage 的结果决定。
-          paidByUserId: widget.initialPaidByUserId,
-          participantIds: _aaParticipantIds,
-          splits: _aaSplits,
-        ),
-      ) as AaEditResult?;
+      final result =
+          await Navigator.of(context).pushNamed(
+                Routes.aaEdit,
+                arguments: AaEditPageArgs(
+                  ledgerId: _ledgerId,
+                  amount: total,
+                  currencyCode: txCurrency,
+                  categoryName: CategoryUtils.getDisplayName(c.name, context),
+                  categoryIconName: c.icon,
+                  date: _date,
+                  mode: _aaMode,
+                  // 支出人初值仅作分摊编辑页回显(编辑模式回填已保存值);编辑器本身
+                  // 不维护支出人状态,最终是否写入由 AaEditPage 的结果决定。
+                  paidByUserId: widget.initialPaidByUserId,
+                  participantIds: _aaParticipantIds,
+                  splits: _aaSplits,
+                ),
+              )
+              as AaEditResult?;
       if (result == null || !mounted) return null; // 取消:不落库
       // 回传值同步到本地状态,编辑器再次打开时现场与已确认的分摊一致。
       _aaMode = result.aaMode == 2 ? AaMode.custom : AaMode.perPerson;
@@ -528,8 +546,9 @@ class _TransactionEditorSheetState
       _aaSplits = result.aaSplits;
       return (
         aaMode: result.aaMode,
-        aaParticipants:
-            result.aaParticipants == null ? null : jsonEncode(result.aaParticipants),
+        aaParticipants: result.aaParticipants == null
+            ? null
+            : jsonEncode(result.aaParticipants),
         // 人均结果不带金额:编辑模式显式清空旧 aaSplits;新建写 null
         aaSplits: result.aaSplits != null
             ? jsonEncode(result.aaSplits)
@@ -634,7 +653,8 @@ class _TransactionEditorSheetState
       // 分类名 + 金额 + 交易发生日期拼接；operatorUserId 在单人账本下为 null，
       // 详情页对应行将不显示操作者，符合预期。
       final operatorUserId = await currentOperatorUserIdFromUi(ref);
-      final summary = '${c.name} · ${total.toStringAsFixed(2)} · '
+      final summary =
+          '${c.name} · ${total.toStringAsFixed(2)} · '
           '${_date.year}-${_date.month.toString().padLeft(2, '0')}-'
           '${_date.day.toString().padLeft(2, '0')} '
           '${_date.hour.toString().padLeft(2, '0')}:'
@@ -693,8 +713,9 @@ class _TransactionEditorSheetState
   void _onNotePicked(String note) {
     setState(() {
       _noteCtrl.text = note;
-      _noteCtrl.selection =
-          TextSelection.fromPosition(TextPosition(offset: note.length));
+      _noteCtrl.selection = TextSelection.fromPosition(
+        TextPosition(offset: note.length),
+      );
     });
   }
 
@@ -762,7 +783,8 @@ class _TransactionEditorSheetState
 
     final isInCalcMode = _calcState == _CalcState.operating;
     // 主按钮可用性：operating 状态 = 始终可用；waiting/calculated = 金额>0 且分类已选
-    final doneEnabled = (isInCalcMode || _currentTotal.abs() > 0) &&
+    final doneEnabled =
+        (isInCalcMode || _currentTotal.abs() > 0) &&
         _selectedCategory != null &&
         !_isSubmitting;
 
@@ -787,141 +809,146 @@ class _TransactionEditorSheetState
         // 同时整页（含分类区 / 自定义键盘）保持可见，不收起。
         padding: EdgeInsets.only(bottom: mq.viewInsets.bottom),
         child: Container(
-        constraints: BoxConstraints(maxHeight: sheetMaxH),
-        decoration: BoxDecoration(
-          color: SpitoutTokens.surfaceSheet(context),
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(16)),
-        ),
-        child: Padding(
-          // sheet 背景已由 SafeArea 顶到状态栏下面，顶部无需再内缩；
-          // 仅底部内缩 Home Indicator 高度，最底排按键不被手势条压住。
-          padding: EdgeInsets.only(bottom: bottomInset),
-          child: Column(
-          // 始终填满可用高度：分类区用 Expanded 占据剩余空间并独立滚动。
-          // sheetMaxH = available（全屏 − 键盘）。键盘拉起时整页上移且不收起内容，
-          // 满足「保留整个记账页、系统键盘不遮挡备注行与币种行」的需求。
-          mainAxisSize: MainAxisSize.max,
-          children: [
-            // —— 拖拽条 ——
-            Container(
-              width: 36,
-              height: 4,
-              margin: const EdgeInsets.only(top: 8, bottom: 4),
-              decoration: BoxDecoration(
-                color: SpitoutTokens.textTertiary(context)
-                    .withValues(alpha: 0.3),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            // —— Header：返回 + 记一笔 + 分摊方式(弱化) + 作者头像 ——
-            _buildHeader(context, l10n, editingTxId, aaEnabled),
-            // —— 分类区（始终显示，含系统键盘拉起时） ——
-            // 键盘拉起时分类区保持可见，整页上移保留。
-            // 弱分隔线
-            Divider(
-              height: 1,
-              thickness: 0.5,
-              color: SpitoutTokens.cardInnerDividerColor(context),
-            ),
-            // 分类区（独立滚动、无可见滚动条）
-            // Expanded 占据剩余空间：空间充足时多展示几行分类，
-            // 不足时（如系统键盘拉起）分类区被压缩、超出部分滚动查看。
-            Expanded(
-              child: CategoryGridSection(
-                kind: widget.initialKind,
-                initialSelectedId: widget.initialCategoryId,
-                onCategorySelected: _onCategorySelected,
-              ),
-            ),
-            Divider(
-              height: 1,
-              thickness: 0.5,
-              color: SpitoutTokens.cardInnerDividerColor(context),
-            ),
-            // —— 底部固定区：备注行 + 金额栏行（始终显示） + 键盘（仅键盘关闭时） ——
-            // 备注行必须始终在树中，否则键盘拉起→NoteInputRow 移除→
-            // TextField 销毁→焦点丢失→键盘收起，形成死循环导致备注无法输入。
-            // 输入区整体包一层带向上阴影的容器：分类区可独立滚动，阴影让
-            // 底部固定输入区产生「悬浮于分类内容之上」的层次分隔感。
-            // 注意必须带与 sheet 一致的实色背景，否则阴影会透过透明区域渗出来。
-            Container(
-              decoration: BoxDecoration(
-                color: SpitoutTokens.surfaceSheet(context),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.06),
-                    blurRadius: 8,
-                    // 负 Y 偏移：阴影只向上（分类区方向）投射
-                    offset: const Offset(0, -2),
+          constraints: BoxConstraints(maxHeight: sheetMaxH),
+          decoration: BoxDecoration(
+            color: SpitoutTokens.surfaceSheet(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+          ),
+          child: Padding(
+            // sheet 背景已由 SafeArea 顶到状态栏下面，顶部无需再内缩；
+            // 仅底部内缩 Home Indicator 高度，最底排按键不被手势条压住。
+            padding: EdgeInsets.only(bottom: bottomInset),
+            child: Column(
+              // 始终填满可用高度：分类区用 Expanded 占据剩余空间并独立滚动。
+              // sheetMaxH = available（全屏 − 键盘）。键盘拉起时整页上移且不收起内容，
+              // 满足「保留整个记账页、系统键盘不遮挡备注行与币种行」的需求。
+              mainAxisSize: MainAxisSize.max,
+              children: [
+                // —— 拖拽条 ——
+                Container(
+                  width: 36,
+                  height: 4,
+                  margin: const EdgeInsets.only(top: 8, bottom: 4),
+                  decoration: BoxDecoration(
+                    color: SpitoutTokens.textTertiary(
+                      context,
+                    ).withValues(alpha: 0.3),
+                    borderRadius: BorderRadius.circular(2),
                   ),
-                ],
-              ),
-              child: Padding(
-              // 底部留白 16：最底排按键距屏幕下沿过近，留出呼吸空间
-              padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // 备注输入行（备注行在金额栏行上方）
-                  NoteInputRow(
-                    noteController: _noteCtrl,
-                    noteFocusNode: _noteFocusNode,
-                    onNotePicked: _onNotePicked,
+                ),
+                // —— Header：返回 + 记一笔 + 分摊方式(弱化) + 作者头像 ——
+                _buildHeader(context, l10n, editingTxId, aaEnabled),
+                // —— 分类区（始终显示，含系统键盘拉起时） ——
+                // 键盘拉起时分类区保持可见，整页上移保留。
+                // 弱分隔线
+                Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: SpitoutTokens.cardInnerDividerColor(context),
+                ),
+                // 分类区（独立滚动、无可见滚动条）
+                // Expanded 占据剩余空间：空间充足时多展示几行分类，
+                // 不足时（如系统键盘拉起）分类区被压缩、超出部分滚动查看。
+                Expanded(
+                  child: CategoryGridSection(
+                    kind: widget.initialKind,
+                    initialSelectedId: widget.initialCategoryId,
+                    onCategorySelected: _onCategorySelected,
                   ),
-                  const SizedBox(height: 4),
-                  // 金额栏行：[币种][金额][删除]
-                  AmountExpressionBar(
-                    txCurrency: txCurrency,
-                    ledgerBase: ledgerBase,
-                    amountStr: _amountStr,
-                    acc: _acc,
-                    op: _op,
-                    opGlyph: _opGlyph,
-                    equalsTotal: _currentTotal,
-                    calcState: _calcStateStr,
-                    conversionPreview: _conversionPreview(),
-                    rateFetching: _fetchingRate,
-                    rateMissing: rate == null && !_fetchingRate && isForeign,
-                    rateMissingHint: l10n.txRateMissingHint,
-                    onPickCurrency: _pickCurrency,
-                    onEditRate: _editRate,
-                    onClearAmount: _clearAmount,
-                    onDeleteOne: _backspace,
+                ),
+                Divider(
+                  height: 1,
+                  thickness: 0.5,
+                  color: SpitoutTokens.cardInnerDividerColor(context),
+                ),
+                // —— 底部固定区：备注行 + 金额栏行（始终显示） + 键盘（仅键盘关闭时） ——
+                // 备注行必须始终在树中，否则键盘拉起→NoteInputRow 移除→
+                // TextField 销毁→焦点丢失→键盘收起，形成死循环导致备注无法输入。
+                // 输入区整体包一层带向上阴影的容器：分类区可独立滚动，阴影让
+                // 底部固定输入区产生「悬浮于分类内容之上」的层次分隔感。
+                // 注意必须带与 sheet 一致的实色背景，否则阴影会透过透明区域渗出来。
+                Container(
+                  decoration: BoxDecoration(
+                    color: SpitoutTokens.surfaceSheet(context),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.06),
+                        blurRadius: 8,
+                        // 负 Y 偏移：阴影只向上（分类区方向）投射
+                        offset: const Offset(0, -2),
+                      ),
+                    ],
                   ),
-                  // 4×4 键盘（始终显示；系统键盘拉起时整页上移，
-                  // 键盘区随之上移，不会与系统键盘叠加遮挡备注/币种行）
-                  const SizedBox(height: 8),
-                  AmountKeypad(
-                    u: keypadU,
-                    date: _date,
-                    showTime: true, // 5 列滚轮始终含时分
-                    calcState: _calcStateStr,
-                    op: _op,
-                    isDoneEnabled: doneEnabled,
-                    isSubmitting: _isSubmitting,
-                    opGlyph: _opGlyph,
-                    onAppend: _append,
-                    onApplyOp: _applyOp,
-                    onApplyEquals: _applyEquals,
-                    onPickDate: _pickDate,
-                    onSubmit: _onSubmit,
+                  child: Padding(
+                    // 底部留白 16：最底排按键距屏幕下沿过近，留出呼吸空间
+                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // 备注输入行（备注行在金额栏行上方）
+                        NoteInputRow(
+                          noteController: _noteCtrl,
+                          noteFocusNode: _noteFocusNode,
+                          onNotePicked: _onNotePicked,
+                        ),
+                        const SizedBox(height: 4),
+                        // 金额栏行：[币种][金额][删除]
+                        AmountExpressionBar(
+                          txCurrency: txCurrency,
+                          ledgerBase: ledgerBase,
+                          amountStr: _amountStr,
+                          acc: _acc,
+                          op: _op,
+                          opGlyph: _opGlyph,
+                          equalsTotal: _currentTotal,
+                          calcState: _calcStateStr,
+                          conversionPreview: _conversionPreview(),
+                          rateFetching: _fetchingRate,
+                          rateMissing:
+                              rate == null && !_fetchingRate && isForeign,
+                          rateMissingHint: l10n.txRateMissingHint,
+                          onPickCurrency: _pickCurrency,
+                          onEditRate: _editRate,
+                          onClearAmount: _clearAmount,
+                          onDeleteOne: _backspace,
+                        ),
+                        // 4×4 键盘（始终显示；系统键盘拉起时整页上移，
+                        // 键盘区随之上移，不会与系统键盘叠加遮挡备注/币种行）
+                        const SizedBox(height: 8),
+                        AmountKeypad(
+                          u: keypadU,
+                          date: _date,
+                          showTime: true, // 5 列滚轮始终含时分
+                          calcState: _calcStateStr,
+                          op: _op,
+                          isDoneEnabled: doneEnabled,
+                          isSubmitting: _isSubmitting,
+                          opGlyph: _opGlyph,
+                          onAppend: _append,
+                          onApplyOp: _applyOp,
+                          onApplyEquals: _applyEquals,
+                          onPickDate: _pickDate,
+                          onSubmit: _onSubmit,
+                        ),
+                      ],
+                    ),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-            ),
-          ],
+          ),
         ),
       ),
-    ),
-  ),
-  );
+    );
   }
 
   /// 构建 Header：返回按钮 + 「记一笔」标题 + 分摊方式(弱化) + 作者头像。
   Widget _buildHeader(
-      BuildContext context, AppLocalizations l10n, int? editingTxId, bool aaEnabled) {
+    BuildContext context,
+    AppLocalizations l10n,
+    int? editingTxId,
+    bool aaEnabled,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
       child: Row(
@@ -1011,8 +1038,9 @@ class _TransactionEditorSheetState
       AaMode.custom => l10n.aaModeCustom,
     };
     // 边框色:文字三级色 35% 透明度,亮暗模式下均清晰可见但不抢眼
-    final borderColor =
-        SpitoutTokens.textTertiary(context).withValues(alpha: 0.35);
+    final borderColor = SpitoutTokens.textTertiary(
+      context,
+    ).withValues(alpha: 0.35);
     final arrowColor = SpitoutTokens.iconTertiary(context);
     return Material(
       color: Colors.transparent,
@@ -1052,7 +1080,6 @@ class _TransactionEditorSheetState
       ),
     );
   }
-
 }
 
 // =============================================================================
@@ -1077,18 +1104,18 @@ class _TxAuthorContext {
 /// 仅当交易属于共享账本时返回非null;非共享账本直接返回null不展示头像。
 final _txAuthorContextProvider = FutureProvider.autoDispose
     .family<_TxAuthorContext?, int>((ref, txId) async {
-  final repo = ref.read(repositoryProvider);
-  final tx = await repo.getTransactionById(txId);
-  if (tx == null) return null;
-  final ledger = await repo.getLedgerById(tx.ledgerId);
-  // 只有共享账本才需要展示协作者头像
-  if (!(ledger?.isShared ?? false)) return null;
-  return _TxAuthorContext(
-    creatorUserId: tx.createdByUserId,
-    lastEditedByUserId: tx.lastEditedByUserId,
-    ledgerSyncId: ledger!.syncId!, // 已确认isShared=true的账本syncId必然非空
-  );
-});
+      final repo = ref.read(repositoryProvider);
+      final tx = await repo.getTransactionById(txId);
+      if (tx == null) return null;
+      final ledger = await repo.getLedgerById(tx.ledgerId);
+      // 只有共享账本才需要展示协作者头像
+      if (!(ledger?.isShared ?? false)) return null;
+      return _TxAuthorContext(
+        creatorUserId: tx.createdByUserId,
+        lastEditedByUserId: tx.lastEditedByUserId,
+        ledgerSyncId: ledger!.syncId!, // 已确认isShared=true的账本syncId必然非空
+      );
+    });
 
 /// 编辑模式下的共享账本作者头像组件。
 ///
@@ -1102,7 +1129,9 @@ class _TxAuthorAvatars extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final contextAsync = ref.watch(_txAuthorContextProvider(editingTransactionId));
+    final contextAsync = ref.watch(
+      _txAuthorContextProvider(editingTransactionId),
+    );
     // 获取云端baseUrl用于拼接头像绝对路径
     final baseUrl =
         ref.watch(spitoutCloudProviderInstance).value?.baseUrl ?? '';

@@ -60,8 +60,7 @@ class AnalyticsTestDataSeeder {
     final cats = await repo.getUsableCategories('expense');
     var catIds = cats.map((c) => c.id).toList();
     if (catIds.isEmpty) {
-      final id =
-          await repo.upsertCategory(name: '测试填充', kind: 'expense');
+      final id = (await repo.upsertCategory(name: '测试填充', kind: 'expense')).id;
       catIds = [id];
     }
 
@@ -72,47 +71,81 @@ class AnalyticsTestDataSeeder {
       case TestDataScope.year:
         // 全年 12 个月，每月随机 8 笔，分散在不同日
         for (int m = 1; m <= 12; m++) {
-          final daysInMonth = DateTime(now.year, m + 1, 1)
-              .difference(DateTime(now.year, m, 1))
-              .inDays;
+          final daysInMonth = DateTime(
+            now.year,
+            m + 1,
+            1,
+          ).difference(DateTime(now.year, m, 1)).inDays;
           for (int i = 0; i < 8; i++) {
             final day = 1 + _rand.nextInt(daysInMonth);
-            plan.add(_gen(
-              DateTime(now.year, m, day, _rand.nextInt(24), _rand.nextInt(60)),
-              baseCurrency,
-            ));
+            plan.add(
+              _gen(
+                DateTime(
+                  now.year,
+                  m,
+                  day,
+                  _rand.nextInt(24),
+                  _rand.nextInt(60),
+                ),
+                baseCurrency,
+              ),
+            );
           }
         }
       case TestDataScope.month:
-        final daysInMonth = DateTime(now.year, now.month + 1, 1)
-            .difference(DateTime(now.year, now.month, 1))
-            .inDays;
+        final daysInMonth = DateTime(
+          now.year,
+          now.month + 1,
+          1,
+        ).difference(DateTime(now.year, now.month, 1)).inDays;
         for (int i = 0; i < 40; i++) {
           final day = 1 + _rand.nextInt(daysInMonth);
-          plan.add(_gen(
-            DateTime(now.year, now.month, day, _rand.nextInt(24), _rand.nextInt(60)),
-            baseCurrency,
-          ));
+          plan.add(
+            _gen(
+              DateTime(
+                now.year,
+                now.month,
+                day,
+                _rand.nextInt(24),
+                _rand.nextInt(60),
+              ),
+              baseCurrency,
+            ),
+          );
         }
       case TestDataScope.week:
         // 以周一为一周起点，覆盖 7 天
         final ws = _mondayOf(now);
         for (int d = 0; d < 7; d++) {
           for (int i = 0; i < 4; i++) {
-            plan.add(_gen(
-              DateTime(ws.year, ws.month, ws.day + d, _rand.nextInt(24),
-                  _rand.nextInt(60)),
-              baseCurrency,
-            ));
+            plan.add(
+              _gen(
+                DateTime(
+                  ws.year,
+                  ws.month,
+                  ws.day + d,
+                  _rand.nextInt(24),
+                  _rand.nextInt(60),
+                ),
+                baseCurrency,
+              ),
+            );
           }
         }
       case TestDataScope.day:
         for (int i = 0; i < 12; i++) {
-          plan.add(_gen(
-            DateTime(now.year, now.month, now.day, _rand.nextInt(24),
-                _rand.nextInt(60)),
-            baseCurrency,
-          ));
+          plan.add(
+            _gen(
+              DateTime(
+                now.year,
+                now.month,
+                now.day,
+                _rand.nextInt(24),
+                _rand.nextInt(60),
+              ),
+              baseCurrency,
+            ),
+          );
         }
     }
 
@@ -155,9 +188,5 @@ class _Plan {
   final int amount; // 单位:分
   final String currency;
 
-  _Plan({
-    required this.when,
-    required this.amount,
-    required this.currency,
-  });
+  _Plan({required this.when, required this.amount, required this.currency});
 }

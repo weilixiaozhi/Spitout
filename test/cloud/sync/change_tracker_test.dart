@@ -147,8 +147,7 @@ void main() {
   });
 
   group('综合:多账本场景下 user-global 变更被所有账本的 sync 链可见', () {
-    test('在任一具体账本触发 sync 时,user-global 变更应通过 getUnpushed(0) 一起带出',
-        () async {
+    test('在任一具体账本触发 sync 时,user-global 变更应通过 getUnpushed(0) 一起带出', () async {
       // 模拟真实场景:用户在 mobile 重命名 category(user-global 变更)+
       // 当前账本 5 又改了一笔交易(ledger-scoped 变更)。
       await tracker.recordUserGlobalChange(
@@ -171,6 +170,58 @@ void main() {
       final all = [...ledger5, ...globals];
       expect(all.length, 2);
       expect(all.map((c) => c.entityType).toSet(), {'transaction', 'category'});
+    });
+  });
+
+  group('批量登记端口', () {
+    test('recordLedgerChanges 一次写入多条 ledger 变更', () async {
+      await tracker.recordLedgerChanges(
+        changes: [
+          (
+            entityType: 'transaction',
+            entityId: 1,
+            entitySyncId: 'tx-1',
+            ledgerId: 5,
+            action: 'create',
+            payloadJson: null,
+          ),
+          (
+            entityType: 'transaction',
+            entityId: 2,
+            entitySyncId: 'tx-2',
+            ledgerId: 5,
+            action: 'update',
+            payloadJson: null,
+          ),
+        ],
+      );
+      final changes = await tracker.getUnpushedChangesForLedger(5);
+      expect(changes, hasLength(2));
+      expect(changes.map((c) => c.action).toSet(), {'create', 'update'});
+    });
+
+    test('recordUserGlobalChanges 一次写入多条 user-global 变更', () async {
+      await tracker.recordUserGlobalChanges(
+        changes: [
+          (
+            entityType: 'category',
+            entityId: 1,
+            entitySyncId: 'cat-1',
+            action: 'create',
+            payloadJson: null,
+          ),
+          (
+            entityType: 'exchange_rate_override',
+            entityId: 2,
+            entitySyncId: 'rate-1',
+            action: 'update',
+            payloadJson: null,
+          ),
+        ],
+      );
+      final changes = await tracker.getUnpushedChangesForLedger(0);
+      expect(changes, hasLength(2));
+      expect(changes.every((c) => c.ledgerId == 0), isTrue);
     });
   });
 }

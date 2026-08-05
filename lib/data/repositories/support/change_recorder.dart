@@ -35,4 +35,36 @@ abstract class ChangeRecorder {
     required String action,
     String? payloadJson,
   });
+
+  /// 批量记录 ledger-scoped 变更。
+  ///
+  /// 供批量写入路径使用：把 N 条 change 一次交给实现方落库，避免批量路径绕过
+  /// 本端口直接写 local_changes 表，也避免逐条跨 isolate 的开销。
+  Future<void> recordLedgerChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        int ledgerId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  });
+
+  /// 批量记录 user-global 实体（category / exchange_rate_override）的变更。
+  Future<void> recordUserGlobalChanges({
+    required List<
+      ({
+        String entityType,
+        int entityId,
+        String entitySyncId,
+        String action,
+        String? payloadJson,
+      })
+    >
+    changes,
+  });
 }

@@ -37,11 +37,13 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
             source: source,
             fetchedAt: fetchedAt,
           ),
-          onConflict: d.DoUpdate((_) => ExchangeRatesCompanion(
-            rate: d.Value(e.value),
-            source: d.Value(source),
-            fetchedAt: d.Value(fetchedAt),
-          )),
+          onConflict: d.DoUpdate(
+            (_) => ExchangeRatesCompanion(
+              rate: d.Value(e.value),
+              source: d.Value(source),
+              fetchedAt: d.Value(fetchedAt),
+            ),
+          ),
         );
       }
     });
@@ -50,27 +52,47 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
 
   @override
   Future<List<ExchangeRate>> getLatestAutoRates(String base) async {
-    final rows = await (db.select(db.exchangeRates)
-          ..where((t) => t.baseCurrency.equals(base.toUpperCase()))
-          ..orderBy([
-            (t) => d.OrderingTerm.asc(t.quoteCurrency),
-            (t) => d.OrderingTerm.desc(t.rateDate),
-          ]))
+    final rows = await db
+        .customSelect(
+          'SELECT e.base_currency, e.quote_currency, e.rate_date, '
+          'e.rate, e.source, e.fetched_at '
+          'FROM exchange_rates e '
+          'JOIN ('
+          '  SELECT quote_currency, MAX(rate_date) AS max_date '
+          '  FROM exchange_rates '
+          '  WHERE base_currency = ?1 '
+          '  GROUP BY quote_currency'
+          ') latest '
+          'ON latest.quote_currency = e.quote_currency '
+          'AND latest.max_date = e.rate_date '
+          'WHERE e.base_currency = ?1 '
+          'ORDER BY e.quote_currency',
+          variables: [d.Variable.withString(base.toUpperCase())],
+          readsFrom: {db.exchangeRates},
+        )
         .get();
-    final latest = <String, ExchangeRate>{};
-    for (final r in rows) {
-      latest.putIfAbsent(r.quoteCurrency, () => r); // 排序后每 quote 第一行即最新
-    }
-    return latest.values.toList();
+    return rows
+        .map(
+          (row) => ExchangeRate(
+            baseCurrency: row.read<String>('base_currency'),
+            quoteCurrency: row.read<String>('quote_currency'),
+            rateDate: row.read<String>('rate_date'),
+            rate: row.read<String>('rate'),
+            source: row.read<String>('source'),
+            fetchedAt: row.read<DateTime>('fetched_at'),
+          ),
+        )
+        .toList();
   }
 
   @override
   Future<DateTime?> getLastFetchedAt(String base) async {
-    final row = await (db.select(db.exchangeRates)
-          ..where((t) => t.baseCurrency.equals(base.toUpperCase()))
-          ..orderBy([(t) => d.OrderingTerm.desc(t.fetchedAt)])
-          ..limit(1))
-        .getSingleOrNull();
+    final row =
+        await (db.select(db.exchangeRates)
+              ..where((t) => t.baseCurrency.equals(base.toUpperCase()))
+              ..orderBy([(t) => d.OrderingTerm.desc(t.fetchedAt)])
+              ..limit(1))
+            .getSingleOrNull();
     return row?.fetchedAt;
   }
 
@@ -98,65 +120,83 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
   }) async {
     final baseUp = base.toUpperCase();
     final quoteUp = quote.toUpperCase();
-    final existing = await (db.select(db.exchangeRateOverrides)
-          ..where((t) =>
-              t.baseCurrency.equals(baseUp) & t.quoteCurrency.equals(quoteUp)))
-        .getSingleOrNull();
-    final now = DateTime.now().toUtc();
-    if (existing == null) {
-      final syncId = _uuid.v4();
-      final id = await db.into(db.exchangeRateOverrides).insert(
-            ExchangeRateOverridesCompanion.insert(
-              baseCurrency: baseUp,
-              quoteCurrency: quoteUp,
-              rate: rate,
-              syncId: d.Value(syncId),
-              updatedAt: d.Value(now),
-            ),
-          );
-      await trackerGetter()?.recordUserGlobalChange(
-        entityType: 'exchange_rate_override',
-        entityId: id,
-        entitySyncId: syncId,
-        action: 'create',
-      );
-    } else {
-      final syncId = existing.syncId ?? _uuid.v4();
-      await (db.update(db.exchangeRateOverrides)
-            ..where((t) => t.id.equals(existing.id)))
-          .write(ExchangeRateOverridesCompanion(
-        rate: d.Value(rate),
-        syncId: d.Value(syncId),
-        updatedAt: d.Value(now),
-      ));
-      await trackerGetter()?.recordUserGlobalChange(
-        entityType: 'exchange_rate_override',
-        entityId: existing.id,
-        entitySyncId: syncId,
-        action: 'update',
-      );
-    }
+    // 写覆盖汇率与登记变更同事务:登记失败时回滚,避免本地已生效但云端漏推。
+    await db.transaction(() async {
+      final existing =
+          await (db.select(db.exchangeRateOverrides)..where(
+                (t) =>
+                    t.baseCurrency.equals(baseUp) &
+                    t.quoteCurrency.equals(quoteUp),
+              ))
+              .getSingleOrNull();
+      final now = DateTime.now().toUtc();
+      if (existing == null) {
+        final syncId = _uuid.v4();
+        final id = await db
+            .into(db.exchangeRateOverrides)
+            .insert(
+              ExchangeRateOverridesCompanion.insert(
+                baseCurrency: baseUp,
+                quoteCurrency: quoteUp,
+                rate: rate,
+                syncId: d.Value(syncId),
+                updatedAt: d.Value(now),
+              ),
+            );
+        await trackerGetter()?.recordUserGlobalChange(
+          entityType: 'exchange_rate_override',
+          entityId: id,
+          entitySyncId: syncId,
+          action: 'create',
+        );
+      } else {
+        final syncId = existing.syncId ?? _uuid.v4();
+        await (db.update(
+          db.exchangeRateOverrides,
+        )..where((t) => t.id.equals(existing.id))).write(
+          ExchangeRateOverridesCompanion(
+            rate: d.Value(rate),
+            syncId: d.Value(syncId),
+            updatedAt: d.Value(now),
+          ),
+        );
+        await trackerGetter()?.recordUserGlobalChange(
+          entityType: 'exchange_rate_override',
+          entityId: existing.id,
+          entitySyncId: syncId,
+          action: 'update',
+        );
+      }
+    });
   }
 
   @override
-  Future<void> removeOverride({required String base, required String quote}) async {
-    final existing = await (db.select(db.exchangeRateOverrides)
-          ..where((t) =>
-              t.baseCurrency.equals(base.toUpperCase()) &
-              t.quoteCurrency.equals(quote.toUpperCase())))
-        .getSingleOrNull();
-    if (existing == null) return;
-    await (db.delete(db.exchangeRateOverrides)
-          ..where((t) => t.id.equals(existing.id)))
-        .go();
-    final syncId = existing.syncId;
-    if (syncId != null) {
-      await trackerGetter()?.recordUserGlobalChange(
-        entityType: 'exchange_rate_override',
-        entityId: existing.id,
-        entitySyncId: syncId,
-        action: 'delete',
-      );
-    }
+  Future<void> removeOverride({
+    required String base,
+    required String quote,
+  }) async {
+    // 删除与登记变更同事务:登记失败时回滚,避免本地已删但云端仍持有投影。
+    await db.transaction(() async {
+      final existing =
+          await (db.select(db.exchangeRateOverrides)..where(
+                (t) =>
+                    t.baseCurrency.equals(base.toUpperCase()) &
+                    t.quoteCurrency.equals(quote.toUpperCase()),
+              ))
+              .getSingleOrNull();
+      if (existing == null) return;
+      await (db.delete(
+        db.exchangeRateOverrides,
+      )..where((t) => t.id.equals(existing.id))).go();
+      final syncId = existing.syncId;
+      if (syncId != null) {
+        await trackerGetter()?.recordUserGlobalChange(
+          entityType: 'exchange_rate_override',
+          entityId: existing.id,
+          entitySyncId: syncId,
+          action: 'delete',
+        );
+      }
+    });
   }
 }

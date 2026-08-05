@@ -1,10 +1,9 @@
 import 'package:drift/drift.dart' as d;
-import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/logger_service.dart';
 import '../../data/db.dart';
-import '../../providers/core/database_providers.dart';
+import '../../data/repositories/support/change_recorder.dart';
 import 'seed_service.dart';
 
 /// 分类图标升级迁移（Layer 2 数据迁移）。
@@ -36,7 +35,12 @@ class CategoryIconMigrationService {
   /// 按确定性 syncId 把存量默认分类的旧图标回写为新图标。
   ///
   /// - [db] 本地数据库实例。
-  static Future<void> migrate({required SpitoutDatabase db}) async {
+  /// - [changeRecorder] 变更登记端口；由 providers 层按当前云后端注入，
+  ///   为 null 时跳过登记（与仓库“未注入即空实现”的语义一致）。
+  static Future<void> migrate({
+    required SpitoutDatabase db,
+    ChangeRecorder? changeRecorder,
+  }) async {
     final prefs = await SharedPreferences.getInstance();
     if (prefs.getBool(_migratedKey) == true) return; // 已迁移，跳过
 
@@ -73,7 +77,7 @@ class CategoryIconMigrationService {
               .write(CategoriesCompanion(icon: d.Value(newIcon)));
 
           // 3) 登记 user-global 待推送变更（ledgerId=0），让云端也拿到新图标；
-          //    已有未推送 change 时不重复插入。
+          //    已有未推送 change 时不重复登记；登记统一走 ChangeRecorder 端口。
           for (final row in rows) {
             final existing = await (db.select(db.localChanges)
                   ..where((c) =>
@@ -84,14 +88,11 @@ class CategoryIconMigrationService {
                 .getSingleOrNull();
             if (existing != null) continue;
 
-            await db.into(db.localChanges).insert(
-              LocalChangesCompanion.insert(
-                entityType: 'category',
-                entityId: row.id,
-                entitySyncId: syncId,
-                ledgerId: 0,
-                action: 'update',
-              ),
+            await changeRecorder?.recordUserGlobalChange(
+              entityType: 'category',
+              entityId: row.id,
+              entitySyncId: syncId,
+              action: 'update',
             );
           }
         }
@@ -103,17 +104,5 @@ class CategoryIconMigrationService {
       logger.error('CategoryIconMigration', '迁移失败', e, st);
       // 不写标记位，下次启动重试。
     }
-  }
-}
-
-/// App 启动时触发一次分类图标迁移（失败仅记日志，不阻塞启动）。
-Future<void> migrateCategoryIconsOnLaunch(
-  T Function<T>(ProviderListenable<T>) read,
-) async {
-  try {
-    final db = read(databaseProvider);
-    await CategoryIconMigrationService.migrate(db: db);
-  } catch (e, st) {
-    logger.warning('CategoryIconMigration', '启动迁移触发失败(非阻塞)', '$e\n$st');
   }
 }

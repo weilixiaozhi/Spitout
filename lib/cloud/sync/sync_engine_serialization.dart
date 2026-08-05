@@ -432,7 +432,8 @@ extension SyncEngineSerializationExt on SyncEngine {
         .toList();
 
     return jsonEncode({
-      'version': 6,
+      // 与 transactions_json 共用同一版本常量，防止快照栈版本悄悄落后。
+      'version': transactionsJsonVersion,
       'exportedAt': DateTime.now().toUtc().toIso8601String(),
       'ledgerId': ledger.id,
       'ledgerName': ledger.name,

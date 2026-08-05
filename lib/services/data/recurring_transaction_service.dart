@@ -1,4 +1,5 @@
 import '../../data/db.dart';
+import '../../data/repositories/base_repository.dart';
 import '../../core/logging/logger_service.dart';
 
 /// 重复交易频率枚举
@@ -24,22 +25,20 @@ enum RecurringFrequency {
 /// 注意：此服务主要用于生成待处理的周期交易记录
 /// 基础的 CRUD 操作请使用 RecurringTransactionRepository
 ///
-/// repository 参数可以是 BeeRepository 或 CloudRepository
 class RecurringTransactionService {
   static const _tag = 'Recurring';
 
-  final dynamic repository;
+  final BaseRepository repository;
 
   RecurringTransactionService(this.repository);
 
   /// 静态方法：生成待处理的重复交易（供启动时和初始化时调用）
   ///
-  /// [repository] 可以是 BeeRepository 或 CloudRepository
   /// [verbose] 是否打印详细日志
   ///
   /// 返回：生成了交易的账本ID集合（用于触发同步）
   static Future<Set<int>> generatePendingTransactionsStatic({
-    required dynamic repository,
+    required BaseRepository repository,
     bool verbose = false,
   }) async {
     try {
@@ -180,10 +179,11 @@ class RecurringTransactionService {
     final generatedTransactions = <Transaction>[];
 
     for (final ledger in ledgers) {
-      // 获取所有启用的周期交易
-      final allRecurring = await repository.getAllRecurringTransactions();
-      final recurringList = allRecurring
-          .where((r) => r.ledgerId == ledger.id && r.enabled)
+      // 只加载当前账本的模板，避免每次循环全表扫描。
+      final recurringList = (await repository.getRecurringTransactionsByLedger(
+        ledger.id,
+      ))
+          .where((r) => r.enabled)
           .toList();
       if (recurringList.isEmpty) continue;
       logger.info(_tag,
@@ -208,38 +208,22 @@ class RecurringTransactionService {
           logger.info(_tag,
               '周期交易 id=${currentRecurring.id} 生成一笔: happenedAt=$nextDate amount=${currentRecurring.amount / 100} type=${currentRecurring.type}');
 
-          // 生成交易记录
-          final transactionId = await repository.addTransaction(
-            ledgerId: currentRecurring.ledgerId,
-            type: currentRecurring.type,
-            amount: currentRecurring.amount,
-            categoryId: currentRecurring.categoryId,
+          // 写交易 + 推进锚点在同一事务内完成，防止锚点更新失败导致重复生成。
+          final transactionId = await repository.generateRecurringTransaction(
+            recurring: currentRecurring,
             happenedAt: nextDate,
-            note: currentRecurring.note,
           );
 
-          // 更新最后生成日期
-          await repository.updateLastGeneratedDate(
-            currentRecurring.id,
-            nextDate,
-          );
-
-          // 使用流式查询获取生成的交易（取第一个）
-          final transactionsWithCategory =
-              await repository.transactionsWithCategoryAll(ledgerId: ledger.id).first;
-          final matchedTransactions = transactionsWithCategory
-              .where((e) => e.t.id == transactionId)
-              .toList();
-          final transaction = matchedTransactions.isNotEmpty
-              ? matchedTransactions.first.t
-              : null;
+          // 单条反查新交易，不再订阅整个账本交易流。
+          final transaction = await repository.getTransactionById(transactionId);
 
           if (transaction != null) {
             generatedTransactions.add(transaction);
           }
 
-          // 重新读取更新后的重复交易记录，用于下一次循环
-          final updatedList = await repository.getAllRecurringTransactions();
+          // 重新读取当前账本更新后的模板，用于下一次循环。
+          final updatedList =
+              await repository.getRecurringTransactionsByLedger(ledger.id);
           final matchedRecurring =
               updatedList.where((r) => r.id == currentRecurring.id).toList();
           if (matchedRecurring.isEmpty) break;

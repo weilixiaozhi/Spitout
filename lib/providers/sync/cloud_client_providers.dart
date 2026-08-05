@@ -35,9 +35,16 @@ final changeTrackerProvider = Provider<ChangeTracker>((ref) {
 /// (family key=cloudProvider 命中相同缓存)。否则两个独立 engine 各跑各的
 /// sync,同一 ledger 1 秒内可能 2-3 次 sync。
 ///
-/// 注:disposal 责任归 family — engine.startListeningRealtime 在 syncService
-/// 装配 callback 后才启动,但 dispose 由 Riverpod GC family entry 时统一触发。
-final syncEngineProvider = Provider.family<SyncEngine, SpitoutCloudProvider>(
+/// 生命周期（autoDispose）：
+/// - 正常运行期由 `syncServiceProvider` watch 本 family，entry 常驻；
+/// - 登录 / 切换账号 / 云失活时 `syncServiceProvider` 随配置重建、停止 watch
+///   旧 key，Riverpod 立即 GC 旧 entry 并调用 `ref.onDispose` → engine.dispose()
+///   （停 WS + 关事件流），避免旧引擎与 WebSocket 在容器销毁前无限累积。
+/// - 各 UI 动作函数（shared_ledger / ledger_storage 等）只 `ref.read` 不持有，
+///   但它们在云激活态下必然有 `syncServiceProvider` 这个常驻 watcher 保活，
+///   不会被中途 dispose；测试经 overrideWith 注入桩引擎时无 onDispose，同样安全。
+final syncEngineProvider =
+    Provider.autoDispose.family<SyncEngine, SpitoutCloudProvider>(
   (ref, provider) {
     final db = ref.watch(databaseProvider);
     final tracker = ref.watch(changeTrackerProvider);
@@ -143,6 +150,11 @@ Stream<CloudUser?> _seedThenFollow(CloudAuthService auth) async* {
 
 /// 已初始化的 SpitoutCloudProvider 实例
 /// 用于 SyncEngine 和其他需要直接访问 Spitout Cloud API 的场景
+///
+/// 保持非 autoDispose：它不是 family，单槽位重建不会累积旧实例；且大量 UI
+/// 组件 watch 它，autoDispose 反而会造成频繁重建。旧云客户端的释放由
+/// [syncEngineProvider]（以实例为 key 的 autoDispose family）负责——旧 entry
+/// 被 GC 时即不再持有该实例引用。
 final spitoutCloudProviderInstance =
     FutureProvider<SpitoutCloudProvider?>((ref) async {
   // P0-b 闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧

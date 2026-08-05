@@ -12,6 +12,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/services/data/category_icon_migration_service.dart';
 import 'package:spitout/services/data/seed_service.dart';
@@ -77,7 +78,10 @@ void main() {
           ),
         );
 
-    await CategoryIconMigrationService.migrate(db: db);
+    await CategoryIconMigrationService.migrate(
+      db: db,
+      changeRecorder: ChangeTracker(db),
+    );
 
     final sub = await (db.select(db.categories)
           ..where((c) => c.id.equals(subId)))
@@ -119,7 +123,10 @@ void main() {
       syncIdValue: syncId('subscription'),
     );
 
-    await CategoryIconMigrationService.migrate(db: db);
+    await CategoryIconMigrationService.migrate(
+      db: db,
+      changeRecorder: ChangeTracker(db),
+    );
 
     final sub = await (db.select(db.categories)
           ..where((c) => c.id.equals(subId)))
@@ -139,8 +146,9 @@ void main() {
       syncIdValue: syncId('transfer'),
     );
 
-    await CategoryIconMigrationService.migrate(db: db);
-    await CategoryIconMigrationService.migrate(db: db);
+    final tracker = ChangeTracker(db);
+    await CategoryIconMigrationService.migrate(db: db, changeRecorder: tracker);
+    await CategoryIconMigrationService.migrate(db: db, changeRecorder: tracker);
 
     final changes = await (db.select(db.localChanges)
           ..where((c) => c.entityType.equals('category')))

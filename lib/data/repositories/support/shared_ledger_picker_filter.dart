@@ -16,6 +16,7 @@ library;
 import 'package:drift/drift.dart' show OrderingTerm;
 
 import '../../db.dart';
+import '../../../core/logging/logger_service.dart';
 import '../category_repository.dart';
 
 /// 由 syncId 字符串稳定地派生一个负数 int,用作 synthetic Category
@@ -50,8 +51,9 @@ extension SharedLedgerPickerFilter on SpitoutDatabase {
   /// 从本地 ledgers 表解析当前 ledger 的 picker 上下文。
   Future<LedgerPickerContext?> loadLedgerPickerContext(int? ledgerId) async {
     if (ledgerId == null) return null;
-    final l = await (select(ledgers)..where((t) => t.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final l = await (select(
+      ledgers,
+    )..where((t) => t.id.equals(ledgerId))).getSingleOrNull();
     if (l == null) return null;
     return LedgerPickerContext(
       ledgerSyncId: l.syncId,
@@ -98,12 +100,15 @@ extension SharedLedgerPickerFilter on SpitoutDatabase {
   /// 与 picker 既有语义对齐：一级按 sortOrder 升序；子分类挂在
   /// syntheticIdForSyncId(parentSyncId) 键下。
   Future<CategoryPickerTree> getSharedCategoryPickerTree(
-      String ledgerSyncId, String kind) async {
-    final rows = await (select(sharedLedgerCategories)
-          ..where((t) => t.ledgerSyncId.equals(ledgerSyncId))
-          ..where((t) => t.kind.equals(kind))
-          ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
-        .get();
+    String ledgerSyncId,
+    String kind,
+  ) async {
+    final rows =
+        await (select(sharedLedgerCategories)
+              ..where((t) => t.ledgerSyncId.equals(ledgerSyncId))
+              ..where((t) => t.kind.equals(kind))
+              ..orderBy([(t) => OrderingTerm.asc(t.sortOrder)]))
+            .get();
     final topLevel = <Category>[];
     final children = <int, List<Category>>{};
     for (final s in rows) {
@@ -138,18 +143,36 @@ extension SharedLedgerPickerFilter on SpitoutDatabase {
   /// 按 synthetic id 反查 Category — 给 tx editor "initial selected" 用。
   /// 正数 id → 主表 Categories;负数 id → 扫 SharedLedgerCategories 找
   /// syntheticIdForSyncId 命中。
-  Future<Category?> findCategoryBySyntheticId(int id) async {
+  Future<Category?> findCategoryBySyntheticId(
+    int id, {
+    String? ledgerSyncId,
+  }) async {
     if (id >= 0) {
-      return (select(categories)..where((c) => c.id.equals(id)))
-          .getSingleOrNull();
+      return (select(
+        categories,
+      )..where((c) => c.id.equals(id))).getSingleOrNull();
     }
-    final all = await select(sharedLedgerCategories).get();
+    final q = select(sharedLedgerCategories);
+    if (ledgerSyncId != null && ledgerSyncId.isNotEmpty) {
+      q.where((t) => t.ledgerSyncId.equals(ledgerSyncId));
+    }
+    final all = await q.get();
+    SharedLedgerCategory? matched;
     for (final s in all) {
       if (syntheticIdForSyncId(s.syncId) == id) {
-        return _sharedCategoryAsMain(s);
+        if (matched != null) {
+          // synthetic id 由 hashCode 派生,跨账本/同账本都可能有极小概率碰撞;
+          // 记录日志便于排查,仍取首个命中保持确定行为。
+          logger.warning(
+            'SharedLedgerPicker',
+            'synthetic id($id) 命中多条共享分类:'
+                '${matched.ledgerSyncId}/${matched.syncId} 与 ${s.ledgerSyncId}/${s.syncId}',
+          );
+          break;
+        }
+        matched = s;
       }
     }
-    return null;
+    return matched == null ? null : _sharedCategoryAsMain(matched);
   }
 }
-

@@ -38,9 +38,12 @@ final securityInitProvider = FutureProvider<void>((ref) async {
   final prefs = await SharedPreferences.getInstance();
 
   // 读取应用锁状态
-  final enabled = prefs.getBool('app_lock_enabled') ?? false;
-  final biometric = prefs.getBool('app_lock_biometric_enabled') ?? false;
-  final timeout = prefs.getInt('app_lock_timeout_seconds') ?? 0;
+  // key 统一引用 AppLockService 常量，避免字符串散落导致改名后静默失联。
+  final enabled = prefs.getBool(AppLockService.prefsKeyEnabled) ?? false;
+  final biometric =
+      prefs.getBool(AppLockService.prefsKeyBiometricEnabled) ?? false;
+  final timeout =
+      prefs.getInt(AppLockService.prefsKeyTimeoutSeconds) ?? 0;
 
   ref.read(appLockEnabledProvider.notifier).set(enabled);
   ref.read(appLockBiometricEnabledProvider.notifier).set(biometric);
@@ -49,7 +52,7 @@ final securityInitProvider = FutureProvider<void>((ref) async {
   // 安全检查：锁已启用但无 PIN，自动禁用
   if (enabled && !(await AppLockService.hasPin())) {
     ref.read(appLockEnabledProvider.notifier).set(false);
-    await prefs.setBool('app_lock_enabled', false);
+    await prefs.setBool(AppLockService.prefsKeyEnabled, false);
     return;
   }
 
@@ -60,12 +63,12 @@ final securityInitProvider = FutureProvider<void>((ref) async {
 
   // 监听 Provider 变化并持久化
   ref.listen<bool>(appLockEnabledProvider, (prev, next) async {
-    await prefs.setBool('app_lock_enabled', next);
+    await prefs.setBool(AppLockService.prefsKeyEnabled, next);
   });
   ref.listen<bool>(appLockBiometricEnabledProvider, (prev, next) async {
-    await prefs.setBool('app_lock_biometric_enabled', next);
+    await prefs.setBool(AppLockService.prefsKeyBiometricEnabled, next);
   });
   ref.listen<int>(appLockTimeoutProvider, (prev, next) async {
-    await prefs.setInt('app_lock_timeout_seconds', next);
+    await prefs.setInt(AppLockService.prefsKeyTimeoutSeconds, next);
   });
 });

@@ -72,6 +72,16 @@ class LocalRepository extends BaseRepository {
     _virtualUserRepo = LocalLedgerVirtualUserRepository(db);
   }
 
+  /// 最外层委托统一守卫：捕获并记录仓储异常后原样上抛，由 Provider 层转友好提示。
+  Future<T> _guard<T>(String operation, Future<T> Function() action) async {
+    try {
+      return await action();
+    } catch (e, st) {
+      logger.error('LocalRepository', '$operation 失败: $e', st);
+      rethrow;
+    }
+  }
+
   // ============================================
   // LedgerRepository 接口实现 - 委托给 LocalLedgerRepository
   // ============================================
@@ -101,6 +111,10 @@ class LocalRepository extends BaseRepository {
     ledgerId: ledgerId,
     transactions: transactions,
   );
+
+  @override
+  Future<Map<int, ({double expenseTotal, int transactionCount})>>
+      getAllLedgerStats() => _ledgerRepo.getAllLedgerStats();
 
   @override
   Future<int> createLedger({
@@ -134,9 +148,12 @@ class LocalRepository extends BaseRepository {
   Future<void> copyLedgerData({
     required int sourceLedgerId,
     required int targetLedgerId,
-  }) => _ledgerRepo.copyLedgerData(
-    sourceLedgerId: sourceLedgerId,
-    targetLedgerId: targetLedgerId,
+  }) => _guard(
+    'copyLedgerData',
+    () => _ledgerRepo.copyLedgerData(
+      sourceLedgerId: sourceLedgerId,
+      targetLedgerId: targetLedgerId,
+    ),
   );
 
   @override
@@ -270,7 +287,10 @@ class LocalRepository extends BaseRepository {
 
   @override
   Future<void> reassignLedgerId({required int fromId, required int toId}) =>
-      _ledgerRepo.reassignLedgerId(fromId: fromId, toId: toId);
+      _guard(
+        'reassignLedgerId',
+        () => _ledgerRepo.reassignLedgerId(fromId: fromId, toId: toId),
+      );
 
   @override
   Future<int> clearLedgerTransactions(int ledgerId) async {
@@ -388,26 +408,47 @@ class LocalRepository extends BaseRepository {
       currencyCode: currencyCode,
       nativeAmount: nativeAmount,
     );
-    final id = await _transactionRepo.addTransaction(
-      ledgerId: ledgerId,
-      type: type,
-      amount: amount,
-      categoryId: categoryId,
-      happenedAt: happenedAt,
-      note: note,
-      syncId: syncId,
-      categorySyncIdOverride: categorySyncIdOverride,
-      excludeFromStats: excludeFromStats,
-      currencyCode: cc,
-      nativeAmount: na,
-      paidByUserId: paidByUserId,
-      aaMode: aaMode,
-      aaParticipants: aaParticipants,
-      aaSplits: aaSplits,
-    );
-    if (changeTracker != null) {
+    if (changeTracker == null) {
+      return _transactionRepo.addTransaction(
+        ledgerId: ledgerId,
+        type: type,
+        amount: amount,
+        categoryId: categoryId,
+        happenedAt: happenedAt,
+        note: note,
+        syncId: syncId,
+        categorySyncIdOverride: categorySyncIdOverride,
+        excludeFromStats: excludeFromStats,
+        currencyCode: cc,
+        nativeAmount: na,
+        paidByUserId: paidByUserId,
+        aaMode: aaMode,
+        aaParticipants: aaParticipants,
+        aaSplits: aaSplits,
+      );
+    }
+    // 写交易与登记变更必须在同一事务:登记失败时回滚交易,避免本地已生效但
+    // 云端永远不知道的静默丢失。
+    return db.transaction(() async {
+      final id = await _transactionRepo.addTransaction(
+        ledgerId: ledgerId,
+        type: type,
+        amount: amount,
+        categoryId: categoryId,
+        happenedAt: happenedAt,
+        note: note,
+        syncId: syncId,
+        categorySyncIdOverride: categorySyncIdOverride,
+        excludeFromStats: excludeFromStats,
+        currencyCode: cc,
+        nativeAmount: na,
+        paidByUserId: paidByUserId,
+        aaMode: aaMode,
+        aaParticipants: aaParticipants,
+        aaSplits: aaSplits,
+      );
       final tx = await _transactionRepo.getTransactionById(id);
-      if (tx != null) {
+      if (tx != null && tx.syncId != null) {
         await changeTracker!.recordLedgerChange(
           entityType: 'transaction',
           entityId: id,
@@ -416,8 +457,8 @@ class LocalRepository extends BaseRepository {
           action: 'create',
         );
       }
-    }
-    return id;
+      return id;
+    });
   }
 
   @override
@@ -450,16 +491,20 @@ class LocalRepository extends BaseRepository {
       final inserted = await (db.select(
         db.transactions,
       )..where((t) => t.syncId.isIn(syncIds))).get();
-      for (final tx in inserted) {
-        if (tx.syncId == null) continue;
-        await changeTracker!.recordLedgerChange(
-          entityType: 'transaction',
-          entityId: tx.id,
-          entitySyncId: tx.syncId!,
-          ledgerId: tx.ledgerId,
-          action: 'create',
-        );
-      }
+      await changeTracker!.recordLedgerChanges(
+        changes: [
+          for (final tx in inserted)
+            if (tx.syncId != null)
+              (
+                entityType: 'transaction',
+                entityId: tx.id,
+                entitySyncId: tx.syncId!,
+                ledgerId: tx.ledgerId,
+                action: 'create',
+                payloadJson: null,
+              ),
+        ],
+      );
       return n;
     });
   }
@@ -483,6 +528,11 @@ class LocalRepository extends BaseRepository {
     String? aaSplits,
   }) async {
     final old = await _transactionRepo.getTransactionById(id);
+    if (old == null) {
+      // 防止对已删除/不存在的 id 继续更新并返回假版本号,后续 appendEditHistory
+      // 会插入指向不存在交易的历史孤儿行。
+      throw StateError('交易不存在，无法更新: $id');
+    }
     // 联动兜底:调用方不传两字段时——
     //   仅 amount 变了 → 按该笔隐含汇率联动缩放;amount 未变 → 不动。
     var effCurrency = currencyCode;
@@ -492,28 +542,24 @@ class LocalRepository extends BaseRepository {
     // 只传币种 → 补快照(旧快照可用则沿用,失效按隐含汇率缩放,否则 1:1);
     // 只传快照 → 沿用旧币种,旧行无币种则清空快照,保证约束不被破坏。
     if (effCurrency != null && effNative == null) {
-      final oldNative = old?.nativeAmount;
-      if (old != null &&
-          oldNative != null &&
+      final oldNative = old.nativeAmount;
+      if (oldNative != null &&
           old.currencyCode?.toUpperCase() == effCurrency.toUpperCase() &&
           old.amount == amount) {
         effNative = oldNative;
-      } else if (old != null &&
-          oldNative != null &&
-          old.amount != 0 &&
-          old.amount != amount) {
+      } else if (oldNative != null && old.amount != 0 && old.amount != amount) {
         effNative = (oldNative * amount / old.amount).round();
       } else {
         effNative = amount;
       }
     } else if (effCurrency == null && effNative != null) {
-      effCurrency = old?.currencyCode;
+      effCurrency = old.currencyCode;
       if (effCurrency == null) {
         effNative = null; // 旧行无币种 → 快照无意义,清空保持成对。
       }
     }
 
-    if (effCurrency == null && effNative == null && old != null) {
+    if (effCurrency == null && effNative == null) {
       if (old.nativeAmount != null && old.amount != amount) {
         final oldNative = old.nativeAmount!;
         if (old.amount == 0 || oldNative == old.amount) {
@@ -524,57 +570,64 @@ class LocalRepository extends BaseRepository {
         }
       }
     }
-    if (changeTracker != null) {
-      if (old?.syncId != null) {
-        final version = await _transactionRepo.updateTransaction(
-          id: id,
-          type: type,
-          amount: amount,
-          categoryId: categoryId,
-          note: note,
-          happenedAt: happenedAt,
-          categorySyncIdOverride: categorySyncIdOverride,
-          excludeFromStats: excludeFromStats,
-          currencyCode: effCurrency,
-          nativeAmount: effNative,
-          paidByUserId: paidByUserId,
-          aaMode: aaMode,
-          aaParticipants: aaParticipants,
-          aaSplits: aaSplits,
-        );
-        await changeTracker!.recordLedgerChange(
-          entityType: 'transaction',
-          entityId: id,
-          entitySyncId: old!.syncId!,
-          ledgerId: old.ledgerId,
-          action: 'update',
-        );
-        // 透传内部返回的版本号:无论是否走 changeTracker 路径,
-        // UI 层都需要拿到 version 去写编辑历史,避免历史快照版本号缺失。
-        return version;
-      }
+    if (changeTracker == null || old.syncId == null) {
+      return _transactionRepo.updateTransaction(
+        id: id,
+        type: type,
+        amount: amount,
+        categoryId: categoryId,
+        note: note,
+        happenedAt: happenedAt,
+        categorySyncIdOverride: categorySyncIdOverride,
+        excludeFromStats: excludeFromStats,
+        currencyCode: effCurrency,
+        nativeAmount: effNative,
+        paidByUserId: paidByUserId,
+        aaMode: aaMode,
+        aaParticipants: aaParticipants,
+        aaSplits: aaSplits,
+      );
     }
-    return _transactionRepo.updateTransaction(
-      id: id,
-      type: type,
-      amount: amount,
-      categoryId: categoryId,
-      note: note,
-      happenedAt: happenedAt,
-      categorySyncIdOverride: categorySyncIdOverride,
-      excludeFromStats: excludeFromStats,
-      currencyCode: effCurrency,
-      nativeAmount: effNative,
-      paidByUserId: paidByUserId,
-      aaMode: aaMode,
-      aaParticipants: aaParticipants,
-      aaSplits: aaSplits,
-    );
+    // 写更新与登记变更同事务:登记失败时回滚本次编辑,避免本地版本号已前进但
+    // 云端仍停留在旧值。
+    return db.transaction(() async {
+      final version = await _transactionRepo.updateTransaction(
+        id: id,
+        type: type,
+        amount: amount,
+        categoryId: categoryId,
+        note: note,
+        happenedAt: happenedAt,
+        categorySyncIdOverride: categorySyncIdOverride,
+        excludeFromStats: excludeFromStats,
+        currencyCode: effCurrency,
+        nativeAmount: effNative,
+        paidByUserId: paidByUserId,
+        aaMode: aaMode,
+        aaParticipants: aaParticipants,
+        aaSplits: aaSplits,
+      );
+      await changeTracker!.recordLedgerChange(
+        entityType: 'transaction',
+        entityId: id,
+        entitySyncId: old.syncId!,
+        ledgerId: old.ledgerId,
+        action: 'update',
+      );
+      // 透传内部返回的版本号:UI 层需要拿到 version 去写编辑历史。
+      return version;
+    });
   }
 
   @override
   Future<void> deleteTransaction(int id) async {
-    if (changeTracker != null) {
+    if (changeTracker == null) {
+      await _transactionRepo.deleteTransaction(id);
+      return;
+    }
+    // 删除与登记变更同事务:登记失败时回滚删除,避免本地已消失但云端仍以为
+    // 实体存在,后续同步差异把“幽灵删除”反复推送。
+    await db.transaction(() async {
       final tx = await _transactionRepo.getTransactionById(id);
       if (tx?.syncId != null) {
         await changeTracker!.recordLedgerChange(
@@ -585,8 +638,8 @@ class LocalRepository extends BaseRepository {
           action: 'delete',
         );
       }
-    }
-    await _transactionRepo.deleteTransaction(id);
+      await _transactionRepo.deleteTransaction(id);
+    });
   }
 
   // ==================== 编辑历史 ====================
@@ -687,6 +740,7 @@ class LocalRepository extends BaseRepository {
     int ledgerId,
     String base, {
     required bool onlyUnconverted,
+    bool recordChanges = true,
   }) =>
       // 单事务包裹:逐笔 UPDATE + change INSERT 不各自 commit/fsync
       // (万笔账本从 ~2 万次独立 commit 降到 1 次)
@@ -695,6 +749,7 @@ class LocalRepository extends BaseRepository {
           ledgerId,
           base,
           onlyUnconverted: onlyUnconverted,
+          recordChanges: recordChanges,
         ),
       );
 
@@ -702,6 +757,7 @@ class LocalRepository extends BaseRepository {
     int ledgerId,
     String base, {
     required bool onlyUnconverted,
+    required bool recordChanges,
   }) async {
     final baseUp = base.toUpperCase();
     final rates = await _effectiveRatesFor(baseUp);
@@ -756,7 +812,7 @@ class LocalRepository extends BaseRepository {
           ),
         );
       }
-      if (changeTracker != null && t.syncId != null) {
+      if (recordChanges && changeTracker != null && t.syncId != null) {
         await changeTracker!.recordLedgerChange(
           entityType: 'transaction',
           entityId: t.id,
@@ -777,8 +833,17 @@ class LocalRepository extends BaseRepository {
   }
 
   @override
-  Future<int> recalcNativeAmountsForLedger(int ledgerId, String newBase) =>
-      _recalcNativeAmounts(ledgerId, newBase, onlyUnconverted: false);
+  Future<int> recalcNativeAmountsForLedger(
+    int ledgerId,
+    String newBase, {
+    bool recordChanges = true,
+  }) =>
+      _recalcNativeAmounts(
+        ledgerId,
+        newBase,
+        onlyUnconverted: false,
+        recordChanges: recordChanges,
+      );
 
   @override
   Future<int> recomputeForeignTxForLedger(int ledgerId) async {
@@ -795,13 +860,15 @@ class LocalRepository extends BaseRepository {
     final base =
         ((ledger?.currency.isNotEmpty ?? false) ? ledger!.currency : 'CNY')
             .toUpperCase();
-    // currency_code IS NULL 的行用账本币种兜底
+    // currency_code IS NULL 的行用账本币种兜底;native_amount 为 NULL 的存量/导入
+    // 外币交易同样视为未折算——直接比较 native_amount = amount 在 NULL 时恒为
+    // NULL,会漏统计。
     final row = await db
         .customSelect(
           'SELECT COUNT(*) AS cnt FROM transactions t '
           'WHERE t.ledger_id = ?1 '
           "AND UPPER(COALESCE(t.currency_code, ?2)) != ?2 "
-          'AND t.native_amount = t.amount',
+          'AND COALESCE(t.native_amount, t.amount) = t.amount',
           variables: [
             d.Variable.withInt(ledgerId),
             d.Variable.withString(base),
@@ -868,21 +935,20 @@ class LocalRepository extends BaseRepository {
       final inserted = await (db.select(
         db.transactions,
       )..where((t) => t.syncId.isIn(syncIds))).get();
-      await db.batch((b) {
-        for (final tx in inserted) {
-          if (tx.syncId == null) continue;
-          b.insert(
-            db.localChanges,
-            LocalChangesCompanion.insert(
-              entityType: 'transaction',
-              entityId: tx.id,
-              entitySyncId: tx.syncId!,
-              ledgerId: tx.ledgerId,
-              action: 'create',
-            ),
-          );
-        }
-      });
+      await changeTracker!.recordLedgerChanges(
+        changes: [
+          for (final tx in inserted)
+            if (tx.syncId != null)
+              (
+                entityType: 'transaction',
+                entityId: tx.id,
+                entitySyncId: tx.syncId!,
+                ledgerId: tx.ledgerId,
+                action: 'create',
+                payloadJson: null,
+              ),
+        ],
+      );
       return ids;
     });
   }
@@ -913,9 +979,11 @@ class LocalRepository extends BaseRepository {
   }
 
   @override
-  Stream<List<({Transaction t, Category? category})>>
-  transactionsWithCategoryAll({int? ledgerId}) =>
-      _transactionRepo.transactionsWithCategoryAll(ledgerId: ledgerId);
+  Future<List<({Transaction t, Category? category})>>
+  transactionsWithCategoryAll({int? ledgerId}) => _guard(
+    'transactionsWithCategoryAll',
+    () => _transactionRepo.transactionsWithCategoryAll(ledgerId: ledgerId),
+  );
 
   @override
   Future<List<({Transaction t, Category? category})>>
@@ -1102,21 +1170,20 @@ class LocalRepository extends BaseRepository {
       final txs = await (db.select(
         db.transactions,
       )..where((t) => t.syncId.isIn(syncIdToTxId.keys.toList()))).get();
-      await db.batch((b) {
-        for (final tx in txs) {
-          if (tx.syncId == null) continue;
-          b.insert(
-            db.localChanges,
-            LocalChangesCompanion.insert(
-              entityType: 'transaction',
-              entityId: tx.id,
-              entitySyncId: tx.syncId!,
-              ledgerId: tx.ledgerId,
-              action: 'update',
-            ),
-          );
-        }
-      });
+      await changeTracker!.recordLedgerChanges(
+        changes: [
+          for (final tx in txs)
+            if (tx.syncId != null)
+              (
+                entityType: 'transaction',
+                entityId: tx.id,
+                entitySyncId: tx.syncId!,
+                ledgerId: tx.ledgerId,
+                action: 'update',
+                payloadJson: null,
+              ),
+        ],
+      );
       return syncIdToTxId;
     });
   }
@@ -1140,23 +1207,20 @@ class LocalRepository extends BaseRepository {
       final deleted = await _transactionRepo.deleteTransactionsBatchBySyncIds(
         syncIds,
       );
-      // 一次性 batch insert N 条 transaction:delete change,代替逐条
-      // recordLedgerChange,跨 isolate boundary 从 N 次降到 1 次。
-      await db.batch((b) {
-        for (final tx in rows) {
-          if (tx.syncId == null) continue;
-          b.insert(
-            db.localChanges,
-            LocalChangesCompanion.insert(
-              entityType: 'transaction',
-              entityId: tx.id,
-              entitySyncId: tx.syncId!,
-              ledgerId: tx.ledgerId,
-              action: 'delete',
-            ),
-          );
-        }
-      });
+      await changeTracker!.recordLedgerChanges(
+        changes: [
+          for (final tx in rows)
+            if (tx.syncId != null)
+              (
+                entityType: 'transaction',
+                entityId: tx.id,
+                entitySyncId: tx.syncId!,
+                ledgerId: tx.ledgerId,
+                action: 'delete',
+                payloadJson: null,
+              ),
+        ],
+      );
       return deleted;
     });
   }
@@ -1175,16 +1239,27 @@ class LocalRepository extends BaseRepository {
     int? parentId,
     String? syncId,
   }) async {
-    final id = await _categoryRepo.createCategory(
-      name: name,
-      kind: kind,
-      icon: icon,
-      sortOrder: sortOrder,
-      level: level,
-      parentId: parentId,
-      syncId: syncId,
-    );
-    if (changeTracker != null) {
+    if (changeTracker == null) {
+      return _categoryRepo.createCategory(
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+        level: level,
+        parentId: parentId,
+        syncId: syncId,
+      );
+    }
+    return db.transaction(() async {
+      final id = await _categoryRepo.createCategory(
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+        level: level,
+        parentId: parentId,
+        syncId: syncId,
+      );
       final cat = await _categoryRepo.getCategoryById(id);
       if (cat?.syncId != null) {
         await changeTracker!.recordUserGlobalChange(
@@ -1194,8 +1269,8 @@ class LocalRepository extends BaseRepository {
           action: 'create',
         );
       }
-    }
-    return id;
+      return id;
+    });
   }
 
   @override
@@ -1207,15 +1282,25 @@ class LocalRepository extends BaseRepository {
     int? sortOrder,
     String? syncId,
   }) async {
-    final id = await _categoryRepo.createSubCategory(
-      parentId: parentId,
-      name: name,
-      kind: kind,
-      icon: icon,
-      sortOrder: sortOrder,
-      syncId: syncId,
-    );
-    if (changeTracker != null) {
+    if (changeTracker == null) {
+      return _categoryRepo.createSubCategory(
+        parentId: parentId,
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+        syncId: syncId,
+      );
+    }
+    return db.transaction(() async {
+      final id = await _categoryRepo.createSubCategory(
+        parentId: parentId,
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+        syncId: syncId,
+      );
       final cat = await _categoryRepo.getCategoryById(id);
       if (cat?.syncId != null) {
         await changeTracker!.recordUserGlobalChange(
@@ -1225,8 +1310,8 @@ class LocalRepository extends BaseRepository {
           action: 'create',
         );
       }
-    }
-    return id;
+      return id;
+    });
   }
 
   @override
@@ -1237,29 +1322,45 @@ class LocalRepository extends BaseRepository {
     int? parentId,
     int? level,
   }) async {
-    final cat = changeTracker != null
-        ? await _categoryRepo.getCategoryById(id)
-        : null;
-    await _categoryRepo.updateCategory(
-      id,
-      name: name,
-      icon: icon,
-      parentId: parentId,
-      level: level,
-    );
-    if (cat?.syncId != null) {
-      await changeTracker!.recordUserGlobalChange(
-        entityType: 'category',
-        entityId: id,
-        entitySyncId: cat!.syncId!,
-        action: 'update',
+    if (changeTracker == null) {
+      await _categoryRepo.updateCategory(
+        id,
+        name: name,
+        icon: icon,
+        parentId: parentId,
+        level: level,
       );
+      return;
     }
+    // 更新与登记变更同事务,登记失败时回滚,避免本地新名字已生效但云端漏推。
+    await db.transaction(() async {
+      final cat = await _categoryRepo.getCategoryById(id);
+      await _categoryRepo.updateCategory(
+        id,
+        name: name,
+        icon: icon,
+        parentId: parentId,
+        level: level,
+      );
+      if (cat?.syncId != null) {
+        await changeTracker!.recordUserGlobalChange(
+          entityType: 'category',
+          entityId: id,
+          entitySyncId: cat!.syncId!,
+          action: 'update',
+        );
+      }
+    });
   }
 
   @override
   Future<void> deleteCategory(int id) async {
-    if (changeTracker != null) {
+    if (changeTracker == null) {
+      await _categoryRepo.deleteCategory(id);
+      return;
+    }
+    // 删除与登记变更同事务:登记失败时回滚,避免本地分类已删但云端仍持有投影。
+    await db.transaction(() async {
       final cat = await _categoryRepo.getCategoryById(id);
       if (cat?.syncId != null) {
         await changeTracker!.recordUserGlobalChange(
@@ -1269,8 +1370,8 @@ class LocalRepository extends BaseRepository {
           action: 'delete',
         );
       }
-    }
-    await _categoryRepo.deleteCategory(id);
+      await _categoryRepo.deleteCategory(id);
+    });
   }
 
   @override
@@ -1365,25 +1466,50 @@ class LocalRepository extends BaseRepository {
   }
 
   @override
-  Future<int> upsertCategory({
+  Future<({int id, bool created})> upsertCategory({
     required String name,
     required String kind,
     String? icon,
     int? sortOrder,
-  }) => _categoryRepo.upsertCategory(
-    name: name,
-    kind: kind,
-    icon: icon,
-    sortOrder: sortOrder,
-  );
+  }) async {
+    if (changeTracker == null) {
+      return _categoryRepo.upsertCategory(
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+      );
+    }
+    return db.transaction(() async {
+      final result = await _categoryRepo.upsertCategory(
+        name: name,
+        kind: kind,
+        icon: icon,
+        sortOrder: sortOrder,
+      );
+      // 只有真正新建的分类才登记 create change;命中已有分类时不产生同步噪音。
+      if (result.created) {
+        final cat = await _categoryRepo.getCategoryById(result.id);
+        if (cat?.syncId != null) {
+          await changeTracker!.recordUserGlobalChange(
+            entityType: 'category',
+            entityId: result.id,
+            entitySyncId: cat!.syncId!,
+            action: 'create',
+          );
+        }
+      }
+      return result;
+    });
+  }
 
   @override
   Future<Category?> getCategoryById(int categoryId) =>
       _categoryRepo.getCategoryById(categoryId);
 
   @override
-  Future<Category?> findCategoryBySyntheticId(int id) =>
-      _categoryRepo.findCategoryBySyntheticId(id);
+  Future<Category?> findCategoryBySyntheticId(int id, {String? ledgerSyncId}) =>
+      _categoryRepo.findCategoryBySyntheticId(id, ledgerSyncId: ledgerSyncId);
 
   @override
   Future<List<Category>> filterCategoriesForLedgerPicker(
@@ -1590,8 +1716,8 @@ class LocalRepository extends BaseRepository {
       _categoryRepo.getCategoryFullName(categoryId);
 
   @override
-  Stream<Category?> watchCategory(int categoryId) =>
-      _categoryRepo.watchCategory(categoryId);
+  Stream<Category?> watchCategory(int categoryId, {String? ledgerSyncId}) =>
+      _categoryRepo.watchCategory(categoryId, ledgerSyncId: ledgerSyncId);
 
   @override
   Stream<List<Transaction>> watchTransactionsByCategory(
@@ -1657,8 +1783,30 @@ class LocalRepository extends BaseRepository {
   }
 
   @override
-  Future<int> insertCategory(CategoriesCompanion category) =>
-      _categoryRepo.insertCategory(category);
+  Future<int> insertCategory(CategoriesCompanion category) async {
+    if (changeTracker == null) {
+      return _categoryRepo.insertCategory(category);
+    }
+    // 与 batchInsertCategories 对齐:缺 syncId 时预填,插入后登记 create change。
+    final effective =
+        category.syncId == const d.Value.absent() ||
+            category.syncId.value == null
+        ? category.copyWith(syncId: d.Value(_uuid.v4()))
+        : category;
+    return db.transaction(() async {
+      final id = await _categoryRepo.insertCategory(effective);
+      final cat = await _categoryRepo.getCategoryById(id);
+      if (cat?.syncId != null) {
+        await changeTracker!.recordUserGlobalChange(
+          entityType: 'category',
+          entityId: id,
+          entitySyncId: cat!.syncId!,
+          action: 'create',
+        );
+      }
+      return id;
+    });
+  }
 
   @override
   Future<Set<String>> getUsedCurrencies() async {
@@ -1794,6 +1942,29 @@ class LocalRepository extends BaseRepository {
       _recurringTransactionRepo.getAllRecurringTransactions();
 
   @override
+  Future<int> generateRecurringTransaction({
+    required RecurringTransaction recurring,
+    required DateTime happenedAt,
+  }) {
+    // 交易写入与锚点推进必须同一事务：锚点更新失败时整体回滚，
+    // 否则下次扫描会按旧锚点重复生成同一天交易。
+    // addTransaction 内部还有一层事务（写交易+登记同步变更），
+    // Drift 会以 savepoint 形式嵌套进本事务。
+    return db.transaction(() async {
+      final txId = await addTransaction(
+        ledgerId: recurring.ledgerId,
+        type: recurring.type,
+        amount: recurring.amount,
+        categoryId: recurring.categoryId,
+        happenedAt: happenedAt,
+        note: recurring.note,
+      );
+      await updateLastGeneratedDate(recurring.id, happenedAt);
+      return txId;
+    });
+  }
+
+  @override
   Future<List<RecurringTransaction>> getRecurringTransactionsByLedger(
     int ledgerId,
   ) => _recurringTransactionRepo.getRecurringTransactionsByLedger(ledgerId);
@@ -1922,15 +2093,20 @@ class LocalRepository extends BaseRepository {
     required String name,
     String? syncId,
   }) async {
-    final id = await _virtualUserRepo.create(
-      ledgerId: ledgerId,
-      name: name,
-      syncId: syncId,
-    );
-    // 登记 virtual_user:create change(ledger-scoped),供 sync 推送到协作设备。
-    // 仅 changeTracker 挂上时才登记(未登录/无后端时为 no-op)。
-    if (changeTracker != null) {
-      // 重新查:子仓已写完,这里取回 syncId 用于 change log
+    if (changeTracker == null) {
+      return _virtualUserRepo.create(
+        ledgerId: ledgerId,
+        name: name,
+        syncId: syncId,
+      );
+    }
+    // 写虚拟用户与登记变更同事务:登记失败时回滚,避免本地已有但云端漏推。
+    return db.transaction(() async {
+      final id = await _virtualUserRepo.create(
+        ledgerId: ledgerId,
+        name: name,
+        syncId: syncId,
+      );
       final created = await (db.select(
         db.ledgerVirtualUsers,
       )..where((t) => t.id.equals(id))).getSingleOrNull();
@@ -1943,51 +2119,56 @@ class LocalRepository extends BaseRepository {
           action: 'create',
         );
       }
-    }
-    return id;
+      return id;
+    });
   }
 
   @override
   Future<void> rename({required int id, required String name}) async {
-    // 先预查 syncId 和 ledgerId(删/改名后行可能查不到)
-    final existing = await (db.select(
-      db.ledgerVirtualUsers,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
-    await _virtualUserRepo.rename(id: id, name: name);
-    if (changeTracker != null && existing != null && existing.syncId != null) {
-      await changeTracker!.recordLedgerChange(
-        entityType: 'virtual_user',
-        entityId: id,
-        entitySyncId: existing.syncId!,
-        ledgerId: existing.ledgerId,
-        action: 'update',
-      );
+    if (changeTracker == null) {
+      await _virtualUserRepo.rename(id: id, name: name);
+      return;
     }
+    // 改名与登记变更同事务,登记失败时回滚。
+    await db.transaction(() async {
+      final existing = await (db.select(
+        db.ledgerVirtualUsers,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      await _virtualUserRepo.rename(id: id, name: name);
+      if (existing != null && existing.syncId != null) {
+        await changeTracker!.recordLedgerChange(
+          entityType: 'virtual_user',
+          entityId: id,
+          entitySyncId: existing.syncId!,
+          ledgerId: existing.ledgerId,
+          action: 'update',
+        );
+      }
+    });
   }
 
   @override
   Future<bool> delete(int id) async {
-    // 先预查 syncId 和 ledgerId(删后查不到),用于 change log
-    final existing = await (db.select(
-      db.ledgerVirtualUsers,
-    )..where((t) => t.id.equals(id))).getSingleOrNull();
-    // 名下有账不可删(子仓内部会校验并抛错)
-    final deleted = await _virtualUserRepo.delete(id);
-    // 硬删成功后登记 virtual_user:delete change(对齐 ledger_snapshot:delete
-    // 模式),server 按 entity_sync_id 删投影
-    if (deleted &&
-        changeTracker != null &&
-        existing != null &&
-        existing.syncId != null) {
-      await changeTracker!.recordLedgerChange(
-        entityType: 'virtual_user',
-        entityId: id,
-        entitySyncId: existing.syncId!,
-        ledgerId: existing.ledgerId,
-        action: 'delete',
-      );
+    if (changeTracker == null) {
+      return _virtualUserRepo.delete(id);
     }
-    return deleted;
+    // 删除与登记变更同事务,登记失败时回滚。
+    return db.transaction(() async {
+      final existing = await (db.select(
+        db.ledgerVirtualUsers,
+      )..where((t) => t.id.equals(id))).getSingleOrNull();
+      final deleted = await _virtualUserRepo.delete(id);
+      if (deleted && existing != null && existing.syncId != null) {
+        await changeTracker!.recordLedgerChange(
+          entityType: 'virtual_user',
+          entityId: id,
+          entitySyncId: existing.syncId!,
+          ledgerId: existing.ledgerId,
+          action: 'delete',
+        );
+      }
+      return deleted;
+    });
   }
 
   @override

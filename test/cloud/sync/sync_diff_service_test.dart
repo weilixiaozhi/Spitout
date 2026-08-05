@@ -50,6 +50,13 @@ void main() {
     String type = 'expense',
     DateTime? happenedAt,
     String? note,
+    String? currencyCode,
+    int? nativeAmount,
+    bool excludeFromStats = false,
+    String? paidByUserId,
+    int? aaMode,
+    String? aaParticipants,
+    String? aaSplits,
   }) async {
     final effectiveAmount = amount ?? Decimal.parse('100');
     final id = await db.into(db.transactions).insert(
@@ -60,6 +67,13 @@ void main() {
             happenedAt: Value(happenedAt ?? DateTime(2024, 1, 1, 12, 0, 0)),
             note: Value(note),
             syncId: Value(syncId),
+            currencyCode: Value(currencyCode),
+            nativeAmount: Value(nativeAmount),
+            excludeFromStats: Value(excludeFromStats),
+            paidByUserId: Value(paidByUserId),
+            aaMode: Value(aaMode),
+            aaParticipants: Value(aaParticipants),
+            aaSplits: Value(aaSplits),
           ),
         );
     return (await repo.getTransactionsByLedger(ledgerId)).firstWhere((t) => t.id == id);
@@ -256,6 +270,44 @@ void main() {
       expect(preview.changes.single.diffDetails.join(), contains('类型'));
     });
 
+    test('仅币种/折算/统计标记不同 → modified（全字段快照契约）', () async {
+      final ledgerId = await createLedger(); // CNY 账本
+      await insertLocalTx(
+        ledgerId,
+        amount: Decimal.parse('100'),
+        currencyCode: 'CNY',
+        nativeAmount: 10000,
+        paidByUserId: 'u1',
+        aaMode: 2,
+        aaParticipants: '["u1","u2"]',
+        aaSplits: '{"u1":"50.00","u2":"50.00"}',
+      );
+      final preview = await service.computeDiff(
+        repo: repo,
+        ledgerId: ledgerId,
+        cloudTransactions: [
+          ImportTransaction(
+            type: 'expense',
+            amount: Decimal.parse('100'),
+            happenedAt: _t(2024, 1, 1, 12, 0, 0),
+            syncId: 'tx-1',
+            currencyCode: 'USD',
+            nativeAmount: Decimal.parse('80'),
+            excludeFromStats: true,
+            paidByUserId: 'u1',
+            aaMode: 2,
+            aaParticipants: '["u1","u2"]',
+            aaSplits: '{"u1":"50.00","u2":"50.00"}',
+          ),
+        ],
+      );
+      expect(preview!.modifiedCount, 1);
+      final details = preview.changes.single.diffDetails.join();
+      expect(details, contains('币种'));
+      expect(details, contains('折算金额'));
+      expect(details, contains('统计排除'));
+    });
+
     test('本地有、云端无 → deleted', () async {
       final ledgerId = await createLedger();
       await insertLocalTx(ledgerId, syncId: 'tx-ghost');
@@ -385,6 +437,54 @@ void main() {
       final local = await repo.getTransactionsByLedger(ledgerId);
       expect(local.single.amount, 8800);
       expect(local.single.note, '新');
+    });
+
+    test('modified 全字段覆盖：币种/折算/统计/AA 与云端对齐', () async {
+      final ledgerId = await createLedger();
+      await insertLocalTx(
+        ledgerId,
+        amount: Decimal.parse('100'),
+        currencyCode: 'CNY',
+        nativeAmount: 10000,
+        paidByUserId: 'u1',
+        aaMode: 2,
+        aaParticipants: '["u1","u2"]',
+        aaSplits: '{"u1":"50.00","u2":"50.00"}',
+      );
+      final changes = [
+        SyncChange(
+          type: SyncChangeType.modified,
+          cloudTransaction: ImportTransaction(
+            type: 'expense',
+            amount: Decimal.parse('100'),
+            happenedAt: _t(2024, 1, 1, 12, 0, 0),
+            syncId: 'tx-1',
+            currencyCode: 'USD',
+            nativeAmount: Decimal.parse('80'),
+            excludeFromStats: true,
+            paidByUserId: 'u1',
+            aaMode: 2,
+            aaParticipants: '["u1","u2"]',
+            aaSplits: '{"u1":"50.00","u2":"50.00"}',
+          ),
+        ),
+      ];
+
+      final result = await service.applySyncChanges(
+        repo: repo,
+        ledgerId: ledgerId,
+        selectedChanges: changes,
+        importData: const ImportData(),
+      );
+      expect(result.modifiedCount, 1);
+
+      final local = (await repo.getTransactionsByLedger(ledgerId)).single;
+      expect(local.currencyCode, 'USD');
+      expect(local.nativeAmount, 8000);
+      expect(local.excludeFromStats, isTrue);
+      expect(local.aaMode, 2);
+      expect(local.aaParticipants, '["u1","u2"]');
+      expect(local.aaSplits, '{"u1":"50.00","u2":"50.00"}');
     });
 
     test('deleted（有 syncId）→ 批量删除', () async {

@@ -11,6 +11,12 @@ import '../../core/logging/logger_service.dart';
 ///
 /// 用于云同步时序列化和反序列化交易数据
 
+/// 账本快照 JSON 的当前版本号。
+///
+/// 快照导出（transactions_json / sync_engine_serialization 的 fullPush）
+/// 必须统一引用本常量，避免增量栈升级到 v8+ 时快照栈悄悄落后。
+const int transactionsJsonVersion = 7;
+
 // --- 字符串清理 ---
 
 /// 清理字符串中的控制字符，防止 JSON 解析错误
@@ -34,7 +40,7 @@ String _sanitizeString(String? input) {
 /// [ledgerId] - 账本ID
 ///
 /// 返回包含以下字段的 JSON：
-/// - version: 数据格式版本（当前为4）
+/// - version: 数据格式版本（当前为 [transactionsJsonVersion]）
 /// - exportedAt: 导出时间戳
 /// - ledgerId: 账本ID
 /// - ledgerName: 账本名称
@@ -195,7 +201,7 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
   }).toList();
 
   final payload = {
-    'version': 7, // v7:AA 分摊功能(paidByUserId/aaMode/aaParticipants/
+    'version': transactionsJsonVersion, // v7:AA 分摊功能(paidByUserId/aaMode/aaParticipants/
     // aaSplits + ledger.aaEnabled + virtualUsers 数组)。
     // v6 导入兜底为 null/空 → 视为未启用 AA,向后兼容。
     'exportedAt': DateTime.now().toUtc().toIso8601String(),

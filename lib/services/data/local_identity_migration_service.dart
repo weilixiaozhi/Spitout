@@ -1,3 +1,5 @@
+import 'dart:convert';
+
 import 'package:drift/drift.dart' as d;
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -92,6 +94,14 @@ class LocalIdentityMigrationService {
           'UPDATE record_edit_histories SET operator_user_id = ?1 WHERE operator_user_id = ?2',
           variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
           updates: {db.recordEditHistories},
+        );
+
+        // AA 分摊引用：aaParticipants(JSON 数组)/aaSplits(JSON 对象)里的
+        // localSelfId 一并改写，否则迁移后“我”在历史 AA 账目中变成陌生参与人。
+        await _rewriteAaReferencesInTx(
+          db: db,
+          localSelfId: localSelfId,
+          cloudUserId: cloudUserId,
         );
       });
 
@@ -188,11 +198,115 @@ class LocalIdentityMigrationService {
           ],
           updates: {db.recordEditHistories},
         );
+
+        // AA 分摊引用同样限定账本范围改写。
+        await _rewriteAaReferencesInTx(
+          db: db,
+          ledgerId: ledgerId,
+          localSelfId: localSelfId,
+          cloudUserId: cloudUserId,
+        );
       });
       logger.info('LocalIdentityMigration', '账本 $ledgerId 转云端身份迁移完成');
     } catch (e, st) {
       logger.error('LocalIdentityMigration', '账本 $ledgerId 转云端身份迁移失败', e, st);
       rethrow;
+    }
+  }
+
+  /// 重写交易 AA 字段中的 localSelfId → cloudUserId。
+  ///
+  /// [ledgerId] 为空时全库改写，否则仅改写指定账本（与调用方事务保持一致）。
+  /// JSON 解析失败的行保持原样并记日志，不让单条脏数据阻断整批迁移。
+  static Future<void> _rewriteAaReferencesInTx({
+    required SpitoutDatabase db,
+    required String localSelfId,
+    required String cloudUserId,
+    int? ledgerId,
+  }) async {
+    final rows = await db.customSelect(
+      ledgerId == null
+          ? '''
+            SELECT id, aa_participants, aa_splits
+            FROM transactions
+            WHERE aa_participants LIKE ?1 OR aa_splits LIKE ?1
+            '''
+          : '''
+            SELECT id, aa_participants, aa_splits
+            FROM transactions
+            WHERE ledger_id = ?2 AND (aa_participants LIKE ?1 OR aa_splits LIKE ?1)
+            ''',
+      variables: [
+        d.Variable<String>('%$localSelfId%'),
+        if (ledgerId != null) d.Variable<int>(ledgerId),
+      ],
+      readsFrom: {db.transactions},
+    ).get();
+
+    for (final row in rows) {
+      final txId = row.read<int>('id');
+      var participants = row.readNullable<String>('aa_participants');
+      var splits = row.readNullable<String>('aa_splits');
+      var participantsChanged = false;
+      var splitsChanged = false;
+
+      // aaParticipants:JSON 数组,元素为 userId 或虚拟用户 syncId。
+      // 替换后去重,防止 localSelfId 与 cloudUserId 并存时出现重复参与人。
+      if (participants != null && participants.isNotEmpty) {
+        try {
+          final list = (jsonDecode(participants) as List).cast<String>();
+          if (list.contains(localSelfId)) {
+            final replaced = <String>[];
+            for (final id in list) {
+              final target = id == localSelfId ? cloudUserId : id;
+              if (!replaced.contains(target)) replaced.add(target);
+            }
+            participants = jsonEncode(replaced);
+            participantsChanged = true;
+          }
+        } catch (e, st) {
+          logger.warning(
+              'LocalIdentityMigration', '解析 aaParticipants 失败 tx=$txId', '$e\n$st');
+        }
+      }
+
+      // aaSplits:JSON 对象,key=参与人,value=金额字符串。
+      // cloudUserId 已存在时保留原值,避免覆盖可能更新的分摊数据。
+      if (splits != null && splits.isNotEmpty) {
+        try {
+          final map = (jsonDecode(splits) as Map).cast<String, String>();
+          if (map.containsKey(localSelfId)) {
+            final value = map.remove(localSelfId)!;
+            map.putIfAbsent(cloudUserId, () => value);
+            splits = jsonEncode(map);
+            splitsChanged = true;
+          }
+        } catch (e, st) {
+          logger.warning(
+              'LocalIdentityMigration', '解析 aaSplits 失败 tx=$txId', '$e\n$st');
+        }
+      }
+
+      // 只回写实际变化的列；Drift 的 Variable 不接受可空类型，
+      // 未变化的列不参与 UPDATE，天然保留原值（含 NULL）。
+      if (participantsChanged || splitsChanged) {
+        final assignments = <String>[];
+        final variables = <d.Variable<Object>>[];
+        if (participantsChanged) {
+          assignments.add('aa_participants = ?${assignments.length + 1}');
+          variables.add(d.Variable<String>(participants!));
+        }
+        if (splitsChanged) {
+          assignments.add('aa_splits = ?${assignments.length + 1}');
+          variables.add(d.Variable<String>(splits!));
+        }
+        await db.customUpdate(
+          'UPDATE transactions SET ${assignments.join(', ')} '
+          'WHERE id = ?${assignments.length + 1}',
+          variables: [...variables, d.Variable<int>(txId)],
+          updates: {db.transactions},
+        );
+      }
     }
   }
 }

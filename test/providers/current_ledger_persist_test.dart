@@ -21,23 +21,22 @@ Future<int> _insertSingleLedger(SpitoutDatabase db, String name) async {
   return db.into(db.ledgers).insert(LedgersCompanion.insert(name: name));
 }
 
-/// 触发 currentLedgerPersistProvider 的加载 IIFE，并等待其完成。
+/// 触发 currentLedgerPersistProvider 的启动解析，并等待其完成。
 ///
-/// IIFE 内部读取 repositoryProvider（同步 Provider）拿到 repo，再异步校验账本存在性，
-/// 最后把生效的 ledgerId 写入 currentLedgerIdProvider.notifier.state。这里先同步读取
-/// repositoryProvider 确保仓储实例已就绪，再触发 IIFE，然后让出事件循环一小段延时，
-/// 确保 fire-and-forget 的 IIFE（含可能的 prefs 写回）彻底跑完，避免竞态污染后续用例。
+/// 解析内部读取 repositoryProvider 拿到 repo，再异步校验账本存在性，最后把
+/// 生效的 ledgerId 写入 currentLedgerIdProvider.notifier.state。FutureProvider
+/// 允许直接 await `.future` 等解析收敛（含可能的 prefs 写回），避免竞态。
 Future<void> _triggerAndAwaitResolve(
   ProviderContainer container, {
   Map<String, Object>? initialPrefs,
 }) async {
   SharedPreferences.setMockInitialValues(initialPrefs ?? {});
-  // 同步读取 repositoryProvider 强制仓储实例就绪（与 IIFE 内部读取的是同一实例）。
+  // 同步读取 repositoryProvider 强制仓储实例就绪（与解析内部读取的是同一实例）。
   container.read(repositoryProvider);
-  // 触发加载 IIFE（读取 prefs + 校验账本存在性 + 写回 currentLedgerIdProvider）。
-  container.read(currentLedgerPersistProvider);
-  // 让出事件循环，等待 IIFE 完成 state 写入与 prefs 写回。
-  await Future.delayed(const Duration(milliseconds: 150));
+  // 触发启动解析并等待完成（读取 prefs + 校验账本存在性 + 写回 currentLedgerIdProvider）。
+  await container.read(currentLedgerPersistProvider.future);
+  // 让出事件循环，等待监听回调（如持久化写回）彻底收敛。
+  await Future.delayed(const Duration(milliseconds: 50));
 }
 
 void main() {
@@ -108,27 +107,27 @@ void main() {
     await db.close();
   });
 
-  // 回归测试：复现「新用户引导」的真实时序 —— 启动解析 IIFE 先对空库跑过
+  // 回归测试：复现「新用户引导」的真实时序 —— 启动解析先对空库跑过
   // （只执行一次且不会重跑），之后引导流程才 seed 出账本。此前无任何用例
   // 覆盖该顺序，导致 d961918 引入的回归（重装后默认账本未选中）被漏放行。
-  test('空库先触发 IIFE → 后插入账本 → selectFirstLedger 显式选中并写回 prefs', () async {
+  test('空库先触发启动解析 → 后插入账本 → selectFirstLedger 显式选中并写回 prefs', () async {
     final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
     final container = ProviderContainer(
       overrides: [databaseProvider.overrideWithValue(db)],
     );
 
-    // 第一步：空库触发启动解析 IIFE（模拟 main() 预加载阶段），应保持哨兵 0。
+    // 第一步：空库触发启动解析（模拟 main() 预加载阶段），应保持哨兵 0。
     await _triggerAndAwaitResolve(container, initialPrefs: {});
     expect(container.read(currentLedgerIdProvider), 0,
         reason: '空库时启动解析不应选中任何账本');
 
     // 第二步：模拟引导完成后 SeedService.ensureSeed 创建默认账本。
-    // 注意 IIFE 是一次性的，此时重新 read provider 不会重跑解析。
+    // 注意启动解析是一次性的，此时重新 read provider 不会重跑解析。
     final id = await _insertSingleLedger(db, '引导默认账本');
     container.read(currentLedgerPersistProvider);
     await Future.delayed(const Duration(milliseconds: 150));
     expect(container.read(currentLedgerIdProvider), 0,
-        reason: 'IIFE 不会重跑，仅靠启动解析无法感知账本从无到有');
+        reason: '启动解析不会重跑，仅靠它无法感知账本从无到有');
 
     // 第三步：引导完成处显式调用 selectFirstLedger（welcome_page 的修复点），
     // 应选中首个账本并把 id 写回 prefs，保证下次启动稳定恢复。

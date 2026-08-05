@@ -1032,6 +1032,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get reminderTitle => 'Recording Reminder';
 
   @override
+  String get reminderBody =>
+      'Don\'t forget to record today\'s income and expenses 💰';
+
+  @override
   String get reminderSubtitle => 'Set daily recording reminder time';
 
   @override
@@ -2430,6 +2434,13 @@ class AppLocalizationsEn extends AppLocalizations {
       'Including cloud service configs and app settings';
 
   @override
+  String get configIncludeCredentials => 'Include credentials';
+
+  @override
+  String get configIncludeCredentialsSubtitle =>
+      'Passwords and secret keys will be written in plain text';
+
+  @override
   String get configExportSelectTitle => 'Select Export Content';
 
   @override
@@ -2437,6 +2448,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get configExportConfirmTitle => 'Confirm Export';
+
+  @override
+  String get configExportContainsSecretsWarning =>
+      'This file contains passwords/secret keys. Do not share it or commit it to version control!';
 
   @override
   String get configImportSelectTitle => 'Select Import Content';

@@ -15,6 +15,7 @@ import 'widgets/login_2fa_challenge_view.dart';
 import 'theme/app_theme.dart';
 import 'package:spitout/providers/providers.dart';
 import 'services/notification/notification_factory.dart';
+import 'services/notification/reminder_constants.dart';
 import 'pages/auth/welcome_page.dart';
 import 'pages/auth/app_lock_screen.dart';
 import 'services/system/reminder_monitor_service.dart';
@@ -69,7 +70,9 @@ Future<void> main() async {
 
   // 启动提醒监控服务（监听应用生命周期，自动恢复丢失的提醒）
   try {
-    ReminderMonitorService().startMonitoring();
+    ReminderMonitorService().startMonitoring(
+      contextProvider: () => globalNavigatorKey.currentContext!,
+    );
   } catch (e) {
     logger.warning('App', '提醒监控服务启动失败（可能在不支持的平台上运行）: $e');
   }
@@ -119,20 +122,25 @@ Future<void> _restoreUserReminder() async {
   try {
     logger.info('Reminder', '检查并恢复记账提醒...');
     final prefs = await SharedPreferences.getInstance();
-    final isEnabled = prefs.getBool('reminder_enabled') ?? false;
+    final isEnabled = prefs.getBool(ReminderPrefs.enabled) ?? false;
 
     if (isEnabled) {
-      final hour = prefs.getInt('reminder_hour') ?? 21;
-      final minute = prefs.getInt('reminder_minute') ?? 0;
+      final hour = prefs.getInt(ReminderPrefs.hour) ?? 21;
+      final minute = prefs.getInt(ReminderPrefs.minute) ?? 0;
       logger.info('Reminder', '发现用户已启用记账提醒: ${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}');
       logger.info('Reminder', '正在重新设置提醒任务...');
 
       try {
         final notificationUtil = NotificationFactory.getInstance();
+        // 恢复前先取消旧通知链，再按当前配置重建，避免系统残留旧时间的备用通知。
+        await notificationUtil.cancelNotification(ReminderPrefs.mainNotificationId);
+        // 启动阶段无 BuildContext，按系统语言取提醒文案（统一收敛到 l10n）。
+        final l10n =
+            lookupAppLocalizations(PlatformDispatcher.instance.locale);
         await notificationUtil.scheduleDailyReminder(
-          id: 1001,
-          title: '记账提醒',
-          body: '别忘了记录今天的收支哦 💰',
+          id: ReminderPrefs.mainNotificationId,
+          title: l10n.reminderTitle,
+          body: l10n.reminderBody,
           hour: hour,
           minute: minute,
         );
