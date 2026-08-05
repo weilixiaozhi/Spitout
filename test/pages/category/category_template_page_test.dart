@@ -89,7 +89,7 @@ void main() {
       overrides: [
         repositoryProvider.overrideWithValue(repo),
         // ledgerId=0：跳过写入后的 PostProcessor.sync 触发（同步非本测试关注点）
-        currentLedgerIdProvider.overrideWith((ref) => 0),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
         categoriesWithCountProvider.overrideWith(
           (ref) => Stream<List<_CategoryWithCount>>.value(cats),
         ),

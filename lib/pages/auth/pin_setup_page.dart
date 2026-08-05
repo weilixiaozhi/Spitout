@@ -80,7 +80,7 @@ class _PinSetupPageState extends ConsumerState<PinSetupPage> {
       // 确认 PIN
       if (_pin == _firstPin) {
         await AppLockService.setPin(_pin);
-        ref.read(appLockEnabledProvider.notifier).state = true;
+        ref.read(appLockEnabledProvider.notifier).set(true);
         if (mounted) {
           showToast(context, AppLocalizations.of(context).appLockPinSetSuccess);
           Navigator.pop(context, true);

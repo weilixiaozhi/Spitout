@@ -11,7 +11,7 @@ dependencies:
     sdk: flutter
   flutter_localizations:
     sdk: flutter
-  flutter_riverpod: ^2.5.1
+  flutter_riverpod: ^3.4.2
   drift: ^2.20.2
   # sqlite3 原为 drift 传递依赖：本地备份的完整性校验需以只读模式直接调其
   # PRAGMA API（drift 裸 executor 的 ensureOpen 依赖内部接口不可用），提升为

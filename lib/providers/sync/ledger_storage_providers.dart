@@ -39,9 +39,9 @@ Future<SpitoutCloudProvider> _requireCloud(WidgetRef ref) async {
 /// 归属变更后的统一收尾:列表、当前账本、交易缓存全部刷新。
 void _refreshAfterMove(WidgetRef ref) {
   ref.invalidate(localLedgersProvider);
-  ref.read(ledgerListRefreshProvider.notifier).state++;
+  ref.read(ledgerListRefreshProvider.notifier).tick();
   ref.invalidate(currentLedgerProvider);
-  ref.read(cachedTransactionsProvider.notifier).state = null;
+  ref.read(cachedTransactionsProvider.notifier).set(null);
 }
 
 /// 把本地账本移动到 Spitout Cloud。

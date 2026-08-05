@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../cloud/spitout_cloud.dart';
 import '../../data/db.dart';
@@ -10,6 +11,7 @@ import '../../core/logging/logger_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
 // 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 // 叶子模块：仅账本列表刷新 tick，供自愈兜底监听使用，不反向依赖本文件（不成环）。
 import 'package:spitout/providers/core/refresh_ticks.dart';
 
@@ -31,7 +33,7 @@ final databaseProvider = Provider<SpitoutDatabase>((ref) {
 final repositoryProvider = Provider<BaseRepository>((ref) {
   final db = ref.watch(databaseProvider);
 
-  final config = ref.watch(activeCloudConfigProvider).valueOrNull;
+  final config = ref.watch(activeCloudConfigProvider).value;
 
   // 后端类型决定注入哪种变更信号(两者互斥,由后端同步范式决定):
   //   - Spitout Cloud → ChangeTracker:实体级增量,写 local_changes 供
@@ -75,7 +77,10 @@ final repositoryProvider = Provider<BaseRepository>((ref) {
 // 默认值 0 为「未选中」哨兵：SQLite 自增主键从 1 起，0 永远不可能是真实账本 id，
 // 可彻底消除「账本 1 不存在时回落到 1 指向空账本、首页误判为空状态并误导
 // 进入『新建账本』」的隐患。
-final currentLedgerIdProvider = StateProvider<int>((ref) => 0);
+final currentLedgerIdProvider =
+    NotifierProvider<SimpleStateNotifier<int>, int>(
+  () => SimpleStateNotifier((ref) => 0),
+);
 
 // 获取当前账本的详细信息。
 // StreamProvider:sync pull / 本地编辑改了 ledger 行(如 monthStartDay)会自动
@@ -88,7 +93,7 @@ final currentLedgerProvider = StreamProvider<Ledger?>((ref) {
 
 /// 当前账本的每月起始日(1-28);未加载完成时按 1(自然月)兜底。
 final currentMonthStartDayProvider = Provider<int>((ref) {
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   return (ledger?.monthStartDay ?? 1).clamp(1, 28);
 });
 
@@ -119,7 +124,7 @@ Future<void> selectFirstLedger(T Function<T>(ProviderListenable<T>) read) async 
     // currentLedgerPersistProvider 的 listen 兜底写回，这里无需手写 prefs。
     if (ledgers.isEmpty) {
       if (read(currentLedgerIdProvider) != 0) {
-        read(currentLedgerIdProvider.notifier).state = 0;
+        read(currentLedgerIdProvider.notifier).set(0);
       }
       return;
     }
@@ -127,7 +132,7 @@ Future<void> selectFirstLedger(T Function<T>(ProviderListenable<T>) read) async 
     // getAllLedgers 按 id 升序，first 即最早创建的账本。
     final first = ledgers.first.id;
     if (read(currentLedgerIdProvider) != first) {
-      read(currentLedgerIdProvider.notifier).state = first;
+      read(currentLedgerIdProvider.notifier).set(first);
     }
     // 直接写回 prefs 而不依赖 currentLedgerPersistProvider 的 listen 回调：
     // 引导阶段该 provider 可能尚未被激活，显式写回才能保证下次启动稳定恢复。
@@ -163,7 +168,7 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
         // 持久化的账本仍然有效：沿用用户上次选择。
         final st = ref.read(currentLedgerIdProvider);
         if (st != saved) {
-          ref.read(currentLedgerIdProvider.notifier).state = saved;
+          ref.read(currentLedgerIdProvider.notifier).set(saved);
         }
       } else {
         // 账本已不存在（被删 / 首次安装未选 / 覆盖更新清空 prefs）：
@@ -208,7 +213,7 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
           // 真·无账本：清掉可能的僵尸 ID，保持哨兵 0（与 selectFirstLedger
           // 空表分支对齐）。
           if (triggerId != 0) {
-            ref.read(currentLedgerIdProvider.notifier).state = 0;
+            ref.read(currentLedgerIdProvider.notifier).set(0);
           }
           return;
         }
@@ -220,7 +225,7 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
         if (triggerId == 0) return;
         // 仅更新内存态：上方持久化 ref.listen 会在 id 变化时自动写回 prefs，
         // 无需在此重复写（单一数据源）。
-        ref.read(currentLedgerIdProvider.notifier).state = first;
+        ref.read(currentLedgerIdProvider.notifier).set(first);
       } catch (e, stackTrace) {
         // 自愈失败不阻断主流程：最坏进空状态，用户可在管理页手动选。
         logger.error('CurrentLedgerSelfHeal', '自愈回退账本失败: $e', e, stackTrace);
@@ -240,7 +245,7 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
         if (ledgers.isEmpty) return;
         // 异步查询期间 id 可能已被其它路径选中，重校验后再介入（幂等）。
         if (ref.read(currentLedgerIdProvider) != 0) return;
-        ref.read(currentLedgerIdProvider.notifier).state = ledgers.first.id;
+        ref.read(currentLedgerIdProvider.notifier).set(ledgers.first.id);
       } catch (e, stackTrace) {
         logger.error('CurrentLedgerSelfHeal', '刷新兜底选账本失败: $e', e, stackTrace);
       }
@@ -249,18 +254,18 @@ final currentLedgerPersistProvider = Provider<void>((ref) {
 });
 
 // 当账本切换时，顺便触发一次设置页状态刷新（确保"我的"页及时反映）
-final _ledgerChangeListener = Provider<void>((ref) {
+final ledgerChangeListenerProvider = Provider<void>((ref) {
   // 激活持久化监听
   ref.read(currentLedgerPersistProvider);
   ref.listen<int>(currentLedgerIdProvider, (prev, next) {
-    ref.read(syncStatusRefreshProvider.notifier).state++;
+    ref.read(syncStatusRefreshProvider.notifier).tick();
   });
 });
 
 // 确保监听器被激活
 final appInitProvider = FutureProvider<void>((ref) async {
   // 读取以激活监听
-  ref.read(_ledgerChangeListener);
+  ref.read(ledgerChangeListenerProvider);
 });
 
 // 分类Provider

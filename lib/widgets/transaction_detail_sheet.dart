@@ -325,7 +325,7 @@ class _TransactionDetailBody extends ConsumerWidget {
     // 虚拟成员 标识→名称;真实成员走 memberDisplayMap。
     final virtualNames = <String, String>{
       for (final v
-          in ref.watch(ledgerVirtualUsersProvider(t.ledgerId)).valueOrNull ??
+          in ref.watch(ledgerVirtualUsersProvider(t.ledgerId)).value ??
               const [])
         v.syncId ?? 'vu_${v.id}': v.name,
     };

@@ -75,7 +75,9 @@ Future<void> main() async {
   }
 
   // 创建全局ProviderContainer（需要在周期交易生成之前创建，因为需要使用 repositoryProvider）
-  final container = ProviderContainer();
+  // 关闭 Riverpod 3.0 的自动重试：沿用 2.x 行为，provider 失败后展示错误由用户手动重试，
+  // 避免云同步类 provider 在离线场景下持续后台重试并反复刷新 UI。
+  final container = ProviderContainer(retry: (retryCount, error) => null);
 
   // 注册 Spitout Cloud 2FA challenge handler。当 server 返回 requires_2fa=true,
   // service 层会调这个 handler 弹出 Login2FAChallengeDialog 让用户输码。
@@ -281,5 +283,3 @@ class MainApp extends ConsumerWidget {
     );
   }
 }
-
-

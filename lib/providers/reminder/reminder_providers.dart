@@ -53,10 +53,13 @@ class ReminderSettings {
   int get hashCode => isEnabled.hashCode ^ hour.hashCode ^ minute.hashCode;
 }
 
-/// 记账提醒设置的StateNotifier
-class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
-  ReminderSettingsNotifier() : super(ReminderSettings.defaultSettings()) {
+/// 记账提醒设置的 Notifier
+class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
+  @override
+  ReminderSettings build() {
+    // 先同步返回默认设置，再异步加载保存的配置，避免首次渲染等待 IO。
     _loadSettings();
+    return ReminderSettings.defaultSettings();
   }
 
   static const String _keyEnabled = 'reminder_enabled';
@@ -155,6 +158,7 @@ class ReminderSettingsNotifier extends StateNotifier<ReminderSettings> {
 }
 
 /// 记账提醒设置Provider
-final reminderSettingsProvider = StateNotifierProvider<ReminderSettingsNotifier, ReminderSettings>((ref) {
-  return ReminderSettingsNotifier();
-});
+final reminderSettingsProvider =
+    NotifierProvider<ReminderSettingsNotifier, ReminderSettings>(
+  ReminderSettingsNotifier.new,
+);

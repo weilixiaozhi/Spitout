@@ -112,6 +112,9 @@ void main() {
                       : null,
                 )),
           ],
+          // 与生产 main.dart 一致：关闭 Riverpod 3 自动重试。
+          // 否则未登录场景下成员区 provider 失败后会持续重试，pumpAndSettle 永不收敛。
+          retry: (retryCount, error) => null,
           child: LedgerEditPage(ledger: ledger),
         ),
       ),

@@ -91,7 +91,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   /// 为什么不弹结果 Toast:「远端账本」概念下线后刷新只是重查本地库,
   /// RefreshIndicator 的转圈收尾本身就是完成反馈,再弹 Toast 反而打扰。
   Future<void> _handleRefresh(WidgetRef ref) async {
-    ref.read(ledgerListRefreshProvider.notifier).state++;
+    ref.read(ledgerListRefreshProvider.notifier).tick();
 
     // 本地刷新：本地库查询，provider 内部已兜底（失败返回空列表并记日志），
     // 这里的 try-catch 只是防御 provider 被 override 等极端情况。
@@ -109,7 +109,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     int? currentId,
     AsyncValue<List<LedgerDisplayItem>> localAsync,
   ) {
-    final localLedgers = localAsync.valueOrNull ?? [];
+    final localLedgers = localAsync.value ?? [];
     final localError = localAsync.error;
 
     // 如果本地在加载中且没有缓存数据，显示全局加载
@@ -144,7 +144,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     // S3 / Supabase 等)就算扫码也走不通,按钮藏起来避免误导。
     final cloudConfigAsync = ref.watch(activeCloudConfigProvider);
     final isSpitoutCloud =
-        cloudConfigAsync.valueOrNull?.type == CloudBackendType.spitoutCloud;
+        cloudConfigAsync.value?.type == CloudBackendType.spitoutCloud;
 
     // 归属分区的唯一依据是 storage_mode，与登录状态无关：
     // 未登录时云端账本已被登出清理，分区自然为空，不会出现"看得见但同步不了"。
@@ -285,7 +285,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   Future<void> _handleLocalLedgerTap(LedgerDisplayItem ledger) async {
     // 获取同步状态
     final syncStatusAsync = ref.read(syncStatusProvider(ledger.id));
-    final syncStatus = syncStatusAsync.valueOrNull;
+    final syncStatus = syncStatusAsync.value;
 
     // 检查是否有冲突
     if (syncStatus?.diff == SyncDiff.different) {
@@ -295,10 +295,10 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     }
 
     // 正常切换账本
-    ref.read(currentLedgerIdProvider.notifier).state = ledger.id;
+    ref.read(currentLedgerIdProvider.notifier).set(ledger.id);
     // 切换账本后强制刷新统计页与日历（部分 provider 仅监听刷新信号，不随 ledgerId 参数重算）
-    ref.read(statsRefreshProvider.notifier).state++;
-    ref.read(calendarRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
+    ref.read(calendarRefreshProvider.notifier).tick();
     showToast(context, AppLocalizations.of(context).ledgersSwitched(translateLedgerName(context, ledger.name)));
   }
 
@@ -306,7 +306,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   Future<void> _openLedgerEditPage(LedgerDisplayItem ledger) async {
     // 冲突拦截：有冲突 → 先弹冲突解决对话框，不进编辑页
     final syncStatusAsync = ref.read(syncStatusProvider(ledger.id));
-    final syncStatus = syncStatusAsync.valueOrNull;
+    final syncStatus = syncStatusAsync.value;
     if (syncStatus?.diff == SyncDiff.different) {
       await _showConflictResolutionDialog(context, ledger);
       return;
@@ -471,7 +471,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                         if (!mounted) return;
 
                         // 刷新统计
-                        ref.read(statsRefreshProvider.notifier).state++;
+                        ref.read(statsRefreshProvider.notifier).tick();
 
                         showToast(
                           this.context,
@@ -511,8 +511,8 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                         if (!mounted) return;
 
                         // 刷新列表和同步状态
-                        ref.read(ledgerListRefreshProvider.notifier).state++;
-                        ref.read(syncStatusRefreshProvider.notifier).state++;
+                        ref.read(ledgerListRefreshProvider.notifier).tick();
+                        ref.read(syncStatusRefreshProvider.notifier).tick();
 
                         showToast(this.context, l10n.ledgersConflictUploadSuccess);
                       } catch (e) {

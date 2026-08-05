@@ -362,12 +362,12 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                             ref
                                                 .read(syncStatusRefreshProvider
                                                     .notifier)
-                                                .state++;
+                                                .tick();
                                             // 直接切到"我的"页并关闭登录页
                                             ref
                                                 .read(bottomTabIndexProvider
                                                     .notifier)
-                                                .state = 3; // Mine tab index
+                                                .set(3); // Mine tab index
                                             final can = Navigator.of(context)
                                                 .canPop();
                                             logger.info('nav',

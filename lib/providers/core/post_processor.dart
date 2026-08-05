@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../cloud/sync/sync_engine.dart';
 import '../../core/logging/logger_service.dart';
@@ -78,25 +79,25 @@ class PostProcessor {
 
   /// 交易后完整处理：刷新统计 + 日历，再走同步
   static Future<void> _run(_Read read, int ledgerId) async {
-    read(statsRefreshProvider.notifier).state++;
+    read(statsRefreshProvider.notifier).tick();
     // 数据已变更：同时刷新日历（与统计页一致），覆盖新增/删除/导入/清空等场景
-    read(calendarRefreshProvider.notifier).state++;
+    read(calendarRefreshProvider.notifier).tick();
     await _doSync(read, ledgerId);
   }
 
   /// 仅同步：补日历刷新后走同步
   static Future<void> _sync(_Read read, int ledgerId) async {
-    read(calendarRefreshProvider.notifier).state++;
+    read(calendarRefreshProvider.notifier).tick();
     await _doSync(read, ledgerId);
   }
 
   /// 云端下载后：只刷新四个信号，不触发同步上传
   static void _runAfterDownload(_Read read) {
-    read(statsRefreshProvider.notifier).state++;
+    read(statsRefreshProvider.notifier).tick();
     // 云端拉取的记录同样要刷新日历
-    read(calendarRefreshProvider.notifier).state++;
-    read(syncStatusRefreshProvider.notifier).state++;
-    read(ledgerListRefreshProvider.notifier).state++;
+    read(calendarRefreshProvider.notifier).tick();
+    read(syncStatusRefreshProvider.notifier).tick();
+    read(ledgerListRefreshProvider.notifier).tick();
     logger.info('PostProcessor', '云端下载后刷新完成');
   }
 
@@ -107,8 +108,8 @@ class PostProcessor {
       sync.markLocalChanged(ledgerId: ledgerId);
     } catch (_) {}
 
-    read(syncStatusRefreshProvider.notifier).state++;
-    read(ledgerListRefreshProvider.notifier).state++;
+    read(syncStatusRefreshProvider.notifier).tick();
+    read(ledgerListRefreshProvider.notifier).tick();
 
     // Spitout Cloud：始终自动双向同步
     if (sync is SyncEngine) {
@@ -116,7 +117,7 @@ class PostProcessor {
       Future(() async {
         try {
           await sync.sync(ledgerId: ledgerId.toString());
-          refresh.state++;
+          refresh.tick();
           logger.info(
               'PostProcessor', 'Spitout Cloud 自动同步完成', 'ledgerId=$ledgerId');
         } catch (e) {
@@ -134,7 +135,7 @@ class PostProcessor {
       Future(() async {
         try {
           await sync.uploadCurrentLedger(ledgerId: ledgerId);
-          refresh.state++;
+          refresh.tick();
           logger.info('PostProcessor', '后台同步完成', 'ledgerId=$ledgerId');
         } catch (e) {
           logger.error('PostProcessor', '后台同步失败', e);

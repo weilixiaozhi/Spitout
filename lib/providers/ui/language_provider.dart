@@ -4,13 +4,16 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 
 // 语言设置提供者
-final languageProvider = StateNotifierProvider<LanguageNotifier, Locale?>((ref) {
-  return LanguageNotifier();
-});
+final languageProvider = NotifierProvider<LanguageNotifier, Locale?>(
+  LanguageNotifier.new,
+);
 
-class LanguageNotifier extends StateNotifier<Locale?> {
-  LanguageNotifier() : super(null) {
+class LanguageNotifier extends Notifier<Locale?> {
+  @override
+  Locale? build() {
+    // 先同步返回 null（跟随系统），再异步加载保存的语言选择。
     _loadLanguage();
+    return null;
   }
 
   static const String _languageKey = 'selected_language';

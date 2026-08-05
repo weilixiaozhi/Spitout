@@ -53,8 +53,8 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       if (!verified) return;
 
       await AppLockService.clearPin();
-      ref.read(appLockEnabledProvider.notifier).state = false;
-      ref.read(appLockBiometricEnabledProvider.notifier).state = false;
+      ref.read(appLockEnabledProvider.notifier).set(false);
+      ref.read(appLockBiometricEnabledProvider.notifier).set(false);
       if (mounted) {
         showToast(context, l10n.appLockDisabled);
       }
@@ -88,7 +88,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       );
       if (!success) return;
     }
-    ref.read(appLockBiometricEnabledProvider.notifier).state = enable;
+    ref.read(appLockBiometricEnabledProvider.notifier).set(enable);
     await AppLockService.setBiometricEnabled(enable);
   }
 
@@ -136,7 +136,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                       ? Icon(AppIcons.check, color: primaryColor)
                       : null,
                   onTap: () {
-                    ref.read(appLockTimeoutProvider.notifier).state = opt.$1;
+                    ref.read(appLockTimeoutProvider.notifier).set(opt.$1);
                     AppLockService.setTimeoutSeconds(opt.$1);
                     Navigator.pop(ctx);
                   },

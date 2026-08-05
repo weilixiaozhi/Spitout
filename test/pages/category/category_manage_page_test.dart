@@ -114,7 +114,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 0),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
         currentLedgerProvider
             .overrideWith((ref) => Stream<db.Ledger?>.value(ledger)),
         // categoriesWithCountProvider 是 StreamProvider.autoDispose，

@@ -327,7 +327,7 @@ class TransactionListItem extends ConsumerWidget {
               : null;
           // 实时读取云基础地址以拼接成员头像相对路径
           final baseUrl =
-              ref.watch(spitoutCloudProviderInstance).valueOrNull?.baseUrl ?? '';
+              ref.watch(spitoutCloudProviderInstance).value?.baseUrl ?? '';
           parts.add(Row(
             mainAxisSize: MainAxisSize.min,
             children: [

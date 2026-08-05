@@ -80,7 +80,7 @@ class MemberStatsSection extends ConsumerWidget {
     final primary = Theme.of(context).colorScheme.primary;
     // 总支出带账本币种符号展示,与成员条目金额口径一致。
     final amount = _totalExpenseText(
-        statsAsync.valueOrNull, ref.watch(currentLedgerCurrencyProvider));
+        statsAsync.value, ref.watch(currentLedgerCurrencyProvider));
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: Row(

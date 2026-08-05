@@ -92,7 +92,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   /// Owner 的分类，此页编辑仅影响个人分类。角色取自 [currentLedgerProvider]
   /// 状态入口，不直连 db。
   Widget _buildSharedLedgerBanner(BuildContext context, AppLocalizations l10n) {
-    final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+    final ledger = ref.watch(currentLedgerProvider).value;
     if (ledger == null || !ledger.isShared) return const SizedBox.shrink();
     final isOwner = ledger.myRole == 'owner';
     return Padding(
@@ -492,7 +492,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
     if (_selectedCategoryIds.isEmpty) return;
 
     final categoriesWithCount =
-        ref.read(categoriesWithCountProvider).valueOrNull ?? [];
+        ref.read(categoriesWithCountProvider).value ?? [];
 
     if (_deleteOption == 1) {
       // 迁移模式：选择目标分类
@@ -818,7 +818,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   Future<void> _clearUnusedCategories() async {
     final l10n = AppLocalizations.of(context);
     final categoriesWithCount =
-        ref.read(categoriesWithCountProvider).valueOrNull ?? [];
+        ref.read(categoriesWithCountProvider).value ?? [];
 
     // 找出交易数为 0 的分类（统计已包含子分类交易数）
     final unusedCategories = categoriesWithCount
@@ -1804,7 +1804,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
     final repo = ref.read(repositoryProvider);
     final subCategories = await repo.getSubCategories(widget.parentCategory.id);
 
-    final countsSource = ref.read(categoriesWithCountProvider).valueOrNull ??
+    final countsSource = ref.read(categoriesWithCountProvider).value ??
         widget.categoriesWithCount;
     final result = <({db.Category category, int transactionCount})>[];
     for (final subCat in subCategories) {
@@ -2359,7 +2359,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
     final l10n = AppLocalizations.of(context);
 
     // 取最新分类数据；排除待删除的子分类自身
-    final countsSource = ref.read(categoriesWithCountProvider).valueOrNull ??
+    final countsSource = ref.read(categoriesWithCountProvider).value ??
         widget.categoriesWithCount;
     final availableCategories = countsSource.where((item) {
       if (_selectedCategoryIds.contains(item.category.id)) return false;

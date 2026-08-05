@@ -129,7 +129,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
   /// 新建模式：默认币种链 — 当前账本本位币 → welcome 选币 → CNY
   Future<void> _initDefaultCurrency() async {
-    String currency = ref.read(currentLedgerProvider).valueOrNull?.currency ?? '';
+    String currency = ref.read(currentLedgerProvider).value?.currency ?? '';
     if (currency.isEmpty) {
       try {
         final prefs = await SharedPreferences.getInstance();
@@ -393,7 +393,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   Widget _buildStorageModeSelector(
       BuildContext context, AppLocalizations l10n) {
     final isSpitoutCloud =
-        ref.watch(activeCloudConfigProvider).valueOrNull?.type ==
+        ref.watch(activeCloudConfigProvider).value?.type ==
             CloudBackendType.spitoutCloud;
     final mode = _effectiveStorageMode(isSpitoutCloud);
 
@@ -505,7 +505,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   /// 在本区隐藏时沦为孤儿间隙。
   Widget _buildStorageActions(BuildContext context, AppLocalizations l10n) {
     final isSpitoutCloud =
-        ref.watch(activeCloudConfigProvider).valueOrNull?.type ==
+        ref.watch(activeCloudConfigProvider).value?.type ==
             CloudBackendType.spitoutCloud;
     final ledger = widget.ledger!;
 
@@ -747,7 +747,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     final repo = ref.read(repositoryProvider);
 
     // 这里读后端类型只为「归属二次夹紧」这一 UI 语义，与同步触发无关。
-    final isSpitoutCloud = ref.read(activeCloudConfigProvider).valueOrNull?.type ==
+    final isSpitoutCloud = ref.read(activeCloudConfigProvider).value?.type ==
         CloudBackendType.spitoutCloud;
     // 二次夹紧：未登录 Spitout Cloud 时无论 UI 状态如何都只能建本地账本，
     // 否则会造出"标了 cloud 却没有云端副本"的孤儿账本。
@@ -805,13 +805,18 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
     // 空账本场景切换到新账本：同样走 container，避免快速退出后「建了第一本
     // 账本却仍处于无当前账本」的状态。
-    final currentLedger = await container.read(currentLedgerProvider.future);
+    // Riverpod 3 下 container.read(StreamProvider.future) 会因临时监听器关闭而挂起，
+    // 必须保持监听直到首值到达（见 readProviderFuture 说明）。
+    final currentLedger = await readProviderFutureFromContainer(
+      container,
+      currentLedgerProvider.future,
+    );
     if (currentLedger == null) {
-      container.read(currentLedgerIdProvider.notifier).state = newLedgerId;
+      container.read(currentLedgerIdProvider.notifier).set(newLedgerId);
       container.invalidate(currentLedgerProvider);
     }
     // 列表刷新信号同理：账本列表页在本页 pop 后仍存活，必须收到
-    container.read(ledgerListRefreshProvider.notifier).state++;
+    container.read(ledgerListRefreshProvider.notifier).tick();
 
     // 仅 UI 反馈需要 mounted
     if (!mounted) return newLedgerId;
@@ -933,9 +938,9 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
     // 刷新信号在 sync 之前发；走 container 与页面生命周期解耦，
     // 保证快速退出后列表页/统计页仍能收到信号。
-    container.read(ledgerListRefreshProvider.notifier).state++;
+    container.read(ledgerListRefreshProvider.notifier).tick();
     container.invalidate(currentLedgerProvider);
-    container.read(statsRefreshProvider.notifier).state++;
+    container.read(statsRefreshProvider.notifier).tick();
 
     // 触发同步更新云端（container 版，不依赖页面挂载）
     try {
@@ -961,12 +966,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       await repo.clearLedgerTransactions(ledger.id);
 
       if (!mounted) return;
-      ref.read(cachedTransactionsProvider.notifier).state = null;
+      ref.read(cachedTransactionsProvider.notifier).set(null);
       await PostProcessor.sync(ref, ledgerId: ledger.id);
 
       if (!mounted) return;
-      ref.read(ledgerListRefreshProvider.notifier).state++;
-      ref.read(statsRefreshProvider.notifier).state++;
+      ref.read(ledgerListRefreshProvider.notifier).tick();
+      ref.read(statsRefreshProvider.notifier).tick();
       showToast(context, l10n.ledgersClearSuccess);
     } catch (e) {
       if (!mounted) return;
@@ -998,7 +1003,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       if (current == deletedLedgerId) {
         final remain = allLedgers.where((l) => l.id != deletedLedgerId).toList();
         if (remain.isNotEmpty) {
-          ref.read(currentLedgerIdProvider.notifier).state = remain.first.id;
+          ref.read(currentLedgerIdProvider.notifier).set(remain.first.id);
         }
       }
 
@@ -1010,8 +1015,8 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
       if (!mounted) return;
       ref.invalidate(currentLedgerProvider);
-      ref.read(ledgerListRefreshProvider.notifier).state++;
-      ref.read(statsRefreshProvider.notifier).state++;
+      ref.read(ledgerListRefreshProvider.notifier).tick();
+      ref.read(statsRefreshProvider.notifier).tick();
 
       showToast(context, l10n.ledgersDeleted);
       // 删除成功后返回上一页
@@ -1058,12 +1063,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       if (current == ledger.id) {
         final remain = allLedgers.where((l) => l.id != ledger.id).toList();
         if (remain.isNotEmpty) {
-          ref.read(currentLedgerIdProvider.notifier).state = remain.first.id;
+          ref.read(currentLedgerIdProvider.notifier).set(remain.first.id);
         }
       }
       ref.invalidate(currentLedgerProvider);
-      ref.read(ledgerListRefreshProvider.notifier).state++;
-      ref.read(statsRefreshProvider.notifier).state++;
+      ref.read(ledgerListRefreshProvider.notifier).tick();
+      ref.read(statsRefreshProvider.notifier).tick();
 
       if (!mounted) return;
       showToast(context, l10n.ledgersLeaveAndDeleteSuccess);
@@ -1105,12 +1110,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       if (current == ledger.id) {
         final remain = allLedgers.where((l) => l.id != ledger.id).toList();
         if (remain.isNotEmpty) {
-          ref.read(currentLedgerIdProvider.notifier).state = remain.first.id;
+          ref.read(currentLedgerIdProvider.notifier).set(remain.first.id);
         }
       }
       ref.invalidate(currentLedgerProvider);
-      ref.read(ledgerListRefreshProvider.notifier).state++;
-      ref.read(statsRefreshProvider.notifier).state++;
+      ref.read(ledgerListRefreshProvider.notifier).tick();
+      ref.read(statsRefreshProvider.notifier).tick();
 
       if (!mounted) return;
       showToast(context, l10n.ledgersDeleteSharedSuccess);

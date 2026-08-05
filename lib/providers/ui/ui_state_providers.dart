@@ -1,6 +1,7 @@
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
@@ -20,15 +21,22 @@ import 'package:spitout/providers/core/refresh_ticks.dart';
 export 'package:spitout/providers/core/refresh_ticks.dart';
 
 // 底部导航索引（0: 明细, 3: 我的；1/2 为占位）
-final bottomTabIndexProvider = StateProvider<int>((ref) => 0);
+final bottomTabIndexProvider =
+    NotifierProvider<SimpleStateNotifier<int>, int>(
+  () => SimpleStateNotifier((ref) => 0),
+);
 
 // 首页滚动到顶部触发器（每次改变值时触发滚动）
-final homeScrollToTopProvider = StateProvider<int>((ref) => 0);
+final homeScrollToTopProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 // Currently selected month (first day), default to now
-final selectedMonthProvider = StateProvider<DateTime>((ref) {
-  final now = DateTime.now();
-  return DateTime(now.year, now.month, 1);
+final selectedMonthProvider =
+    NotifierProvider<SimpleStateNotifier<DateTime>, DateTime>(() {
+  return SimpleStateNotifier((ref) {
+    final now = DateTime.now();
+    return DateTime(now.year, now.month, 1);
+  });
 });
 
 // 应用初始化状态
@@ -40,7 +48,9 @@ enum AppInitState {
 
 // 应用初始化状态Provider
 final appInitStateProvider =
-    StateProvider<AppInitState>((ref) => AppInitState.splash);
+    NotifierProvider<SimpleStateNotifier<AppInitState>, AppInitState>(
+  () => SimpleStateNotifier((ref) => AppInitState.splash),
+);
 
 // 应用初始化Provider - 管理数据预加载
 final appSplashInitProvider = FutureProvider<void>((ref) async {
@@ -76,7 +86,7 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     final ledgerRow = await repo.getLedgerById(ledgerId);
     final startDay = (ledgerRow?.monthStartDay ?? 1).clamp(1, 28);
     final currentMonth = labelForDate(now, startDay);
-    ref.read(selectedMonthProvider.notifier).state = currentMonth;
+    ref.read(selectedMonthProvider.notifier).set(currentMonth);
 
     // 并行预加载：月度统计 + 交易列表（分别计时）
     final monthlyParams = (ledgerId: ledgerId, month: currentMonth);
@@ -101,7 +111,7 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     final monthlyResult = results[0] as double;
     final transactionsWithCategory = results[1] as List<({Transaction t, Category? category})>;
 
-    ref.read(lastMonthlyTotalsProvider(monthlyParams).notifier).state = monthlyResult;
+    ref.read(lastMonthlyTotalsProvider(monthlyParams).notifier).set(monthlyResult);
     // 不预加载完整列表，让 Stream 自己加载
     logger.info(tag, '并行预加载完成: ${DateTime.now().difference(stepTime).inMilliseconds}ms, 首屏${transactionsWithCategory.length}条');
     stepTime = DateTime.now();
@@ -111,7 +121,7 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       return (t: item.t, category: item.category);
     }).toList();
 
-    ref.read(cachedTransactionsProvider.notifier).state = fullTransactions;
+    ref.read(cachedTransactionsProvider.notifier).set(fullTransactions);
 
     // 账本统计异步加载（不阻塞启动）
     Future.microtask(() async {
@@ -142,11 +152,14 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
   // 计算数据预加载耗时
   final dataLoadTime = DateTime.now().difference(startTime);
   logger.info(tag, '预加载总耗时: ${dataLoadTime.inMilliseconds}ms，切换到主应用');
-  ref.read(appInitStateProvider.notifier).state = AppInitState.ready;
+  ref.read(appInitStateProvider.notifier).set(AppInitState.ready);
 });
 
 // 是否应该显示欢迎页面的Provider
-final shouldShowWelcomeProvider = StateProvider<bool>((ref) => false);
+final shouldShowWelcomeProvider =
+    NotifierProvider<SimpleStateNotifier<bool>, bool>(
+  () => SimpleStateNotifier((ref) => false),
+);
 
 // 初始化检查是否需要显示欢迎页面
 final welcomeCheckProvider = FutureProvider<bool>((ref) async {
@@ -154,7 +167,7 @@ final welcomeCheckProvider = FutureProvider<bool>((ref) async {
   final welcomeShown = prefs.getBool('welcome_shown') ?? false;
   if (!welcomeShown) {
     debugPrint('👋 首次启动，需要展示欢迎页面');
-    ref.read(shouldShowWelcomeProvider.notifier).state = true;
+    ref.read(shouldShowWelcomeProvider.notifier).set(true);
     return true;
   }
   return false;

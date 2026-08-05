@@ -32,8 +32,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
     // 同步到 Provider
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(calendarSelectedMonthProvider.notifier).state = _focusedMonth;
-      ref.read(calendarSelectedDateProvider.notifier).state = _selectedDay;
+      ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
+      ref.read(calendarSelectedDateProvider.notifier).set(_selectedDay);
     });
   }
 
@@ -41,7 +41,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     setState(() {
       _selectedDay = selectedDay;
     });
-    ref.read(calendarSelectedDateProvider.notifier).state = selectedDay;
+    ref.read(calendarSelectedDateProvider.notifier).set(selectedDay);
   }
 
   void _onPageChanged(DateTime focusedMonth) {
@@ -50,8 +50,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       // 切换月份时，清空选中日期
       _selectedDay = null;
     });
-    ref.read(calendarSelectedMonthProvider.notifier).state = focusedMonth;
-    ref.read(calendarSelectedDateProvider.notifier).state = null;
+    ref.read(calendarSelectedMonthProvider.notifier).set(focusedMonth);
+    ref.read(calendarSelectedDateProvider.notifier).set(null);
   }
 
   void _jumpToToday() {
@@ -60,8 +60,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       _focusedMonth = DateTime(now.year, now.month, 1);
       _selectedDay = now;
     });
-    ref.read(calendarSelectedMonthProvider.notifier).state = _focusedMonth;
-    ref.read(calendarSelectedDateProvider.notifier).state = _selectedDay;
+    ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
+    ref.read(calendarSelectedDateProvider.notifier).set(_selectedDay);
   }
 
   Future<void> _addTransactionForSelectedDate() async {
@@ -80,7 +80,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     // 编辑器关闭后,主动刷新日历的统计与当日交易列表
     // (FutureProvider 不会因 Drift 写入自动重算)
     if (mounted) {
-      ref.read(calendarRefreshProvider.notifier).state++;
+      ref.read(calendarRefreshProvider.notifier).tick();
     }
   }
 

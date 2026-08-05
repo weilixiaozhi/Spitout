@@ -43,7 +43,7 @@ class LedgerCard extends ConsumerWidget {
 
     // 获取同步状态
     final syncStatusAsync = ref.watch(syncStatusProvider(ledger.id));
-    final syncStatus = syncStatusAsync.valueOrNull;
+    final syncStatus = syncStatusAsync.value;
 
     // 检查是否正在上传
     final uploadingIds = ref.watch(uploadingLedgerIdsProvider);
@@ -275,7 +275,7 @@ class LedgerCard extends ConsumerWidget {
     // 统一读取当前激活后端类型:本地账本据此判断是否处于快照备份态,
     // 云端账本恒为云形。
     final backendType =
-        ref.watch(activeCloudConfigProvider).valueOrNull?.type;
+        ref.watch(activeCloudConfigProvider).value?.type;
 
     // 云端账本:恒为云形图标。仅 SpitoutCloud 真正持有云端账本,切走后已被 purge
     // 清空;webdav/s3/supabase 属"本地快照备份"范畴,云端账本形态一致用云形。

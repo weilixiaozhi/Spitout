@@ -282,7 +282,7 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
   Widget _buildEditCategoryEntry(BuildContext context) {
     final primary = Theme.of(context).colorScheme.primary;
     final l10n = AppLocalizations.of(context);
-    final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+    final ledger = ref.watch(currentLedgerProvider).value;
     final isEditorInShared =
         ledger != null && ledger.isShared && ledger.myRole != 'owner';
     final entryColor =

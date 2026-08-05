@@ -90,7 +90,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
 
   void _unlock() {
     AppLockService.recordUnlock();
-    ref.read(isAppLockedProvider.notifier).state = false;
+    ref.read(isAppLockedProvider.notifier).set(false);
   }
 
   @override

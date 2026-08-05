@@ -50,7 +50,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 0),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
         // 本位币固定为 CNY，避免依赖 currentLedgerProvider
         currentLedgerCurrencyProvider.overrideWith((ref) => 'CNY'),
         // 汇率表置空：本位币记账不触发汇率拉取，杜绝网络调用

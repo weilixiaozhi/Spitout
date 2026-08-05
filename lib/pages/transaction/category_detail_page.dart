@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart'
     show ledgerMembersProvider;
@@ -109,7 +110,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
     );
 
     // 构建 categoryMap 快照，供列表渲染使用
-    final categoryMap = categoryMapAsync.valueOrNull ?? <int, db.Category>{};
+    final categoryMap = categoryMapAsync.value ?? <int, db.Category>{};
 
     // 共享账本成员表(userId→成员),详情 sheet 用于协作成员 / AA 支出人展示名
     final ledger = ref.watch(currentLedgerProvider).asData?.value;
@@ -256,25 +257,25 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortTimeDesc,
                     isSelected: currentSortType == SortType.timeDesc,
-                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).state = SortType.timeDesc,
+                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.timeDesc),
                   ),
                   const SizedBox(width: 8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortTimeAsc,
                     isSelected: currentSortType == SortType.timeAsc,
-                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).state = SortType.timeAsc,
+                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.timeAsc),
                   ),
                   const SizedBox(width: 8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortAmountDesc,
                     isSelected: currentSortType == SortType.amountDesc,
-                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).state = SortType.amountDesc,
+                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.amountDesc),
                   ),
                   const SizedBox(width: 8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortAmountAsc,
                     isSelected: currentSortType == SortType.amountAsc,
-                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).state = SortType.amountAsc,
+                    onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.amountAsc),
                   ),
                 ],
               ),
@@ -303,7 +304,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
 
       // 刷新：账本笔数与全局统计
       ref.invalidate(countsForLedgerProvider(ledgerId));
-      ref.read(statsRefreshProvider.notifier).state++;
+      ref.read(statsRefreshProvider.notifier).tick();
     } catch (e) {
       if (mounted) {
         showToast(context,
@@ -655,9 +656,10 @@ final _categoryTransactionsStreamProvider = StreamProvider.family<List<db.Transa
 });
 
 // 排序状态管理
-final _categorySortTypeProvider = StateProvider.family<SortType, int>((ref, categoryId) {
-  return SortType.timeDesc; // 默认时间倒序
-});
+final _categorySortTypeProvider =
+    NotifierProvider.family<SimpleStateNotifier<SortType>, SortType, int>(
+  (categoryId) => SimpleStateNotifier((ref) => SortType.timeDesc),
+);
 
 // 派生数据：排序后的交易列表（自动响应排序状态变化）
 final _categoryTransactionsWithSortProvider = Provider.family<AsyncValue<List<db.Transaction>>, ({int categoryId, int ledgerId})>((ref, params) {

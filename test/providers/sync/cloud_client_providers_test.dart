@@ -97,7 +97,10 @@ void main() {
     // 先让 authServiceProvider 进入 data 态，cloudCurrentUserProvider 才会返回
     // 单发 null 的流（而非等待依赖的空流），避免 .future 捕获到永远 loading 的空流。
     await container.read(authServiceProvider.future);
-    final user = await container.read(cloudCurrentUserProvider.future);
+    final user = await readProviderFutureFromContainer(
+      container,
+      cloudCurrentUserProvider.future,
+    );
     expect(user, isNull);
   });
 
@@ -109,7 +112,10 @@ void main() {
     ]);
     addTearDown(container.dispose);
     await container.read(authServiceProvider.future);
-    final resolved = await container.read(cloudCurrentUserProvider.future);
+    final resolved = await readProviderFutureFromContainer(
+      container,
+      cloudCurrentUserProvider.future,
+    );
     expect(resolved, user);
   });
 

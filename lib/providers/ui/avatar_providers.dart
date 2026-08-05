@@ -1,10 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 import '../../services/storage/avatar_picker.dart';
 import '../../services/storage/avatar_storage.dart';
 
 /// 头像刷新触发器
-final avatarRefreshProvider = StateProvider<int>((ref) => 0);
+final avatarRefreshProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 /// 用户头像路径
 final avatarPathProvider = FutureProvider<String?>((ref) async {

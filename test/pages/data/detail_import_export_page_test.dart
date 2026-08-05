@@ -55,7 +55,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
       ],
       child: MaterialApp(
         localizationsDelegates: const [

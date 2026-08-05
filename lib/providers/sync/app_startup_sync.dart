@@ -66,7 +66,7 @@ class AppStartupSync {
         if (syncService is TransactionsSyncManager) {
           // 快照型后端：刷新全部账本的远端同步状态 + 账本列表 UI tick。
           await syncService.refreshAllLedgersStatus();
-          _ref.read(ledgerListRefreshProvider.notifier).state++;
+          _ref.read(ledgerListRefreshProvider.notifier).tick();
         } else if (syncService is SyncEngine) {
           // 增量型后端：账户级首次同步（含 5 秒节流防重复）。
           _triggerInitialCloudSync(syncService);
@@ -109,8 +109,8 @@ class AppStartupSync {
             'Spitout Cloud 首次同步完成: synced=${ledgers.length - result.skipped} '
             'skipped=${result.skipped} pushed=${result.pushed} '
             'pulled=${result.pulled} 总耗时 ${result.elapsedMs}ms');
-        _ref.read(syncStatusRefreshProvider.notifier).state++;
-        _ref.read(ledgerListRefreshProvider.notifier).state++;
+        _ref.read(syncStatusRefreshProvider.notifier).tick();
+        _ref.read(ledgerListRefreshProvider.notifier).tick();
       } catch (e, st) {
         logger.error('AppStart', 'Spitout Cloud 首次同步异常', e, st);
       }

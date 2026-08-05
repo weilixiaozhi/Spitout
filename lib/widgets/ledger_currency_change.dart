@@ -109,12 +109,12 @@ Future<bool> applyLedgerCurrencyChange(
 
   // 7. 刷新信号必须在 sync 之前发:重算产生大量 change,push 可能耗时数十秒
   // 甚至失败;本地数据此刻已就绪,立即刷新,UI 不等 push。
-  ref.read(ledgerListRefreshProvider.notifier).state++;
+  ref.read(ledgerListRefreshProvider.notifier).tick();
   // currentLedgerProvider 已是 StreamProvider(Drift watch 自动推送),
   // 此 invalidate 仅作防御性重订阅(如流曾进入 error 态),正常路径冗余无害。
   ref.invalidate(currentLedgerProvider);
   ref.invalidate(monthlyTotalsProvider);
-  ref.read(statsRefreshProvider.notifier).state++;
+  ref.read(statsRefreshProvider.notifier).tick();
 
   // 8. 触发同步把账本元数据 + 重算 change 推到云端;失败仅告警,本地已生效
   try {

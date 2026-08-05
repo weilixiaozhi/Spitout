@@ -151,7 +151,7 @@ void main() {
       overrides: [databaseProvider.overrideWithValue(db)],
     );
     container.read(repositoryProvider);
-    container.read(currentLedgerIdProvider.notifier).state = second;
+    container.read(currentLedgerIdProvider.notifier).set(second);
 
     await selectFirstLedger(container.read);
 
@@ -176,7 +176,7 @@ void main() {
     );
     // 恢复前 currentLedgerIdProvider 已被旧值占据（相当于启动时解析出的旧 id）。
     container.read(repositoryProvider);
-    container.read(currentLedgerIdProvider.notifier).state = 999;
+    container.read(currentLedgerIdProvider.notifier).set(999);
 
     // 恢复成功 → invalidate 新库 → 复用 selectFirstLedger 校验并回退（local_backup_page 的修复点）。
     await selectFirstLedger(container.read);

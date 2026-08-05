@@ -224,7 +224,7 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
     if (result == null || !mounted) return;
     final name = result.trim();
     if (name.isEmpty || name == current) return; // v1 不清空；无变化不写
-    ref.read(displayNameProvider.notifier).state = name;
+    ref.read(displayNameProvider.notifier).set(name);
     showToast(context, AppLocalizations.of(context).mineDisplayNameSaved);
   }
 

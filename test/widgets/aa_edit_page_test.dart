@@ -45,7 +45,7 @@ Future<void> _openAaEdit(
           (ref, ledgerId) async => _options,
         ),
         currentLedgerProvider.overrideWith((ref) => Stream.value(null)),
-        displayNameProvider.overrideWith((ref) => displayName),
+        displayNameProvider.overrideWithBuild((ref, notifier) => displayName),
         // 云实例桩为 null:未手选时默认支出人解析走 localSelfId 兜底。
         spitoutCloudProviderInstance.overrideWith((ref) async => null),
         if (localSelfId != null)

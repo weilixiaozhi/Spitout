@@ -30,8 +30,8 @@ void main() {
     return ProviderScope(
       overrides: [
         currentLedgerCurrencyProvider.overrideWith((ref) => 'CNY'),
-        visibleCurrenciesProvider.overrideWith(
-          (ref) => {'CNY', 'HKD', 'USD'},
+        visibleCurrenciesProvider.overrideWithBuild(
+          (ref, notifier) => {'CNY', 'HKD', 'USD'},
         ),
       ],
       child: MaterialApp(

@@ -261,13 +261,13 @@ class _ConfigImportExportPageState
       if (themeMode != null) {
         switch (themeMode) {
           case 'light':
-            ref.read(themeModeProvider.notifier).state = ThemeMode.light;
+            ref.read(themeModeProvider.notifier).set(ThemeMode.light);
             break;
           case 'dark':
-            ref.read(themeModeProvider.notifier).state = ThemeMode.dark;
+            ref.read(themeModeProvider.notifier).set(ThemeMode.dark);
             break;
           default:
-            ref.read(themeModeProvider.notifier).state = ThemeMode.system;
+            ref.read(themeModeProvider.notifier).set(ThemeMode.system);
         }
         logger.info('ConfigImport', '主题模式已刷新: $themeMode');
       }

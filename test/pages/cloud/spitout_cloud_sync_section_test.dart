@@ -19,6 +19,7 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -103,6 +104,7 @@ Future<void> _pumpSection(
   CloudAuthService? auth,
   SyncService? sync,
   List<Override> extraOverrides = const [],
+  int currentLedgerId = 1,
 }) async {
   SharedPreferences.setMockInitialValues({});
   await tester.pumpWidget(
@@ -118,7 +120,7 @@ Future<void> _pumpSection(
         // provider 实例为 null → 2FA 行自动隐藏、server 版本号不显示。
         spitoutCloudProviderInstance.overrideWith((ref) async => null),
         spitoutCloudServerVersionProvider.overrideWith((ref) async => null),
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => currentLedgerId),
         ...extraOverrides,
       ],
       child: MaterialApp(
@@ -319,7 +321,8 @@ void main() {
   /// disposed" 断言失败——这与业务无关,是 drift+riverpod+flutter_test 的已知
   /// 副作用。这里改用一次性 FutureProvider 从内存库读账本,既保留「真实选中账本」
   /// 的语义链路,又绕开 drift 流查询的 pending timer。
-  ({SyncEngine engine, List<Override> overrides}) healthFixture({
+  ({SyncEngine engine, List<Override> overrides, int currentLedgerId})
+      healthFixture({
     required SpitoutDatabase db,
     required FakeSpitoutCloudProvider provider,
     required ChangeTracker tracker,
@@ -335,10 +338,10 @@ void main() {
       ),
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => currentLedgerId),
         currentLedgerProvider.overrideWith(
             (ref) => Stream.fromFuture(repo.getLedgerById(currentLedgerId))),
       ],
+      currentLedgerId: currentLedgerId,
     );
   }
 
@@ -370,7 +373,10 @@ void main() {
       currentLedgerId: ledgerA,
     );
     await _pumpSection(tester,
-        active: _spitoutActive(), sync: f.engine, extraOverrides: f.overrides);
+        active: _spitoutActive(),
+        sync: f.engine,
+        currentLedgerId: f.currentLedgerId,
+        extraOverrides: f.overrides);
     // initState 的 postFrameCallback 触发 refresh(),等待账户级检测完成。
     await tester.pumpAndSettle();
 
@@ -410,7 +416,10 @@ void main() {
       currentLedgerId: ledgerB,
     );
     await _pumpSection(tester,
-        active: _spitoutActive(), sync: f.engine, extraOverrides: f.overrides);
+        active: _spitoutActive(),
+        sync: f.engine,
+        currentLedgerId: f.currentLedgerId,
+        extraOverrides: f.overrides);
     await tester.pumpAndSettle();
 
     expect(find.descendant(of: _card(), matching: find.text('当前账本')),
@@ -448,7 +457,10 @@ void main() {
       currentLedgerId: localLedger,
     );
     await _pumpSection(tester,
-        active: _spitoutActive(), sync: f.engine, extraOverrides: f.overrides);
+        active: _spitoutActive(),
+        sync: f.engine,
+        currentLedgerId: f.currentLedgerId,
+        extraOverrides: f.overrides);
     await tester.pumpAndSettle();
 
     expect(find.descendant(of: _card(), matching: find.text('当前账本')),
@@ -495,7 +507,10 @@ void main() {
     f.engine.debugMarkSelfHealBroken(ledgerA.toString());
 
     await _pumpSection(tester,
-        active: _spitoutActive(), sync: f.engine, extraOverrides: f.overrides);
+        active: _spitoutActive(),
+        sync: f.engine,
+        currentLedgerId: f.currentLedgerId,
+        extraOverrides: f.overrides);
     await tester.pumpAndSettle();
 
     expect(

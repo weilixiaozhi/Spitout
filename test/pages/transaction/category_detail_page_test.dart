@@ -108,7 +108,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
         currentLedgerProvider
             .overrideWith((ref) => Stream<db.Ledger?>.value(testLedger)),
       ],

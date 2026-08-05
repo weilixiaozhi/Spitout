@@ -182,7 +182,7 @@ Future<void> _pumpPage(
         // 本测试只验证云 UI 可见性，与「当前账本选择」无关。currentLedgerIdProvider
         // 默认已改为哨兵 0（表示「未选中」），而同步区块对 ledgerId==0 渲染为
         // 简化提示而非完整 UI，故显式指定一个有效账本 id 以渲染完整同步区块。
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
       ],
       child: MaterialApp(
         // 测试环境默认 locale 为 en，强制 zh 以渲染中文文案
@@ -553,7 +553,7 @@ void main() {
             autoSyncValueProvider.overrideWith((ref) async => false),
             spitoutCloudProviderInstance.overrideWith((ref) async => null),
             spitoutCloudServerVersionProvider.overrideWith((ref) async => null),
-            currentLedgerIdProvider.overrideWith((ref) => 1),
+            currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
           ],
           child: MaterialApp(
             locale: const Locale('zh'),
@@ -672,7 +672,7 @@ void main() {
             autoSyncValueProvider.overrideWith((ref) async => false),
             spitoutCloudProviderInstance.overrideWith((ref) async => null),
             spitoutCloudServerVersionProvider.overrideWith((ref) async => null),
-            currentLedgerIdProvider.overrideWith((ref) => 1),
+            currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
             // 关键桩：让 Spitout 登录块走可覆盖工厂，返回 Fake auth
             cloudServicesFactoryProvider.overrideWith(
               (ref) => (config) async => (provider: null, auth: fakeAuth),
@@ -876,7 +876,7 @@ void main() {
             autoSyncValueProvider.overrideWith((ref) async => false),
             spitoutCloudProviderInstance.overrideWith((ref) async => null),
             spitoutCloudServerVersionProvider.overrideWith((ref) async => null),
-            currentLedgerIdProvider.overrideWith((ref) => 1),
+            currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
           ],
           child: MaterialApp(
             locale: const Locale('zh'),

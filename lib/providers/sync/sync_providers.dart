@@ -3,8 +3,10 @@ import 'dart:io';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 import '../../cloud/sync/sync_service.dart';
 import '../../cloud/sync/sync_coordinator.dart';
 import '../../cloud/sync/sync_engine.dart';
@@ -63,13 +65,15 @@ final syncStatusProvider =
   final status = await sync.getStatus(ledgerId: ledgerId);
 
   // 写入最近一次成功值，供 UI 在刷新期间显示旧值，避免闪烁
-  ref.read(lastSyncStatusProvider(ledgerId).notifier).state = status;
+  ref.read(lastSyncStatusProvider(ledgerId).notifier).set(status);
   return status;
 });
 
 // 最近一次同步状态缓存（按 ledgerId）
 final lastSyncStatusProvider =
-    StateProvider.family<SyncStatus?, int>((ref, ledgerId) => null);
+    NotifierProvider.family<SimpleStateNotifier<SyncStatus?>, SyncStatus?, int>(
+  (ledgerId) => SimpleStateNotifier((ref) => null),
+);
 
 // 自动同步开关：值与设置
 final autoSyncValueProvider = FutureProvider.autoDispose<bool>((ref) async {
@@ -181,19 +185,19 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           // SyncEngine 的 broadcast(sync: true),listener 收到 emit 后立即同步
           // 执行 state 变更,Flutter framework 把所有 markNeedsBuild 合并到当前
           // 帧的同一次 rebuild,不会跨帧 cascade。
-          ref.read(syncStatusRefreshProvider.notifier).state++;
-          ref.read(ledgerListRefreshProvider.notifier).state++;
+          ref.read(syncStatusRefreshProvider.notifier).tick();
+          ref.read(ledgerListRefreshProvider.notifier).tick();
           // currentLedgerProvider 已是 StreamProvider(Drift watch 自动推送),
           // 此 invalidate 仅作防御性重订阅(如流曾进入 error 态),正常路径冗余无害。
           ref.invalidate(currentLedgerProvider);
-          ref.read(syncGenerationProvider.notifier).state++;
-          ref.read(statsRefreshProvider.notifier).state++;
-          ref.read(calendarRefreshProvider.notifier).state++;
+          ref.read(syncGenerationProvider.notifier).tick();
+          ref.read(statsRefreshProvider.notifier).tick();
+          ref.read(calendarRefreshProvider.notifier).tick();
           // 切到 Stream 模式 — 否则 Drift 已更新但 TransactionList 仍用
           // Splash 阶段 cache 住的 accountName。不清 cachedTransactionsProvider:
           // 切到 stream 模式后 cache 不被读取,留旧值给到 stream 推送之前
           // 平滑过渡。
-          ref.read(homeSwitchToStreamProvider.notifier).state++;
+          ref.read(homeSwitchToStreamProvider.notifier).tick();
         case PushCompleted(:final pushed):
           // 本地变更已上传到 server:同步状态从「本地有更新」→「已同步」。
           // 只 bump syncStatusRefresh —— 「我的」页和账本卡片的同步状态都走
@@ -201,7 +205,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           // syncStatusRefresh 即会重算。push 不改本地展示数据,不需要账本列表
           // /统计等全域 cascade。
           if (pushed > 0) {
-            ref.read(syncStatusRefreshProvider.notifier).state++;
+            ref.read(syncStatusRefreshProvider.notifier).tick();
           }
         case LedgersPurged():
           // 云端下线已全量清共享账本:当前账本可能刚被删,重指第一个。
@@ -212,13 +216,13 @@ final syncServiceProvider = Provider<SyncService>((ref) {
             logger.error('SyncProvider', 'LedgersPurged 重指账本失败: $e', e, st);
           });
           ref.invalidate(localLedgersProvider);
-          ref.read(ledgerListRefreshProvider.notifier).state++;
+          ref.read(ledgerListRefreshProvider.notifier).tick();
           ref.invalidate(currentLedgerProvider);
-          ref.read(cachedTransactionsProvider.notifier).state = null;
+          ref.read(cachedTransactionsProvider.notifier).set(null);
         case SharedResourceChanged():
-          ref.read(sharedResourceRefreshProvider.notifier).state++;
+          ref.read(sharedResourceRefreshProvider.notifier).tick();
         case AvatarChanged():
-          ref.read(avatarRefreshProvider.notifier).state++;
+          ref.read(avatarRefreshProvider.notifier).tick();
         case ProfileFieldApplied(:final field, :final value):
           switch (field) {
             case ProfileField.appearance:
@@ -315,7 +319,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           try {
             newLedgerCount = await engine.syncLedgersFromServer();
             if (newLedgerCount > 0) {
-              ref.read(ledgerListRefreshProvider.notifier).state++;
+              ref.read(ledgerListRefreshProvider.notifier).tick();
               logger.info(
                   'SyncProvider', '从 server 拉回 $newLedgerCount 个新账本');
             }
@@ -324,7 +328,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
                 'SyncProvider', 'syncLedgersFromServer 失败: $e', st);
             // 承接 SyncEngine 网络分支逃逸的 rethrow(5xx/Socket/Timeout):
             // 写入 lastSyncErrorProvider 让 UI 可见同步失败,而非静默吞掉。
-            ref.read(lastSyncErrorProvider.notifier).state = e.toString();
+            ref.read(lastSyncErrorProvider.notifier).set(e.toString());
           }
 
           // Step 1.5: 如果有新账本插进来，要从 cursor=0 把 sync_changes 重放
@@ -351,19 +355,19 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           logger.info('SyncProvider',
               '自动同步成功: pushed=${result.pushed}, pulled=${result.pulled}, '
               'skipped=${result.skipped}, elapsedMs=${result.elapsedMs}');
-          ref.read(syncStatusRefreshProvider.notifier).state++;
-          ref.read(ledgerListRefreshProvider.notifier).state++;
-          ref.read(syncGenerationProvider.notifier).state++;
-          ref.read(statsRefreshProvider.notifier).state++;
-          ref.read(calendarRefreshProvider.notifier).state++;
-          ref.read(homeSwitchToStreamProvider.notifier).state++;
-          ref.read(cachedTransactionsProvider.notifier).state = null;
+          ref.read(syncStatusRefreshProvider.notifier).tick();
+          ref.read(ledgerListRefreshProvider.notifier).tick();
+          ref.read(syncGenerationProvider.notifier).tick();
+          ref.read(statsRefreshProvider.notifier).tick();
+          ref.read(calendarRefreshProvider.notifier).tick();
+          ref.read(homeSwitchToStreamProvider.notifier).tick();
+          ref.read(cachedTransactionsProvider.notifier).set(null);
           // 不无条件 bump avatarRefreshProvider — AvatarChanged 事件
           // 只在真下载头像时触发,避免每次 bootstrap 闪一次头像。
-          ref.read(lastSyncErrorProvider.notifier).state = null;
+          ref.read(lastSyncErrorProvider.notifier).set(null);
         } catch (e, st) {
           logger.error('SyncProvider', '自动同步异常', e, st);
-          ref.read(lastSyncErrorProvider.notifier).state = e.toString();
+          ref.read(lastSyncErrorProvider.notifier).set(e.toString());
         } finally {
           _autoSyncInProgress = false;
         }
@@ -389,8 +393,8 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   // 但未上传(coordinator 受闸门阻拦),watch 不会因开关变化重发,需外部触发
   // 消费。从 false→true 的边沿才触发,避免开启态下的无谓重扫。
   ref.listen<AsyncValue<bool>>(autoSyncValueProvider, (prev, next) {
-    final wasOn = prev?.valueOrNull ?? false;
-    final isOn = next.valueOrNull ?? false;
+    final wasOn = prev?.value ?? false;
+    final isOn = next.value ?? false;
     if (!wasOn && isOn) {
       logger.info('SyncProvider', 'auto_sync 开启, 触发快照脏信号补扫');
       snapshotCoordinator.scanNow();
@@ -513,15 +517,15 @@ Future<void> reconcileProfileToServer({
 // 下面两个函数都由 SyncEngine 的 ProfileFieldApplied 事件触发:先比对当前值,
 // 不同才写。写 Riverpod state 会触发 theme_providers 里的 ref.listen,该
 // listener 会推送回 server — "写了相同值不触发推送" 的保证由 Riverpod 自己给,
-// StateProvider 收到相同值不会 notify。所以只要正确跳过"相同值",就不会产生
+// Notifier 收到相同值不会 notify。所以只要正确跳过"相同值",就不会产生
 // echo 循环。
 
 void _applyDisplayNameFromServer(Ref ref, String name) {
   final trimmed = name.trim();
   if (trimmed.isEmpty) return; // v1 不下空,避免清空对端本地昵称
   final current = ref.read(displayNameProvider);
-  if (current == trimmed) return; // 相同值不写,StateProvider 不 notify → 无 echo
-  ref.read(displayNameProvider.notifier).state = trimmed;
+  if (current == trimmed) return; // 相同值不写,Notifier 不 notify → 无 echo
+  ref.read(displayNameProvider.notifier).set(trimmed);
   logger.info('profile_sync', 'applied display_name from server: $trimmed');
 }
 
@@ -533,7 +537,7 @@ void _applyAppearanceFromServer(Ref ref, Map<String, dynamic> appearance) {
       (expenseColorScheme == 'red' || expenseColorScheme == 'green')) {
     final current = ref.read(expenseColorSchemeProvider);
     if (current != expenseColorScheme) {
-      ref.read(expenseColorSchemeProvider.notifier).state = expenseColorScheme;
+      ref.read(expenseColorSchemeProvider.notifier).set(expenseColorScheme);
     }
   } else if (expenseColorScheme != null) {
     logger.warning('profile_sync',
@@ -694,4 +698,3 @@ Future<RestoreResult> restoreBackupAndReconcile({
 // 账本列表相关 provider（ledgerListRefreshProvider / uploadingLedgerIdsProvider /
 // localLedgersProvider）定义于 refresh_ticks.dart 与 ledger_list_providers.dart，
 // 本文件 re-export 保持消费方无感。
-

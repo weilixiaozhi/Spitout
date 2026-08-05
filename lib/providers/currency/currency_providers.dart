@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../data/db.dart' show Ledger;
@@ -21,7 +23,8 @@ import 'package:spitout/providers/sync/cloud_client_providers.dart';
 /// 为唯一来源;无「全局主币种(baseCurrency)」双轨制。
 
 /// 汇率数据变更信号:拉取成功 / 手动编辑后 bump,触发 effectiveRates 重算。
-final rateRefreshTickProvider = StateProvider<int>((ref) => 0);
+final rateRefreshTickProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 final exchangeRateServiceProvider =
     Provider<ExchangeRateService>((ref) => ExchangeRateService());
@@ -35,8 +38,9 @@ final exchangeRateServiceProvider =
 /// 语义(账本维度化后):**当前账本**的可见集合——每账本一套,纯本地偏好,
 /// 不走云同步(决策 P3);默认值 = [kCommonCurrencyCodes](13 个常用币种)
 /// ∪ {该账本本位币},由 [visibleCurrenciesInitProvider] 初始化并即时落盘。
-final visibleCurrenciesProvider = StateProvider<Set<String>>(
-  (ref) => kCommonCurrencyCodes.toSet(),
+final visibleCurrenciesProvider =
+    NotifierProvider<SimpleStateNotifier<Set<String>>, Set<String>>(
+  () => SimpleStateNotifier((ref) => kCommonCurrencyCodes.toSet()),
 );
 
 /// 可见币种持久化 key:每账本一套(`visibleCurrencies.<ledgerId>`),
@@ -84,7 +88,7 @@ final visibleCurrenciesInitProvider = FutureProvider<void>((ref) async {
           .toSet();
     }
     // 始终创建新 Set 赋值以触发 Riverpod 重建(Set 的可变性不触发通知)
-    ref.read(visibleCurrenciesProvider.notifier).state = initial;
+    ref.read(visibleCurrenciesProvider.notifier).set(initial);
   }
 
   // 等当前账本就绪(StreamProvider 首次发射)再加载,避免默认集合闪烁
@@ -93,8 +97,8 @@ final visibleCurrenciesInitProvider = FutureProvider<void>((ref) async {
 
   // 切账本 → 加载目标账本 key(无则初始化);无账本 → 兜底 key
   ref.listen<AsyncValue<Ledger?>>(currentLedgerProvider, (prev, next) {
-    final nextLedger = next.valueOrNull;
-    if (nextLedger?.id == prev?.valueOrNull?.id) return;
+    final nextLedger = next.value;
+    if (nextLedger?.id == prev?.value?.id) return;
     unawaited(loadFor(nextLedger?.id, nextLedger?.currency));
   });
 });
@@ -119,11 +123,11 @@ Future<void> toggleCurrencyVisibility(WidgetRef ref, String code) async {
   } else {
     next.add(codeUp);
   }
-  ref.read(visibleCurrenciesProvider.notifier).state = next;
+  ref.read(visibleCurrenciesProvider.notifier).set(next);
 
   try {
     final prefs = await SharedPreferences.getInstance();
-    final ledgerId = ref.read(currentLedgerProvider).valueOrNull?.id;
+    final ledgerId = ref.read(currentLedgerProvider).value?.id;
     await prefs.setString(
         ledgerId == null
             ? _kVisibleCurrenciesFallbackKey
@@ -148,10 +152,10 @@ Future<void> ensureCurrencyVisibleForCurrentLedger(
   if (cur.contains(codeUp)) return;
   // 始终创建新 Set 赋值以触发 Riverpod 重建(Set 的可变性不触发通知)
   final next = {...cur, codeUp};
-  ref.read(visibleCurrenciesProvider.notifier).state = next;
+  ref.read(visibleCurrenciesProvider.notifier).set(next);
   try {
     final prefs = await SharedPreferences.getInstance();
-    final ledgerId = ref.read(currentLedgerProvider).valueOrNull?.id;
+    final ledgerId = ref.read(currentLedgerProvider).value?.id;
     await prefs.setString(
         ledgerId == null
             ? _kVisibleCurrenciesFallbackKey
@@ -192,7 +196,7 @@ final currencyPickerRatesProvider =
 /// 当前账本本位币(ISO 大写)。`ledger.currency` 的语义化别名——交易级多币种后
 /// 它的语义是「账本统计折算的目标币种」。
 final currentLedgerCurrencyProvider = Provider<String>((ref) {
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   final c = ledger?.currency;
   return (c == null || c.isEmpty) ? 'CNY' : c.toUpperCase();
 });
@@ -224,7 +228,7 @@ final effectiveRatesForLedgerProvider =
 final ledgerUnconvertedForeignTxCountProvider = FutureProvider<int>((ref) async {
   ref.watch(statsRefreshProvider);
   ref.watch(rateRefreshTickProvider);
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return 0;
   final repo = ref.watch(repositoryProvider);
   return repo.countUnconvertedForeignTx(ledger.id);
@@ -233,7 +237,7 @@ final ledgerUnconvertedForeignTxCountProvider = FutureProvider<int>((ref) async 
 /// 当前账本外币交易条数(含已折算):>0 时账本统计页显示折算脚注。
 final ledgerForeignTxCountProvider = FutureProvider<int>((ref) async {
   ref.watch(statsRefreshProvider);
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return 0;
   final repo = ref.watch(repositoryProvider);
   return repo.countForeignCurrencyTx(ledger.id);
@@ -307,7 +311,7 @@ Future<bool> refreshExchangeRatesImpl({
         anySuccess = true;
       }
     }
-    if (anySuccess) read(rateRefreshTickProvider.notifier).state++;
+    if (anySuccess) read(rateRefreshTickProvider.notifier).tick();
     return anySuccess;
   } catch (e, st) {
     logger.warning('currency_providers', '汇率刷新失败: $e', st);

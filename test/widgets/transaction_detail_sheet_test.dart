@@ -9,10 +9,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
+import 'package:spitout/data/db.dart' show LedgerVirtualUser;
 import 'package:spitout/data/models.dart'
     show Ledger, RecordEditHistory, Transaction;
 import 'package:spitout/l10n/app_localizations.dart';
-import 'package:spitout/providers/providers.dart' show currentLedgerProvider;
+import 'package:spitout/providers/providers.dart'
+    show currentLedgerProvider, ledgerVirtualUsersProvider;
 import 'package:spitout/providers/statistics/record_history_providers.dart'
     show recordEditHistoryProvider;
 import 'package:spitout/widgets/transaction_detail_sheet.dart';
@@ -42,6 +44,12 @@ Future<void> _openSheet(
         ),
         recordEditHistoryProvider.overrideWith(
           (ref, recordId) async => const <RecordEditHistory>[],
+        ),
+        // 详情 sheet 常驻 watch 虚拟用户列表（drift 流）；测试环境无真实数据库，
+        // 必须 override，否则构造真实链会在 dispose 时留下 drift 的 0ms 定时器。
+        ledgerVirtualUsersProvider.overrideWith(
+          (ref, ledgerId) =>
+              Stream<List<LedgerVirtualUser>>.value(const []),
         ),
       ],
       child: MaterialApp(

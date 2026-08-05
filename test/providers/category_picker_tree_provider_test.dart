@@ -14,8 +14,7 @@ import 'package:flutter_test/flutter_test.dart';
 import '../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/providers/category/category_picker_providers.dart';
-import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/providers.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
 
 void main() {
@@ -32,7 +31,7 @@ void main() {
     container = ProviderContainer(overrides: [
       databaseProvider.overrideWithValue(db),
       // 默认值已改为哨兵 0（表示「未选中」），此处显式指定 1 以匹配插入的账本 id。
-      currentLedgerIdProvider.overrideWith((ref) => 1),
+      currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
     ]);
     // currentLedgerIdProvider 初值为 1，插入对应账本供 picker 上下文解析
     await db.into(db.ledgers).insert(LedgersCompanion.insert(name: '默认账本'));
@@ -72,8 +71,10 @@ void main() {
       level: const d.Value(2),
     ));
 
-    final tree =
-        await container.read(categoryPickerTreeProvider('expense').future);
+    final tree = await readProviderFutureFromContainer(
+      container,
+      categoryPickerTreeProvider('expense').future,
+    );
 
     expect(tree.topLevel.map((c) => c.name), ['交通', '餐饮']);
     expect(tree.children[foodId]!.single.name, '早餐');
@@ -81,15 +82,17 @@ void main() {
 
   test('写 categories 表后自动重发新树（零手动 invalidate）', () async {
     await addTopCategory('餐饮');
-    final first =
-        await container.read(categoryPickerTreeProvider('expense').future);
+    final first = await readProviderFutureFromContainer(
+      container,
+      categoryPickerTreeProvider('expense').future,
+    );
     expect(first.topLevel.single.name, '餐饮');
 
     final emissions = <String>[];
     final sub = container.listen(
       categoryPickerTreeProvider('expense'),
       (prev, next) {
-        final v = next.valueOrNull;
+        final v = next.value;
         if (v != null) {
           emissions.add(v.topLevel.map((c) => c.name).join(','));
         }
@@ -136,8 +139,10 @@ void main() {
       updatedAt: DateTime.now(),
     ));
 
-    final tree =
-        await container.read(categoryPickerTreeProvider('expense').future);
+    final tree = await readProviderFutureFromContainer(
+      container,
+      categoryPickerTreeProvider('expense').future,
+    );
 
     final parentSynthetic = syntheticIdForSyncId('c1');
     final childSynthetic = syntheticIdForSyncId('c2');

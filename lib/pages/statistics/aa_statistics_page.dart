@@ -58,7 +58,7 @@ class AaStatisticsPage extends ConsumerWidget {
                 ref,
                 l10n,
                 statistics,
-                excludedAsync.valueOrNull ?? const [],
+                excludedAsync.value ?? const [],
               ),
             ),
           ),

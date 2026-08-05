@@ -77,7 +77,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
     // 基准 = 当前账本本位币(折算基准唯一来源);切账本自动换组
     final base = ref.watch(currentLedgerCurrencyProvider);
     final ratesAsync = ref.watch(effectiveRatesForLedgerProvider);
-    final currentLedger = ref.watch(currentLedgerProvider).valueOrNull;
+    final currentLedger = ref.watch(currentLedgerProvider).value;
 
     // 缓存:有数据时存入 _lastRates,base 与缓存 base 一致时刷新期间用缓存承接,
     // 避免 effectiveRatesForLedgerProvider 短暂 loading 触发全屏 spinner 闪屏。
@@ -89,7 +89,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
     // refresh 期间 use cache;无缓存或 base 变了才走 provider raw value
     final rates = hasCache
         ? _lastRates!
-        : (ratesAsync.valueOrNull ?? const <String, EffectiveRate>{});
+        : (ratesAsync.value ?? const <String, EffectiveRate>{});
 
     // 外币 = 用户可见币种集合 − 基准币种(「管理展示币种」页勾选子集,
     // 仅影响 UI 展示;API 仍全量拉取存储,隐藏币种随时可重新启用)。
@@ -439,7 +439,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
   /// 无账本时不可切(P4):Toast 引导先创建账本。
   Future<void> _pickBaseCurrency(BuildContext context) async {
     final l10n = AppLocalizations.of(context);
-    final ledger = ref.read(currentLedgerProvider).valueOrNull;
+    final ledger = ref.read(currentLedgerProvider).value;
     if (ledger == null) {
       showToast(context, l10n.homeBaseCurrencyNeedLedger);
       return;
@@ -491,7 +491,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
       // rate 字符串原样存用户输入(trim),不二次格式化。
       await repo.setOverride(base: base, quote: quote, rate: result.rate);
     }
-    ref.read(rateRefreshTickProvider.notifier).state++;
+    ref.read(rateRefreshTickProvider.notifier).tick();
     final activeLedgerId = ref.read(currentLedgerIdProvider);
     if (activeLedgerId > 0) {
       unawaited(PostProcessor.sync(ref, ledgerId: activeLedgerId));
@@ -503,7 +503,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
   Future<void> _resetRate(String quote, String base) async {
     final repo = ref.read(repositoryProvider);
     await repo.removeOverride(base: base, quote: quote);
-    ref.read(rateRefreshTickProvider.notifier).state++;
+    ref.read(rateRefreshTickProvider.notifier).tick();
     final activeLedgerId = ref.read(currentLedgerIdProvider);
     if (activeLedgerId > 0) {
       unawaited(PostProcessor.sync(ref, ledgerId: activeLedgerId));

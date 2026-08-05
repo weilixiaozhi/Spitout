@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/models.dart';
 import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
 
@@ -19,7 +20,10 @@ import 'package:spitout/providers/statistics/statistics_providers.dart';
 // providers.dart barrel 的可见符号保持不变。
 
 /// 当前正在上传的账本ID集合
-final uploadingLedgerIdsProvider = StateProvider<Set<int>>((ref) => {});
+final uploadingLedgerIdsProvider =
+    NotifierProvider<SimpleStateNotifier<Set<int>>, Set<int>>(
+  () => SimpleStateNotifier((ref) => {}),
+);
 
 /// 本地账本列表（快速，仅本地）
 final localLedgersProvider =

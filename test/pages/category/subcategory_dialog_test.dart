@@ -98,7 +98,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 0),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
         categoriesWithCountProvider.overrideWith(
           (ref) => Stream<List<_CategoryWithCount>>.value(
               categories ?? testCategories),

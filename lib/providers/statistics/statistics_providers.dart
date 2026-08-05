@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 // 统计：某账本的记账天数与总笔数
 final countsForLedgerProvider = FutureProvider.family
@@ -13,10 +14,16 @@ final countsForLedgerProvider = FutureProvider.family
 });
 
 // 统计刷新 tick（全局）：每次 +1 触发统计相关 Provider 重新获取
-final statsRefreshProvider = StateProvider<int>((ref) => 0);
+final statsRefreshProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 // 统计：月度支出汇总最近值（避免 loading 闪烁），全局仅支出模式
-final lastMonthlyTotalsProvider = StateProvider.family<double?, ({int ledgerId, DateTime month})>((ref, params) => null);
+final lastMonthlyTotalsProvider = NotifierProvider.family<
+    SimpleStateNotifier<double?>,
+    double?,
+    ({int ledgerId, DateTime month})>(
+  (params) => SimpleStateNotifier((ref) => null),
+);
 
 // 统计：月度支出汇总（全局仅支出模式，只返回支出金额）
 final monthlyTotalsProvider = FutureProvider.family
@@ -31,13 +38,17 @@ final monthlyTotalsProvider = FutureProvider.family
   // 全局仅支出模式, repo 直接返回 double
   final expense = res;
   // 写入最近一次成功值，供 UI 在刷新期间显示旧值
-  ref.read(lastMonthlyTotalsProvider(params).notifier).state = expense;
+  ref.read(lastMonthlyTotalsProvider(params).notifier).set(expense);
   return expense;
 });
 
 // 统计：今日支出最近值（避免 loading 闪烁）
-final lastTodayExpenseProvider =
-    StateProvider.family<double?, int>((ref, ledgerId) => null);
+final lastTodayExpenseProvider = NotifierProvider.family<
+    SimpleStateNotifier<double?>,
+    double?,
+    int>(
+  (ledgerId) => SimpleStateNotifier((ref) => null),
+);
 
 // 统计：今日支出（本地时区自然日，全局仅支出模式）
 // now 在 provider 内部取 DateTime.now(),外部只需传 ledgerId。
@@ -51,13 +62,17 @@ final todayExpenseProvider = FutureProvider.family
   ref.onDispose(() => link.close());
   final expense =
       await repo.todayExpense(ledgerId: ledgerId, now: DateTime.now());
-  ref.read(lastTodayExpenseProvider(ledgerId).notifier).state = expense;
+  ref.read(lastTodayExpenseProvider(ledgerId).notifier).set(expense);
   return expense;
 });
 
 // 统计：本周支出最近值（避免 loading 闪烁）
-final lastWeekExpenseProvider =
-    StateProvider.family<double?, int>((ref, ledgerId) => null);
+final lastWeekExpenseProvider = NotifierProvider.family<
+    SimpleStateNotifier<double?>,
+    double?,
+    int>(
+  (ledgerId) => SimpleStateNotifier((ref) => null),
+);
 
 // 统计：本周支出（周一为起始的自然周，全局仅支出模式）
 // 对应设计稿首页"本月支出汇总卡"的"本周"列。
@@ -69,7 +84,7 @@ final weekExpenseProvider = FutureProvider.family
   ref.onDispose(() => link.close());
   final expense =
       await repo.weekExpense(ledgerId: ledgerId, now: DateTime.now());
-  ref.read(lastWeekExpenseProvider(ledgerId).notifier).state = expense;
+  ref.read(lastWeekExpenseProvider(ledgerId).notifier).set(expense);
   return expense;
 });
 
@@ -79,7 +94,7 @@ final weekExpenseProvider = FutureProvider.family
 /// watch statsRefresh 确保同步/导入后重判。
 final analyticsHasAnyExpenseProvider = FutureProvider<bool>((ref) async {
   ref.watch(statsRefreshProvider);
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return false;
   final repo = ref.watch(repositoryProvider);
   return repo.hasAnyExpenseTx(ledgerId: ledger.id);
@@ -90,7 +105,7 @@ final analyticsHasAnyExpenseProvider = FutureProvider<bool>((ref) async {
 final analyticsDataRangeProvider =
     FutureProvider<({DateTime? earliest, DateTime? latest})>((ref) async {
   ref.watch(statsRefreshProvider);
-  final ledger = ref.watch(currentLedgerProvider).valueOrNull;
+  final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return (earliest: null, latest: null);
   final repo = ref.watch(repositoryProvider);
   final results = await Future.wait<dynamic>([

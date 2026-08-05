@@ -162,7 +162,7 @@ class _HomePageState extends ConsumerState<HomePage>
     }
     // 切月：重置 PageView 到中间页，让 _buildPageView 自动按新月份渲染。
     setState(() {
-      ref.read(selectedMonthProvider.notifier).state = res;
+      ref.read(selectedMonthProvider.notifier).set(res);
     });
     if (_monthPager.hasClients) {
       _monthPager.jumpToPage(_centerPageIndex);
@@ -233,7 +233,7 @@ class _HomePageState extends ConsumerState<HomePage>
     // 刷新统计页相关 provider，清除「全局无数据」空态
     ref.invalidate(analyticsHasAnyExpenseProvider);
     ref.invalidate(analyticsDataRangeProvider);
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
     showToast(context, '已填充 $count 条测试数据');
   }
 
@@ -241,8 +241,9 @@ class _HomePageState extends ConsumerState<HomePage>
   void _backToCurrentMonth() {
     final now = DateTime.now();
     setState(() {
-      ref.read(selectedMonthProvider.notifier).state =
-          DateTime(now.year, now.month, 1);
+      ref
+          .read(selectedMonthProvider.notifier)
+          .set(DateTime(now.year, now.month, 1));
     });
     if (_monthPager.hasClients) {
       _monthPager.jumpToPage(_centerPageIndex);
@@ -368,7 +369,7 @@ class _HomePageState extends ConsumerState<HomePage>
     // 重新汇总与列表：invalidate 月度汇总 + 当前账本 + 统计刷新信号。
     ref.invalidate(monthlyTotalsProvider);
     ref.invalidate(currentLedgerProvider);
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
     // 重新拉一次个性化设置（颜色方案 / 主题模式）以确保与磁盘一致。
     await ref.read(themeModeInitProvider.future);
     await ref.read(expenseColorSchemeInitProvider.future);
@@ -395,7 +396,7 @@ class _HomePageState extends ConsumerState<HomePage>
           // 同时 invalidate 月度汇总让「今日/本月」卡片立刻刷新。
           ref.invalidate(monthlyTotalsProvider);
           ref.invalidate(currentLedgerProvider);
-          ref.read(statsRefreshProvider.notifier).state++;
+          ref.read(statsRefreshProvider.notifier).tick();
         }
       }
     } catch (e) {
@@ -426,7 +427,7 @@ class _HomePageState extends ConsumerState<HomePage>
     final dir = page == 2 ? 1 : -1;
     final current = ref.read(selectedMonthProvider);
     final target = DateTime(current.year, current.month + dir, 1);
-    ref.read(selectedMonthProvider.notifier).state = target;
+    ref.read(selectedMonthProvider.notifier).set(target);
     // 重置到中页：中页会按新 selectedMonth 渲染真实交易列表，
     // 相邻页保持骨架屏占位，下一次左右滑仍以中页为基准。
     _monthPager.jumpToPage(_centerPageIndex);
@@ -759,13 +760,13 @@ class _HomePageState extends ConsumerState<HomePage>
               await repo.deleteTransaction(tx.id);
               if (!context.mounted) return;
               ref.invalidate(countsForLedgerProvider(ledgerId));
-              ref.read(statsRefreshProvider.notifier).state++;
+              ref.read(statsRefreshProvider.notifier).tick();
               PostProcessor.sync(ref, ledgerId: ledgerId);
               if (context.mounted) showToast(context, l10n.ledgersDeleted);
             },
             onCategoryTap: (cat) async {
               // 点击分类图标跳到分类详情。
-              ref.read(homeSwitchToStreamProvider.notifier).state++;
+              ref.read(homeSwitchToStreamProvider.notifier).tick();
               if (!context.mounted) return;
               await Navigator.of(context).push(
                 appPageRoute(

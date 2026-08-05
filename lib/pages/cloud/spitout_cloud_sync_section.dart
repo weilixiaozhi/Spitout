@@ -95,12 +95,17 @@ class SpitoutCloudSyncSectionState
   /// 资格判定与引擎侧完全对齐(storageMode 为云 + syncId 非空):syncId 为空
   /// 串的云账本从未同步过,拿它当载体会让引擎直接走 error 分支。
   ///
-  /// 用 `.future` 等待而非同步读 `valueOrNull`:currentLedgerProvider 是
+  /// 用 `.future` 等待而非同步读 `.value`:currentLedgerProvider 是
   /// StreamProvider,开屏 postFrame 触发 refresh 时它多半还停在 loading,
   /// 同步读会拿到 null,导致「当前账本」组在冷启动首帧被误判为"无载体"而
   /// 永久隐藏(要等用户手动切一次账本才出现)。
   Future<int?> _currentCarrierLedgerId() async {
-    final current = await ref.read(currentLedgerProvider.future);
+    // Riverpod 3 下 read(StreamProvider.future) 会因临时监听器关闭而挂起，
+    // 必须保持监听直到首值到达（见 readProviderFuture 说明）。
+    final current = await readProviderFutureFromWidgetRef(
+      ref,
+      currentLedgerProvider.future,
+    );
     if (current == null) return null;
     if (!isCloudLedgerOf(current.storageMode, isShared: current.isShared)) {
       return null;
@@ -254,7 +259,7 @@ class SpitoutCloudSyncSectionState
       // 不管是否 sync,都 bump 下 UI tick。widget 已 dispose 时跳过 —
       // 否则 ref.read 会抛 StateError "Cannot use ref after the widget was disposed"。
       if (mounted) {
-        ref.read(syncStatusRefreshProvider.notifier).state++;
+        ref.read(syncStatusRefreshProvider.notifier).tick();
       }
     } finally {
       if (mounted) setState(() => _checking = false);
@@ -326,7 +331,7 @@ class SpitoutCloudSyncSectionState
           // 通过 provider 监听,server 升级后跟着 sync ticker 自
           // 动刷新,不依赖死缓存。
           Consumer(builder: (ctx, r, _) {
-            final v = r.watch(spitoutCloudServerVersionProvider).valueOrNull;
+            final v = r.watch(spitoutCloudServerVersionProvider).value;
             if (v == null || v.isEmpty) {
               return const SizedBox.shrink();
             }
@@ -353,7 +358,7 @@ class SpitoutCloudSyncSectionState
   /// 不渲染右箭头,用专属图标作分类标识,避免"看着能点却点不动"的误导。
   Widget _buildAccountSection(BuildContext context, CloudUser? user) {
     final l10n = AppLocalizations.of(context);
-    final cfg = ref.watch(activeCloudConfigProvider).valueOrNull;
+    final cfg = ref.watch(activeCloudConfigProvider).value;
     final cachedEmail = cfg?.spitoutCloudEmail ?? '';
     final cachedPassword = cfg?.spitoutCloudPassword ?? '';
     final hasCredentials = cachedEmail.isNotEmpty && cachedPassword.isNotEmpty;
@@ -401,8 +406,8 @@ class SpitoutCloudSyncSectionState
           );
           if (!context.mounted) return;
           showToast(context, l10n.cloudReloginSuccess);
-          ref.read(syncStatusRefreshProvider.notifier).state++;
-          ref.read(statsRefreshProvider.notifier).state++;
+          ref.read(syncStatusRefreshProvider.notifier).tick();
+          ref.read(statsRefreshProvider.notifier).tick();
         } on CloudAuthException catch (e) {
           // 账号鉴权失败（邮箱/密码错、账号被锁等）：纯账号问题，不弹 toast、
           // 不弹窗，仅内联友好红字并隐藏按钮（setState 后 widget 重建 → 命中上方
@@ -423,7 +428,7 @@ class SpitoutCloudSyncSectionState
         await Navigator.of(context).push(
           appPageRoute(builder: (_) => const LoginPage()),
         );
-        ref.read(syncStatusRefreshProvider.notifier).state++;
+        ref.read(syncStatusRefreshProvider.notifier).tick();
       };
     }
 

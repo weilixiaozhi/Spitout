@@ -87,14 +87,14 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
     if (state == AppLifecycleState.inactive) {
       // 多任务切换时显示隐私模糊屏（仅在应用锁启用时）
       if (ref.read(appLockEnabledProvider)) {
-        ref.read(showPrivacyScreenProvider.notifier).state = true;
+        ref.read(showPrivacyScreenProvider.notifier).set(true);
       }
     } else if (state == AppLifecycleState.paused) {
       // 记录进入后台时间
       AppLockService.recordBackgroundTime();
     } else if (state == AppLifecycleState.resumed) {
       // 移除隐私模糊屏
-      ref.read(showPrivacyScreenProvider.notifier).state = false;
+      ref.read(showPrivacyScreenProvider.notifier).set(false);
       // 检查是否需要锁定
       _checkAppLockOnResume();
       // 切回前台时尝试一次自动本地备份（按天去重：开关关闭或当天已备份则内部直接跳过）
@@ -105,12 +105,18 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
   Future<void> _checkAppLockOnResume() async {
     final shouldLock = await AppLockService.shouldLockOnResume();
     if (shouldLock && mounted) {
-      ref.read(isAppLockedProvider.notifier).state = true;
+      ref.read(isAppLockedProvider.notifier).set(true);
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Riverpod 3 起，仅被 read 一次的 provider 会被暂停，其内部 ref.listen 副作用
+    // 随之失效（账本持久化/自愈、启动同步监听等）。在常驻根组件持续 watch，
+    // 保证这些监听器在整个 App 生命周期内保持活跃。
+    ref.watch(currentLedgerPersistProvider);
+    ref.watch(ledgerChangeListenerProvider);
+    ref.watch(appStartupSyncProvider);
     final idx = ref.watch(bottomTabIndexProvider);
     final l10n = AppLocalizations.of(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -127,7 +133,7 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
         // 仅当已在首页 Tab 时才保留"再按一次退出"的双击确认逻辑。
         final currentIdx = ref.read(bottomTabIndexProvider);
         if (currentIdx != 0) {
-          ref.read(bottomTabIndexProvider.notifier).state = 0;
+          ref.read(bottomTabIndexProvider.notifier).set(0);
           return;
         }
 
@@ -164,14 +170,14 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
                     now.difference(_lastTapTime!) <
                         const Duration(milliseconds: 300)) {
                   if (index == 0) {
-                    ref.read(homeScrollToTopProvider.notifier).state++;
+                    ref.read(homeScrollToTopProvider.notifier).tick();
                   }
                   _lastTapTime = null;
                   _lastTappedIndex = null;
                 } else {
                   _lastTapTime = now;
                   _lastTappedIndex = index;
-                  ref.read(bottomTabIndexProvider.notifier).state = index;
+                  ref.read(bottomTabIndexProvider.notifier).set(index);
                 }
               },
               onCenterTap: () {
@@ -198,7 +204,7 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
                   final next = current == ThemeMode.dark
                       ? ThemeMode.light
                       : ThemeMode.dark;
-                  ref.read(themeModeProvider.notifier).state = next;
+                  ref.read(themeModeProvider.notifier).set(next);
                 },
                 child: Icon(
                   Theme.of(context).brightness == Brightness.dark

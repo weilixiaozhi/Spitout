@@ -77,7 +77,7 @@ void main() {
     fake = _FakeProviderWithSharedResources(null);
     container = ProviderContainer(overrides: [
       databaseProvider.overrideWithValue(db),
-      currentLedgerIdProvider.overrideWith((ref) => 1),
+      currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
       // 把 cloud provider 与 engine 都换成 fake / 真实 engine 实例
       spitoutCloudProviderInstance.overrideWith((ref) async => fake),
     ]);
@@ -119,7 +119,7 @@ void main() {
     );
 
     await waitFor(
-      () => container.read(categoryPickerTreeProvider('expense')).valueOrNull
+      () => container.read(categoryPickerTreeProvider('expense')).value
               ?.topLevel
               .isNotEmpty ==
           true,
@@ -132,7 +132,7 @@ void main() {
     // 本地分类未出现在 Editor 视角
     final tree = container
         .read(categoryPickerTreeProvider('expense'))
-        .valueOrNull!;
+        .value!;
     expect(tree.topLevel.single.name, '共享餐饮');
     expect(tree.topLevel.any((c) => c.name == '本地分类'), false);
   });
@@ -201,7 +201,7 @@ void main() {
     // 重建 container,spitoutCloudProviderInstance 返 null
     final container2 = ProviderContainer(overrides: [
       databaseProvider.overrideWithValue(db),
-      currentLedgerIdProvider.overrideWith((ref) => 1),
+      currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
       spitoutCloudProviderInstance.overrideWith((ref) async => null),
     ]);
     addTearDown(container2.dispose);
@@ -222,8 +222,10 @@ void main() {
       (_, _) {},
       fireImmediately: true,
     );
-    final tree = await container2
-        .read(categoryPickerTreeProvider('expense').future);
+    final tree = await readProviderFutureFromContainer(
+      container2,
+      categoryPickerTreeProvider('expense').future,
+    );
     sub.close();
 
     expect(tree.topLevel.single.name, '本地分类');

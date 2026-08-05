@@ -13,6 +13,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 
 import 'package:spitout/core/logging/logger_service.dart';
@@ -163,9 +164,9 @@ Future<SpitoutCloudInviteAcceptResult> acceptSharedLedgerInvite(
     // (单纯 state++ 在 cached FutureProvider 上偶发不触发 reCompute,
     // invalidate 是无条件 dispose + 下次 watch 重新 build)
     ref.invalidate(localLedgersProvider);
-    ref.read(ledgerListRefreshProvider.notifier).state++;
-    ref.read(syncGenerationProvider.notifier).state++;
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(ledgerListRefreshProvider.notifier).tick();
+    ref.read(syncGenerationProvider.notifier).tick();
+    ref.read(statsRefreshProvider.notifier).tick();
   } catch (e, st) {
     // 静默,UI 自己刷不到下次 sync 再补;但 log 出来便于诊断
     logger.warning('JoinSharedLedger',
@@ -206,7 +207,7 @@ Future<void> removeMemberAndRefresh(
     await engine.syncLedgersFromServer();
   } catch (_) {}
   ref.invalidate(localLedgersProvider);
-  ref.read(ledgerListRefreshProvider.notifier).state++;
+  ref.read(ledgerListRefreshProvider.notifier).tick();
   // currentLedgerProvider 也得 invalidate — 首页 header 看的是它
   ref.invalidate(currentLedgerProvider);
 }
@@ -235,7 +236,7 @@ Future<void> leaveAndDeleteSharedLedgerProvider(
     await engine.syncLedgersFromServer();
   } catch (_) {}
   ref.invalidate(localLedgersProvider);
-  ref.read(ledgerListRefreshProvider.notifier).state++;
+  ref.read(ledgerListRefreshProvider.notifier).tick();
   ref.invalidate(currentLedgerProvider);
 }
 
@@ -262,7 +263,7 @@ Future<void> deleteSharedLedgerAsOwnerProvider(
     await engine.syncLedgersFromServer();
   } catch (_) {}
   ref.invalidate(localLedgersProvider);
-  ref.read(ledgerListRefreshProvider.notifier).state++;
+  ref.read(ledgerListRefreshProvider.notifier).tick();
   ref.invalidate(currentLedgerProvider);
 }
 
@@ -302,9 +303,9 @@ Future<bool> _purge(
     // 当前账本可能刚被清掉:重指第一个可用账本,再刷新列表 / 当前账本 / 缓存
     await selectFirstLedger(read);
     invalidate(localLedgersProvider);
-    read(ledgerListRefreshProvider.notifier).state++;
+    read(ledgerListRefreshProvider.notifier).tick();
     invalidate(currentLedgerProvider);
-    read(cachedTransactionsProvider.notifier).state = null;
+    read(cachedTransactionsProvider.notifier).set(null);
     return true;
   } catch (e, st) {
     logger.error('SharedLedger', 'purgeLocalCloudLedgers 失败: $e', e, st);

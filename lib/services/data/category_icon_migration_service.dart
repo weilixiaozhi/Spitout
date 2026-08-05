@@ -1,5 +1,5 @@
 import 'package:drift/drift.dart' as d;
-import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/logger_service.dart';

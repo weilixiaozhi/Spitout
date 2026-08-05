@@ -22,6 +22,7 @@ import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:shared_preferences/shared_preferences.dart';
@@ -63,7 +64,7 @@ ProviderContainer _makeContainer({
       // 本地账本直接返回确定数据，确保测试可确定性地断言渲染结果。
       localLedgersProvider.overrideWith((ref) => Future.value(local)),
       // 挂起：测试环境无数据库配置，避免 cloudServiceStore 抛错；
-      // valueOrNull 为 null 时不会渲染"加入共享账本"入口，也不影响本测试断言。
+      // .value 为 null 时不会渲染"加入共享账本"入口，也不影响本测试断言。
       activeCloudConfigProvider
           .overrideWith((ref) => Completer<CloudServiceConfig>().future),
       // 业务无关的额外覆盖（如导航测试里 stub 掉 currentLedgerProvider，

@@ -200,7 +200,7 @@ class _TransactionEditorSheetState
   /// 本笔汇率：手改/隐含 > 有效汇率（effectiveRatesForLedgerProvider）。
   double? _currentRate() {
     if (_rateManuallySet) return double.tryParse(_rateStr ?? '');
-    final rates = ref.read(effectiveRatesForLedgerProvider).valueOrNull;
+    final rates = ref.read(effectiveRatesForLedgerProvider).value;
     final er = rates?[_txCurrency()];
     return er == null ? null : double.tryParse(er.rate);
   }
@@ -213,7 +213,7 @@ class _TransactionEditorSheetState
     if (txCurrency == base || _rateManuallySet || _fetchingRate) return;
     if (_rateFetchAttemptedFor == txCurrency) return;
     final ratesAsync = ref.read(effectiveRatesForLedgerProvider);
-    final rates = ratesAsync.valueOrNull;
+    final rates = ratesAsync.value;
     if (rates == null) return; // provider 尚未解析，等它先出结果
     if (rates.containsKey(txCurrency)) return; // 已有汇率
     _rateFetchAttemptedFor = txCurrency;
@@ -488,7 +488,7 @@ class _TransactionEditorSheetState
   Future<({int? aaMode, String? aaParticipants, String? aaSplits, String? paidByUserId})?>
       _resolveAaFields(double total, String txCurrency, Category c) async {
     final aaEnabled =
-        ref.read(currentLedgerProvider).valueOrNull?.aaEnabled ?? false;
+        ref.read(currentLedgerProvider).value?.aaEnabled ?? false;
     // 未开启 AA 的账本:aa* 与 paidByUserId 恒 null。update 语义下 null =
     // 不更新,开关关闭后编辑历史交易不会清掉旧分摊/支出人数据,重开仍在。
     if (!aaEnabled) {
@@ -673,7 +673,7 @@ class _TransactionEditorSheetState
     PostProcessor.sync(ref, ledgerId: _ledgerId);
     // 刷新：账本笔数与全局统计
     ref.invalidate(countsForLedgerProvider(_ledgerId));
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
 
     // 提交成功后关闭编辑器 sheet。
     // 若本次提交跳转过 AaEditPage,AA 页退场固定为下滑动画(见
@@ -767,7 +767,7 @@ class _TransactionEditorSheetState
 
     // AA 区块仅账本开启 AA 时展示(功能隔离)
     final aaEnabled =
-        ref.watch(currentLedgerProvider).valueOrNull?.aaEnabled ?? false;
+        ref.watch(currentLedgerProvider).value?.aaEnabled ?? false;
 
     // 编辑模式 + 共享账本 → 展示作者头像（创建者/最后编辑者）
     final editingTxId = widget.editingTransactionId;
@@ -1104,7 +1104,7 @@ class _TxAuthorAvatars extends ConsumerWidget {
     final contextAsync = ref.watch(_txAuthorContextProvider(editingTransactionId));
     // 获取云端baseUrl用于拼接头像绝对路径
     final baseUrl =
-        ref.watch(spitoutCloudProviderInstance).valueOrNull?.baseUrl ?? '';
+        ref.watch(spitoutCloudProviderInstance).value?.baseUrl ?? '';
 
     return contextAsync.when(
       // 加载中 / 出错 / 非共享账本 → 不展示

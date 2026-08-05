@@ -1,5 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 // 同步域「叶子」provider：云服务配置 + 各类刷新 tick。
 //
@@ -33,7 +34,9 @@ final activeCloudConfigProvider =
 /// 先查本闸门,true 直接降级 null / LocalOnly;purge 全部完成后置 false(开闸),
 /// 下游因 watch 本闸门自动重建并按"已回退本地"的新配置装配。
 final cloudDeactivationInProgressProvider =
-    StateProvider<bool>((ref) => false);
+    NotifierProvider<SimpleStateNotifier<bool>, bool>(
+  () => SimpleStateNotifier((ref) => false),
+);
 
 // Supabase配置(不管是否激活)
 final supabaseConfigProvider = FutureProvider<CloudServiceConfig?>((ref) async {
@@ -69,23 +72,34 @@ final s3ConfigProvider = FutureProvider<CloudServiceConfig?>((ref) async {
 /// 为什么不直接 `ref.invalidate(watchTransactionsProvider)`：Supabase Realtime
 /// 通道绑在同一个 stream provider 上，invalidate 会把通道拆掉再建，反而更慢；
 /// 用一个独立 bump 计数器是最便宜的信号。
-final syncGenerationProvider = StateProvider<int>((ref) => 0);
+final syncGenerationProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 /// 最近一次同步错误信息（供 UI 状态栏展示）。
 /// PostProcessor / SyncEngine 的 catch 分支把错误写到这里，避免 silent swallow。
-final lastSyncErrorProvider = StateProvider<String?>((ref) => null);
+final lastSyncErrorProvider =
+    NotifierProvider<SimpleStateNotifier<String?>, String?>(
+  () => SimpleStateNotifier((ref) => null),
+);
 
 // 用于触发设置页同步状态的刷新（每次 +1 即可触发 FutureBuilder 重新获取）
-final syncStatusRefreshProvider = StateProvider<int>((ref) => 0);
+final syncStatusRefreshProvider =
+    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 /// 按账本触发同步状态刷新（用于远端增量拉取后的局部刷新）
 final syncStatusRefreshByLedgerProvider =
-    StateProvider.family<int, int>((ref, _) => 0);
+    NotifierProvider.family<TickStateNotifier, int, int>(
+  (ledgerId) => TickStateNotifier((ref) => 0),
+);
 
 /// 按账本触发页面数据刷新（减少全局刷新带来的闪烁）
 final ledgerDataRefreshByLedgerProvider =
-    StateProvider.family<int, int>((ref, _) => 0);
+    NotifierProvider.family<TickStateNotifier, int, int>(
+  (ledgerId) => TickStateNotifier((ref) => 0),
+);
 
 /// 按账本记录"远端变更应用中"状态，用于页面局部防闪渲染
 final remoteApplyInProgressByLedgerProvider =
-    StateProvider.family<bool, int>((ref, _) => false);
+    NotifierProvider.family<SimpleStateNotifier<bool>, bool, int>(
+  (ledgerId) => SimpleStateNotifier((ref) => false),
+);

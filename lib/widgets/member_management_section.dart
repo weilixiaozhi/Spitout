@@ -238,7 +238,7 @@ class _MemberManagementSectionState
     final existingCount = _isCreatingMode
         ? widget.pendingVirtualUsers.length
         : (ref.read(ledgerVirtualUsersProvider(widget.ledgerId!))
-                .valueOrNull ??
+                .value ??
             const <LedgerVirtualUser>[])
             .length;
     final defaultName = l10n.aaVirtualUserDefaultName(existingCount + 1);
@@ -415,7 +415,7 @@ class _MemberManagementSectionState
     // 因此监听同步事件:该账本 push 完成时自动重拉成员列表,成员区从
     // 加载态自动恢复到正常列表,无需用户手动刷新。
     ref.listen(syncEventStreamProvider, (previous, next) {
-      final event = next.valueOrNull;
+      final event = next.value;
       if (event is PushCompleted &&
           event.ledgerId == widget.ledgerExternalId) {
         ref.invalidate(ledgerMembersProvider(widget.ledgerExternalId!));
@@ -626,7 +626,7 @@ class _MemberManagementSectionState
 
     // 编辑态:从 Stream 拉取已落库虚拟用户。
     final List<LedgerVirtualUser> existingUsers = !_isCreatingMode
-        ? (ref.watch(ledgerVirtualUsersProvider(widget.ledgerId!)).valueOrNull ??
+        ? (ref.watch(ledgerVirtualUsersProvider(widget.ledgerId!)).value ??
             const <LedgerVirtualUser>[])
         : const <LedgerVirtualUser>[];
 
@@ -1059,7 +1059,7 @@ class _MemberAvatar extends ConsumerWidget {
       return const PersonAvatar(size: 40, iconSize: 18);
     }
     final cloudAsync = ref.watch(spitoutCloudProviderInstance);
-    final cloud = cloudAsync.valueOrNull;
+    final cloud = cloudAsync.value;
     final base = cloud?.baseUrl;
     if (base == null || base.isEmpty) {
       return const PersonAvatar(size: 40, iconSize: 18);

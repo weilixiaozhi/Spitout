@@ -10,8 +10,7 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/providers/currency/currency_providers.dart';
-import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/providers.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -46,14 +45,16 @@ void main() {
           .overrideWith((ref) => Stream<Ledger?>.value(ledgerWith('usd'))),
     ]);
     addTearDown(container.dispose);
-    await container.read(currentLedgerProvider.future);
+    await readProviderFutureFromContainer(
+        container, currentLedgerProvider.future);
     expect(container.read(currentLedgerCurrencyProvider), 'USD');
 
     final empty = ProviderContainer(overrides: [
       currentLedgerProvider.overrideWith((ref) => Stream<Ledger?>.value(null)),
     ]);
     addTearDown(empty.dispose);
-    await empty.read(currentLedgerProvider.future);
+    await readProviderFutureFromContainer(
+        empty, currentLedgerProvider.future);
     expect(empty.read(currentLedgerCurrencyProvider), 'CNY');
   });
 
@@ -80,11 +81,14 @@ void main() {
           .overrideWith((ref) => Stream<Ledger?>.value(ledgerWith('USD'))),
     ]);
     addTearDown(container.dispose);
-    await container.read(currentLedgerProvider.future);
+    await readProviderFutureFromContainer(
+        container, currentLedgerProvider.future);
     // 账本本位币 USD → 应取 base=USD 的组(折算基准 = 账本本位币)
 
-    final rates =
-        await container.read(effectiveRatesForLedgerProvider.future);
+    final rates = await readProviderFutureFromContainer(
+      container,
+      effectiveRatesForLedgerProvider.future,
+    );
     expect(rates.keys, containsAll(['CNY', 'JPY']));
     expect(rates['CNY']!.rate, '0.14');
     expect(rates.containsKey('USD'), isFalse); // base 自身不在 quote 里

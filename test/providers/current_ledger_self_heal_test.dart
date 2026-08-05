@@ -47,7 +47,9 @@ Future<void> _activateAndSettle(
   SharedPreferences.setMockInitialValues(initialPrefs ?? {});
   // 先强制仓储实例就绪（与 provider 体内读取的是同一实例）。
   container.read(repositoryProvider);
-  container.read(currentLedgerPersistProvider);
+  // Riverpod 3 下 read 一次后 provider 会被暂停，内部 ref.listen 自愈监听不会触发；
+  // 仿照 app.dart 根组件的常驻 watch，保持一个真实监听直到 container dispose。
+  container.listen(currentLedgerPersistProvider, (_, _) {});
   await Future.delayed(const Duration(milliseconds: 400));
 }
 
@@ -69,7 +71,7 @@ void main() {
     SharedPreferences.setMockInitialValues({});
     container.read(repositoryProvider);
     // 模拟换账号 GC 后残留的僵尸 id：内存态指向早已不存在的账本。
-    container.read(currentLedgerIdProvider.notifier).state = 999;
+    container.read(currentLedgerIdProvider.notifier).set(999);
 
     await selectFirstLedger(container.read);
 
@@ -138,7 +140,7 @@ void main() {
 
     // 模拟换账号后新账本延迟同步到位，随后同步链路 bump 账本列表刷新 tick。
     final arrived = await _insertLedger(db, '同步到位的账本');
-    container.read(ledgerListRefreshProvider.notifier).state++;
+    container.read(ledgerListRefreshProvider.notifier).tick();
     await _settleHeal();
 
     expect(container.read(currentLedgerIdProvider), arrived,

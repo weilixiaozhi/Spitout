@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
@@ -120,7 +121,7 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
         currentLedgerOverride ??
             currentLedgerProvider.overrideWith((ref) => Stream<Ledger?>.value(testLedger)),
         // 自然月起始日，避免 periodForLabel 跨月带来的过滤复杂度。
@@ -130,7 +131,7 @@ void main() {
         todayExpenseProvider.overrideWith((ref, ledgerId) async => 0.0),
         weekExpenseProvider.overrideWith((ref, ledgerId) async => 0.0),
         // 切月测试需要可控的初始月份（不依赖 DateTime.now）。
-        selectedMonthProvider.overrideWith((ref) => initialMonth ?? DateTime(2026, 7, 1)),
+        selectedMonthProvider.overrideWithBuild((ref, notifier) => initialMonth ?? DateTime(2026, 7, 1)),
         ...?extraOverrides,
       ],
       child: MaterialApp(

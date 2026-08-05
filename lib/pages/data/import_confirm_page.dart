@@ -388,13 +388,13 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     final dataStart = widget.hasHeader ? (headerRow + 1) : 0;
     final total = rows.length - dataStart;
     // 初始化全局进度
-    container.read(importProgressProvider.notifier).state = ImportProgress(
+    container.read(importProgressProvider.notifier).set(ImportProgress(
       running: true,
       total: total,
       done: 0,
       ok: 0,
       fail: 0,
-    );
+    ));
 
     bool dialogOpen = true;
     // 进度弹窗（可转后台）
@@ -482,13 +482,13 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         onProgress: (processed, progressTotal) {
           done = processed;
           // 更新全局进度
-          container.read(importProgressProvider.notifier).state = ImportProgress(
+          container.read(importProgressProvider.notifier).set(ImportProgress(
             running: true,
             total: total,
             done: done,
             ok: ok,
             fail: fail,
-          );
+          ));
           if (mounted) setState(() {});
         },
       );
@@ -519,7 +519,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     // 即使页面已被关闭（mounted=false），也要继续更新全局进度供"我的"页展示
     // 先切换为"完成"以驱动 UI 展示成功动画/提示（不等待云上传）
     try {
-      container.read(importProgressProvider.notifier).state = ImportProgress(
+      container.read(importProgressProvider.notifier).set(ImportProgress(
         running: false,
         total: total,
         done: done,
@@ -528,7 +528,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         ledgerId: ledgerId, // 设置账本ID，用于触发账本列表页面刷新
         skipped: skipped, // 跳过的记录数
         skippedTypes: skippedTypes, // 跳过的类型及数量
-      );
+      ));
     } catch (_) {
       // 忽略进度更新错误
     }
@@ -538,14 +538,15 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
       Future<void>.delayed(const Duration(seconds: 5), () {
         // 延长到5秒，让用户看到动画
         try {
-          container.read(importProgressProvider.notifier).state =
-              ImportProgress.empty;
+          container
+              .read(importProgressProvider.notifier)
+              .set(ImportProgress.empty);
           // 刷新"我的"页统计（笔数/天数）
           container.invalidate(countsForLedgerProvider(ledgerId));
           // 触发全局统计刷新（用于"我的"页顶部聚合信息）
-          container.read(statsRefreshProvider.notifier).state++;
+          container.read(statsRefreshProvider.notifier).tick();
           // 触发一次同步状态刷新（UI 端会复用缓存避免闪烁）
-          container.read(syncStatusRefreshProvider.notifier).state++;
+          container.read(syncStatusRefreshProvider.notifier).tick();
         } catch (_) {
           // 忽略延迟刷新错误
         }
@@ -614,7 +615,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
     }
     // 返回后再显式刷新一次全局统计，确保顶部汇总即时更新
     try {
-      container.read(statsRefreshProvider.notifier).state++;
+      container.read(statsRefreshProvider.notifier).tick();
     } catch (_) {}
 
     // 导入完成后，账本列表页面会通过监听 importProgressProvider 自动刷新

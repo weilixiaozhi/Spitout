@@ -307,7 +307,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           final sync = ref.read(syncServiceProvider);
           final ledgerId = ref.read(currentLedgerIdProvider);
           sync.clearStatusCache(ledgerId: ledgerId);
-          ref.read(syncStatusRefreshProvider.notifier).state++;
+          ref.read(syncStatusRefreshProvider.notifier).tick();
           // 等待状态刷新完成
           await ref.read(syncStatusProvider(ledgerId).future);
       }
@@ -1840,7 +1840,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       // P0-b 关闸:先关闸再 invalidate,让下游在旧值窗口内直接降级为
       // null / LocalOnly —— 绝不重建云客户端,否则 setRecoveryCredentials +
       // currentUser 会用旧邮密静默重登,把已登出的账号拉回来。
-      ref.read(cloudDeactivationInProgressProvider.notifier).state = true;
+      ref.read(cloudDeactivationInProgressProvider.notifier).set(true);
 
       // SpitoutCloud 先清登录态(非阻塞):失败不阻断配置清除
       if (type == CloudBackendType.spitoutCloud) {
@@ -1882,7 +1882,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             // 1. 开闸 → 下游因 watch 闸门自动重建,按已回退的本地配置装配;
             // 2. invalidate SyncEngine family 实例 → 触发 engine.dispose(),
             //    释放可能残留的孤儿 WebSocket(防御项)。
-            container.read(cloudDeactivationInProgressProvider.notifier).state = false;
+            container.read(cloudDeactivationInProgressProvider.notifier).set(false);
             if (cloudProviderBefore != null) {
               container.invalidate(syncEngineProvider(cloudProviderBefore));
             }
@@ -1895,14 +1895,14 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       } else {
         // 无需 purge 的路径同样要开闸,否则闸门只关不开会永久降级本地同步。
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          container.read(cloudDeactivationInProgressProvider.notifier).state = false;
+          container.read(cloudDeactivationInProgressProvider.notifier).set(false);
         });
       }
 
       if (mounted) showToast(context, l10n.cloudClearConfigDone);
     } catch (e, st) {
       // 异常路径也必须开闸兜底,防止闸门只关不开卡死后续所有云同步。
-      container.read(cloudDeactivationInProgressProvider.notifier).state = false;
+      container.read(cloudDeactivationInProgressProvider.notifier).set(false);
       logger.error('cloud_config', '清除云端配置失败', e, st);
       if (mounted) showToast(context, '${l10n.commonError}: $e');
     }

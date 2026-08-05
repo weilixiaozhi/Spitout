@@ -387,7 +387,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       if (context.mounted) {
         // 标记欢迎页面已完成，触发重新构建进入主应用。
         // 此时 appInitState 已为 ready 且首屏数据已预加载，首页可立即渲染。
-        ref.read(shouldShowWelcomeProvider.notifier).state = false;
+        ref.read(shouldShowWelcomeProvider.notifier).set(false);
       }
     } finally {
       if (mounted) {
@@ -481,7 +481,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       if (context.mounted) {
         showToast(context, l10n.welcomeImportSuccess);
         // 直接完成导入流程，不引导附件导入
-        ref.read(shouldShowWelcomeProvider.notifier).state = false;
+        ref.read(shouldShowWelcomeProvider.notifier).set(false);
       }
     } catch (e, st) {
       logger.error('welcome', '导入配置文件失败', e, st);

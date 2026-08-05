@@ -211,7 +211,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
                             ),
                           ),
                           // 默认 true（零干预兜底）；加载期间也按 true 展示避免闪烁
-                          value: autoBackup.valueOrNull ?? true,
+                          value: autoBackup.value ?? true,
                           onChanged: (v) =>
                               ref.read(autoBackupSetterProvider).set(v),
                           activeThumbColor: Theme.of(context).primaryColor,

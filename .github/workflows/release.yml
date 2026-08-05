@@ -146,7 +146,7 @@ jobs:
           ls -la "$APK_DIR"/Spitout-* 2>/dev/null || true
 
       - name: 上传产物（Actions Artifacts）
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: android-apks
           if-no-files-found: error
@@ -172,7 +172,7 @@ jobs:
           echo "notes_file=RELEASE_NOTES.md" >> $GITHUB_OUTPUT
 
       - name: 创建 GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: ${{ steps.meta.outputs.tag_name }}
           name: ${{ steps.meta.outputs.tag_name }}

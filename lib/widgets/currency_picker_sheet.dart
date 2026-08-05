@@ -134,7 +134,7 @@ Future<String?> showCurrencyPickerSheet(
                         : (ref
                                 .watch(currencyPickerRatesProvider(
                                     rateBase.toUpperCase()))
-                                .valueOrNull ??
+                                .value ??
                             const <String, double>{});
                     return ListView.builder(
                       itemCount: filtered.length,

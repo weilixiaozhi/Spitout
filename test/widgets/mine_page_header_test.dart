@@ -56,7 +56,7 @@ void main() {
       overrides: [
         // 无云同步头像：直接给 null，等价于「未从服务端拉到头像」。
         avatarPathProvider.overrideWith((ref) async => null),
-        displayNameProvider.overrideWith((ref) => displayName),
+        displayNameProvider.overrideWithBuild((ref, notifier) => displayName),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -211,7 +211,7 @@ void main() {
               .overrideWith((ref) async => 'avatars/fake_avatar.png'),
           // 非 Spitout Cloud 模式：云端删除分支应直接跳过，不发任何请求。
           spitoutCloudProviderInstance.overrideWith((ref) async => null),
-          displayNameProvider.overrideWith((ref) => ''),
+          displayNameProvider.overrideWithBuild((ref, notifier) => ''),
         ],
         child: MaterialApp(
           localizationsDelegates: const [

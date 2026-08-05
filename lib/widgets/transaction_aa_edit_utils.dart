@@ -129,7 +129,7 @@ class TransactionAaEditUtils {
     // 同步与统计刷新(与编辑记账器提交后保持一致)。
     PostProcessor.sync(ref, ledgerId: ledgerId);
     ref.invalidate(countsForLedgerProvider(ledgerId));
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
 
     if (context.mounted) {
       showToast(context, AppLocalizations.of(context).commonSave);

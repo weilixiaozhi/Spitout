@@ -302,7 +302,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     final l10n = AppLocalizations.of(context);
     final optionsAsync =
         ref.watch(aaParticipantOptionsProvider(widget.args.ledgerId));
-    final options = optionsAsync.valueOrNull ?? const <AaParticipantOption>[];
+    final options = optionsAsync.value ?? const <AaParticipantOption>[];
     _lastOptions = options;
     _initOnce(options);
     if (_initialized) _syncAmountControllers(options);
@@ -310,7 +310,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     final participants = _effectiveParticipants(options);
     // 交易币种缺省时回退账本本位币展示。
     final currencyCode = widget.args.currencyCode ??
-        ref.watch(currentLedgerProvider).valueOrNull?.currency;
+        ref.watch(currentLedgerProvider).value?.currency;
 
     return Scaffold(
       body: Column(

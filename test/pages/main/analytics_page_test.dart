@@ -123,10 +123,10 @@ void main() {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
-        currentLedgerIdProvider.overrideWith((ref) => 1),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
         currentLedgerProvider.overrideWith((ref) => Stream<Ledger?>.value(testLedger)),
         currentMonthStartDayProvider.overrideWith((ref) => 1),
-        selectedMonthProvider.overrideWith((ref) => DateTime(2026, 7, 1)),
+        selectedMonthProvider.overrideWithBuild((ref, notifier) => DateTime(2026, 7, 1)),
         // 直接 override 统计页专用 provider，避免走 repo 链
         analyticsHasAnyExpenseProvider.overrideWith((ref) async => hasAnyData),
         analyticsDataRangeProvider.overrideWith((ref) async {
@@ -643,7 +643,7 @@ void main() {
       (tester) async {
     // 复现链路（月视图，默认周期，避免依赖切换交互）：
     // 1) 首帧 analyticsDataRangeProvider 仍在 pending（dataRangeDelay 未到），
-    //    _buildSubTabs 读到 valueOrNull=null → 仅生成单个「当前月」tab，
+    //    _buildSubTabs 读到 .value=null → 仅生成单个「当前月」tab，
     //    并把 _lastEnsuredTabId 置为当前月、_lastEnsuredTabIds=[当前月]。
     // 2) provider resolve 后，子 Tab 列表由单个扩张为 earliest..latest 全量，
     //    但选中项 id 未变。旧守卫（仅判断 activeId != _lastEnsuredTabId）

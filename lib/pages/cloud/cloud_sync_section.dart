@@ -294,7 +294,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                           setState(() => uploadBusy = true);
                           // 标记为上传中
                           final uploadingIds = ref.read(uploadingLedgerIdsProvider);
-                          ref.read(uploadingLedgerIdsProvider.notifier).state = {...uploadingIds, ledgerId};
+                          ref.read(uploadingLedgerIdsProvider.notifier).set({...uploadingIds, ledgerId});
 
                           try {
                             await sync.uploadCurrentLedger(
@@ -302,7 +302,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                             if (!context.mounted) return;
 
                             // 刷新账本列表
-                            ref.read(ledgerListRefreshProvider.notifier).state++;
+                            ref.read(ledgerListRefreshProvider.notifier).tick();
 
                             await AppDialog.info(context,
                                 title: AppLocalizations.of(context)
@@ -324,7 +324,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     ref
                                         .read(lastSyncStatusProvider(ledgerId)
                                             .notifier)
-                                        .state = stNow;
+                                        .set(stNow);
                                     break;
                                   }
                                   if (i < maxAttempts - 1) {
@@ -332,9 +332,9 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     delay *= 2;
                                   }
                                 }
-                                ref.read(syncStatusRefreshProvider.notifier).state++;
+                                ref.read(syncStatusRefreshProvider.notifier).tick();
                                 // 再次刷新账本列表确保状态更新
-                                ref.read(ledgerListRefreshProvider.notifier).state++;
+                                ref.read(ledgerListRefreshProvider.notifier).tick();
                               } catch (_) {}
                             });
                           } catch (e) {
@@ -347,7 +347,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                             if (mounted) setState(() => uploadBusy = false);
                             // 移除上传中标记
                             final uploadingIds = ref.read(uploadingLedgerIdsProvider);
-                            ref.read(uploadingLedgerIdsProvider.notifier).state = uploadingIds.where((id) => id != ledgerId).toSet();
+                            ref.read(uploadingLedgerIdsProvider.notifier).set(uploadingIds.where((id) => id != ledgerId).toSet());
                           }
                         },
                       ),
@@ -512,11 +512,11 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                   ref
                                       .read(syncStatusRefreshProvider
                                           .notifier)
-                                      .state++;
+                                      .tick();
                                   ref
                                       .read(
                                           statsRefreshProvider.notifier)
-                                      .state++;
+                                      .tick();
                                 } else {
                                   final confirmed =
                                       await AppDialog.confirm<bool>(
@@ -549,11 +549,11 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     ref
                                         .read(syncStatusRefreshProvider
                                             .notifier)
-                                        .state++;
+                                        .tick();
                                     ref
                                         .read(statsRefreshProvider
                                             .notifier)
-                                        .state++;
+                                        .tick();
 
                                     // Surface 2：登出即云失活，全量清本地
                                     // 云端账本（本地账本不受影响）。放到

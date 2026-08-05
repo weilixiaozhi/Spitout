@@ -110,7 +110,7 @@ void main() {
     final cloudOwn = await seedCloudLedger(h.db, 'ext-3');
     final personal = await seedPersonalLedger(h.db);
     // 模拟用户当前正停在共享账本上——purge 后必须重指
-    h.container.read(currentLedgerIdProvider.notifier).state = shared1;
+    h.container.read(currentLedgerIdProvider.notifier).set(shared1);
     final ref = await captureRef(tester, h.container);
 
     await purgeLocalCloudLedgersProvider(ref);
@@ -139,7 +139,7 @@ void main() {
   testWidgets('无云端账本时幂等：不抛错、当前选中不被打扰', (tester) async {
     final h = await harness();
     final personal = await seedPersonalLedger(h.db);
-    h.container.read(currentLedgerIdProvider.notifier).state = personal;
+    h.container.read(currentLedgerIdProvider.notifier).set(personal);
     final ref = await captureRef(tester, h.container);
 
     // 连调两次验证幂等；任何异常都会冒泡为测试失败
@@ -162,7 +162,7 @@ void main() {
     final shared1 = await seedSharedLedger(h.db, 'ext-1');
     final cloudOwn = await seedCloudLedger(h.db, 'ext-3');
     final personal = await seedPersonalLedger(h.db);
-    h.container.read(currentLedgerIdProvider.notifier).state = shared1;
+    h.container.read(currentLedgerIdProvider.notifier).set(shared1);
 
     // 关键:直接传入 ProviderContainer(无 WidgetRef、无 mounted 守卫),证明页面
     // 销毁后也能完成清理(修复"退出页面跳过 purge"的核心机制,对应方案 H)。
@@ -211,7 +211,7 @@ void main() {
     test('purge 成功返回 true(回归保护:返回值不得恒为 false)', () async {
       final h = await harness();
       final shared1 = await seedSharedLedger(h.db, 'ext-1');
-      h.container.read(currentLedgerIdProvider.notifier).state = shared1;
+      h.container.read(currentLedgerIdProvider.notifier).set(shared1);
 
       final ok = await purgeLocalCloudLedgersWithContainer(h.container);
       expect(ok, isTrue, reason: 'purge 成功必须返回 true');

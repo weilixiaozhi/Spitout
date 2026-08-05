@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
+import 'package:spitout/providers/core/simple_state_notifier.dart';
 
 import '../../cloud/sync/change_tracker.dart';
 import '../../cloud/sync/sync_engine.dart';
@@ -51,7 +52,9 @@ final syncEngineProvider = Provider.family<SyncEngine, SpitoutCloudProvider>(
 
 /// 同步引擎状态（区别于 sync_service.dart 中的 SyncStatus）
 final syncEngineStatusProvider =
-    StateProvider<SyncEngineStatus>((ref) => SyncEngineStatus.idle);
+    NotifierProvider<SimpleStateNotifier<SyncEngineStatus>, SyncEngineStatus>(
+  () => SimpleStateNotifier((ref) => SyncEngineStatus.idle),
+);
 
 /// 未推送变更数量
 final unpushedChangeCountProvider = FutureProvider<int>((ref) async {

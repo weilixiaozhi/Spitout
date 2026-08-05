@@ -209,7 +209,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
           ? Icon(AppIcons.check, color: primaryColor)
           : null,
       onTap: () {
-        ref.read(themeModeProvider.notifier).state = value;
+        ref.read(themeModeProvider.notifier).set(value);
         Navigator.pop(context);
       },
     );
@@ -283,8 +283,9 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       setDialogState(() => saving = true);
                       // 真正提交:有变更才落盘 + 同步云端,避免无谓写入。
                       if (selected != initialSelected) {
-                        ref.read(expenseColorSchemeProvider.notifier).state =
-                            selected;
+                        ref
+                            .read(expenseColorSchemeProvider.notifier)
+                            .set(selected);
                       }
                 if (!pageContext.mounted) return;
                 // 仅关闭颜色选择弹窗,停留在外观设置页(不跳转首页)。

@@ -379,7 +379,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
   /// 构建子 Tab 列表：按真实数据范围 earliest..latest 生成。
   List<AnalyticsSubTab> _buildSubTabs() {
-    final range = ref.read(analyticsDataRangeProvider).valueOrNull;
+    final range = ref.read(analyticsDataRangeProvider).value;
     final l10n = AppLocalizations.of(context);
     return generateSubTabs(
       period: _period,
@@ -661,7 +661,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
     // 全局空数据判定：无任何支出交易时 Header 禁用点击
     final hasAnyDataAsync = ref.watch(analyticsHasAnyExpenseProvider);
-    final hasAnyData = hasAnyDataAsync.valueOrNull ?? false;
+    final hasAnyData = hasAnyDataAsync.value ?? false;
     // watch 数据范围 provider：resolve 后触发重建，让子 Tab 按真实范围生成
     ref.watch(analyticsDataRangeProvider);
 
@@ -1134,7 +1134,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   /// 外币补折算横幅：账本存在未折算外币交易时提示，并可一键补折算
   Widget _buildRecalcForeignBanner(BuildContext context) {
     final count =
-        ref.watch(ledgerUnconvertedForeignTxCountProvider).valueOrNull ?? 0;
+        ref.watch(ledgerUnconvertedForeignTxCountProvider).value ?? 0;
     if (count <= 0) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     return Padding(
@@ -1170,7 +1170,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
   /// 折算脚注：账本存在外币交易（含已折算）时，提示统计数字已折本位币
   Widget _buildConvertedFootnote(BuildContext context) {
-    final count = ref.watch(ledgerForeignTxCountProvider).valueOrNull ?? 0;
+    final count = ref.watch(ledgerForeignTxCountProvider).value ?? 0;
     if (count <= 0) return const SizedBox.shrink();
     final base = ref.watch(currentLedgerCurrencyProvider);
     return Padding(
@@ -1219,7 +1219,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     if (!mounted) return;
     showToast(context, l10n.recalcForeignTxDone(n));
     // bump 统计刷新：横幅重查消失 + 各统计图表按新折算重算
-    ref.read(statsRefreshProvider.notifier).state++;
+    ref.read(statsRefreshProvider.notifier).tick();
   }
 }
 

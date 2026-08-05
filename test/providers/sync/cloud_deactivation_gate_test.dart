@@ -59,7 +59,7 @@ void main() {
     await container.read(activeCloudConfigProvider.future);
 
     // 模拟 _deleteConfig 流程:先关闸,再 invalidate 级联根
-    container.read(cloudDeactivationInProgressProvider.notifier).state = true;
+    container.read(cloudDeactivationInProgressProvider.notifier).set(true);
     container.invalidate(activeCloudConfigProvider);
     // 重新 materialize active:此处 active 仍会解析出 Spitout 配置
     await container.read(activeCloudConfigProvider.future);
@@ -77,7 +77,7 @@ void main() {
     final container = _containerWithSpy(calls);
     await container.read(activeCloudConfigProvider.future);
 
-    container.read(cloudDeactivationInProgressProvider.notifier).state = true;
+    container.read(cloudDeactivationInProgressProvider.notifier).set(true);
     container.invalidate(activeCloudConfigProvider);
     await container.read(activeCloudConfigProvider.future);
 
@@ -92,12 +92,12 @@ void main() {
     final container = _containerWithSpy(calls);
     await container.read(activeCloudConfigProvider.future);
 
-    container.read(cloudDeactivationInProgressProvider.notifier).state = true;
+    container.read(cloudDeactivationInProgressProvider.notifier).set(true);
     container.invalidate(activeCloudConfigProvider);
     await container.read(activeCloudConfigProvider.future);
 
     // 失活流程结束,开闸
-    container.read(cloudDeactivationInProgressProvider.notifier).state = false;
+    container.read(cloudDeactivationInProgressProvider.notifier).set(false);
 
     // 开闸后 watch 闸门的 provider 自动重建,重新评估 active → 恢复正常装配
     final provider = await container.read(spitoutCloudProviderInstance.future);
