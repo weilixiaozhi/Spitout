@@ -116,6 +116,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get commonFailed => '失败';
 
   @override
+  String get commonOperationFailed => '操作失败，请稍后重试';
+
+  @override
   String get commonBack => '返回';
 
   @override
@@ -1648,6 +1651,12 @@ class AppLocalizationsZh extends AppLocalizations {
   String get recurringTransactionEmptyHint => '点击右上角 + 按钮添加';
 
   @override
+  String get recurringTransactionAmountInvalid => '金额需大于 0';
+
+  @override
+  String get recurringTransactionEndBeforeStart => '结束日期不能早于开始日期';
+
+  @override
   String recurringTransactionEveryNDays(int n) {
     return '每 $n 天';
   }
@@ -2846,6 +2855,9 @@ class AppLocalizationsZh extends AppLocalizations {
       '把邀请码或短链发给对方。对方装上 Spitout 后,点击链接或在「我的 → 加入共享账本」输入码即可加入。';
 
   @override
+  String get sharedInviteUnavailable => '邀请暂不可用，请重新生成';
+
+  @override
   String sharedInviteShareText(String ledger, String code, String url) {
     return '邀请你加入 Spitout 共享账本「$ledger」\n\n邀请码:$code\n链接:$url\n\n点击链接或在 Spitout → 我的 → 加入共享账本输入此码即可。';
   }
@@ -2897,6 +2909,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get sharedMembersRemoved => '已移除成员';
+
+  @override
+  String get sharedMembersRemoveFailed => '移除成员失败，请稍后重试';
 
   @override
   String get sharedMembersSyncPending => '首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员';
@@ -3898,6 +3913,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get commonFailed => '失敗';
+
+  @override
+  String get commonOperationFailed => '操作失敗，請稍後重試';
 
   @override
   String get commonBack => '返回';
@@ -5432,6 +5450,12 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get recurringTransactionEmptyHint => '點擊右上角 + 按鈕新增';
 
   @override
+  String get recurringTransactionAmountInvalid => '金額需大於 0';
+
+  @override
+  String get recurringTransactionEndBeforeStart => '結束日期不能早於開始日期';
+
+  @override
   String recurringTransactionEveryNDays(int n) {
     return '每 $n 天';
   }
@@ -6629,6 +6653,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
       '把邀請碼或短連結發給對方。對方裝上 Spitout 後,點擊連結或在「我的 → 加入共享帳本」輸入碼即可加入。';
 
   @override
+  String get sharedInviteUnavailable => '邀請暫不可用，請重新產生';
+
+  @override
   String sharedInviteShareText(String ledger, String code, String url) {
     return '邀請你加入 Spitout 共享帳本「$ledger」\n\n邀請碼:$code\n連結:$url\n\n點擊連結或在 Spitout → 我的 → 加入共享帳本輸入此碼即可。';
   }
@@ -6680,6 +6707,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get sharedMembersRemoved => '已移除成員';
+
+  @override
+  String get sharedMembersRemoveFailed => '移除成員失敗，請稍後再試';
 
   @override
   String get sharedMembersSyncPending => '首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員';

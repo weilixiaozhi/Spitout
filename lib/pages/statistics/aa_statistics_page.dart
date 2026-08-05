@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging/logger_service.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
@@ -46,12 +47,21 @@ class AaStatisticsPage extends ConsumerWidget {
           Expanded(
             child: statisticsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text(
-                  '$e',
-                  style: TextStyle(color: SpitoutTokens.error(context)),
-                ),
-              ),
+              error: (e, st) {
+                // 原始异常只进日志,页面展示统一友好文案,避免泄露实现细节。
+                logger.error(
+                  'AaStatisticsPage',
+                  'AA 分摊统计加载失败 ledger=$ledgerId',
+                  e,
+                  st,
+                );
+                return Center(
+                  child: Text(
+                    l10n.commonOperationFailed,
+                    style: TextStyle(color: SpitoutTokens.error(context)),
+                  ),
+                );
+              },
               data: (statistics) => _buildBody(
                 context,
                 ref,
@@ -184,6 +194,7 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
+  /// 分摊详情行:头像 + 名称 + 实付 / 应摊 / 差额三列,点击进入成员账单详情。
   Widget _buildPerPersonRow(
     BuildContext context,
     WidgetRef ref,
@@ -612,8 +623,6 @@ final _aaExcludedTxProvider = StreamProvider.autoDispose
       // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
       ref.watch(aaStatisticsProvider(ledgerId));
       final repo = ref.read(repositoryProvider);
-      // 复用首页列表同款带 category 的交易流,客户端过滤 aaMode=1。
-      return repo
-          .watchTransactionsWithCategoryAll(ledgerId: ledgerId)
-          .map((all) => all.where((it) => it.t.aaMode == 1).toList());
+      // 过滤下沉到数据层查询(aaMode=1),避免整库交易流在客户端过滤。
+      return repo.watchExcludedAaTransactions(ledgerId);
     });

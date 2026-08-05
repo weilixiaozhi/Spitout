@@ -3,7 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudBackendType, CloudServiceConfig;
-import 'package:spitout/cloud/auth_error_localizer.dart' as auth_error_localizer;
+import 'package:spitout/cloud/auth_error_localizer.dart'
+    as auth_error_localizer;
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
@@ -34,20 +35,19 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     });
   }
 
+  /// 加载「记住账号」时持久化的邮箱，回填到登录表单。
+  ///
+  /// 设计意图：密码只作为一次性输入、从不落盘，因此这里只恢复邮箱；
+  /// 勾选状态由邮箱是否存在推导，避免本地残留明文密码。
   Future<void> _loadSavedCredentials() async {
     try {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);
       String? savedEmail;
-      String? savedPassword;
       if (cloudConfig.type == CloudBackendType.supabase) {
         savedEmail = cloudConfig.supabaseEmail;
-        savedPassword = cloudConfig.supabasePassword;
       } else if (cloudConfig.type == CloudBackendType.spitoutCloud) {
-        // Spitout Cloud：跟 Supabase 一样，勾选"记住账号"时同时存邮箱+密码，
-        // 作为 token 失效时的兜底登录途径（见 spitoutCloudProviderInstance
-        // 里的 fallback signInWithEmail）。
+        // Spitout Cloud 与 Supabase 一致：仅持久化邮箱，密码不落盘。
         savedEmail = cloudConfig.spitoutCloudEmail;
-        savedPassword = cloudConfig.spitoutCloudPassword;
       } else {
         return;
       }
@@ -55,24 +55,26 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
         setState(() {
           emailCtrl.text = savedEmail!;
-          if (savedPassword != null && savedPassword.isNotEmpty) {
-            pwdCtrl.text = savedPassword;
-            _rememberAccount = true;
-          }
+          // 有邮箱即视为之前勾选过「记住账号」。
+          _rememberAccount = true;
         });
       }
     } catch (e) {
-      logger.warning('auth', '加载保存的账号密码失败: $e');
+      logger.warning('auth', '加载保存的账号失败: $e');
     }
   }
 
+  /// 保存「记住账号」配置：仅持久化邮箱，密码作为一次性输入不写入存储。
+  ///
+  /// 设计意图：SharedPreferences 在 Android 侧是明文 XML，保存密码会随
+  /// 系统备份 / root 读取泄露；Spitout Cloud 已有 session token 持久化，
+  /// Supabase 同样由 SDK 持久化会话，密码不再需要兜底自动登录。
   Future<void> _saveCredentials(String email, String password) async {
     try {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);
       final store = ref.read(cloudServiceStoreProvider);
 
       if (cloudConfig.type == CloudBackendType.supabase) {
-        // Supabase 仍旧保留"记住账号"时同时存密码（老 SDK 没有 refresh token 持久化）。
         final updatedConfig = CloudServiceConfig(
           type: cloudConfig.type,
           name: cloudConfig.name,
@@ -80,36 +82,45 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           supabaseAnonKey: cloudConfig.supabaseAnonKey,
           supabaseBucket: cloudConfig.supabaseBucket ?? 'spitout-backups',
           supabaseEmail: _rememberAccount ? email : null,
-          supabasePassword: _rememberAccount ? password : null,
+          supabasePassword: null,
         );
         await store.saveOnly(updatedConfig);
         ref.invalidate(supabaseConfigProvider);
         ref.invalidate(activeCloudConfigProvider);
-        logger.info('auth', 'Supabase 账号密码保存状态：${_rememberAccount ? "已保存" : "已清除"}');
+        logger.info(
+          'auth',
+          'Supabase 记住账号状态：${_rememberAccount ? "已保存邮箱" : "已清除"}',
+        );
         return;
       }
 
       if (cloudConfig.type == CloudBackendType.spitoutCloud) {
-        // Spitout Cloud：勾选"记住账号"时存邮箱+密码 —— token 机制平时够用，
-        // 但 token 失效 / 老版本升级 / 本地 SharedPreferences 被清等场景都靠
-        // 这份密码做兜底自动登录。
         final updatedConfig = CloudServiceConfig(
           type: cloudConfig.type,
           name: cloudConfig.name,
           spitoutCloudBaseUrl: cloudConfig.spitoutCloudBaseUrl,
           spitoutCloudApiPrefix: cloudConfig.spitoutCloudApiPrefix,
           spitoutCloudEmail: _rememberAccount ? email : null,
-          spitoutCloudPassword: _rememberAccount ? password : null,
+          spitoutCloudPassword: null,
         );
         await store.saveOnly(updatedConfig);
         ref.invalidate(spitoutCloudConfigProvider);
         ref.invalidate(activeCloudConfigProvider);
-        logger.info('auth',
-            'Spitout Cloud 账号密码保存状态：${_rememberAccount ? "已保存" : "已清除"}');
+        logger.info(
+          'auth',
+          'Spitout Cloud 记住账号状态：${_rememberAccount ? "已保存邮箱" : "已清除"}',
+        );
       }
     } catch (e, st) {
-      logger.error('auth', '保存账号密码失败', e, st);
+      logger.error('auth', '保存账号配置失败', e, st);
     }
+  }
+
+  /// 日志脱敏：仅保留邮箱前缀与域名，避免完整邮箱落入日志。
+  String _maskEmail(String email) {
+    final at = email.indexOf('@');
+    if (at <= 1) return '***';
+    return '${email.substring(0, 2)}***${email.substring(at)}';
   }
 
   @override
@@ -145,13 +156,17 @@ class _AuthPageState extends ConsumerState<AuthPage> {
 
     // 检测云服务类型
     final cloudConfig = ref.watch(activeCloudConfigProvider);
-    if (cloudConfig.hasValue && cloudConfig.value!.type == CloudBackendType.webdav) {
+    if (cloudConfig.hasValue &&
+        cloudConfig.value!.type == CloudBackendType.webdav) {
       // WebDAV 不需要登录页面
       return Scaffold(
         backgroundColor: SpitoutTokens.scaffoldBackground(context),
         body: Column(
           children: [
-            PrimaryHeader(title: AppLocalizations.of(context).authLogin, showBack: true),
+            PrimaryHeader(
+              title: AppLocalizations.of(context).authLogin,
+              showBack: true,
+            ),
             Expanded(
               child: Center(
                 child: Padding(
@@ -163,13 +178,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: SpitoutTokens.isDark(context) ? null : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
+                      boxShadow: SpitoutTokens.isDark(context)
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -215,7 +232,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       backgroundColor: SpitoutTokens.scaffoldBackground(context),
       body: Column(
         children: [
-          PrimaryHeader(title: AppLocalizations.of(context).authLogin, showBack: true),
+          PrimaryHeader(
+            title: AppLocalizations.of(context).authLogin,
+            showBack: true,
+          ),
           Expanded(
             child: Center(
               child: Padding(
@@ -228,13 +248,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
                       borderRadius: BorderRadius.circular(12),
-                      boxShadow: SpitoutTokens.isDark(context) ? null : [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.04),
-                          blurRadius: 10,
-                          offset: const Offset(0, 4),
-                        )
-                      ],
+                      boxShadow: SpitoutTokens.isDark(context)
+                          ? null
+                          : [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.04),
+                                blurRadius: 10,
+                                offset: const Offset(0, 4),
+                              ),
+                            ],
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -242,18 +264,24 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                         TextField(
                           controller: emailCtrl,
                           keyboardType: TextInputType.emailAddress,
-                          decoration: InputDecoration(labelText: AppLocalizations.of(context).authEmail),
+                          decoration: InputDecoration(
+                            labelText: AppLocalizations.of(context).authEmail,
+                          ),
                         ),
                         const SizedBox(height: 8),
                         TextField(
                           controller: pwdCtrl,
                           obscureText: !_showPwd,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context).authPassword,
+                            labelText: AppLocalizations.of(
+                              context,
+                            ).authPassword,
                             suffixIcon: IconButton(
-                              icon: Icon(_showPwd
-                                  ? AppIcons.visibilityOff
-                                  : AppIcons.visibility),
+                              icon: Icon(
+                                _showPwd
+                                    ? AppIcons.visibilityOff
+                                    : AppIcons.visibility,
+                              ),
                               onPressed: () =>
                                   setState(() => _showPwd = !_showPwd),
                             ),
@@ -281,17 +309,27 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      AppLocalizations.of(context).authRememberAccount,
-                                      style: theme.textTheme.bodyMedium?.copyWith(
-                                        color: SpitoutTokens.textPrimary(context),
-                                      ),
+                                      AppLocalizations.of(
+                                        context,
+                                      ).authRememberAccount,
+                                      style: theme.textTheme.bodyMedium
+                                          ?.copyWith(
+                                            color: SpitoutTokens.textPrimary(
+                                              context,
+                                            ),
+                                          ),
                                     ),
                                     Text(
-                                      AppLocalizations.of(context).authRememberAccountHint,
-                                      style: theme.textTheme.bodySmall?.copyWith(
-                                        color: SpitoutTokens.textSecondary(context),
-                                        fontSize: 11,
-                                      ),
+                                      AppLocalizations.of(
+                                        context,
+                                      ).authRememberAccountHint,
+                                      style: theme.textTheme.bodySmall
+                                          ?.copyWith(
+                                            color: SpitoutTokens.textSecondary(
+                                              context,
+                                            ),
+                                            fontSize: 11,
+                                          ),
                                     ),
                                   ],
                                 ),
@@ -305,101 +343,122 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             padding: const EdgeInsets.only(bottom: 8.0),
                             child: Text(
                               errorText!,
-                              style: TextStyle(color: SpitoutTokens.error(context)),
+                              style: TextStyle(
+                                color: SpitoutTokens.error(context),
+                              ),
                             ),
                           ),
                         SizedBox(
                           width: double.infinity,
                           child: FilledButton(
-                                  style: FilledButton.styleFrom(
-                                    shape: RoundedRectangleBorder(
-                                        borderRadius: radius),
-                                  ),
-                                  onPressed: busy
-                                      ? null
-                                      : () async {
-                                          final email = emailCtrl.text.trim();
-                                          final pwd = pwdCtrl.text;
-                                          logger.info('auth', '开始登录：邮箱=$email');
-                                          if (!isValidEmail(email)) {
-                                            setState(() => errorText =
-                                                AppLocalizations.of(context)
-                                                    .authInvalidEmail);
-                                            return;
-                                          }
-                                          // 不本地校验密码强度:密码规则由服务端决定,
-                                          // App 不二次猜测(否则会把服务端能登录的合法
-                                          // 密码挡在门外,见 issue #358)。
-                                          setState(() {
-                                            busy = true;
-                                            errorText = null;
-                                          });
-                                          try {
-                                            final auth = await ref.read(authServiceProvider.future);
-                                            await auth.signInWithEmail(
-                                                email: email, password: pwd);
-                                            if (!context.mounted) return;
-                                            logger.info('auth', '登录成功：邮箱=$email');
+                            style: FilledButton.styleFrom(
+                              shape: RoundedRectangleBorder(
+                                borderRadius: radius,
+                              ),
+                            ),
+                            onPressed: busy
+                                ? null
+                                : () async {
+                                    final email = emailCtrl.text.trim();
+                                    final pwd = pwdCtrl.text;
+                                    logger.info(
+                                      'auth',
+                                      '开始登录：邮箱=${_maskEmail(email)}',
+                                    );
+                                    if (!isValidEmail(email)) {
+                                      setState(
+                                        () => errorText = AppLocalizations.of(
+                                          context,
+                                        ).authInvalidEmail,
+                                      );
+                                      return;
+                                    }
+                                    // 不本地校验密码强度:密码规则由服务端决定,
+                                    // App 不二次猜测(否则会把服务端能登录的合法
+                                    // 密码挡在门外,见 issue #358)。
+                                    setState(() {
+                                      busy = true;
+                                      errorText = null;
+                                    });
+                                    try {
+                                      final auth = await ref.read(
+                                        authServiceProvider.future,
+                                      );
+                                      await auth.signInWithEmail(
+                                        email: email,
+                                        password: pwd,
+                                      );
+                                      if (!context.mounted) return;
+                                      logger.info(
+                                        'auth',
+                                        '登录成功：邮箱=${_maskEmail(email)}',
+                                      );
 
-                                            // Save credentials if "remember account" is checked
-                                            await _saveCredentials(email, pwd);
+                                      // Save credentials if "remember account" is checked
+                                      await _saveCredentials(email, pwd);
 
-                                            // 再次检查 mounted（_saveCredentials 产生了新的 async gap）
-                                            if (!context.mounted) return;
+                                      // 再次检查 mounted（_saveCredentials 产生了新的 async gap）
+                                      if (!context.mounted) return;
 
-                                            // 刷新认证服务和同步服务以触发状态更新
-                                            ref.invalidate(authServiceProvider);
-                                            // 治本:登录成功且 session 已持久化后,invalidate 缓存的
-                                            // cloud provider,让它以新 session 重建。spitoutCloudProviderInstance
-                                            // 是 FutureProvider,登录前已缓存且内部 _session 为 null;不
-                                            // invalidate 则 sync 链带 null 会话 → readLedgers() 抛
-                                            // CloudNotAuthenticatedException 被吞 → 旧账本一条都清不掉。
-                                            // syncServiceProvider 内部 watch 了该 provider,会级联重建。
-                                            ref.invalidate(spitoutCloudProviderInstance);
-                                            ref.invalidate(syncServiceProvider);
+                                      // 刷新认证服务和同步服务以触发状态更新
+                                      ref.invalidate(authServiceProvider);
+                                      // 治本:登录成功且 session 已持久化后,invalidate 缓存的
+                                      // cloud provider,让它以新 session 重建。spitoutCloudProviderInstance
+                                      // 是 FutureProvider,登录前已缓存且内部 _session 为 null;不
+                                      // invalidate 则 sync 链带 null 会话 → readLedgers() 抛
+                                      // CloudNotAuthenticatedException 被吞 → 旧账本一条都清不掉。
+                                      // syncServiceProvider 内部 watch 了该 provider,会级联重建。
+                                      ref.invalidate(
+                                        spitoutCloudProviderInstance,
+                                      );
+                                      ref.invalidate(syncServiceProvider);
 
-                                            // 刷新同步状态
-                                            ref
-                                                .read(syncStatusRefreshProvider
-                                                    .notifier)
-                                                .tick();
-                                            // 直接切到"我的"页并关闭登录页
-                                            ref
-                                                .read(bottomTabIndexProvider
-                                                    .notifier)
-                                                .set(3); // Mine tab index
-                                            final can = Navigator.of(context)
-                                                .canPop();
-                                            logger.info('nav',
-                                                'login: success -> switch tab to Mine, canPop=$can; pop login');
-                                            if (can) {
-                                              Navigator.of(context).pop();
-                                            }
-                                          } catch (e, st) {
-                                            final msg = friendlyAuthError(e);
-                                            final detailedMsg = 'Type: ${e.runtimeType}, Message: $e';
-                                            logger.error(
-                                                'auth',
-                                                '登录失败：邮箱=$email，用户友好信息=$msg，详细错误=$detailedMsg',
-                                                e,
-                                                st);
-                                            setState(() => errorText = '$msg\n\n调试信息: $detailedMsg');
-                                          } finally {
-                                            if (mounted) {
-                                              setState(() => busy = false);
-                                            }
-                                          }
-                                        },
-                                  child: busy
-                                      ? const SizedBox(
-                                          width: 20,
-                                          height: 20,
-                                          child: CircularProgressIndicator(
-                                              strokeWidth: 2,
-                                              color: Colors.white),
-                                        )
-                                      : Text(AppLocalizations.of(context).authLogin),
-                                ),
+                                      // 刷新同步状态
+                                      ref
+                                          .read(
+                                            syncStatusRefreshProvider.notifier,
+                                          )
+                                          .tick();
+                                      // 直接切到"我的"页并关闭登录页
+                                      ref
+                                          .read(bottomTabIndexProvider.notifier)
+                                          .set(3); // Mine tab index
+                                      final can = Navigator.of(
+                                        context,
+                                      ).canPop();
+                                      logger.info(
+                                        'nav',
+                                        'login: success -> switch tab to Mine, canPop=$can; pop login',
+                                      );
+                                      if (can) {
+                                        Navigator.of(context).pop();
+                                      }
+                                    } catch (e, st) {
+                                      final msg = friendlyAuthError(e);
+                                      logger.error(
+                                        'auth',
+                                        '登录失败：邮箱=${_maskEmail(email)}，用户友好信息=$msg',
+                                        e,
+                                        st,
+                                      );
+                                      setState(() => errorText = msg);
+                                    } finally {
+                                      if (mounted) {
+                                        setState(() => busy = false);
+                                      }
+                                    }
+                                  },
+                            child: busy
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: Colors.white,
+                                    ),
+                                  )
+                                : Text(AppLocalizations.of(context).authLogin),
+                          ),
                         ),
                         const SizedBox(height: 16),
                       ],

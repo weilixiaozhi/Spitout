@@ -141,6 +141,20 @@ class LocalTransactionRepository implements TransactionRepository {
     return _watchTxJoinWithSharedHydration(q);
   }
 
+  @override
+  Stream<List<({Transaction t, Category? category})>>
+  watchExcludedAaTransactions(int ledgerId) {
+    // 只取 aaMode=1(不分摊)的交易,过滤下沉到 SQL,避免客户端全量过滤。
+    final select = db.select(db.transactions)
+      ..where((t) => t.ledgerId.equals(ledgerId) & t.aaMode.equals(1))
+      ..orderBy([
+        (t) =>
+            d.OrderingTerm(expression: t.happenedAt, mode: d.OrderingMode.desc),
+      ]);
+    final q = select.join(_txJoins());
+    return _watchTxJoinWithSharedHydration(q);
+  }
+
   /// 把 Drift 主表 stream 跟 SharedLedgerCategories 表更新合流,
   /// 任一变化都重跑 hydration 并 emit。
   ///

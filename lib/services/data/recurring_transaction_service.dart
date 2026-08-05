@@ -1,24 +1,6 @@
-import '../../data/db.dart';
+import '../../data/models.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../core/logging/logger_service.dart';
-
-/// 重复交易频率枚举
-enum RecurringFrequency {
-  daily('daily'),      // 每天
-  weekly('weekly'),    // 每周
-  monthly('monthly'),  // 每月
-  yearly('yearly');    // 每年
-
-  final String value;
-  const RecurringFrequency(this.value);
-
-  static RecurringFrequency fromString(String value) {
-    return RecurringFrequency.values.firstWhere(
-      (e) => e.value == value,
-      orElse: () => RecurringFrequency.monthly,
-    );
-  }
-}
 
 /// 重复交易服务
 ///

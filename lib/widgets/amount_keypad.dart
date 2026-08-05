@@ -4,6 +4,7 @@ import 'package:flutter/services.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import 'keypad_constants.dart';
 
 /// 数字键盘区：数字 / 小数点 / 运算符长条 / 日期 / 完成（等号）。
 ///
@@ -204,10 +205,10 @@ class AmountKeypad extends StatelessWidget {
                       style: text.labelSmall?.copyWith(
                           color: SpitoutTokens.textPrimary(context),
                           fontWeight: FontWeight.w600,
-                          // 双行日期字号从 u 派生。
-                          // 压缩区间(u<44)下限降到 7px，使两行文本能塞进最小键高 u=30，
-                          // 避免 RenderFlex 溢出；常规 u≥44 保底 9px 保证可读。
-                          fontSize: (u * 0.18).clamp(u < 44 ? 7.0 : 9.0, 11.0)),
+                          // 双行日期字号从 u 派生：当前 u∈[30,35] 时 u*0.18
+                          // 仅 5.4~6.3px，下限 7px 保证可读且能塞进最小键高；
+                          // 上限 9px 防未来 u 增大后溢出（消除 u<44 死分支）。
+                          fontSize: (u * 0.18).clamp(7.0, 9.0)),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -215,7 +216,7 @@ class AmountKeypad extends StatelessWidget {
                       style: text.labelSmall?.copyWith(
                           color: SpitoutTokens.textSecondary(context),
                           fontWeight: FontWeight.w500,
-                          fontSize: (u * 0.18).clamp(u < 44 ? 7.0 : 9.0, 11.0)),
+                          fontSize: (u * 0.18).clamp(7.0, 9.0)),
                     ),
                   ],
                 )
@@ -313,20 +314,20 @@ class AmountKeypad extends StatelessWidget {
       data: MediaQuery.of(context).copyWith(textScaler: capped),
       child: LayoutBuilder(
         builder: (ctx, c) {
-          // 4 列等宽
-          final colWidth = (c.maxWidth - 3 * 8) / 4; // 3 个 8px gap
+          // 4 列等宽（间隙统一来自 KeypadLayout.gap）
+          final colWidth = (c.maxWidth - 3 * KeypadLayout.gap) / 4;
           return Column(
             children: [
               // 第一部分：3 行数字 + 4 个运算符键（运算符列 4 键均分 3 行高度）
               // ValueKey 便于测试定位行高，验证 u 参数化生效
               SizedBox(
                 key: const ValueKey('keypad_num_grid'),
-                height: 3 * u + 2 * 8, // 3 行数字键高度（每行 u + gap 8）
+                height: 3 * u + 2 * KeypadLayout.gap, // 3 行数字键高度（每行 u + gap 8）
                 child: Row(
                   children: [
                     // 左侧 3×3 数字网格
                     SizedBox(
-                      width: colWidth * 3 + 2 * 8,
+                      width: colWidth * 3 + 2 * KeypadLayout.gap,
                       child: Column(
                         children: [
                           SizedBox(
@@ -337,12 +338,12 @@ class AmountKeypad extends StatelessWidget {
                                     width: colWidth,
                                     child: _numKey(context, text, '1',
                                         onTap: () => onAppend('1'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '2',
                                         onTap: () => onAppend('2'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '3',
@@ -350,7 +351,7 @@ class AmountKeypad extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: KeypadLayout.gap),
                           SizedBox(
                             height: u,
                             child: Row(
@@ -359,12 +360,12 @@ class AmountKeypad extends StatelessWidget {
                                     width: colWidth,
                                     child: _numKey(context, text, '4',
                                         onTap: () => onAppend('4'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '5',
                                         onTap: () => onAppend('5'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '6',
@@ -372,7 +373,7 @@ class AmountKeypad extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: KeypadLayout.gap),
                           SizedBox(
                             height: u,
                             child: Row(
@@ -381,12 +382,12 @@ class AmountKeypad extends StatelessWidget {
                                     width: colWidth,
                                     child: _numKey(context, text, '7',
                                         onTap: () => onAppend('7'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '8',
                                         onTap: () => onAppend('8'))),
-                                const SizedBox(width: 8),
+                                const SizedBox(width: KeypadLayout.gap),
                                 SizedBox(
                                     width: colWidth,
                                     child: _numKey(context, text, '9',
@@ -397,7 +398,7 @@ class AmountKeypad extends StatelessWidget {
                         ],
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: KeypadLayout.gap),
                     // 右侧运算符长条：× ÷ − + 四热区均分 3 行高度
                     SizedBox(
                       width: colWidth,
@@ -406,7 +407,7 @@ class AmountKeypad extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: KeypadLayout.gap),
               // 第二部分：底部行 [日期][0][.][=/Enter]
               SizedBox(
                 key: const ValueKey('keypad_bottom_row'),
@@ -414,17 +415,17 @@ class AmountKeypad extends StatelessWidget {
                 child: Row(
                   children: [
                     SizedBox(width: colWidth, child: _dateKey(context, text)),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: KeypadLayout.gap),
                     SizedBox(
                         width: colWidth,
                         child: _numKey(context, text, '0',
                             onTap: () => onAppend('0'))),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: KeypadLayout.gap),
                     SizedBox(
                         width: colWidth,
                         child: _numKey(context, text, '.',
                             onTap: () => onAppend('.'))),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: KeypadLayout.gap),
                     SizedBox(width: colWidth, child: _doneKey(context, text)),
                   ],
                 ),

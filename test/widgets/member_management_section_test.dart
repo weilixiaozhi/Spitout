@@ -15,9 +15,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/data/db.dart' show LedgerVirtualUser;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
+import 'package:spitout/providers/providers.dart' show ledgerVirtualUsersProvider;
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/member_management_section.dart';
 import 'package:spitout/widgets/text_state_switch.dart';
@@ -234,6 +236,67 @@ void main() {
     expect(find.text('成员管理'), findsOneWidget);
     expect(find.text('邀请新成员'), findsNothing);
     expect(find.text('生成邀请码'), findsNothing);
+  });
+
+  testWidgets('虚拟用户行编辑输入在父级重建后保留', (tester) async {
+    final vu = LedgerVirtualUser(
+      id: 1,
+      ledgerId: 1,
+      syncId: 'vu-1',
+      name: '虚拟用户1',
+      createdAt: DateTime(2026, 1, 1),
+      updatedAt: null,
+    );
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          ledgerVirtualUsersProvider.overrideWith(
+            (ref, ledgerId) =>
+                Stream<List<LedgerVirtualUser>>.value([vu]),
+          ),
+          ledgerMembersProvider.overrideWith(
+            (ref, ledgerId) async =>
+                [_member(userId: 'u1', role: 'owner', isSelf: true)],
+          ),
+          spitoutCloudProviderInstance.overrideWith((ref) async => null),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: Scaffold(
+            body: SingleChildScrollView(
+              child: MemberManagementSection(
+                ledgerExternalId: 'ext-1',
+                ledgerName: '测试账本',
+                ledgerId: 1,
+                aaEnabled: true,
+                onAaChanged: (_) {},
+                isReadOnly: false,
+                pendingVirtualUsers: const [],
+                onPendingVirtualUsersChanged: (_) {},
+                showInviteEntry: true,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('虚拟用户1'), findsOneWidget);
+    await tester.enterText(find.byType(TextField), '新名字');
+    await tester.pump();
+
+    // 展开邀请区触发成员管理整棵子树 setState 重建：
+    // State 持有的 controller 必须保留正在编辑但未失焦的内容。
+    await tester.tap(find.text('邀请新成员'));
+    await tester.pumpAndSettle();
+
+    final field = tester.widget<TextField>(find.byType(TextField));
+    expect(field.controller!.text, '新名字',
+        reason: '父级重建后行内编辑输入不应丢失');
   });
 
   testWidgets('AA 分摊开关位于成员管理标题行(文字+开关)', (tester) async {

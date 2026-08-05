@@ -1,9 +1,6 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/statistics/record_history_providers.dart';
@@ -27,6 +24,7 @@ import 'format_money.dart';
 import 'amount_text.dart';
 import 'me_suffix.dart';
 import 'user_display_name_resolver.dart';
+import 'aa_fields_utils.dart';
 import '../theme/icons/app_icons.dart';
 
 /// 记录详情 Bottom Sheet(对应设计稿"记录详情 Bottom Sheet")。
@@ -127,30 +125,6 @@ class _TransactionDetailBody extends ConsumerWidget {
     );
   }
 
-  /// 解析 aaParticipants(JSON 数组字符串);空 / 解析失败返回 null(全部成员)。
-  List<String>? _parseAaIdList(String? json) {
-    if (json == null || json.isEmpty) return null;
-    try {
-      return (jsonDecode(json) as List).map((e) => e.toString()).toList();
-    } catch (e, st) {
-      logger.warning(
-          'TransactionDetailSheet', '解析 aaParticipants 失败', '$e\n$st');
-      return null;
-    }
-  }
-
-  /// 解析 aaSplits(JSON 对象字符串)为 参与人标识 → 金额字符串;失败返回空表。
-  Map<String, String> _parseAaSplits(String? json) {
-    if (json == null || json.isEmpty) return const {};
-    try {
-      final obj = jsonDecode(json) as Map<String, dynamic>;
-      return {for (final e in obj.entries) e.key: e.value.toString()};
-    } catch (e, st) {
-      logger.warning('TransactionDetailSheet', '解析 aaSplits 失败', '$e\n$st');
-      return const {};
-    }
-  }
-
   /// AA 分摊明细区块(只读,与编辑分摊页对齐)。
   ///
   /// 布局:分摊方式 / 支出人 / 参与人 三行,均为只读信息行。
@@ -198,7 +172,7 @@ class _TransactionDetailBody extends ConsumerWidget {
     }
     // 参与人展示:昵称前若干人逗号隔开,剩余「…(x人)」;全选显示「全部成员(x人)」。
     // 用富文本逐名渲染,本人名字后追加「(我)」共享后缀。
-    final ids = _parseAaIdList(t.aaParticipants);
+    final ids = parseAaParticipantIds(t.aaParticipants);
     widgets.add(_InfoRow(
       label: l10n.aaParticipants,
       value: '',
@@ -206,7 +180,7 @@ class _TransactionDetailBody extends ConsumerWidget {
     ));
     if (mode == AaMode.custom) {
       // 指定分摊:逐人金额(只读);label 为参与人名,本人时同样追加后缀。
-      final splits = _parseAaSplits(t.aaSplits);
+      final splits = parseAaSplits(t.aaSplits) ?? const {};
       for (final e in splits.entries) {
         final name = resolver.resolve(e.key);
         final nameDisplay = name.isEmpty ? l10n.aaUnknownUser : name;
@@ -300,9 +274,11 @@ class _TransactionDetailBody extends ConsumerWidget {
         children: [if (resolver.isSelf(id)) meSuffixSpan(context, l10n)],
       ));
     }
-    final tail = count <= 2
-        ? '（$count${l10n.aaParticipantsUnit}）'
-        : '…（${count - 2}${l10n.aaParticipantsUnit}）';
+    // 单人已全部展示，不再拼「（1人）」；双人保留人数标注；超过 2 人时
+    // 尾部表达被省略的人数。
+    final tail = count > 2
+        ? '…（${count - 2}${l10n.aaParticipantsUnit}）'
+        : (count == 2 ? '（$count${l10n.aaParticipantsUnit}）' : '');
     spans.add(TextSpan(text: tail));
     return Text.rich(
       TextSpan(style: style, children: spans),

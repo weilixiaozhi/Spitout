@@ -35,6 +35,7 @@
     "commonEmpty": "暂无数据",
     "commonError": "错误",
     "commonFailed": "失败",
+    "commonOperationFailed": "操作失败，请稍后重试",
     "commonBack": "返回",
     "commonNext": "下一步",
     "commonFinish": "完成",
@@ -614,6 +615,8 @@
     "recurringTransactionDeleteConfirm": "确定要删除这个周期账单吗？",
     "recurringTransactionEmpty": "暂无周期账单",
     "recurringTransactionEmptyHint": "点击右上角 + 按钮添加",
+    "recurringTransactionAmountInvalid": "金额需大于 0",
+    "recurringTransactionEndBeforeStart": "结束日期不能早于开始日期",
     "recurringTransactionEveryNDays": "每 {n} 天",
     "@recurringTransactionEveryNDays": {
         "placeholders": {
@@ -1244,6 +1247,7 @@
     },
     "sharedInviteWarning": "⚠️ 不要把邀请码发到公开群 / 朋友圈。拿到码的任何人都可加入账本;泄露后请到成员管理页撤销并重新生成。",
     "sharedInviteInstruction": "把邀请码或短链发给对方。对方装上 Spitout 后,点击链接或在「我的 → 加入共享账本」输入码即可加入。",
+    "sharedInviteUnavailable": "邀请暂不可用，请重新生成",
     "sharedInviteShareText": "邀请你加入 Spitout 共享账本「{ledger}」\n\n邀请码:{code}\n链接:{url}\n\n点击链接或在 Spitout → 我的 → 加入共享账本输入此码即可。",
     "@sharedInviteShareText": {
         "placeholders": {
@@ -1293,6 +1297,7 @@
         }
     },
     "sharedMembersRemoved": "已移除成员",
+    "sharedMembersRemoveFailed": "移除成员失败，请稍后重试",
     "sharedMembersSyncPending": "首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员",
     "sharedMembersSaveFirst": "请先保存账本",
     "sharedMembersInviteSyncFailed": "云端同步尚未完成，请稍后重试",

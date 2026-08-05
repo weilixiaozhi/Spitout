@@ -1,3 +1,5 @@
+import 'keypad_constants.dart';
+
 /// 记账页自定义键盘行高计算。
 ///
 /// - 空间充足：键盘行高 = [maxU]，富余高度留给分类区；
@@ -15,9 +17,10 @@ double computeKeypadU({
   double minCategoryH = 96,
   // 键高整体压缩（用户反馈偏大）：上限 48→35，下限同步 36→30，
   // 保证 clamp 上下界合法（lower ≤ upper）且按键仍可点按。
-  double minU = 30,
-  double maxU = 35,
-  double keypadGap = 24, // 4 行键盘之间 3 个 8px 纵向间距
+  double minU = KeypadLayout.minU,
+  double maxU = KeypadLayout.maxU,
+  // 4 行键盘之间 3 个 8px 纵向间距（统一来自 KeypadLayout.gap）。
+  double keypadGap = KeypadLayout.keypadGap,
 }) {
   // 键盘预算 = 可用高度 − 顶部/底部固定区 − 分类区最低可见高度；
   // 不足/超出由 clamp 封顶到 [4*minU+gap, 4*maxU+gap]

@@ -1,5 +1,7 @@
 import 'dart:convert';
 
+import 'package:decimal/decimal.dart';
+
 import '../../data/db.dart';
 import '../../core/logging/logger_service.dart';
 import 'aa_decimal_util.dart';
@@ -31,6 +33,7 @@ enum AaMode {
 /// 单条交易的 AA 分摊结果。
 ///
 /// [shares] key=参与人标识(userId 或虚拟用户 syncId),value=应摊金额(double)。
+/// 金额口径为账本本位币(由 [nativeAmount] 折算,未折算时回退原币种金额)。
 /// 支出人实付与应摊的差额归支出人,保证 sum(应摊) == 实付。
 class AaStatisticsTxResult {
   /// 交易 syncId(跨设备标识,本地展示用 tx.id)。
@@ -39,7 +42,7 @@ class AaStatisticsTxResult {
   /// 交易本地 id。
   final int txId;
 
-  /// 实付金额。
+  /// 实付金额(账本本位币,单位:元)。
   final double paidAmount;
 
   /// 支出人标识(userId 或虚拟用户 syncId)。
@@ -48,7 +51,7 @@ class AaStatisticsTxResult {
   /// 分摊模式。
   final AaMode mode;
 
-  /// 每人应摊金额。key=参与人标识,value=应摊金额(double)。
+  /// 每人应摊金额(账本本位币,单位:元)。key=参与人标识,value=应摊金额(double)。
   final Map<String, double> shares;
 
   const AaStatisticsTxResult({
@@ -181,6 +184,11 @@ class AaStatisticsService {
   }) {
     final mode = AaMode.fromDb(tx.aaMode);
 
+    // 账本级汇总统一以「折本位币金额」为计算口径:多币种账本下各笔交易
+    // 的实付/应摊才能直接求和,避免 ¥100 + $50 被当成 ¥150。
+    // 未折算的历史数据/单币种账本 nativeAmount 为 null,回退原金额(隐含汇率 1)。
+    final nativeCents = tx.nativeAmount ?? tx.amount;
+
     // 支出人未知(paidByUserId 为空):实付归属不明,强行归给参与人首个会
     // 造成分摊统计失真(如全算给虚拟用户)。与成员支出模块「未知支出人
     // 无法归属、不计入」口径一致,直接跳过该交易,不参与 AA 统计。
@@ -204,7 +212,7 @@ class AaStatisticsService {
     if (participants.isEmpty) return null;
 
     // 数据库金额为整数分,直接转 Decimal,不再经 double 归一化。
-    final totalDecimal = toDecimalFromCents(tx.amount);
+    final totalDecimal = toDecimalFromCents(nativeCents);
     final shares = <String, double>{};
 
     switch (mode) {
@@ -242,13 +250,27 @@ class AaStatisticsService {
         }
         try {
           final obj = jsonDecode(tx.aaSplits!) as Map<String, dynamic>;
+          // aaSplits 是用户在原币种下填写并落库的金额,账本级汇总需按本笔
+          // 隐含汇率(本位币/原币)折算,保证跨币种求和口径一致;无法换算
+          // (金额为 0 等异常)时原样保留。
+          final convertToNative = nativeCents > 0 &&
+              tx.amount > 0 &&
+              nativeCents != tx.amount;
           for (final entry in obj.entries) {
             final v = entry.value;
-            if (v is num) {
-              shares[entry.key] = v.toDouble();
-            } else {
-              shares[entry.key] = double.tryParse(v.toString()) ?? 0.0;
+            final original = v is num
+                ? toDecimal2(v.toDouble())
+                : Decimal.tryParse(v.toString()) ?? Decimal.zero;
+            if (!convertToNative) {
+              shares[entry.key] = toDouble(original);
+              continue;
             }
+            // 原币分 → 本位币分:全程 BigInt/Decimal,避免超大金额 double 精度损失。
+            final originalCents = (original * Decimal.fromInt(100)).toBigInt();
+            final nativeShareCents =
+                (originalCents * BigInt.from(nativeCents)) ~/
+                    BigInt.from(tx.amount);
+            shares[entry.key] = nativeShareCents.toInt() / 100;
           }
         } catch (e, st) {
           logger.warning('AaStatistics',
@@ -262,8 +284,8 @@ class AaStatisticsService {
     return AaStatisticsTxResult(
       syncId: tx.syncId,
       txId: tx.id,
-      // 实付金额按"元"输出(展示口径),数值源自整数分,除以 100 无损。
-      paidAmount: tx.amount / 100,
+      // 实付金额按本位币"元"输出(展示口径),数值源自整数分,除以 100 无损。
+      paidAmount: nativeCents / 100,
       paidBy: paidBy,
       mode: mode,
       shares: shares,

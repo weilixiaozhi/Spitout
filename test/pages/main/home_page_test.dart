@@ -95,8 +95,9 @@ void main() {
     // 为空 → AppEmpty（无持续动画，不阻塞 pump）。
     registerTxsStream(() => Stream<List<_TxItem>>.value(const []));
     when(
-      () => repo.watchTransactionsWithCategoryAll(
+      () => repo.watchTransactionsWithCategoryInMonth(
         ledgerId: any(named: 'ledgerId'),
+        month: any(named: 'month'),
       ),
     ).thenAnswer((_) => txsStreamFactory());
     // 下拉刷新会走 _runLocalRefresh:先由 currency_providers 读全部账本汇总本位币,
@@ -616,14 +617,14 @@ void main() {
     // 仅在 initState / 切月切账本时创建一次。
     var txStreamCallCount = 0;
     when(
-      () => repo.watchTransactionsWithCategoryAll(
+      () => repo.watchTransactionsWithCategoryInMonth(
         ledgerId: any(named: 'ledgerId'),
+        month: any(named: 'month'),
       ),
     ).thenAnswer((_) {
       txStreamCallCount++;
       return Stream<List<_TxItem>>.value(const []);
     });
-    registerTxsStream(() => repo.watchTransactionsWithCategoryAll(ledgerId: 1));
 
     await tester.pumpWidget(
       buildApp(

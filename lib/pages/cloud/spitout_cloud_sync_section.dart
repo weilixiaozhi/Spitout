@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
-    show CloudUser, CloudAuthException, TwoFactorStatus;
+    show CloudUser, TwoFactorStatus;
 
 import 'package:spitout/providers/providers.dart';
 import '../../data/models.dart';
@@ -12,7 +12,6 @@ import '../../theme/colors.dart';
 import '../../theme/typography.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/logging/logger_service.dart';
-import '../../cloud/auth_error_localizer.dart';
 import '../auth/login_page.dart';
 import '../settings/log_center_page.dart';
 import '../../theme/icons/app_icons.dart';
@@ -57,25 +56,12 @@ class SpitoutCloudSyncSectionState
   bool _autoSyncing = false;
 
   /// DEEP:云端是否「一个账本都没有」(checkAccountHealth 返回 null)。
-  ///
   /// 为 true 时健康面板直接展示「暂无云端账本」提示,不渲染对账计数骨架,
   /// 也不触发 checkAccountHealth —— 本地账本无 syncId,删兜底后检测必 error,
   /// 展示错误提示反而误导用户以为云端异常,实际只是还没同步过任何账本。
   ///
   /// 复位机制:[refresh] 在 [cloudLedgers] 非空时自动置 false,无需手动清零。
   bool _noCloudLedgers = false;
-
-  /// 重新登录（复用本地保存凭证）失败时的内联友好提示文案。
-  ///
-  /// 设计意图：账号鉴权失败（[CloudAuthException]，如邮箱/密码错）属于「纯账号
-  /// 问题」，不弹 toast、不弹窗，仅在账号行下方用一行红字内联提示，同时让
-  /// 「重新登录」按钮消失（避免同一错误反复可点）。网络类异常走另一分支
-  /// （保留按钮 + 弹网络 toast），不会写到这里。
-  ///
-  /// 复位机制：本字段没有显式清零逻辑——按钮仅当 `_credentialInvalidHint == null`
-  /// 时渲染，而挂载 onPressed 的那一刻它必然为 null（下方早返回已拦截），故无需手动
-  /// reset。用户离开本页 → State.dispose → 再次进入重建为 null，天然复位。
-  String? _credentialInvalidHint;
 
   @override
   void initState() {
@@ -199,11 +185,12 @@ class SpitoutCloudSyncSectionState
       // [Route B] 登录态正在静默恢复(撞 30s 冷却)→ 不报错、不触发同步,
       // 等冷却结束自动再拉一次,避免用户手动狂刷。
       if (report.recovering) {
-        final wait =
-            report.recoveryRemaining ?? const Duration(seconds: 30);
-        unawaited(Future.delayed(wait, () {
-          if (mounted) refresh();
-        }));
+        final wait = report.recoveryRemaining ?? const Duration(seconds: 30);
+        unawaited(
+          Future.delayed(wait, () {
+            if (mounted) refresh();
+          }),
+        );
         return;
       }
       // [Route B] 无恢复凭证 / 恢复彻底失败 → 友好提示手动登录,不抛 raw 异常
@@ -215,10 +202,13 @@ class SpitoutCloudSyncSectionState
       // carrierLedgerId 非空判定不可省:当前选中本地账本时报告不带载体,
       // 此时跳过本轮 backfill(切回云账本再补),避免空断言崩溃。
       if (report.needsBackfill && report.carrierLedgerId != null) {
-        final backfilled = await actions
-            .backfillUntrackedEntities(ledgerId: report.carrierLedgerId!);
-        logger.info('CloudSyncSection',
-            'refresh: backfill 补写 $backfilled 条 sync_change');
+        final backfilled = await actions.backfillUntrackedEntities(
+          ledgerId: report.carrierLedgerId!,
+        );
+        logger.info(
+          'CloudSyncSection',
+          'refresh: backfill 补写 $backfilled 条 sync_change',
+        );
         if (backfilled > 0 && mounted) {
           // 重拉必须复用同一 carrier,否则报告的 carrierLedgerId 会变 null,
           // 「当前账本」组在刷新中途闪没。
@@ -237,19 +227,24 @@ class SpitoutCloudSyncSectionState
           // pushUserGlobalEntities),与 app.dart 冷启动共用同一入口。
           final result = await actions.syncAccount();
           if (!mounted || result == null) return;
-          logger.info('CloudSyncSection',
-              'refresh: syncAccount pushed=${result.pushed} '
-              'pulled=${result.pulled} skipped=${result.skipped}');
+          logger.info(
+            'CloudSyncSection',
+            'refresh: syncAccount pushed=${result.pushed} '
+                'pulled=${result.pulled} skipped=${result.skipped}',
+          );
           // 同理复用 carrier:同步完成后的重拉若丢了载体,「当前账本」组同样闪没。
-          final after =
-              await actions.checkAccountHealth(carrierLedgerId: carrier);
+          final after = await actions.checkAccountHealth(
+            carrierLedgerId: carrier,
+          );
           if (after != null && mounted) {
             setState(() => _latestReport = after);
           }
         } catch (e) {
           if (mounted) {
             showToast(
-                context, '${AppLocalizations.of(context).commonFailed}: $e');
+              context,
+              '${AppLocalizations.of(context).commonFailed}: $e',
+            );
           }
         } finally {
           if (mounted) setState(() => _autoSyncing = false);
@@ -288,8 +283,8 @@ class SpitoutCloudSyncSectionState
         child: Text(
           l10n.aiOcrNoLedger,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: SpitoutTokens.textSecondary(context),
-              ),
+            color: SpitoutTokens.textSecondary(context),
+          ),
         ),
       );
     }
@@ -323,48 +318,46 @@ class SpitoutCloudSyncSectionState
           ),
           const SizedBox(height: 8),
           // Section 2: 同步说明(折叠) — 解释增量/全量、断点续传、排查
-          SectionCard(
-            child: _buildSyncHelpSection(context),
-          ),
+          SectionCard(child: _buildSyncHelpSection(context)),
           // Spitout Cloud server 版本号,底部弱展示。
           // 跟 web header 的 vX.Y.Z 对齐,方便确认 server 哪版。
           // 通过 provider 监听,server 升级后跟着 sync ticker 自
           // 动刷新,不依赖死缓存。
-          Consumer(builder: (ctx, r, _) {
-            final v = r.watch(spitoutCloudServerVersionProvider).value;
-            if (v == null || v.isEmpty) {
-              return const SizedBox.shrink();
-            }
-            return Padding(
-              padding: const EdgeInsets.only(top: 16, bottom: 8),
-              child: Center(
-                child: Text(
-                  'Spitout Cloud v$v',
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: SpitoutTokens.textTertiary(context),
+          Consumer(
+            builder: (ctx, r, _) {
+              final v = r.watch(spitoutCloudServerVersionProvider).value;
+              if (v == null || v.isEmpty) {
+                return const SizedBox.shrink();
+              }
+              return Padding(
+                padding: const EdgeInsets.only(top: 16, bottom: 8),
+                child: Center(
+                  child: Text(
+                    'Spitout Cloud v$v',
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: SpitoutTokens.textTertiary(context),
+                    ),
                   ),
                 ),
-              ),
-            );
-          }),
+              );
+            },
+          ),
         ],
       ),
     );
   }
 
-  /// 账号头部行:已登录时只读展示邮箱(一行文案);未登录时在账号行直接
-  /// 给出登录按钮(有保存邮密 → "重新登录"自动复用凭证静默登录,否则跳登录页)。
-  /// 不渲染右箭头,用专属图标作分类标识,避免"看着能点却点不动"的误导。
+  /// 账号头部行：已登录时只读展示邮箱（一行文案）；未登录时在账号行直接
+  /// 给出登录按钮，统一跳转登录页手动输入。
+  ///
+  /// 密码不再持久化（见 CloudServiceStore），因此不存在「用缓存凭证自动重登」
+  /// 的路径；session 失效后由用户重新登录，避免明文密码落盘。
   Widget _buildAccountSection(BuildContext context, CloudUser? user) {
     final l10n = AppLocalizations.of(context);
-    final cfg = ref.watch(activeCloudConfigProvider).value;
-    final cachedEmail = cfg?.spitoutCloudEmail ?? '';
-    final cachedPassword = cfg?.spitoutCloudPassword ?? '';
-    final hasCredentials = cachedEmail.isNotEmpty && cachedPassword.isNotEmpty;
 
-    // 已登录:纯展示行,不可点。显式传 trailing 空占位隐藏 AppListTile
-    // 默认右箭头,使用 verifiedUser 图标作分类标识。
+    // 已登录：纯展示行，不可点。显式传 trailing 空占位隐藏 AppListTile
+    // 默认右箭头，使用 verifiedUser 图标作分类标识。
     if (user != null) {
       return AppListTile(
         leading: AppIcons.verifiedUser,
@@ -373,72 +366,19 @@ class SpitoutCloudSyncSectionState
       );
     }
 
-    // 重新登录失败过：此时账号必然未登录（否则上面的 user != null 已早返回），
-    // 在账号行下方内联一行友好红字，并让「重新登录」按钮消失（setState 后 widget
-    // 重建 → 命中本早返回 → 按钮不渲染，避免同一错误反复可点）。
-    // 字段复位靠离开页面 dispose 重建（见字段注释），无需手动清零。
-    if (_credentialInvalidHint != null) {
-      return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
-        child: Text(
-          _credentialInvalidHint!,
-          style: TextStyle(fontSize: 13, color: SpitoutTokens.error(context)),
-        ),
-      );
-    }
-
-    // 未登录:用户要求"有需要 login 就给 login 按钮"。这里直接渲染一个
-    // 明确的登录按钮(而非伪装成可点行),避免"看着能点却点不动"。
-    // 有保存邮密 → "重新登录"复用本地凭证静默登录;无邮密 → 跳传统登录页。
-    // 两者都用 AppIcons.login 作分类标识。
-    final VoidCallback? onPressed;
-    final String label;
-    if (hasCredentials) {
-      label = l10n.cloudReloginTitle; // "重新登录"
-      onPressed = () async {
-        try {
-          // 走统一 auth 实例（与 SyncEngine / 账号流同源），登录成功后
-          // _authStateController 自动推送新用户，账号流即时刷新，无需 invalidate。
-          final auth = await ref.read(authServiceProvider.future);
-          await auth.signInWithEmail(
-            email: cachedEmail,
-            password: cachedPassword,
-          );
-          if (!context.mounted) return;
-          showToast(context, l10n.cloudReloginSuccess);
-          ref.read(syncStatusRefreshProvider.notifier).tick();
-          ref.read(statsRefreshProvider.notifier).tick();
-        } on CloudAuthException catch (e) {
-          // 账号鉴权失败（邮箱/密码错、账号被锁等）：纯账号问题，不弹 toast、
-          // 不弹窗，仅内联友好红字并隐藏按钮（setState 后 widget 重建 → 命中上方
-          // 早返回 → 「重新登录」按钮不渲染，避免同一错误反复可点）。
-          if (!context.mounted) return;
-          setState(() => _credentialInvalidHint = friendlyAuthError(e, context));
-        } catch (e) {
-          // 其余异常（网络超时、服务端 5xx 等）：保留按钮，弹网络友好 toast，
-          // 用户可立即重试。与账号失败分支区分：账号失败不可重试（按钮消失），
-          // 网络失败通常短暂且可重试（按钮保留）。
-          if (!context.mounted) return;
-          showToast(context, friendlyAuthError(e, context));
-        }
-      };
-    } else {
-      label = l10n.mineLoginTitle; // "登录"
-      onPressed = () async {
-        await Navigator.of(context).push(
-          appPageRoute(builder: (_) => const LoginPage()),
-        );
-        ref.read(syncStatusRefreshProvider.notifier).tick();
-      };
-    }
-
-    // 左对齐的紧凑按钮,不撑满整行,与上方标题/下方计数保持一致的左缩进。
+    // 未登录：直接渲染明确的登录按钮（而非伪装成可点行），
+    // 避免"看着能点却点不动"的误导。
     return Align(
       alignment: Alignment.centerLeft,
       child: FilledButton.icon(
-        onPressed: onPressed,
+        onPressed: () async {
+          await Navigator.of(
+            context,
+          ).push(appPageRoute(builder: (_) => const LoginPage()));
+          ref.read(syncStatusRefreshProvider.notifier).tick();
+        },
         icon: const Icon(AppIcons.login, size: 18),
-        label: Text(label),
+        label: Text(l10n.mineLoginTitle),
       ),
     );
   }
@@ -452,8 +392,10 @@ class SpitoutCloudSyncSectionState
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
         childrenPadding: const EdgeInsets.only(bottom: 4),
-        leading: Icon(AppIcons.help,
-            color: SpitoutTokens.iconSecondary(context)),
+        leading: Icon(
+          AppIcons.help,
+          color: SpitoutTokens.iconSecondary(context),
+        ),
         title: Text(
           l10n.cloudSyncHelpTitle,
           style: TextStyle(
@@ -463,21 +405,33 @@ class SpitoutCloudSyncSectionState
           ),
         ),
         children: [
-          _helpBlock(context, l10n.cloudSyncHelpModesTitle,
-              l10n.cloudSyncHelpModesBody),
-          _helpBlock(context, l10n.cloudSyncHelpWhenFullTitle,
-              l10n.cloudSyncHelpWhenFullBody),
-          _helpBlock(context, l10n.cloudSyncHelpStuckTitle,
-              l10n.cloudSyncHelpStuckBody),
-          _helpBlock(context, l10n.cloudSyncHelpTroubleshootTitle,
-              l10n.cloudSyncHelpTroubleshootBody),
+          _helpBlock(
+            context,
+            l10n.cloudSyncHelpModesTitle,
+            l10n.cloudSyncHelpModesBody,
+          ),
+          _helpBlock(
+            context,
+            l10n.cloudSyncHelpWhenFullTitle,
+            l10n.cloudSyncHelpWhenFullBody,
+          ),
+          _helpBlock(
+            context,
+            l10n.cloudSyncHelpStuckTitle,
+            l10n.cloudSyncHelpStuckBody,
+          ),
+          _helpBlock(
+            context,
+            l10n.cloudSyncHelpTroubleshootTitle,
+            l10n.cloudSyncHelpTroubleshootBody,
+          ),
           const SizedBox(height: 4),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
-              onPressed: () => Navigator.of(context).push(
-                appPageRoute(builder: (_) => const LogCenterPage()),
-              ),
+              onPressed: () => Navigator.of(
+                context,
+              ).push(appPageRoute(builder: (_) => const LogCenterPage())),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.primary,
                 padding: EdgeInsets.zero,
@@ -542,7 +496,8 @@ class SpitoutCloudSyncSectionState
     }
 
     // 初次 init 时 report 还没填,仍然把面板骨架 + 占位值画出来(用户要求常驻)。
-    final effective = report ??
+    final effective =
+        report ??
         const SyncHealthReport(
           ledgerTx: SyncCountPair.missing(),
           totalTx: SyncCountPair.missing(),
@@ -559,13 +514,18 @@ class SpitoutCloudSyncSectionState
       );
     }
     if (effective.needsLogin) {
-      return _buildHealthError(context, l10n.syncHealthNeedsLogin,
-          color: Colors.red);
+      return _buildHealthError(
+        context,
+        l10n.syncHealthNeedsLogin,
+        color: Colors.red,
+      );
     }
     if (effective.error != null) {
       return _buildHealthError(
-          context, l10n.syncHealthCheckFailed(effective.error!),
-          color: Colors.red);
+        context,
+        l10n.syncHealthCheckFailed(effective.error!),
+        color: Colors.red,
+      );
     }
 
     // 状态摘要:自愈熔断 → 红字;差异 → 橙字;一致 → 默认主文字色。
@@ -595,11 +555,12 @@ class SpitoutCloudSyncSectionState
         // 顶部标题行:icon + 标题 + 状态(含检测 / 同步中 spinner)。
         Row(
           children: [
-            Icon(AppIcons.cloudSync,
-                color: Theme.of(context).colorScheme.primary),
+            Icon(
+              AppIcons.cloudSync,
+              color: Theme.of(context).colorScheme.primary,
+            ),
             const SizedBox(width: 8),
-            Text(l10n.syncHealthTitle,
-                style: SpitoutTextTokens.title(context)),
+            Text(l10n.syncHealthTitle, style: SpitoutTextTokens.title(context)),
             const Spacer(),
             if (_checking || _autoSyncing)
               const SizedBox(
@@ -611,10 +572,12 @@ class SpitoutCloudSyncSectionState
         ),
         const SizedBox(height: 4),
         // 状态文案:恢复中 / 需登录 / 差异 / 一致 ……(颜色由上述分支决定)。
-        Text(statusText,
-            style: SpitoutTextTokens.body(context).copyWith(
-              color: statusColor ?? SpitoutTokens.textPrimary(context),
-            )),
+        Text(
+          statusText,
+          style: SpitoutTextTokens.body(
+            context,
+          ).copyWith(color: statusColor ?? SpitoutTokens.textPrimary(context)),
+        ),
         const SizedBox(height: 12),
         // 当前账本分组:交易数。
         //
@@ -659,8 +622,7 @@ class SpitoutCloudSyncSectionState
           children: [
             Icon(AppIcons.cloudSync, color: theme.colorScheme.primary),
             const SizedBox(width: 8),
-            Text(l10n.syncHealthTitle,
-                style: SpitoutTextTokens.title(context)),
+            Text(l10n.syncHealthTitle, style: SpitoutTextTokens.title(context)),
             const Spacer(),
             if (showSpinner)
               const SizedBox(
@@ -673,15 +635,18 @@ class SpitoutCloudSyncSectionState
         const SizedBox(height: 8),
         Row(
           children: [
-            Icon(Icons.info_outline,
-                size: 16, color: color ?? theme.colorScheme.primary),
+            Icon(
+              Icons.info_outline,
+              size: 16,
+              color: color ?? theme.colorScheme.primary,
+            ),
             const SizedBox(width: 6),
             Expanded(
               child: Text(
                 message,
-                style: SpitoutTextTokens.body(context).copyWith(
-                  color: color ?? SpitoutTokens.textPrimary(context),
-                ),
+                style: SpitoutTextTokens.body(
+                  context,
+                ).copyWith(color: color ?? SpitoutTokens.textPrimary(context)),
               ),
             ),
           ],
@@ -697,9 +662,7 @@ class SpitoutCloudSyncSectionState
       padding: const EdgeInsets.only(top: 10, bottom: 2),
       child: Text(
         text,
-        style: theme.textTheme.bodySmall?.copyWith(
-          fontWeight: FontWeight.w600,
-        ),
+        style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }
@@ -710,11 +673,7 @@ class SpitoutCloudSyncSectionState
   /// (网络错 / 老 server 无该字段),此时只显示本地数 + 占位「—」,不把 -1
   /// 误渲染成计数;[pair.hasDiff] 为真(本地 ≠ 远端)时整行橙色高亮,提示存在差异。
   /// 同步状态分类行不带 icon,保持纯文本逐项计数。
-  Widget _pairRow(
-    BuildContext context,
-    String label,
-    SyncCountPair pair,
-  ) {
+  Widget _pairRow(BuildContext context, String label, SyncCountPair pair) {
     final l10n = AppLocalizations.of(context);
     final theme = Theme.of(context);
     final remoteMissing = pair.remote < 0;
@@ -726,9 +685,7 @@ class SpitoutCloudSyncSectionState
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Expanded(
-            child: Text(label, style: theme.textTheme.bodyMedium),
-          ),
+          Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
           Text(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
@@ -762,8 +719,7 @@ class SpitoutCloudSyncSectionState
                 color: count > 0
                     ? Colors.orange
                     : SpitoutTokens.textPrimary(context),
-                fontWeight:
-                    count > 0 ? FontWeight.w600 : FontWeight.w400,
+                fontWeight: count > 0 ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
           ),
@@ -771,7 +727,6 @@ class SpitoutCloudSyncSectionState
       ),
     );
   }
-
 }
 
 /// 2FA 状态展示行(只读)。
@@ -803,8 +758,7 @@ class _TwoFactorStatusRowState extends ConsumerState<_TwoFactorStatusRow> {
 
   Future<void> _load() async {
     try {
-      final provider =
-          await ref.read(spitoutCloudProviderInstance.future);
+      final provider = await ref.read(spitoutCloudProviderInstance.future);
       if (provider == null) {
         if (mounted) {
           setState(() {
@@ -856,14 +810,13 @@ class _TwoFactorStatusRowState extends ConsumerState<_TwoFactorStatusRow> {
     }
     final status = _status!;
 
-    final enabledLabel =
-        status.enabled ? l10n.twofaStatusEnabled : l10n.twofaStatusDisabled;
+    final enabledLabel = status.enabled
+        ? l10n.twofaStatusEnabled
+        : l10n.twofaStatusDisabled;
     // 启用日期并入标题保持单行紧凑;
     // 标题超长时由 AppListTile 的 ellipsis 兜底。
     final enabledAtSuffix = status.enabled && status.enabledAt != null
-        ? ' · ${l10n.twofaStatusEnabledAt(
-            '${status.enabledAt!.year}-${status.enabledAt!.month.toString().padLeft(2, '0')}-${status.enabledAt!.day.toString().padLeft(2, '0')}',
-          )}'
+        ? ' · ${l10n.twofaStatusEnabledAt('${status.enabledAt!.year}-${status.enabledAt!.month.toString().padLeft(2, '0')}-${status.enabledAt!.day.toString().padLeft(2, '0')}')}'
         : '';
 
     // 不自带 SectionCard:本行已并入宿主的"状态卡片"(账号/2FA/同步状态

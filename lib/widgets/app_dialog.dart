@@ -177,7 +177,10 @@ class AppDialog {
               Flexible(
                 child: SingleChildScrollView(
                   child: Text(
-                    message.replaceAll('\\n', '\n'), // 处理转义的换行符
+                    // 按原文展示：调用方需传真实换行符（\n）。
+                    // 不做 replaceAll('\\n', '\n')，避免把文案中字面量的
+                    // 反斜杠 n（如路径 / 用户数据）误改成换行。
+                    message,
                     textAlign: TextAlign.left,
                     style: Theme.of(ctx).textTheme.bodyMedium?.copyWith(
                           color: SpitoutTokens.textSecondary(ctx),

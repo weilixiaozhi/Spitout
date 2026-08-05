@@ -33,7 +33,12 @@ class _WheelPickerState<T> extends State<WheelPicker<T>> {
   @override
   void initState() {
     super.initState();
-    selected = widget.initial;
+    // initial 不在 items 中时修正为列表首项，避免「确定」返回列表外的值；
+    // 空列表是调用方配置错误，保持 initial 且靠 CupertinoPicker 空列表兜底，
+    // 不在此处崩溃。
+    selected = widget.items.contains(widget.initial)
+        ? widget.initial
+        : (widget.items.isEmpty ? widget.initial : widget.items.first);
     final index = widget.items.indexOf(selected);
     _controller = FixedExtentScrollController(initialItem: index >= 0 ? index : 0);
   }

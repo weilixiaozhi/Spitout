@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/providers.dart';
+import '../../core/logging/logger_service.dart';
 import '../../data/models.dart' as db;
 import '../../widgets/widgets.dart';
 import '../../theme/colors.dart';
@@ -59,6 +60,8 @@ class CategoryDetailPage extends ConsumerStatefulWidget {
 }
 
 class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
+  /// 删除进行中标记:防止详情 sheet 与行内删除入口连点重复执行。
+  bool _deleting = false;
 
   @override
   Widget build(BuildContext context) {
@@ -78,7 +81,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       data: (transactions) {
         if (widget.startDate != null && widget.endDate != null) {
           final filtered = transactions.where((t) {
-            // 修复：使用 >= 和 < 来包含起始日期，排除结束日期的下一天
+            // 区间为 [startDate, endDate):包含起始日,排除结束日的下一天。
             return t.happenedAt.isAtSameMomentAs(widget.startDate!) ||
                    (t.happenedAt.isAfter(widget.startDate!) &&
                     t.happenedAt.isBefore(widget.endDate!));
@@ -142,11 +145,24 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                     height: 120,
                     child: Center(child: CircularProgressIndicator()),
                   ),
-                  error: (error, stack) => Container(
-                    height: 120,
-                    margin: const EdgeInsets.all(16),
-                    child: Center(child: Text(AppLocalizations.of(context).categoryLoadFailed(error.toString()))),
-                  ),
+                  error: (error, stack) {
+                    // 原始异常只进日志,页面展示统一友好文案。
+                    logger.error(
+                      'CategoryDetailPage',
+                      '分类汇总加载失败 category=${widget.categoryId}',
+                      error,
+                      stack,
+                    );
+                    return Container(
+                      height: 120,
+                      margin: const EdgeInsets.all(16),
+                      child: Center(
+                        child: Text(
+                          AppLocalizations.of(context).categoryDetailLoadFailed,
+                        ),
+                      ),
+                    );
+                  },
                   data: (summary) => _buildSummaryCard(summary),
                 ),
                 // 排序控件
@@ -155,8 +171,45 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                 Expanded(
                   child: filteredTransactionsAsync.when(
                     loading: () => const Center(child: CircularProgressIndicator()),
-                    error: (error, stack) => Center(child: Text('${AppLocalizations.of(context).categoryDetailLoadFailed}: $error')),
-                    data: (transactions) => _buildTransactionsList(transactions, currentSortType, categoryMap, memberMap, localOwnerName, ledger?.aaEnabled ?? false),
+                    error: (error, stack) {
+                      logger.error(
+                        'CategoryDetailPage',
+                        '分类交易加载失败 category=${widget.categoryId}',
+                        error,
+                        stack,
+                      );
+                      return _buildLoadError(
+                        () => ref.invalidate(
+                          _categoryTransactionsWithSortProvider((
+                            categoryId: widget.categoryId,
+                            ledgerId: ledgerId,
+                          )),
+                        ),
+                      );
+                    },
+                    data: (transactions) {
+                      // 分类映射未就绪:交易先到也不能静默跳过分类组,
+                      // 先展示加载态,避免整组交易消失。
+                      if (categoryMapAsync.isLoading) {
+                        return const Center(child: CircularProgressIndicator());
+                      }
+                      // 分类映射加载失败:展示错误 + 重试,不静默当「无交易」。
+                      if (categoryMapAsync.hasError) {
+                        return _buildLoadError(
+                          () => ref.invalidate(
+                            _categorySubsMapProvider(widget.categoryId),
+                          ),
+                        );
+                      }
+                      return _buildTransactionsList(
+                        transactions,
+                        currentSortType,
+                        categoryMap,
+                        memberMap,
+                        localOwnerName,
+                        ledger?.aaEnabled ?? false,
+                      );
+                    },
                   ),
                 ),
               ],
@@ -293,24 +346,65 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
   /// 删除交易:写库 → 后台同步 → 刷新账本笔数与全局统计。
   /// 详情 sheet 与行内删除入口共用同一逻辑。
   Future<void> _deleteTransaction(db.Transaction transaction) async {
+    if (_deleting) return;
+    _deleting = true;
     final repo = ref.read(repositoryProvider);
     final ledgerId = ref.read(currentLedgerIdProvider);
+    final l10n = AppLocalizations.of(context);
 
     try {
       await repo.deleteTransaction(transaction.id);
 
-      // 统一处理：自动/手动同步与状态刷新（后台静默）
-      await PostProcessor.sync(ref, ledgerId: ledgerId);
-
       // 刷新：账本笔数与全局统计
       ref.invalidate(countsForLedgerProvider(ledgerId));
       ref.read(statsRefreshProvider.notifier).tick();
-    } catch (e) {
-      if (mounted) {
-        showToast(context,
-            '${AppLocalizations.of(context).categoryDetailDeleteFailed}: $e');
+
+      // 同步失败单独记录:删除已成功,不应误报为「删除失败」,
+      // 数据会由后续自动同步机制补推。
+      try {
+        await PostProcessor.sync(ref, ledgerId: ledgerId);
+      } catch (e, st) {
+        logger.warning(
+          'CategoryDetailPage',
+          '删除成功但同步失败 tx=${transaction.id}',
+          '$e\n$st',
+        );
       }
+    } catch (e, st) {
+      logger.error(
+        'CategoryDetailPage',
+        '删除交易失败 tx=${transaction.id}',
+        e,
+        st,
+      );
+      if (mounted) {
+        showToast(context, l10n.categoryDetailDeleteFailed);
+      }
+    } finally {
+      _deleting = false;
     }
+  }
+
+  /// 列表加载失败占位:友好文案 + 重试按钮。
+  Widget _buildLoadError(VoidCallback onRetry) {
+    final l10n = AppLocalizations.of(context);
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            l10n.categoryDetailLoadFailed,
+            style: TextStyle(color: SpitoutTokens.textSecondary(context)),
+          ),
+          const SizedBox(height: 8),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(AppIcons.refresh, size: 18),
+            label: Text(l10n.analyticsRetry),
+          ),
+        ],
+      ),
+    );
   }
 
   Widget _buildTransactionsList(
@@ -680,10 +774,21 @@ final _categoryTransactionsWithSortProvider = Provider.family<AsyncValue<List<db
           sorted.sort((a, b) => b.happenedAt.compareTo(a.happenedAt));
           break;
         case SortType.amountAsc:
-          sorted.sort((a, b) => a.amount.compareTo(b.amount));
+          // 金额排序与列表展示/小计口径一致:按折本位币金额排。
+          sorted.sort(
+            (a, b) =>
+                (a.nativeAmount ?? a.amount).compareTo(
+                  b.nativeAmount ?? b.amount,
+                ),
+          );
           break;
         case SortType.amountDesc:
-          sorted.sort((a, b) => b.amount.compareTo(a.amount));
+          sorted.sort(
+            (a, b) =>
+                (b.nativeAmount ?? b.amount).compareTo(
+                  a.nativeAmount ?? a.amount,
+                ),
+          );
           break;
       }
 

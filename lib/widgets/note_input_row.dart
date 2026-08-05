@@ -58,17 +58,23 @@ class NoteInputRow extends ConsumerWidget {
                 fillColor: SpitoutTokens.surfaceInput(context),
                 contentPadding:
                     const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                // 清空按钮（后缀）：CircleX 图标，仅备注非空时显示
-                suffixIcon: noteController.text.isNotEmpty
-                    ? GestureDetector(
-                        onTap: () => onNotePicked(''),
-                        child: Icon(
-                          AppIcons.cancel,
-                          size: 18,
-                          color: SpitoutTokens.iconSecondary(context),
-                        ),
-                      )
-                    : null,
+                // 清空按钮（后缀）：CircleX 图标，仅备注非空时显示。
+                // 用 ValueListenableBuilder 监听 controller 自身，输入变化时
+                // 按钮即时出现/消失，不依赖父层是否重建本组件。
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: noteController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () => onNotePicked(''),
+                      child: Icon(
+                        AppIcons.cancel,
+                        size: 18,
+                        color: SpitoutTokens.iconSecondary(context),
+                      ),
+                    );
+                  },
+                ),
               ),
             ),
           ),

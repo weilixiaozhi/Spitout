@@ -116,6 +116,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get commonFailed => 'Failed';
 
   @override
+  String get commonOperationFailed =>
+      'Operation failed, please try again later';
+
+  @override
   String get commonBack => 'Back';
 
   @override
@@ -1712,6 +1716,14 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap the + button in the top right corner to add';
 
   @override
+  String get recurringTransactionAmountInvalid =>
+      'Amount must be greater than 0';
+
+  @override
+  String get recurringTransactionEndBeforeStart =>
+      'End date cannot be earlier than start date';
+
+  @override
   String recurringTransactionEveryNDays(int n) {
     return 'Every $n day(s)';
   }
@@ -2976,6 +2988,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Send the code or short link to the other person. After they install Spitout, they can tap the link or enter the code from \"Me → Join shared ledger\".';
 
   @override
+  String get sharedInviteUnavailable =>
+      'Invite is unavailable. Please generate a new one.';
+
+  @override
   String sharedInviteShareText(String ledger, String code, String url) {
     return 'I\'m inviting you to Spitout shared ledger \"$ledger\".\n\nCode: $code\nLink: $url\n\nTap the link, or open Spitout → Me → Join shared ledger and enter this code.';
   }
@@ -3027,6 +3043,10 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get sharedMembersRemoved => 'Member removed';
+
+  @override
+  String get sharedMembersRemoveFailed =>
+      'Failed to remove member. Please try again later.';
 
   @override
   String get sharedMembersSyncPending =>

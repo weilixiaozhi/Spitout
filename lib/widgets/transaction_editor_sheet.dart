@@ -1,10 +1,9 @@
-import 'dart:convert';
-
 import 'package:decimal/decimal.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../core/logging/logger_service.dart';
 import '../data/models.dart';
 import '../l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
@@ -24,6 +23,7 @@ import 'category_grid_section.dart';
 import 'keypad_layout.dart';
 import 'note_input_row.dart';
 import 'collaborator_avatar.dart';
+import 'aa_fields_utils.dart';
 import '../theme/icons/app_icons.dart';
 
 /// 记账编辑 BottomSheet（单页：分类 + 金额 + 备注 + 键盘同页）。
@@ -546,13 +546,16 @@ class _TransactionEditorSheetState
       _aaSplits = result.aaSplits;
       return (
         aaMode: result.aaMode,
-        aaParticipants: result.aaParticipants == null
-            ? null
-            : jsonEncode(result.aaParticipants),
-        // 人均结果不带金额:编辑模式显式清空旧 aaSplits;新建写 null
-        aaSplits: result.aaSplits != null
-            ? jsonEncode(result.aaSplits)
-            : (isEditing ? '' : null),
+        // 参与人与金额的清空语义统一走工具函数：编辑模式「全部成员 / 人均」
+        // 必须显式写空串清空旧值，新建模式写 null（update 语义 null=不更新）。
+        aaParticipants: aaParticipantsJsonForWrite(
+          result.aaParticipants,
+          isEditing: isEditing,
+        ),
+        aaSplits: aaSplitsJsonForWrite(
+          result.aaSplits,
+          isEditing: isEditing,
+        ),
         // 支出人透传分摊编辑页结果:未手选回传 null,新建由落库层回填
         // 操作者(默认支出人 = 创建人),编辑不更新保持原值。
         paidByUserId: result.paidByUserId,
@@ -564,8 +567,8 @@ class _TransactionEditorSheetState
     // 不更新),不分摊交易的支出人由创建时落库层回填操作者决定。
     return (
       aaMode: 1,
-      aaParticipants: isEditing ? '' : null,
-      aaSplits: isEditing ? '' : null,
+      aaParticipants: aaParticipantsJsonForWrite(null, isEditing: isEditing),
+      aaSplits: aaSplitsJsonForWrite(null, isEditing: isEditing),
       paidByUserId: null,
     );
   }
@@ -583,126 +586,137 @@ class _TransactionEditorSheetState
     if (_isSubmitting) return;
     setState(() => _isSubmitting = true);
 
-    final total = _currentTotal.abs(); // 始终正数(元)
-    // 落库统一为整数分:UI 已限制 2 位小数,×100 取整无尾差。
-    final totalCents = (total * 100).round();
+    try {
+      final total = _currentTotal.abs(); // 始终正数(元)
+      // 落库统一为整数分:UI 已限制 2 位小数,×100 取整无尾差。
+      final totalCents = (total * 100).round();
 
-    // 折本位币快照。外币且汇率无效 → 阻断。
-    final txCurrency = _txCurrency();
-    final ledgerBase = ref.read(currentLedgerCurrencyProvider);
-    int? nativeAmount;
-    if (txCurrency == ledgerBase) {
-      nativeAmount = totalCents;
-    } else {
-      final r = _currentRate();
-      if (r == null || r <= 0) {
-        setState(() => _isSubmitting = false);
-        showToast(context, AppLocalizations.of(context).txRateMissingHint);
-        return;
+      // 折本位币快照。外币且汇率无效 → 阻断。
+      final txCurrency = _txCurrency();
+      final ledgerBase = ref.read(currentLedgerCurrencyProvider);
+      int? nativeAmount;
+      if (txCurrency == ledgerBase) {
+        nativeAmount = totalCents;
+      } else {
+        final r = _currentRate();
+        if (r == null || r <= 0) {
+          showToast(context, AppLocalizations.of(context).txRateMissingHint);
+          return;
+        }
+        nativeAmount = (total * r * 100).round();
       }
-      nativeAmount = (total * r * 100).round();
-    }
 
-    // AA 分流:指定分摊先跳 AaEditPage 取 result 后一次性落库;
-    // 取消则中止提交,编辑器保持开启、内容保留。
-    final aa = await _resolveAaFields(total, txCurrency, c);
-    if (aa == null) {
+      // AA 分流:指定分摊先跳 AaEditPage 取 result 后一次性落库;
+      // 取消则中止提交,编辑器保持开启、内容保留。
+      final aa = await _resolveAaFields(total, txCurrency, c);
+      if (aa == null) return;
+
+      HapticFeedback.lightImpact();
+      SystemSound.play(SystemSoundType.click);
+
+      final repo = ref.read(repositoryProvider);
+      // Category 是 synthetic（id<0）时，categoryId 留 null，override 走 syncId
+      final isSyntheticCategory = c.id < 0;
+      final categoryIdForWrite = isSyntheticCategory ? null : c.id;
+      final categoryOverride = isSyntheticCategory ? c.syncId : null;
+
+      int transactionId;
+      if (widget.editingTransactionId != null) {
+        // 编辑模式：更新交易
+        // 无旗标功能：excludeFromStats 恒为 false
+        final newVersion = await repo.updateTransaction(
+          id: widget.editingTransactionId!,
+          type: widget.initialKind,
+          amount: totalCents,
+          categoryId: categoryIdForWrite,
+          note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
+          happenedAt: _date,
+          categorySyncIdOverride: categoryOverride,
+          excludeFromStats: false,
+          currencyCode: txCurrency,
+          nativeAmount: nativeAmount,
+          paidByUserId: aa.paidByUserId,
+          aaMode: aa.aaMode,
+          aaParticipants: aa.aaParticipants,
+          aaSplits: aa.aaSplits,
+        );
+        transactionId = widget.editingTransactionId!;
+        // 共享账本：本地 lastEditedByUserId 立即回填（云实例读取收敛到 providers 动作函数）
+        await markTxEditedFromUi(ref, transactionId);
+
+        // 闭环：在编辑历史表追加一条同版本号快照，让详情页"编辑记录"区块
+        // 有内容可展示。updateTransaction 已将 transactions.version +1，
+        // 此处用同版本号写历史，使 transactions.version 与
+        // record_edit_histories.version 一一对应，详情页"vN"标签才能
+        // 正确指代本次编辑。
+        // summary 作为不本地化的快照文本（与 note 字段同理），直接用
+        // 分类名 + 金额 + 交易发生日期拼接；operatorUserId 在单人账本下为 null，
+        // 详情页对应行将不显示操作者，符合预期。
+        final operatorUserId = await currentOperatorUserIdFromUi(ref);
+        final summary =
+            '${c.name} · ${total.toStringAsFixed(2)} · '
+            '${_date.year}-${_date.month.toString().padLeft(2, '0')}-'
+            '${_date.day.toString().padLeft(2, '0')} '
+            '${_date.hour.toString().padLeft(2, '0')}:'
+            '${_date.minute.toString().padLeft(2, '0')}';
+        await repo.appendEditHistory(
+          recordId: transactionId,
+          version: newVersion,
+          operatorUserId: operatorUserId,
+          summary: summary,
+        );
+        // 主动失效编辑历史缓存：若详情 sheet 仍在 widget tree 上，
+        // 下次读取会重查，立即看到刚写入的历史行。
+        ref.invalidate(recordEditHistoryProvider(transactionId));
+      } else {
+        transactionId = await repo.addTransaction(
+          ledgerId: _ledgerId,
+          type: widget.initialKind,
+          amount: totalCents,
+          categoryId: categoryIdForWrite,
+          happenedAt: _date,
+          note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
+          categorySyncIdOverride: categoryOverride,
+          excludeFromStats: false,
+          currencyCode: txCurrency,
+          nativeAmount: nativeAmount,
+          paidByUserId: aa.paidByUserId,
+          aaMode: aa.aaMode,
+          aaParticipants: aa.aaParticipants,
+          aaSplits: aa.aaSplits,
+        );
+        // 共享账本：新建本地 tx 回填创建人 + 编辑人（同一个 user）;
+        // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖。
+        await markTxCreatedFromUi(ref, transactionId);
+      }
+
+      // 统一处理：自动/手动同步与状态刷新（后台静默）
+      PostProcessor.sync(ref, ledgerId: _ledgerId);
+      // 刷新：账本笔数与全局统计
+      ref.invalidate(countsForLedgerProvider(_ledgerId));
+      ref.read(statsRefreshProvider.notifier).tick();
+
+      // 提交成功后关闭编辑器 sheet。
+      // 若本次提交跳转过 AaEditPage,AA 页退场固定为下滑动画(见
+      // aaSlidePageRoute),与 sheet 下滑收起同向同速、同步进行,视觉上
+      // 两层"一起收起来",无需等待 AA 页退场完成,也无需瞬隐 sheet。
+      // 未跳转 AA 页时走标准 pop,sheet 下滑动画体验保持不变。
+      if (mounted && Navigator.of(context).canPop()) {
+        Navigator.of(context).pop();
+      }
+    } catch (e, st) {
+      // 提交失败：保持 sheet 开启（内容不丢），复位提交中状态并提示，
+      // 避免 updateTransaction 成功但 appendEditHistory 失败时界面永久卡死。
+      logger.error('TransactionEditorSheet', '提交交易失败', e, st);
+      if (mounted) {
+        showToast(
+          context,
+          '${AppLocalizations.of(context).commonError}: $e',
+        );
+      }
+    } finally {
+      // 无论成功 / 失败 / 取消都必须复位，防止提交按钮永久转圈。
       if (mounted) setState(() => _isSubmitting = false);
-      return;
-    }
-
-    HapticFeedback.lightImpact();
-    SystemSound.play(SystemSoundType.click);
-
-    final repo = ref.read(repositoryProvider);
-    // Category 是 synthetic（id<0）时，categoryId 留 null，override 走 syncId
-    final isSyntheticCategory = c.id < 0;
-    final categoryIdForWrite = isSyntheticCategory ? null : c.id;
-    final categoryOverride = isSyntheticCategory ? c.syncId : null;
-
-    int transactionId;
-    if (widget.editingTransactionId != null) {
-      // 编辑模式：更新交易
-      // 无旗标功能：excludeFromStats 恒为 false
-      final newVersion = await repo.updateTransaction(
-        id: widget.editingTransactionId!,
-        type: widget.initialKind,
-        amount: totalCents,
-        categoryId: categoryIdForWrite,
-        note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
-        happenedAt: _date,
-        categorySyncIdOverride: categoryOverride,
-        excludeFromStats: false,
-        currencyCode: txCurrency,
-        nativeAmount: nativeAmount,
-        paidByUserId: aa.paidByUserId,
-        aaMode: aa.aaMode,
-        aaParticipants: aa.aaParticipants,
-        aaSplits: aa.aaSplits,
-      );
-      transactionId = widget.editingTransactionId!;
-      // 共享账本：本地 lastEditedByUserId 立即回填（云实例读取收敛到 providers 动作函数）
-      await markTxEditedFromUi(ref, transactionId);
-
-      // 闭环：在编辑历史表追加一条同版本号快照，让详情页"编辑记录"区块
-      // 有内容可展示。updateTransaction 已将 transactions.version +1，
-      // 此处用同版本号写历史，使 transactions.version 与
-      // record_edit_histories.version 一一对应，详情页"vN"标签才能
-      // 正确指代本次编辑。
-      // summary 作为不本地化的快照文本（与 note 字段同理），直接用
-      // 分类名 + 金额 + 交易发生日期拼接；operatorUserId 在单人账本下为 null，
-      // 详情页对应行将不显示操作者，符合预期。
-      final operatorUserId = await currentOperatorUserIdFromUi(ref);
-      final summary =
-          '${c.name} · ${total.toStringAsFixed(2)} · '
-          '${_date.year}-${_date.month.toString().padLeft(2, '0')}-'
-          '${_date.day.toString().padLeft(2, '0')} '
-          '${_date.hour.toString().padLeft(2, '0')}:'
-          '${_date.minute.toString().padLeft(2, '0')}';
-      await repo.appendEditHistory(
-        recordId: transactionId,
-        version: newVersion,
-        operatorUserId: operatorUserId,
-        summary: summary,
-      );
-      // 主动失效编辑历史缓存：若详情 sheet 仍在 widget tree 上，
-      // 下次读取会重查，立即看到刚写入的历史行。
-      ref.invalidate(recordEditHistoryProvider(transactionId));
-    } else {
-      transactionId = await repo.addTransaction(
-        ledgerId: _ledgerId,
-        type: widget.initialKind,
-        amount: totalCents,
-        categoryId: categoryIdForWrite,
-        happenedAt: _date,
-        note: _noteCtrl.text.isEmpty ? null : _noteCtrl.text,
-        categorySyncIdOverride: categoryOverride,
-        excludeFromStats: false,
-        currencyCode: txCurrency,
-        nativeAmount: nativeAmount,
-        paidByUserId: aa.paidByUserId,
-        aaMode: aa.aaMode,
-        aaParticipants: aa.aaParticipants,
-        aaSplits: aa.aaSplits,
-      );
-      // 共享账本：新建本地 tx 回填创建人 + 编辑人（同一个 user）;
-      // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖。
-      await markTxCreatedFromUi(ref, transactionId);
-    }
-
-    // 统一处理：自动/手动同步与状态刷新（后台静默）
-    PostProcessor.sync(ref, ledgerId: _ledgerId);
-    // 刷新：账本笔数与全局统计
-    ref.invalidate(countsForLedgerProvider(_ledgerId));
-    ref.read(statsRefreshProvider.notifier).tick();
-
-    // 提交成功后关闭编辑器 sheet。
-    // 若本次提交跳转过 AaEditPage,AA 页退场固定为下滑动画(见
-    // aaSlidePageRoute),与 sheet 下滑收起同向同速、同步进行,视觉上
-    // 两层"一起收起来",无需等待 AA 页退场完成,也无需瞬隐 sheet。
-    // 未跳转 AA 页时走标准 pop,sheet 下滑动画体验保持不变。
-    if (mounted && Navigator.of(context).canPop()) {
-      Navigator.of(context).pop();
     }
   }
 
@@ -1110,10 +1124,14 @@ final _txAuthorContextProvider = FutureProvider.autoDispose
       final ledger = await repo.getLedgerById(tx.ledgerId);
       // 只有共享账本才需要展示协作者头像
       if (!(ledger?.isShared ?? false)) return null;
+      // 脏数据 / 半同步态下 isShared=true 但 syncId 为空时直接降级不展示，
+      // 避免 ! 空安全崩溃把头像 provider 打进 error 态。
+      final ledgerSyncId = ledger!.syncId;
+      if (ledgerSyncId == null || ledgerSyncId.isEmpty) return null;
       return _TxAuthorContext(
         creatorUserId: tx.createdByUserId,
         lastEditedByUserId: tx.lastEditedByUserId,
-        ledgerSyncId: ledger!.syncId!, // 已确认isShared=true的账本syncId必然非空
+        ledgerSyncId: ledgerSyncId,
       );
     });
 

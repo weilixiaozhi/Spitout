@@ -1,17 +1,14 @@
-import 'dart:convert';
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../core/logging/logger_service.dart';
 import '../data/models.dart';
-import '../data/repositories/support/shared_ledger_picker_filter.dart'
-    show syntheticIdForSyncId;
 import '../l10n/app_localizations.dart';
 import '../routes.dart';
 import '../services/statistics/aa_edit_models.dart';
 import '../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../utils/category_utils.dart';
+import 'aa_fields_utils.dart';
 import 'toast.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
@@ -64,8 +61,8 @@ class TransactionAaEditUtils {
         date: transaction.happenedAt,
         mode: mode,
         paidByUserId: transaction.paidByUserId,
-        participantIds: _parseIdList(transaction.aaParticipants),
-        splits: _parseSplits(transaction.aaSplits),
+        participantIds: parseAaParticipantIds(transaction.aaParticipants),
+        splits: parseAaSplits(transaction.aaSplits),
       ),
     ) as AaEditResult?;
 
@@ -82,10 +79,12 @@ class TransactionAaEditUtils {
       id: transaction.id,
       type: transaction.type,
       amount: transaction.amount,
-      categoryId: transaction.categoryId ??
-          (transaction.categorySyncIdOverride != null
-              ? syntheticIdForSyncId(transaction.categorySyncIdOverride!)
-              : null),
+      // 共享账本 Editor 视角：synthetic override 存在时 categoryId 留 null，
+      // 绝不把 synthetic 负数 id 写进共享账本交易的 category_id。
+      categoryId: aaEditCategoryIdForWrite(
+        categoryId: transaction.categoryId,
+        categorySyncIdOverride: transaction.categorySyncIdOverride,
+      ),
       note: transaction.note,
       happenedAt: transaction.happenedAt,
       categorySyncIdOverride: transaction.categorySyncIdOverride,
@@ -94,12 +93,11 @@ class TransactionAaEditUtils {
       nativeAmount: transaction.nativeAmount,
       paidByUserId: result.paidByUserId,
       aaMode: result.aaMode,
-      aaParticipants: result.aaParticipants == null
-          ? ''
-          : jsonEncode(result.aaParticipants),
-      aaSplits: result.aaSplits != null
-          ? jsonEncode(result.aaSplits)
-          : '',
+      aaParticipants: aaParticipantsJsonForWrite(
+        result.aaParticipants,
+        isEditing: true,
+      ),
+      aaSplits: aaSplitsJsonForWrite(result.aaSplits, isEditing: true),
     );
 
     // 共享账本:本地 lastEditedByUserId 立即回填。
@@ -135,28 +133,4 @@ class TransactionAaEditUtils {
     }
   }
 
-  /// 解析 aaParticipants(JSON 数组字符串)为参与人标识列表;
-  /// 空 / 解析失败返回 null(全部成员运行时展开)。
-  static List<String>? _parseIdList(String? json) {
-    if (json == null || json.isEmpty) return null;
-    try {
-      return (jsonDecode(json) as List).map((e) => e.toString()).toList();
-    } catch (e, st) {
-      logger.warning('TransactionAaEditUtils', '解析 aaParticipants 失败', '$e\n$st');
-      return null;
-    }
-  }
-
-  /// 解析 aaSplits(JSON 对象字符串)为 参与人标识 → 金额字符串 映射;
-  /// 空 / 解析失败返回 null。
-  static Map<String, String>? _parseSplits(String? json) {
-    if (json == null || json.isEmpty) return null;
-    try {
-      final obj = jsonDecode(json) as Map<String, dynamic>;
-      return {for (final e in obj.entries) e.key: e.value.toString()};
-    } catch (e, st) {
-      logger.warning('TransactionAaEditUtils', '解析 aaSplits 失败', '$e\n$st');
-      return null;
-    }
-  }
 }

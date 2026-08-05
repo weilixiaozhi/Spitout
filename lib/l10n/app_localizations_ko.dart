@@ -116,6 +116,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get commonFailed => '실패';
 
   @override
+  String get commonOperationFailed => '작업에 실패했습니다. 잠시 후 다시 시도해 주세요';
+
+  @override
   String get commonBack => '뒤로';
 
   @override
@@ -1661,6 +1664,12 @@ class AppLocalizationsKo extends AppLocalizations {
   String get recurringTransactionEmptyHint => '우측 상단의 + 버튼을 눌러 추가하세요';
 
   @override
+  String get recurringTransactionAmountInvalid => '금액은 0보다 커야 합니다';
+
+  @override
+  String get recurringTransactionEndBeforeStart => '종료일은 시작일보다 빠를 수 없습니다';
+
+  @override
   String recurringTransactionEveryNDays(int n) {
     return '$n일마다';
   }
@@ -2883,6 +2892,9 @@ class AppLocalizationsKo extends AppLocalizations {
       '코드나 짧은 링크를 상대방에게 전달하세요. Spitout를 설치한 후 링크를 누르거나 \"내 정보 → 공유 가계부 참여\"에서 코드를 입력하면 됩니다.';
 
   @override
+  String get sharedInviteUnavailable => '초대 코드를 사용할 수 없습니다. 다시 생성해 주세요.';
+
+  @override
   String sharedInviteShareText(String ledger, String code, String url) {
     return 'Spitout 공유 가계부 \"$ledger\"에 초대합니다.\n\n코드: $code\n링크: $url\n\n링크를 누르거나 Spitout → 내 정보 → 공유 가계부 참여에서 이 코드를 입력하세요.';
   }
@@ -2934,6 +2946,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get sharedMembersRemoved => '멤버가 제거되었습니다';
+
+  @override
+  String get sharedMembersRemoveFailed => '멤버 제거에 실패했습니다. 나중에 다시 시도해 주세요.';
 
   @override
   String get sharedMembersSyncPending =>

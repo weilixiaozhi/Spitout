@@ -311,6 +311,12 @@ abstract class AppLocalizations {
   /// **'Failed'**
   String get commonFailed;
 
+  /// No description provided for @commonOperationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Operation failed, please try again later'**
+  String get commonOperationFailed;
+
   /// No description provided for @commonBack.
   ///
   /// In en, this message translates to:
@@ -3142,6 +3148,18 @@ abstract class AppLocalizations {
   /// **'Tap the + button in the top right corner to add'**
   String get recurringTransactionEmptyHint;
 
+  /// No description provided for @recurringTransactionAmountInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'Amount must be greater than 0'**
+  String get recurringTransactionAmountInvalid;
+
+  /// No description provided for @recurringTransactionEndBeforeStart.
+  ///
+  /// In en, this message translates to:
+  /// **'End date cannot be earlier than start date'**
+  String get recurringTransactionEndBeforeStart;
+
   /// No description provided for @recurringTransactionEveryNDays.
   ///
   /// In en, this message translates to:
@@ -5350,6 +5368,12 @@ abstract class AppLocalizations {
   /// **'Send the code or short link to the other person. After they install Spitout, they can tap the link or enter the code from \"Me → Join shared ledger\".'**
   String get sharedInviteInstruction;
 
+  /// No description provided for @sharedInviteUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Invite is unavailable. Please generate a new one.'**
+  String get sharedInviteUnavailable;
+
   /// No description provided for @sharedInviteShareText.
   ///
   /// In en, this message translates to:
@@ -5439,6 +5463,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Member removed'**
   String get sharedMembersRemoved;
+
+  /// No description provided for @sharedMembersRemoveFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Failed to remove member. Please try again later.'**
+  String get sharedMembersRemoveFailed;
 
   /// No description provided for @sharedMembersSyncPending.
   ///

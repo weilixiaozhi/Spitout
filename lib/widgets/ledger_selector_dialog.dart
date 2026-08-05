@@ -21,7 +21,7 @@ Future<int?> showLedgerSelector(
   );
 }
 
-class LedgerSelectorDialog extends ConsumerWidget {
+class LedgerSelectorDialog extends ConsumerStatefulWidget {
   final int? currentLedgerId;
 
   const LedgerSelectorDialog({
@@ -30,13 +30,27 @@ class LedgerSelectorDialog extends ConsumerWidget {
   });
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(repositoryProvider);
+  ConsumerState<LedgerSelectorDialog> createState() =>
+      _LedgerSelectorDialogState();
+}
+
+class _LedgerSelectorDialogState extends ConsumerState<LedgerSelectorDialog> {
+  /// 账本列表 future 缓存：弹窗生命周期内只查一次，重建不重复读 DB。
+  late final Future<List<Ledger>> _ledgersFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _ledgersFuture = ref.read(repositoryProvider).getAllLedgers();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
     final l10n = AppLocalizations.of(context);
 
     return FutureBuilder<List<Ledger>>(
-      future: repo.getAllLedgers(),
+      future: _ledgersFuture,
       builder: (context, snapshot) {
         if (!snapshot.hasData) {
           return const Center(child: CircularProgressIndicator());
@@ -60,7 +74,7 @@ class LedgerSelectorDialog extends ConsumerWidget {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
           title: Text(l10n.ledgerSelectTitle),
           children: ledgers.map((ledger) {
-            final isSelected = ledger.id == currentLedgerId;
+            final isSelected = ledger.id == widget.currentLedgerId;
             return SimpleDialogOption(
               onPressed: () => Navigator.pop(context, ledger.id),
               child: Row(

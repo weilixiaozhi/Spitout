@@ -42,7 +42,7 @@ class AaMemberSplit {
   /// 参与人显示名。
   final String displayName;
 
-  /// 应摊金额（元，展示口径）。
+  /// 应摊金额（账本本位币，元，展示口径）。
   final double amount;
 
   /// 是否本人；UI 据此追加「(我)」后缀。
@@ -67,10 +67,10 @@ class AaMemberBill {
   /// 分摊方式（人均 / 指定金额 / 不分摊），UI 据此渲染方式徽标。
   final AaMode mode;
 
-  /// 账单实付金额（元）。
+  /// 账单实付金额（账本本位币，元）。
   final double totalAmount;
 
-  /// 该成员在本笔账单中的支出金额（元）。
+  /// 该成员在本笔账单中的支出金额（账本本位币，元）。
   /// 人均/指定金额为应摊值；不分摊或分摊数据异常时整笔归本人。
   final double myShare;
 

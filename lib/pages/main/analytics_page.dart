@@ -9,6 +9,7 @@ import '../transaction/category_detail_page.dart';
 
 import '../../l10n/app_localizations.dart';
 import '../../data/models.dart' as db;
+import '../../core/logging/logger_service.dart';
 import '../../utils/category_utils.dart';
 import '../../utils/date/month_range.dart';
 import '../../utils/date/week_math.dart';
@@ -38,7 +39,8 @@ typedef _TopCat = ({
   String name,
   db.Category? category,
   double total,
-  List<({int id, db.Category? category, String name, double total})> subCategories,
+  List<({int id, db.Category? category, String name, double total})>
+  subCategories,
 });
 
 /// 一次统计计算的结果聚合，供 UI 直接消费
@@ -78,6 +80,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   int? _lastLedgerId;
   // 重试 tick：错误态点击重试时 +1，触发 Future 重建。
   int _retryTick = 0;
+  // 一键补折算进行中：禁用按钮，防止并发触发多次重算写入。
+  bool _recalcBusy = false;
 
   // 子 Tab 滚动控制器：选中项滚动到视图中。
   final ScrollController _subTabController = ScrollController();
@@ -125,18 +129,22 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         // 周视图始终展示完整 7 天，使图表轴稳定（含未来天=0）
         final start = _selWeekStart;
         final isCurrent = start == mondayOf(now);
-        return (start: start, end: start.add(const Duration(days: 7)), isCurrent: isCurrent);
+        return (
+          start: start,
+          end: start.add(const Duration(days: 7)),
+          isCurrent: isCurrent,
+        );
       case AnalyticsPeriod.year:
         final range = yearRangeFor(_selYear, sd);
-        final isCurrent =
-            !now.isBefore(range.start) && now.isBefore(range.end);
+        final isCurrent = !now.isBefore(range.start) && now.isBefore(range.end);
         final end = isCurrent ? today.add(const Duration(days: 1)) : range.end;
         return (start: range.start, end: end, isCurrent: isCurrent);
       case AnalyticsPeriod.month:
         final range = periodForLabel(_selMonth.year, _selMonth.month, sd);
         final nowLabel = labelForDate(now, sd);
         final isCurrent =
-            _selMonth.year == nowLabel.year && _selMonth.month == nowLabel.month;
+            _selMonth.year == nowLabel.year &&
+            _selMonth.month == nowLabel.month;
         final end = isCurrent ? today.add(const Duration(days: 1)) : range.end;
         return (start: range.start, end: end, isCurrent: isCurrent);
     }
@@ -178,14 +186,23 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   }
 
   /// 根据当前父级周期拉取折线图序列：年视图按月聚合，其余按日聚合
-  Future<dynamic> _fetchSeries(DateTime start, DateTime end, {bool isPrev = false}) {
+  Future<dynamic> _fetchSeries(
+    DateTime start,
+    DateTime end, {
+    bool isPrev = false,
+  }) {
     final repo = ref.read(repositoryProvider);
     final ledgerId = ref.read(currentLedgerIdProvider);
     if (_period == AnalyticsPeriod.year) {
       final year = isPrev ? _selYear - 1 : _selYear;
       return repo.totalsByMonth(ledgerId: ledgerId, type: _type, year: year);
     }
-    return repo.totalsByDay(ledgerId: ledgerId, type: _type, start: start, end: end);
+    return repo.totalsByDay(
+      ledgerId: ledgerId,
+      type: _type,
+      start: start,
+      end: end,
+    );
   }
 
   /// 汇总任意序列（日或月）的总额
@@ -228,10 +245,23 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       prevSeries,
     ]);
 
-    final hierarchyData = results[0]
-        as List<({int? id, String name, String? icon, int? parentId, int level, double total})>;
+    final hierarchyData =
+        results[0]
+            as List<
+              ({
+                int? id,
+                String name,
+                String? icon,
+                int? parentId,
+                int level,
+                double total,
+              })
+            >;
     final sharedSynthetic = results[3] as Map<int, db.Category>;
-    final catData = await _aggregateTopLevelCategories(hierarchyData, sharedSynthetic);
+    final catData = await _aggregateTopLevelCategories(
+      hierarchyData,
+      sharedSynthetic,
+    );
     final sum = catData.fold<double>(0, (a, b) => a + b.total);
     final seriesRaw = results[1];
     final prevTotal = _sumSeries(results[4]);
@@ -247,7 +277,17 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   /// 将带层级的分类聚合结果折叠为一级分类（保留预计算二级明细，避免展开时重复查询）。
   /// 使用 getCategoriesByIds 批量取回 Category，避免 N+1 查询（P1）。
   Future<List<_TopCat>> _aggregateTopLevelCategories(
-    List<({int? id, String name, String? icon, int? parentId, int level, double total})> hierarchyData,
+    List<
+      ({
+        int? id,
+        String name,
+        String? icon,
+        int? parentId,
+        int level,
+        double total,
+      })
+    >
+    hierarchyData,
     Map<int, db.Category> sharedSynthetic,
   ) async {
     final repo = ref.read(repositoryProvider);
@@ -266,10 +306,18 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     // 一次性批量查询，避免循环内 await getCategoryById
     final catMap = await repo.getCategoriesByIds(realIds);
     // 合并：sharedSynthetic 优先（共享账本合成分类），否则用真实分类
-    db.Category? catOf(int? id) => id == null ? null : (sharedSynthetic[id] ?? catMap[id]);
+    db.Category? catOf(int? id) =>
+        id == null ? null : (sharedSynthetic[id] ?? catMap[id]);
 
-    final Map<int?, ({String name, double total, List<({int id, db.Category? category, String name, double total})> subs})>
-        topMap = {};
+    final Map<
+      int?,
+      ({
+        String name,
+        double total,
+        List<({int id, db.Category? category, String name, double total})> subs,
+      })
+    >
+    topMap = {};
     for (final row in hierarchyData) {
       final topId = row.parentId ?? row.id;
       final isTop = row.parentId == null;
@@ -280,7 +328,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         () => (
           name: catOf(topId)?.name ?? row.name,
           total: 0.0,
-          subs: <({int id, db.Category? category, String name, double total})>[],
+          subs:
+              <({int id, db.Category? category, String name, double total})>[],
         ),
       );
       final entry = topMap[topId]!;
@@ -357,7 +406,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         mode: WheelDatePickerMode.y,
       );
     }
-    if (res == null) return;
+    if (res == null || !mounted) return;
     setState(() {
       switch (_period) {
         case AnalyticsPeriod.week:
@@ -432,7 +481,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     // tab 却停留在开头」的错位（BUG）。
     final newIds = tabs.map((t) => t.id).toList();
     final listChanged =
-        _lastEnsuredTabIds == null || !_tabIdsEqual(newIds, _lastEnsuredTabIds!);
+        _lastEnsuredTabIds == null ||
+        !_tabIdsEqual(newIds, _lastEnsuredTabIds!);
     if (tabs.isNotEmpty && (activeId != _lastEnsuredTabId || listChanged)) {
       _lastEnsuredTabId = activeId;
       _lastEnsuredTabIds = newIds;
@@ -440,7 +490,11 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         if (!_subTabController.hasClients) return;
         final ctx = _subTabKeyContexts[activeId];
         if (ctx != null) {
-          Scrollable.ensureVisible(ctx, alignment: 0.5, duration: const Duration(milliseconds: 200));
+          Scrollable.ensureVisible(
+            ctx,
+            alignment: 0.5,
+            duration: const Duration(milliseconds: 200),
+          );
         }
       });
     }
@@ -517,9 +571,18 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
           selectedBackgroundColor: SpitoutTokens.surfaceSelected(context),
           selectedTextColor: SpitoutTokens.primary(context),
           options: [
-            CapsuleOption(value: AnalyticsPeriod.week, label: l10n.analyticsWeek),
-            CapsuleOption(value: AnalyticsPeriod.month, label: l10n.analyticsMonth),
-            CapsuleOption(value: AnalyticsPeriod.year, label: l10n.analyticsYear),
+            CapsuleOption(
+              value: AnalyticsPeriod.week,
+              label: l10n.analyticsWeek,
+            ),
+            CapsuleOption(
+              value: AnalyticsPeriod.month,
+              label: l10n.analyticsMonth,
+            ),
+            CapsuleOption(
+              value: AnalyticsPeriod.year,
+              label: l10n.analyticsYear,
+            ),
           ],
           onChanged: (v) => setState(() {
             _period = v;
@@ -550,19 +613,34 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   }
 
   /// 支出趋势网格：总支出 / 环比 / 日均支出
-  Widget _buildTrendGrid(double sum, double dailyAvg, _MomInfo mom, Color primary) {
+  Widget _buildTrendGrid(
+    double sum,
+    double dailyAvg,
+    _MomInfo mom,
+    Color primary,
+  ) {
     final l10n = AppLocalizations.of(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _statCell(
           l10n.analyticsTotalExpenseLabel,
-          AmountText(value: sum, signed: false, decimals: 0, showCurrency: true),
+          AmountText(
+            value: sum,
+            signed: false,
+            decimals: 0,
+            showCurrency: true,
+          ),
         ),
         _statCell(
           mom.label,
           mom.none
-              ? Text('—', style: SpitoutTextTokens.title(context).copyWith(fontSize: 16))
+              ? Text(
+                  '—',
+                  style: SpitoutTextTokens.title(
+                    context,
+                  ).copyWith(fontSize: 16),
+                )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
@@ -585,12 +663,18 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         ),
         _statCell(
           l10n.analyticsDailyExpense,
-          AmountText(value: dailyAvg, signed: false, decimals: 0, showCurrency: true),
+          AmountText(
+            value: dailyAvg,
+            signed: false,
+            decimals: 0,
+            showCurrency: true,
+          ),
         ),
       ],
     );
   }
 
+  /// 统计指标格：标签 + 数值，三个指标横向均分。
   Widget _statCell(String label, Widget value) {
     return Expanded(
       child: Column(
@@ -598,7 +682,10 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         children: [
           Text(
             label,
-            style: TextStyle(fontSize: 12, color: SpitoutTokens.textTertiary(context)),
+            style: TextStyle(
+              fontSize: 12,
+              color: SpitoutTokens.textTertiary(context),
+            ),
           ),
           const SizedBox(height: 6),
           value,
@@ -697,8 +784,12 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                       label: _period == AnalyticsPeriod.week
                           ? AppLocalizations.of(context).analyticsBackToThisWeek
                           : _period == AnalyticsPeriod.month
-                              ? AppLocalizations.of(context).analyticsBackToThisMonth
-                              : AppLocalizations.of(context).analyticsBackToThisYear,
+                          ? AppLocalizations.of(
+                              context,
+                            ).analyticsBackToThisMonth
+                          : AppLocalizations.of(
+                              context,
+                            ).analyticsBackToThisYear,
                       onPressed: _jumpToCurrentPeriod,
                     ),
                 ],
@@ -716,8 +807,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   _period == AnalyticsPeriod.week
                       ? AppLocalizations.of(context).analyticsWeek
                       : _period == AnalyticsPeriod.month
-                          ? AppLocalizations.of(context).analyticsMonth
-                          : AppLocalizations.of(context).analyticsYear,
+                      ? AppLocalizations.of(context).analyticsMonth
+                      : AppLocalizations.of(context).analyticsYear,
                 ),
               ),
               _buildRecalcForeignBanner(context),
@@ -729,25 +820,26 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     ? _buildEmpty(primary)
                     : FutureBuilder<_AnalyticsData>(
                         key: ValueKey(
-                            '$_period-$_selMonth-$_selYear-$_selWeekStart-$_type-$_retryTick'),
+                          '$_period-$_selMonth-$_selYear-$_selWeekStart-$_type-$_retryTick',
+                        ),
                         future: _dataFuture,
                         builder: (context, snapshot) {
-                    // 错误态：显示重试 UI
-                    if (snapshot.hasError) {
-                      return _buildError(snapshot.error, primary);
-                    }
-                    // 加载态：骨架屏近似最终布局
-                    if (!snapshot.hasData) {
-                      return _buildSkeleton();
-                    }
-                    final data = snapshot.data!;
-                    // 空态判定：以交易笔数为准
-                    if (data.txCount == 0) {
-                      return _buildEmpty(primary);
-                    }
-                    return _buildContent(data, primary);
-                  },
-                ),
+                          // 错误态：显示重试 UI
+                          if (snapshot.hasError) {
+                            return _buildError(snapshot.error, primary);
+                          }
+                          // 加载态：骨架屏近似最终布局
+                          if (!snapshot.hasData) {
+                            return _buildSkeleton();
+                          }
+                          final data = snapshot.data!;
+                          // 空态判定：以交易笔数为准
+                          if (data.txCount == 0) {
+                            return _buildEmpty(primary);
+                          }
+                          return _buildContent(data, primary);
+                        },
+                      ),
               ),
             ],
           ),
@@ -802,7 +894,11 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(AppIcons.cloudOff, size: 48, color: SpitoutTokens.textTertiary(context)),
+            Icon(
+              AppIcons.cloudOff,
+              size: 48,
+              color: SpitoutTokens.textTertiary(context),
+            ),
             const SizedBox(height: 12),
             Text(
               l10n.analyticsLoadFailed,
@@ -873,14 +969,17 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 xUnitLabel: _period == AnalyticsPeriod.week
                     ? l10n.analyticsWeek
                     : _period == AnalyticsPeriod.year
-                        ? l10n.analyticsYear
-                        : l10n.analyticsMonth,
+                    ? l10n.analyticsYear
+                    : l10n.analyticsMonth,
               ),
             ),
           ),
           const SizedBox(height: 24),
           // 分类排行模块
-          Text(l10n.analyticsCategoryLabel, style: SpitoutTextTokens.title(context)),
+          Text(
+            l10n.analyticsCategoryLabel,
+            style: SpitoutTextTokens.title(context),
+          ),
           const SizedBox(height: 12),
           CategoryDonutChart(data: donutData, sum: sum),
           const SizedBox(height: 12),
@@ -914,19 +1013,21 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     ({DateTime start, DateTime end, bool isCurrent}) cur,
   ) {
     final scope = _period.name;
-    final selMonth =
-        _period == AnalyticsPeriod.week ? _selWeekStart : _selMonth;
+    final selMonth = _period == AnalyticsPeriod.week
+        ? _selWeekStart
+        : _selMonth;
 
     // 生成周期标签
     String? periodLabel;
     if (scope != 'all') {
       periodLabel = switch (scope) {
-        'year' => '${selMonth.year}',
+        // 年视图直接使用 _selYear，避免沿用月视图残留的 _selMonth 造成标签错位。
+        'year' => '$_selYear',
         // 周视图：用选中周一展示该周区间（周一 ~ 周日）
         'week' => () {
-            final end = selMonth.add(const Duration(days: 6));
-            return '${selMonth.month}/${selMonth.day}-${end.month}/${end.day}';
-          }(),
+          final end = selMonth.add(const Duration(days: 6));
+          return '${selMonth.month}/${selMonth.day}-${end.month}/${end.day}';
+        }(),
         _ => '${selMonth.year}.${selMonth.month.toString().padLeft(2, '0')}',
       };
     }
@@ -1070,14 +1171,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     // 环图展示 Top5 + 「其他」聚合：各扇区占比合计恒等于 100%，
     // 与下方完整分类排行榜口径一致。若只画 Top5，分类多于 5 个时
     // fl_chart 会把部分数据拉满整圆，形成「假 100%」（视觉误导）。
-    final restTotal =
-        data.catData.skip(5).fold<double>(0, (a, c) => a + c.total);
+    final restTotal = data.catData
+        .skip(5)
+        .fold<double>(0, (a, c) => a + c.total);
     final donutData = [
       for (final c in data.catData.take(5))
         DonutCategory(
           name: CategoryUtils.getDisplayName(c.name, context),
           percent: data.sum == 0 ? 0 : c.total / data.sum,
-          total: c.total,
         ),
       // 「其他」聚合扇区固定排最后（即使金额大于第 5 名），
       // 符合记账类 App 的阅读习惯；restTotal 为 0 时不追加。
@@ -1085,7 +1186,6 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         DonutCategory(
           name: l10n.commonOther,
           percent: data.sum == 0 ? 0 : restTotal / data.sum,
-          total: restTotal,
           isOther: true,
         ),
     ];
@@ -1133,8 +1233,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
   /// 外币补折算横幅：账本存在未折算外币交易时提示，并可一键补折算
   Widget _buildRecalcForeignBanner(BuildContext context) {
-    final count =
-        ref.watch(ledgerUnconvertedForeignTxCountProvider).value ?? 0;
+    final count = ref.watch(ledgerUnconvertedForeignTxCountProvider).value ?? 0;
     if (count <= 0) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     return Padding(
@@ -1146,8 +1245,11 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           child: Row(
             children: [
-              Icon(AppIcons.currencyExchange,
-                  size: 16, color: Theme.of(context).colorScheme.primary),
+              Icon(
+                AppIcons.currencyExchange,
+                size: 16,
+                color: Theme.of(context).colorScheme.primary,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -1158,8 +1260,13 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 ),
               ),
               TextButton(
-                onPressed: () => _runRecalcForeignTx(count),
-                child: Text(l10n.recalcForeignTxAction, style: TextStyle(fontSize: 12)),
+                onPressed: _recalcBusy
+                    ? null
+                    : () => _runRecalcForeignTx(count),
+                child: Text(
+                  l10n.recalcForeignTxAction,
+                  style: TextStyle(fontSize: 12),
+                ),
               ),
             ],
           ),
@@ -1188,7 +1295,10 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     );
   }
 
-  /// 一键补折算：先刷新本位币汇率组，再按最新汇率重算账本内所有外币交易
+  /// 一键补折算：先刷新本位币汇率组，再按最新汇率重算账本内所有外币交易。
+  ///
+  /// 折算期间置 _recalcBusy 禁用按钮，避免并发触发多次重算写入；
+  /// 失败时弹友好提示并记日志，异常不冒泡到框架层。
   Future<void> _runRecalcForeignTx(int count) async {
     final l10n = AppLocalizations.of(context);
     final confirmed = await showDialog<bool>(
@@ -1209,17 +1319,30 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       ),
     );
     if (confirmed != true || !mounted) return;
-    final repo = ref.read(repositoryProvider);
-    final ledgerId = ref.read(currentLedgerIdProvider);
-    // 补折算前先确保本位币汇率组是新鲜的（缺组则整体跳过）；
-    // extraQuotes 带上账本交易实际涉及的外币，避免无账户的币种永远补不上。
-    final foreign = await repo.getLedgerForeignCurrencies(ledgerId);
-    await refreshExchangeRatesFromUi(ref, force: true, extraQuotes: foreign);
-    final n = await repo.recomputeForeignTxForLedger(ledgerId);
-    if (!mounted) return;
-    showToast(context, l10n.recalcForeignTxDone(n));
-    // bump 统计刷新：横幅重查消失 + 各统计图表按新折算重算
-    ref.read(statsRefreshProvider.notifier).tick();
+
+    setState(() => _recalcBusy = true);
+    try {
+      final repo = ref.read(repositoryProvider);
+      final ledgerId = ref.read(currentLedgerIdProvider);
+      // 补折算前先确保本位币汇率组是新鲜的（缺组则整体跳过）；
+      // extraQuotes 带上账本交易实际涉及的外币，避免无账户的币种永远补不上。
+      final foreign = await repo.getLedgerForeignCurrencies(ledgerId);
+      await refreshExchangeRatesFromUi(ref, force: true, extraQuotes: foreign);
+      final n = await repo.recomputeForeignTxForLedger(ledgerId);
+      if (!mounted) return;
+      showToast(context, l10n.recalcForeignTxDone(n));
+      // bump 统计刷新：横幅重查消失 + 各统计图表按新折算重算
+      ref.read(statsRefreshProvider.notifier).tick();
+    } catch (e, st) {
+      logger.error('AnalyticsPage', '一键补折算失败', e, st);
+      if (mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _recalcBusy = false);
+      }
+    }
   }
 }
 
@@ -1230,7 +1353,12 @@ class _MomInfo {
   final bool up; // 是否上升
   final bool none; // 无对比基准（上期=0）
 
-  const _MomInfo({required this.label, required this.value, required this.up, required this.none});
+  const _MomInfo({
+    required this.label,
+    required this.value,
+    required this.up,
+    required this.none,
+  });
 }
 
 /// 子 Tab 胶囊构建器：独立 Widget 以便注册 BuildContext 供 ensureVisible 定位。

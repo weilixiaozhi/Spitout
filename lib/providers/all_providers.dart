@@ -9,8 +9,11 @@
 // 主题相关（叶子模块，可安全 export）
 export 'package:spitout/providers/ui/theme_providers.dart';
 
-// 数据库相关  
+// 数据库相关
 export 'package:spitout/providers/core/database_providers.dart';
+
+// 首次初始化种子服务门面
+export 'package:spitout/providers/core/seed_providers.dart';
 
 // 本地设备身份相关
 export 'package:spitout/providers/core/local_self_id_providers.dart';
@@ -44,6 +47,9 @@ export 'package:spitout/providers/import_export/import_export_providers.dart';
 
 // 提醒相关
 export 'package:spitout/providers/reminder/reminder_providers.dart';
+
+// 维护工具（孤儿数据清理 / 统计测试数据填充）
+export 'package:spitout/providers/maintenance/maintenance_providers.dart';
 
 // 语言相关
 export 'package:spitout/providers/ui/language_provider.dart';

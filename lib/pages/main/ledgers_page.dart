@@ -42,8 +42,10 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     // 监听导入进度，当导入完成时自动刷新账本列表和同步状态
     ref.listen<ImportProgress>(importProgressProvider, (previous, next) {
       // 检测到导入完成（从运行中变为完成状态）
-      if (previous?.running == true && next.isJustCompleted && next.ledgerId != null) {
-        debugPrint('🟢 [LedgersPage] 检测到导入完成: ledgerId=${next.ledgerId}');
+      if (previous?.running == true &&
+          next.isJustCompleted &&
+          next.ledgerId != null) {
+        logger.info('LedgersPage', '检测到导入完成: ledgerId=${next.ledgerId}');
         // 触发同步状态刷新和账本列表刷新
         PostProcessor.sync(ref, ledgerId: next.ledgerId!);
       }
@@ -152,11 +154,11 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     final cloudOnly = ledgers.where((l) => l.isCloudLedger).toList();
 
     Widget card(LedgerDisplayItem ledger) => LedgerCard(
-          ledger: ledger,
-          selected: ledger.id == currentId,
-          onTap: () => _handleLocalLedgerTap(ledger),
-          onMore: () => _openLedgerEditPage(ledger),
-        );
+      ledger: ledger,
+      selected: ledger.id == currentId,
+      onTap: () => _handleLocalLedgerTap(ledger),
+      onMore: () => _openLedgerEditPage(ledger),
+    );
 
     return ListView(
       // 内容不足一屏时（如只有一两个账本）夹紧滚动物理不产生 overscroll，
@@ -165,8 +167,11 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       children: [
         // ---------------- 本地账本 ----------------
-        _buildSectionHeader(context,
-            icon: AppIcons.localStorage, title: l10n.ledgersSectionLocal),
+        _buildSectionHeader(
+          context,
+          icon: AppIcons.localStorage,
+          title: l10n.ledgersSectionLocal,
+        ),
         if (localOnly.isEmpty)
           _buildSectionEmptyHint(
             context,
@@ -184,8 +189,11 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
         const SizedBox(height: 20.0),
 
         // ---------------- Spitout Cloud 账本 ----------------
-        _buildSectionHeader(context,
-            icon: AppIcons.cloudQueue, title: l10n.ledgersSectionCloud),
+        _buildSectionHeader(
+          context,
+          icon: AppIcons.cloudQueue,
+          title: l10n.ledgersSectionCloud,
+        ),
         // 共享账本入口 — 跟 web 端 LedgersSection 一致，
         // 归属模型下它属于云端范畴，因此收进云端分区标题下方。
         if (isSpitoutCloud)
@@ -196,9 +204,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               label: Text(l10n.sharedJoinPageTitle),
               onPressed: () async {
                 await Navigator.of(context).push(
-                  appPageRoute(
-                    builder: (_) => const JoinSharedLedgerPage(),
-                  ),
+                  appPageRoute(builder: (_) => const JoinSharedLedgerPage()),
                 );
               },
               style: OutlinedButton.styleFrom(
@@ -269,23 +275,23 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
         children: [
           Text(
             text,
-            style: theme.textTheme.bodySmall
-                ?.copyWith(color: theme.colorScheme.outline),
+            style: theme.textTheme.bodySmall?.copyWith(
+              color: theme.colorScheme.outline,
+            ),
           ),
-          if (action != null) ...[
-            const SizedBox(height: 10),
-            action,
-          ],
+          if (action != null) ...[const SizedBox(height: 10), action],
         ],
       ),
     );
   }
 
   /// 处理本地账本点击 - 切换账本或显示冲突对话框
+  ///
+  /// 点击时先等待同步状态加载完成再判断冲突，避免状态尚未就绪时把 null
+  /// 误判为「无冲突」而跳过拦截（见 syncStatusProvider 缓存语义）。
   Future<void> _handleLocalLedgerTap(LedgerDisplayItem ledger) async {
-    // 获取同步状态
-    final syncStatusAsync = ref.read(syncStatusProvider(ledger.id));
-    final syncStatus = syncStatusAsync.value;
+    final syncStatus = await _awaitSyncStatus(ledger.id);
+    if (!mounted) return;
 
     // 检查是否有冲突
     if (syncStatus?.diff == SyncDiff.different) {
@@ -299,44 +305,72 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
     // 切换账本后强制刷新统计页与日历（部分 provider 仅监听刷新信号，不随 ledgerId 参数重算）
     ref.read(statsRefreshProvider.notifier).tick();
     ref.read(calendarRefreshProvider.notifier).tick();
-    showToast(context, AppLocalizations.of(context).ledgersSwitched(translateLedgerName(context, ledger.name)));
+    showToast(
+      context,
+      AppLocalizations.of(
+        context,
+      ).ledgersSwitched(translateLedgerName(context, ledger.name)),
+    );
   }
 
   /// 打开本地账本编辑二级页面（保留冲突拦截）
   Future<void> _openLedgerEditPage(LedgerDisplayItem ledger) async {
-    // 冲突拦截：有冲突 → 先弹冲突解决对话框，不进编辑页
-    final syncStatusAsync = ref.read(syncStatusProvider(ledger.id));
-    final syncStatus = syncStatusAsync.value;
+    // 冲突拦截：有冲突 → 先弹冲突解决对话框，不进编辑页；
+    // 等待状态就绪后再判断，避免加载中误放行。
+    final syncStatus = await _awaitSyncStatus(ledger.id);
+    if (!mounted) return;
     if (syncStatus?.diff == SyncDiff.different) {
       await _showConflictResolutionDialog(context, ledger);
       return;
     }
 
-    if (!mounted) return;
-    await Navigator.of(context).push(
-      appPageRoute(builder: (_) => LedgerEditPage(ledger: ledger)),
-    );
+    await Navigator.of(
+      context,
+    ).push(appPageRoute(builder: (_) => LedgerEditPage(ledger: ledger)));
   }
 
+  /// 等待指定账本的同步状态就绪；加载失败时降级为「无冲突」并记日志。
+  Future<SyncStatus?> _awaitSyncStatus(int ledgerId) async {
+    try {
+      return await ref.read(syncStatusProvider(ledgerId).future);
+    } catch (e, st) {
+      logger.warning('LedgersPage', '获取账本同步状态失败(按无冲突处理): $e', st);
+      return null;
+    }
+  }
 
+  /// 取指纹前 8 位用于展示；null / 过短时整体展示，避免 substring 越界。
+  String _shortFingerprint(String? fp) {
+    if (fp == null || fp.length < 8) return fp ?? '—';
+    return fp.substring(0, 8);
+  }
 
   /// 打开新建账本二级页面
   void _showCreateLedgerDialog(BuildContext context) {
-    Navigator.of(context).push(
-      appPageRoute(builder: (_) => const LedgerEditPage()),
-    );
+    Navigator.of(
+      context,
+    ).push(appPageRoute(builder: (_) => const LedgerEditPage()));
   }
 
   /// 显示冲突解决对话框
-  Future<void> _showConflictResolutionDialog(BuildContext context, LedgerDisplayItem ledger) async {
-    
-
+  Future<void> _showConflictResolutionDialog(
+    BuildContext context,
+    LedgerDisplayItem ledger,
+  ) async {
     final l10n = AppLocalizations.of(context);
     final syncService = ref.read(syncServiceProvider);
 
-    // 获取同步状态详情
-    final syncStatus = await syncService.getStatus(ledgerId: ledger.id);
-
+    // 获取同步状态详情；失败时降级为非阻塞提示，不把异常抛给框架层。
+    final SyncStatus status;
+    try {
+      status = await syncService.getStatus(ledgerId: ledger.id);
+    } catch (e, st) {
+      logger.error('LedgersPage', '获取同步状态详情失败', e, st);
+      if (context.mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
+      return;
+    }
     if (!mounted) return;
 
     final DateFormat dateFormat = DateFormat('yyyy-MM-dd HH:mm:ss');
@@ -354,7 +388,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
           valueListenable: isProcessing,
           builder: (stateContext, processing, _) {
             return AlertDialog(
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
               title: Row(
                 children: [
                   const Icon(AppIcons.warning, color: Colors.red, size: 28),
@@ -369,7 +405,10 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                   children: [
                     Text(
                       l10n.ledgersConflictMessage,
-                      style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
                     ),
                     const SizedBox(height: 16),
 
@@ -384,15 +423,18 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            l10n.ledgersConflictLocalInfo(syncStatus.localCount),
+                            l10n.ledgersConflictLocalInfo(status.localCount),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
                           const SizedBox(height: 4),
                           Text(
                             l10n.ledgersConflictLocalFingerprint(
-                              syncStatus.localFingerprint.substring(0, 8),
+                              _shortFingerprint(status.localFingerprint),
                             ),
-                            style: const TextStyle(fontSize: 12, color: Colors.black54),
+                            style: const TextStyle(
+                              fontSize: 12,
+                              color: Colors.black54,
+                            ),
                           ),
                         ],
                       ),
@@ -401,7 +443,8 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                     const SizedBox(height: 12),
 
                     // 云端信息
-                    if (syncStatus.cloudFingerprint != null && syncStatus.cloudExportedAt != null)
+                    if (status.cloudFingerprint != null &&
+                        status.cloudExportedAt != null)
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
@@ -412,22 +455,34 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              l10n.ledgersConflictRemoteInfo(syncStatus.cloudCount ?? 0),
-                              style: const TextStyle(fontWeight: FontWeight.w600),
+                              l10n.ledgersConflictRemoteInfo(
+                                status.cloudCount ?? 0,
+                              ),
+                              style: const TextStyle(
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               l10n.ledgersConflictRemoteUpdated(
-                                dateFormat.format(syncStatus.cloudExportedAt!.toLocal()),
+                                dateFormat.format(
+                                  status.cloudExportedAt!.toLocal(),
+                                ),
                               ),
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
                             ),
                             const SizedBox(height: 2),
                             Text(
                               l10n.ledgersConflictRemoteFingerprint(
-                                syncStatus.cloudFingerprint!.substring(0, 8),
+                                _shortFingerprint(status.cloudFingerprint),
                               ),
-                              style: const TextStyle(fontSize: 12, color: Colors.black54),
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Colors.black54,
+                              ),
                             ),
                           ],
                         ),
@@ -455,9 +510,10 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                       isProcessing.value = true;
                       try {
                         showToast(context, l10n.ledgersConflictDownloading);
-                        final result = await syncService.downloadAndRestoreToCurrentLedger(
-                          ledgerId: ledger.id,
-                        );
+                        final result = await syncService
+                            .downloadAndRestoreToCurrentLedger(
+                              ledgerId: ledger.id,
+                            );
 
                         if (stateContext.mounted) {
                           Navigator.pop(dialogContext);
@@ -477,13 +533,14 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                           this.context,
                           l10n.ledgersConflictDownloadSuccess(result.inserted),
                         );
-                      } catch (e) {
+                      } catch (e, st) {
                         isProcessing.value = false;
+                        logger.error('LedgersPage', '冲突下载失败', e, st);
                         if (stateContext.mounted) {
                           await AppDialog.error(
                             stateContext,
                             title: l10n.commonFailed,
-                            message: '$e',
+                            message: l10n.commonOperationFailed,
                           );
                         }
                       }
@@ -502,7 +559,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                       isProcessing.value = true;
                       try {
                         showToast(context, l10n.ledgersConflictUploading);
-                        await syncService.uploadCurrentLedger(ledgerId: ledger.id);
+                        await syncService.uploadCurrentLedger(
+                          ledgerId: ledger.id,
+                        );
 
                         if (stateContext.mounted) {
                           Navigator.pop(dialogContext);
@@ -514,14 +573,18 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                         ref.read(ledgerListRefreshProvider.notifier).tick();
                         ref.read(syncStatusRefreshProvider.notifier).tick();
 
-                        showToast(this.context, l10n.ledgersConflictUploadSuccess);
-                      } catch (e) {
+                        showToast(
+                          this.context,
+                          l10n.ledgersConflictUploadSuccess,
+                        );
+                      } catch (e, st) {
                         isProcessing.value = false;
+                        logger.error('LedgersPage', '冲突上传失败', e, st);
                         if (stateContext.mounted) {
                           await AppDialog.error(
                             stateContext,
                             title: l10n.commonFailed,
-                            message: '$e',
+                            message: l10n.commonOperationFailed,
                           );
                         }
                       }

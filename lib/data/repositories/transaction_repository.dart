@@ -63,6 +63,13 @@ abstract class TransactionRepository {
   Stream<List<({Transaction t, Category? category})>>
   watchTransactionsWithCategoryAll({int? ledgerId});
 
+  /// 获取账本内「不计入分摊」(aaMode=1) 的交易流(带分类信息)。
+  ///
+  /// 供 AA 统计页「不计入分摊」清单使用;过滤在 SQL 层完成,
+  /// 避免整库交易流拉到客户端后再过滤。
+  Stream<List<({Transaction t, Category? category})>>
+  watchExcludedAaTransactions(int ledgerId);
+
   /// 获取所有交易记录（带分类信息）- 一次性 Future 版本
   /// [ledgerId] 可选，不传则获取所有账本的交易
   Future<List<({Transaction t, Category? category})>>

@@ -5,7 +5,6 @@ import 'package:spitout/providers/providers.dart';
 import '../../widgets/widgets.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
-import '../../services/data/recurring_transaction_service.dart';
 import '../../core/logging/logger_service.dart';
 import '../../utils/category_utils.dart';
 import '../../theme/icons/app_icons.dart';
@@ -38,6 +37,8 @@ class _RecurringTransactionEditPageState
   late bool _enabled;
   bool _hasAttemptedSave = false; // 是否已尝试保存
   int? _selectedLedgerId; // 选中的账本ID
+  bool _saving = false; // 保存进行中,防止连点重复建单/更新
+  bool _deleting = false; // 删除进行中,防止连点
 
   bool get _isEditing => widget.recurring != null;
 
@@ -77,15 +78,19 @@ class _RecurringTransactionEditPageState
 
   Future<void> _loadCategory() async {
     if (_isEditing && widget.recurring!.categoryId != null) {
-      final repo = ref.read(repositoryProvider);
-
-      final category = await repo.getCategoryById(
-        widget.recurring!.categoryId!,
-      );
-
-      setState(() {
-        _selectedCategory = category;
-      });
+      try {
+        final repo = ref.read(repositoryProvider);
+        final category = await repo.getCategoryById(
+          widget.recurring!.categoryId!,
+        );
+        // 加载期间页面可能已销毁,且分类被删除时返回 null 无需回填。
+        if (!mounted || category == null) return;
+        setState(() {
+          _selectedCategory = category;
+        });
+      } catch (e, st) {
+        logger.warning('周期账单编辑', '加载分类失败', '$e\n$st');
+      }
     }
   }
 
@@ -143,8 +148,9 @@ class _RecurringTransactionEditPageState
                       if (value == null || value.isEmpty) {
                         return l10n.commonError;
                       }
-                      if (double.tryParse(value) == null) {
-                        return l10n.commonError;
+                      final cents = _parseAmountToCents(value);
+                      if (cents == null || cents <= 0) {
+                        return l10n.recurringTransactionAmountInvalid;
                       }
                       return null;
                     },
@@ -205,7 +211,9 @@ class _RecurringTransactionEditPageState
             width: double.infinity,
             padding: const EdgeInsets.all(16),
             child: FilledButton(
-              onPressed: _isFormValid() ? _saveRecurringTransaction : null,
+              onPressed: _isFormValid() && !_saving
+                  ? _saveRecurringTransaction
+                  : null,
               child: Text(l10n.commonSave),
             ),
           ),
@@ -247,13 +255,13 @@ class _RecurringTransactionEditPageState
           ),
           errorText: _getLedgerErrorText(),
         ),
-        child: FutureBuilder<Ledger?>(
-          future: _selectedLedgerId != null
-              ? ref.read(repositoryProvider).getLedgerById(_selectedLedgerId!)
-              : Future.value(null),
-          builder: (context, snapshot) {
-            final ledgerName = snapshot.data?.name ?? l10n.ledgerSelect;
-            return Text(ledgerName);
+        child: Builder(
+          builder: (context) {
+            // 账本名走 FutureProvider.family 缓存,避免每次 build 重新查库。
+            final ledgerName = _selectedLedgerId == null
+                ? null
+                : ref.watch(ledgerByIdProvider(_selectedLedgerId!)).value?.name;
+            return Text(ledgerName ?? l10n.ledgerSelect);
           },
         ),
       ),
@@ -277,9 +285,9 @@ class _RecurringTransactionEditPageState
   }
 
   bool _isFormValid() {
-    // 检查金额
-    if (_amountController.text.isEmpty ||
-        double.tryParse(_amountController.text) == null) {
+    // 检查金额:必须能解析且大于 0,0/负数周期账单无意义。
+    final cents = _parseAmountToCents(_amountController.text);
+    if (cents == null || cents <= 0) {
       return false;
     }
 
@@ -505,8 +513,8 @@ class _RecurringTransactionEditPageState
   Future<void> _selectDate(BuildContext context, bool isStartDate) async {
     final now = DateTime.now();
     final todayStart = DateTime(now.year, now.month, now.day);
-    // 开始日期最早只能是今天:禁止历史开始日期,避免回溯生成脏数据(issue #135);
-    // 结束日期不早于开始日期。
+    // 开始日期最早只能是今天,禁止历史开始日期,避免回溯补生成;
+    // 结束日期选择器以开始日期为下限。
     final minDate = isStartDate ? todayStart : _startDate;
     var initial = isStartDate ? _startDate : (_endDate ?? _startDate);
     if (initial.isBefore(minDate)) initial = minDate;
@@ -519,6 +527,16 @@ class _RecurringTransactionEditPageState
     );
 
     if (date != null) {
+      if (!context.mounted) return;
+      // 先设结束日、再改开始日时,新开始日可能晚于结束日,这里阻断,
+      // 保证区间始终合法(start <= end)。
+      if (isStartDate && _endDate != null && date.isAfter(_endDate!)) {
+        showToast(
+          context,
+          AppLocalizations.of(context).recurringTransactionEndBeforeStart,
+        );
+        return;
+      }
       setState(() {
         if (isStartDate) {
           _startDate = date;
@@ -561,24 +579,40 @@ class _RecurringTransactionEditPageState
   }
 
   Future<void> _saveRecurringTransaction() async {
+    if (_saving) return;
     final l10n = AppLocalizations.of(context);
 
     // 标记为已尝试保存，触发错误提示显示
     setState(() {
       _hasAttemptedSave = true;
+      _saving = true;
     });
 
-    if (!_formKey.currentState!.validate()) {
-      return;
-    }
-
-    if (!_isFormValid()) {
-      return;
-    }
-
-    final repo = ref.read(repositoryProvider);
-
     try {
+      if (!_formKey.currentState!.validate()) {
+        return;
+      }
+
+      if (!_isFormValid()) {
+        return;
+      }
+
+      // 最终兜底:结束日期不能早于开始日期(选择器已尽量防,这里拦截
+      // 任何绕过路径,避免生成 start > end 的非法周期)。
+      if (_endDate != null && _endDate!.isBefore(_startDate)) {
+        showToast(context, l10n.recurringTransactionEndBeforeStart);
+        return;
+      }
+
+      // 金额直接按字符串解析成分,不经 double 中间态,避免超大金额
+      // 精度损失与 1e309 等极端输入在 round() 抛异常。
+      final amountCents = _parseAmountToCents(_amountController.text);
+      if (amountCents == null) {
+        showToast(context, l10n.recurringTransactionAmountInvalid);
+        return;
+      }
+
+      final repo = ref.read(repositoryProvider);
       if (_isEditing) {
         // 编辑模式：检查是否需要重置 lastGeneratedDate
         bool shouldResetLastGenerated = false;
@@ -592,8 +626,7 @@ class _RecurringTransactionEditPageState
           id: widget.recurring!.id,
           ledgerId: _selectedLedgerId!,
           type: _type,
-          // 页面输入为"元",落库转整数分。
-          amount: (double.parse(_amountController.text) * 100).round(),
+          amount: amountCents,
           categoryId: _selectedCategory!.id,
 
           note: _noteController.text.isEmpty ? null : _noteController.text,
@@ -612,7 +645,7 @@ class _RecurringTransactionEditPageState
         await repo.addRecurringTransaction(
           ledgerId: _selectedLedgerId!,
           type: _type,
-          amount: (double.parse(_amountController.text) * 100).round(),
+          amount: amountCents,
           categoryId: _selectedCategory!.id,
 
           note: _noteController.text.isEmpty ? null : _noteController.text,
@@ -633,12 +666,17 @@ class _RecurringTransactionEditPageState
       // 使用 logger 记录详细错误信息
       logger.error('周期账单保存', '保存失败', e, stackTrace);
       if (mounted) {
-        showToast(context, '${l10n.commonError}: $e');
+        showToast(context, l10n.commonOperationFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _saving = false);
       }
     }
   }
 
   Future<void> _deleteRecurringTransaction() async {
+    if (_deleting) return;
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -660,12 +698,44 @@ class _RecurringTransactionEditPageState
     );
 
     if (confirmed == true) {
-      final repo = ref.read(repositoryProvider);
-      await repo.deleteRecurringTransaction(widget.recurring!.id);
+      if (!mounted) return;
+      _deleting = true;
+      final l10n = AppLocalizations.of(context);
+      try {
+        final repo = ref.read(repositoryProvider);
+        await repo.deleteRecurringTransaction(widget.recurring!.id);
 
-      if (mounted) {
-        Navigator.of(context).pop(true); // 返回 true 表示数据已更改
+        if (mounted) {
+          Navigator.of(context).pop(true); // 返回 true 表示数据已更改
+        }
+      } catch (e, stackTrace) {
+        // 删除失败不冒泡:记录日志并提示用户重试。
+        logger.error('周期账单删除', '删除失败', e, stackTrace);
+        if (mounted) {
+          showToast(context, l10n.commonOperationFailed);
+        }
+      } finally {
+        _deleting = false;
       }
+    }
+  }
+
+  /// 把用户输入的金额字符串解析为整数分。
+  ///
+  /// 设计意图:直接按字符串解析(整数 + 最多两位小数),不经过 double
+  /// 中间态,避免超大金额精度损失;格式非法(含科学计数法等)返回 null。
+  int? _parseAmountToCents(String text) {
+    final cleaned = text.trim();
+    if (cleaned.isEmpty) return null;
+    final match = RegExp(r'^(\d+)(?:\.(\d{1,2}))?$').firstMatch(cleaned);
+    if (match == null) return null;
+    try {
+      final yuan = int.parse(match.group(1)!);
+      final frac = match.group(2) ?? '';
+      return yuan * 100 + int.parse(frac.padRight(2, '0'));
+    } on FormatException {
+      // 超出 int64 范围等极端输入按非法处理,不抛到 UI。
+      return null;
     }
   }
 }

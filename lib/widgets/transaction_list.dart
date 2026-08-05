@@ -115,6 +115,8 @@ class TransactionListState extends ConsumerState<TransactionList> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? FlutterListViewController();
+    // 首次进入即构建扁平列表，build 不再重复分组排序。
+    _buildFlatItems();
   }
 
   @override
@@ -126,6 +128,11 @@ class TransactionListState extends ConsumerState<TransactionList> {
       if (widget.transactionsWithDetails != null) {
         _usePreloadedData = true; // 重置为预加载模式
       }
+    }
+    // 交易数据变化时才重建分组/排序结果（memo 化），
+    // 避免月交易量大时每帧 build 都重复 O(n log n)。
+    if (!identical(widget.transactions, oldWidget.transactions)) {
+      _buildFlatItems();
     }
   }
   @override
@@ -235,8 +242,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
 
   @override
   Widget build(BuildContext context) {
-    _buildFlatItems();
-
     // 无数据时展示空状态。
     // 空表也必须能下拉刷新 —— 用户场景是"刚切换账本/新装应用时空表,
     // 想下拉从云端同步数据进来"。用 SingleChildScrollView +

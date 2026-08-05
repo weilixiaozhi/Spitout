@@ -77,6 +77,12 @@ class SpitoutPopupMenu extends StatelessWidget {
   /// 自定义图标
   final Widget? icon;
 
+  /// 菜单相对触发按钮的偏移。
+  ///
+  /// 默认 (-15, 50) 是针对「右上角省略号」场景的既有视觉调校；换到其它位置 /
+  /// 字号 / 无障碍缩放下应显式传入适配值，不再假设触发图标恒在右上角。
+  final Offset menuOffset;
+
   /// 提示文字
   final String? tooltip;
 
@@ -92,6 +98,7 @@ class SpitoutPopupMenu extends StatelessWidget {
     this.onSelected,
     this.primaryColor,
     this.icon,
+    this.menuOffset = const Offset(-15, 50),
     this.tooltip,
   });
 
@@ -115,9 +122,7 @@ class SpitoutPopupMenu extends StatelessWidget {
       ),
       color: SpitoutTokens.surface(context),
       elevation: isDark ? 8 : 4,
-      // 弹窗默认左缘贴 icon 左缘，这里硬编码向左调整 15px，
-      // 使弹窗整体左移、右缘更贴近省略号 icon 右侧。
-      offset: const Offset(-15, 50),
+      offset: menuOffset,
       onSelected: onSelected,
       itemBuilder: (context) {
         final List<PopupMenuEntry<String>> entries = [];

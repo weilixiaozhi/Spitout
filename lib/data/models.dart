@@ -53,3 +53,24 @@ export 'models/app_update_info.dart' show AppUpdateInfo, UpdateStatus;
 // services/import/data_import_service.dart（依赖汇率服务）。
 export 'models/import_models.dart'
     show ImportCategory, ImportTransaction, ImportData, ImportResult, ImportVirtualUser;
+
+/// 周期记账频率枚举。
+///
+/// 数据模型层定义,页面与 Provider 统一经本门面引用,
+/// 避免页面直接依赖服务层文件。
+enum RecurringFrequency {
+  daily('daily'), // 每天
+  weekly('weekly'), // 每周
+  monthly('monthly'), // 每月
+  yearly('yearly'); // 每年
+
+  final String value;
+  const RecurringFrequency(this.value);
+
+  static RecurringFrequency fromString(String value) {
+    return RecurringFrequency.values.firstWhere(
+      (e) => e.value == value,
+      orElse: () => RecurringFrequency.monthly,
+    );
+  }
+}

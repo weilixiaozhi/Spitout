@@ -90,6 +90,9 @@ Future<void> _openSheet(
 Transaction _transaction({
   String? createdByUserId = 'u_creator',
   String? lastEditedByUserId = 'u_editor',
+  int? aaMode,
+  String? aaParticipants,
+  String? paidByUserId,
 }) {
   return Transaction(
     id: 1,
@@ -101,6 +104,9 @@ Transaction _transaction({
     version: 1,
     createdByUserId: createdByUserId,
     lastEditedByUserId: lastEditedByUserId,
+    aaMode: aaMode,
+    aaParticipants: aaParticipants,
+    paidByUserId: paidByUserId,
   );
 }
 
@@ -239,5 +245,24 @@ void main() {
     expect(find.text('编辑记账'), findsOneWidget);
     // 删除 icon 仍在右上角(trailing):IconButton 1 个。
     expect(find.byType(IconButton), findsOneWidget);
+  });
+
+  testWidgets('单人参与人展示纯姓名，不再拼「（1人）」', (tester) async {
+    await _openSheet(
+      tester,
+      transaction: _transaction(
+        aaMode: 0,
+        aaParticipants: '["u1"]',
+        paidByUserId: 'u1',
+      ),
+      localOwnerDisplayName: '本地昵称',
+      aaEnabled: true,
+    );
+
+    // 单人参与人：姓名仍在，尾部人数标注消失
+    expect(find.textContaining('（1人）', findRichText: true), findsNothing,
+        reason: '单人参与人无需「（1人）」尾部');
+    expect(find.textContaining('本地昵称', findRichText: true), findsWidgets,
+        reason: '参与人/支出人姓名应正常渲染');
   });
 }

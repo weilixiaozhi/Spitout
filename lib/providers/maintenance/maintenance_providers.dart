@@ -16,7 +16,19 @@ import '../../services/maintenance/orphan_record.dart';
 import '../../services/maintenance/orphan_scanner.dart';
 import '../../services/maintenance/shared_ledger_category_repair.dart';
 import '../../core/logging/logger_service.dart';
+import '../../services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+
+// UI 侧通过 providers 门面使用测试数据填充，不直接触碰服务层。
+export '../../services/maintenance/analytics_test_data_seeder.dart'
+    show TestDataScope;
+
+/// 统计页测试数据填充器（仅 debug 包使用）。
+final analyticsTestDataSeederProvider = Provider<AnalyticsTestDataSeeder>((
+  ref,
+) {
+  return AnalyticsTestDataSeeder(ref.watch(repositoryProvider));
+});
 
 final orphanScannerProvider = Provider<OrphanScanner>((ref) {
   final db = ref.watch(databaseProvider);
@@ -29,11 +41,12 @@ final orphanCleanerProvider = Provider<OrphanCleaner>((ref) {
   return OrphanCleaner(db: db, repository: repository);
 });
 
-final sharedLedgerCategoryRepairProvider =
-    Provider<SharedLedgerCategoryRepair>((ref) {
-  final db = ref.watch(databaseProvider);
-  return SharedLedgerCategoryRepair(db: db);
-});
+final sharedLedgerCategoryRepairProvider = Provider<SharedLedgerCategoryRepair>(
+  (ref) {
+    final db = ref.watch(databaseProvider);
+    return SharedLedgerCategoryRepair(db: db);
+  },
+);
 
 /// 启动期一次性历史脏数据修复。成功后写标志位，失败不写以便下次启动重试。
 final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
@@ -44,25 +57,29 @@ final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
   try {
     final result = await repair.repair();
     if (result.fixedTransactions > 0) {
-      logger.info('SharedLedgerCategoryRepair',
-          '已修复 ${result.fixedTransactions} 笔共享账本交易分类表示');
+      logger.info(
+        'SharedLedgerCategoryRepair',
+        '已修复 ${result.fixedTransactions} 笔共享账本交易分类表示',
+      );
     }
     // 还有镜像未就绪的共享账本时不置完成标志，下次启动继续补跑
     if (result.skippedLedgers == 0) {
       await prefs.setBool(key, true);
     } else {
-      logger.info('SharedLedgerCategoryRepair',
-          '有 ${result.skippedLedgers} 个共享账本镜像未就绪，下次启动继续修复');
+      logger.info(
+        'SharedLedgerCategoryRepair',
+        '有 ${result.skippedLedgers} 个共享账本镜像未就绪，下次启动继续修复',
+      );
     }
   } catch (e, st) {
-    logger.error('SharedLedgerCategoryRepair',
-        '历史脏数据修复失败，将在下次启动重试', e, st);
+    logger.error('SharedLedgerCategoryRepair', '历史脏数据修复失败，将在下次启动重试', e, st);
   }
 });
 
 /// 一次扫描的全部结果。autoDispose:用户离开页面后下次进来重扫。
-final orphanScanReportProvider =
-    FutureProvider.autoDispose<OrphanScanReport>((ref) async {
+final orphanScanReportProvider = FutureProvider.autoDispose<OrphanScanReport>((
+  ref,
+) async {
   final scanner = ref.watch(orphanScannerProvider);
   return scanner.scanAll();
 });

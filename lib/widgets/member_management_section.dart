@@ -216,14 +216,63 @@ class _MemberManagementSectionState
   /// 调起系统分享,携带账本名 + 邀请码 + 短链。
   ///
   /// 分享视图只展示"创建响应"生成的邀请,该响应按新协议必带 shareUrl;
-  /// 列表响应只含掩码、不会进入此路径,故这里可安全断言非空。
+  /// 列表响应只含掩码、不会进入此路径。仍做空值守卫：后端协议若变化返回
+  /// null，降级为「邀请暂不可用」提示，不在 UI 层空断言崩溃。
   Future<void> _share(SpitoutCloudInvite invite, AppLocalizations l10n) async {
+    final url = invite.shareUrl;
+    if (url == null || url.isEmpty) {
+      if (mounted) showToast(context, l10n.sharedInviteUnavailable);
+      return;
+    }
     final message = l10n.sharedInviteShareText(
       widget.ledgerName,
       invite.formattedCode,
-      invite.shareUrl!,
+      url,
     );
     await SharePlus.instance.share(ShareParams(text: message));
+  }
+
+  /// 复制邀请码；后端返回缺失时降级为友好提示，不做非空断言。
+  void _copyInviteCode(SpitoutCloudInvite invite, AppLocalizations l10n) {
+    final code = invite.code;
+    if (code == null || code.isEmpty) {
+      if (mounted) showToast(context, l10n.sharedInviteUnavailable);
+      return;
+    }
+    _copy(code, l10n);
+  }
+
+  /// 复制邀请短链；后端返回缺失时降级为友好提示，不做非空断言。
+  void _copyInviteLink(SpitoutCloudInvite invite, AppLocalizations l10n) {
+    final url = invite.shareUrl;
+    if (url == null || url.isEmpty) {
+      if (mounted) showToast(context, l10n.sharedInviteUnavailable);
+      return;
+    }
+    _copy(url, l10n);
+  }
+
+  /// 把移除成员失败映射为本地化提示，避免把内部异常文本（URL / 堆栈）直接
+  /// 展示给用户：网络类 → 网络文案；权限类 → 权限文案；其余 → 通用失败文案。
+  String _removeMemberFailureMessage(Object e, AppLocalizations l10n) {
+    final s = e.toString().toLowerCase();
+    if (s.contains('socketexception') ||
+        s.contains('timeoutexception') ||
+        s.contains('clientexception') ||
+        s.contains('network') ||
+        s.contains('连接') ||
+        s.contains('网络')) {
+      return l10n.authErrorNetworkIssue;
+    }
+    if (s.contains('403') ||
+        s.contains('denied') ||
+        s.contains('permission') ||
+        s.contains('forbidden') ||
+        s.contains('无权') ||
+        s.contains('权限')) {
+      return l10n.cloudErrorAccessDenied;
+    }
+    return l10n.sharedMembersRemoveFailed;
   }
 
   /// 小时数转本地化有效期标签(<24h 显示小时,否则显示天数)。
@@ -843,8 +892,8 @@ class _MemberManagementSectionState
 
   /// 邀请码分享视图 — 大号邀请码 + 有效期 + 复制 / 分享 / 复制链接操作。
   ///
-  /// 仅由创建响应生成并展示,该响应必带明文 code 与 shareUrl(列表接口不返回),
-  /// 因此下方对这两个字段做非空断言。
+  /// 仅由创建响应生成并展示（列表接口不返回明文 code / shareUrl）。
+  /// 对两个可空字段做空值守卫：后端协议变化时降级为友好提示，不空断言崩溃。
   Widget _buildShareView(SpitoutCloudInvite invite, AppLocalizations l10n) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -876,7 +925,7 @@ class _MemberManagementSectionState
               child: OutlinedButton.icon(
                 icon: const Icon(AppIcons.copy),
                 label: Text(l10n.sharedInviteCopyCode),
-                onPressed: () => _copy(invite.code!, l10n),
+                onPressed: () => _copyInviteCode(invite, l10n),
               ),
             ),
             const SizedBox(width: 12),
@@ -893,7 +942,7 @@ class _MemberManagementSectionState
         OutlinedButton.icon(
           icon: const Icon(AppIcons.link),
           label: Text(l10n.sharedInviteCopyLink),
-          onPressed: () => _copy(invite.shareUrl!, l10n),
+          onPressed: () => _copyInviteLink(invite, l10n),
         ),
         const SizedBox(height: 24),
         Text(
@@ -948,7 +997,9 @@ class _MemberManagementSectionState
       );
       if (context.mounted) showToast(context, l10n.sharedMembersRemoved);
     } catch (e) {
-      if (context.mounted) showToast(context, e.toString());
+      if (context.mounted) {
+        showToast(context, _removeMemberFailureMessage(e, l10n));
+      }
     }
   }
 }
@@ -1116,7 +1167,7 @@ class _MemberAvatar extends ConsumerWidget {
 /// 单个虚拟用户行:头像(person 图标)+ 可编辑名称 + 移除 icon。
 ///
 /// 复用协作者移除逻辑(personRemove icon);名称行内编辑,不弹窗。
-class _VirtualUserTile extends StatelessWidget {
+class _VirtualUserTile extends StatefulWidget {
   const _VirtualUserTile({
     required this.name,
     required this.isReadOnly,
@@ -1137,20 +1188,44 @@ class _VirtualUserTile extends StatelessWidget {
   final VoidCallback onDelete;
 
   @override
+  State<_VirtualUserTile> createState() => _VirtualUserTileState();
+}
+
+class _VirtualUserTileState extends State<_VirtualUserTile> {
+  /// 行内编辑控制器：由 State 持有并在 dispose 释放。
+  ///
+  /// 修复点：原先在 build 中每次新建 controller（无 dispose），父组件任何
+  /// setState 都会重建并丢掉正在输入但未失焦的内容；改为 State 持有后，
+  /// 滚动 / 刷新 / 无关重建都不会打断输入，也不会累积未释放的 controller。
+  late final TextEditingController _controller;
+
+  /// 是否已触发重命名回调（防止失焦 + 提交重复触发）；文本再次变化后复位。
+  bool _committed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.name);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _commit() {
+    if (_committed) return;
+    _committed = true;
+    final newText = _controller.text.trim();
+    if (newText.isNotEmpty && newText != widget.name) {
+      widget.onRename(newText);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // 行内编辑控制器:初始值为当前名称,失焦或回车时触发重命名。
-    final controller = TextEditingController(text: name);
-    // 标记是否已触发回调,避免失焦时重复触发(失焦 + dispose 两次)。
-    var committed = false;
-    void commit() {
-      if (committed) return;
-      committed = true;
-      final newText = controller.text.trim();
-      if (newText.isNotEmpty && newText != name) {
-        onRename(newText);
-      }
-    }
 
     // 自行布局而非用 ListTile:TextField 需限定宽度到「虚拟用户1」左右,
     // ListTile 的 title 会 Expanded 铺满,色块过宽与全局编辑框视觉不一致。
@@ -1178,8 +1253,10 @@ class _VirtualUserTile extends StatelessWidget {
           SizedBox(
             width: 140,
             child: TextField(
-              controller: controller,
-              readOnly: isReadOnly,
+              controller: _controller,
+              readOnly: widget.isReadOnly,
+              // 文本变化后允许再次提交（否则首次提交后 _committed 恒为 true）。
+              onChanged: (_) => _committed = false,
               decoration: InputDecoration(
                 isDense: true,
                 hintText: l10n.aaVirtualUserNameHint,
@@ -1211,16 +1288,16 @@ class _VirtualUserTile extends StatelessWidget {
               // 失焦时提交重命名(避免每次按键都写库)。
               onTapOutside: (_) {
                 FocusScope.of(context).unfocus();
-                commit();
+                _commit();
               },
-              onSubmitted: (_) => commit(),
+              onSubmitted: (_) => _commit(),
             ),
           ),
           const Spacer(),
           IconButton(
             icon: const Icon(AppIcons.personRemove, size: 20),
             tooltip: l10n.commonDelete,
-            onPressed: isReadOnly ? null : onDelete,
+            onPressed: widget.isReadOnly ? null : widget.onDelete,
             style: IconButton.styleFrom(
               foregroundColor: SpitoutTokens.error(context),
             ),

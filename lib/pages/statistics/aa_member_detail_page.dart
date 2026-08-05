@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
 import '../../services/statistics/aa_member_detail_models.dart';
@@ -8,6 +9,7 @@ import '../../services/statistics/aa_statistics_service.dart' show AaMode;
 import '../../theme/colors.dart';
 import '../../theme/dimens.dart';
 import '../../theme/icons/app_icons.dart';
+import '../../theme/shadows.dart';
 import '../../theme/typography.dart';
 import '../../utils/category_utils.dart';
 import '../../utils/currency/currencies.dart' show getCurrencySymbol;
@@ -55,12 +57,21 @@ class AaMemberDetailPage extends ConsumerWidget {
           Expanded(
             child: detailAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(
-                child: Text(
-                  '${l10n.commonError}: $e',
-                  style: TextStyle(color: SpitoutTokens.error(context)),
-                ),
-              ),
+              error: (e, st) {
+                // 原始异常只进日志,页面展示统一友好文案,避免泄露实现细节。
+                logger.error(
+                  'AaMemberDetailPage',
+                  '成员账单详情加载失败 participant=${args.participantId}',
+                  e,
+                  st,
+                );
+                return Center(
+                  child: Text(
+                    l10n.commonOperationFailed,
+                    style: TextStyle(color: SpitoutTokens.error(context)),
+                  ),
+                );
+              },
               data: (data) => data == null
                   ? _buildCenterEmpty(context, l10n)
                   : _buildBody(context, ref, l10n, data),
@@ -141,7 +152,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     AppLocalizations l10n,
     AaMemberDetailData data,
   ) {
-    // 汇总/分摊方式均按账本本位币口径，与分摊详情表一致。
+    // 汇总/分摊方式/单笔账单均按账本本位币口径，与分摊详情表一致。
     final currencyCode = ref.watch(currentLedgerCurrencyProvider);
     final totalAmount = data.bills.fold<double>(
       0,
@@ -155,26 +166,55 @@ class AaMemberDetailPage extends ConsumerWidget {
     final noSplitCount = data.bills
         .where((b) => b.mode == AaMode.noSplit)
         .length;
+    // 账单列表扁平化索引:日期标题 + 单笔账单行,交给 ListView.builder 懒加载,
+    // 避免几百笔账单时每次 build 都创建整棵 Widget 树。
+    final entries = data.bills.isEmpty
+        ? const <Object>[]
+        : _flattenBillEntries(data.bills);
 
-    return ListView(
+    return ListView.builder(
       padding: const EdgeInsets.all(16),
-      children: [
-        _buildSummaryCard(
-          context,
-          l10n,
-          data,
-          totalAmount,
-          avgAmount,
-          currencyCode,
-        ),
-        const SizedBox(height: 20),
-        _buildSplitMethod(context, l10n, aaCount, customCount, noSplitCount),
-        const SizedBox(height: 20),
-        if (data.bills.isEmpty)
-          _buildEmptyCard(context, l10n)
-        else
-          ..._buildBillGroups(context, l10n, data.bills, currencyCode),
-      ],
+      itemCount: 2 + (data.bills.isEmpty ? 1 : entries.length),
+      itemBuilder: (context, index) {
+        if (index == 0) {
+          return _buildSummaryCard(
+            context,
+            l10n,
+            data,
+            totalAmount,
+            avgAmount,
+            currencyCode,
+          );
+        }
+        if (index == 1) {
+          // 汇总卡与分摊方式卡之间保持 20 间距,与改动前视觉一致。
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 20),
+            child: _buildSplitMethod(
+              context,
+              l10n,
+              aaCount,
+              customCount,
+              noSplitCount,
+            ),
+          );
+        }
+        if (data.bills.isEmpty) {
+          return _buildEmptyCard(context, l10n);
+        }
+        final entry = entries[index - 2];
+        if (entry is _BillDateHeader) {
+          return DaySectionHeader(
+            dateText: entry.dateKey,
+            expense: entry.dayTotal,
+            currencyCode: currencyCode,
+          );
+        }
+        if (entry is _BillRowEntry) {
+          return _buildBillRowItem(context, l10n, entry, currencyCode);
+        }
+        return const SizedBox.shrink();
+      },
     );
   }
 
@@ -452,51 +492,77 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 账单列表：按日期分组（日期标题复用全局 [DaySectionHeader]），
-  /// 每组一张白色卡片，组内每笔账单为「主行 + 分摊明细」。
-  List<Widget> _buildBillGroups(
-    BuildContext context,
-    AppLocalizations l10n,
-    List<AaMemberBill> bills,
-    String currencyCode,
-  ) {
+  /// 把账单列表展平为「日期标题 + 单笔账单」的索引序列。
+  ///
+  /// 设计意图:ListView.builder 需要扁平的 item 序列才能按需构建;
+  /// 每行记录是否组首/组尾,由 [_buildBillRowItem] 据此绘制连续卡片
+  /// 的圆角、内部分割线与组尾间距。
+  List<Object> _flattenBillEntries(List<AaMemberBill> bills) {
     final groups = <String, List<AaMemberBill>>{};
     for (final b in bills) {
       final key = _dateKey(b.tx.happenedAt);
       (groups[key] ??= []).add(b);
     }
 
-    final widgets = <Widget>[];
+    final entries = <Object>[];
     for (final entry in groups.entries) {
       final dayTotal = entry.value.fold<double>(
         0,
         (sum, b) => sum + b.totalAmount,
       );
-      widgets.add(
-        DaySectionHeader(
-          dateText: entry.key,
-          expense: dayTotal,
-          currencyCode: currencyCode,
-        ),
-      );
-      widgets.add(
-        SectionCard(
-          margin: EdgeInsets.zero,
-          padding: const EdgeInsets.symmetric(vertical: 4),
-          child: Column(
-            children: [
-              for (var i = 0; i < entry.value.length; i++) ...[
-                if (i > 0)
-                  Divider(height: 1, color: SpitoutTokens.divider(context)),
-                _buildBillRow(context, l10n, entry.value[i], currencyCode),
-              ],
-            ],
+      entries.add(_BillDateHeader(entry.key, dayTotal));
+      final dayBills = entry.value;
+      for (var i = 0; i < dayBills.length; i++) {
+        entries.add(
+          _BillRowEntry(
+            bill: dayBills[i],
+            isFirstInGroup: i == 0,
+            isLastInGroup: i == dayBills.length - 1,
+          ),
+        );
+      }
+    }
+    return entries;
+  }
+
+  /// 单笔账单行容器:组首行负责卡片顶部圆角与阴影,组尾行负责底部圆角
+  /// 与组间距,中间行仅提供表面底色 + 上分割线,整体视觉等同原来的一张
+  /// SectionCard,但每一行可被 ListView.builder 独立懒加载。
+  Widget _buildBillRowItem(
+    BuildContext context,
+    AppLocalizations l10n,
+    _BillRowEntry entry,
+    String currencyCode,
+  ) {
+    return Container(
+      margin: EdgeInsets.only(bottom: entry.isLastInGroup ? 16 : 0),
+      decoration: BoxDecoration(
+        color: SpitoutTokens.surface(context),
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(
+            entry.isFirstInGroup ? SpitoutDimens.radius12 : 0,
+          ),
+          bottom: Radius.circular(
+            entry.isLastInGroup ? SpitoutDimens.radius12 : 0,
           ),
         ),
-      );
-      widgets.add(const SizedBox(height: 16));
-    }
-    return widgets;
+        // 整组卡片阴影由组首/组尾行承载(中间行表面覆盖组首下缘),
+        // 视觉上仍是一张卡片的外围阴影。
+        boxShadow: SpitoutTokens.isDark(context)
+            ? null
+            : (entry.isFirstInGroup || entry.isLastInGroup)
+                ? SpitoutShadows.card
+                : null,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          if (!entry.isFirstInGroup)
+            Divider(height: 1, color: SpitoutTokens.divider(context)),
+          _buildBillRow(context, l10n, entry.bill, currencyCode),
+        ],
+      ),
+    );
   }
 
   /// 单笔账单：分类图标 + 分类名/分摊方式徽标 + 备注 + 时间·付款人 +
@@ -515,9 +581,8 @@ class AaMemberDetailPage extends ConsumerWidget {
     final timeText =
         '${time.hour.toString().padLeft(2, '0')}:'
         '${time.minute.toString().padLeft(2, '0')}';
-    // 单笔账单金额优先按交易原币种展示，与首页列表项口径一致；
-    // 历史数据无币种时回退账本本位币。
-    final txCurrency = bill.tx.currencyCode ?? currencyCode;
+    // 单笔账单金额为账本本位币口径(与汇总卡/分摊详情表一致),
+    // 避免多币种账本下原币金额与汇总口径混用。
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -592,7 +657,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                     signed: true,
                     showCurrency: true,
                     decimals: 2,
-                    currencyCode: txCurrency,
+                    currencyCode: currencyCode,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
@@ -602,7 +667,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                   const SizedBox(height: 2),
                   Text(
                     '${l10n.aaStatisticsTxTotalPrefix} '
-                    '${formatMoneyWithCurrency(bill.totalAmount, currencyCode: txCurrency)}',
+                    '${formatMoneyWithCurrency(bill.totalAmount, currencyCode: currencyCode)}',
                     style: TextStyle(
                       fontSize: 11,
                       color: SpitoutTokens.textTertiary(context),
@@ -671,7 +736,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                             child: Text(
                               formatMoneyWithCurrency(
                                 s.amount,
-                                currencyCode: txCurrency,
+                                currencyCode: currencyCode,
                               ),
                               style: TextStyle(
                                 fontSize: 11,
@@ -759,4 +824,28 @@ class AaMemberDetailPage extends ConsumerWidget {
   String _dateKey(DateTime dt) =>
       '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
       '${dt.day.toString().padLeft(2, '0')}';
+}
+
+/// 账单列表扁平化条目:日期分组标题(日期 + 当日支出合计)。
+class _BillDateHeader {
+  final String dateKey;
+  final double dayTotal;
+
+  const _BillDateHeader(this.dateKey, this.dayTotal);
+}
+
+/// 账单列表扁平化条目:单笔账单行。
+///
+/// [isFirstInGroup]/[isLastInGroup] 用于渲染组卡片的首尾圆角、分割线与
+/// 组尾间距,保证懒加载拆分后视觉与原来的整张卡片一致。
+class _BillRowEntry {
+  final AaMemberBill bill;
+  final bool isFirstInGroup;
+  final bool isLastInGroup;
+
+  const _BillRowEntry({
+    required this.bill,
+    required this.isFirstInGroup,
+    required this.isLastInGroup,
+  });
 }

@@ -43,28 +43,26 @@ final changeTrackerProvider = Provider<ChangeTracker>((ref) {
 /// - 各 UI 动作函数（shared_ledger / ledger_storage 等）只 `ref.read` 不持有，
 ///   但它们在云激活态下必然有 `syncServiceProvider` 这个常驻 watcher 保活，
 ///   不会被中途 dispose；测试经 overrideWith 注入桩引擎时无 onDispose，同样安全。
-final syncEngineProvider =
-    Provider.autoDispose.family<SyncEngine, SpitoutCloudProvider>(
-  (ref, provider) {
-    final db = ref.watch(databaseProvider);
-    final tracker = ref.watch(changeTrackerProvider);
-    final repo = ref.watch(repositoryProvider);
-    final engine = SyncEngine(
-      db: db,
-      provider: provider,
-      changeTracker: tracker,
-      repo: repo,
-    );
-    ref.onDispose(() => engine.dispose());
-    return engine;
-  },
-);
+final syncEngineProvider = Provider.autoDispose
+    .family<SyncEngine, SpitoutCloudProvider>((ref, provider) {
+      final db = ref.watch(databaseProvider);
+      final tracker = ref.watch(changeTrackerProvider);
+      final repo = ref.watch(repositoryProvider);
+      final engine = SyncEngine(
+        db: db,
+        provider: provider,
+        changeTracker: tracker,
+        repo: repo,
+      );
+      ref.onDispose(() => engine.dispose());
+      return engine;
+    });
 
 /// 同步引擎状态（区别于 sync_service.dart 中的 SyncStatus）
 final syncEngineStatusProvider =
     NotifierProvider<SimpleStateNotifier<SyncEngineStatus>, SyncEngineStatus>(
-  () => SimpleStateNotifier((ref) => SyncEngineStatus.idle),
-);
+      () => SimpleStateNotifier((ref) => SyncEngineStatus.idle),
+    );
 
 /// 未推送变更数量
 final unpushedChangeCountProvider = FutureProvider<int>((ref) async {
@@ -155,8 +153,9 @@ Stream<CloudUser?> _seedThenFollow(CloudAuthService auth) async* {
 /// 组件 watch 它，autoDispose 反而会造成频繁重建。旧云客户端的释放由
 /// [syncEngineProvider]（以实例为 key 的 autoDispose family）负责——旧 entry
 /// 被 GC 时即不再持有该实例引用。
-final spitoutCloudProviderInstance =
-    FutureProvider<SpitoutCloudProvider?>((ref) async {
+final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudProvider?>((
+  ref,
+) async {
   // P0-b 闸门:云失活流程进行中(invalidate 旧值窗口)即使 active 仍持旧
   // Spitout 配置,也必须直接降级 null —— 绝不重建云客户端。否则
   // setRecoveryCredentials + currentUser 会用旧邮密静默重登,
@@ -180,26 +179,26 @@ final spitoutCloudProviderInstance =
     final provider = services.provider as SpitoutCloudProvider;
 
     final email = config.spitoutCloudEmail;
-    final password = config.spitoutCloudPassword;
 
-    // 把邮密交给 auth service,让它在任何时刻发现 session 失效都能自动重登。
-    // auth service 内部会在 currentUser / requireAccessToken 触发时尝试恢复,
-    // 无需等 Provider 重建。
+    // 密码不再持久化（见 CloudServiceStore），因此只注入邮箱用于日志兜底；
+    // session 失效后由用户手动重新登录，避免明文密码落盘。
     if (services.auth is SpitoutCloudAuthService) {
       (services.auth as SpitoutCloudAuthService).setRecoveryCredentials(
         email: email,
-        password: password,
       );
     }
 
-    // 双重保险:构造之后也触发一次 currentUser,让 initialize() 没恢复出
-    // session 的场景立刻走一次恢复登录(email+password 有时),减少用户第一次
-    // 操作时的卡顿感。currentUser 内部已经自带 _tryRecoveryLogin。
+    // 构造之后也触发一次 currentUser，让 initialize() 没恢复出 session 的
+    // 场景立刻按未登录处理，减少用户第一次操作时的卡顿感。
+    // currentUser 内部已经自带 _tryRecoveryLogin（密码为空时直接跳过）。
     if (services.auth != null) {
       try {
         final user = await services.auth!.currentUser;
         if (user != null) {
-          logger.info('CloudSync', 'Spitout Cloud session ready: ${user.email}');
+          logger.info(
+            'CloudSync',
+            'Spitout Cloud session ready: ${user.email}',
+          );
         } else if (email != null && email.isNotEmpty) {
           logger.info('CloudSync', 'Spitout Cloud 未登录,等首次 API 触发恢复');
         }
@@ -224,7 +223,11 @@ final spitoutCloudProviderInstance =
 /// 之所以不直接暴露 [createCloudServices]（它是顶层函数无法被 Riverpod override），
 /// 而是包成 Provider 持有工厂函数，是为了让 Widget 测试能无侵入地替换实现。
 final cloudServicesFactoryProvider =
-    Provider<Future<({CloudProvider? provider, CloudAuthService? auth})>
-        Function(CloudServiceConfig)>(
-  (ref) => (config) => createCloudServices(config),
-);
+    Provider<
+      Future<({CloudProvider? provider, CloudAuthService? auth})> Function(
+        CloudServiceConfig,
+      )
+    >(
+      (ref) =>
+          (config) => createCloudServices(config),
+    );

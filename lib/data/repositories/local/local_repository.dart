@@ -347,6 +347,11 @@ class LocalRepository extends BaseRepository {
 
   @override
   Stream<List<({Transaction t, Category? category})>>
+  watchExcludedAaTransactions(int ledgerId) =>
+      _transactionRepo.watchExcludedAaTransactions(ledgerId);
+
+  @override
+  Stream<List<({Transaction t, Category? category})>>
   watchTransactionsWithCategoryInMonth({
     required int ledgerId,
     required DateTime month,

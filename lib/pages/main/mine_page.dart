@@ -16,6 +16,7 @@ import '../settings/config_import_export_page.dart';
 import '../currency/exchange_rate_page.dart';
 import '../data/detail_import_export_page.dart';
 import '../../theme/icons/app_icons.dart';
+
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});
 
@@ -41,40 +42,48 @@ class MinePage extends ConsumerWidget {
                 // 包含：分类管理 → 汇率管理 → 周期账单 → 记账提醒 → 偏好调节
                 // 数据清理已移至「云同步与备份」分组（统计 / 日历已提升为底部导航一级入口）
                 SectionCard(
-                  margin:
-                      EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
+                  margin: EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
                   child: Column(
                     children: [
                       // 分类管理
                       AppListTile(
                         leading: AppIcons.category,
-                        title: AppLocalizations.of(context)
-                            .mineCategoryManagement,
-                        subtitle: AppLocalizations.of(context)
-                            .mineCategoryManagementSubtitle,
-                        trailing: Icon(AppIcons.chevronRight,
-                            color: SpitoutTokens.iconTertiary(context),
-                            size: 20),
+                        title: AppLocalizations.of(
+                          context,
+                        ).mineCategoryManagement,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).mineCategoryManagementSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
+                        ),
                         // 按路由名跳转分类管理页，由 router.dart 统一解析
-                        onTap: () =>
-                            Navigator.of(context).pushNamed(Routes.categoryManage),
+                        onTap: () => Navigator.of(
+                          context,
+                        ).pushNamed(Routes.categoryManage),
                       ),
                       SpitoutTokens.cardDivider(context),
                       // 汇率管理
                       AppListTile(
                         leading: AppIcons.currencyExchange,
-                        title: AppLocalizations.of(context)
-                            .exchangeRatePageTitle,
-                        subtitle: AppLocalizations.of(context)
-                            .exchangeRateEntrySubtitle,
-                        trailing: Icon(AppIcons.chevronRight,
-                            color: SpitoutTokens.iconTertiary(context),
-                            size: 20),
+                        title: AppLocalizations.of(
+                          context,
+                        ).exchangeRatePageTitle,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).exchangeRateEntrySubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
+                        ),
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const ExchangeRatePage()),
+                              builder: (_) => const ExchangeRatePage(),
+                            ),
                           );
                         },
                       ),
@@ -82,18 +91,22 @@ class MinePage extends ConsumerWidget {
                       // 周期账单
                       AppListTile(
                         leading: AppIcons.repeat,
-                        title: AppLocalizations.of(context)
-                            .mineRecurringTransactions,
-                        subtitle: AppLocalizations.of(context)
-                            .mineRecurringTransactionsSubtitle,
-                        trailing: Icon(AppIcons.chevronRight,
-                            color: SpitoutTokens.iconTertiary(context),
-                            size: 20),
+                        title: AppLocalizations.of(
+                          context,
+                        ).mineRecurringTransactions,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).mineRecurringTransactionsSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
+                        ),
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const RecurringTransactionPage()),
+                              builder: (_) => const RecurringTransactionPage(),
+                            ),
                           );
                         },
                       ),
@@ -101,37 +114,43 @@ class MinePage extends ConsumerWidget {
                       // 记账提醒
                       AppListTile(
                         leading: AppIcons.notifications,
-                        title: AppLocalizations.of(context)
-                            .mineReminderSettings,
-                        subtitle: AppLocalizations.of(context)
-                            .mineReminderSettingsSubtitle,
-                        trailing: Icon(AppIcons.chevronRight,
-                            color: SpitoutTokens.iconTertiary(context),
-                            size: 20),
+                        title: AppLocalizations.of(
+                          context,
+                        ).mineReminderSettings,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).mineReminderSettingsSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
+                        ),
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const ReminderSettingsPage()),
+                              builder: (_) => const ReminderSettingsPage(),
+                            ),
                           );
                         },
                       ),
                       SpitoutTokens.cardDivider(context),
-                      // 偏好调节（原「个性化设置 / 外观设置」更名为「偏好调节」）
+                      // 偏好调节
                       AppListTile(
                         leading: AppIcons.theme,
-                        title: AppLocalizations.of(context)
-                            .appearanceSettings,
-                        subtitle: AppLocalizations.of(context)
-                            .appearanceSettingsDesc,
-                        trailing: Icon(AppIcons.chevronRight,
-                            color: SpitoutTokens.iconTertiary(context),
-                            size: 20),
+                        title: AppLocalizations.of(context).appearanceSettings,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).appearanceSettingsDesc,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
+                        ),
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const AppearanceSettingsPage()),
+                              builder: (_) => const AppearanceSettingsPage(),
+                            ),
                           );
                         },
                       ),
@@ -143,92 +162,92 @@ class MinePage extends ConsumerWidget {
                 // 包含：备份与云同步配置 → 明细导入导出 → 配置导入导出 → 数据清理
                 // 云服务与同步状态统一经 CloudServiceEntryTile 进入。
                 SectionCard(
-                    margin: EdgeInsets.fromLTRB(
-                        12.0,
-                        0,
-                        12.0,
-                        0),
-                    child: Column(
-                      children: [
-                        // 备份与云同步配置 —— 统一入口：合并原「云服务」与
-                        //「同步状态」两个 tile，图标与文案按 9 种同步状态切换，
-                        // 点击统一进入 CloudServicePage（不按后端类型路由分叉）。
-                        // 调整至本分组首位，突出云同步与备份的核心入口地位。
-                        CloudServiceEntryTile(
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              appPageRoute(
-                                  builder: (_) => const CloudServicePage()),
-                            );
-                          },
+                  margin: EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
+                  child: Column(
+                    children: [
+                      // 备份与云同步配置 —— 统一入口：图标与文案按 9 种同步状态切换，
+                      // 点击统一进入 CloudServicePage（不按后端类型路由分叉）。
+                      // 调整至本分组首位，突出云同步与备份的核心入口地位。
+                      CloudServiceEntryTile(
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            appPageRoute(
+                              builder: (_) => const CloudServicePage(),
+                            ),
+                          );
+                        },
+                      ),
+                      SpitoutTokens.cardDivider(context),
+                      // 明细导入导出(合并原导入/导出入口,逻辑复用 import/export 页)
+                      AppListTile(
+                        leading: AppIcons.currencyExchange,
+                        title: AppLocalizations.of(
+                          context,
+                        ).detailImportExportTitle,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).detailImportExportSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
                         ),
-                        SpitoutTokens.cardDivider(context),
-                        // 明细导入导出(合并原导入/导出入口,逻辑复用 import/export 页)
-                        AppListTile(
-                          leading: AppIcons.currencyExchange,
-                          title:
-                              AppLocalizations.of(context)
-                                  .detailImportExportTitle,
-                          subtitle:
-                              AppLocalizations.of(context)
-                                  .detailImportExportSubtitle,
-                          trailing: Icon(AppIcons.chevronRight,
-                              color:
-                                  SpitoutTokens.iconTertiary(context),
-                              size: 20),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              appPageRoute(
-                                  builder: (_) =>
-                                      const DetailImportExportPage()),
-                            );
-                          },
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            appPageRoute(
+                              builder: (_) => const DetailImportExportPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      SpitoutTokens.cardDivider(context),
+                      // 配置导入导出
+                      AppListTile(
+                        leading: AppIcons.backupRestore,
+                        title: AppLocalizations.of(
+                          context,
+                        ).configImportExportTitle,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).configImportExportSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
                         ),
-                        SpitoutTokens.cardDivider(context),
-                        // 配置导入导出
-                        AppListTile(
-                          leading: AppIcons.backupRestore,
-                          title: AppLocalizations.of(context)
-                              .configImportExportTitle,
-                          subtitle:
-                              AppLocalizations.of(context)
-                                  .configImportExportSubtitle,
-                          trailing: Icon(AppIcons.chevronRight,
-                              color:
-                                  SpitoutTokens.iconTertiary(context),
-                              size: 20),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              appPageRoute(
-                                  builder: (_) =>
-                                      const ConfigImportExportPage()),
-                            );
-                          },
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            appPageRoute(
+                              builder: (_) => const ConfigImportExportPage(),
+                            ),
+                          );
+                        },
+                      ),
+                      SpitoutTokens.cardDivider(context),
+                      // 数据清理(从功能管理分组移入)
+                      AppListTile(
+                        leading: AppIcons.cleaning,
+                        title: AppLocalizations.of(
+                          context,
+                        ).maintenanceOrphanCleanupTitle,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).maintenanceOrphanCleanupSubtitle,
+                        trailing: Icon(
+                          AppIcons.chevronRight,
+                          color: SpitoutTokens.iconTertiary(context),
+                          size: 20,
                         ),
-                        SpitoutTokens.cardDivider(context),
-                        // 数据清理(从功能管理分组移入)
-                        AppListTile(
-                          leading:
-                              AppIcons.cleaning,
-                          title: AppLocalizations.of(context)
-                              .maintenanceOrphanCleanupTitle,
-                          subtitle:
-                              AppLocalizations.of(context)
-                                  .maintenanceOrphanCleanupSubtitle,
-                          trailing: Icon(AppIcons.chevronRight,
-                              color:
-                                  SpitoutTokens.iconTertiary(context),
-                              size: 20),
-                          onTap: () async {
-                            await Navigator.of(context).push(
-                              appPageRoute(
-                                  builder: (_) =>
-                                      const OrphanCleanupPage()),
-                            );
-                          },
-                        ),
-                      ],
-                    ),
+                        onTap: () async {
+                          await Navigator.of(context).push(
+                            appPageRoute(
+                              builder: (_) => const OrphanCleanupPage(),
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
                 ),
                 SizedBox(height: SpitoutDimens.p16),
                 // 「检查更新」入口：复用全站统一的 AppListTile，

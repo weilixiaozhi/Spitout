@@ -5,6 +5,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import 'keypad_constants.dart';
 
 /// 金额栏行：[币种触发器] [金额 / 算式 / 预览结果] [删除键]。
 ///
@@ -318,10 +319,13 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     // 水平方向不设 padding，由外层 Padding 统一控制左右对齐
     return LayoutBuilder(
       builder: (ctx, c) {
-        // 与 AmountKeypad 的列宽公式保持一致：(总宽 - 3 个 8px 间距) / 4。
+        // 与 AmountKeypad 的列宽公式保持一致：(总宽 - 3 个键间距) / 4，
+        // 键间距统一来自 KeypadLayout.gap。
         // 三区块按 1 / 2+8 / 1 列分配，宽度恰好铺满整行并与键盘键位一一对齐：
         //   币种框 ↔ 数字 1；金额区 ↔ 数字 2+3（含中间间距）；删除键 ↔ 乘号。
-        final colWidth = (c.maxWidth - 3 * 8) / 4;
+        final colWidth = (c.maxWidth - 3 * KeypadLayout.gap) / 4;
+        // 折算预览行同一帧只构建一次，避免先判空再取用导致重复建树。
+        final conversionRow = _buildConversionRow(context);
         return Column(
           crossAxisAlignment: CrossAxisAlignment.end,
           children: [
@@ -345,8 +349,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
               ],
             ),
             // 折算预览（仅外币 + 非计算中）
-            if (_buildConversionRow(context) != null)
-              _buildConversionRow(context)!,
+            ?conversionRow,
           ],
         );
       },

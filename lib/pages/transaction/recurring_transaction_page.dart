@@ -6,7 +6,6 @@ import '../../widgets/widgets.dart';
 import '../../data/models.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/logging/logger_service.dart';
-import '../../services/data/recurring_transaction_service.dart';
 import '../../utils/category_utils.dart';
 import '../../theme/colors.dart';
 import 'recurring_transaction_edit_page.dart';
@@ -38,9 +37,36 @@ class RecurringTransactionPage extends ConsumerWidget {
           Expanded(
             child: recurringTransactionsAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (error, stack) => Center(
-                child: Text('Error: $error'),
-              ),
+              error: (error, stack) {
+                // 原始异常只进日志,页面展示统一友好文案 + 重试。
+                logger.error(
+                  'RecurringTransactionPage',
+                  '周期账单列表加载失败',
+                  error,
+                  stack,
+                );
+                final l10n = AppLocalizations.of(context);
+                return Center(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        l10n.commonOperationFailed,
+                        style: TextStyle(
+                          color: SpitoutTokens.textSecondary(context),
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () =>
+                            ref.invalidate(allRecurringTransactionsProvider),
+                        icon: const Icon(AppIcons.refresh, size: 18),
+                        label: Text(l10n.analyticsRetry),
+                      ),
+                    ],
+                  ),
+                );
+              },
               data: (recurringTransactions) {
                 if (recurringTransactions.isEmpty) {
                   return Center(
@@ -108,14 +134,25 @@ class RecurringTransactionPage extends ConsumerWidget {
   }
 }
 
-class _RecurringTransactionCard extends ConsumerWidget {
+class _RecurringTransactionCard extends ConsumerStatefulWidget {
   final RecurringTransaction recurring;
 
   const _RecurringTransactionCard({required this.recurring});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final repo = ref.watch(repositoryProvider);
+  ConsumerState<_RecurringTransactionCard> createState() =>
+      _RecurringTransactionCardState();
+}
+
+class _RecurringTransactionCardState
+    extends ConsumerState<_RecurringTransactionCard> {
+  /// 开关切换进行中标记:防止连点与切换期间重复提交。
+  bool _toggling = false;
+
+  RecurringTransaction get recurring => widget.recurring;
+
+  @override
+  Widget build(BuildContext context) {
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
@@ -178,29 +215,39 @@ class _RecurringTransactionCard extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       // 第一行：分类名称
-                      FutureBuilder<Category?>(
-                          future: _getCategory(ref, recurring.categoryId),
-                          builder: (context, snapshot) {
-                            final categoryName = snapshot.data?.name ?? '';
-                            return Text(
-                              CategoryUtils.getDisplayName(categoryName, context),
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w600,
-                                color: SpitoutTokens.textPrimary(context),
-                              ),
-                            );
-                          },
-                        ),
+                      Builder(
+                        builder: (context) {
+                          // 分类名走 FutureProvider.family 缓存,避免每次
+                          // build 都为卡片重新发起数据库查询。
+                          final categoryId = recurring.categoryId;
+                          final categoryName = categoryId == null
+                              ? null
+                              : ref
+                                  .watch(categoryByIdProvider(categoryId))
+                                  .value
+                                  ?.name;
+                          return Text(
+                            CategoryUtils.getDisplayName(categoryName, context),
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: SpitoutTokens.textPrimary(context),
+                            ),
+                          );
+                        },
+                      ),
                       const SizedBox(height: 6),
                       // 第二行：账本 + 频率 + 时间
                       Row(
                         children: [
                           // 账本
-                          FutureBuilder<Ledger?>(
-                            future: _getLedger(ref, recurring.ledgerId),
-                            builder: (context, snapshot) {
-                              final ledgerName = snapshot.data?.name ?? '';
+                          Builder(
+                            builder: (context) {
+                              final ledgerName = ref
+                                  .watch(ledgerByIdProvider(recurring.ledgerId))
+                                  .value
+                                  ?.name ??
+                                  '';
                               return Text(
                                 ledgerName,
                                 style: TextStyle(
@@ -301,24 +348,11 @@ class _RecurringTransactionCard extends ConsumerWidget {
                       alignment: Alignment.centerRight,
                       child: Switch(
                         value: recurring.enabled,
-                        onChanged: (value) async {
-                          logger.info('Recurring', '开关点击: id=${recurring.id}, newValue=$value, repo类型=${repo.runtimeType}');
-
-                          try {
-                            await repo.toggleRecurringTransaction(
-                                recurring.id, value);
-                            logger.info('Recurring', 'toggleRecurringTransaction 完成');
-
-                            // 给Realtime一点时间触发更新
-                            await Future.delayed(const Duration(milliseconds: 100));
-
-                            ref.invalidate(allRecurringTransactionsProvider);
-                            logger.info('Recurring', 'Provider已invalidate');
-                          } catch (e, stackTrace) {
-                            logger.warning('Recurring', '切换失败: $e');
-                            logger.debug('Recurring', '堆栈: $stackTrace');
-                          }
-                        },
+                        onChanged: _toggling
+                            ? null
+                            : (value) async {
+                                await _toggle(value);
+                              },
                         activeThumbColor: primaryColor,
                       ),
                     ),
@@ -332,6 +366,7 @@ class _RecurringTransactionCard extends ConsumerWidget {
     );
   }
 
+  /// 频率展示文案:间隔为 1 时用「每天/每周/…」,否则用「每 N 天/…」。
   String _getFrequencyDescription(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final frequency = RecurringFrequency.fromString(recurring.frequency);
@@ -362,15 +397,38 @@ class _RecurringTransactionCard extends ConsumerWidget {
     }
   }
 
-  Future<Category?> _getCategory(WidgetRef ref, int? categoryId) async {
-    if (categoryId == null) return null;
-    final repo = ref.read(repositoryProvider);
-    return await repo.getCategoryById(categoryId);
-  }
-
-  Future<Ledger?> _getLedger(WidgetRef ref, int ledgerId) async {
-    final repo = ref.read(repositoryProvider);
-    return await repo.getLedgerById(ledgerId);
+  /// 切换周期账单开关。
+  ///
+  /// 写库成功后失效列表流并等待其刷新,替代原先的固定 100ms 延迟;
+  /// 失败时保持原开关状态并 toast 提示,不静默。
+  Future<void> _toggle(bool value) async {
+    if (_toggling) return;
+    setState(() => _toggling = true);
+    final l10n = AppLocalizations.of(context);
+    try {
+      final repo = ref.read(repositoryProvider);
+      await repo.toggleRecurringTransaction(recurring.id, value);
+      logger.debug(
+        'Recurring',
+        '周期账单开关已切换 id=${recurring.id} enabled=$value',
+      );
+      // 失效后等待数据流首帧,确保列表刷新完成,再收尾。
+      ref.invalidate(allRecurringTransactionsProvider);
+      await ref.read(allRecurringTransactionsProvider.future);
+    } catch (e, st) {
+      logger.warning(
+        'Recurring',
+        '周期账单开关切换失败 id=${recurring.id} enabled=$value',
+        '$e\n$st',
+      );
+      if (mounted) {
+        showToast(context, l10n.commonOperationFailed);
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _toggling = false);
+      }
+    }
   }
 }
 

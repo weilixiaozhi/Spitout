@@ -458,6 +458,10 @@ class _CategorySelectorDialogState
   String _searchText = '';
   Map<int, int> _transactionCounts = {};
   Map<int, bool> _categoryFilterResults = {}; // 存储过滤器结果
+  /// 分类加载 future 缓存：首次 / shared 资源 tick 变化时重建一次，
+  /// 搜索与父级 setState 只做内存过滤，避免每次按键都全量重查数据库。
+  Future<List<Category>>? _categoriesFuture;
+  int _loadedSharedResourceTick = -1;
 
   @override
   void initState() {
@@ -671,9 +675,14 @@ class _CategorySelectorDialogState
   @override
   Widget build(BuildContext context) {
     // 共享账本:WS shared_resource_change 推送后 tick bump 触发 rebuild
-    // → 下方 FutureBuilder 拿到新 Future 重查 SharedLedgerCategories。
+    // → 仅在该 tick 变化时重建分类加载 future（其余 rebuild 走缓存），
+    // 搜索 / 父级 setState 只做内存过滤，不再全量重查数据库。
     // 否则 A 改分类名 B 这边 picker 显示旧名,要重启 app。
-    ref.watch(sharedResourceRefreshProvider);
+    final sharedTick = ref.watch(sharedResourceRefreshProvider);
+    if (_categoriesFuture == null || sharedTick != _loadedSharedResourceTick) {
+      _categoriesFuture = _loadAllCategories();
+      _loadedSharedResourceTick = sharedTick;
+    }
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
@@ -759,7 +768,7 @@ class _CategorySelectorDialogState
             // 分类列表
             Expanded(
               child: FutureBuilder<List<Category>>(
-                future: _loadAllCategories(),
+                future: _categoriesFuture,
                 builder: (context, snapshot) {
                   if (!snapshot.hasData) {
                     return const Center(child: CircularProgressIndicator());

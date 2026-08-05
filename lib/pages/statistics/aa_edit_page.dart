@@ -6,7 +6,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/logging/logger_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../../providers/providers.dart';
-import '../../services/data/tx_author_service.dart';
 import '../../services/statistics/aa_decimal_util.dart';
 import '../../services/statistics/aa_edit_models.dart';
 import '../../services/statistics/aa_statistics_service.dart';
@@ -116,11 +115,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
       List<AaParticipantOption> options) async {
     try {
       // 操作者 id 优先级与落库层一致:云 userId > localSelfId(设备身份)。
-      final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
-      final localSelfId = await ref.read(localSelfIdProvider.future);
-      final operatorId =
-          (cloudUserId != null && cloudUserId.isNotEmpty) ? cloudUserId : localSelfId;
+      final operatorId = await currentOperatorIdFromUi(ref);
       if (operatorId.isEmpty || !mounted) return;
       // 操作者不在名册中时放弃,避免锁定一个不存在的行。
       if (!options.any((o) => o.id == operatorId)) return;
@@ -303,8 +298,23 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         ref.watch(aaParticipantOptionsProvider(widget.args.ledgerId));
     final options = optionsAsync.value ?? const <AaParticipantOption>[];
     _lastOptions = options;
-    _initOnce(options);
-    if (_initialized) _syncAmountControllers(options);
+    // 金额输入控制器必须在渲染参与人行前就位(TextField 依赖 controller),
+    // 此处仅做控制器增删,不改变业务状态,可安全在 build 中执行。
+    _syncAmountControllers(options);
+    // 业务初始化(_initOnce 改写 _paidById/_participantIds 等状态字段)延迟到
+    // 帧结束执行,避免在 build 中直接改 state,为后续可能的 setState 留出安全余量。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final current = ref
+              .read(aaParticipantOptionsProvider(widget.args.ledgerId))
+              .value ??
+          const <AaParticipantOption>[];
+      final before = _initialized;
+      _initOnce(current);
+      if (before != _initialized && mounted) {
+        setState(() {});
+      }
+    });
 
     final participants = _effectiveParticipants(options);
     // 交易币种缺省时回退账本本位币展示。
@@ -622,7 +632,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           options: options,
           selectedId: _paidById,
         );
-        if (picked != null && picked != _paidById) {
+        // 选择器打开期间页面可能已销毁,或用户取消选择,均不更新状态。
+        if (picked == null || !mounted) return;
+        if (picked != _paidById) {
           setState(() {
             _paidById = picked;
             // 手选后标记手动选择:确认回传手选值(而非 null)。

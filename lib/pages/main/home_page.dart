@@ -10,11 +10,8 @@ import '../../widgets/widgets.dart';
 import '../../l10n/app_localizations.dart';
 import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../services/maintenance/analytics_test_data_seeder.dart';
 import '../../utils/format_utils.dart';
-import '../../utils/date/month_range.dart';
 import '../../utils/category_utils.dart';
-import '../../services/data/tx_author_service.dart';
 import '../transaction/category_detail_page.dart';
 import 'ledgers_page.dart';
 import '../../routes.dart';
@@ -205,8 +202,8 @@ class _HomePageState extends ConsumerState<HomePage>
     // 避免填充数据出现「支出人未知」或分摊统计误归因。
     String? paidByUserId;
     try {
-      final cloud = await ref.read(spitoutCloudProviderInstance.future);
-      final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
+      // 经 providers 门面解析当前操作者：云 userId 优先，未登录用设备身份兜底。
+      final cloudUserId = await currentOperatorUserIdFromUi(ref);
       final localSelfId = await ref.read(localSelfIdProvider.future);
       paidByUserId = (cloudUserId != null && cloudUserId.isNotEmpty)
           ? cloudUserId
@@ -215,7 +212,7 @@ class _HomePageState extends ConsumerState<HomePage>
       // 未配置/未登录时跳过,seeder 侧不传支出人(仅 debug 数据,不影响生产)。
       paidByUserId = null;
     }
-    final seeder = AnalyticsTestDataSeeder(ref.read(repositoryProvider));
+    final seeder = ref.read(analyticsTestDataSeederProvider);
     final count = await seeder.fill(
       ledgerId: ledgerId,
       baseCurrency: baseCurrency,
@@ -372,25 +369,18 @@ class _HomePageState extends ConsumerState<HomePage>
     ref.invalidate(expenseColorSchemeProvider);
 
     // 补折算：检查是否有未折算的外币交易（如导入/同步进来的数据缺汇率），
-    // 有则补拉涉及外币的汇率并折算，避免数据失真。非致命，失败仅告警。
+    // 有则直接按开头已拉取的最新汇率折算，避免数据失真。非致命，失败仅告警。
     try {
       final repo = ref.read(repositoryProvider);
       final ledgerId = ref.read(currentLedgerIdProvider);
       final unconvertedCount = await repo.countUnconvertedForeignTx(ledgerId);
       if (unconvertedCount > 0) {
-        // 先拉取涉及外币的汇率（force 确保不跳过 24h 节流）
-        final foreignCurrencies = await repo.getLedgerForeignCurrencies(
-          ledgerId,
-        );
-        final rateOk = await refreshExchangeRatesFromUi(
-          ref,
-          force: true,
-          extraQuotes: foreignCurrencies,
-        );
+        // 汇率已在方法开头整体拉取（接口一次返回全部币种），此处直接重算即可，
+        // 避免同一刷新里发起两次网络往返。
         final recalcCount = await repo.recomputeForeignTxForLedger(ledgerId);
         logger.info(
           'HomePage',
-          '本地刷新补折算: 未折算=$unconvertedCount 拉取汇率=$rateOk 补折算=$recalcCount',
+          '本地刷新补折算: 未折算=$unconvertedCount 补折算=$recalcCount',
         );
         if (recalcCount > 0) {
           // 折算成功 → invalidate currentLedgerProvider 强制 _MonthPage
@@ -507,7 +497,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       ),
                   ],
                 ),
-                // 轻扫提示行：从原「卡片下方」上移到「日期组件(首行)与汇总卡之间」，
+                // 轻扫提示行：位于「日期组件(首行)与汇总卡之间」，
                 // 轻扫提示行：放在日期组件与汇总卡之间（共用 SwipeHint，统一样式）。
                 // 左内边距对齐 PrimaryHeader 的日期标题(距左 14)，让图标左边缘与日期文字左边缘对齐，主副标题块左边界一致。
                 // PrimaryHeader→提示的间距承接标题行底部留白，下方留 8 接卡片(该距离已确认刚好，保持不变)。
@@ -561,7 +551,44 @@ class _HomePageState extends ConsumerState<HomePage>
             );
           },
           loading: () => const SizedBox.shrink(),
-          error: (_, _) => const SizedBox.shrink(),
+          error: (error, st) {
+            // 头部账本加载失败：保留月份标题并给出可重试占位，避免整块静默消失。
+            logger.error('HomePage', '当前账本加载失败', error, st);
+            final l10n = AppLocalizations.of(context);
+            return Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                PrimaryHeader(
+                  title: monthYearLabel(context, month.month, month.year),
+                  onTitleTap: _onTapDateHeader,
+                  titleTrailing: AppIcons.chevronDown,
+                ),
+                Padding(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        l10n.analyticsLoadFailed,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Theme.of(context).colorScheme.onSurfaceVariant,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      TextButton.icon(
+                        onPressed: () => ref.invalidate(currentLedgerProvider),
+                        icon: const Icon(AppIcons.refresh, size: 18),
+                        label: Text(l10n.analyticsRetry),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            );
+          },
         );
       },
     );
@@ -726,8 +753,10 @@ class _HomePageState extends ConsumerState<HomePage>
                 return _MonthPage(
                   ledgerId: ledgerId,
                   month: month,
-                  getStream: () =>
-                      repo.watchTransactionsWithCategoryAll(ledgerId: ledgerId),
+                  getStream: () => repo.watchTransactionsWithCategoryInMonth(
+                    ledgerId: ledgerId,
+                    month: month,
+                  ),
                   onEdit: (tx, cat) async {
                     await TransactionEditUtils.editTransaction(
                       context,
@@ -1008,7 +1037,7 @@ class _HeaderSummary extends ConsumerWidget {
 ///   onTap 不在此处:整张卡片已经可点击进入账本。
 /// - Row 用 mainAxisSize.min 让 tab 宽度随内容收缩贴右缘;账本名用
 ///   ConstrainedBox 限宽 96、超出省略号,避免长名把 tab 顶穿卡片左半区。
-/// - 无账本态保持原「合作圈 + 新建账本」引导样式。
+/// - 无账本态显示「合作圈 + 新建账本」引导样式。
 class _LedgerEntryInCard extends StatelessWidget {
   final String ledgerName;
   final String currencyCode;
@@ -1153,13 +1182,8 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
   @override
   Widget build(BuildContext context) {
     final month = widget.month;
-    final period = periodForLabel(
-      month.year,
-      month.month,
-      ref.watch(currentMonthStartDayProvider),
-    );
-    // 仅展示当月数据：在 Repository 上过滤后传 list（保留 join 性能），
-    // 单纯 client 过滤是 O(n) 但单月量级可控，避免再加一个 family provider。
+    // 数据已由数据层按账本 monthStartDay 边界过滤（watchTransactionsWithCategoryInMonth），
+    // 列表直接消费当月流，避免整库全量拉取后再做 O(n) 客户端过滤。
     // ref.watch 上提到 StreamBuilder 之前（独立清理）：成员/账本 provider 变化只触发
     // _MonthPage 整体 rebuild，build 重跑时 memberMap 照常重算、头像实时更新，
     // 不依赖 StreamBuilder.builder 闭包内的 watch。
@@ -1197,12 +1221,19 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
       // 复用缓存的流引用：rebuild 不重新订阅，memberMap 实时刷新但交易流不丢、不灰屏。
       stream: _txStream!,
       builder: (context, snapshot) {
+        // 流出错：展示友好错误 + 重试（重建流），避免永久骨架屏。
+        if (snapshot.hasError) {
+          logger.error('HomePage', '交易流加载失败: ${snapshot.error}');
+          return _MonthError(
+            onRetry: () {
+              setState(() {
+                _txStream = widget.getStream();
+              });
+            },
+          );
+        }
+
         final all = snapshot.data ?? const [];
-        // 过滤成单月：period.start ≤ tx.happenedAt < period.end
-        final monthItems = all.where((it) {
-          final t = it.t.happenedAt;
-          return !t.isBefore(period.start) && t.isBefore(period.end);
-        }).toList();
 
         // 数据流尚未发射时显示骨架屏占位：切月重置后中页重新订阅流，
         // 首帧无数据 → 骨架屏，避免空状态闪烁；数据到达后自动替换为真实列表。
@@ -1216,7 +1247,7 @@ class _MonthPageState extends ConsumerState<_MonthPage> {
         // 共享账本成员映射(userId→displayName):列表项头像 + 详情 Sheet 协作成员
         // （ledger / memberMap 已上提到 build 外层计算，此处直接复用）
         return TransactionList(
-          transactions: monthItems,
+          transactions: all,
           controller: _listCtrl,
           emptyWidget: AppEmpty(
             text: AppLocalizations.of(context).homeNoRecords,
@@ -1270,6 +1301,41 @@ class _MonthSkeleton extends StatelessWidget {
       padding: const EdgeInsets.only(top: 8),
       itemCount: 8,
       itemBuilder: (_, _) => const PulseSkeleton(child: SkeletonListTile()),
+    );
+  }
+}
+
+/// 单月交易流错误态：友好提示 + 重试按钮；保持可滚动以便下拉刷新。
+class _MonthError extends StatelessWidget {
+  final VoidCallback onRetry;
+
+  const _MonthError({required this.onRetry});
+
+  @override
+  Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final theme = Theme.of(context);
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      padding: const EdgeInsets.all(24),
+      children: [
+        const SizedBox(height: 48),
+        Icon(AppIcons.cloudOff, size: 48, color: theme.colorScheme.outline),
+        const SizedBox(height: 12),
+        Text(
+          l10n.analyticsLoadFailed,
+          textAlign: TextAlign.center,
+          style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
+        ),
+        const SizedBox(height: 12),
+        Center(
+          child: TextButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(AppIcons.refresh, size: 18),
+            label: Text(l10n.analyticsRetry),
+          ),
+        ),
+      ],
     );
   }
 }

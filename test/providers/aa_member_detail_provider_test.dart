@@ -85,6 +85,8 @@ void main() {
   /// 直接写库插入一笔交易（绕过 sync 登记，仅作数据源）。
   Future<int> seedTx({
     required int amountCents,
+    int? nativeAmountCents,
+    String? currencyCode,
     String type = 'expense',
     String? paidByUserId,
     int? aaMode,
@@ -92,6 +94,10 @@ void main() {
     String? aaSplits,
     DateTime? happenedAt,
   }) {
+    // 库表 CHECK:币种与折算金额要么都空、要么都非空;
+    // 传了折算金额但没传币种时默认按 USD 构造。
+    final effectiveCurrency =
+        currencyCode ?? (nativeAmountCents == null ? null : 'USD');
     return db
         .into(db.transactions)
         .insert(
@@ -99,6 +105,12 @@ void main() {
             ledgerId: 1,
             type: type,
             amount: amountCents,
+            nativeAmount: nativeAmountCents == null
+                ? const Value.absent()
+                : Value(nativeAmountCents),
+            currencyCode: effectiveCurrency == null
+                ? const Value.absent()
+                : Value(effectiveCurrency),
             happenedAt: Value(happenedAt ?? DateTime(2026, 8, 3, 12, 0)),
             paidByUserId: paidByUserId == null
                 ? const Value.absent()
@@ -233,5 +245,29 @@ void main() {
     expect(data, isNotNull);
     expect(data!.member.displayName, '李四');
     expect(data.bills, isEmpty);
+  });
+
+  test('多币种:单笔账单与汇总均按账本本位币(nativeAmount)口径', () async {
+    // 外币账单:原币 $10(1000 分),折本位币 ¥72.50(7250 分)。
+    await seedTx(
+      amountCents: 1000,
+      nativeAmountCents: 7250,
+      paidByUserId: 'u1',
+      aaMode: 0,
+      aaParticipants: jsonEncode(['u1', 'u2']),
+      happenedAt: DateTime(2026, 8, 3, 12, 0),
+    );
+
+    final data = await readDetail('u1');
+    expect(data, isNotNull);
+    final bill = data!.bills.single;
+    // 实付/本人应摊均为本位币,而不是原币 $10 / $5。
+    expect(bill.totalAmount, closeTo(72.50, 0.001));
+    expect(bill.myShare, closeTo(36.25, 0.001));
+    // 分摊明细同样为本位币。
+    expect(
+      bill.splits.fold<double>(0, (s, it) => s + it.amount),
+      closeTo(72.50, 0.001),
+    );
   });
 }

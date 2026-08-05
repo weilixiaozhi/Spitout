@@ -1,5 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/database_providers.dart';
+
+import '../../services/export/config_export_service.dart';
 
 // 导入任务进度：用于显示"后台导入中"状态与进度
 class ImportProgress {
@@ -32,26 +35,39 @@ class ImportProgress {
     int? ledgerId,
     int? skipped,
     Map<String, int>? skippedTypes,
-  }) =>
-      ImportProgress(
-        running: running ?? this.running,
-        total: total ?? this.total,
-        done: done ?? this.done,
-        ok: ok ?? this.ok,
-        fail: fail ?? this.fail,
-        ledgerId: ledgerId ?? this.ledgerId,
-        skipped: skipped ?? this.skipped,
-        skippedTypes: skippedTypes ?? this.skippedTypes,
-      );
+  }) => ImportProgress(
+    running: running ?? this.running,
+    total: total ?? this.total,
+    done: done ?? this.done,
+    ok: ok ?? this.ok,
+    fail: fail ?? this.fail,
+    ledgerId: ledgerId ?? this.ledgerId,
+    skipped: skipped ?? this.skipped,
+    skippedTypes: skippedTypes ?? this.skippedTypes,
+  );
 
   /// 判断是否刚完成导入（从运行中变为完成状态）
   bool get isJustCompleted => !running && total > 0;
 
-  static const empty =
-      ImportProgress(running: false, total: 0, done: 0, ok: 0, fail: 0);
+  static const empty = ImportProgress(
+    running: false,
+    total: 0,
+    done: 0,
+    ok: 0,
+    fail: 0,
+  );
 }
 
 final importProgressProvider =
     NotifierProvider<SimpleStateNotifier<ImportProgress>, ImportProgress>(
-  () => SimpleStateNotifier((ref) => ImportProgress.empty),
-);
+      () => SimpleStateNotifier((ref) => ImportProgress.empty),
+    );
+
+/// 配置导入动作门面：页面只依赖 providers，不直接触碰服务层。
+final importConfigFromYamlProvider =
+    Provider<Future<void> Function(String yamlContent)>((ref) {
+      return (yamlContent) => ConfigExportService.importFromYaml(
+        yamlContent,
+        repository: ref.read(repositoryProvider),
+      );
+    });

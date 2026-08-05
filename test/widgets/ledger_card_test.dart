@@ -89,6 +89,13 @@ void main() {
     expect(find.byIcon(LucideIcons.heartHandshake), findsNothing);
   });
 
+  testWidgets('不向用户展示本地自增 ID', (tester) async {
+    await _pump(tester, _ledger(isShared: false));
+
+    expect(find.textContaining('ID:'), findsNothing,
+        reason: '内部自增 ID 对用户无意义且跨设备不一致，不应展示');
+  });
+
   group('状态图标(方案B重构)', () {
     testWidgets('云端账本恒为云形:即便激活 webdav 也不显示 storage 备份图标',
         (tester) async {

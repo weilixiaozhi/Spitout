@@ -123,14 +123,6 @@ class LedgerCard extends ConsumerWidget {
                                     color: SpitoutTokens.textPrimary(context),
                                   ),
                                 ),
-                                TextSpan(
-                                  text: ' (ID:${ledger.id})',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: SpitoutTokens.textSecondary(context),
-                                  ),
-                                ),
                               ],
                             ),
                           ),

@@ -4,13 +4,8 @@ import 'dart:io';
 import '../../l10n/app_localizations.dart';
 import '../../utils/file_picker_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:spitout/providers/ui/ui_state_providers.dart';
-import 'package:spitout/providers/ui/language_provider.dart';
-import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/providers/ui/theme_providers.dart';
+import 'package:spitout/providers/providers.dart';
 import '../../core/logging/logger_service.dart';
-import '../../services/data/seed_service.dart';
-import '../../services/export/config_export_service.dart';
 import '../../utils/currency/currencies.dart';
 import '../../widgets/widgets.dart';
 import '../../theme/icons/app_icons.dart';
@@ -87,9 +82,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         child: Column(
           children: [
             // 页面内容：币种选择屏
-            Expanded(
-              child: _buildCurrencyPage(context, l10n),
-            ),
+            Expanded(child: _buildCurrencyPage(context, l10n)),
 
             // 底部按钮区域：仅"完成"
             Padding(
@@ -109,8 +102,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         ? const SizedBox(
                             width: 20,
                             height: 20,
-                            child:
-                                CircularProgressIndicator(strokeWidth: 2),
+                            child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : Text(l10n.commonFinish),
                   ),
@@ -132,8 +124,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
     // 「汇率 → 币种管理」中启用。仍保持可滚动，仅首屏高度调整为约可见 6 行。
     final all = getCurrencies(context);
     final currencies = <CurrencyInfo>[
-      for (final code in _currencyOrder)
-        ...all.where((c) => c.code == code),
+      for (final code in _currencyOrder) ...all.where((c) => c.code == code),
     ];
 
     // 外层包 LayoutBuilder + SingleChildScrollView：在矮屏(如测试视口)下避免整页溢出；
@@ -154,166 +145,171 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                 children: [
                   const SizedBox(height: 24),
 
-          // 品牌 LOGO（SVG 自带配色，不需主题色参数）
-          // 放大展示：图标 72 → 120、容器 96 → 160，提升首屏品牌辨识度与视觉重心
-          SizedBox(
-            width: 160,
-            height: 160,
-            child: Center(
-              child: SpitoutIcon(size: 120),
-            ),
-          ),
-          const SizedBox(height: 28),
+                  // 品牌 LOGO（SVG 自带配色，不需主题色参数）
+                  // 放大展示：图标 72 → 120、容器 96 → 160，提升首屏品牌辨识度与视觉重心
+                  SizedBox(
+                    width: 160,
+                    height: 160,
+                    child: Center(child: SpitoutIcon(size: 120)),
+                  ),
+                  const SizedBox(height: 28),
 
-          // 标题：选择记账货币
-          Text(
-            l10n.welcomeSelectCurrencyTitle,
-            style: Theme.of(context).textTheme.headlineMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: 20),
-
-          // 首屏列表高度固定为约 6 行，保证"刚好能看到 6 个币种"；
-          // 仍是完整 13 个、可滚动，仅限制可视区域高度（不改变滚动逻辑）。
-          // 列表铺满横向宽度：父级 Column 为 stretch 会拉伸全宽，无需 Center 包裹，
-          // 也不限制 maxWidth，列表直接占满可用宽度。
-          Container(
-            width: double.infinity,
-            height: _kWelcomeVisibleRows * _kWelcomeRowHeight + _kWelcomeListPeek,
-            decoration: BoxDecoration(
-              color: SpitoutTokens.surface(context),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListView.separated(
-              key: const Key('currencyListView'), // 供测试精准定位币种列表
-              itemCount: currencies.length,
-              separatorBuilder: (context, index) =>
-                  SpitoutTokens.cardDivider(context, indent: 0),
-              itemBuilder: (context, index) {
-                final currency = currencies[index];
-                final isSelected = _selectedCurrency == currency.code;
-
-                // 固定行高，使首屏"刚好可见 6 行"的高度精确可控
-                return SizedBox(
-                  height: _kWelcomeRowHeight,
-                  child: InkWell(
-                    onTap: () {
-                    setState(() {
-                      _selectedCurrency = currency.code;
-                    });
-                  },
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
+                  // 标题：选择记账货币
+                  Text(
+                    l10n.welcomeSelectCurrencyTitle,
+                    style: Theme.of(context).textTheme.headlineMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: SpitoutTokens.textPrimary(context),
                     ),
-                    child: Row(
-                      children: [
-                        // 单选框：选中用主题色，未选用次要图标色（保留 Radio）
-                        Icon(
-                          isSelected
-                              ? AppIcons.radioChecked
-                              : AppIcons.radioUnchecked,
-                          color: isSelected
-                              ? SpitoutTokens.primary(context)
-                              : SpitoutTokens.iconSecondary(context),
-                          size: 22,
-                        ),
-                        const SizedBox(width: 12),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
 
-                        // 与币种选择弹窗同一布局：固定宽度符号列 + 名称 (ISO) 左对齐。
-                        // 符号长短不一（¥ 与 HK$），固定列宽保证名称列
-                        // 在所有行中对齐到同一 x 位置。
-                        currencySymbolColumn(
-                          currency.code,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
-                        ),
-                        // 与弹窗 ListTile 的图标-文字间距（horizontalTitleGap=16）一致
-                        const SizedBox(width: 16),
+                  // 首屏列表高度固定为约 6 行，保证"刚好能看到 6 个币种"；
+                  // 仍是完整 13 个、可滚动，仅限制可视区域高度（不改变滚动逻辑）。
+                  // 列表铺满横向宽度：父级 Column 为 stretch 会拉伸全宽，无需 Center 包裹，
+                  // 也不限制 maxWidth，列表直接占满可用宽度。
+                  Container(
+                    width: double.infinity,
+                    height:
+                        _kWelcomeVisibleRows * _kWelcomeRowHeight +
+                        _kWelcomeListPeek,
+                    decoration: BoxDecoration(
+                      color: SpitoutTokens.surface(context),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: ListView.separated(
+                      key: const Key('currencyListView'), // 供测试精准定位币种列表
+                      itemCount: currencies.length,
+                      separatorBuilder: (context, index) =>
+                          SpitoutTokens.cardDivider(context, indent: 0),
+                      itemBuilder: (context, index) {
+                        final currency = currencies[index];
+                        final isSelected = _selectedCurrency == currency.code;
 
-                        // 「名称 (ISO)」展示，例：人民币 (CNY)。
-                        // 用 Expanded 提供有界宽度，溢出以省略号收尾。
-                        Expanded(
-                          child: Text(
-                            '${currency.name} (${currency.code})',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: SpitoutTokens.textPrimary(context),
-                              fontSize: 16,
-                              fontWeight: isSelected
-                                  ? FontWeight.w600
-                                  : FontWeight.w400,
+                        // 固定行高，使首屏"刚好可见 6 行"的高度精确可控
+                        return SizedBox(
+                          height: _kWelcomeRowHeight,
+                          child: InkWell(
+                            onTap: () {
+                              setState(() {
+                                _selectedCurrency = currency.code;
+                              });
+                            },
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 14,
+                              ),
+                              child: Row(
+                                children: [
+                                  // 单选框：选中用主题色，未选用次要图标色（保留 Radio）
+                                  Icon(
+                                    isSelected
+                                        ? AppIcons.radioChecked
+                                        : AppIcons.radioUnchecked,
+                                    color: isSelected
+                                        ? SpitoutTokens.primary(context)
+                                        : SpitoutTokens.iconSecondary(context),
+                                    size: 22,
+                                  ),
+                                  const SizedBox(width: 12),
+
+                                  // 与币种选择弹窗同一布局：固定宽度符号列 + 名称 (ISO) 左对齐。
+                                  // 符号长短不一（¥ 与 HK$），固定列宽保证名称列
+                                  // 在所有行中对齐到同一 x 位置。
+                                  currencySymbolColumn(
+                                    currency.code,
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      color: SpitoutTokens.textSecondary(
+                                        context,
+                                      ),
+                                    ),
+                                  ),
+                                  // 与弹窗 ListTile 的图标-文字间距（horizontalTitleGap=16）一致
+                                  const SizedBox(width: 16),
+
+                                  // 「名称 (ISO)」展示，例：人民币 (CNY)。
+                                  // 用 Expanded 提供有界宽度，溢出以省略号收尾。
+                                  Expanded(
+                                    child: Text(
+                                      '${currency.name} (${currency.code})',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: SpitoutTokens.textPrimary(
+                                          context,
+                                        ),
+                                        fontSize: 16,
+                                        fontWeight: isSelected
+                                            ? FontWeight.w600
+                                            : FontWeight.w400,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
+                        );
+                      },
+                    ),
+                  ),
+
+                  // 列表下方间距压缩 10px 让给列表区（列表 Expanded 因此加长 10px）
+                  const SizedBox(height: 6),
+
+                  // 底部描述文案：选择您常用的货币，之后可以随时在设置中更改
+                  Text(
+                    l10n.welcomeCurrencyDescription,
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                      color: SpitoutTokens.textSecondary(context),
+                    ),
+                    textAlign: TextAlign.center,
+                  ),
+
+                  const SizedBox(height: 12),
+
+                  // 老用户导入配置入口（紧凑样式，从原语言页迁移至此）
+                  TextButton(
+                    onPressed: _isImporting
+                        ? null
+                        : () => _importConfig(context),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (_isImporting)
+                          const SizedBox(
+                            width: 14,
+                            height: 14,
+                            child: CircularProgressIndicator(strokeWidth: 2),
+                          )
+                        else
+                          Icon(
+                            AppIcons.fileUpload,
+                            size: 16,
+                            color: SpitoutTokens.textLink(context),
+                          ),
+                        const SizedBox(width: 6),
+                        Text(
+                          _isImporting
+                              ? l10n.welcomeImportingConfig
+                              : '${l10n.welcomeExistingUserTitle} ${l10n.welcomeExistingUserButton}',
+                          style: Theme.of(context).textTheme.bodyMedium
+                              ?.copyWith(
+                                color: SpitoutTokens.textLink(context),
+                              ),
                         ),
                       ],
                     ),
                   ),
-                  ),
-                );
-              },
+
+                  const SizedBox(height: 8),
+                ],
+              ),
             ),
           ),
-
-          // 列表下方间距压缩 10px 让给列表区（列表 Expanded 因此加长 10px）
-          const SizedBox(height: 6),
-
-          // 底部描述文案：选择您常用的货币，之后可以随时在设置中更改
-          Text(
-            l10n.welcomeCurrencyDescription,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: SpitoutTokens.textSecondary(context),
-                ),
-            textAlign: TextAlign.center,
-          ),
-
-          const SizedBox(height: 12),
-
-          // 老用户导入配置入口（紧凑样式，从原语言页迁移至此）
-          TextButton(
-            onPressed: _isImporting ? null : () => _importConfig(context),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                if (_isImporting)
-                  const SizedBox(
-                    width: 14,
-                    height: 14,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                    ),
-                  )
-                else
-                  Icon(
-                    AppIcons.fileUpload,
-                    size: 16,
-                    color: SpitoutTokens.textLink(context),
-                  ),
-                const SizedBox(width: 6),
-                Text(
-                  _isImporting
-                      ? l10n.welcomeImportingConfig
-                      : '${l10n.welcomeExistingUserTitle} ${l10n.welcomeExistingUserButton}',
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: SpitoutTokens.textLink(context),
-                      ),
-                ),
-              ],
-            ),
-          ),
-
-          const SizedBox(height: 8),
-        ],
-      ),
-      ),
-        ),
         );
       },
     );
@@ -325,8 +321,9 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
   ///
   /// 关键设计：所有耗时操作（建库 seed + 首屏数据预加载）都在本方法内完成，
   /// 期间「完成」按钮保持 loading 态（_isInitializing=true）。
-  /// 只有当数据就绪后才切换 shouldShowWelcomeProvider 进入首页，
-  /// 从而避免「进首页后前几秒卡顿无法操作」的体验问题。
+  /// welcome_shown 必须在 seed 与账本选中全部成功后才写入，否则初始化失败
+  /// 时重启会跳过欢迎页，用户进入残缺的空库且没有任何错误提示。
+  /// 任一步失败都会走 catch 弹友好错误并保持欢迎页，允许用户重试。
   Future<void> _finishWelcome(BuildContext context) async {
     // 设置初始化状态：按钮立即切换为 loading 转圈，并禁用重复点击
     setState(() {
@@ -335,8 +332,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('welcome_shown', true);
-      // 保存用户选择的货币
+      // 保存用户选择的货币（完成标记放到数据就绪之后统一写入）
       await prefs.setString('selected_currency', _selectedCurrency);
 
       // 初始化数据库（使用用户选择的语言和设置）
@@ -346,13 +342,11 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         logger.info('welcome', '分类: 混合层次模板(静默创建)');
 
         final l10n = AppLocalizations.of(context);
-        final db = ref.read(databaseProvider);
 
         // 第一步：固定 seed 混合层次分类（一级+二级并存），并始终创建默认账本。
-        // seed 入口在 services 层（SeedService.ensureSeed），数据层 db 不
-        // 反向依赖种子服务；这里仍通过 databaseProvider 取库实例后交给服务。
-        await SeedService.ensureSeed(
-          db,
+        // seed 入口在 services 层（经 ensureSeedProvider 门面），数据层 db 不
+        // 反向依赖种子服务。
+        await ref.read(ensureSeedProvider)(
           l10n: l10n,
           currency: _selectedCurrency,
         );
@@ -370,8 +364,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         // 设计意图：appSplashInitProvider 在 main() 启动阶段已针对「空数据库」跑过一遍，
         // 预加载结果为空/陈旧。此处 seed 完成后 invalidate 触发重跑，使其针对已建好
         // 账本与分类的数据库重新预加载首屏数据（月度统计、交易列表、周期交易生成等）。
-        // 等待其完成后再进入首页，保证首页首帧即有数据、可立即交互，
-        // 避免「进首页后静默加载导致前几秒卡顿」。
+        // 等待其完成后再进入首页，保证首页首帧即有数据、可立即交互。
         logger.info('welcome', '开始预加载首页数据');
         try {
           ref.invalidate(appSplashInitProvider);
@@ -384,10 +377,24 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         }
       }
 
+      // 数据全部就绪后才标记完成，保证下次启动不会跳过未完成的初始化。
       if (context.mounted) {
-        // 标记欢迎页面已完成，触发重新构建进入主应用。
-        // 此时 appInitState 已为 ready 且首屏数据已预加载，首页可立即渲染。
-        ref.read(shouldShowWelcomeProvider.notifier).set(false);
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('welcome_shown', true);
+        if (context.mounted) {
+          // 触发重新构建进入主应用；此时首屏数据已预加载，首页可立即渲染。
+          ref.read(shouldShowWelcomeProvider.notifier).set(false);
+        }
+      }
+    } catch (e, st) {
+      logger.error('welcome', '首次初始化失败', e, st);
+      if (context.mounted) {
+        final l10n = AppLocalizations.of(context);
+        await AppDialog.error(
+          context,
+          title: l10n.commonFailed,
+          message: l10n.commonOperationFailed,
+        );
       }
     } finally {
       if (mounted) {
@@ -431,14 +438,11 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
       logger.info('welcome', '开始导入配置文件');
 
-      // 不调 ensureSeed:删了"配置无账本时自动创建默认账本"后 db 变量没用了。
+      // 导入配置走 providers 门面，页面不直接触碰服务层。
       final repo = ref.read(repositoryProvider);
 
       // 导入配置
-      await ConfigExportService.importFromYaml(
-        yamlContent,
-        repository: repo,
-      );
+      await ref.read(importConfigFromYamlProvider)(yamlContent);
 
       logger.info('welcome', '配置文件导入成功');
 
@@ -452,10 +456,6 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       // 配置不含账本时 selectFirstLedger 内部直接返回，保持哨兵 0 的
       // 真空状态，仍由 LedgersPage 空态引导新建，不改变既有产品语义。
       await selectFirstLedger(ref.read);
-
-      // 标记欢迎页面已完成
-      final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('welcome_shown', true);
 
       // 刷新所有配置相关的 providers，使导入的配置立即生效
       ref.invalidate(themeModeInitProvider);
@@ -478,6 +478,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
         logger.error('welcome', '首页数据预加载失败，将进入首页按需加载', e, st);
       }
 
+      // 导入与预加载均完成后才标记欢迎页面完成，避免中途失败后重启跳过欢迎页。
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('welcome_shown', true);
+
       if (context.mounted) {
         showToast(context, l10n.welcomeImportSuccess);
         // 直接完成导入流程，不引导附件导入
@@ -486,7 +490,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
     } catch (e, st) {
       logger.error('welcome', '导入配置文件失败', e, st);
       if (context.mounted) {
-        showToast(context, l10n.welcomeImportFailed(e.toString()));
+        showToast(
+          context,
+          l10n.welcomeImportFailed(l10n.commonOperationFailed),
+        );
       }
     } finally {
       if (mounted) {
@@ -496,5 +503,4 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
       }
     }
   }
-
 }

@@ -4,7 +4,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
-    show CloudBackendType, CloudServiceConfig, CloudAuthException,
+    show
+        CloudBackendType,
+        CloudServiceConfig,
+        CloudAuthException,
         createCloudServices;
 import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart'
@@ -32,10 +35,13 @@ class CloudServicePage extends ConsumerStatefulWidget {
 class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   bool _testingConnection = false;
   final Map<String, bool> _connectionTestResults = {};
+
   /// 各后端上次测试时间，用于头部内联展示「上次测试时间：YYYY-MM-DD HH:MM:SS」。
   final Map<String, DateTime> _connectionTestTimes = {};
+
   /// 各后端上次测试结果详情文案（成功/失败具体原因），内联展示不弹窗。
   final Map<String, String> _connectionTestMessages = {};
+
   /// SharedPreferences 句柄，用于跨页面持久化测试结果。initState 中初始化。
   SharedPreferences? _prefs;
 
@@ -50,8 +56,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// [SpitoutCloudSyncSectionState.refresh]（原独立页面的 _onRefresh）。
   /// 仅在 spitoutCloud 激活时挂载到区块上，切走后组件 unmount，
   /// currentState 自动置空，无需额外清理。
-  final GlobalKey<SpitoutCloudSyncSectionState> _spitoutSyncKey =
-      GlobalKey();
+  final GlobalKey<SpitoutCloudSyncSectionState> _spitoutSyncKey = GlobalKey();
 
   @override
   Widget build(BuildContext context) {
@@ -92,7 +97,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           Expanded(
             child: activeAsync.when(
               loading: () => const Center(child: CircularProgressIndicator()),
-              error: (e, _) => Center(child: Text('${AppLocalizations.of(context).commonError}: $e')),
+              error: (e, _) => Center(
+                child: Text('${AppLocalizations.of(context).commonError}: $e'),
+              ),
               data: (active) {
                 // 单列表展示：按离线模式 / 备份同步 / 云端协同分组，主标题下依次
                 // 平铺该分组内的服务卡片。各卡片的切换/配置/教程/测试逻辑各自独立。
@@ -100,184 +107,228 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 return RefreshIndicator(
                   onRefresh: () => _onHostRefresh(active),
                   child: ListView(
-                  // 顶部留白从 8 增至 16：首个分组“离线模式”距顶部 PrimaryHeader 太近，增加呼吸感
-                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
-                  // 内容不足一屏时也允许下拉手势触发刷新
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  children: [
-                    // ===== 离线模式 =====
-                    _buildSectionHeader(context, AppLocalizations.of(context).cloudTabOffline),
-                    _buildServiceCard(
-                      context: context,
-                      icon: AppIcons.localStorage,
-                      iconColor: SpitoutTokens.brandLocal,
-                      title: AppLocalizations.of(context).cloudLocalStorageTitle,
-                      subtitle: AppLocalizations.of(context).cloudLocalStorageSubtitle,
-                      isSelected: active.type == CloudBackendType.local,
-                      isDisabled: false,
-                      onTap: () => _switchService(CloudBackendType.local),
-                      // 齿轮「配置」入口：进入本地存储页（自动备份开关 / 快照恢复）。
-                      // 复用卡片内置 onConfigure 浮层按钮，零改动卡片组件。
-                      onConfigure: () => Navigator.of(context).push(
-                        appPageRoute(
-                            builder: (_) => const LocalBackupPage()),
+                    // 顶部留白从 8 增至 16：首个分组“离线模式”距顶部 PrimaryHeader 太近，增加呼吸感
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    // 内容不足一屏时也允许下拉手势触发刷新
+                    physics: const AlwaysScrollableScrollPhysics(),
+                    children: [
+                      // ===== 离线模式 =====
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context).cloudTabOffline,
                       ),
-                    ),
+                      _buildServiceCard(
+                        context: context,
+                        icon: AppIcons.localStorage,
+                        iconColor: SpitoutTokens.brandLocal,
+                        title: AppLocalizations.of(
+                          context,
+                        ).cloudLocalStorageTitle,
+                        subtitle: AppLocalizations.of(
+                          context,
+                        ).cloudLocalStorageSubtitle,
+                        isSelected: active.type == CloudBackendType.local,
+                        isDisabled: false,
+                        onTap: () => _switchService(CloudBackendType.local),
+                        // 齿轮「配置」入口：进入本地存储页（自动备份开关 / 快照恢复）。
+                        // 复用卡片内置 onConfigure 浮层按钮，零改动卡片组件。
+                        onConfigure: () => Navigator.of(context).push(
+                          appPageRoute(builder: (_) => const LocalBackupPage()),
+                        ),
+                      ),
 
-                    const SizedBox(height: 20),
-                    // ===== 备份同步 =====
-                    _buildSectionHeader(
-                      context,
-                      AppLocalizations.of(context).cloudTabBackup,
-                    ),
-                    if (active.type != CloudBackendType.local &&
-                        active.type != CloudBackendType.spitoutCloud) ...[
-                      _buildMultiDeviceWarning(context),
+                      const SizedBox(height: 20),
+                      // ===== 备份同步 =====
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context).cloudTabBackup,
+                      ),
+                      if (active.type != CloudBackendType.local &&
+                          active.type != CloudBackendType.spitoutCloud) ...[
+                        _buildMultiDeviceWarning(context),
+                        const SizedBox(height: 12),
+                      ],
+
+                      // WebDAV
+                      webdavAsync.when(
+                        loading: () => const SizedBox(
+                          height: 100,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, _) => const SizedBox.shrink(),
+                        data: (webdavCfg) => _buildServiceCard(
+                          context: context,
+                          icon: AppIcons.folderShared,
+                          iconColor: SpitoutTokens.brandWebdav,
+                          title: AppLocalizations.of(
+                            context,
+                          ).cloudCustomWebdavTitle,
+                          subtitle: webdavCfg?.valid == true
+                              ? webdavCfg!.obfuscatedUrl()
+                              : AppLocalizations.of(
+                                  context,
+                                ).cloudCustomWebdavSubtitle,
+                          isSelected: active.type == CloudBackendType.webdav,
+                          isConfigured: webdavCfg?.valid == true,
+                          isDisabled: false,
+                          onTap: () => webdavCfg?.valid == true
+                              ? _switchService(CloudBackendType.webdav)
+                              : _configureService(CloudBackendType.webdav),
+                          onConfigure: webdavCfg?.valid == true
+                              ? () => _configureService(CloudBackendType.webdav)
+                              : null,
+                          onShowGuide: _showWebdavHelpDialog,
+                        ),
+                      ),
+                      // 备份同步操作区块：仅当前选中 WebDAV 时显示在该卡片正下方
+                      //（需求：选中哪个模块就展示在哪个模块下，local/SpitoutCloud 时隐藏）
+                      if (active.type == CloudBackendType.webdav) ...[
+                        const SizedBox(height: 8),
+                        const CloudSyncSection(),
+                      ],
+
                       const SizedBox(height: 12),
-                    ],
-
-                    // WebDAV
-                    webdavAsync.when(
-                      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                      error: (e, _) => const SizedBox.shrink(),
-                      data: (webdavCfg) => _buildServiceCard(
-                        context: context,
-                        icon: AppIcons.folderShared,
-                        iconColor: SpitoutTokens.brandWebdav,
-                        title: AppLocalizations.of(context).cloudCustomWebdavTitle,
-                        subtitle: webdavCfg?.valid == true
-                            ? webdavCfg!.obfuscatedUrl()
-                            : AppLocalizations.of(context).cloudCustomWebdavSubtitle,
-                        isSelected: active.type == CloudBackendType.webdav,
-                        isConfigured: webdavCfg?.valid == true,
-                        isDisabled: false,
-                        onTap: () => webdavCfg?.valid == true
-                            ? _switchService(CloudBackendType.webdav)
-                            : _configureService(CloudBackendType.webdav),
-                        onConfigure: webdavCfg?.valid == true
-                            ? () => _configureService(CloudBackendType.webdav)
-                            : null,
-                        onShowGuide: _showWebdavHelpDialog,
+                      // S3
+                      s3Async.when(
+                        loading: () => const SizedBox(
+                          height: 100,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, _) => const SizedBox.shrink(),
+                        data: (s3Cfg) => _buildServiceCard(
+                          context: context,
+                          icon: AppIcons.storage,
+                          iconColor: SpitoutTokens.brandS3,
+                          title: AppLocalizations.of(
+                            context,
+                          ).cloudCustomS3Title,
+                          subtitle: s3Cfg?.valid == true
+                              ? s3Cfg!.obfuscatedUrl()
+                              : AppLocalizations.of(
+                                  context,
+                                ).cloudCustomS3Subtitle,
+                          isSelected: active.type == CloudBackendType.s3,
+                          isConfigured: s3Cfg?.valid == true,
+                          isDisabled: false,
+                          onTap: () => s3Cfg?.valid == true
+                              ? _switchService(CloudBackendType.s3)
+                              : _configureService(CloudBackendType.s3),
+                          onConfigure: s3Cfg?.valid == true
+                              ? () => _configureService(CloudBackendType.s3)
+                              : null,
+                          onShowGuide: _showS3HelpDialog,
+                        ),
                       ),
-                    ),
-                    // 备份同步操作区块：仅当前选中 WebDAV 时显示在该卡片正下方
-                    //（需求：选中哪个模块就展示在哪个模块下，local/SpitoutCloud 时隐藏）
-                    if (active.type == CloudBackendType.webdav) ...[
-                      const SizedBox(height: 8),
-                      const CloudSyncSection(),
-                    ],
+                      // 备份同步操作区块：仅当前选中 S3 时显示在该卡片正下方
+                      if (active.type == CloudBackendType.s3) ...[
+                        const SizedBox(height: 8),
+                        const CloudSyncSection(),
+                      ],
 
-                    const SizedBox(height: 12),
-                    // S3
-                    s3Async.when(
-                      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                      error: (e, _) => const SizedBox.shrink(),
-                      data: (s3Cfg) => _buildServiceCard(
-                        context: context,
-                        icon: AppIcons.storage,
-                        iconColor: SpitoutTokens.brandS3,
-                        title: AppLocalizations.of(context).cloudCustomS3Title,
-                        subtitle: s3Cfg?.valid == true
-                            ? s3Cfg!.obfuscatedUrl()
-                            : AppLocalizations.of(context).cloudCustomS3Subtitle,
-                        isSelected: active.type == CloudBackendType.s3,
-                        isConfigured: s3Cfg?.valid == true,
-                        isDisabled: false,
-                        onTap: () => s3Cfg?.valid == true
-                            ? _switchService(CloudBackendType.s3)
-                            : _configureService(CloudBackendType.s3),
-                        onConfigure: s3Cfg?.valid == true
-                            ? () => _configureService(CloudBackendType.s3)
-                            : null,
-                        onShowGuide: _showS3HelpDialog,
+                      const SizedBox(height: 12),
+                      // Supabase
+                      supabaseAsync.when(
+                        loading: () => const SizedBox(
+                          height: 100,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, _) => const SizedBox.shrink(),
+                        data: (supabaseCfg) => _buildServiceCard(
+                          context: context,
+                          // Supabase 本质是数据库后端,图标语义为 database。
+                          icon: AppIcons.storage,
+                          iconColor: SpitoutTokens.brandSupabase,
+                          title: AppLocalizations.of(
+                            context,
+                          ).cloudCustomSupabaseTitle,
+                          subtitle: supabaseCfg?.valid == true
+                              ? supabaseCfg!.obfuscatedUrl()
+                              : AppLocalizations.of(
+                                  context,
+                                ).cloudCustomSupabaseSubtitle,
+                          isSelected: active.type == CloudBackendType.supabase,
+                          isConfigured: supabaseCfg?.valid == true,
+                          isDisabled: false,
+                          onTap: () => supabaseCfg?.valid == true
+                              ? _switchService(CloudBackendType.supabase)
+                              : _configureService(CloudBackendType.supabase),
+                          onConfigure: supabaseCfg?.valid == true
+                              ? () =>
+                                    _configureService(CloudBackendType.supabase)
+                              : null,
+                          onShowGuide: _showSupabaseHelpDialog,
+                        ),
                       ),
-                    ),
-                    // 备份同步操作区块：仅当前选中 S3 时显示在该卡片正下方
-                    if (active.type == CloudBackendType.s3) ...[
-                      const SizedBox(height: 8),
-                      const CloudSyncSection(),
-                    ],
+                      // 备份同步操作区块：仅当前选中 Supabase 时显示在该卡片正下方
+                      if (active.type == CloudBackendType.supabase) ...[
+                        const SizedBox(height: 8),
+                        const CloudSyncSection(),
+                      ],
 
-                    const SizedBox(height: 12),
-                    // Supabase
-                    supabaseAsync.when(
-                      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                      error: (e, _) => const SizedBox.shrink(),
-                      data: (supabaseCfg) => _buildServiceCard(
-                        context: context,
-                        // Supabase 本质是数据库后端,图标语义为 database。
-                        icon: AppIcons.storage,
-                        iconColor: SpitoutTokens.brandSupabase,
-                        title: AppLocalizations.of(context).cloudCustomSupabaseTitle,
-                        subtitle: supabaseCfg?.valid == true
-                            ? supabaseCfg!.obfuscatedUrl()
-                            : AppLocalizations.of(context).cloudCustomSupabaseSubtitle,
-                        isSelected: active.type == CloudBackendType.supabase,
-                        isConfigured: supabaseCfg?.valid == true,
-                        isDisabled: false,
-                        onTap: () => supabaseCfg?.valid == true
-                            ? _switchService(CloudBackendType.supabase)
-                            : _configureService(CloudBackendType.supabase),
-                        onConfigure: supabaseCfg?.valid == true
-                            ? () => _configureService(CloudBackendType.supabase)
-                            : null,
-                        onShowGuide: _showSupabaseHelpDialog,
+                      const SizedBox(height: 20),
+                      // ===== 云端协同 (Spitout Cloud) =====
+                      _buildSectionHeader(
+                        context,
+                        AppLocalizations.of(context).cloudTabCloudSync,
                       ),
-                    ),
-                    // 备份同步操作区块：仅当前选中 Supabase 时显示在该卡片正下方
-                    if (active.type == CloudBackendType.supabase) ...[
-                      const SizedBox(height: 8),
-                      const CloudSyncSection(),
-                    ],
+                      spitoutCloudAsync.when(
+                        loading: () => const SizedBox(
+                          height: 100,
+                          child: Center(child: CircularProgressIndicator()),
+                        ),
+                        error: (e, _) => const SizedBox.shrink(),
+                        data: (bcCfg) => _buildServiceCard(
+                          context: context,
+                          // Spitout Cloud 用 cloudy 云形图标,与账本卡片图标语义对齐。
+                          icon: AppIcons.cloudQueue,
+                          iconColor: SpitoutTokens.brandCloud,
+                          title: AppLocalizations.of(
+                            context,
+                          ).cloudSpitoutCloudTitle,
+                          subtitle: bcCfg?.valid == true
+                              ? bcCfg!.obfuscatedUrl()
+                              : AppLocalizations.of(
+                                  context,
+                                ).cloudSpitoutCloudSubtitle,
+                          isSelected:
+                              active.type == CloudBackendType.spitoutCloud,
+                          isConfigured: bcCfg?.valid == true,
+                          isDisabled: false,
+                          onTap: () => bcCfg?.valid == true
+                              ? _switchService(CloudBackendType.spitoutCloud)
+                              : _configureService(
+                                  CloudBackendType.spitoutCloud,
+                                ),
+                          onConfigure: bcCfg?.valid == true
+                              ? () => _configureService(
+                                  CloudBackendType.spitoutCloud,
+                                )
+                              : null,
+                          onShowGuide: _showSpitoutCloudHelpDialog,
+                        ),
+                      ),
+                      // SpitoutCloud 专属同步区块：仅当前选中 SpitoutCloud 时
+                      // 显示在该卡片正下方（账号/2FA/对账面板/同步说明）。
+                      // 挂 GlobalKey 供宿主下拉刷新转发。
+                      if (active.type == CloudBackendType.spitoutCloud) ...[
+                        const SizedBox(height: 8),
+                        SpitoutCloudSyncSection(key: _spitoutSyncKey),
+                      ],
 
-                    const SizedBox(height: 20),
-                    // ===== 云端协同 (Spitout Cloud) =====
-                    _buildSectionHeader(context, AppLocalizations.of(context).cloudTabCloudSync),
-                    spitoutCloudAsync.when(
-                      loading: () => const SizedBox(height: 100, child: Center(child: CircularProgressIndicator())),
-                      error: (e, _) => const SizedBox.shrink(),
-                      data: (bcCfg) => _buildServiceCard(
-                        context: context,
-                        // Spitout Cloud 用 cloudy 云形图标,与账本卡片图标语义对齐。
-                        icon: AppIcons.cloudQueue,
-                        iconColor: SpitoutTokens.brandCloud,
-                        title: AppLocalizations.of(context).cloudSpitoutCloudTitle,
-                        subtitle: bcCfg?.valid == true
-                            ? bcCfg!.obfuscatedUrl()
-                            : AppLocalizations.of(context).cloudSpitoutCloudSubtitle,
-                        isSelected: active.type == CloudBackendType.spitoutCloud,
-                        isConfigured: bcCfg?.valid == true,
-                        isDisabled: false,
-                        onTap: () => bcCfg?.valid == true
-                            ? _switchService(CloudBackendType.spitoutCloud)
-                            : _configureService(CloudBackendType.spitoutCloud),
-                        onConfigure: bcCfg?.valid == true
-                            ? () => _configureService(CloudBackendType.spitoutCloud)
-                            : null,
-                        onShowGuide: _showSpitoutCloudHelpDialog,
+                      // 备份方式切换引导：从「备份同步」分组标题副文案挪到页面底部居中，
+                      // 作为整页通用提示，与上方最后一行信息保持约 30px 间距。
+                      const SizedBox(height: 30),
+                      Center(
+                        child: Text(
+                          AppLocalizations.of(context).cloudTabBackupSubtitle,
+                          style: Theme.of(context).textTheme.bodySmall
+                              ?.copyWith(
+                                color: SpitoutTokens.textSecondary(context),
+                              ),
+                          textAlign: TextAlign.center,
+                        ),
                       ),
-                    ),
-                    // SpitoutCloud 专属同步区块：仅当前选中 SpitoutCloud 时
-                    // 显示在该卡片正下方（账号/2FA/对账面板/同步说明）。
-                    // 挂 GlobalKey 供宿主下拉刷新转发。
-                    if (active.type == CloudBackendType.spitoutCloud) ...[
-                      const SizedBox(height: 8),
-                      SpitoutCloudSyncSection(key: _spitoutSyncKey),
                     ],
-
-                    // 备份方式切换引导：从「备份同步」分组标题副文案挪到页面底部居中，
-                    // 作为整页通用提示，与上方最后一行信息保持约 30px 间距。
-                    const SizedBox(height: 30),
-                    Center(
-                      child: Text(
-                        AppLocalizations.of(context).cloudTabBackupSubtitle,
-                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                              color: SpitoutTokens.textSecondary(context),
-                            ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                  ],
                   ),
                 );
               },
@@ -319,8 +370,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// 头部「当前类型 / 脱敏 URL / 连接状态」信息块。
   ///
   /// 设计要点：
-/// - 「测试连接」入口内联为文字链，紧贴状态徽标左侧，不用头部 icon 按钮（避免重复）。
-/// - 测试结果（状态/时间/详情）全部内联展示，不弹窗。
+  /// - 「测试连接」入口内联为文字链，紧贴状态徽标左侧，不用头部 icon 按钮（避免重复）。
+  /// - 测试结果（状态/时间/详情）全部内联展示，不弹窗。
   /// - 测试结果跨页面持久化：重新进入页面时从 SharedPreferences 恢复，
   ///   仅当从未点过「测试连接」（无历史记录）时才显示「未测试」。
   /// - 本地后端没有可连接的远端服务，自测无意义，故不展示测试链与状态徽标。
@@ -357,9 +408,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               child: Text(
                 '${l10n.commonCurrent}: ${_getTypeName(config.type)}',
                 overflow: TextOverflow.ellipsis,
-                style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
+                style: Theme.of(
+                  context,
+                ).textTheme.bodyMedium?.copyWith(fontWeight: FontWeight.w600),
               ),
             ),
             // 本地存储没有“连接”概念，不展示未测试/成功等状态徽标与测试链，仅显示当前类型
@@ -424,10 +475,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           Text(
             testMessage,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  color: testResult == true
-                      ? SpitoutTokens.success(context)
-                      : SpitoutTokens.error(context),
-                ),
+              color: testResult == true
+                  ? SpitoutTokens.success(context)
+                  : SpitoutTokens.error(context),
+            ),
           ),
         ],
       ],
@@ -438,10 +489,15 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   ///
   /// 仅在非本地后端且配置有效时可点击；测试进行中显示转圈，不弹窗。
   /// 配置无效（如未填 URL）时置灰禁用，与头部按钮的业务禁用条件一致。
-  Widget _buildTestConnectionLink(CloudServiceConfig config, AppLocalizations l10n) {
+  Widget _buildTestConnectionLink(
+    CloudServiceConfig config,
+    AppLocalizations l10n,
+  ) {
     final bool canTest = config.valid;
     return TextButton(
-      onPressed: (canTest && !_testingConnection) ? () => _testConnection(config) : null,
+      onPressed: (canTest && !_testingConnection)
+          ? () => _testConnection(config)
+          : null,
       style: TextButton.styleFrom(
         padding: EdgeInsets.zero,
         minimumSize: Size.zero,
@@ -477,54 +533,54 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         onTap: () => _showMultiDeviceDetailDialog(context),
         borderRadius: BorderRadius.circular(12),
         child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: SpitoutTokens.warning(context).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: SpitoutTokens.warning(context).withValues(alpha: 0.3),
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: SpitoutTokens.warning(context).withValues(alpha: 0.1),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(
+              color: SpitoutTokens.warning(context).withValues(alpha: 0.3),
+            ),
+          ),
+          child: Row(
+            children: [
+              Icon(
+                AppIcons.warning,
+                color: SpitoutTokens.warning(context),
+                size: 24,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      l10n.cloudMultiDeviceWarningTitle,
+                      style: TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
+                        color: SpitoutTokens.textPrimary(context),
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      l10n.cloudMultiDeviceWarningMessage,
+                      style: TextStyle(
+                        fontSize: 12,
+                        color: SpitoutTokens.textSecondary(context),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                AppIcons.info,
+                color: SpitoutTokens.warning(context),
+                size: 20,
+              ),
+            ],
           ),
         ),
-        child: Row(
-          children: [
-            Icon(
-              AppIcons.warning,
-              color: SpitoutTokens.warning(context),
-              size: 24,
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    l10n.cloudMultiDeviceWarningTitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    l10n.cloudMultiDeviceWarningMessage,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            Icon(
-              AppIcons.info,
-              color: SpitoutTokens.warning(context),
-              size: 20,
-            ),
-          ],
-        ),
-      ),
       ),
     );
   }
@@ -559,7 +615,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         ),
         content: SizedBox(
           width: double.maxFinite,
-      child: SingleChildScrollView( // ignore: sort_child_properties_last
+          child: SingleChildScrollView(
+            // ignore: sort_child_properties_last
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
@@ -624,9 +681,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             onPressed: () => Navigator.pop(context),
             child: Text(
               l10n.cloudSyncGuideGotIt,
-              style: TextStyle(
-                color: Theme.of(context).colorScheme.primary,
-              ),
+              style: TextStyle(color: Theme.of(context).colorScheme.primary),
             ),
           ),
         ],
@@ -646,7 +701,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: iconColor ?? SpitoutTokens.textSecondary(context)),
+            Icon(
+              icon,
+              size: 18,
+              color: iconColor ?? SpitoutTokens.textSecondary(context),
+            ),
             const SizedBox(width: 6),
             Text(
               title,
@@ -659,25 +718,33 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           ],
         ),
         const SizedBox(height: 6),
-        ...items.map((item) => Padding(
-              padding: const EdgeInsets.only(left: 24, bottom: 4),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('• ', style: TextStyle(color: SpitoutTokens.textSecondary(context), fontSize: 13)),
-                  Expanded(
-                    child: Text(
-                      item,
-                      style: TextStyle(
-                        color: SpitoutTokens.textSecondary(context),
-                        fontSize: 13,
-                        height: 1.4,
-                      ),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(left: 24, bottom: 4),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  '• ',
+                  style: TextStyle(
+                    color: SpitoutTokens.textSecondary(context),
+                    fontSize: 13,
+                  ),
+                ),
+                Expanded(
+                  child: Text(
+                    item,
+                    style: TextStyle(
+                      color: SpitoutTokens.textSecondary(context),
+                      fontSize: 13,
+                      height: 1.4,
                     ),
                   ),
-                ],
-              ),
-            )),
+                ),
+              ],
+            ),
+          ),
+        ),
       ],
     );
   }
@@ -687,7 +754,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   ///
   /// [subtitle] 为可选参数：仅「备份同步」分组需要副标题提示（如操作引导），
   /// 传入时在其下方多渲染一行灰色小字；其余分组不传，保持单行标题布局，互不影响。
-  Widget _buildSectionHeader(BuildContext context, String title, {String? subtitle}) {
+  Widget _buildSectionHeader(
+    BuildContext context,
+    String title, {
+    String? subtitle,
+  }) {
     final Widget titleRow = Row(
       children: [
         // 左侧色条：用主题主色区分分组边界
@@ -703,9 +774,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         Text(
           title,
           style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                fontWeight: FontWeight.w700,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+            fontWeight: FontWeight.w700,
+            color: SpitoutTokens.textPrimary(context),
+          ),
         ),
       ],
     );
@@ -730,8 +801,8 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             child: Text(
               subtitle,
               style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                color: SpitoutTokens.textSecondary(context),
+              ),
             ),
           ),
         ],
@@ -759,12 +830,14 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           // 选中/未选中均保留 2px 边框占位（未选中为透明），确保固定高度下所有卡片高度完全一致，
           // 不会因是否绘制绿色边框而产生 2px 高度差。
           border: Border.all(
-            color: isSelected ? SpitoutTokens.success(context) : Colors.transparent,
+            color: isSelected
+                ? SpitoutTokens.success(context)
+                : Colors.transparent,
             width: 2,
           ),
           borderRadius: BorderRadius.circular(12),
         ),
-          child: SectionCard(
+        child: SectionCard(
           margin: EdgeInsets.zero,
           // 将 SectionCard 默认 12 内边距收窄为 5：按钮/勾选浮层 right:0 仅距卡片外边 5px（保留轻量边缘留白）。
           // 图标与文字的间距由内部 InkWell 的 Padding(horizontal:12, vertical:10) 进一步保证。
@@ -782,7 +855,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 child: SizedBox(
                   height: 71,
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -802,48 +878,61 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                         // 按钮行已下移到卡片底部右下角，与副标题在视觉上错开，无需额外右侧避让。
                         Expanded(
                           child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Row(
-                                  children: [
-                                    Expanded(
-                                      child: Text(
-                                        title,
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      title,
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: Theme.of(context)
+                                          .textTheme
+                                          .titleMedium
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.w600,
+                                          ),
                                     ),
-                                    if (isDisabled)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                        decoration: BoxDecoration(
-                                          color: SpitoutTokens.textTertiary(context).withValues(alpha: 0.2),
-                                          borderRadius: BorderRadius.circular(8),
-                                        ),
-                                        child: Text(
-                                          '不可用',
-                                          style: TextStyle(
-                                            fontSize: 11,
-                                            color: SpitoutTokens.textTertiary(context),
+                                  ),
+                                  if (isDisabled)
+                                    Container(
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                        vertical: 2,
+                                      ),
+                                      decoration: BoxDecoration(
+                                        color: SpitoutTokens.textTertiary(
+                                          context,
+                                        ).withValues(alpha: 0.2),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: Text(
+                                        '不可用',
+                                        style: TextStyle(
+                                          fontSize: 11,
+                                          color: SpitoutTokens.textTertiary(
+                                            context,
                                           ),
                                         ),
                                       ),
-                                  ],
-                                ),
-                                const SizedBox(height: 7),
-                                Text(
-                                  subtitle,
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                                    color: SpitoutTokens.textSecondary(context),
-                                  ),
-                                ),
-                              ],
-                            ),
+                                    ),
+                                ],
+                              ),
+                              const SizedBox(height: 7),
+                              Text(
+                                subtitle,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: Theme.of(context).textTheme.bodySmall
+                                    ?.copyWith(
+                                      color: SpitoutTokens.textSecondary(
+                                        context,
+                                      ),
+                                    ),
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -864,13 +953,19 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                       color: SpitoutTokens.success(context),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(AppIcons.check, color: SpitoutTokens.textOnPrimary(context), size: 18),
+                    child: Icon(
+                      AppIcons.check,
+                      color: SpitoutTokens.textOnPrimary(context),
+                      size: 18,
+                    ),
                   ),
                 ),
 
               // 覆盖层：配置 / 教程按钮行浮于右下角，拥有独立点击区域，
               // 不会触发卡片选中，也不参与布局高度（浮在卡片之上）。
-              if (!isDisabled && ((isConfigured && onConfigure != null) || onShowGuide != null))
+              if (!isDisabled &&
+                  ((isConfigured && onConfigure != null) ||
+                      onShowGuide != null))
                 Positioned(
                   right: 0,
                   bottom: 0,
@@ -881,9 +976,15 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                         TextButton.icon(
                           onPressed: onShowGuide,
                           icon: const Icon(AppIcons.help, size: 16),
-                          label: Text(AppLocalizations.of(context).commonTutorial, style: const TextStyle(fontSize: 12)),
+                          label: Text(
+                            AppLocalizations.of(context).commonTutorial,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -893,9 +994,15 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                         TextButton.icon(
                           onPressed: onConfigure,
                           icon: const Icon(AppIcons.settings, size: 16),
-                          label: Text(AppLocalizations.of(context).commonConfigure, style: const TextStyle(fontSize: 12)),
+                          label: Text(
+                            AppLocalizations.of(context).commonConfigure,
+                            style: const TextStyle(fontSize: 12),
+                          ),
                           style: TextButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 8,
+                            ),
                             minimumSize: Size.zero,
                             tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                           ),
@@ -928,34 +1035,25 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHelpSection(
-                l10n.cloudSupabaseHelpIntro,
-                [
-                  l10n.cloudSupabaseHelpIntro1,
-                  l10n.cloudSupabaseHelpIntro2,
-                  l10n.cloudSupabaseHelpIntro3,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudSupabaseHelpIntro, [
+                l10n.cloudSupabaseHelpIntro1,
+                l10n.cloudSupabaseHelpIntro2,
+                l10n.cloudSupabaseHelpIntro3,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudSupabaseHelpSteps,
-                [
-                  l10n.cloudSupabaseHelpStep1,
-                  l10n.cloudSupabaseHelpStep2,
-                  l10n.cloudSupabaseHelpStep3,
-                  l10n.cloudSupabaseHelpStep4,
-                  l10n.cloudSupabaseHelpStep5,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudSupabaseHelpSteps, [
+                l10n.cloudSupabaseHelpStep1,
+                l10n.cloudSupabaseHelpStep2,
+                l10n.cloudSupabaseHelpStep3,
+                l10n.cloudSupabaseHelpStep4,
+                l10n.cloudSupabaseHelpStep5,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudSupabaseHelpFaq,
-                [
-                  '• ${l10n.cloudSupabaseHelpFaq1}',
-                  '• ${l10n.cloudSupabaseHelpFaq2}',
-                  '• ${l10n.cloudSupabaseHelpFaq3}',
-                ],
-              ),
+              _buildHelpSection(l10n.cloudSupabaseHelpFaq, [
+                '• ${l10n.cloudSupabaseHelpFaq1}',
+                '• ${l10n.cloudSupabaseHelpFaq2}',
+                '• ${l10n.cloudSupabaseHelpFaq3}',
+              ]),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -965,7 +1063,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(AppIcons.info, color: SpitoutTokens.brandSupabase, size: 20),
+                    Icon(
+                      AppIcons.info,
+                      color: SpitoutTokens.brandSupabase,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1020,10 +1122,26 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               ),
               const SizedBox(height: 16),
               // 4 步教程
-              _buildBeeCloudStep('1', l10n.cloudTutorialStep1Title, l10n.cloudTutorialStep1Desc),
-              _buildBeeCloudStep('2', l10n.cloudTutorialStep2Title, l10n.cloudTutorialStep2Desc),
-              _buildBeeCloudStep('3', l10n.cloudTutorialStep3Title, l10n.cloudTutorialStep3Desc),
-              _buildBeeCloudStep('4', l10n.cloudTutorialStep4Title, l10n.cloudTutorialStep4Desc),
+              _buildBeeCloudStep(
+                '1',
+                l10n.cloudTutorialStep1Title,
+                l10n.cloudTutorialStep1Desc,
+              ),
+              _buildBeeCloudStep(
+                '2',
+                l10n.cloudTutorialStep2Title,
+                l10n.cloudTutorialStep2Desc,
+              ),
+              _buildBeeCloudStep(
+                '3',
+                l10n.cloudTutorialStep3Title,
+                l10n.cloudTutorialStep3Desc,
+              ),
+              _buildBeeCloudStep(
+                '4',
+                l10n.cloudTutorialStep4Title,
+                l10n.cloudTutorialStep4Desc,
+              ),
               const SizedBox(height: 4),
               // 特色功能 —— 强调 Web + 多设备协同 + 多用户 + 共享账本
               Container(
@@ -1044,10 +1162,22 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                       ),
                     ),
                     const SizedBox(height: 6),
-                    Text(l10n.cloudTutorialFeature1, style: const TextStyle(fontSize: 12.5, height: 1.7)),
-                    Text(l10n.cloudTutorialFeature2, style: const TextStyle(fontSize: 12.5, height: 1.7)),
-                    Text(l10n.cloudTutorialFeature3, style: const TextStyle(fontSize: 12.5, height: 1.7)),
-                    Text(l10n.cloudTutorialFeature4, style: const TextStyle(fontSize: 12.5, height: 1.7)),
+                    Text(
+                      l10n.cloudTutorialFeature1,
+                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                    ),
+                    Text(
+                      l10n.cloudTutorialFeature2,
+                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                    ),
+                    Text(
+                      l10n.cloudTutorialFeature3,
+                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                    ),
+                    Text(
+                      l10n.cloudTutorialFeature4,
+                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                    ),
                   ],
                 ),
               ),
@@ -1062,7 +1192,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Icon(AppIcons.info, color: SpitoutTokens.brandCloud, size: 20),
+                    Icon(
+                      AppIcons.info,
+                      color: SpitoutTokens.brandCloud,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text.rich(
@@ -1131,11 +1265,13 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13,
-                    )),
+                Text(
+                  title,
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w600,
+                    fontSize: 13,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   desc,
@@ -1170,35 +1306,26 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHelpSection(
-                l10n.cloudWebdavHelpIntro,
-                [
-                  l10n.cloudWebdavHelpIntro1,
-                  l10n.cloudWebdavHelpIntro2,
-                  l10n.cloudWebdavHelpIntro3,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudWebdavHelpIntro, [
+                l10n.cloudWebdavHelpIntro1,
+                l10n.cloudWebdavHelpIntro2,
+                l10n.cloudWebdavHelpIntro3,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudWebdavHelpProviders,
-                [
-                  l10n.cloudWebdavHelpProvider1,
-                  l10n.cloudWebdavHelpProvider2,
-                  l10n.cloudWebdavHelpProvider3,
-                  l10n.cloudWebdavHelpProvider4,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudWebdavHelpProviders, [
+                l10n.cloudWebdavHelpProvider1,
+                l10n.cloudWebdavHelpProvider2,
+                l10n.cloudWebdavHelpProvider3,
+                l10n.cloudWebdavHelpProvider4,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudWebdavHelpSteps,
-                [
-                  l10n.cloudWebdavHelpStep1,
-                  l10n.cloudWebdavHelpStep2,
-                  l10n.cloudWebdavHelpStep3,
-                  l10n.cloudWebdavHelpStep4,
-                  l10n.cloudWebdavHelpStep5,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudWebdavHelpSteps, [
+                l10n.cloudWebdavHelpStep1,
+                l10n.cloudWebdavHelpStep2,
+                l10n.cloudWebdavHelpStep3,
+                l10n.cloudWebdavHelpStep4,
+                l10n.cloudWebdavHelpStep5,
+              ]),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1208,7 +1335,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 ),
                 child: Row(
                   children: [
-                    Icon(AppIcons.info, color: SpitoutTokens.brandWebdav, size: 20),
+                    Icon(
+                      AppIcons.info,
+                      color: SpitoutTokens.brandWebdav,
+                      size: 20,
+                    ),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
@@ -1252,38 +1383,29 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              _buildHelpSection(
-                l10n.cloudS3HelpIntro,
-                [
-                  l10n.cloudS3HelpIntro1,
-                  l10n.cloudS3HelpIntro2,
-                  l10n.cloudS3HelpIntro3,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudS3HelpIntro, [
+                l10n.cloudS3HelpIntro1,
+                l10n.cloudS3HelpIntro2,
+                l10n.cloudS3HelpIntro3,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudS3HelpProviders,
-                [
-                  l10n.cloudS3HelpProvider1,
-                  l10n.cloudS3HelpProvider2,
-                  l10n.cloudS3HelpProvider3,
-                  l10n.cloudS3HelpProvider4,
-                  l10n.cloudS3HelpProvider5,
-                  l10n.cloudS3HelpProvider6,
-                  l10n.cloudS3HelpProvider7,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudS3HelpProviders, [
+                l10n.cloudS3HelpProvider1,
+                l10n.cloudS3HelpProvider2,
+                l10n.cloudS3HelpProvider3,
+                l10n.cloudS3HelpProvider4,
+                l10n.cloudS3HelpProvider5,
+                l10n.cloudS3HelpProvider6,
+                l10n.cloudS3HelpProvider7,
+              ]),
               const SizedBox(height: 16),
-              _buildHelpSection(
-                l10n.cloudS3HelpSteps,
-                [
-                  l10n.cloudS3HelpStep1,
-                  l10n.cloudS3HelpStep2,
-                  l10n.cloudS3HelpStep3,
-                  l10n.cloudS3HelpStep4,
-                  l10n.cloudS3HelpStep5,
-                ],
-              ),
+              _buildHelpSection(l10n.cloudS3HelpSteps, [
+                l10n.cloudS3HelpStep1,
+                l10n.cloudS3HelpStep2,
+                l10n.cloudS3HelpStep3,
+                l10n.cloudS3HelpStep4,
+                l10n.cloudS3HelpStep5,
+              ]),
               const SizedBox(height: 16),
               Container(
                 padding: const EdgeInsets.all(12),
@@ -1333,16 +1455,18 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           ),
         ),
         const SizedBox(height: 8),
-        ...items.map((item) => Padding(
-          padding: const EdgeInsets.only(left: 8, bottom: 4),
-          child: Text(
-            item,
-            style: TextStyle(
-              fontSize: 13,
-              color: SpitoutTokens.textSecondary(context),
+        ...items.map(
+          (item) => Padding(
+            padding: const EdgeInsets.only(left: 8, bottom: 4),
+            child: Text(
+              item,
+              style: TextStyle(
+                fontSize: 13,
+                color: SpitoutTokens.textSecondary(context),
+              ),
             ),
           ),
-        )),
+        ),
       ],
     );
   }
@@ -1393,7 +1517,13 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       final success = await store.activate(type);
       if (!success && type != CloudBackendType.local) {
         if (mounted) {
-          await AppDialog.error(context, title: AppLocalizations.of(context).cloudSwitchFailedTitle, message: AppLocalizations.of(context).cloudSwitchFailedConfigMissing);
+          await AppDialog.error(
+            context,
+            title: AppLocalizations.of(context).cloudSwitchFailedTitle,
+            message: AppLocalizations.of(
+              context,
+            ).cloudSwitchFailedConfigMissing,
+          );
         }
         return;
       }
@@ -1431,11 +1561,18 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       });
 
       if (mounted) {
-        showToast(context, AppLocalizations.of(context).cloudSwitchedTo(_getTypeName(type)));
+        showToast(
+          context,
+          AppLocalizations.of(context).cloudSwitchedTo(_getTypeName(type)),
+        );
       }
     } catch (e) {
       if (mounted) {
-        await AppDialog.error(context, title: AppLocalizations.of(context).cloudSwitchFailedTitle, message: '$e');
+        await AppDialog.error(
+          context,
+          title: AppLocalizations.of(context).cloudSwitchFailedTitle,
+          message: '$e',
+        );
       }
     }
   }
@@ -1445,7 +1582,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
   /// 读取当前登录用户的云 userId 与设备 localSelfId,把库中所有 localSelfId
   /// 引用改写为云 userId。迁移幂等(同一账号只跑一次),失败仅记日志不阻塞 UI。
   /// 用 container 而非 ref,避免页面销毁后迁移被跳过。
-  Future<void> _migrateLocalIdentityAfterLogin(ProviderContainer container) async {
+  Future<void> _migrateLocalIdentityAfterLogin(
+    ProviderContainer container,
+  ) async {
     try {
       final cloud = await container.read(spitoutCloudProviderInstance.future);
       if (cloud == null) return;
@@ -1459,8 +1598,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         localSelfId: localSelfId,
       );
     } catch (e, st) {
-      logger.warning('CloudServicePage',
-          '登录后本地身份迁移失败(非阻塞,下次登录会重试)', '$e\n$st');
+      logger.warning('CloudServicePage', '登录后本地身份迁移失败(非阻塞,下次登录会重试)', '$e\n$st');
     }
   }
 
@@ -1531,7 +1669,6 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         spitoutCloudBaseUrl: url,
         spitoutCloudApiPrefix: apiPrefix.isEmpty ? '/api/v1' : apiPrefix,
         spitoutCloudEmail: email.isNotEmpty ? email : null,
-        spitoutCloudPassword: password.isNotEmpty ? password : null,
       );
 
       try {
@@ -1551,7 +1688,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             try {
               // 走可覆盖的工厂 provider：运行时为真实 createCloudServices；
               // Widget 测试经 overrideWith 注入桩，无需触网即可验证登录分支。
-              final services = await ref.read(cloudServicesFactoryProvider)(cfg);
+              final services = await ref.read(cloudServicesFactoryProvider)(
+                cfg,
+              );
               if (services.auth != null) {
                 await services.auth!.signInWithEmail(
                   email: email,
@@ -1564,7 +1703,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 ref.invalidate(autoSyncValueProvider);
 
                 if (mounted) {
-                  showToast(context, AppLocalizations.of(context).cloudSpitoutCloudLoginSuccess);
+                  showToast(
+                    context,
+                    AppLocalizations.of(context).cloudSpitoutCloudLoginSuccess,
+                  );
                 }
               }
               // 能走到这里 = 登录成功（有凭证且成功登录）或本配置无 auth 可登录
@@ -1577,7 +1719,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               if (mounted) {
                 await AppDialog.error(
                   context,
-                  title: AppLocalizations.of(context).cloudSpitoutCloudLoginFailed,
+                  title: AppLocalizations.of(
+                    context,
+                  ).cloudSpitoutCloudLoginFailed,
                   message: friendlyAuthError(e, context),
                 );
               }
@@ -1587,7 +1731,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               if (mounted) {
                 await AppDialog.error(
                   context,
-                  title: AppLocalizations.of(context).cloudSpitoutCloudLoginFailed,
+                  title: AppLocalizations.of(
+                    context,
+                  ).cloudSpitoutCloudLoginFailed,
                   message: friendlyAuthError(e, context),
                 );
               }
@@ -1602,7 +1748,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         }
       } catch (e) {
         if (mounted) {
-          await AppDialog.error(context, title: AppLocalizations.of(context).cloudSaveFailed, message: e.toString());
+          await AppDialog.error(
+            context,
+            title: AppLocalizations.of(context).cloudSaveFailed,
+            message: e.toString(),
+          );
         }
       }
     }
@@ -1643,7 +1793,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         name: l10n.cloudCustomSupabaseTitle,
         supabaseUrl: url,
         supabaseAnonKey: key,
-        supabaseBucket: bucket.isEmpty ? 'spitout-backups' : bucket,  // 业务层提供默认值
+        supabaseBucket: bucket.isEmpty ? 'spitout-backups' : bucket, // 业务层提供默认值
       );
 
       try {
@@ -1661,7 +1811,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         }
       } catch (e) {
         if (mounted) {
-          await AppDialog.error(context, title: AppLocalizations.of(context).cloudSaveFailed, message: e.toString());
+          await AppDialog.error(
+            context,
+            title: AppLocalizations.of(context).cloudSaveFailed,
+            message: e.toString(),
+          );
         }
       }
     }
@@ -1723,7 +1877,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         }
       } catch (e) {
         if (mounted) {
-          await AppDialog.error(context, title: AppLocalizations.of(context).cloudSaveFailed, message: e.toString());
+          await AppDialog.error(
+            context,
+            title: AppLocalizations.of(context).cloudSaveFailed,
+            message: e.toString(),
+          );
         }
       }
     }
@@ -1797,7 +1955,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
         }
       } catch (e) {
         if (mounted) {
-          await AppDialog.error(context, title: AppLocalizations.of(context).cloudSaveFailed, message: e.toString());
+          await AppDialog.error(
+            context,
+            title: AppLocalizations.of(context).cloudSaveFailed,
+            message: e.toString(),
+          );
         }
       }
     }
@@ -1882,7 +2044,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             // 1. 开闸 → 下游因 watch 闸门自动重建,按已回退的本地配置装配;
             // 2. invalidate SyncEngine family 实例 → 触发 engine.dispose(),
             //    释放可能残留的孤儿 WebSocket(防御项)。
-            container.read(cloudDeactivationInProgressProvider.notifier).set(false);
+            container
+                .read(cloudDeactivationInProgressProvider.notifier)
+                .set(false);
             if (cloudProviderBefore != null) {
               container.invalidate(syncEngineProvider(cloudProviderBefore));
             }
@@ -1895,7 +2059,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       } else {
         // 无需 purge 的路径同样要开闸,否则闸门只关不开会永久降级本地同步。
         WidgetsBinding.instance.addPostFrameCallback((_) {
-          container.read(cloudDeactivationInProgressProvider.notifier).set(false);
+          container
+              .read(cloudDeactivationInProgressProvider.notifier)
+              .set(false);
         });
       }
 
@@ -1943,21 +2109,30 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
           case CloudBackendType.supabase:
             // Supabase 连接测试 - 查询不存在的表验证 URL 和 anon key
             // 200 或 404 表示连接正常且 key 有效，401/403 表示 key 无效
-            final testUrl = Uri.parse('${config.supabaseUrl}/rest/v1/_spitout_health_check?select=id&limit=1');
-            final response = await http.get(
-              testUrl,
-              headers: {
-                'apikey': config.supabaseAnonKey!,
-                'Authorization': 'Bearer ${config.supabaseAnonKey}',
-              },
-            ).timeout(const Duration(seconds: 10));
+            final testUrl = Uri.parse(
+              '${config.supabaseUrl}/rest/v1/_spitout_health_check?select=id&limit=1',
+            );
+            final response = await http
+                .get(
+                  testUrl,
+                  headers: {
+                    'apikey': config.supabaseAnonKey!,
+                    'Authorization': 'Bearer ${config.supabaseAnonKey}',
+                  },
+                )
+                .timeout(const Duration(seconds: 10));
 
-            if (response.statusCode == 200 || response.statusCode == 404 || response.statusCode == 406) {
+            if (response.statusCode == 200 ||
+                response.statusCode == 404 ||
+                response.statusCode == 406) {
               connectionSuccess = true;
-            } else if (response.statusCode == 401 || response.statusCode == 403) {
+            } else if (response.statusCode == 401 ||
+                response.statusCode == 403) {
               throw Exception(l10n.cloudErrorAuthFailed);
             } else {
-              throw Exception(l10n.cloudErrorServerStatus('${response.statusCode}'));
+              throw Exception(
+                l10n.cloudErrorServerStatus('${response.statusCode}'),
+              );
             }
             break;
 
@@ -1971,7 +2146,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             final request = http.Request('OPTIONS', testUrl);
             request.headers['Authorization'] = 'Basic $credentials';
 
-            final streamedResponse = await request.send().timeout(const Duration(seconds: 10));
+            final streamedResponse = await request.send().timeout(
+              const Duration(seconds: 10),
+            );
             final response = await http.Response.fromStream(streamedResponse);
 
             if (response.statusCode == 200 || response.statusCode == 204) {
@@ -1988,7 +2165,9 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
             } else if (response.statusCode == 404) {
               throw Exception(l10n.cloudErrorPathNotFound(testUrl.path));
             } else {
-              throw Exception(l10n.cloudErrorServerStatus('${response.statusCode}'));
+              throw Exception(
+                l10n.cloudErrorServerStatus('${response.statusCode}'),
+              );
             }
             break;
 
@@ -2018,7 +2197,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               final cleanedConfig = CloudServiceConfig(
                 type: config.type,
                 name: config.name,
-                s3Endpoint: config.s3Endpoint?.replaceFirst(RegExp(r'^https?://'), ''),
+                s3Endpoint: config.s3Endpoint?.replaceFirst(
+                  RegExp(r'^https?://'),
+                  '',
+                ),
                 s3Region: config.s3Region,
                 s3AccessKey: config.s3AccessKey,
                 s3SecretKey: config.s3SecretKey,
@@ -2027,14 +2209,22 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
                 s3Port: config.s3Port,
               );
 
-              logger.info('CloudServicePage', 'S3 连接测试开始: endpoint=${cleanedConfig.s3Endpoint}, bucket=${cleanedConfig.s3Bucket}');
+              logger.info(
+                'CloudServicePage',
+                'S3 连接测试开始: endpoint=${cleanedConfig.s3Endpoint}, bucket=${cleanedConfig.s3Bucket}',
+              );
 
               final services = await createCloudServices(cleanedConfig);
 
-              logger.info('CloudServicePage', 'S3 provider 创建结果: ${services.provider != null ? "成功" : "失败"}');
+              logger.info(
+                'CloudServicePage',
+                'S3 provider 创建结果: ${services.provider != null ? "成功" : "失败"}',
+              );
 
               if (services.provider == null) {
-                throw Exception('S3 provider 初始化失败 - createCloudServices 返回 null');
+                throw Exception(
+                  'S3 provider 初始化失败 - createCloudServices 返回 null',
+                );
               }
 
               // 实际测试连接：尝试列出 bucket 中的文件
@@ -2049,7 +2239,10 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
               // 提取最有用的错误信息
               String errorMsg = e.toString();
               if (errorMsg.contains('CloudConfigurationException:')) {
-                errorMsg = errorMsg.replaceFirst('CloudConfigurationException: ', '');
+                errorMsg = errorMsg.replaceFirst(
+                  'CloudConfigurationException: ',
+                  '',
+                );
               } else if (errorMsg.contains('Exception:')) {
                 errorMsg = errorMsg.replaceFirst('Exception: ', '');
               }
@@ -2085,6 +2278,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage> {
       if (mounted) setState(() => _testingConnection = false);
     }
   }
+
   /// 写入「测试连接」结果到内存并持久化到 SharedPreferences。
   ///
   /// 统一处理三件套：结果(bool) / 时间(DateTime) / 详情文案(String)，
@@ -2151,7 +2345,8 @@ class _SpitoutCloudConfigDialog extends StatefulWidget {
   });
 
   @override
-  State<_SpitoutCloudConfigDialog> createState() => _SpitoutCloudConfigDialogState();
+  State<_SpitoutCloudConfigDialog> createState() =>
+      _SpitoutCloudConfigDialogState();
 }
 
 class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
@@ -2214,7 +2409,8 @@ class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
       contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: SingleChildScrollView( // ignore: sort_child_properties_last
+      child: SingleChildScrollView(
+        // ignore: sort_child_properties_last
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2224,9 +2420,12 @@ class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
               focusNode: urlFocus,
               textInputAction: TextInputAction.next,
               // 回车/下一步:焦点移交给下一个字段,避免键盘因焦点丢失而收起。
-              onEditingComplete: () => FocusScope.of(context).requestFocus(emailFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(emailFocus),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudSpitoutCloudUrlLabel,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudSpitoutCloudUrlLabel,
                 hintText: AppLocalizations.of(context).cloudSpitoutCloudUrlHint,
                 // 必填项为空时的内联弱提示(不弹窗),保留已填内容。
                 errorText: _urlError,
@@ -2240,10 +2439,15 @@ class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
               controller: emailController,
               focusNode: emailFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(passwordFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(passwordFocus),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudSpitoutCloudEmailLabel,
-                hintText: AppLocalizations.of(context).cloudSpitoutCloudEmailHint,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudSpitoutCloudEmailLabel,
+                hintText: AppLocalizations.of(
+                  context,
+                ).cloudSpitoutCloudEmailHint,
               ),
               keyboardType: TextInputType.emailAddress,
             ),
@@ -2255,11 +2459,17 @@ class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
               // 最后一个字段:完成后收起键盘,不向下传递焦点。
               onEditingComplete: () => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudSpitoutCloudPasswordLabel,
-                hintText: AppLocalizations.of(context).cloudSpitoutCloudPasswordHint,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudSpitoutCloudPasswordLabel,
+                hintText: AppLocalizations.of(
+                  context,
+                ).cloudSpitoutCloudPasswordHint,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    obscurePassword ? AppIcons.visibility : AppIcons.visibilityOff,
+                    obscurePassword
+                        ? AppIcons.visibility
+                        : AppIcons.visibilityOff,
                     size: 20,
                   ),
                   onPressed: () {
@@ -2284,25 +2494,27 @@ class _SpitoutCloudConfigDialogState extends State<_SpitoutCloudConfigDialog> {
           ),
           const SizedBox(width: 12),
           Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  // 内联校验:必填项 url 为空时仅在字段下方显示弱提示,不切换弹窗、不丢失已填内容。
-                  final url = urlController.text.trim();
-                  final email = emailController.text.trim();
-                  final password = passwordController.text.trim();
-                  setState(() {
-                    _urlError = url.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                  });
-                  if (_urlError != null) return;
-                  Navigator.of(context).pop({
-                    'url': url,
-                    'apiPrefix': apiPrefixController.text.trim(),
-                    'email': email,
-                    'password': password,
-                  });
-                },
-                child: Text(AppLocalizations.of(context).commonSave),
-              ),
+            child: FilledButton(
+              onPressed: () {
+                // 内联校验:必填项 url 为空时仅在字段下方显示弱提示,不切换弹窗、不丢失已填内容。
+                final url = urlController.text.trim();
+                final email = emailController.text.trim();
+                final password = passwordController.text.trim();
+                setState(() {
+                  _urlError = url.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                });
+                if (_urlError != null) return;
+                Navigator.of(context).pop({
+                  'url': url,
+                  'apiPrefix': apiPrefixController.text.trim(),
+                  'email': email,
+                  'password': password,
+                });
+              },
+              child: Text(AppLocalizations.of(context).commonSave),
+            ),
           ),
         ],
       ),
@@ -2387,7 +2599,8 @@ class _SupabaseConfigDialogState extends State<_SupabaseConfigDialog> {
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
       contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: SingleChildScrollView( // ignore: sort_child_properties_last
+      child: SingleChildScrollView(
+        // ignore: sort_child_properties_last
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2397,7 +2610,8 @@ class _SupabaseConfigDialogState extends State<_SupabaseConfigDialog> {
               focusNode: urlFocus,
               textInputAction: TextInputAction.next,
               // 焦点移交给 key 字段。
-              onEditingComplete: () => FocusScope.of(context).requestFocus(keyFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(keyFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudSupabaseUrlLabel,
                 hintText: AppLocalizations.of(context).cloudSupabaseUrlHint,
@@ -2412,7 +2626,9 @@ class _SupabaseConfigDialogState extends State<_SupabaseConfigDialog> {
               focusNode: keyFocus,
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudAnonKeyLabel,
-                hintText: AppLocalizations.of(context).cloudSupabaseAnonKeyHintLong,
+                hintText: AppLocalizations.of(
+                  context,
+                ).cloudSupabaseAnonKeyHintLong,
                 errorText: _keyError,
               ),
               keyboardType: TextInputType.text,
@@ -2427,7 +2643,9 @@ class _SupabaseConfigDialogState extends State<_SupabaseConfigDialog> {
               // 最后一个字段:完成后收起键盘。
               onEditingComplete: () => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudSupabaseBucketLabel,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudSupabaseBucketLabel,
                 hintText: AppLocalizations.of(context).cloudSupabaseBucketHint,
               ),
               keyboardType: TextInputType.text,
@@ -2445,24 +2663,28 @@ class _SupabaseConfigDialogState extends State<_SupabaseConfigDialog> {
           ),
           const SizedBox(width: 12),
           Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  // 内联校验:url 与 key 必填,任一为空则在对应字段下显示弱提示,不关闭弹窗。
-                  final url = urlController.text.trim();
-                  final key = keyController.text.trim();
-                  setState(() {
-                    _urlError = url.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _keyError = key.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                  });
-                  if (_urlError != null || _keyError != null) return;
-                  Navigator.of(context).pop({
-                    'url': url,
-                    'key': key,
-                    'bucket': bucketController.text.trim(),
-                  });
-                },
-                child: Text(AppLocalizations.of(context).commonSave),
-              ),
+            child: FilledButton(
+              onPressed: () {
+                // 内联校验:url 与 key 必填,任一为空则在对应字段下显示弱提示,不关闭弹窗。
+                final url = urlController.text.trim();
+                final key = keyController.text.trim();
+                setState(() {
+                  _urlError = url.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _keyError = key.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                });
+                if (_urlError != null || _keyError != null) return;
+                Navigator.of(context).pop({
+                  'url': url,
+                  'key': key,
+                  'bucket': bucketController.text.trim(),
+                });
+              },
+              child: Text(AppLocalizations.of(context).commonSave),
+            ),
           ),
         ],
       ),
@@ -2558,7 +2780,8 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
       contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: SingleChildScrollView( // ignore: sort_child_properties_last
+      child: SingleChildScrollView(
+        // ignore: sort_child_properties_last
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2568,7 +2791,8 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
               focusNode: urlFocus,
               textInputAction: TextInputAction.next,
               // 焦点依次移交下一个字段。
-              onEditingComplete: () => FocusScope.of(context).requestFocus(usernameFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(usernameFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudWebdavUrlLabel,
                 hintText: AppLocalizations.of(context).cloudWebdavUrlHint,
@@ -2580,9 +2804,12 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
               controller: usernameController,
               focusNode: usernameFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(passwordFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(passwordFocus),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudWebdavUsernameLabel,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudWebdavUsernameLabel,
                 errorText: _usernameError,
               ),
             ),
@@ -2591,13 +2818,18 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
               controller: passwordController,
               focusNode: passwordFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(pathFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(pathFocus),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudWebdavPasswordLabel,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudWebdavPasswordLabel,
                 errorText: _passwordError,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    obscurePassword ? AppIcons.visibility : AppIcons.visibilityOff,
+                    obscurePassword
+                        ? AppIcons.visibility
+                        : AppIcons.visibilityOff,
                     size: 20,
                   ),
                   onPressed: () {
@@ -2617,9 +2849,13 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
               // 最后一个字段:完成后收起键盘。
               onEditingComplete: () => FocusScope.of(context).unfocus(),
               decoration: InputDecoration(
-                labelText: AppLocalizations.of(context).cloudWebdavRemotePathLabel,
+                labelText: AppLocalizations.of(
+                  context,
+                ).cloudWebdavRemotePathLabel,
                 hintText: AppLocalizations.of(context).cloudWebdavPathHint,
-                helperText: AppLocalizations.of(context).cloudWebdavRemotePathHelperText,
+                helperText: AppLocalizations.of(
+                  context,
+                ).cloudWebdavRemotePathHelperText,
               ),
             ),
           ],
@@ -2635,28 +2871,37 @@ class _WebdavConfigDialogState extends State<_WebdavConfigDialog> {
           ),
           const SizedBox(width: 12),
           Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  // 内联校验:url/username/password 必填,任一为空则在对应字段下显示弱提示,不关闭弹窗。
-                  final url = urlController.text.trim();
-                  final username = usernameController.text.trim();
-                  final password = passwordController.text.trim();
-                  final path = pathController.text.trim();
-                  setState(() {
-                    _urlError = url.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _usernameError = username.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _passwordError = password.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                  });
-                  if (_urlError != null || _usernameError != null || _passwordError != null) return;
-                  Navigator.of(context).pop({
-                    'url': url,
-                    'username': username,
-                    'password': password,
-                    'path': path,
-                  });
-                },
-                child: Text(AppLocalizations.of(context).commonSave),
-              ),
+            child: FilledButton(
+              onPressed: () {
+                // 内联校验:url/username/password 必填,任一为空则在对应字段下显示弱提示,不关闭弹窗。
+                final url = urlController.text.trim();
+                final username = usernameController.text.trim();
+                final password = passwordController.text.trim();
+                final path = pathController.text.trim();
+                setState(() {
+                  _urlError = url.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _usernameError = username.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _passwordError = password.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                });
+                if (_urlError != null ||
+                    _usernameError != null ||
+                    _passwordError != null)
+                  return;
+                Navigator.of(context).pop({
+                  'url': url,
+                  'username': username,
+                  'password': password,
+                  'path': path,
+                });
+              },
+              child: Text(AppLocalizations.of(context).commonSave),
+            ),
           ),
         ],
       ),
@@ -2721,7 +2966,9 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
     accessKeyController = TextEditingController(text: widget.initialAccessKey);
     secretKeyController = TextEditingController(text: widget.initialSecretKey);
     bucketController = TextEditingController(text: widget.initialBucket);
-    portController = TextEditingController(text: widget.initialPort?.toString() ?? '');
+    portController = TextEditingController(
+      text: widget.initialPort?.toString() ?? '',
+    );
     endpointFocus = FocusNode();
     regionFocus = FocusNode();
     accessKeyFocus = FocusNode();
@@ -2773,7 +3020,8 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
       contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-      child: SingleChildScrollView( // ignore: sort_child_properties_last
+      child: SingleChildScrollView(
+        // ignore: sort_child_properties_last
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -2783,7 +3031,8 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
               focusNode: endpointFocus,
               textInputAction: TextInputAction.next,
               // 焦点依次移交下一个字段。
-              onEditingComplete: () => FocusScope.of(context).requestFocus(regionFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(regionFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudS3EndpointLabel,
                 hintText: AppLocalizations.of(context).cloudS3EndpointHint,
@@ -2796,7 +3045,8 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
               controller: regionController,
               focusNode: regionFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(accessKeyFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(accessKeyFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudS3RegionLabel,
                 hintText: AppLocalizations.of(context).cloudS3RegionHint,
@@ -2807,7 +3057,8 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
               controller: accessKeyController,
               focusNode: accessKeyFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(secretKeyFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(secretKeyFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudS3AccessKeyLabel,
                 hintText: AppLocalizations.of(context).cloudS3AccessKeyHint,
@@ -2819,14 +3070,17 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
               controller: secretKeyController,
               focusNode: secretKeyFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(bucketFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(bucketFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudS3SecretKeyLabel,
                 hintText: AppLocalizations.of(context).cloudS3SecretKeyHint,
                 errorText: _secretKeyError,
                 suffixIcon: IconButton(
                   icon: Icon(
-                    obscureSecretKey ? AppIcons.visibility : AppIcons.visibilityOff,
+                    obscureSecretKey
+                        ? AppIcons.visibility
+                        : AppIcons.visibilityOff,
                     size: 20,
                   ),
                   onPressed: () {
@@ -2843,7 +3097,8 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
               controller: bucketController,
               focusNode: bucketFocus,
               textInputAction: TextInputAction.next,
-              onEditingComplete: () => FocusScope.of(context).requestFocus(portFocus),
+              onEditingComplete: () =>
+                  FocusScope.of(context).requestFocus(portFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(context).cloudS3BucketLabel,
                 hintText: AppLocalizations.of(context).cloudS3BucketHint,
@@ -2892,40 +3147,48 @@ class _S3ConfigDialogState extends State<_S3ConfigDialog> {
           ),
           const SizedBox(width: 12),
           Expanded(
-              child: FilledButton(
-                onPressed: () {
-                  // 内联校验:endpoint/accessKey/secretKey/bucket 必填,任一为空则在对应字段下
-                  // 显示弱提示,不切换弹窗、不丢失已填内容。
-                  final endpoint = endpointController.text.trim();
-                  final accessKey = accessKeyController.text.trim();
-                  final secretKey = secretKeyController.text.trim();
-                  final bucket = bucketController.text.trim();
-                  setState(() {
-                    _endpointError = endpoint.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _accessKeyError = accessKey.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _secretKeyError = secretKey.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                    _bucketError = bucket.isEmpty ? l10n.cloudConfigInvalidMessage : null;
-                  });
-                  if (_endpointError != null ||
-                      _accessKeyError != null ||
-                      _secretKeyError != null ||
-                      _bucketError != null) {
-                    return;
-                  }
-                  final portText = portController.text.trim();
-                  final port = portText.isEmpty ? null : int.tryParse(portText);
-                  Navigator.of(context).pop({
-                    'endpoint': endpoint,
-                    'region': regionController.text.trim(),
-                    'accessKey': accessKey,
-                    'secretKey': secretKey,
-                    'bucket': bucket,
-                    'useSSL': useSSL,
-                    'port': port,
-                  });
-                },
-                child: Text(AppLocalizations.of(context).commonSave),
-              ),
+            child: FilledButton(
+              onPressed: () {
+                // 内联校验:endpoint/accessKey/secretKey/bucket 必填,任一为空则在对应字段下
+                // 显示弱提示,不切换弹窗、不丢失已填内容。
+                final endpoint = endpointController.text.trim();
+                final accessKey = accessKeyController.text.trim();
+                final secretKey = secretKeyController.text.trim();
+                final bucket = bucketController.text.trim();
+                setState(() {
+                  _endpointError = endpoint.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _accessKeyError = accessKey.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _secretKeyError = secretKey.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                  _bucketError = bucket.isEmpty
+                      ? l10n.cloudConfigInvalidMessage
+                      : null;
+                });
+                if (_endpointError != null ||
+                    _accessKeyError != null ||
+                    _secretKeyError != null ||
+                    _bucketError != null) {
+                  return;
+                }
+                final portText = portController.text.trim();
+                final port = portText.isEmpty ? null : int.tryParse(portText);
+                Navigator.of(context).pop({
+                  'endpoint': endpoint,
+                  'region': regionController.text.trim(),
+                  'accessKey': accessKey,
+                  'secretKey': secretKey,
+                  'bucket': bucket,
+                  'useSSL': useSSL,
+                  'port': port,
+                });
+              },
+              child: Text(AppLocalizations.of(context).commonSave),
+            ),
           ),
         ],
       ),

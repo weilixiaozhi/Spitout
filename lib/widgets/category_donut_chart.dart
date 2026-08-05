@@ -22,11 +22,11 @@ import '../theme/colors.dart';
 /// - 先排定标签最终 y 槽位，再按最终槽位画线，线终点与标签垂直中心严格对齐。
 /// - 空数据态：灰色镂空圆环 + 中心无任何文字。
 class CategoryDonutChart extends StatelessWidget {
-  /// 分类数据：name 名称，percent 占比(0..1)，total 金额，isOther 其他聚合。
+  /// 分类数据：name 名称，percent 占比(0..1)，isOther 其他聚合。
   /// 约定：上层保证合计 percent == 1.0（Top5 + 其他聚合），组件不截断。
   final List<DonutCategory> data;
 
-  /// 总金额（用于空态判定）
+  /// 总金额（单位：元；仅用于空态判定，不参与扇区渲染）。
   final double sum;
 
   const CategoryDonutChart({
@@ -121,6 +121,12 @@ class CategoryDonutChart extends StatelessWidget {
           // 数据分类更多时偏差更大）。角度计算必须按同一口径归一化，
           // 否则引导线与实际扇区角度对不上（周数据 ≤4 分类时合计恰好
           // 100%，所以该问题只在月/年视图暴露）。
+          //
+          // sectionsSpace=2 会在相邻扇区间插入 2° 空隙：相对「连续扇区」的
+          // 计算口径，各扇区实际起角会平移约 space/2 的累计偏差（单扇区
+          // 中点偏差 ≤1°），引导线中点与真实扇区中点在此量级内轻微偏移，
+          // 视觉可接受。若未来要求像素级严格对齐，需把每段起始角再按
+          // sectionsSpace 逐段修正。
           final midAngles = <double>[];
           if (!isEmpty) {
             final shownTotal =
@@ -415,7 +421,6 @@ class _GuideLinePainter extends CustomPainter {
 class DonutCategory {
   final String name;
   final double percent; // 0..1，占全部支出的比例
-  final double total;
 
   /// 是否为「其他」聚合扇区（true 时用中性灰渲染，区别于主色层级）
   final bool isOther;
@@ -423,7 +428,6 @@ class DonutCategory {
   const DonutCategory({
     required this.name,
     required this.percent,
-    required this.total,
     this.isOther = false,
   });
 }

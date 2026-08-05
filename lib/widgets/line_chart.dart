@@ -6,6 +6,18 @@ import 'package:flutter/material.dart';
 import '../theme/colors.dart';
 import '../theme/chart_tokens.dart';
 
+/// 数值标注格式化（单位=元）：>=10000 用 w，>=1000 用 k，否则取整。
+///
+/// 单独抽出并 `@visibleForTesting` 暴露，是为了用单测锁定「元」展示口径：
+/// 上层若误传数据库整数分，12.5 会被显示成 1250（放大 100 倍）而无法从
+/// 图表本身察觉，契约由测试兜底。
+@visibleForTesting
+String formatChartValueLabel(double v) {
+  if (v >= 10000) return '${(v / 10000).toStringAsFixed(1)}w';
+  if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}k';
+  return v.toStringAsFixed(0);
+}
+
 /// 统计页支出趋势折线图（fl_chart 实现）。
 ///
 /// 设计意图：
@@ -18,7 +30,11 @@ import '../theme/chart_tokens.dart';
 /// - 右侧安全区：数据区右端距 X 轴箭头 46px（原 16px + 需求追加 30px），
 ///   折线终点/数值标注/单位标签均不会遮盖箭头。
 class AnalyticsLineChart extends StatelessWidget {
-  /// 折线数值序列（空列表 = 空数据态）
+  /// 折线数值序列（空列表 = 空数据态）。
+  ///
+  /// 单位契约：**元（展示口径）**。数值标注按元取整 / k / w 缩写直接展示，
+  /// 不在此处做分→元换算；上层调用方必须传元，禁止传数据库整数分，
+  /// 否则标注会放大 100 倍（如 12.50 显示为 1250）。
   final List<double> values;
 
   /// X 轴刻度标签（与 [values] 一一对应；空数据态传空列表）
@@ -294,12 +310,8 @@ class AnalyticsLineChart extends StatelessWidget {
     return ((v / 100).ceil()) * 100.0;
   }
 
-  /// 数值缩写：>=10000 用 w，>=1000 用 k，否则取整
-  static String _fmt(double v) {
-    if (v >= 10000) return '${(v / 10000).toStringAsFixed(1)}w';
-    if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}k';
-    return v.toStringAsFixed(0);
-  }
+  /// 数值标注格式化（单位=元），委托给顶层纯函数 [formatChartValueLabel]。
+  static String _fmt(double v) => formatChartValueLabel(v);
 }
 
 /// 坐标轴骨架画笔：L 形轴线 + 末端实心三角箭头 + X 轴单位标签。
@@ -387,5 +399,11 @@ class _AxisPainter extends CustomPainter {
   bool shouldRepaint(covariant _AxisPainter old) =>
       old.axisColor != axisColor ||
       old.unitLabel != unitLabel ||
-      old.unitLabelColor != unitLabelColor;
+      old.unitLabelColor != unitLabelColor ||
+      // 布局常量当前由调用方固定传入，但若未来参数化，缺比较会导致
+      // 只改布局不重绘的 stale 画面，故一并纳入重绘条件。
+      old.leftReserved != leftReserved ||
+      old.bottomReserved != bottomReserved ||
+      old.topArrowY != topArrowY ||
+      old.rightArrowMargin != rightArrowMargin;
 }

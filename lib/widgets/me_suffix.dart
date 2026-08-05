@@ -14,12 +14,11 @@ class MeSuffix extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    // 与前缀名保持 4px 间距,后缀文本自带前导空格「 (我)」,与成员管理
-    // 模块既有间距/空格格式完全一致。
+    // 间距统一由后缀文本自带的前导空格提供（「 (我)」），与 meSuffixSpan
+    // 口径完全一致；不再叠加 SizedBox，避免 4px + 1 空格的双重间距。
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        const SizedBox(width: 4),
         Text(
           ' (${l10n.aaMe})',
           style: TextStyle(

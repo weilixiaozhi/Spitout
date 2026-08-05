@@ -3,33 +3,54 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import '../../services/security/app_lock_service.dart';
 
+/// AppLockService 的 provider 门面：页面只依赖 providers 层，便于测试替换。
+final appLockServiceProvider = Provider<AppLockServiceFacade>(
+  (ref) => const AppLockServiceFacade(),
+);
+
+/// AppLockService 静态方法集合的实例门面。
+class AppLockServiceFacade {
+  const AppLockServiceFacade();
+
+  Future<void> setPin(String pin) => AppLockService.setPin(pin);
+
+  Future<bool> verifyPin(String pin) => AppLockService.verifyPin(pin);
+
+  Future<bool> canUseBiometrics() => AppLockService.canUseBiometrics();
+
+  Future<bool> isBiometricEnabled() => AppLockService.isBiometricEnabled();
+
+  Future<bool> authenticateWithBiometrics({required String reason}) =>
+      AppLockService.authenticateWithBiometrics(reason: reason);
+
+  void recordUnlock() => AppLockService.recordUnlock();
+}
+
 // 应用是否处于锁定状态
-final isAppLockedProvider =
-    NotifierProvider<SimpleStateNotifier<bool>, bool>(
+final isAppLockedProvider = NotifierProvider<SimpleStateNotifier<bool>, bool>(
   () => SimpleStateNotifier((ref) => false),
 );
 
 // 隐私模糊屏是否显示（多任务切换时）
 final showPrivacyScreenProvider =
     NotifierProvider<SimpleStateNotifier<bool>, bool>(
-  () => SimpleStateNotifier((ref) => false),
-);
+      () => SimpleStateNotifier((ref) => false),
+    );
 
 // 应用锁是否启用
 final appLockEnabledProvider =
     NotifierProvider<SimpleStateNotifier<bool>, bool>(
-  () => SimpleStateNotifier((ref) => false),
-);
+      () => SimpleStateNotifier((ref) => false),
+    );
 
 // 生物识别是否启用
 final appLockBiometricEnabledProvider =
     NotifierProvider<SimpleStateNotifier<bool>, bool>(
-  () => SimpleStateNotifier((ref) => false),
-);
+      () => SimpleStateNotifier((ref) => false),
+    );
 
 // 超时时间（秒）：0=立即, 60=1分钟, 300=5分钟, 900=15分钟
-final appLockTimeoutProvider =
-    NotifierProvider<SimpleStateNotifier<int>, int>(
+final appLockTimeoutProvider = NotifierProvider<SimpleStateNotifier<int>, int>(
   () => SimpleStateNotifier((ref) => 0),
 );
 
@@ -42,8 +63,7 @@ final securityInitProvider = FutureProvider<void>((ref) async {
   final enabled = prefs.getBool(AppLockService.prefsKeyEnabled) ?? false;
   final biometric =
       prefs.getBool(AppLockService.prefsKeyBiometricEnabled) ?? false;
-  final timeout =
-      prefs.getInt(AppLockService.prefsKeyTimeoutSeconds) ?? 0;
+  final timeout = prefs.getInt(AppLockService.prefsKeyTimeoutSeconds) ?? 0;
 
   ref.read(appLockEnabledProvider.notifier).set(enabled);
   ref.read(appLockBiometricEnabledProvider.notifier).set(biometric);

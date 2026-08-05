@@ -327,3 +327,22 @@ final allRecurringTransactionsProvider = StreamProvider.autoDispose<List<Recurri
   final repo = ref.watch(repositoryProvider);
   return repo.watchAllRecurringTransactions();
 });
+
+/// 按 id 缓存的分类查询。
+///
+/// 周期账单列表/编辑页共用:FutureProvider.family 保证同一分类只查一次,
+/// 避免列表卡片每次 build 都重新发起数据库查询。
+final categoryByIdProvider =
+    FutureProvider.autoDispose.family<Category?, int>((ref, categoryId) {
+      final repo = ref.watch(repositoryProvider);
+      return repo.getCategoryById(categoryId);
+    });
+
+/// 按 id 缓存的账本查询。
+///
+/// 与 [categoryByIdProvider] 同理,供周期账单卡片展示账本名复用。
+final ledgerByIdProvider =
+    FutureProvider.autoDispose.family<Ledger?, int>((ref, ledgerId) {
+      final repo = ref.watch(repositoryProvider);
+      return repo.getLedgerById(ledgerId);
+    });

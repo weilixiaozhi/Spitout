@@ -44,6 +44,10 @@ class CapsuleSwitcher<T> extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // 空选项降级为空容器：options.length * 2 - 1 在空列表时为 -1，
+    // take(-1) 会抛 RangeError，未来新增入口直接传空列表也不应崩溃。
+    if (options.isEmpty) return const SizedBox.shrink();
+
     final isDark = SpitoutTokens.isDark(context);
     final bg = backgroundColor ?? SpitoutTokens.surfaceCapsule(context);
     final selectedBg = selectedBackgroundColor ?? (isDark ? SpitoutTokens.primary(context) : Colors.black);

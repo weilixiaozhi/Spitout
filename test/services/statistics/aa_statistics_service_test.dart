@@ -92,6 +92,7 @@ void main() {
     Transaction makeTx({
       required int id,
       int amount = 1000,
+      int? nativeAmount,
       String? paidByUserId = 'u1',
       int? aaMode,
       String? aaParticipants,
@@ -113,7 +114,7 @@ void main() {
         categorySyncIdOverride: null,
         excludeFromStats: false,
         currencyCode: null,
-        nativeAmount: null,
+        nativeAmount: nativeAmount,
         version: 1,
         lastEditedAt: null,
         paidByUserId: paidByUserId,
@@ -237,12 +238,54 @@ void main() {
       );
       expect(result, isNull);
     });
+
+    test('外币交易:人均分摊按 nativeAmount(本位币)计算', () {
+      // 原币 1000 分($10),折本位币 7250 分(¥72.50,隐含汇率 7.25)。
+      final tx = makeTx(
+        id: 1,
+        amount: 1000,
+        nativeAmount: 7250,
+        paidByUserId: 'u1',
+        aaMode: 0,
+        aaParticipants: jsonEncode(['u1', 'u2']),
+      );
+      final result = AaStatisticsService.computeTx(
+        tx: tx,
+        allParticipants: ['u1', 'u2'],
+      )!;
+      // 实付按本位币输出,而不是原币 $10。
+      expect(result.paidAmount.toStringAsFixed(2), '72.50');
+      // 72.50 / 2 = 36.25 整除,无余数。
+      expect(result.shares['u1']!.toStringAsFixed(2), '36.25');
+      expect(result.shares['u2']!.toStringAsFixed(2), '36.25');
+    });
+
+    test('外币指定分摊:原币金额按隐含汇率折到本位币', () {
+      // $10,隐含汇率 7.25 → ¥72.50;原币分摊 u1=6 / u2=4。
+      final tx = makeTx(
+        id: 1,
+        amount: 1000,
+        nativeAmount: 7250,
+        paidByUserId: 'u1',
+        aaMode: 2,
+        aaParticipants: jsonEncode(['u1', 'u2']),
+        aaSplits: jsonEncode({'u1': '6.00', 'u2': '4.00'}),
+      );
+      final result = AaStatisticsService.computeTx(
+        tx: tx,
+        allParticipants: ['u1', 'u2'],
+      )!;
+      // 6.00 × 7.25 = 43.50;4.00 × 7.25 = 29.00。
+      expect(result.shares['u1']!.toStringAsFixed(2), '43.50');
+      expect(result.shares['u2']!.toStringAsFixed(2), '29.00');
+    });
   });
 
   group('AaStatisticsService.computeLedger', () {
     Transaction makeTx({
       required int id,
       required int amount,
+      int? nativeAmount,
       required String paidByUserId,
       int? aaMode,
       String? aaParticipants,
@@ -263,7 +306,7 @@ void main() {
         categorySyncIdOverride: null,
         excludeFromStats: false,
         currencyCode: null,
-        nativeAmount: null,
+        nativeAmount: nativeAmount,
         version: 1,
         lastEditedAt: null,
         paidByUserId: paidByUserId,
@@ -444,6 +487,46 @@ void main() {
       expect(fromU2.fromIsSelf, isTrue);
       expect(fromU3.fromIsSelf, isFalse);
       expect(fromU2.toIsSelf, isFalse);
+    });
+
+    test('多币种账本:汇总按 nativeAmount 跨币种求和,不直接相加原币', () {
+      final txs = [
+        // u1 垫付 ¥100(人民币)。
+        makeTx(
+          id: 1,
+          amount: 10000,
+          nativeAmount: 10000,
+          paidByUserId: 'u1',
+          aaMode: 0,
+          aaParticipants: jsonEncode(['u1', 'u2']),
+        ),
+        // u2 垫付 $50,折本位币 ¥362.50(隐含汇率 7.25)。
+        makeTx(
+          id: 2,
+          amount: 5000,
+          nativeAmount: 36250,
+          paidByUserId: 'u2',
+          aaMode: 0,
+          aaParticipants: jsonEncode(['u1', 'u2']),
+        ),
+      ];
+      final settlement = AaStatisticsService.computeLedger(
+        transactions: txs,
+        allParticipants: ['u1', 'u2'],
+        displayNameMap: {'u1': 'Alice', 'u2': 'Bob'},
+      );
+
+      // u1:实付 ¥100.00,应摊 50 + 181.25 = 231.25,净额 -131.25。
+      final u1 = settlement.participants
+          .firstWhere((p) => p.participantId == 'u1');
+      expect(u1.totalPaid.toStringAsFixed(2), '100.00');
+      expect(u1.totalShouldPay.toStringAsFixed(2), '231.25');
+      expect(u1.net.toStringAsFixed(2), '-131.25');
+      // u2:实付 ¥362.50,应摊 50 + 181.25 = 231.25,净额 +131.25。
+      final u2 = settlement.participants
+          .firstWhere((p) => p.participantId == 'u2');
+      expect(u2.totalPaid.toStringAsFixed(2), '362.50');
+      expect(u2.net.toStringAsFixed(2), '131.25');
     });
   });
 }

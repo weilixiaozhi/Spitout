@@ -24,7 +24,7 @@ class CloudServiceStore {
         final raw = sp.getString(_kSpitoutCloudCfg);
         if (raw != null) {
           try {
-            return decodeCloudConfig(raw);
+            return await _decodeAndMigrate(sp, _kSpitoutCloudCfg, raw);
           } catch (e) {
             // 解析失败，静默回退到本地存储
           }
@@ -35,7 +35,7 @@ class CloudServiceStore {
         final raw = sp.getString(_kSupabaseCfg);
         if (raw != null) {
           try {
-            return decodeCloudConfig(raw);
+            return await _decodeAndMigrate(sp, _kSupabaseCfg, raw);
           } catch (e) {
             // 解析失败，静默回退到本地存储
           }
@@ -78,7 +78,7 @@ class CloudServiceStore {
     final raw = sp.getString(_kSpitoutCloudCfg);
     if (raw == null) return null;
     try {
-      return decodeCloudConfig(raw);
+      return await _decodeAndMigrate(sp, _kSpitoutCloudCfg, raw);
     } catch (e) {
       return null;
     }
@@ -90,7 +90,7 @@ class CloudServiceStore {
     final raw = sp.getString(_kSupabaseCfg);
     if (raw == null) return null;
     try {
-      return decodeCloudConfig(raw);
+      return await _decodeAndMigrate(sp, _kSupabaseCfg, raw);
     } catch (e) {
       return null;
     }
@@ -123,6 +123,8 @@ class CloudServiceStore {
   /// 保存并激活配置
   Future<void> saveAndActivate(CloudServiceConfig cfg) async {
     final sp = await SharedPreferences.getInstance();
+    // 登录账号密码仅作一次性输入，落盘前剥离（见 _stripAccountPasswords）。
+    cfg = _stripAccountPasswords(cfg);
 
     switch (cfg.type) {
       case CloudBackendType.local:
@@ -152,13 +154,14 @@ class CloudServiceStore {
         await sp.setString(_kActiveType, 's3');
         // Provider 会在下次使用时自动初始化
         break;
-
     }
   }
 
   /// 仅保存配置,不激活
   Future<void> saveOnly(CloudServiceConfig cfg) async {
     final sp = await SharedPreferences.getInstance();
+    // 与 saveAndActivate 同策略：登录账号密码不落盘。
+    cfg = _stripAccountPasswords(cfg);
 
     switch (cfg.type) {
       case CloudBackendType.local:
@@ -180,8 +183,47 @@ class CloudServiceStore {
       case CloudBackendType.s3:
         await sp.setString(_kS3Cfg, encodeCloudConfig(cfg));
         break;
-
     }
+  }
+
+  /// 剥离 Spitout Cloud / Supabase 的登录密码，仅保留邮箱等非敏感配置。
+  ///
+  /// 设计意图：登录密码只作为一次性输入使用，不写入 SharedPreferences
+  /// （Android 侧为明文 XML，且可能随系统备份带走）。WebDAV / S3 的
+  /// 访问凭据属于同步必需配置，不在剥离范围内。
+  CloudServiceConfig _stripAccountPasswords(CloudServiceConfig cfg) {
+    if (cfg.type != CloudBackendType.spitoutCloud &&
+        cfg.type != CloudBackendType.supabase) {
+      return cfg;
+    }
+    return CloudServiceConfig(
+      type: cfg.type,
+      name: cfg.name,
+      spitoutCloudBaseUrl: cfg.spitoutCloudBaseUrl,
+      spitoutCloudApiPrefix: cfg.spitoutCloudApiPrefix,
+      spitoutCloudEmail: cfg.spitoutCloudEmail,
+      supabaseUrl: cfg.supabaseUrl,
+      supabaseAnonKey: cfg.supabaseAnonKey,
+      supabaseBucket: cfg.supabaseBucket,
+      supabaseEmail: cfg.supabaseEmail,
+    );
+  }
+
+  /// 解码存量配置并迁移：若历史版本残留了明文密码，读取时立即剥离并回写。
+  ///
+  /// 返回的配置不再包含密码，后续所有消费方（云客户端 / UI）拿到的都是
+  /// 安全形态，无需各自再判空。
+  Future<CloudServiceConfig> _decodeAndMigrate(
+    SharedPreferences sp,
+    String key,
+    String raw,
+  ) async {
+    final cfg = decodeCloudConfig(raw);
+    final sanitized = _stripAccountPasswords(cfg);
+    if (cfg.spitoutCloudPassword != null || cfg.supabasePassword != null) {
+      await sp.setString(key, encodeCloudConfig(sanitized));
+    }
+    return sanitized;
   }
 
   /// 清空指定后端的配置,使其回到「未配置」状态。
@@ -284,7 +326,6 @@ class CloudServiceStore {
         } catch (e) {
           return false;
         }
-
     }
   }
 }

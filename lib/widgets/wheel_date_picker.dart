@@ -9,6 +9,50 @@ import '../utils/date/week_math.dart'
 /// 滚轮选择模式：年 / 年-月 / 年-月-日 / 年-周（统计页周账期筛选）/ 年-月-日-时-分（记账页）。
 enum WheelDatePickerMode { y, ym, ymd, week, datetime }
 
+/// datetime 模式下按边界日计算可选「小时」范围。
+///
+/// 边界日（与 [min] / [max] 同一天）受其时刻约束，其余日期 0-23 全量；
+/// 抽出为纯函数便于单测逐列钳制逻辑。
+@visibleForTesting
+List<int> hourRangeForDateTime({
+  required DateTime date,
+  required DateTime min,
+  required DateTime max,
+}) {
+  int start = 0, end = 23;
+  if (date.year == min.year && date.month == min.month && date.day == min.day) {
+    start = min.hour;
+  }
+  if (date.year == max.year && date.month == max.month && date.day == max.day) {
+    end = max.hour;
+  }
+  return [for (int h = start; h <= end; h++) h];
+}
+
+/// datetime 模式下某小时可选「分钟」范围。
+///
+/// 仅「边界日 + 边界小时」受 [min] / [max] 分钟约束，其余时段 0-59 全量。
+@visibleForTesting
+List<int> minuteRangeForDateTime({
+  required DateTime date,
+  required int hour,
+  required DateTime min,
+  required DateTime max,
+}) {
+  int start = 0, end = 59;
+  final isMinBoundary = date.year == min.year &&
+      date.month == min.month &&
+      date.day == min.day &&
+      hour == min.hour;
+  final isMaxBoundary = date.year == max.year &&
+      date.month == max.month &&
+      date.day == max.day &&
+      hour == max.hour;
+  if (isMinBoundary) start = min.minute;
+  if (isMaxBoundary) end = max.minute;
+  return [for (int m = start; m <= end; m++) m];
+}
+
 class WheelDatePicker extends StatefulWidget {
   /// 初始选中时间。
   final DateTime initial;
@@ -68,6 +112,12 @@ Future<DateTime?> showWheelDatePicker(
   // 子 sheet 遮罩色;记账页内调用传透明以不显示遮罩
   Color? barrierColor,
 }) {
+  // 入口校验：minDate > maxDate 时年份列表为空，CupertinoPicker 无子项且
+  // 控制器 initialItem=-1 会抛异常，提前以明确错误阻断而非运行期崩溃。
+  if (minDate != null && maxDate != null && minDate.isAfter(maxDate)) {
+    throw ArgumentError('WheelDatePicker: minDate 不能晚于 maxDate');
+  }
+
   final l10n = AppLocalizations.of(context);
   // 按模式解析标题/副标题/确认文案默认值，调用方传参可覆盖。
   String resolvedTitle;
@@ -134,6 +184,10 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
   @override
   void initState() {
     super.initState();
+    // 入口校验（直接构造组件时同样生效）：防止 min > max 产生空年份列表。
+    if (_min.isAfter(_max)) {
+      throw ArgumentError('WheelDatePicker: minDate 不能晚于 maxDate');
+    }
     final clamped = _clamp(widget.initial);
     year = clamped.year;
     month = clamped.month;
@@ -152,8 +206,14 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
     // 初始化滚动控制器（year 必选;时/分必选,其余按模式惰性创建）
     final years = _yearList();
     _yearCtrl = FixedExtentScrollController(initialItem: years.indexOf(year));
-    _hourCtrl = FixedExtentScrollController(initialItem: hour);
-    _minuteCtrl = FixedExtentScrollController(initialItem: minute);
+    // datetime 模式下时/分列按边界日钳制（见 _hourListForDateTime），
+    // initialItem 必须是「值在列表中的索引」而非值本身。
+    final hours = _hourListForDateTime();
+    final hourIndex = hours.indexOf(hour);
+    _hourCtrl = FixedExtentScrollController(initialItem: hourIndex < 0 ? 0 : hourIndex);
+    final minutes = _minuteListForDateTime(hour);
+    final minuteIndex = minutes.indexOf(minute);
+    _minuteCtrl = FixedExtentScrollController(initialItem: minuteIndex < 0 ? 0 : minuteIndex);
   }
 
   @override
@@ -205,6 +265,24 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
     return [for (int d = start; d <= end; d++) d];
   }
 
+  // datetime 模式下某年某月某日可选「小时」范围：边界日受 [_min]/[_max]
+  // 时刻约束，其余日期 0-23 全量。逐列钳制避免「整体 _clamp 把用户选的时间
+  // 静默改成边界时刻」（如 min 为今天 09:00 时，今天 08:00 直接不可选）。
+  List<int> _hourListForDateTime() => hourRangeForDateTime(
+        date: DateTime(year, month, day),
+        min: _min,
+        max: _max,
+      );
+
+  // datetime 模式下某小时可选「分钟」范围：边界日 + 边界小时受 min/max 约束，
+  // 其余时段 0-59 全量。
+  List<int> _minuteListForDateTime(int hour) => minuteRangeForDateTime(
+        date: DateTime(year, month, day),
+        hour: hour,
+        min: _min,
+        max: _max,
+      );
+
   // 某年可选「年内周序号」范围（边界年受 [_effectiveMin]/[_effectiveMax] 限制）。
   List<int> _weekListForYear(int y) {
     int sw = 1, ew = weeksInYear(y);
@@ -226,6 +304,12 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
         final weeks = _weekListForYear(year);
         if (!weeks.contains(week)) week = weeks.last;
       }
+      if (widget.mode == WheelDatePickerMode.datetime) {
+        final hours = _hourListForDateTime();
+        if (!hours.contains(hour)) hour = hours.last;
+        final minutes = _minuteListForDateTime(hour);
+        if (!minutes.contains(minute)) minute = minutes.last;
+      }
     });
     final mi = _monthListForYear(year).indexOf(month);
     if (_monthCtrl != null) {
@@ -244,6 +328,14 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
             (_) => _weekCtrl!.jumpToItem(wi < 0 ? 0 : wi));
       }
     }
+    if (widget.mode == WheelDatePickerMode.datetime) {
+      final hi = _hourListForDateTime().indexOf(hour);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _hourCtrl.jumpToItem(hi < 0 ? 0 : hi));
+      final mi = _minuteListForDateTime(hour).indexOf(minute);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _minuteCtrl.jumpToItem(mi < 0 ? 0 : mi));
+    }
   }
 
   void _onMonthChanged(int index) {
@@ -251,22 +343,65 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
       month = _monthListForYear(year)[index];
       final days = _dayListForYM(year, month);
       if (!days.contains(day)) day = days.last;
+      if (widget.mode == WheelDatePickerMode.datetime) {
+        final hours = _hourListForDateTime();
+        if (!hours.contains(hour)) hour = hours.last;
+        final minutes = _minuteListForDateTime(hour);
+        if (!minutes.contains(minute)) minute = minutes.last;
+      }
     });
     final di = _dayListForYM(year, month).indexOf(day);
     if (_dayCtrl != null) {
       WidgetsBinding.instance.addPostFrameCallback(
           (_) => _dayCtrl!.jumpToItem(di < 0 ? 0 : di));
     }
+    if (widget.mode == WheelDatePickerMode.datetime) {
+      final hi = _hourListForDateTime().indexOf(hour);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _hourCtrl.jumpToItem(hi < 0 ? 0 : hi));
+      final mi = _minuteListForDateTime(hour).indexOf(minute);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _minuteCtrl.jumpToItem(mi < 0 ? 0 : mi));
+    }
   }
 
-  void _onDayChanged(int index) =>
-      setState(() => day = _dayListForYM(year, month)[index]);
+  void _onDayChanged(int index) {
+    setState(() {
+      day = _dayListForYM(year, month)[index];
+      if (widget.mode == WheelDatePickerMode.datetime) {
+        final hours = _hourListForDateTime();
+        if (!hours.contains(hour)) hour = hours.last;
+        final minutes = _minuteListForDateTime(hour);
+        if (!minutes.contains(minute)) minute = minutes.last;
+      }
+    });
+    if (widget.mode == WheelDatePickerMode.datetime) {
+      final hi = _hourListForDateTime().indexOf(hour);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _hourCtrl.jumpToItem(hi < 0 ? 0 : hi));
+      final mi = _minuteListForDateTime(hour).indexOf(minute);
+      WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _minuteCtrl.jumpToItem(mi < 0 ? 0 : mi));
+    }
+  }
 
   void _onWeekChanged(int index) =>
       setState(() => week = _weekListForYear(year)[index]);
 
-  void _onHourChanged(int index) => setState(() => hour = index);
-  void _onMinuteChanged(int index) => setState(() => minute = index);
+  void _onHourChanged(int index) {
+    setState(() {
+      hour = _hourListForDateTime()[index];
+      final minutes = _minuteListForDateTime(hour);
+      if (!minutes.contains(minute)) minute = minutes.last;
+    });
+    // 边界小时的分钟列表可能变窄，跳转到新列表内的合法索引。
+    final mi = _minuteListForDateTime(hour).indexOf(minute);
+    WidgetsBinding.instance.addPostFrameCallback(
+        (_) => _minuteCtrl.jumpToItem(mi < 0 ? 0 : mi));
+  }
+
+  void _onMinuteChanged(int index) =>
+      setState(() => minute = _minuteListForDateTime(hour)[index]);
 
   /// 组合当前各列得到最终 DateTime（按模式夹到有效边界内）。
   DateTime _buildResult() {
@@ -400,10 +535,13 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
         body = group([yearPicker, monthPicker, dayPicker]);
       case WheelDatePickerMode.week:
         final weeks = _weekListForYear(year);
-        if (week < weeks.first) week = weeks.first;
-        if (week > weeks.last) week = weeks.last;
-        _weekCtrl ??=
-            FixedExtentScrollController(initialItem: weeks.indexOf(week));
+        // 仅取防御性展示值，不直接改字段（build 中改字段无 setState 会与
+        // UI 状态短暂不一致；week 的收敛已由 _onYearChanged 负责）。
+        final effectiveWeek = week < weeks.first
+            ? weeks.first
+            : (week > weeks.last ? weeks.last : week);
+        _weekCtrl ??= FixedExtentScrollController(
+            initialItem: weeks.indexOf(effectiveWeek));
         final weekPicker = _buildPicker(
           items: weeks,
           controller: _weekCtrl,
@@ -413,9 +551,10 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
         );
         body = group([yearPicker, weekPicker]);
       case WheelDatePickerMode.datetime:
-        // 时/分写死全量,不钳制（保持被替换的 5 列选择器行为）。
-        final hours = [for (int h = 0; h < 24; h++) h];
-        final minutes = [for (int m = 0; m < 60; m++) m];
+        // 时/分按边界日逐列钳制（见 _hourListForDateTime），用户在边界日
+        // 选不到越界时刻，不再被整体 _clamp 静默改成 min/max。
+        final hours = _hourListForDateTime();
+        final minutes = _minuteListForDateTime(hour);
         final hourPicker = _buildPicker(
           items: hours,
           controller: _hourCtrl,
