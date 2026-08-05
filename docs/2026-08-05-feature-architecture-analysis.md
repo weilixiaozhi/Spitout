@@ -10,7 +10,7 @@
 Spitout 是一款个人记账 Flutter 应用（v1.1.1+1，Dart SDK `^3.12.0`），采用“本地优先 + 云同步”的数据架构。技术栈与分层骨架如下：
 
 - **UI 层**：Flutter Material，`pages/`（38 个文件）+ `widgets/`（62 个文件，含大量通用组件与记账编辑 sheet）。
-- **状态层**：Riverpod 2.x（93 个文件引用），`providers/` 29 个文件，barrel 收敛为 `providers.dart`（39 个消费者）。
+- **状态层**：Riverpod 3.4.2（95 个文件引用），`providers/` 29 个文件，barrel 收敛为 `providers.dart`（39 个消费者）。
 - **数据层**：Drift 2.x（SQLite），`data/db.dart`（含 1 个 `db.g.dart` 生成文件）+ 25 个仓储/模型文件。
 - **云同步层**：`cloud/` 20 个文件，双栈并存：
   - **Spitout Cloud（增量栈）**：`SyncEngine`（`sync_engine.dart` 约 2300 行 + 7 个 part 文件）基于 `sync_changes` 行级日志 + WebSocket 实时推送；
@@ -428,7 +428,7 @@ lib/widgets/ledger_currency_change.dart:9  import 'widgets.dart';   ← 回边
 | 依赖 | 引用文件数 | 主要用途域 | 状态 |
 |---|---:|---|---|
 | flutter | 120 | UI/框架 | 活跃 |
-| flutter_riverpod | 93 | 状态管理 | 活跃 |
+| flutter_riverpod | 95 | 状态管理 | 活跃 |
 | shared_preferences | 28 | 配置/持久化开关 | 活跃 |
 | drift | 25 | SQLite ORM | 活跃 |
 | intl | 15 | 本地化/日期 | 活跃 |
