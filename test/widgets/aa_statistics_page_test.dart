@@ -3,6 +3,7 @@
 // 统一后缀（含前导空格），非本人保持纯名不拼接。
 library;
 
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -231,6 +232,56 @@ void main() {
     expect(find.text('共 ¥ 168'), findsOneWidget);
     // 分摊明细中的本人追加「(我)」后缀。
     expect(find.text('张三 (我)', findRichText: true), findsWidgets);
+
+    await unmountPage(tester);
+  });
+
+  testWidgets('仅有不分摊支出的成员仍出现在分摊详情表', (tester) async {
+    // 外键约束：交易必须先有账本存在（与 Provider 测试同口径）。
+    await repo.createLedger(
+      name: '测试账本',
+      storageMode: 'local',
+      ownerUserId: 'u1',
+      aaEnabled: true,
+    );
+    final stats = AaLedgerStatistics(
+      participants: [
+        AaParticipantSummary(
+          participantId: 'u1',
+          displayName: '张三',
+          totalPaid: 100,
+          totalShouldPay: 50,
+          isSelf: true,
+        ),
+        // 李四无 AA 活动：只有一笔「不分摊」支出。
+        AaParticipantSummary(
+          participantId: 'u2',
+          displayName: '李四',
+          totalPaid: 0,
+          totalShouldPay: 0,
+          isSelf: false,
+        ),
+      ],
+      transfers: const [],
+    );
+    // 写库插入李四垫付的不分摊支出：不进 AA 统计，
+    // 但成员详情页本质是「首页支出列表按成员筛选」，必须可进入查看。
+    await db
+        .into(db.transactions)
+        .insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 700,
+            happenedAt: Value(DateTime(2026, 8, 1, 8, 0)),
+            paidByUserId: Value('u2'),
+            aaMode: Value(1),
+          ),
+        );
+
+    await pumpPage(tester, stats);
+
+    expect(find.text('李四', findRichText: true), findsOneWidget);
 
     await unmountPage(tester);
   });

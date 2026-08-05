@@ -1,8 +1,10 @@
 /// 成员账单详情 Provider 单测（按支出人维度聚合）。
 ///
 /// 需求锚点：
-/// - 详情页只展示「该成员作为支出人」的 AA 账单（aaMode != 1）；
+/// - 详情页展示「该成员作为支出人」的全部支出明细（含不分摊 aaMode=1，
+///   收入交易不计入支出明细）；
 /// - 人均 / 指定金额的分摊明细、本人应摊与账本级统计口径一致；
+/// - 不分摊账单无分摊明细，整笔金额即本人支出；
 /// - 虚拟用户、owner、协作者均可作为支出人进入查看；
 /// - 无垫付账单的成员返回空账单列表而非报错。
 library;
@@ -83,6 +85,7 @@ void main() {
   /// 直接写库插入一笔交易（绕过 sync 登记，仅作数据源）。
   Future<int> seedTx({
     required int amountCents,
+    String type = 'expense',
     String? paidByUserId,
     int? aaMode,
     String? aaParticipants,
@@ -94,7 +97,7 @@ void main() {
         .insert(
           TransactionsCompanion.insert(
             ledgerId: 1,
-            type: 'expense',
+            type: type,
             amount: amountCents,
             happenedAt: Value(happenedAt ?? DateTime(2026, 8, 3, 12, 0)),
             paidByUserId: paidByUserId == null
@@ -118,7 +121,7 @@ void main() {
     );
   }
 
-  test('按支出人维度聚合：只返回该成员垫付的 AA 账单', () async {
+  test('按支出人维度聚合：返回该成员全部支出明细（含不分摊，排除收入）', () async {
     // 张三垫付的人均账单：10.00 / 3 人，floor 后余数归支出人 → 3.34/3.33/3.33。
     await seedTx(
       amountCents: 1000,
@@ -135,7 +138,7 @@ void main() {
       aaParticipants: jsonEncode(['u1', 'u2']),
       happenedAt: DateTime(2026, 8, 2, 12, 0),
     );
-    // 不分摊：不进入 AA 统计，也不应出现。
+    // 不分摊：虽不进入 AA 统计，但属于该成员垫付的支出，必须纳入。
     await seedTx(
       amountCents: 700,
       paidByUserId: 'u1',
@@ -144,6 +147,13 @@ void main() {
     );
     // 支出人未知：无法归属，不应出现。
     await seedTx(amountCents: 900, happenedAt: DateTime(2026, 7, 31, 8, 0));
+    // 收入交易：不属于支出明细，不应出现。
+    await seedTx(
+      amountCents: 5000,
+      type: 'income',
+      paidByUserId: 'u1',
+      happenedAt: DateTime(2026, 7, 28, 10, 0),
+    );
     // 张三垫付的指定金额账单：8.00 = 张三 4.00 + 李四 4.00。
     await seedTx(
       amountCents: 800,
@@ -157,9 +167,9 @@ void main() {
     expect(data, isNotNull);
     expect(data!.ledgerName, '测试账本');
     expect(data.member.isSelf, isTrue);
-    expect(data.bills, hasLength(2), reason: '只有张三垫付的两笔 AA 账单');
+    expect(data.bills, hasLength(3), reason: '张三垫付的两笔 AA 账单 + 一笔不分摊支出，收入不计入');
 
-    // 最新在前：人均账单在前，指定金额账单在后。
+    // 最新在前：人均账单 → 不分摊账单 → 指定金额账单。
     final perPersonBill = data.bills[0];
     expect(perPersonBill.mode, AaMode.perPerson);
     expect(perPersonBill.totalAmount, 10.0);
@@ -180,7 +190,15 @@ void main() {
       reason: '分摊明细合计恒等于账单实付',
     );
 
-    final customBill = data.bills[1];
+    // 不分摊账单：无分摊明细，整笔金额即本人支出。
+    final noSplitBill = data.bills[1];
+    expect(noSplitBill.mode, AaMode.noSplit);
+    expect(noSplitBill.totalAmount, 7.0);
+    expect(noSplitBill.myShare, closeTo(7.0, 0.001));
+    expect(noSplitBill.splits, isEmpty);
+    expect(noSplitBill.payerName, '张三');
+
+    final customBill = data.bills[2];
     expect(customBill.mode, AaMode.custom);
     expect(customBill.totalAmount, 8.0);
     expect(customBill.myShare, closeTo(4.0, 0.001));

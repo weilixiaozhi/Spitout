@@ -511,25 +511,48 @@ final aaMemberDetailProvider = FutureProvider.autoDispose
         for (final p in stats.participants) p.participantId: p.isSelf,
       };
 
-      // 取账本全部交易（带分类），过滤 aaMode != 1 与 getAaTransactionsByLedger
-      // 口径一致；watch 变体返回流，取首帧快照即可用于展示分类图标/名称。
+      // 取账本全部交易（带分类）；watch 变体返回流，取首帧快照即可。
+      // 成员详情本质是「首页支出列表按支出人筛选」：全部支出（含不分摊）
+      // 都要展示，仅收入交易与未知支出人不归属任何成员。
       final all = await repo
           .watchTransactionsWithCategoryAll(ledgerId: args.ledgerId)
           .first;
       final bills = <AaMemberBill>[];
       for (final it in all) {
-        if (it.t.aaMode == 1) continue; // 不分摊，不进入 AA 统计。
-        final result = AaStatisticsService.computeTx(
-          tx: it.t,
-          allParticipants: participantIds,
-        );
-        // 只保留该成员作为支出人的账单；支出人未知/计算失败的账单跳过。
-        if (result == null || result.paidBy != args.participantId) continue;
+        final tx = it.t;
+        if (tx.type != 'expense') continue; // 支出明细不含收入交易。
+        final paidBy = tx.paidByUserId;
+        if (paidBy == null || paidBy.isEmpty) continue; // 支出人未知，无法归属。
+        if (paidBy != args.participantId) continue; // 只保留本人垫付的账单。
+
+        final mode = AaMode.fromDb(tx.aaMode);
+        // 不分摊（aaMode=1）不参与 AA 计算：整笔支出归本人，无分摊明细；
+        // 指定分摊数据异常（如 aaSplits 为空）同样降级为整笔归本人。
+        final result = mode == AaMode.noSplit
+            ? null
+            : AaStatisticsService.computeTx(
+                tx: tx,
+                allParticipants: participantIds,
+              );
+        if (result == null) {
+          bills.add(
+            AaMemberBill(
+              tx: tx,
+              category: it.category,
+              mode: mode,
+              totalAmount: tx.amount / 100,
+              myShare: tx.amount / 100,
+              payerName: nameOf[paidBy] ?? paidBy,
+              splits: const [],
+            ),
+          );
+          continue;
+        }
 
         final shares = result.shares;
         bills.add(
           AaMemberBill(
-            tx: it.t,
+            tx: tx,
             category: it.category,
             mode: result.mode,
             totalAmount: result.paidAmount,

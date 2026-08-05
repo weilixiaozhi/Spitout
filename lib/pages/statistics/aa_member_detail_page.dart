@@ -14,19 +14,23 @@ import '../../utils/currency/currencies.dart' show getCurrencySymbol;
 import '../../widgets/me_suffix.dart';
 import '../../widgets/widgets.dart';
 
+/// 分摊方式卡片的强调等级：普通（AA）、琥珀（指定金额）、弱化（不分摊）。
+enum _MethodAccent { normal, warning, muted }
+
 /// 成员账单详情页（按支出人维度汇总）。
 ///
 /// 内容结构（自上而下，严格参考设计稿）：
 /// 1. 头部：返回 + 成员头像 + 成员名 / 账本名；
 /// 2. 汇总卡（深色英雄卡）：账单汇总 - 总笔数 / 总金额 / 平均金额，
 ///    底部展示该成员应收（应付）金额；
-/// 3. 分摊方式：AA分摊 / 指定金额 笔数双卡；
+/// 3. 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡；
 /// 4. 账单列表：按日期分组的账单卡片，每笔含分类 / 分摊方式徽标 / 备注 /
-///    时间·付款人 / 本人应摊 / 账单总额，并展开分摊明细。
+///    时间·付款人 / 本人支出 / 账单总额；AA 账单展开分摊明细，
+///    不分摊账单无分摊明细。
 ///
-/// 数据源为 [aaMemberDetailProvider]：只展示该成员作为支出人的 AA 账单；
-/// 虚拟用户 / 账本 owner / 协作者均可从分摊详情表进入查看，本人标记与
-/// 汇总口径和分摊详情表完全一致。
+/// 数据源为 [aaMemberDetailProvider]：展示该成员作为支出人的全部支出明细
+/// （含不分摊，即首页列表按成员筛选）；虚拟用户 / 账本 owner / 协作者均可
+/// 从分摊详情表进入查看，本人标记与汇总口径和分摊详情表完全一致。
 class AaMemberDetailPage extends ConsumerWidget {
   const AaMemberDetailPage({super.key, required this.args});
 
@@ -147,7 +151,10 @@ class AaMemberDetailPage extends ConsumerWidget {
         ? 0.0
         : totalAmount / data.bills.length;
     final aaCount = data.bills.where((b) => b.mode == AaMode.perPerson).length;
-    final customCount = data.bills.length - aaCount;
+    final customCount = data.bills.where((b) => b.mode == AaMode.custom).length;
+    final noSplitCount = data.bills
+        .where((b) => b.mode == AaMode.noSplit)
+        .length;
 
     return ListView(
       padding: const EdgeInsets.all(16),
@@ -161,7 +168,7 @@ class AaMemberDetailPage extends ConsumerWidget {
           currencyCode,
         ),
         const SizedBox(height: 20),
-        _buildSplitMethod(context, l10n, aaCount, customCount),
+        _buildSplitMethod(context, l10n, aaCount, customCount, noSplitCount),
         const SizedBox(height: 20),
         if (data.bills.isEmpty)
           _buildEmptyCard(context, l10n)
@@ -329,15 +336,16 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 分摊方式：AA分摊 / 指定金额 笔数双卡。
+  /// 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡。
   ///
   /// 指定金额卡沿用设计稿的琥珀强调（浅底 + 琥珀边框/数字），
-  /// 颜色统一走项目 warning token，不硬编码设计稿色值。
+  /// 不分摊卡用弱化中性色（不参与分摊），颜色统一走项目 token。
   Widget _buildSplitMethod(
     BuildContext context,
     AppLocalizations l10n,
     int aaCount,
     int customCount,
+    int noSplitCount,
   ) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -360,16 +368,25 @@ class AaMemberDetailPage extends ConsumerWidget {
                 context,
                 aaCount,
                 l10n.aaStatisticsModePerPerson,
-                accent: false,
+                _MethodAccent.normal,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: _buildMethodCard(
                 context,
                 customCount,
                 l10n.aaStatisticsModeCustom,
-                accent: true,
+                _MethodAccent.warning,
+              ),
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: _buildMethodCard(
+                context,
+                noSplitCount,
+                l10n.aaModeNoSplit,
+                _MethodAccent.muted,
               ),
             ),
           ],
@@ -381,43 +398,54 @@ class AaMemberDetailPage extends ConsumerWidget {
   Widget _buildMethodCard(
     BuildContext context,
     int count,
-    String label, {
-    required bool accent,
-  }) {
+    String label,
+    _MethodAccent accent,
+  ) {
     final warn = SpitoutTokens.warning(context);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: accent
-            ? warn.withValues(alpha: 0.08)
-            : SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
-        border: Border.all(
-          color: accent
-              ? warn.withValues(alpha: 0.3)
-              : SpitoutTokens.divider(context),
-        ),
+    final (bg, border, number, text) = switch (accent) {
+      _MethodAccent.normal => (
+        SpitoutTokens.surface(context),
+        SpitoutTokens.divider(context),
+        SpitoutTokens.textPrimary(context),
+        SpitoutTokens.textTertiary(context),
       ),
-      child: Row(
+      _MethodAccent.warning => (
+        warn.withValues(alpha: 0.08),
+        warn.withValues(alpha: 0.3),
+        warn,
+        warn,
+      ),
+      _MethodAccent.muted => (
+        SpitoutTokens.surfaceSecondary(context),
+        SpitoutTokens.divider(context),
+        SpitoutTokens.textSecondary(context),
+        SpitoutTokens.textTertiary(context),
+      ),
+    };
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
+        border: Border.all(color: border),
+      ),
+      child: Column(
         children: [
           Text(
             '$count',
             style: TextStyle(
-              fontSize: 28,
+              fontSize: 24,
               fontWeight: FontWeight.w700,
-              color: accent ? warn : SpitoutTokens.textPrimary(context),
+              color: number,
               height: 1,
             ),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                color: accent ? warn : SpitoutTokens.textTertiary(context),
-              ),
-            ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            style: TextStyle(fontSize: 11, color: text),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ],
       ),
@@ -472,7 +500,7 @@ class AaMemberDetailPage extends ConsumerWidget {
   }
 
   /// 单笔账单：分类图标 + 分类名/分摊方式徽标 + 备注 + 时间·付款人 +
-  /// 右侧本人应摊/账单总额，下方展开分摊明细。
+  /// 右侧本人支出/账单总额；AA 账单下方展开分摊明细，不分摊无明细。
   Widget _buildBillRow(
     BuildContext context,
     AppLocalizations l10n,
@@ -555,7 +583,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // 右侧：本人应摊（支出红）+ 账单总额。
+              // 右侧：本人支出（AA 为应摊额，不分摊为全额）+ 账单总额。
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -587,102 +615,112 @@ class AaMemberDetailPage extends ConsumerWidget {
             ],
           ),
         ),
-        // 分摊明细：浅色圆角容器，每行 头像 + 名称（本人带「(我)」）+ 金额。
-        Container(
-          margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(
-            color: SpitoutTokens.surfaceSecondary(context),
-            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                l10n.aaStatisticsSplitDetail,
-                style: TextStyle(
-                  fontSize: 10,
-                  color: SpitoutTokens.textTertiary(context),
-                ),
-              ),
-              const SizedBox(height: 6),
-              for (final s in bill.splits)
-                Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 3),
-                  child: Row(
-                    children: [
-                      AaParticipantAvatar(
-                        ledgerId: args.ledgerId,
-                        participantId: s.participantId,
-                        isSelf: s.isSelf,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text.rich(
-                          TextSpan(
-                            text: s.displayName,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: SpitoutTokens.textSecondary(context),
-                            ),
-                            children: [
-                              if (s.isSelf) meSuffixSpan(context, l10n),
-                            ],
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: FittedBox(
-                          fit: BoxFit.scaleDown,
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            formatMoneyWithCurrency(
-                              s.amount,
-                              currencyCode: txCurrency,
-                            ),
-                            style: TextStyle(
-                              fontSize: 11,
-                              fontWeight: FontWeight.w500,
-                              color: SpitoutTokens.textPrimary(context),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
+        // 分摊明细：仅 AA 账单渲染；不分摊账单无分摊明细。
+        if (bill.splits.isNotEmpty)
+          Container(
+            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: SpitoutTokens.surfaceSecondary(context),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Text(
+                  l10n.aaStatisticsSplitDetail,
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: SpitoutTokens.textTertiary(context),
                   ),
                 ),
-            ],
+                const SizedBox(height: 6),
+                for (final s in bill.splits)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 3),
+                    child: Row(
+                      children: [
+                        AaParticipantAvatar(
+                          ledgerId: args.ledgerId,
+                          participantId: s.participantId,
+                          isSelf: s.isSelf,
+                          size: 20,
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text.rich(
+                            TextSpan(
+                              text: s.displayName,
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: SpitoutTokens.textSecondary(context),
+                              ),
+                              children: [
+                                if (s.isSelf) meSuffixSpan(context, l10n),
+                              ],
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerRight,
+                            child: Text(
+                              formatMoneyWithCurrency(
+                                s.amount,
+                                currencyCode: txCurrency,
+                              ),
+                              style: TextStyle(
+                                fontSize: 11,
+                                fontWeight: FontWeight.w500,
+                                color: SpitoutTokens.textPrimary(context),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+              ],
+            ),
           ),
-        ),
       ],
     );
   }
 
-  /// 分摊方式徽标：AA分摊（主题蓝）/ 指定金额（琥珀），
+  /// 分摊方式徽标：AA分摊（主题蓝）/ 指定金额（琥珀）/ 不分摊（中性灰），
   /// 颜色走项目主题 token，不硬编码设计稿色值。
   Widget _buildSplitBadge(
     BuildContext context,
     AaMode mode,
     AppLocalizations l10n,
   ) {
-    final isPerPerson = mode == AaMode.perPerson;
-    final color = isPerPerson
-        ? Theme.of(context).colorScheme.primary
-        : SpitoutTokens.warning(context);
+    final primary = Theme.of(context).colorScheme.primary;
+    final warn = SpitoutTokens.warning(context);
+    final (color, bg) = switch (mode) {
+      AaMode.perPerson => (primary, primary.withValues(alpha: 0.08)),
+      AaMode.custom => (warn, warn.withValues(alpha: 0.08)),
+      AaMode.noSplit => (
+        SpitoutTokens.textSecondary(context),
+        SpitoutTokens.surfaceSecondary(context),
+      ),
+    };
+    final label = switch (mode) {
+      AaMode.perPerson => l10n.aaStatisticsModePerPerson,
+      AaMode.custom => l10n.aaStatisticsModeCustom,
+      AaMode.noSplit => l10n.aaModeNoSplit,
+    };
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 0.08),
+        color: bg,
         borderRadius: BorderRadius.circular(4),
       ),
       child: Text(
-        isPerPerson
-            ? l10n.aaStatisticsModePerPerson
-            : l10n.aaStatisticsModeCustom,
+        label,
         style: TextStyle(
           fontSize: 9,
           fontWeight: FontWeight.w500,

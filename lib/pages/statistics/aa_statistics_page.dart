@@ -79,6 +79,17 @@ class AaStatisticsPage extends ConsumerWidget {
     final active = statistics.participants
         .where((p) => p.totalPaid > 0 || p.totalShouldPay > 0)
         .toList();
+    // 仅有「不分摊」支出的参与人没有 AA 统计值，但成员账单详情页本质是
+    // 「首页支出列表按成员筛选」，必须能从分摊详情表进入查看自己的全部支出，
+    // 故把这类参与人补充进列表（AA 三列按其真实统计值 0 展示）。
+    final activeIds = active.map((p) => p.participantId).toSet();
+    for (final p in statistics.participants) {
+      if (activeIds.contains(p.participantId)) continue;
+      final hasNoSplitExpense = excluded.any(
+        (it) => it.t.paidByUserId == p.participantId,
+      );
+      if (hasNoSplitExpense) active.add(p);
+    }
 
     // 分摊总额 = 各参与人实付合计(每笔 AA 交易由支出人实付一次,恒等)。
     final totalAmount = active.fold(0.0, (sum, p) => sum + p.totalPaid);

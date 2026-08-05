@@ -3,8 +3,9 @@
 /// 需求锚点（设计稿）：
 /// - 头部：成员名 + 账本名；
 /// - 汇总卡：账单汇总（总笔数 / 总金额 / 平均金额）+ 应收（应付）金额；
-/// - 分摊方式：AA分摊 / 指定金额 笔数双卡；
+/// - 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡；
 /// - 账单列表：分类名、备注、时间·付款人、本人应摊、账单总额、分摊明细；
+///   （不分摊账单无分摊明细区，整笔金额即本人支出）；
 /// - 无账单时展示空态。
 library;
 
@@ -48,7 +49,7 @@ void main() {
         nativeAmount: amountCents,
         version: 1,
         paidByUserId: paidByUserId,
-        aaMode: mode == AaMode.custom ? 2 : 0,
+        aaMode: mode == AaMode.custom ? 2 : (mode == AaMode.noSplit ? 1 : 0),
         aaParticipants: null,
         aaSplits: null,
       ),
@@ -70,6 +71,10 @@ void main() {
   }
 
   Future<void> pumpPage(WidgetTester tester, AaMemberDetailData data) async {
+    // 列表内容较长（3 个日期分组），放大视口避免懒加载导致屏外项未构建。
+    tester.view.physicalSize = const Size(800, 1800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -129,6 +134,15 @@ void main() {
           happenedAt: DateTime(2026, 7, 30, 20, 0),
           note: '指定金额分摊',
         ),
+        makeBill(
+          id: 3,
+          amountCents: 700,
+          myShare: 7,
+          mode: AaMode.noSplit,
+          happenedAt: DateTime(2026, 8, 1, 8, 0),
+          note: '个人物品',
+          splits: const [],
+        ),
       ],
     );
 
@@ -141,16 +155,20 @@ void main() {
     expect(find.text('账单汇总'), findsOneWidget);
     expect(find.text('总笔数'), findsOneWidget);
     expect(find.text('应收金额'), findsOneWidget);
-    // 分摊方式：AA分摊 / 指定金额 各一笔；
+    // 分摊方式：AA分摊 / 指定金额 / 不分摊 各一笔；
     // 文案同时出现在「分摊方式卡」与账单行「分摊方式徽标」上。
     expect(find.text('AA分摊'), findsNWidgets(2));
     expect(find.text('指定金额'), findsNWidgets(2));
-    expect(find.text('1'), findsNWidgets(2));
-    // 账单行：备注、本人应摊、账单总额。
+    expect(find.text('不分摊'), findsNWidgets(2));
+    expect(find.text('1'), findsNWidgets(3));
+    // 账单行：备注、本人应摊、账单总额（不分摊整笔即本人支出）。
     expect(find.text('昱阳米粉 晚餐'), findsOneWidget);
+    expect(find.text('个人物品'), findsOneWidget);
     expect(find.text('- ¥ 56'), findsOneWidget);
     expect(find.text('共 ¥ 168'), findsOneWidget);
-    // 分摊明细区。
+    expect(find.text('- ¥ 7'), findsOneWidget);
+    expect(find.text('共 ¥ 7'), findsOneWidget);
+    // 分摊明细区：仅 AA 账单展示，不分摊账单不渲染。
     expect(find.text('分摊明细'), findsNWidgets(2));
 
     await unmountPage(tester);

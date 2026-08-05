@@ -56,7 +56,7 @@ class AaMemberSplit {
   });
 }
 
-/// 成员账单详情中的单笔 AA 账单（该成员作为支出人）。
+/// 成员账单详情中的单笔支出（该成员作为支出人，含不分摊）。
 class AaMemberBill {
   /// 交易本体（取分类/备注/时间等展示字段）。
   final Transaction tx;
@@ -64,19 +64,20 @@ class AaMemberBill {
   /// 交易分类（用于图标与分类名展示，与首页列表同源）。
   final Category? category;
 
-  /// 分摊方式（人均 / 指定金额），UI 据此渲染方式徽标。
+  /// 分摊方式（人均 / 指定金额 / 不分摊），UI 据此渲染方式徽标。
   final AaMode mode;
 
   /// 账单实付金额（元）。
   final double totalAmount;
 
-  /// 该成员在本笔账单中的应摊金额（元）；指定金额未填本人时兜底 0。
+  /// 该成员在本笔账单中的支出金额（元）。
+  /// 人均/指定金额为应摊值；不分摊或分摊数据异常时整笔归本人。
   final double myShare;
 
   /// 支出人显示名（本页按支出人维度汇总，通常即成员本人）。
   final String payerName;
 
-  /// 分摊明细（参与人 → 应摊金额）。
+  /// 分摊明细（参与人 → 应摊金额）；不分摊账单为空（无分摊明细）。
   final List<AaMemberSplit> splits;
 
   const AaMemberBill({
@@ -90,7 +91,7 @@ class AaMemberBill {
   });
 }
 
-/// 成员账单详情页数据源（按支出人维度汇总）。
+/// 成员账单详情页数据源（该成员全部支出明细，按支出人筛选）。
 class AaMemberDetailData {
   /// 账本名（头部副标题）。
   final String ledgerName;
@@ -98,7 +99,7 @@ class AaMemberDetailData {
   /// 成员汇总（实付/应摊/净额），与分摊详情表口径一致。
   final AaParticipantSummary member;
 
-  /// 该成员作为支出人的 AA 账单列表（按时间倒序）。
+  /// 该成员作为支出人的全部支出列表（含不分摊，按时间倒序）。
   final List<AaMemberBill> bills;
 
   const AaMemberDetailData({
