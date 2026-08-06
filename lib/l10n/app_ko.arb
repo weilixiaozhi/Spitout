@@ -996,14 +996,6 @@
             }
         }
     },
-    "calendarViewAllTransactions": "전체 {count}건 보기",
-    "@calendarViewAllTransactions": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "calendarAddTransaction": "이 날짜에 기록 추가",
     "commonUncategorized": "미분류",
     "syncPreviewTitle": "동기화 미리보기",

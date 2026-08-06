@@ -1012,6 +1012,14 @@
     "calendarTitle": "日历",
     "calendarToday": "回到今天",
     "calendarNoTransactions": "当天无交易",
+    "calendarViewAllTransactions": "查看全部 {count} 笔",
+    "@calendarViewAllTransactions": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "calendarAddTransaction": "在该日记账",
     "commonUncategorized": "未分类",
     "syncPreviewTitle": "同步预览",

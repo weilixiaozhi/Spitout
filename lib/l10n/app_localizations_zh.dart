@@ -2483,7 +2483,7 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String calendarViewAllTransactions(int count) {
-    return 'View all $count transactions';
+    return '查看全部 $count 笔';
   }
 
   @override

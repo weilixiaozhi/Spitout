@@ -1110,14 +1110,6 @@
             }
         }
     },
-    "calendarViewAllTransactions": "View all {count} transactions",
-    "@calendarViewAllTransactions": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "calendarAddTransaction": "Add entry on this day",
     "commonUncategorized": "Uncategorized",
     "syncPreviewTitle": "Sync Preview",
