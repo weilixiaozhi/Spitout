@@ -4858,7 +4858,9 @@ class $LedgerMembersTable extends LedgerMembers
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _accountMeta = const VerificationMeta('account');
+  static const VerificationMeta _accountMeta = const VerificationMeta(
+    'account',
+  );
   @override
   late final GeneratedColumn<String> account = GeneratedColumn<String>(
     'account',
