@@ -8,7 +8,6 @@ import '../../data/repositories/base_repository.dart';
 import '../../cloud/sync/change_tracker.dart';
 import '../../cloud/sync/snapshot_dirty_tracker.dart';
 import '../../core/logging/logger_service.dart';
-import '../../services/data/category_icon_migration_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
 // 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
@@ -288,41 +287,6 @@ final categoriesProvider = FutureProvider<List<Category>>((ref) async {
   final repo = ref.watch(repositoryProvider);
   return await repo.getAllCategories();
 });
-
-/// App 启动时触发一次分类图标迁移（失败仅记日志，不阻塞启动）。
-///
-/// 变更登记与 repositoryProvider 使用同一注入口径：仅 Spitout Cloud 后端
-/// 注入 ChangeTracker，快照型后端 / 未配置后端时跳过登记（与仓库空实现
-/// 语义一致），避免 services 层直连 providers 或直写 local_changes。
-Future<void> migrateCategoryIconsOnLaunch(
-  T Function<T>(ProviderListenable<T> listenable) read,
-) async {
-  try {
-    final db = read(databaseProvider);
-    // 云配置是异步 FutureProvider，冷启动时可能尚未就绪；短等一次，
-    // 确保迁移能拿到 ChangeTracker 登记待推送变更（否则只改本地，
-    // 下一次同步 pull 会把服务端旧图标盖回来）。超时则按当前值保守处理。
-    var config = read(activeCloudConfigProvider).value;
-    if (config == null) {
-      try {
-        config = await read(activeCloudConfigProvider.future)
-            .timeout(const Duration(seconds: 2));
-      } catch (_) {
-        // 配置加载失败/超时：tracker 为 null，仅跳过云端变更登记，不阻断本地迁移。
-      }
-    }
-    final ChangeTracker? tracker =
-        (config != null && config.valid && config.type == CloudBackendType.spitoutCloud)
-            ? ChangeTracker(db)
-            : null;
-    await CategoryIconMigrationService.migrate(
-      db: db,
-      changeRecorder: tracker,
-    );
-  } catch (e, st) {
-    logger.warning('CategoryIconMigration', '启动迁移触发失败(非阻塞)', '$e\n$st');
-  }
-}
 
 // 分类与交易笔数组合Provider（响应式版本）
 // 使用 autoDispose 在页面关闭时自动取消订阅

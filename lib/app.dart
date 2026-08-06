@@ -69,9 +69,6 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
     // 场景，故此处补挂一次；内部按天去重，与 resumed 触发天然幂等。
     Future.microtask(() => autoBackupOnLaunch(ref.read));
 
-    // 存量分类图标迁移：订阅服务 repeat → calendarClock、转账
-    // arrowLeftRight → handCoins。幂等（标记位 + WHERE 守卫），不覆盖手动换过的图标。
-    Future.microtask(() => migrateCategoryIconsOnLaunch(ref.read));
   }
 
   @override
