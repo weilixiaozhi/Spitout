@@ -3430,6 +3430,72 @@ abstract class AppLocalizations {
   /// **'Restoring…'**
   String get localBackupRestoring;
 
+  /// No description provided for @localBackupOldLink.
+  ///
+  /// In en, this message translates to:
+  /// **'Can\'t see older backups?'**
+  String get localBackupOldLink;
+
+  /// No description provided for @localBackupOldDialogTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Find Older Backups'**
+  String get localBackupOldDialogTitle;
+
+  /// No description provided for @localBackupOldReasonTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Why can\'t I see them?'**
+  String get localBackupOldReasonTitle;
+
+  /// No description provided for @localBackupOldReasonBody.
+  ///
+  /// In en, this message translates to:
+  /// **'After an app update or reinstall, Android hides old backups. The files are still in Download/Spitout/backups, but the app can\'t read them yet.'**
+  String get localBackupOldReasonBody;
+
+  /// No description provided for @localBackupOldHowTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'How to find them?'**
+  String get localBackupOldHowTitle;
+
+  /// No description provided for @localBackupOldHowBody.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap \"Grant access\" to open system settings and enable \"All files access\". When you return, this page refreshes automatically and older backups reappear.'**
+  String get localBackupOldHowBody;
+
+  /// No description provided for @localBackupOldSafeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Privacy note'**
+  String get localBackupOldSafeTitle;
+
+  /// No description provided for @localBackupOldSafeBody.
+  ///
+  /// In en, this message translates to:
+  /// **'This permission is only used to read your own backup files, and you can turn it off anytime in system settings. If you\'d rather not, use \"Import from file\" to pick a backup manually.'**
+  String get localBackupOldSafeBody;
+
+  /// No description provided for @localBackupOldGrant.
+  ///
+  /// In en, this message translates to:
+  /// **'Grant access'**
+  String get localBackupOldGrant;
+
+  /// No description provided for @localBackupOldLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get localBackupOldLater;
+
+  /// No description provided for @localBackupOldGrantFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open system settings. Please enable \"All files access\" manually'**
+  String get localBackupOldGrantFailed;
+
   /// No description provided for @cloudCustomSupabaseTitle.
   ///
   /// In en, this message translates to:

@@ -27,12 +27,60 @@ class LocalBackupPage extends ConsumerStatefulWidget {
   ConsumerState<LocalBackupPage> createState() => _LocalBackupPageState();
 }
 
-class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
+class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
+    with WidgetsBindingObserver {
   bool _backingUp = false;
   bool _restoring = false;
 
-  // 列表刷新计数：备份/恢复后 +1 让 FutureBuilder 重新拉取目录
-  int _refreshTick = 0;
+  /// 备份列表 Future：initState 创建，下拉刷新 / resume / 备份成功后重建，
+  /// FutureBuilder 依赖其实例变化触发重读，避免每次 build 都新建 Future。
+  late Future<List<LocalBackupFile>> _backupsFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+    _backupsFuture = _loadBackups();
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // 从系统「所有文件访问」设置页返回后重读目录，让刚授予的权限立即生效，
+    // 旧版本备份重新出现在列表中。
+    if (state == AppLifecycleState.resumed) {
+      _reloadBackups();
+    }
+  }
+
+  Future<List<LocalBackupFile>> _loadBackups() =>
+      ref.read(localBackupServiceProvider).listBackups();
+
+  /// 重建列表 Future 并刷新 UI（内部有 mounted 守卫，可安全在异步回调中调用）。
+  void _reloadBackups() {
+    if (!mounted) return;
+    setState(() {
+      _backupsFuture = _loadBackups();
+    });
+  }
+
+  /// 下拉刷新：等待新 Future 完成，让 RefreshIndicator 的转圈正确收尾。
+  Future<void> _refreshBackups() async {
+    final future = _loadBackups();
+    setState(() {
+      _backupsFuture = future;
+    });
+    try {
+      await future;
+    } catch (e, st) {
+      logger.error('LocalBackup', '下拉刷新备份列表失败', e, st);
+    }
+  }
 
   /// 手动立即备份：不受按天去重限制；成功后写入当天日期，
   /// 避免当天再被自动触发重复备份（今天已有新鲜快照）。
@@ -41,7 +89,8 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
     // Android 11+ 写公共 Download 需「所有文件访问」授权：手动备份是用户主动
     // 动作，适合在此引导一次；未授权也不阻断，服务层会自动降级到应用专属目录。
     // 非 Android 平台无此授权流程，直接放行（保持原语义）。
-    if (Platform.isAndroid && await ensureExportDirAccess(context, ref) == null) {
+    if (Platform.isAndroid &&
+        await ensureExportDirAccess(context, ref) == null) {
       return;
     }
     if (!mounted) return;
@@ -54,11 +103,13 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
           .read(localBackupServiceProvider)
           .createBackup(db: db, localSelfId: localSelfId);
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(LocalBackupService.prefsKeyLastBackupDate,
-          LocalBackupService.todayString());
+      await prefs.setString(
+        LocalBackupService.prefsKeyLastBackupDate,
+        LocalBackupService.todayString(),
+      );
       if (!mounted) return;
       showToast(context, l10n.localBackupSuccess);
-      setState(() => _refreshTick++);
+      _reloadBackups();
     } catch (e, st) {
       logger.error('LocalBackup', '手动备份失败', e, st);
       if (!mounted) return;
@@ -155,6 +206,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
     final l10n = AppLocalizations.of(context);
     final isDark = SpitoutTokens.isDark(context);
     final autoBackup = ref.watch(autoBackupValueProvider);
+    final showOldBackupLink = ref.watch(showOldBackupLinkProvider);
 
     return PopScope(
       // 恢复执行中禁止返回：覆盖数据库文件中途离开会造成用户不可感知的临界状态
@@ -178,138 +230,183 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
                   ],
                 ),
                 Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      const SizedBox(height: 16),
-                      // ===== 自动本地备份开关 =====
-                      // 背景色由 Material 承载：若用带背景色的 Container 包裹
-                      // SwitchListTile，其 ink 波纹会画在 DecoratedBox 之下而被
-                      // 遮挡，触发 Flutter 的 ListTile 背景调试断言。
-                      Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Material(
-                          color: SpitoutTokens.surface(context),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            side: isDark
-                                ? BorderSide(
-                                    color: SpitoutTokens.border(context))
-                                : BorderSide.none,
-                          ),
-                          clipBehavior: Clip.antiAlias,
-                          child: SwitchListTile(
-                          title: Text(
-                            l10n.localBackupAutoTitle,
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w500,
-                              color: SpitoutTokens.textPrimary(context),
+                  // 下拉刷新：内容不足一屏时也允许下拉，保证刷新手势始终可用
+                  child: RefreshIndicator(
+                    onRefresh: _refreshBackups,
+                    child: ListView(
+                      physics: const AlwaysScrollableScrollPhysics(),
+                      padding: EdgeInsets.zero,
+                      children: [
+                        const SizedBox(height: 16),
+                        // ===== 自动本地备份开关 =====
+                        // 背景色由 Material 承载：若用带背景色的 Container 包裹
+                        // SwitchListTile，其 ink 波纹会画在 DecoratedBox 之下而被
+                        // 遮挡，触发 Flutter 的 ListTile 背景调试断言。
+                        Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Material(
+                            color: SpitoutTokens.surface(context),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: isDark
+                                  ? BorderSide(
+                                      color: SpitoutTokens.border(context),
+                                    )
+                                  : BorderSide.none,
+                            ),
+                            clipBehavior: Clip.antiAlias,
+                            child: SwitchListTile(
+                              title: Text(
+                                l10n.localBackupAutoTitle,
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w500,
+                                  color: SpitoutTokens.textPrimary(context),
+                                ),
+                              ),
+                              subtitle: Text(
+                                l10n.localBackupAutoSubtitle,
+                                style: TextStyle(
+                                  fontSize: 10,
+                                  color: SpitoutTokens.textSecondary(context),
+                                ),
+                              ),
+                              // 默认 true（零干预兜底）；加载期间也按 true 展示避免闪烁
+                              value: autoBackup.value ?? true,
+                              onChanged: (v) =>
+                                  ref.read(autoBackupSetterProvider).set(v),
+                              activeThumbColor: Theme.of(context).primaryColor,
                             ),
                           ),
-                          subtitle: Text(
-                            l10n.localBackupAutoSubtitle,
+                        ),
+                        const SizedBox(height: 24),
+                        // ===== 恢复列表 =====
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          child: Text(
+                            l10n.localBackupListHint,
                             style: TextStyle(
-                              fontSize: 10,
+                              fontSize: 14,
                               color: SpitoutTokens.textSecondary(context),
                             ),
                           ),
-                          // 默认 true（零干预兜底）；加载期间也按 true 展示避免闪烁
-                          value: autoBackup.value ?? true,
-                          onChanged: (v) =>
-                              ref.read(autoBackupSetterProvider).set(v),
-                          activeThumbColor: Theme.of(context).primaryColor,
-                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                      // ===== 恢复列表 =====
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 16),
-                        child: Text(
-                          l10n.localBackupListHint,
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      FutureBuilder<List<LocalBackupFile>>(
-                        // _refreshTick 进 key：备份/恢复后强制重建 Future 重读目录
-                        key: ValueKey(_refreshTick),
-                        future: ref
-                            .read(localBackupServiceProvider)
-                            .listBackups(),
-                        builder: (context, snapshot) {
-                          final backups = snapshot.data ?? [];
-                          if (snapshot.connectionState !=
-                              ConnectionState.done) {
-                            return const Padding(
-                              padding: EdgeInsets.all(32),
-                              child: Center(
-                                  child: CircularProgressIndicator()),
-                            );
-                          }
-                          if (backups.isEmpty) {
-                            return Padding(
-                              padding: const EdgeInsets.all(32),
-                              child: Center(
-                                child: Text(
-                                  l10n.localBackupListEmpty,
-                                  style: TextStyle(
-                                    color:
-                                        SpitoutTokens.textTertiary(context),
+                        if (showOldBackupLink)
+                          Align(
+                            alignment: Alignment.centerLeft,
+                            child: Padding(
+                              padding: const EdgeInsets.only(left: 12),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(8),
+                                onTap: _showOldBackupHelpDialog,
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 6,
+                                  ),
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        AppIcons.help,
+                                        size: 14,
+                                        color: SpitoutTokens.textSecondary(
+                                          context,
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                      Text(
+                                        l10n.localBackupOldLink,
+                                        style: TextStyle(
+                                          fontSize: 13,
+                                          color: SpitoutTokens.textSecondary(
+                                            context,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
                               ),
-                            );
-                          }
-                          return Column(
-                            children: [
-                              for (final backup in backups)
-                                _buildBackupTile(context, backup, isDark),
-                            ],
-                          );
-                        },
-                      ),
-                      const SizedBox(height: 16),
-                      // 导入文件恢复入口：卸载重装后历史备份可能不在恢复列表中，
-                      // 此处常驻一个手动指定文件的兜底通道，避免"备份还在却恢复不了"。
-                      // 放在列表底部居中，避免与标题区视觉冲突，且空列表时同样可见。
-                      Center(
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: (_backingUp || _restoring)
-                              ? null
-                              : _importAndRestore,
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 12, vertical: 8),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  AppIcons.fileUpload,
-                                  size: 16,
-                                  color: Theme.of(context).primaryColor,
+                            ),
+                          ),
+                        const SizedBox(height: 8),
+                        FutureBuilder<List<LocalBackupFile>>(
+                          future: _backupsFuture,
+                          builder: (context, snapshot) {
+                            final backups = snapshot.data ?? [];
+                            if (snapshot.connectionState !=
+                                ConnectionState.done) {
+                              return const Padding(
+                                padding: EdgeInsets.all(32),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
                                 ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  l10n.localBackupImportFromFile,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.w500,
-                                    color: Theme.of(context).primaryColor,
+                              );
+                            }
+                            if (backups.isEmpty) {
+                              return Padding(
+                                padding: const EdgeInsets.all(32),
+                                child: Center(
+                                  child: Text(
+                                    l10n.localBackupListEmpty,
+                                    style: TextStyle(
+                                      color: SpitoutTokens.textTertiary(
+                                        context,
+                                      ),
+                                    ),
                                   ),
                                 ),
+                              );
+                            }
+                            return Column(
+                              children: [
+                                for (final backup in backups)
+                                  _buildBackupTile(context, backup, isDark),
                               ],
+                            );
+                          },
+                        ),
+                        const SizedBox(height: 16),
+                        // 导入文件恢复入口：卸载重装后历史备份可能不在恢复列表中，
+                        // 此处常驻一个手动指定文件的兜底通道，避免"备份还在却恢复不了"。
+                        // 放在列表底部居中，避免与标题区视觉冲突，且空列表时同样可见。
+                        Center(
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: (_backingUp || _restoring)
+                                ? null
+                                : _importAndRestore,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 12,
+                                vertical: 8,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    AppIcons.fileUpload,
+                                    size: 16,
+                                    color: Theme.of(context).primaryColor,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    l10n.localBackupImportFromFile,
+                                    style: TextStyle(
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.w500,
+                                      color: Theme.of(context).primaryColor,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
               ],
@@ -346,9 +443,151 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage> {
     );
   }
 
+  /// 找回旧版本备份引导弹窗：解释 Android 隐藏旧备份的原因，
+  /// 并提供「去开启」拉起系统「所有文件访问」授权；返回后由 resume 自动刷新。
+  Future<void> _showOldBackupHelpDialog() async {
+    final l10n = AppLocalizations.of(context);
+    final grant = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: SpitoutTokens.surfaceElevated(dialogContext),
+        title: Row(
+          children: [
+            Icon(
+              AppIcons.info,
+              color: Theme.of(dialogContext).colorScheme.primary,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                l10n.localBackupOldDialogTitle,
+                style: TextStyle(
+                  color: SpitoutTokens.textPrimary(dialogContext),
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        content: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _buildOldBackupGuideSection(
+                dialogContext,
+                icon: AppIcons.warning,
+                iconColor: SpitoutTokens.warning(dialogContext),
+                title: l10n.localBackupOldReasonTitle,
+                body: l10n.localBackupOldReasonBody,
+              ),
+              const SizedBox(height: 16),
+              _buildOldBackupGuideSection(
+                dialogContext,
+                icon: AppIcons.settings,
+                iconColor: Theme.of(dialogContext).colorScheme.primary,
+                title: l10n.localBackupOldHowTitle,
+                body: l10n.localBackupOldHowBody,
+              ),
+              const SizedBox(height: 16),
+              _buildOldBackupGuideSection(
+                dialogContext,
+                icon: AppIcons.verifiedUser,
+                iconColor: Colors.green,
+                title: l10n.localBackupOldSafeTitle,
+                body: l10n.localBackupOldSafeBody,
+              ),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, false),
+            child: Text(
+              l10n.localBackupOldLater,
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.primary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(dialogContext, true),
+            child: Text(
+              l10n.localBackupOldGrant,
+              style: TextStyle(
+                color: Theme.of(dialogContext).colorScheme.primary,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+
+    if (grant != true || !mounted) return;
+    try {
+      await ref.read(requestAllFilesAccessProvider)();
+    } catch (e, st) {
+      logger.error('LocalBackup', '拉起「所有文件访问」授权失败', e, st);
+      if (!mounted) return;
+      showToast(context, l10n.localBackupOldGrantFailed);
+    }
+    // 授权页返回时生命周期回调可能先于 await 完成，这里再兜底刷新一次，
+    // 保证列表与权限状态同步。
+    _reloadBackups();
+  }
+
+  /// 找回旧备份弹窗内的单块说明：图标 + 小标题 + 正文。
+  Widget _buildOldBackupGuideSection(
+    BuildContext context, {
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String body,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Icon(icon, size: 18, color: iconColor),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                title,
+                style: TextStyle(
+                  color: SpitoutTokens.textPrimary(context),
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 24),
+          child: Text(
+            body,
+            style: TextStyle(
+              color: SpitoutTokens.textSecondary(context),
+              fontSize: 13,
+              height: 1.5,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   /// 单个备份快照列表项：文件名（主）+ 大小（副），点击进入恢复确认
   Widget _buildBackupTile(
-      BuildContext context, LocalBackupFile backup, bool isDark) {
+    BuildContext context,
+    LocalBackupFile backup,
+    bool isDark,
+  ) {
     // 背景色交给 Material 承载（原因同自动备份开关卡片），
     // 外层仅留 margin，确保 ListTile 的最近 Material 祖先先于任何带背景的 DecoratedBox。
     return Container(

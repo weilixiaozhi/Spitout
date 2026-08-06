@@ -1824,6 +1824,43 @@ class AppLocalizationsKo extends AppLocalizations {
   String get localBackupRestoring => '복원 중…';
 
   @override
+  String get localBackupOldLink => '이전 버전 백업이 안 보이나요?';
+
+  @override
+  String get localBackupOldDialogTitle => '이전 버전 백업 찾기';
+
+  @override
+  String get localBackupOldReasonTitle => '왜 안 보이나요?';
+
+  @override
+  String get localBackupOldReasonBody =>
+      '앱을 업데이트하거나 다시 설치하면 Android 시스템이 이전 백업을 숨깁니다. 파일은 여전히 Download/Spitout/backups 폴더에 있지만 앱에서 아직 읽을 수 없습니다.';
+
+  @override
+  String get localBackupOldHowTitle => '어떻게 찾나요?';
+
+  @override
+  String get localBackupOldHowBody =>
+      '「권한 부여」를 눌러 시스템 설정에서 「모든 파일 액세스」를 켜세요. 돌아오면 이 페이지가 자동으로 새로고침되어 이전 백업이 다시 표시됩니다.';
+
+  @override
+  String get localBackupOldSafeTitle => '보안 안내';
+
+  @override
+  String get localBackupOldSafeBody =>
+      '이 권한은 사용자 본인의 백업 파일을 읽는 데에만 사용되며, 언제든 시스템 설정에서 끌 수 있습니다. 권한을 켜지 않으려면 「파일에서 복원」으로 직접 파일을 선택하세요.';
+
+  @override
+  String get localBackupOldGrant => '권한 부여';
+
+  @override
+  String get localBackupOldLater => '나중에';
+
+  @override
+  String get localBackupOldGrantFailed =>
+      '시스템 설정을 열 수 없습니다. 「모든 파일 액세스」를 직접 켜주세요';
+
+  @override
   String get cloudCustomSupabaseTitle => '사용자 지정 Supabase';
 
   @override

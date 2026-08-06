@@ -1809,6 +1809,42 @@ class AppLocalizationsZh extends AppLocalizations {
   String get localBackupRestoring => '正在恢复…';
 
   @override
+  String get localBackupOldLink => '看不到旧版本备份？';
+
+  @override
+  String get localBackupOldDialogTitle => '找回旧版本备份';
+
+  @override
+  String get localBackupOldReasonTitle => '为什么看不到？';
+
+  @override
+  String get localBackupOldReasonBody =>
+      'App 升级或重装后，Android 系统会把旧备份隐藏起来。文件其实还在 Download/Spitout/backups 目录里，只是暂时读不到。';
+
+  @override
+  String get localBackupOldHowTitle => '怎么找回？';
+
+  @override
+  String get localBackupOldHowBody =>
+      '点击「去开启」，跳到系统设置打开「所有文件访问」，返回后本页会自动刷新，旧备份会重新出现。';
+
+  @override
+  String get localBackupOldSafeTitle => '安全说明';
+
+  @override
+  String get localBackupOldSafeBody =>
+      '该权限只用于读取你自己的备份文件，可随时在系统设置中关闭；不想开启时，也可以使用「导入文件恢复」手动选择文件。';
+
+  @override
+  String get localBackupOldGrant => '去开启';
+
+  @override
+  String get localBackupOldLater => '暂不';
+
+  @override
+  String get localBackupOldGrantFailed => '无法打开系统设置，请手动开启「所有文件访问」';
+
+  @override
   String get cloudCustomSupabaseTitle => '自定义 Supabase';
 
   @override
@@ -5651,6 +5687,42 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get localBackupRestoring => '正在恢復…';
+
+  @override
+  String get localBackupOldLink => '看不到舊版本備份？';
+
+  @override
+  String get localBackupOldDialogTitle => '找回舊版本備份';
+
+  @override
+  String get localBackupOldReasonTitle => '為什麼看不到？';
+
+  @override
+  String get localBackupOldReasonBody =>
+      'App 升級或重裝後，Android 系統會把舊備份隱藏起來。檔案其實還在 Download/Spitout/backups 目錄裡，只是暫時讀不到。';
+
+  @override
+  String get localBackupOldHowTitle => '怎麼找回？';
+
+  @override
+  String get localBackupOldHowBody =>
+      '點擊「去開啟」，跳到系統設定開啟「所有檔案存取」，返回後本頁會自動重新整理，舊備份會重新出現。';
+
+  @override
+  String get localBackupOldSafeTitle => '安全說明';
+
+  @override
+  String get localBackupOldSafeBody =>
+      '該權限只用於讀取你自己的備份檔案，可隨時在系統設定中關閉；不想開啟時，也可以使用「匯入檔案恢復」手動選擇檔案。';
+
+  @override
+  String get localBackupOldGrant => '去開啟';
+
+  @override
+  String get localBackupOldLater => '暫不';
+
+  @override
+  String get localBackupOldGrantFailed => '無法開啟系統設定，請手動開啟「所有檔案存取」';
 
   @override
   String get cloudCustomSupabaseTitle => '自訂 Supabase';

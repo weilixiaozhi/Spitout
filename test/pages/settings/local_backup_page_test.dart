@@ -19,7 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/settings/local_backup_page.dart';
-import 'package:spitout/providers/sync/sync_providers.dart';
+import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/backup/local_backup_service.dart';
 import '../../helpers/test_isolation.dart';
 
@@ -35,14 +35,19 @@ import '../../helpers/test_isolation.dart';
 class StubLocalBackupService extends LocalBackupService {
   final List<LocalBackupFile> _stubList;
 
+  /// listBackups 被调用次数：用于断言下拉刷新 / resume 触发了重读。
+  int listBackupsCalls = 0;
+
   /// [backups] 控制 listBackups 返回的桩数据，默认空列表（空态）。
   StubLocalBackupService({List<LocalBackupFile>? backups})
-      : _stubList = backups ?? [],
-        super();
+    : _stubList = backups ?? [],
+      super();
 
   @override
-  Future<List<LocalBackupFile>> listBackups() async =>
-      List.unmodifiable(_stubList);
+  Future<List<LocalBackupFile>> listBackups() async {
+    listBackupsCalls++;
+    return List.unmodifiable(_stubList);
+  }
 
   @override
   Future<File> createBackup({
@@ -64,7 +69,9 @@ class StubLocalBackupService extends LocalBackupService {
 
   @override
   Future<RestoreStatus?> validateBackup(
-      File backupFile, int currentSchemaVersion) async {
+    File backupFile,
+    int currentSchemaVersion,
+  ) async {
     // 桩：校验总是通过，不打开 sqlite 连接
     return null;
   }
@@ -103,12 +110,21 @@ LocalBackupFile stubBackupFile(
 ///
 /// 桩不碰磁盘，FutureBuilder 的 future 在 fake async zone 中立即完成，
 /// pumpAndSettle 可正常收敛，不再需要 runAsync 绕行。
-Future<void> _pumpPage(WidgetTester tester,
-    {required LocalBackupService service}) async {
+Future<void> _pumpPage(
+  WidgetTester tester, {
+  required LocalBackupService service,
+  bool showOldBackupLink = true,
+  Future<void> Function()? requestAllFilesAccess,
+}) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         localBackupServiceProvider.overrideWithValue(service),
+        showOldBackupLinkProvider.overrideWithValue(showOldBackupLink),
+        if (requestAllFilesAccess != null)
+          requestAllFilesAccessProvider.overrideWithValue(
+            requestAllFilesAccess,
+          ),
       ],
       child: MaterialApp(
         // 强制 zh 渲染中文文案（测试环境默认 en）
@@ -130,8 +146,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => resetGlobalTestState());
 
-  testWidgets('页面渲染：标题 / 开关默认开 / 引导文案 / 空态 / 立即备份按钮',
-      (tester) async {
+  testWidgets('页面渲染：标题 / 开关默认开 / 引导文案 / 空态 / 立即备份按钮', (tester) async {
     await _pumpPage(tester, service: StubLocalBackupService());
 
     expect(find.text('本地存储'), findsOneWidget);
@@ -159,13 +174,14 @@ void main() {
     expect(sw.value, isFalse);
   });
 
-  testWidgets('备份列表渲染文件名与大小，点击弹出恢复二次确认，取消不动数据',
-      (tester) async {
+  testWidgets('备份列表渲染文件名与大小，点击弹出恢复二次确认，取消不动数据', (tester) async {
     // 桩注入两个假备份（文件名大小与真实格式一致，不碰磁盘）
-    final service = StubLocalBackupService(backups: [
-      stubBackupFile('spitout_backup_20260701_090000.sqlite'),
-      stubBackupFile('spitout_backup_20260702_090000.sqlite'),
-    ]);
+    final service = StubLocalBackupService(
+      backups: [
+        stubBackupFile('spitout_backup_20260701_090000.sqlite'),
+        stubBackupFile('spitout_backup_20260702_090000.sqlite'),
+      ],
+    );
 
     await _pumpPage(tester, service: service);
 
@@ -187,5 +203,90 @@ void main() {
     expect(find.text('恢复备份'), findsNothing);
     // 列表仍在、当前页未退出
     expect(find.text('spitout_backup_20260702_090000.sqlite'), findsOneWidget);
+  });
+
+  testWidgets('找回旧备份入口：点击弹出说明弹窗，「去开启」拉起系统权限并关闭弹窗', (tester) async {
+    var grantCalls = 0;
+    await _pumpPage(
+      tester,
+      service: StubLocalBackupService(),
+      requestAllFilesAccess: () async => grantCalls++,
+    );
+
+    // 入口文字链常驻渲染
+    expect(find.text('看不到旧版本备份？'), findsOneWidget);
+
+    await tester.tap(find.text('看不到旧版本备份？'));
+    await tester.pumpAndSettle();
+
+    // 说明弹窗：标题 + 原因/方法/安全三块 + 两个操作按钮
+    expect(find.text('找回旧版本备份'), findsOneWidget);
+    expect(find.text('为什么看不到？'), findsOneWidget);
+    expect(find.text('怎么找回？'), findsOneWidget);
+    expect(find.text('安全说明'), findsOneWidget);
+    expect(find.text('去开启'), findsOneWidget);
+    expect(find.text('暂不'), findsOneWidget);
+
+    // 主按钮拉起系统授权动作（页面不直接触碰 permission_handler）
+    await tester.tap(find.text('去开启'));
+    await tester.pumpAndSettle();
+
+    expect(grantCalls, 1);
+    expect(find.text('找回旧版本备份'), findsNothing);
+  });
+
+  testWidgets('找回旧备份弹窗：点「暂不」关闭弹窗且不拉起权限', (tester) async {
+    var grantCalls = 0;
+    await _pumpPage(
+      tester,
+      service: StubLocalBackupService(),
+      requestAllFilesAccess: () async => grantCalls++,
+    );
+
+    await tester.tap(find.text('看不到旧版本备份？'));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('暂不'));
+    await tester.pumpAndSettle();
+
+    expect(grantCalls, 0);
+    expect(find.text('找回旧版本备份'), findsNothing);
+  });
+
+  testWidgets('非 Android 平台不展示找回旧备份入口', (tester) async {
+    await _pumpPage(
+      tester,
+      service: StubLocalBackupService(),
+      showOldBackupLink: false,
+    );
+
+    expect(find.text('看不到旧版本备份？'), findsNothing);
+  });
+
+  testWidgets('下拉刷新重新拉取备份列表', (tester) async {
+    final service = StubLocalBackupService();
+    await _pumpPage(tester, service: service);
+
+    // 首次进入页面拉取一次
+    expect(service.listBackupsCalls, 1);
+
+    await tester.fling(find.byType(ListView), const Offset(0, 300), 1000);
+    await tester.pumpAndSettle();
+
+    expect(service.listBackupsCalls, 2);
+  });
+
+  testWidgets('从系统设置返回（resume）自动刷新备份列表', (tester) async {
+    final service = StubLocalBackupService();
+    await _pumpPage(tester, service: service);
+
+    expect(service.listBackupsCalls, 1);
+
+    // 模拟跳系统设置授权后回到应用：paused -> resumed
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.paused);
+    await tester.pump();
+    tester.binding.handleAppLifecycleStateChanged(AppLifecycleState.resumed);
+    await tester.pumpAndSettle();
+
+    expect(service.listBackupsCalls, 2);
   });
 }

@@ -1884,6 +1884,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get localBackupRestoring => 'Restoring…';
 
   @override
+  String get localBackupOldLink => 'Can\'t see older backups?';
+
+  @override
+  String get localBackupOldDialogTitle => 'Find Older Backups';
+
+  @override
+  String get localBackupOldReasonTitle => 'Why can\'t I see them?';
+
+  @override
+  String get localBackupOldReasonBody =>
+      'After an app update or reinstall, Android hides old backups. The files are still in Download/Spitout/backups, but the app can\'t read them yet.';
+
+  @override
+  String get localBackupOldHowTitle => 'How to find them?';
+
+  @override
+  String get localBackupOldHowBody =>
+      'Tap \"Grant access\" to open system settings and enable \"All files access\". When you return, this page refreshes automatically and older backups reappear.';
+
+  @override
+  String get localBackupOldSafeTitle => 'Privacy note';
+
+  @override
+  String get localBackupOldSafeBody =>
+      'This permission is only used to read your own backup files, and you can turn it off anytime in system settings. If you\'d rather not, use \"Import from file\" to pick a backup manually.';
+
+  @override
+  String get localBackupOldGrant => 'Grant access';
+
+  @override
+  String get localBackupOldLater => 'Not now';
+
+  @override
+  String get localBackupOldGrantFailed =>
+      'Couldn\'t open system settings. Please enable \"All files access\" manually';
+
+  @override
   String get cloudCustomSupabaseTitle => 'Custom Supabase';
 
   @override
