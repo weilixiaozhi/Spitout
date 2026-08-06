@@ -71,7 +71,7 @@ class NotificationReceiver : BroadcastReceiver() {
                 val channel = NotificationChannel(
                     channelId,
                     "记账提醒",
-                    NotificationManager.IMPORTANCE_MAX // 使用最高重要性来显示横幅
+                    NotificationManager.IMPORTANCE_HIGH // 使用最高允许的重要性来显示横幅
                 ).apply {
                     description = "每日记账提醒"
                     enableVibration(true)
