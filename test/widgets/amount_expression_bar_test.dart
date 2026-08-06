@@ -75,4 +75,13 @@ void main() {
       reason: '删除键高度应为 35',
     );
   });
+
+  testWidgets('币种触发器走全局展示格式：ISO + (符号)，如 CNY (¥)', (tester) async {
+    await tester.pumpWidget(buildHarness());
+
+    // 与 currency_flag.dart 的 currencyFlagLabel 全局口径一致：
+    // 「ISO + 空格 + 半角括号包裹的币种符号」，避免各页面币种写法不统一。
+    expect(find.text('CNY (¥)'), findsOneWidget,
+        reason: '币种触发器应展示全局统一的「ISO + (符号)」格式');
+  });
 }

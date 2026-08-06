@@ -5,11 +5,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import 'currency_flag.dart';
 import 'keypad_constants.dart';
 
 /// 金额栏行：[币种触发器] [金额 / 算式 / 预览结果] [删除键]。
 ///
-/// - 币种触发器：仅展示币种名称，不显示币种符号与 ISO 代码及下拉箭头。
+/// - 币种触发器：全局统一展示「ISO + (符号)」（如 CNY (¥)），与账本卡片、
+///   记账详情等所有币种展示点共用 currencyFlagLabel 口径。
 /// - 金额区：横向滚动 + 自动显示末尾输入（whitespace-nowrap + scroll-smooth）。
 ///   - waiting/calculated：仅显示最终结果；空值显示 `0`。
 ///   - operating：表达式 + 灰色预览结果（`算式 = 预览`）。
@@ -126,11 +128,11 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     return r.isEmpty ? '0' : r;
   }
 
-  /// 币种触发器：仅展示币种 ISO 代码（如 CNY / USD），不显示符号与名称。
+  /// 币种触发器：展示全局统一的「ISO + (符号)」（如 CNY (¥)）。
   ///
-  /// 设计意图：ISO 代码定长 3 字符，在与数字键 1 列等宽的窄框内不会挤压；
-  /// 且与首页卡片账本徽章的币种展示口径一致，避免同一币种在不同页面
-  /// 出现「人民币 / ¥ / CNY」三种写法。
+  /// 设计意图：与首页卡片账本徽章、记账详情等所有币种展示点共用
+  /// currencyFlagLabel 全局口径，避免同一币种在不同页面出现
+  /// 「人民币 / ¥ / CNY」三种写法；窄框内由 FittedBox 等比缩小兜底。
   Widget _buildCurrencyChip(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return InkWell(
@@ -144,14 +146,14 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
           color: SpitoutTokens.surfaceKeySecondary(context),
           borderRadius: BorderRadius.circular(12),
         ),
-        // 长尾币种可能超过 3 字符：FittedBox 等比缩小兜底，保证不溢出
+        // 符号与 ISO 拼装后宽度可能超过 1 列：FittedBox 等比缩小兜底，保证不溢出
         child: Center(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(
-              widget.txCurrency.toUpperCase(),
-              maxLines: 1,
-              style: text.bodyMedium?.copyWith(
+            child: currencyFlagLabel(
+              context,
+              widget.txCurrency,
+              textStyle: text.bodyMedium?.copyWith(
                 color: SpitoutTokens.textPrimary(context),
                 fontWeight: FontWeight.w600,
               ),
