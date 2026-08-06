@@ -1438,7 +1438,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get authRememberAccountHint =>
-      'Auto-fill on next login (Supabase only)';
+      'Auto-fill on next login';
 
   @override
   String get cloudFirstSaveSwitchTitle => 'Configuration Saved';
@@ -1474,16 +1474,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authLogin => 'Login';
 
   @override
-  String get authEmail => 'Email';
+  String get authEmail => 'Account';
 
   @override
   String get authPassword => 'Password';
 
   @override
-  String get authInvalidEmail => 'Please enter a valid email address';
+  String get authInvalidEmail => 'Please enter your account';
 
   @override
-  String get authErrorInvalidCredentials => 'Email or password is incorrect.';
+  String get authErrorInvalidCredentials => 'Account or password is incorrect.';
 
   @override
   String get authErrorEmailNotConfirmed =>
@@ -1918,10 +1918,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => 'Email';
+  String get cloudSpitoutCloudEmailLabel => 'Account';
 
   @override
-  String get cloudSpitoutCloudEmailHint => 'your@email.com';
+  String get cloudSpitoutCloudEmailHint => 'Account or email';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => 'Password';

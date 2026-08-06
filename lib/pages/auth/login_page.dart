@@ -19,7 +19,7 @@ class AuthPage extends ConsumerStatefulWidget {
 }
 
 class _AuthPageState extends ConsumerState<AuthPage> {
-  final emailCtrl = TextEditingController();
+  final accountCtrl = TextEditingController();
   final pwdCtrl = TextEditingController();
   String? errorText;
   bool busy = false;
@@ -35,27 +35,27 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     });
   }
 
-  /// 加载「记住账号」时持久化的邮箱，回填到登录表单。
+  /// 加载「记住账号」时持久化的账号，回填到登录表单。
   ///
-  /// 设计意图：密码只作为一次性输入、从不落盘，因此这里只恢复邮箱；
-  /// 勾选状态由邮箱是否存在推导，避免本地残留明文密码。
+  /// 设计意图：密码只作为一次性输入、从不落盘，因此这里只恢复账号；
+  /// 勾选状态由账号是否存在推导，避免本地残留明文密码。
   Future<void> _loadSavedCredentials() async {
     try {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);
-      String? savedEmail;
+      String? savedAccount;
       if (cloudConfig.type == CloudBackendType.supabase) {
-        savedEmail = cloudConfig.supabaseEmail;
+        savedAccount = cloudConfig.supabaseEmail;
       } else if (cloudConfig.type == CloudBackendType.spitoutCloud) {
-        // Spitout Cloud 与 Supabase 一致：仅持久化邮箱，密码不落盘。
-        savedEmail = cloudConfig.spitoutCloudEmail;
+        // Spitout Cloud 与 Supabase 一致：仅持久化账号，密码不落盘。
+        savedAccount = cloudConfig.spitoutCloudEmail;
       } else {
         return;
       }
 
-      if (savedEmail != null && savedEmail.isNotEmpty && mounted) {
+      if (savedAccount != null && savedAccount.isNotEmpty && mounted) {
         setState(() {
-          emailCtrl.text = savedEmail!;
-          // 有邮箱即视为之前勾选过「记住账号」。
+          accountCtrl.text = savedAccount!;
+          // 有账号即视为之前勾选过「记住账号」。
           _rememberAccount = true;
         });
       }
@@ -64,12 +64,12 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-  /// 保存「记住账号」配置：仅持久化邮箱，密码作为一次性输入不写入存储。
+  /// 保存「记住账号」配置：仅持久化账号，密码作为一次性输入不写入存储。
   ///
   /// 设计意图：SharedPreferences 在 Android 侧是明文 XML，保存密码会随
   /// 系统备份 / root 读取泄露；Spitout Cloud 已有 session token 持久化，
   /// Supabase 同样由 SDK 持久化会话，密码不再需要兜底自动登录。
-  Future<void> _saveCredentials(String email, String password) async {
+  Future<void> _saveCredentials(String account, String password) async {
     try {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);
       final store = ref.read(cloudServiceStoreProvider);
@@ -81,7 +81,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           supabaseUrl: cloudConfig.supabaseUrl,
           supabaseAnonKey: cloudConfig.supabaseAnonKey,
           supabaseBucket: cloudConfig.supabaseBucket ?? 'spitout-backups',
-          supabaseEmail: _rememberAccount ? email : null,
+          supabaseEmail: _rememberAccount ? account : null,
           supabasePassword: null,
         );
         await store.saveOnly(updatedConfig);
@@ -89,7 +89,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         ref.invalidate(activeCloudConfigProvider);
         logger.info(
           'auth',
-          'Supabase 记住账号状态：${_rememberAccount ? "已保存邮箱" : "已清除"}',
+          'Supabase 记住账号状态：${_rememberAccount ? "已保存账号" : "已清除"}',
         );
         return;
       }
@@ -100,7 +100,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           name: cloudConfig.name,
           spitoutCloudBaseUrl: cloudConfig.spitoutCloudBaseUrl,
           spitoutCloudApiPrefix: cloudConfig.spitoutCloudApiPrefix,
-          spitoutCloudEmail: _rememberAccount ? email : null,
+          spitoutCloudEmail: _rememberAccount ? account : null,
           spitoutCloudPassword: null,
         );
         await store.saveOnly(updatedConfig);
@@ -108,7 +108,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
         ref.invalidate(activeCloudConfigProvider);
         logger.info(
           'auth',
-          'Spitout Cloud 记住账号状态：${_rememberAccount ? "已保存邮箱" : "已清除"}',
+          'Spitout Cloud 记住账号状态：${_rememberAccount ? "已保存账号" : "已清除"}',
         );
       }
     } catch (e, st) {
@@ -116,24 +116,26 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-  /// 日志脱敏：仅保留邮箱前缀与域名，避免完整邮箱落入日志。
-  String _maskEmail(String email) {
-    final at = email.indexOf('@');
-    if (at <= 1) return '***';
-    return '${email.substring(0, 2)}***${email.substring(at)}';
+  /// 日志脱敏：避免完整账号落入日志；邮箱仍保留前缀与域名便于排查。
+  String _maskAccount(String account) {
+    final t = account.trim();
+    if (t.length <= 2) return '***';
+    final at = t.indexOf('@');
+    if (at > 0) {
+      return '${t.substring(0, 2)}***${t.substring(at)}';
+    }
+    return '${t.substring(0, 2)}***';
   }
 
   @override
   void dispose() {
-    emailCtrl.dispose();
+    accountCtrl.dispose();
     pwdCtrl.dispose();
     super.dispose();
   }
 
-  bool isValidEmail(String s) {
-    final t = s.trim();
-    final emailRe = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-    return emailRe.hasMatch(t);
+  bool isValidAccount(String s) {
+    return s.trim().isNotEmpty;
   }
 
   /// 登录失败文案：委托给共享 helper（[auth_error_localizer.friendlyAuthError]）。
@@ -262,8 +264,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
                         TextField(
-                          controller: emailCtrl,
-                          keyboardType: TextInputType.emailAddress,
+                          controller: accountCtrl,
+                          keyboardType: TextInputType.text,
                           decoration: InputDecoration(
                             labelText: AppLocalizations.of(context).authEmail,
                           ),
@@ -359,13 +361,13 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             onPressed: busy
                                 ? null
                                 : () async {
-                                    final email = emailCtrl.text.trim();
+                                    final account = accountCtrl.text.trim();
                                     final pwd = pwdCtrl.text;
                                     logger.info(
                                       'auth',
-                                      '开始登录：邮箱=${_maskEmail(email)}',
+                                      '开始登录：账号=${_maskAccount(account)}',
                                     );
-                                    if (!isValidEmail(email)) {
+                                    if (!isValidAccount(account)) {
                                       setState(
                                         () => errorText = AppLocalizations.of(
                                           context,
@@ -385,17 +387,17 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                         authServiceProvider.future,
                                       );
                                       await auth.signInWithEmail(
-                                        email: email,
+                                        email: account,
                                         password: pwd,
                                       );
                                       if (!context.mounted) return;
                                       logger.info(
                                         'auth',
-                                        '登录成功：邮箱=${_maskEmail(email)}',
+                                        '登录成功：账号=${_maskAccount(account)}',
                                       );
 
                                       // Save credentials if "remember account" is checked
-                                      await _saveCredentials(email, pwd);
+                                      await _saveCredentials(account, pwd);
 
                                       // 再次检查 mounted（_saveCredentials 产生了新的 async gap）
                                       if (!context.mounted) return;
@@ -437,7 +439,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                       final msg = friendlyAuthError(e);
                                       logger.error(
                                         'auth',
-                                        '登录失败：邮箱=${_maskEmail(email)}，用户友好信息=$msg',
+                                        '登录失败：账号=${_maskAccount(account)}，用户友好信息=$msg',
                                         e,
                                         st,
                                       );

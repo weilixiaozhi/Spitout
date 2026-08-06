@@ -49,7 +49,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
       child: SpitoutCloudConfigDialog(
         initialUrl: existing?.spitoutCloudBaseUrl ?? '',
         initialApiPrefix: existing?.spitoutCloudApiPrefix ?? '/api/v1',
-        initialEmail: existing?.spitoutCloudEmail ?? '',
+        initialAccount: existing?.spitoutCloudEmail ?? '',
         // 密码不持久化(见 CloudServiceStore):即使旧版本残留过密码也不回填,
         // 避免把已失效的明文凭据再次展示/复用。
         initialPassword: '',
@@ -66,7 +66,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
     if (result != null) {
       final url = result['url'] as String;
       final apiPrefix = result['apiPrefix'] as String;
-      final email = result['email'] as String;
+      final account = result['account'] as String;
       final password = result['password'] as String;
 
       // 必填校验(url)已下放到弹窗内联提示(不切换弹窗、保留已填内容),此处直接组装配置。
@@ -75,7 +75,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
         name: l10n.cloudSpitoutCloudTitle,
         spitoutCloudBaseUrl: url,
         spitoutCloudApiPrefix: apiPrefix.isEmpty ? '/api/v1' : apiPrefix,
-        spitoutCloudEmail: email.isNotEmpty ? email : null,
+        spitoutCloudEmail: account.isNotEmpty ? account : null,
       );
 
       try {
@@ -91,7 +91,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
         if (wantSwitch && mounted) {
           // 登录在用户确认激活后统一执行，不手动 invalidate 任何云端 provider，
           // 全部交给 activateService 经级联统一重建。
-          if (email.isNotEmpty && password.isNotEmpty) {
+          if (account.isNotEmpty && password.isNotEmpty) {
             try {
               // 走可覆盖的工厂 provider：运行时为真实 createCloudServices；
               // Widget 测试经 overrideWith 注入桩，无需触网即可验证登录分支。
@@ -100,7 +100,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
               );
               if (services.auth != null) {
                 await services.auth!.signInWithEmail(
-                  email: email,
+                  email: account,
                   password: password,
                 );
                 // 标记自动同步开启并刷新开关状态；不 invalidate 任何云端 provider，
@@ -121,7 +121,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
               // 若登录失败，会走下方 catch 的 return，不会到达此处，从而避免
               // 「登录失败却仍激活服务」的半成品脏状态。
             } on CloudAuthException catch (e) {
-              // 账号鉴权失败（邮箱/密码错、账号被锁等）：纯账号问题，用友好文案
+              // 账号鉴权失败（账号/密码错、账号被锁等）：纯账号问题，用友好文案
               // 弹窗告知；不激活服务、也不弹网络 toast（本就非网络问题）。
               if (mounted) {
                 await AppDialog.error(

@@ -192,13 +192,13 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
     if (services.provider is! SpitoutCloudSyncBackend) return null;
     final provider = services.provider as SpitoutCloudSyncBackend;
 
-    final email = config.spitoutCloudEmail;
+    final account = config.spitoutCloudEmail;
 
-    // 密码不再持久化（见 CloudServiceStore），因此只注入邮箱用于日志兜底；
+    // 密码不再持久化（见 CloudServiceStore），因此只注入账号用于日志兜底；
     // session 失效后由用户手动重新登录，避免明文密码落盘。
     if (services.auth is SpitoutCloudAuthService) {
       (services.auth as SpitoutCloudAuthService).setRecoveryCredentials(
-        email: email,
+        email: account,
       );
     }
 
@@ -213,7 +213,7 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
             'CloudSync',
             'Spitout Cloud session ready: ${user.email}',
           );
-        } else if (email != null && email.isNotEmpty) {
+        } else if (account != null && account.isNotEmpty) {
           logger.info('CloudSync', 'Spitout Cloud 未登录,等首次 API 触发恢复');
         }
       } catch (e, st) {

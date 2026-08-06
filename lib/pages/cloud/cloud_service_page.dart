@@ -414,8 +414,12 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
       // 读取当前激活配置也纳入 try:prefs 损坏时激活流程要能给出反馈,不能未处理冒泡。
       final active = await ref.read(activeCloudConfigProvider.future);
 
-      // 切换前先登出旧服务,避免旧会话残留影响新配置的认证状态（本地存储无需登出）
-      if (active.type != CloudBackendType.local) {
+      // 切换前先登出旧服务,避免旧会话残留影响新配置的认证状态。
+      // 目标为本地存储时不做远端登出:切回本地只是「停用云端同步」,不需要网络;
+      // 远端 session 保留,下次切回 Spitout Cloud 可直接恢复,也不会有「离线切本地
+      // 却被网络问题拦住」的体验。
+      if (active.type != CloudBackendType.local &&
+          type != CloudBackendType.local) {
         try {
           final authService = await ref.read(authServiceProvider.future);
           await authService.signOut();

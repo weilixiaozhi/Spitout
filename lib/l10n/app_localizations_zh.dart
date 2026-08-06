@@ -1380,7 +1380,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authRememberAccount => '记住账号密码';
 
   @override
-  String get authRememberAccountHint => '下次登录时自动填充（仅Supabase）';
+  String get authRememberAccountHint => '下次登录时自动填充';
 
   @override
   String get cloudFirstSaveSwitchTitle => '配置已保存';
@@ -1414,16 +1414,16 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authLogin => '登录';
 
   @override
-  String get authEmail => '邮箱';
+  String get authEmail => '账号';
 
   @override
   String get authPassword => '密码';
 
   @override
-  String get authInvalidEmail => '请输入有效的邮箱地址';
+  String get authInvalidEmail => '请输入账号';
 
   @override
-  String get authErrorInvalidCredentials => '邮箱或密码不正确。';
+  String get authErrorInvalidCredentials => '账号或密码不正确。';
 
   @override
   String get authErrorEmailNotConfirmed => '邮箱未验证，请先到邮箱完成验证再登录。';
@@ -1839,10 +1839,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '邮箱';
+  String get cloudSpitoutCloudEmailLabel => '账号';
 
   @override
-  String get cloudSpitoutCloudEmailHint => 'your@email.com';
+  String get cloudSpitoutCloudEmailHint => '账号或邮箱';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '密码';
@@ -5227,7 +5227,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get authRememberAccount => '記住帳號密碼';
 
   @override
-  String get authRememberAccountHint => '下次登入時自動填入（僅Supabase）';
+  String get authRememberAccountHint => '下次登入時自動填入';
 
   @override
   String get cloudFirstSaveSwitchTitle => '設定已儲存';
@@ -5261,16 +5261,16 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get authLogin => '登入';
 
   @override
-  String get authEmail => '電子郵件';
+  String get authEmail => '帳號';
 
   @override
   String get authPassword => '密碼';
 
   @override
-  String get authInvalidEmail => '請輸入有效的電子郵件地址';
+  String get authInvalidEmail => '請輸入帳號';
 
   @override
-  String get authErrorInvalidCredentials => '電子郵件或密碼不正確。';
+  String get authErrorInvalidCredentials => '帳號或密碼不正確。';
 
   @override
   String get authErrorEmailNotConfirmed => '電子郵件未驗證，請先到電子郵件完成驗證再登入。';
@@ -5686,10 +5686,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '電子郵件';
+  String get cloudSpitoutCloudEmailLabel => '帳號';
 
   @override
-  String get cloudSpitoutCloudEmailHint => 'your@email.com';
+  String get cloudSpitoutCloudEmailHint => '帳號或電子郵件';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '密碼';

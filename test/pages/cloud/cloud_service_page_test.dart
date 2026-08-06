@@ -77,7 +77,7 @@ class _FakeSpitoutAuth extends CloudAuthService {
 /// 桩 auth：登录抛 [CloudAuthException]（账号鉴权失败分支）。
 ///
 /// 用于回归「账号鉴权失败 → 弹友好文案且不激活服务」：message 含 invalid/
-/// credential 关键词，[friendlyAuthError] 据此映射到「邮箱或密码不正确」。
+/// credential 关键词，[friendlyAuthError] 据此映射到「账号或密码不正确」。
 class _CloudPageAuthAccountFail extends _FakeSpitoutAuth {
   @override
   Future<CloudUser> signInWithEmail({
@@ -714,7 +714,7 @@ void main() {
       await tester.pumpAndSettle();
     }
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 登录且 auto_sync 开启', (tester) async {
+    testWidgets('带账号密码保存 + 立即切换 → 登录且 auto_sync 开启', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -726,7 +726,7 @@ void main() {
       await tester.tap(find.text('立即切换'));
       await tester.pumpAndSettle();
 
-      // 1) 登录被调用，且邮箱/密码正确透传
+      // 1) 登录被调用，且账号/密码正确透传
       expect(fakeAuth.signInCalled, isTrue);
       expect(fakeAuth.emailUsed, 'user@example.com');
       expect(fakeAuth.passwordUsed, 'secret');
@@ -745,7 +745,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 暂不切换 → 不登录、auto_sync 仍为 false、活跃仍是 local', (
+    testWidgets('带账号密码保存 + 暂不切换 → 不登录、auto_sync 仍为 false、活跃仍是 local', (
       tester,
     ) async {
       final fakeAuth = _FakeSpitoutAuth();
@@ -777,7 +777,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 账号异常弹窗且不激活服务', (tester) async {
+    testWidgets('带账号密码保存 + 立即切换 → 账号异常弹窗且不激活服务', (tester) async {
       final fakeAuth = _CloudPageAuthAccountFail();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -788,8 +788,8 @@ void main() {
       await tester.tap(find.text('立即切换'));
       await tester.pumpAndSettle();
 
-      // 账号鉴权失败 → 友好文案弹窗（邮箱或密码不正确），且不激活服务。
-      expect(find.text('邮箱或密码不正确。'), findsOneWidget);
+      // 账号鉴权失败 → 友好文案弹窗（账号或密码不正确），且不激活服务。
+      expect(find.text('账号或密码不正确。'), findsOneWidget);
       expect(fakeAuth.signInCalled, isTrue);
       expect(
         (await _testStore().loadActive()).type,
@@ -800,7 +800,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 网络异常弹窗且不激活服务', (tester) async {
+    testWidgets('带账号密码保存 + 立即切换 → 网络异常弹窗且不激活服务', (tester) async {
       final fakeAuth = _CloudPageAuthNetworkFail();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -822,7 +822,7 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('带邮箱密码保存 + 立即切换 → 登录成功且无错误弹窗、激活服务', (tester) async {
+    testWidgets('带账号密码保存 + 立即切换 → 登录成功且无错误弹窗、激活服务', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
@@ -834,7 +834,7 @@ void main() {
       await tester.pumpAndSettle();
 
       // 成功：不应出现任何错误弹窗文案，且正常激活到 spitoutCloud。
-      expect(find.text('邮箱或密码不正确。'), findsNothing);
+      expect(find.text('账号或密码不正确。'), findsNothing);
       expect(find.text('网络异常，请检查网络后重试。'), findsNothing);
       expect(
         (await _testStore().loadActive()).type,
@@ -844,12 +844,12 @@ void main() {
       await tester.pump(const Duration(seconds: 3));
     });
 
-    testWidgets('无邮箱密码 + 立即切换 → 跳过登录直接激活（不调用登录）', (tester) async {
+    testWidgets('无账号密码 + 立即切换 → 跳过登录直接激活（不调用登录）', (tester) async {
       final fakeAuth = _FakeSpitoutAuth();
       SharedPreferences.setMockInitialValues({});
       await pumpWithFakeCloud(tester, fakeAuth);
 
-      // 打开配置弹窗但邮箱/密码留空
+      // 打开配置弹窗但账号/密码留空
       await tester.tap(find.text('Spitout Cloud'));
       await tester.pumpAndSettle();
       await tester.enterText(

@@ -3,10 +3,11 @@ import 'package:flutter/material.dart';
 import '../../l10n/app_localizations.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../widgets/widgets.dart';
+
 class SpitoutCloudConfigDialog extends StatefulWidget {
   final String initialUrl;
   final String initialApiPrefix;
-  final String initialEmail;
+  final String initialAccount;
   final String initialPassword;
   // 已存在配置时标题栏显示清除图标;点击后由弹窗自身用路由 context pop 删除哨兵
   final bool canDelete;
@@ -15,7 +16,7 @@ class SpitoutCloudConfigDialog extends StatefulWidget {
     super.key,
     required this.initialUrl,
     required this.initialApiPrefix,
-    this.initialEmail = '',
+    this.initialAccount = '',
     this.initialPassword = '',
     this.canDelete = false,
   });
@@ -28,11 +29,11 @@ class SpitoutCloudConfigDialog extends StatefulWidget {
 class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
   late final TextEditingController urlController;
   late final TextEditingController apiPrefixController;
-  late final TextEditingController emailController;
+  late final TextEditingController accountController;
   late final TextEditingController passwordController;
   // 显式 FocusNode:用于焦点链式切换,避免多输入框切换时键盘反复收起/拉起。
   late final FocusNode urlFocus;
-  late final FocusNode emailFocus;
+  late final FocusNode accountFocus;
   late final FocusNode passwordFocus;
   bool obscurePassword = true;
   // 内联校验状态:url 为必填,保存时若为空则在字段下方显示弱提示,不切换弹窗、不丢失已填内容。
@@ -43,10 +44,10 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
     super.initState();
     urlController = TextEditingController(text: widget.initialUrl);
     apiPrefixController = TextEditingController(text: widget.initialApiPrefix);
-    emailController = TextEditingController(text: widget.initialEmail);
+    accountController = TextEditingController(text: widget.initialAccount);
     passwordController = TextEditingController(text: widget.initialPassword);
     urlFocus = FocusNode();
-    emailFocus = FocusNode();
+    accountFocus = FocusNode();
     passwordFocus = FocusNode();
   }
 
@@ -54,11 +55,11 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
   void dispose() {
     urlController.dispose();
     apiPrefixController.dispose();
-    emailController.dispose();
+    accountController.dispose();
     passwordController.dispose();
     // 释放焦点节点,防止内存泄漏与悬空引用。
     urlFocus.dispose();
-    emailFocus.dispose();
+    accountFocus.dispose();
     passwordFocus.dispose();
     super.dispose();
   }
@@ -97,7 +98,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
               textInputAction: TextInputAction.next,
               // 回车/下一步:焦点移交给下一个字段,避免键盘因焦点丢失而收起。
               onEditingComplete: () =>
-                  FocusScope.of(context).requestFocus(emailFocus),
+                  FocusScope.of(context).requestFocus(accountFocus),
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(
                   context,
@@ -112,8 +113,8 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
             // 保留 apiPrefixController(默认 /api/v1)让 save 流程不破。
             const SizedBox(height: 16),
             TextField(
-              controller: emailController,
-              focusNode: emailFocus,
+              controller: accountController,
+              focusNode: accountFocus,
               textInputAction: TextInputAction.next,
               onEditingComplete: () =>
                   FocusScope.of(context).requestFocus(passwordFocus),
@@ -125,7 +126,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
                   context,
                 ).cloudSpitoutCloudEmailHint,
               ),
-              keyboardType: TextInputType.emailAddress,
+              keyboardType: TextInputType.text,
             ),
             const SizedBox(height: 16),
             TextField(
@@ -178,7 +179,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
               onPressed: () {
                 // 内联校验:必填项 url 为空时仅在字段下方显示弱提示,不切换弹窗、不丢失已填内容。
                 final url = urlController.text.trim();
-                final email = emailController.text.trim();
+                final account = accountController.text.trim();
                 final password = passwordController.text.trim();
                 setState(() {
                   _urlError = url.isEmpty
@@ -189,7 +190,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
                 Navigator.of(context).pop({
                   'url': url,
                   'apiPrefix': apiPrefixController.text.trim(),
-                  'email': email,
+                  'account': account,
                   'password': password,
                 });
               },
@@ -641,6 +642,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
   String? _accessKeyError;
   String? _secretKeyError;
   String? _bucketError;
+
   /// 端口输入错误:非空但解析失败时内联提示,不静默丢弃。
   String? _portError;
 

@@ -1390,7 +1390,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authRememberAccount => '계정 기억하기';
 
   @override
-  String get authRememberAccountHint => '다음 로그인 시 자동으로 입력됩니다 (Supabase만 해당)';
+  String get authRememberAccountHint => '다음 로그인 시 자동으로 입력됩니다';
 
   @override
   String get cloudFirstSaveSwitchTitle => '설정 저장 완료';
@@ -1425,16 +1425,16 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authLogin => '로그인';
 
   @override
-  String get authEmail => '이메일';
+  String get authEmail => '계정';
 
   @override
   String get authPassword => '비밀번호';
 
   @override
-  String get authInvalidEmail => '올바른 이메일 주소를 입력해 주세요';
+  String get authInvalidEmail => '계정을 입력해 주세요';
 
   @override
-  String get authErrorInvalidCredentials => '이메일 또는 비밀번호가 올바르지 않습니다.';
+  String get authErrorInvalidCredentials => '계정 또는 비밀번호가 올바르지 않습니다.';
 
   @override
   String get authErrorEmailNotConfirmed =>
@@ -1854,10 +1854,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '이메일';
+  String get cloudSpitoutCloudEmailLabel => '계정';
 
   @override
-  String get cloudSpitoutCloudEmailHint => 'your@email.com';
+  String get cloudSpitoutCloudEmailHint => '계정 또는 이메일';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '비밀번호';

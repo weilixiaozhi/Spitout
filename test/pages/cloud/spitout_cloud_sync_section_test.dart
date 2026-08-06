@@ -186,7 +186,7 @@ void main() {
     );
   });
 
-  testWidgets('未登录（含已保存邮箱）：显示「登录」按钮且带 login 图标', (tester) async {
+  testWidgets('未登录（含已保存账号）：显示「登录」按钮且带 login 图标', (tester) async {
     await _pumpSection(tester, active: _spitoutActiveWithCredentials());
 
     // 密码不再持久化 → 账号行统一渲染"登录"按钮(跳转登录页手动输入)。
@@ -207,7 +207,7 @@ void main() {
     );
   });
 
-  testWidgets('已登录：账号行只读展示邮箱,卡片含同步状态详情', (tester) async {
+  testWidgets('已登录：账号行只读展示账号,卡片含同步状态详情', (tester) async {
     await _pumpSection(
       tester,
       active: _spitoutActive(),
@@ -216,7 +216,7 @@ void main() {
       ),
     );
 
-    // 账号行展示邮箱(只读),用 verifiedUser 图标作分类标识。
+    // 账号行展示账号(只读),用 verifiedUser 图标作分类标识。
     expect(find.text('user@example.com'), findsOneWidget);
     expect(
       find.descendant(
@@ -526,7 +526,7 @@ void main() {
   });
 
   group('未登录统一跳转登录页（不再复用本地缓存密码）', () {
-    testWidgets('含已保存邮箱时也不显示「重新登录」，点击进入登录页手动输入', (tester) async {
+    testWidgets('含已保存账号时也不显示「重新登录」，点击进入登录页手动输入', (tester) async {
       await _pumpSection(tester, active: _spitoutActiveWithCredentials());
 
       // 密码不再持久化 → 未登录时不存在「重新登录」入口。
