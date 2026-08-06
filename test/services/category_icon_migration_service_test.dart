@@ -155,4 +155,60 @@ void main() {
         .get();
     expect(changes, hasLength(2));
   });
+
+  test('标记位已写但数据仍残留旧图标时，自愈重新迁移并补登记变更', () async {
+    // 模拟 1.2.0 已迁移过（标记位已写），但迁移结果被云同步 pull 回写旧值覆盖。
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('category_icon_migration_sub_transfer_v1', true);
+
+    final subId = await insertCategory(
+      name: '订阅服务',
+      icon: 'repeat',
+      syncIdValue: syncId('subscription'),
+    );
+    final transferId = await insertCategory(
+      name: '转账',
+      icon: 'arrowLeftRight',
+      syncIdValue: syncId('transfer'),
+    );
+
+    final tracker = ChangeTracker(db);
+    await CategoryIconMigrationService.migrate(db: db, changeRecorder: tracker);
+
+    final sub = await (db.select(db.categories)
+          ..where((c) => c.id.equals(subId)))
+        .getSingle();
+    final transfer = await (db.select(db.categories)
+          ..where((c) => c.id.equals(transferId)))
+        .getSingle();
+    expect(sub.icon, 'calendarClock', reason: '标记位已写也应重新修复主表旧图标');
+    expect(transfer.icon, 'handCoins');
+
+    final changes = await (db.select(db.localChanges)
+          ..where((c) => c.entityType.equals('category')))
+        .get();
+    expect(changes, hasLength(2));
+    expect(
+      changes.every((c) => c.pushedAt == null),
+      isTrue,
+      reason: '自愈修复后必须重新登记待推送变更，才能让云端也拿到新图标',
+    );
+  });
+
+  test('标记位已写且无残留旧图标时跳过，不重复登记', () async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('category_icon_migration_sub_transfer_v1', true);
+
+    await insertCategory(
+      name: '订阅服务',
+      icon: 'calendarClock',
+      syncIdValue: syncId('subscription'),
+    );
+
+    final tracker = ChangeTracker(db);
+    await CategoryIconMigrationService.migrate(db: db, changeRecorder: tracker);
+
+    final changes = await (db.select(db.localChanges)).get();
+    expect(changes, isEmpty, reason: '无残留旧图标时不应重复登记变更');
+  });
 }

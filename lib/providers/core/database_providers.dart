@@ -299,7 +299,18 @@ Future<void> migrateCategoryIconsOnLaunch(
 ) async {
   try {
     final db = read(databaseProvider);
-    final config = read(activeCloudConfigProvider).value;
+    // 云配置是异步 FutureProvider，冷启动时可能尚未就绪；短等一次，
+    // 确保迁移能拿到 ChangeTracker 登记待推送变更（否则只改本地，
+    // 下一次同步 pull 会把服务端旧图标盖回来）。超时则按当前值保守处理。
+    var config = read(activeCloudConfigProvider).value;
+    if (config == null) {
+      try {
+        config = await read(activeCloudConfigProvider.future)
+            .timeout(const Duration(seconds: 2));
+      } catch (_) {
+        // 配置加载失败/超时：tracker 为 null，仅跳过云端变更登记，不阻断本地迁移。
+      }
+    }
     final ChangeTracker? tracker =
         (config != null && config.valid && config.type == CloudBackendType.spitoutCloud)
             ? ChangeTracker(db)

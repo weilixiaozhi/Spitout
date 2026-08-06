@@ -20,7 +20,8 @@ import 'seed_service.dart';
 /// - onUpgrade 在数据层、不持有 SharedPreferences，幂等标记放这里。
 ///
 /// 幂等：写 prefs 标记位 + UPDATE 带 WHERE 守卫（icon = 旧值），
-/// 手动换过图标的分类不会被覆盖。
+/// 手动换过图标的分类不会被覆盖；启动时若发现仍残留旧图标会再次修复，
+/// 避免一次性迁移被云同步回拉旧数据后永久失效。
 class CategoryIconMigrationService {
   CategoryIconMigrationService._();
 
@@ -42,7 +43,12 @@ class CategoryIconMigrationService {
     ChangeRecorder? changeRecorder,
   }) async {
     final prefs = await SharedPreferences.getInstance();
-    if (prefs.getBool(_migratedKey) == true) return; // 已迁移，跳过
+    // 快速路径：迁移已执行过且当前没有残留旧图标才跳过。
+    // 不能只依赖标记位——迁移结果可能被云同步 pull 回写旧值覆盖，
+    // 此时必须允许再次修复，否则升级后图标会一直停留在旧状态。
+    if (prefs.getBool(_migratedKey) == true && !await _hasStaleIcons(db)) {
+      return;
+    }
 
     logger.info('CategoryIconMigration', '开始迁移订阅/转账分类图标');
 
@@ -64,10 +70,14 @@ class CategoryIconMigrationService {
               .get();
 
           // 2) 共享账本镜像表（Editor 本地缓存，随 Owner 推送后收敛）
-          await (db.update(db.sharedLedgerCategories)
+          final mirrorUpdated = await (db.update(db.sharedLedgerCategories)
                 ..where((s) =>
                     s.syncId.equals(syncId) & s.icon.equals(oldIcon)))
               .write(SharedLedgerCategoriesCompanion(icon: d.Value(newIcon)));
+          if (mirrorUpdated > 0) {
+            logger.info(
+                'CategoryIconMigration', '共享账本镜像表修复 $mirrorUpdated 行');
+          }
 
           if (rows.isEmpty) continue;
 
@@ -104,5 +114,33 @@ class CategoryIconMigrationService {
       logger.error('CategoryIconMigration', '迁移失败', e, st);
       // 不写标记位，下次启动重试。
     }
+  }
+
+  /// 检查是否仍存在需要迁移的旧图标（主表或共享账本镜像表）。
+  ///
+  /// 供启动自愈使用：标记位已写但数据仍残留旧图标时，也必须重新执行迁移，
+  /// 否则“迁移跑过但被同步覆盖”的用户永远不会得到新图标。
+  static Future<bool> _hasStaleIcons(SpitoutDatabase db) async {
+    for (final entry in _iconChanges.entries) {
+      final syncId = SeedService.deterministicCategorySyncId(
+        kind: 'expense',
+        level: 1,
+        key: entry.key,
+      );
+      final oldIcon = entry.value.oldIcon;
+
+      final mainHit = await (db.select(db.categories)
+            ..where((c) => c.syncId.equals(syncId) & c.icon.equals(oldIcon))
+            ..limit(1))
+          .getSingleOrNull();
+      if (mainHit != null) return true;
+
+      final mirrorHit = await (db.select(db.sharedLedgerCategories)
+            ..where((s) => s.syncId.equals(syncId) & s.icon.equals(oldIcon))
+            ..limit(1))
+          .getSingleOrNull();
+      if (mirrorHit != null) return true;
+    }
+    return false;
   }
 }
