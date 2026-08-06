@@ -618,6 +618,33 @@ void main() {
       expect(ledger.syncId, isNull);
       expect(provider.deleteLedgerCalls, contains(syncId));
     });
+
+    test('转本地后清空该账本遗留待推送变更(修复:账户级对账永久报差异)', () async {
+      final id = await repo.createLedger(name: '积压本', storageMode: 'cloud');
+      // 云端时期登记一条未推送变更(转本地前尚未推送)。
+      await repo.addTransaction(
+        ledgerId: id,
+        type: 'expense',
+        amount: 900,
+        happenedAt: DateTime(2026, 7, 2),
+      );
+      expect(
+        await changeTracker.getUnpushedChangesForLedger(id),
+        isNotEmpty,
+        reason: '前置:转本地前应有未推送变更',
+      );
+
+      await engine.moveToLocal(id);
+
+      final ledger = await readLedger(id);
+      expect(ledger.storageMode, 'local');
+      expect(ledger.syncId, isNull);
+      expect(
+        await changeTracker.getUnpushedChangesForLedger(id),
+        isEmpty,
+        reason: '转本地后遗留变更不再推送,必须清空,否则账户级对账永久报差异',
+      );
+    });
   });
 
   group('copyToLocal', () {

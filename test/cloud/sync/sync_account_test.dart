@@ -14,6 +14,8 @@ import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart'
+    show SpitoutCloudLedgerStats;
 
 import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/cloud/sync/change_tracker.dart';
@@ -196,6 +198,69 @@ void main() {
       expect(status.localCount, 1);
     });
 
+    test('残留共享账本被 syncAccount 对账清理,账户级 totalTx 不再报差异'
+        '(修复:云端账本已同步完仍显示"检测到差异,已自动同步")', () async {
+      final (db, _, _, provider, engine) = await _harness();
+      addTearDown(db.close);
+
+      // server 只有 ledger-a;ledger-b 是被删/被踢后本地残留的共享账本。
+      provider.pushFakeLedger(ledgerId: 'ledger-a');
+      provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
+      provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
+        transactionCount: 2,
+        transactionTotal: 2,
+        categoryCount: 0,
+        categoryTotal: 0,
+      );
+
+      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      for (final sid in ['tx-a1', 'tx-a2']) {
+        await db.into(db.transactions).insert(
+              TransactionsCompanion.insert(
+                ledgerId: ledgerA,
+                type: 'expense',
+                amount: 1000,
+                categoryId: const Value(null),
+                syncId: Value(sid),
+              ),
+            );
+      }
+      final ledgerB = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'B',
+              syncId: const Value('ledger-b'),
+              storageMode: const Value('cloud'),
+              isShared: const Value(true),
+              myRole: const Value('editor'),
+            ),
+          );
+      for (final sid in ['tx-b1', 'tx-b2', 'tx-b3']) {
+        await db.into(db.transactions).insert(
+              TransactionsCompanion.insert(
+                ledgerId: ledgerB,
+                type: 'expense',
+                amount: 100,
+                categoryId: const Value(null),
+                syncId: Value(sid),
+              ),
+            );
+      }
+
+      final before = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+      expect(before, isNotNull);
+      expect(before!.hasDiff, isTrue,
+          reason: '本地残留共享账本交易计入 totalTx,云端没有 → 报差异');
+
+      await engine.syncAccount();
+
+      final after = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+      expect(after, isNotNull);
+      expect(after!.totalTx.local, 2,
+          reason: 'syncAccount 应先对账账本清单,清理 server 已不存在的残留共享账本');
+      expect(after.hasDiff, isFalse,
+          reason: '清理残留后账户级对账应恢复一致,不再显示"检测到差异,已自动同步"');
+    });
+
     test('fullPush:syncId 不在远端 → 上传 snapshot(fullPush 真实发生)', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
@@ -230,6 +295,13 @@ void main() {
         syncId: 'ledger-shared',
         isShared: true,
         myRole: 'editor',
+      );
+      // server 端真实存在该共享账本(syncAccount 现在会先做账本清单对账,
+      // 若 server 不返回该账本,GC1 会把它当作残留共享账本清掉)。
+      provider.pushFakeLedger(
+        ledgerId: 'ledger-shared',
+        isShared: true,
+        role: 'editor',
       );
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-shared');
       await changeTracker.recordLedgerChange(

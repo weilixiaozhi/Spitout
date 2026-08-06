@@ -317,6 +317,11 @@ class LocalLedgerRepository implements LedgerRepository {
     await db.transaction(() async {
       await updateLedgerStorageMode(id: id, storageMode: 'local');
       await updateLedgerSyncId(id: id, syncId: null);
+      // 转本地后该账本不再参与云端同步,清掉它遗留的待推送变更:
+      // 这些变更(转本地前登记的)syncAccount 永远不会再推送,留着会让
+      // 账户级对账的「未推送变更」永久非零,面板一直显示差异。
+      await (db.delete(db.localChanges)..where((c) => c.ledgerId.equals(id)))
+          .go();
     });
   }
 

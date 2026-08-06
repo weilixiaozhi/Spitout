@@ -249,6 +249,53 @@ void main() {
       expect(report.hasDiff, isFalse,
           reason: '本地账本交易计入后会永久显示"本地比云端多"的假差异');
     });
+
+    test('本地账本遗留未推送变更不计入账户级 unpushed(不会造成永久差异)', () async {
+      final (db, _, _, provider, engine) = await _harness();
+      addTearDown(db.close);
+
+      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerA,
+              type: 'expense',
+              amount: 10000,
+              categoryId: const Value(null),
+              syncId: const Value('tx-cloud-1'),
+            ),
+          );
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+      // 模拟历史遗留:直接写一条属于本地账本的未推送变更
+      // (等价于「转本地」前的存量数据,ChangeTracker 闸门拦不住存量)。
+      await db.into(db.localChanges).insert(
+            LocalChangesCompanion.insert(
+              entityType: 'transaction',
+              entityId: 999,
+              entitySyncId: 'tx-leftover',
+              ledgerId: localId,
+              action: 'create',
+            ),
+          );
+      provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
+        transactionCount: 1,
+        transactionTotal: 1,
+        categoryCount: 0,
+        categoryTotal: 0,
+      );
+
+      final report = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+
+      expect(report, isNotNull);
+      expect(report!.unpushedChanges, 0,
+          reason: '本地账本不上云,其遗留变更不应计入账户级未推送');
+      expect(report.hasDiff, isFalse,
+          reason: '否则云端账本已同步完,面板仍一直显示"检测到差异,已自动同步"');
+    });
   });
 
   group('checkAccountHealth 输出剥离(不传 carrierLedgerId)', () {

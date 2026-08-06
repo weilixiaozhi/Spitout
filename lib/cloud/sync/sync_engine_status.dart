@@ -75,7 +75,14 @@ extension SyncEngineHealthChecks on SyncEngine {
 
     final counts = await _queryLocalSyncCounts(db, effectiveCarrierId);
     // 账户级面板:unpushed 用全局口径,跨所有账本。
-    final unpushed = (await changeTracker.getUnpushedChanges()).length;
+    // 但只统计可同步实体的变更:user-global(ledgerId=0)+ 可同步账本
+    // (带非空 syncId)的变更。纯本地账本不上云,即使历史遗留了未推送变更
+    // (例如「转本地」前登记的),syncAccount 也永远不会推送它们 —— 计入
+    // 会造成「云端账本已同步完仍显示检测到差异」的永久假阳性。
+    final syncableIds = await _syncableLedgerIds(db);
+    final unpushed = (await changeTracker.getUnpushedChanges())
+        .where((c) => c.ledgerId == 0 || syncableIds.contains(c.ledgerId))
+        .length;
 
     // ---------- 远端 /read/ledgers/<id>/stats ----------
     try {
@@ -251,10 +258,7 @@ Future<({int localLedgerTx, int localTotalTx, int localCategories})>
   // 纯本地账本创建/移动回本地时 syncId 会被清空,它们的交易虽然也有
   // 本地 UUID syncId,但永远不会被推送 —— 若计入 totalTx,账户级对账
   // 面板会一直显示"本地比云端多"的假差异,且 syncAccount 无法消除它。
-  final syncableLedgerIds = (await db.select(db.ledgers).get())
-      .where((l) => (l.syncId ?? '').isNotEmpty)
-      .map((l) => l.id)
-      .toList();
+  final syncableLedgerIds = await _syncableLedgerIds(db);
   int ledgerTxCount = 0;
   int localTotalTx = 0;
   if (syncableLedgerIds.isNotEmpty) {
@@ -279,4 +283,17 @@ Future<({int localLedgerTx, int localTotalTx, int localCategories})>
     localTotalTx: localTotalTx,
     localCategories: localCategories,
   );
+}
+
+/// 可同步账本 = 带非空 syncId 的账本(与 push/pull 的判定一致)。
+///
+/// 纯本地账本创建/移动回本地时 syncId 会被清空,其交易虽然也有本地 UUID
+/// syncId,但永远不会被推送;账户级对账的本地计数与未推送变更统计都必须
+/// 以这组账本为口径,否则会制造永久假阳性差异。
+Future<Set<int>> _syncableLedgerIds(SpitoutDatabase db) async {
+  final rows = await db.select(db.ledgers).get();
+  return rows
+      .where((l) => (l.syncId ?? '').isNotEmpty)
+      .map((l) => l.id)
+      .toSet();
 }

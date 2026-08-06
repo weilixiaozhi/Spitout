@@ -1073,6 +1073,8 @@ class SyncEngine implements app.SyncService {
   /// 内部流程:
   /// - Phase 1(用户级一次性,跨账本共享):syncMyProfile → storage.list →
   ///   pull('') → pushUserGlobalEntities;
+  ///   (含一次 syncLedgersFromServer 账本清单对账:补建缺失账本、GC 清理
+  ///   server 已不存在的残留共享账本,保证账户级计数口径与远端一致);
   /// - Phase 2(每个云端账本):复用同一次 storage.list 结果做 fullPush/增量
   ///   决策,无待推 + 已绑定(fast-skip)直接跳过;pull 是用户级全局流,
   ///   统一由收尾处的单次 pull('') 覆盖,不逐账本空探针。
@@ -1112,6 +1114,19 @@ class SyncEngine implements app.SyncService {
             for (final r in remoteLedgers)
               if (r.path is String) r.path as String,
           };
+
+    // b2) 账本清单对账:syncLedgersFromServer 按 /sync/ledgers 权威清单
+    //     补建本地缺失的云端/共享账本,并 GC 清理 server 已不返回的残留
+    //     共享账本。否则这些残留账本(及其带 syncId 的交易)会一直计入
+    //     账户级 totalTx,造成「云端账本已同步完但面板仍报差异」的永久
+    //     假阳性,且 syncAccount 永远不会推送它们、差异永远消不掉。
+    //     单飞锁保证与 WS 重连等入口并发时只跑一次;失败不阻塞主同步。
+    try {
+      await syncLedgersFromServer();
+    } catch (e, st) {
+      logger.warning(
+          'SyncEngine', 'syncAccount: syncLedgersFromServer 失败(继续同步): $e', st);
+    }
 
     // c) 用户级 sync_changes 流(只拉一次,所有账本共享 cursor)。
     try {
