@@ -27,6 +27,7 @@ import 'package:spitout/router.dart';
 import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/widgets/amount_expression_bar.dart';
 import 'package:spitout/widgets/amount_keypad.dart';
+import 'package:spitout/widgets/note_input_row.dart';
 import 'package:spitout/widgets/transaction_editor_sheet.dart';
 import 'package:spitout/widgets/transaction_editor_sheet_entry.dart';
 
@@ -143,5 +144,38 @@ void main() {
         reason: '返回后 sheet 应重新可见');
     expect(amountText('12'), findsOneWidget,
         reason: '返回后已输入的金额应保留');
+  });
+
+  testWidgets('记账 sheet 输入区尺寸：备注/金额栏 35、间距 5 与 10、键盘 u 随可用高度', (tester) async {
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.text('open-sheet'));
+    await tester.pumpAndSettle();
+
+    // 备注行与金额栏整行高度均固定 35
+    expect(tester.getSize(find.byType(NoteInputRow)).height, closeTo(35, 0.5),
+        reason: '备注输入行高度应为 35');
+    expect(tester.getSize(find.byType(AmountExpressionBar)).height, 35,
+        reason: '金额栏整行高度应为 35');
+
+    // 备注行 ↔ 金额栏间距 5px
+    final noteBottom = tester.getBottomLeft(find.byType(NoteInputRow)).dy;
+    final barTop = tester.getTopLeft(find.byType(AmountExpressionBar)).dy;
+    expect(barTop - noteBottom, 5, reason: '备注行与金额栏间距应为 5');
+
+    // 金额栏 ↔ 键盘间距 10px
+    final barBottom = tester.getBottomLeft(find.byType(AmountExpressionBar)).dy;
+    final keypadTop = tester.getTopLeft(find.byType(AmountKeypad)).dy;
+    expect(keypadTop - barBottom, 10, reason: '金额栏与键盘间距应为 10');
+
+    // 键盘 u 由 computeKeypadU 按可用高度算定，落在 [35,45]
+    final keypad = tester.widget<AmountKeypad>(find.byType(AmountKeypad));
+    expect(keypad.u, inInclusiveRange(35, 45),
+        reason: '键盘行高应随可用高度在 [35,45] 内浮动');
+
+    // 容器上下内边距 10 / 20
+    final bottomPadding = find.byWidgetPredicate(
+      (w) => w is Padding && w.padding == const EdgeInsets.fromLTRB(10, 10, 10, 20),
+    );
+    expect(bottomPadding, findsWidgets, reason: '底部输入区容器内边距应为上 10 / 下 20');
   });
 }

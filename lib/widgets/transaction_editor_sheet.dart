@@ -765,8 +765,8 @@ class _TransactionEditorSheetState
     final l10n = AppLocalizations.of(context);
     final keyboardOpen = mq.viewInsets.bottom > 0;
     // —— 高度自适应 ——
-    // 键盘行高 u 由 computeKeypadU 按可用高度算定：默认 35，
-    // 空间不足时（系统键盘拉起、极小屏）压到 30 保底防溢出。
+    // 键盘行高 u 由 computeKeypadU 按可用高度算定：默认 45，
+    // 空间不足时（系统键盘拉起、极小屏）压到 35 保底防溢出。
     // useSafeArea:true 时 route 不 removePadding，内部 padding.top 即真实
     // 状态栏高度（SafeArea 已自动把 sheet 顶到状态栏下面，这里仅用于可用
     // 高度预算，不做任何头部空白补偿）。
@@ -894,8 +894,8 @@ class _TransactionEditorSheetState
                     ],
                   ),
                   child: Padding(
-                    // 底部留白 16：最底排按键距屏幕下沿过近，留出呼吸空间
-                    padding: const EdgeInsets.fromLTRB(10, 8, 10, 16),
+                    // 底部留白 20：最底排按键距屏幕下沿过近，留出呼吸空间
+                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 20),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -905,7 +905,7 @@ class _TransactionEditorSheetState
                           noteFocusNode: _noteFocusNode,
                           onNotePicked: _onNotePicked,
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: 5),
                         // 金额栏行：[币种][金额][删除]
                         AmountExpressionBar(
                           txCurrency: txCurrency,
@@ -928,7 +928,7 @@ class _TransactionEditorSheetState
                         ),
                         // 4×4 键盘（始终显示；系统键盘拉起时整页上移，
                         // 键盘区随之上移，不会与系统键盘叠加遮挡备注/币种行）
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 10),
                         AmountKeypad(
                           u: keypadU,
                           date: _date,

@@ -13,7 +13,7 @@
 ///     6. isSubmitting=true 显示 loading 指示器。
 ///
 ///   B. 尺寸自适应（本次改动核心）：
-///     7. u=56 → 数字网格区高度 = 3*56+2*8，底部行高度 = 56；
+///     7. u=56 → 数字网格区高度 = 3*56+2*10（行距 10px），底部行高度 = 56；
 ///     8. u=44 → 行高随 u 等比缩小，验证小屏自适应；
 ///     9. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
@@ -32,7 +32,7 @@ void main() {
   /// 构建测试宿主：提供本地化 + 主题 + 固定宽高约束。
   ///
   /// 设计意图：AmountKeypad 内部 Column 默认 mainAxisSize.max，需要有限高度
-  /// 约束才能正常布局；高度给 400（> 内容高度 4*u+24）保证不溢出，且不影响
+  /// 约束才能正常布局；高度给 400（> 内容高度 4*u+30）保证不溢出，且不影响
   /// 对按键行高（由 SizedBox(height: u) 固定）的断言。宽度 360 模拟主流手机。
   ///
   /// [textScaler] 通过外层 MediaQuery 注入（而非 tester.view.textScaler），
@@ -257,7 +257,7 @@ void main() {
   });
 
   group('B. 尺寸自适应（本次改动核心）', () {
-    testWidgets('u=56 时数字网格区高度 = 3*56+2*8，底部行高度 = 56',
+    testWidgets('u=56 时数字网格区高度 = 3*56+2*10，底部行高度 = 56',
         (tester) async {
       await tester.pumpWidget(buildHarness(
         u: 56,
@@ -271,7 +271,7 @@ void main() {
       final gridH = tester
           .getSize(find.byKey(const ValueKey('keypad_num_grid')))
           .height;
-      expect(gridH, 3 * 56 + 2 * 8);
+      expect(gridH, 3 * 56 + 2 * 10);
 
       final bottomH = tester
           .getSize(find.byKey(const ValueKey('keypad_bottom_row')))
@@ -292,7 +292,7 @@ void main() {
       final gridH = tester
           .getSize(find.byKey(const ValueKey('keypad_num_grid')))
           .height;
-      expect(gridH, 3 * 44 + 2 * 8);
+      expect(gridH, 3 * 44 + 2 * 10);
 
       final bottomH = tester
           .getSize(find.byKey(const ValueKey('keypad_bottom_row')))
@@ -300,7 +300,7 @@ void main() {
       expect(bottomH, 44);
     });
 
-    testWidgets('u=36 时键盘压缩到方案 A 新下限，行高随 u 等比缩小',
+    testWidgets('u=36 时行高随 u 等比缩小（更小 u 仍按公式渲染）',
         (tester) async {
       await tester.pumpWidget(buildHarness(
         u: 36,
@@ -314,7 +314,7 @@ void main() {
       final gridH = tester
           .getSize(find.byKey(const ValueKey('keypad_num_grid')))
           .height;
-      expect(gridH, 3 * 36 + 2 * 8);
+      expect(gridH, 3 * 36 + 2 * 10);
 
       final bottomH =
           tester.getSize(find.byKey(const ValueKey('keypad_bottom_row'))).height;

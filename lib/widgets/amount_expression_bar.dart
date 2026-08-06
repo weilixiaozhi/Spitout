@@ -137,7 +137,8 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       borderRadius: BorderRadius.circular(12),
       onTap: widget.onPickCurrency,
       child: Container(
-        height: 44,
+        key: const ValueKey('amount_currency_chip'),
+        height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
           color: SpitoutTokens.surfaceKeySecondary(context),
@@ -170,7 +171,8 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     final display = widget.amountStr.isEmpty ? '0' : widget.amountStr;
 
     return Container(
-      height: 44,
+      key: const ValueKey('amount_area'),
+      height: 35,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: SpitoutTokens.surfaceKeySecondary(context),
@@ -256,7 +258,8 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       onLongPressStart: (_) => HapticFeedback.selectionClick(),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 44,
+        key: const ValueKey('amount_delete_key'),
+        height: 35,
         decoration: BoxDecoration(
           color: SpitoutTokens.surfaceKeySecondary(context),
           borderRadius: BorderRadius.circular(12),

@@ -14,31 +14,34 @@ import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/note_input_row.dart';
 
 void main() {
-  testWidgets('输入内容变化后清空按钮即时显隐（不依赖父层重建）', (tester) async {
-    final controller = TextEditingController();
-    final picked = <String>[];
-
-    await tester.pumpWidget(
-      ProviderScope(
-        child: MaterialApp(
-          localizationsDelegates: const [
-            AppLocalizations.delegate,
-            GlobalMaterialLocalizations.delegate,
-            GlobalWidgetsLocalizations.delegate,
-            GlobalCupertinoLocalizations.delegate,
-          ],
-          supportedLocales: AppLocalizations.supportedLocales,
-          locale: const Locale('zh'),
-          home: Scaffold(
-            body: NoteInputRow(
-              noteController: controller,
-              noteFocusNode: FocusNode(),
-              onNotePicked: picked.add,
-            ),
+  /// 构建备注输入行测试宿主。
+  Widget buildRow(TextEditingController controller, ValueChanged<String> onPicked) {
+    return ProviderScope(
+      child: MaterialApp(
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        supportedLocales: AppLocalizations.supportedLocales,
+        locale: const Locale('zh'),
+        home: Scaffold(
+          body: NoteInputRow(
+            noteController: controller,
+            noteFocusNode: FocusNode(),
+            onNotePicked: onPicked,
           ),
         ),
       ),
     );
+  }
+
+  testWidgets('输入内容变化后清空按钮即时显隐（不依赖父层重建）', (tester) async {
+    final controller = TextEditingController();
+    final picked = <String>[];
+
+    await tester.pumpWidget(buildRow(controller, picked.add));
 
     expect(find.byIcon(AppIcons.cancel), findsNothing);
 
@@ -55,6 +58,17 @@ void main() {
     await tester.pump();
     expect(find.byIcon(AppIcons.cancel), findsNothing,
         reason: '清空后按钮应立即消失');
+
+    controller.dispose();
+  });
+
+  testWidgets('备注输入行高度固定 35（需求 30-35 取上限）', (tester) async {
+    final controller = TextEditingController();
+    await tester.pumpWidget(buildRow(controller, (_) {}));
+
+    final height = tester.getSize(find.byType(NoteInputRow)).height;
+    expect(height, closeTo(35, 0.5),
+        reason: '备注行应压缩到 35px，避免挤占下方金额栏与键盘');
 
     controller.dispose();
   });

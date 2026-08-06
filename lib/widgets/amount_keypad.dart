@@ -12,7 +12,7 @@ import 'keypad_constants.dart';
 /// - 主按钮三态：
 ///   - waiting / calculated：显示 Enter 图标，点击提交。
 ///   - operating：显示 `=`，点击先算后进入 calculated。
-/// - 键间距统一 8px。
+/// - 水平键距 8px、行距 10px（统一来自 KeypadLayout.gap / rowGap）。
 /// - 普通键 bg-secondary、圆角 12px；主按钮 bg-primary。
 ///
 /// 布局：
@@ -35,7 +35,7 @@ class AmountKeypad extends StatelessWidget {
   /// 设计意图：keypad 自身处于 mainAxisSize.min 容器内，LayoutBuilder 拿到的
   /// 纵向约束是 infinity，无法自行测算可用高度；故由 sheet 层算定 u 后传入。
   /// 所有行高、字号均从 u 派生，保证小屏等比缩小、大屏不溢出。
-  /// 取值范围 clamp[30,35]：空间充足维持 35，紧张时压到 30（仍保证可点）。
+  /// 取值范围 clamp[35,45]：空间充足维持 45，紧张时压到 35（仍保证可点）。
   final double u;
 
   /// 当前日期（日期键显示）
@@ -108,7 +108,7 @@ class AmountKeypad extends StatelessWidget {
             label,
             style: text.titleMedium?.copyWith(
               color: SpitoutTokens.textPrimary(context),
-              // 字号从 u 派生：u=35→12.6、u=30→10.8，按键缩小时字号同步缩小
+              // 字号从 u 派生：u=45→16.2、u=35→12.6，按键缩小时字号同步缩小
               fontSize: u * 0.36,
               fontWeight: FontWeight.w600,
             ),
@@ -204,8 +204,8 @@ class AmountKeypad extends StatelessWidget {
                       style: text.labelSmall?.copyWith(
                           color: SpitoutTokens.textPrimary(context),
                           fontWeight: FontWeight.w600,
-                          // 双行日期字号从 u 派生：当前 u∈[30,35] 时 u*0.18
-                          // 仅 5.4~6.3px，下限 7px 保证可读且能塞进最小键高；
+                          // 双行日期字号从 u 派生：当前 u∈[35,45] 时 u*0.18
+                          // 仅 6.3~8.1px，下限 7px 保证可读且能塞进最小键高；
                           // 上限 9px 防止 u 增大后溢出。
                           fontSize: (u * 0.18).clamp(7.0, 9.0)),
                     ),
@@ -263,7 +263,7 @@ class AmountKeypad extends StatelessWidget {
           alignment: Alignment.center,
             child: isSubmitting
               ? SizedBox(
-                  // loading 尺寸从 u 派生：u=35→12.6、u=30→10.8
+                  // loading 尺寸从 u 派生：u=45→16.2、u=35→12.6
                   width: u * 0.36,
                   height: u * 0.36,
                   child: const CircularProgressIndicator(
@@ -276,7 +276,7 @@ class AmountKeypad extends StatelessWidget {
                       '=',
                       style: TextStyle(
                         color: Colors.white,
-                        // 等号比数字略大：u=35→15.1、u=30→12.9
+                        // 等号比数字略大：u=45→19.4、u=35→15.1
                         fontSize: u * 0.43,
                         fontWeight: FontWeight.w700,
                       ),
@@ -304,8 +304,8 @@ class AmountKeypad extends StatelessWidget {
 
     // 文字缩放跟随全局（main.dart 已统一 ×0.85 缩小）并在 [0.85, 1.0] 封顶：
     // 下限 0.85 承接全局缩小（不能抬回 1.0，否则键盘文字与全局不一致）；
-    // 上限 1.0 防止系统大字体撑爆按键——fontSize 已从 u 派生（u≤35），
-    // 35×0.36×1.0≈12.6px 落在 35px 按键内富余。
+    // 上限 1.0 防止系统大字体撑爆按键——fontSize 已从 u 派生（u≤45），
+    // 45×0.36×1.0≈16.2px 落在 45px 按键内富余。
     final ts = MediaQuery.textScalerOf(context);
     final capped = TextScaler.linear(ts.scale(1.0).clamp(0.85, 1.0));
 
@@ -321,7 +321,7 @@ class AmountKeypad extends StatelessWidget {
               // ValueKey 便于测试定位行高，验证 u 参数化生效
               SizedBox(
                 key: const ValueKey('keypad_num_grid'),
-                height: 3 * u + 2 * KeypadLayout.gap, // 3 行数字键高度（每行 u + gap 8）
+                height: 3 * u + 2 * KeypadLayout.rowGap, // 3 行数字键高度（每行 u + 行距 10）
                 child: Row(
                   children: [
                     // 左侧 3×3 数字网格
@@ -350,7 +350,7 @@ class AmountKeypad extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: KeypadLayout.gap),
+                          const SizedBox(height: KeypadLayout.rowGap),
                           SizedBox(
                             height: u,
                             child: Row(
@@ -372,7 +372,7 @@ class AmountKeypad extends StatelessWidget {
                               ],
                             ),
                           ),
-                          const SizedBox(height: KeypadLayout.gap),
+                          const SizedBox(height: KeypadLayout.rowGap),
                           SizedBox(
                             height: u,
                             child: Row(
@@ -406,7 +406,7 @@ class AmountKeypad extends StatelessWidget {
                   ],
                 ),
               ),
-              const SizedBox(height: KeypadLayout.gap),
+              const SizedBox(height: KeypadLayout.rowGap),
               // 第二部分：底部行 [日期][0][.][=/Enter]
               SizedBox(
                 key: const ValueKey('keypad_bottom_row'),
