@@ -237,25 +237,45 @@ extension SyncEngineHealthChecks on SyncEngine {
 /// 无法 push,云端不会有对应记录,统计它们会造成永久假阳性"本地比云端多"),
 /// 抽成 library 级私有函数避免两处重复漂移。
 ///
+/// 全量口径必须限定在可同步账本(带非空 syncId):纯本地账本不上云,它的
+/// 交易虽然也有本地 UUID syncId,但永远不会被推送 —— 若计入 totalTx,
+/// 账户级对账面板会一直显示"本地比云端多"的假差异,且 syncAccount 无法
+/// 消除它。
+///
 /// 注意:不能放进 extension —— Dart 不允许私有 extension 成员;
 /// 也不能用 SyncEngine 的 `db` 实例字段(顶层函数没有 this),
 /// 故由调用方显式传入。
 Future<({int localLedgerTx, int localTotalTx, int localCategories})>
     _queryLocalSyncCounts(SpitoutDatabase db, int ledgerId) async {
-  final ledgerTxRows = await (db.select(db.transactions)
-        ..where((t) => t.ledgerId.equals(ledgerId))
-        ..where((t) => t.syncId.isNotNull()))
-      .get();
-  final localTotalTx = (await (db.select(db.transactions)
-            ..where((t) => t.syncId.isNotNull()))
-          .get())
-      .length;
+  // 可同步账本 = 带非空 syncId 的账本(与 push/pull 的判定一致):
+  // 纯本地账本创建/移动回本地时 syncId 会被清空,它们的交易虽然也有
+  // 本地 UUID syncId,但永远不会被推送 —— 若计入 totalTx,账户级对账
+  // 面板会一直显示"本地比云端多"的假差异,且 syncAccount 无法消除它。
+  final syncableLedgerIds = (await db.select(db.ledgers).get())
+      .where((l) => (l.syncId ?? '').isNotEmpty)
+      .map((l) => l.id)
+      .toList();
+  int ledgerTxCount = 0;
+  int localTotalTx = 0;
+  if (syncableLedgerIds.isNotEmpty) {
+    final ledgerTxRows = await (db.select(db.transactions)
+          ..where((t) => t.ledgerId.equals(ledgerId))
+          ..where((t) => t.ledgerId.isIn(syncableLedgerIds))
+          ..where((t) => t.syncId.isNotNull()))
+        .get();
+    ledgerTxCount = ledgerTxRows.length;
+    localTotalTx = (await (db.select(db.transactions)
+              ..where((t) => t.ledgerId.isIn(syncableLedgerIds))
+              ..where((t) => t.syncId.isNotNull()))
+            .get())
+        .length;
+  }
   final localCategories = (await (db.select(db.categories)
             ..where((c) => c.syncId.isNotNull()))
           .get())
       .length;
   return (
-    localLedgerTx: ledgerTxRows.length,
+    localLedgerTx: ledgerTxCount,
     localTotalTx: localTotalTx,
     localCategories: localCategories,
   );

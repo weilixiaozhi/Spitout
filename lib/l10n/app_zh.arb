@@ -174,6 +174,7 @@
     "mineSyncTitle": "同步",
     "mineSyncNotLoggedIn": "未登录",
     "mineSyncNotConfigured": "未配置云端",
+    "mineSyncLocalOnly": "本地账本，仅存本机",
     "mineSyncNoRemote": "云端暂无数据",
     "mineSyncInSync": "已同步 (本地{count}条)",
     "mineSyncLocalNewer": "本地有更新 (本地{count}条, 建议上传)",

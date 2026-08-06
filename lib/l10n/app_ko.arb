@@ -280,6 +280,7 @@
     "mineSyncTitle": "동기화",
     "mineSyncNotLoggedIn": "로그인하지 않음",
     "mineSyncNotConfigured": "클라우드가 설정되지 않음",
+    "mineSyncLocalOnly": "로컬 가계부, 이 기기에만 저장",
     "mineSyncNoRemote": "클라우드 데이터 없음",
     "mineSyncInSync": "동기화됨 (로컬 {count}건)",
     "mineSyncLocalNewer": "로컬이 최신 상태입니다 ({count}건, 업로드를 권장합니다)",

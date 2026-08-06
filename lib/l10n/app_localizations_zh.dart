@@ -662,6 +662,9 @@ class AppLocalizationsZh extends AppLocalizations {
   String get mineSyncNotConfigured => '未配置云端';
 
   @override
+  String get mineSyncLocalOnly => '本地账本，仅存本机';
+
+  @override
   String get mineSyncNoRemote => '云端暂无数据';
 
   @override
@@ -4501,6 +4504,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get mineSyncNotConfigured => '未設定雲端';
+
+  @override
+  String get mineSyncLocalOnly => '本地帳本，僅存本機';
 
   @override
   String get mineSyncNoRemote => '雲端暫無資料';

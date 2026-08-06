@@ -674,6 +674,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get mineSyncNotConfigured => 'Cloud not configured';
 
   @override
+  String get mineSyncLocalOnly => 'Local ledger, device only';
+
+  @override
   String get mineSyncNoRemote => 'No cloud data';
 
   @override

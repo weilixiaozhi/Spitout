@@ -105,6 +105,10 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                 subtitle = AppLocalizations.of(context).mineSyncNotConfigured;
                 icon = AppIcons.cloudOff;
                 break;
+              case SyncDiff.localOnly:
+                subtitle = AppLocalizations.of(context).mineSyncLocalOnly;
+                icon = AppIcons.localStorage;
+                break;
               case SyncDiff.noRemote:
                 subtitle = AppLocalizations.of(context).mineSyncNoRemote;
                 icon = AppIcons.cloudQueue;

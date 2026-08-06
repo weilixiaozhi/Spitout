@@ -1,4 +1,5 @@
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
+import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spitout/cloud/sync/transactions_sync_manager.dart';
@@ -47,6 +48,20 @@ void main() {
       expect(status.diff, SyncDiff.notLoggedIn);
       expect(status.localCount, 0);
       expect(status.message, isNotNull);
+    });
+
+    test('纯本地账本 getStatus 返回 localOnly(不因云服务不可用误报未登录)', () async {
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+
+      final status = await manager.getStatus(ledgerId: localId);
+
+      expect(status.diff, SyncDiff.localOnly,
+          reason: '纯本地账本不上云,状态应独立于云服务可用性');
     });
 
     test('uploadCurrentLedger 抛 CloudSyncException', () async {

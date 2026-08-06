@@ -49,11 +49,12 @@ class PullOutcome {
 
 /// 同步差异枚举，供 UI 分状态渲染。
 ///
-/// 8 种取值覆盖：未登录 / 未配置 / 无远端 / 一致 / 本地新 / 云端新 /
-/// 双向差异 / 错误。
+/// 9 种取值覆盖：未登录 / 未配置 / 纯本地不上云 / 无远端 / 一致 / 本地新 /
+/// 云端新 / 双向差异 / 错误。
 enum SyncDiff {
   notConfigured,
   notLoggedIn,
+  localOnly,
   noRemote,
   inSync,
   localNewer,

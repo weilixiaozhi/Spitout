@@ -17,6 +17,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/cloud/sync/change_tracker.dart';
+import 'package:spitout/cloud/sync/sync_service.dart' show SyncDiff;
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 
@@ -127,6 +128,72 @@ void main() {
       expect(result.pushed, 1, reason: '1 条 unpushed change 应被推送');
       expect(await provider.storage.download(path: 'ledger-a'), isNull,
           reason: '已绑定账本走增量 push,不应触发 fullPush 上传 snapshot');
+    });
+
+    test('push 后清缓存 + emit PushCompleted,getStatus 从 localNewer 刷新为 inSync'
+        '(修复:auto sync 走 syncAccount 推完后图标仍红色)', () async {
+      final (db, _, repo, provider, engine) = await _harness();
+      addTearDown(db.close);
+
+      // 远端已有此账本 → 走增量 push,避开 fullPush 复杂路径。
+      final ledgerId = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
+      // 本地写一条 tx → 产生 unpushed local_change。
+      await repo.insertTransactionsBatch([
+        TransactionsCompanion.insert(
+          ledgerId: ledgerId,
+          type: 'expense',
+          amount: 800,
+          syncId: const Value('tx-sync-account'),
+        ),
+      ]);
+
+      // 同步前:有未推送变更 → getStatus = localNewer,并把结果写进 _statusCache。
+      final before = await engine.getStatus(ledgerId: ledgerId);
+      expect(before.diff, SyncDiff.localNewer,
+          reason: '本地有未推送变更,同步前应为 localNewer(并落入缓存)');
+
+      final received = <SyncEvent>[];
+      final sub = engine.events.listen(received.add);
+      final result = await engine.syncAccount();
+      await Future<void>.delayed(Duration.zero);
+      await sub.cancel();
+
+      expect(result.pushed, greaterThan(0));
+      // 修复点 1:push 完成 emit PushCompleted,通知 UI 重新读同步状态。
+      expect(received.whereType<PushCompleted>(), isNotEmpty,
+          reason: 'syncAccount 上传本地变更后必须 emit PushCompleted');
+      // 修复点 2(真正根因):push 后清了 _statusCache,getStatus 不再吃旧缓存。
+      final after = await engine.getStatus(ledgerId: ledgerId);
+      expect(after.diff, SyncDiff.inSync,
+          reason: 'syncAccount push 成功后 getStatus 必须刷新为 inSync;'
+              '命中旧缓存返回 localNewer 即是本 bug 复现');
+    });
+
+    test('纯本地账本 getStatus 返回 localOnly,不误报"本地有更新"', () async {
+      final (db, _, repo, _, engine) = await _harness();
+      addTearDown(db.close);
+
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+      await repo.insertTransactionsBatch([
+        TransactionsCompanion.insert(
+          ledgerId: localId,
+          type: 'expense',
+          amount: 1000,
+          syncId: const Value('tx-local-only'),
+        ),
+      ]);
+
+      final status = await engine.getStatus(ledgerId: localId);
+
+      expect(status.diff, SyncDiff.localOnly,
+          reason: '纯本地账本不上云,不应因本地有数据而被判为待上传');
+      expect(status.localCount, 1);
     });
 
     test('fullPush:syncId 不在远端 → 上传 snapshot(fullPush 真实发生)', () async {

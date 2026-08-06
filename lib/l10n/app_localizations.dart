@@ -1288,6 +1288,12 @@ abstract class AppLocalizations {
   /// **'Cloud not configured'**
   String get mineSyncNotConfigured;
 
+  /// No description provided for @mineSyncLocalOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Local ledger, device only'**
+  String get mineSyncLocalOnly;
+
   /// No description provided for @mineSyncNoRemote.
   ///
   /// In en, this message translates to:

@@ -810,6 +810,7 @@
     "mineSyncMessage": "說明: {message}",
     "mineSyncNoRemote": "雲端暫無資料",
     "mineSyncNotConfigured": "未設定雲端",
+    "mineSyncLocalOnly": "本地帳本，僅存本機",
     "mineSyncNotLoggedIn": "未登入",
     "mineSyncTitle": "同步",
     "mineTitle": "我的",

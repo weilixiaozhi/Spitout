@@ -458,6 +458,30 @@ class SyncEngine implements app.SyncService {
         );
       }
 
+      // 账本行先读:纯本地账本(不上云)直接返回 localOnly,不发起任何远端
+      // 探测 —— 否则本地账本的交易会被误判为"本地有数据、云端没有",
+      // 在「我的」页与云同步配置里制造永远无法消除的同步差异。
+      final ledgerRowStatus = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(ledgerId)))
+          .getSingleOrNull();
+      // 纯本地账本(无 syncId、storage_mode=local)才判定为不上云:
+      // 若本地行还带着 syncId,说明是异常中间态,仍按可同步账本处理。
+      if (ledgerRowStatus != null &&
+          ledgerRowStatus.isLocalLedger &&
+          (ledgerRowStatus.syncId == null || ledgerRowStatus.syncId!.isEmpty)) {
+        final localTxs = await (db.select(db.transactions)
+              ..where((t) => t.ledgerId.equals(ledgerId)))
+            .get();
+        final status = app.SyncStatus(
+          diff: app.SyncDiff.localOnly,
+          localCount: localTxs.length,
+          localFingerprint: 'local',
+        );
+        _statusCache[ledgerId] = status;
+        _localChanged = false;
+        return status;
+      }
+
       // 本地交易数
       final localTxs = await (db.select(db.transactions)
             ..where((t) => t.ledgerId.equals(ledgerId)))
@@ -469,9 +493,6 @@ class SyncEngine implements app.SyncService {
           (await changeTracker.getUnpushedChangesForLedger(ledgerId)).length;
 
       // 检查云端是否有数据。path 用 ledger.syncId 跟 push 侧保持一致。
-      final ledgerRowStatus = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
-          .getSingleOrNull();
       final hasRemote = await provider.storage.exists(
         path: ledgerRowStatus?.syncId ?? ledgerId.toString(),
       );
@@ -1130,9 +1151,10 @@ class SyncEngine implements app.SyncService {
         // (会覆盖 Owner 数据)。
         final isSharedAsEditor = ledger.isShared && ledger.myRole != 'owner';
 
+        int pushedForLedger;
         if (remoteSyncIds == null && !isSharedAsEditor) {
           // storage.list 失败:保守走增量 push(fullPush 覆盖云端风险更大)。
-          totalPushed += await push(ledger.id.toString());
+          pushedForLedger = await push(ledger.id.toString());
         } else if (!inRemote && !isSharedAsEditor) {
           // 远端没这个账本 → 首次绑定 / server 数据被清 → fullPush。
           // fullPush 前先确保 syncId 是 UUID(否则 server 校验 min_length=3
@@ -1146,11 +1168,24 @@ class SyncEngine implements app.SyncService {
           // fullPush 不处理 delete change,这里 _push 推剩余的 delete change,
           // 清掉 server canonical state。
           final extraPushed = await push(ledger.id.toString());
-          totalPushed += localTxCount + extraPushed;
+          pushedForLedger = localTxCount + extraPushed;
           logger.info('SyncEngine', 'syncAccount: $tag → fullPush 完成');
         } else {
           // 普通增量路径:只推本账本 unpushed change。
-          totalPushed += await push(ledger.id.toString());
+          pushedForLedger = await push(ledger.id.toString());
+        }
+        totalPushed += pushedForLedger;
+
+        // 与 sync() 对齐:push 完成后清掉本账本的 getStatus 缓存,并广播
+        // PushCompleted 供 UI 刷新。否则 auto sync(走 syncAccount)推完后,
+        // 账本管理页的同步状态仍会命中 markLocalChanged 后的旧 localNewer 缓存
+        // —— 数据已推送但图标一直红色。
+        if (pushedForLedger > 0) {
+          clearStatusCache(ledgerId: ledger.id);
+          _emit(PushCompleted(
+            ledgerId: ledger.id.toString(),
+            pushed: pushedForLedger,
+          ));
         }
 
       } catch (e, st) {
@@ -1172,6 +1207,14 @@ class SyncEngine implements app.SyncService {
       } catch (e, st) {
         logger.error('SyncEngine', 'syncAccount: 收尾 pull(用户级) 失败', e, st);
       }
+    }
+
+    // 与实时 pull 对齐:有数据被拉取应用时,清空状态缓存并广播 PullCompleted,
+    // 避免 syncAccount 内的 pull('') 不经 _schedulePull 而没有清缓存/刷新,
+    // UI 一直显示旧同步状态。
+    if (totalPulled > 0) {
+      clearStatusCache();
+      _emit(PullCompleted(ledgerId: '', applied: totalPulled));
     }
 
     // 周期清理已推送的旧变更（与 sync() 同节流）。

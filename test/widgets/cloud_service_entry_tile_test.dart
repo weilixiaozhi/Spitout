@@ -88,6 +88,13 @@ void main() {
     expect(find.byType(CircularProgressIndicator), findsNothing);
   });
 
+  testWidgets('localOnly → localStorage + 本地账本不上云文案', (tester) async {
+    await _pumpTile(tester, status: _st(SyncDiff.localOnly));
+
+    _expectLeadingIcon(AppIcons.localStorage);
+    expect(find.text('本地账本，仅存本机'), findsOneWidget);
+  });
+
   testWidgets('notLoggedIn → lock + 未登录', (tester) async {
     await _pumpTile(tester, status: _st(SyncDiff.notLoggedIn));
 

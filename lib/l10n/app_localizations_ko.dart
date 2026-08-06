@@ -667,6 +667,9 @@ class AppLocalizationsKo extends AppLocalizations {
   String get mineSyncNotConfigured => '클라우드가 설정되지 않음';
 
   @override
+  String get mineSyncLocalOnly => '로컬 가계부, 이 기기에만 저장';
+
+  @override
   String get mineSyncNoRemote => '클라우드 데이터 없음';
 
   @override

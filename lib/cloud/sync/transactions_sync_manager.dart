@@ -6,6 +6,7 @@ import 'package:drift/drift.dart' as drift;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 
 import '../../data/db.dart';
+import '../../data/models/ledger_kind.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../core/logging/logger_service.dart';
 import 'sync_diff_service.dart';
@@ -352,6 +353,23 @@ class TransactionsSyncManager implements SyncService {
   @override
   Future<SyncStatus> getStatus({required int ledgerId}) async {
     await _ensureInitialized();
+
+    // 纯本地账本(不上云)直接返回 localOnly:快照型后端只备份云端账本,
+    // 本地账本若走云侧对比会永远显示"本地有数据、云端没有"的假差异。
+    final ledgerRow = await (db.select(db.ledgers)
+          ..where((l) => l.id.equals(ledgerId)))
+        .getSingleOrNull();
+    if (ledgerRow != null &&
+        ledgerRow.isLocalLedger &&
+        (ledgerRow.syncId == null || ledgerRow.syncId!.isEmpty)) {
+      final status = SyncStatus(
+        diff: SyncDiff.localOnly,
+        localCount: 0,
+        localFingerprint: '',
+      );
+      _statusCache[ledgerId] = status;
+      return status;
+    }
 
     // 如果 provider 不可用，返回未登录状态
     if (_syncManager == null || _provider == null) {

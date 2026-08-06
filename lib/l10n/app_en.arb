@@ -335,6 +335,7 @@
     "mineSyncTitle": "Sync",
     "mineSyncNotLoggedIn": "Not logged in",
     "mineSyncNotConfigured": "Cloud not configured",
+    "mineSyncLocalOnly": "Local ledger, device only",
     "mineSyncNoRemote": "No cloud data",
     "mineSyncInSync": "Synced (local {count} records)",
     "mineSyncLocalNewer": "Local updated ({count} records, upload recommended)",

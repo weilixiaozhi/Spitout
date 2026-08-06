@@ -200,6 +200,55 @@ void main() {
           reason: '本地 2 条 vs 远端 3 条 → 面板应提示有差异');
       expect(report.categories.remote, 1);
     });
+
+    test('纯本地账本交易不计入账户级 totalTx(不上云不制造假差异)', () async {
+      final (db, _, _, provider, engine) = await _harness();
+      addTearDown(db.close);
+
+      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+      // 云端账本 1 条 + 本地账本 2 条;本地账本交易同样有本地 UUID syncId。
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerA,
+              type: 'expense',
+              amount: 10000,
+              categoryId: const Value(null),
+              syncId: const Value('tx-cloud-1'),
+            ),
+          );
+      for (final sid in ['tx-local-1', 'tx-local-2']) {
+        await db.into(db.transactions).insert(
+              TransactionsCompanion.insert(
+                ledgerId: localId,
+                type: 'expense',
+                amount: 500,
+                categoryId: const Value(null),
+                syncId: Value(sid),
+              ),
+            );
+      }
+      provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
+        transactionCount: 1,
+        transactionTotal: 1,
+        categoryCount: 0,
+        categoryTotal: 0,
+      );
+
+      final report = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+
+      expect(report, isNotNull);
+      expect(report!.totalTx.local, 1,
+          reason: '纯本地账本不上云,其交易不得计入账户级全量口径');
+      expect(report.totalTx.remote, 1);
+      expect(report.hasDiff, isFalse,
+          reason: '本地账本交易计入后会永久显示"本地比云端多"的假差异');
+    });
   });
 
   group('checkAccountHealth 输出剥离(不传 carrierLedgerId)', () {

@@ -54,6 +54,10 @@ class CloudServiceEntryTile extends ConsumerWidget {
           icon = AppIcons.cloudOff;
           subtitle = l10n.mineSyncNotConfigured;
           break;
+        case SyncDiff.localOnly:
+          icon = AppIcons.localStorage;
+          subtitle = l10n.mineSyncLocalOnly;
+          break;
         case SyncDiff.noRemote:
           icon = AppIcons.cloudQueue;
           subtitle = l10n.mineSyncNoRemote;
