@@ -35,15 +35,9 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
   String? _lastBase;
   Map<String, EffectiveRate>? _lastRates;
 
-  // 币种筛选关键词。复用 showCurrencyPickerSheet 的过滤逻辑:
-  // 按 code(大写包含)或本地化名称(原文包含)匹配,空关键词展示全部。
-  String _query = '';
-  late final TextEditingController _searchController;
-
   @override
   void initState() {
     super.initState();
-    _searchController = TextEditingController();
     // 进页静默拉取:24h 节流 + 单币种 no-op,内部自判,不阻塞 UI。
     WidgetsBinding.instance.addPostFrameCallback((_) {
       refreshExchangeRatesFromUi(ref);
@@ -52,8 +46,6 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
 
   @override
   void dispose() {
-    // 释放搜索框控制器,避免内存泄漏(TextField 在页面销毁后不被引用)。
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -99,15 +91,8 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
     final allQuotes = kCurrencyCodes
         .where((c) => visible.contains(c.toUpperCase()) && c.toUpperCase() != base)
         .toList();
-    // 币种筛选:复用 showCurrencyPickerSheet 的过滤逻辑,
-    // 按 code(大写包含)或本地化名称(原文包含)匹配,与币种选择弹窗体验一致。
-    final quotes = allQuotes.where((code) {
-      final q = _query.trim();
-      if (q.isEmpty) return true;
-      final uq = q.toUpperCase();
-      final name = getCurrencyName(code, context);
-      return code.toUpperCase().contains(uq) || name.contains(q);
-    }).toList();
+    // 汇率列表直接使用可见币种集合,不做搜索过滤。
+    final quotes = allQuotes;
 
     return Scaffold(
       backgroundColor: SpitoutTokens.scaffoldBackground(context),
@@ -341,29 +326,6 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                   ),
                 ),
                 SizedBox(height: 12.0),
-
-                // 币种筛选框:复用 ledgersSearchCurrency 文案与
-                // showCurrencyPickerSheet 的搜索交互,让用户在汇率列表中
-                // 快速定位目标币种(按名称/代码筛选)。
-                TextField(
-                  controller: _searchController,
-                  decoration: InputDecoration(
-                    prefixIcon: const Icon(AppIcons.search),
-                    hintText: l10n.ledgersSearchCurrency,
-                    // 有输入时显示清除按钮,便于一键清空筛选回到全量列表
-                    suffixIcon: _query.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(AppIcons.close, size: 20),
-                            onPressed: () {
-                              _searchController.clear();
-                              setState(() => _query = '');
-                            },
-                          )
-                        : null,
-                  ),
-                  onChanged: (v) => setState(() => _query = v),
-                ),
-                SizedBox(height: 8.0),
 
                 // 2. 汇率列表
                 SectionCard(

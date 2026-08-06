@@ -78,15 +78,24 @@ class AppearanceSettingsPage extends ConsumerWidget {
                                 'green'
                             ? l10n.appearanceExpenseColorGreen
                             : l10n.appearanceExpenseColorRed,
-                        trailing: Container(
-                          width: 14,
-                          height: 14,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: ref.watch(expenseColorSchemeProvider) ==
-                                    'green'
-                                ? SpitoutTokens.success(context)
-                                : SpitoutTokens.error(context),
+                        // 圆点放进与默认右箭头相同的 24×24 图标槽位,
+                        // 保证圆点中心与下方各行的右箭头中心对齐。
+                        trailing: SizedBox(
+                          width: 24,
+                          height: 24,
+                          child: Center(
+                            child: Container(
+                              width: 14,
+                              height: 14,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color:
+                                    ref.watch(expenseColorSchemeProvider) ==
+                                            'green'
+                                        ? SpitoutTokens.success(context)
+                                        : SpitoutTokens.error(context),
+                              ),
+                            ),
                           ),
                         ),
                         onTap: () => _showExpenseColorSchemeDialog(

@@ -12,22 +12,17 @@ import '../../theme/icons/app_icons.dart';
 import '../../theme/shadows.dart';
 import '../../theme/typography.dart';
 import '../../utils/category_utils.dart';
-import '../../utils/currency/currencies.dart' show getCurrencySymbol;
 import '../../widgets/me_suffix.dart';
 import '../../widgets/widgets.dart';
-
-/// 分摊方式卡片的强调等级：普通（AA）、琥珀（指定金额）、弱化（不分摊）。
-enum _MethodAccent { normal, warning, muted }
 
 /// 成员账单详情页（按支出人维度汇总）。
 ///
 /// 内容结构（自上而下）：
 /// 1. 头部：返回 + 成员头像 + 成员名 / 账本名；
-/// 2. 汇总卡（深色英雄卡）：账单汇总 - 总笔数 / 总金额 / 平均金额，
-///    底部展示该成员应收（应付）金额；
-/// 3. 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡；
+/// 2. 汇总卡：账单汇总 - 总笔数 / 总金额，底部展示该成员应收（应付）金额；
+/// 3. 分摊方式：人均分摊 / 指定金额 / 不分摊 笔数三卡；
 /// 4. 账单列表：按日期分组的账单卡片，每笔含分类 / 分摊方式徽标 / 备注 /
-///    时间·付款人 / 本人支出 / 账单总额；AA 账单展开分摊明细，
+///    时间·付款人 / 账单总额；AA 账单展开分摊明细，
 ///    不分摊账单无分摊明细。
 ///
 /// 数据源为 [aaMemberDetailProvider]：展示该成员作为支出人的全部支出明细
@@ -158,9 +153,6 @@ class AaMemberDetailPage extends ConsumerWidget {
       0,
       (sum, b) => sum + b.totalAmount,
     );
-    final avgAmount = data.bills.isEmpty
-        ? 0.0
-        : totalAmount / data.bills.length;
     final aaCount = data.bills.where((b) => b.mode == AaMode.perPerson).length;
     final customCount = data.bills.where((b) => b.mode == AaMode.custom).length;
     final noSplitCount = data.bills
@@ -182,7 +174,6 @@ class AaMemberDetailPage extends ConsumerWidget {
             l10n,
             data,
             totalAmount,
-            avgAmount,
             currencyCode,
           );
         }
@@ -218,103 +209,90 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 汇总卡（深色英雄卡）：账单汇总 - 总笔数 / 总金额 / 平均金额，
+  /// 汇总卡：账单汇总 - 总笔数 / 总金额，
   /// 底部展示该成员应收 / 应付金额（与分摊详情表净额口径一致）。
   Widget _buildSummaryCard(
     BuildContext context,
     AppLocalizations l10n,
     AaMemberDetailData data,
     double totalAmount,
-    double avgAmount,
     String currencyCode,
   ) {
-    // 深色卡上的文字统一用「反色文字 + 透明度」表达层级，
-    // 强调数字用项目琥珀（warning）而非写死的 #amber-400。
-    final heroText = SpitoutTokens.textOnPrimary(context);
-    final heroSub = heroText.withValues(alpha: 0.5);
-    final warn = SpitoutTokens.warning(context);
     final net = data.member.net;
     final netLabel = net.abs() < 0.005
         ? l10n.aaStatisticsSettled
         : (net > 0
               ? l10n.aaStatisticsNetReceiveAmount
               : l10n.aaStatisticsNetPayAmount);
+    // 应收/应付沿用分摊详情表的语义色：正数绿色、负数红色、结清中性色。
+    final netColor = net.abs() < 0.005
+        ? SpitoutTokens.textTertiary(context)
+        : (net > 0
+              ? SpitoutTokens.success(context)
+              : SpitoutTokens.error(context));
 
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
-      decoration: BoxDecoration(
-        color: SpitoutTokens.cardHero(context),
-        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
-      ),
+    return SectionCard(
+      margin: EdgeInsets.zero,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // 标题行：与分摊统计页其他卡片一致使用中性色小字。
           Row(
             children: [
-              Icon(AppIcons.receipt, size: 14, color: heroSub),
+              Icon(
+                AppIcons.receipt,
+                size: 14,
+                color: SpitoutTokens.textTertiary(context),
+              ),
               const SizedBox(width: 6),
               Text(
                 l10n.aaStatisticsBillSummary,
-                style: TextStyle(fontSize: 11, color: heroSub),
+                style: TextStyle(
+                  fontSize: 13,
+                  color: SpitoutTokens.textSecondary(context),
+                ),
               ),
             ],
           ),
           const SizedBox(height: 16),
+          // 总笔数 / 总金额：两个指标共用同一套标签在上、数值在下的居中样式，
+          // 与分摊详情表的成员指标视觉一致，不再为不同字段区分字号和颜色。
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // 总笔数：白字大号。
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '${data.bills.length}',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.w700,
-                        color: heroText,
-                        height: 1,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    Text(
-                      l10n.aaStatisticsTotalCount,
-                      style: TextStyle(fontSize: 11, color: heroSub),
-                    ),
-                  ],
+                child: _buildSummaryMetric(
+                  context,
+                  l10n.aaStatisticsTotalCount,
+                  '${data.bills.length}',
                 ),
               ),
-              // 总金额 / 平均金额：币种符号 + 琥珀数字。
               Expanded(
-                child: _buildHeroAmountColumn(
+                child: _buildSummaryMetric(
                   context,
-                  totalAmount,
                   l10n.aaStatisticsTotal,
-                  currencyCode,
-                  warn,
-                  heroSub,
-                ),
-              ),
-              Expanded(
-                child: _buildHeroAmountColumn(
-                  context,
-                  avgAmount,
-                  l10n.aaStatisticsAverage,
-                  currencyCode,
-                  warn,
-                  heroSub,
+                  formatMoneyWithCurrency(
+                    totalAmount,
+                    currencyCode: currencyCode,
+                  ),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 16),
-          Divider(height: 1, color: heroText.withValues(alpha: 0.12)),
+          Divider(height: 1, color: SpitoutTokens.divider(context)),
           const SizedBox(height: 12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(netLabel, style: TextStyle(fontSize: 12, color: heroSub)),
+              Text(
+                netLabel,
+                style: TextStyle(
+                  fontSize: 12,
+                  color: SpitoutTokens.textSecondary(context),
+                ),
+              ),
               Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
@@ -325,9 +303,9 @@ class AaMemberDetailPage extends ConsumerWidget {
                       currencyCode: currencyCode,
                     ),
                     style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w700,
-                      color: warn,
+                      fontSize: 14,
+                      fontWeight: FontWeight.w600,
+                      color: netColor,
                     ),
                   ),
                 ),
@@ -339,47 +317,41 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 汇总卡金额列：币种符号（小号琥珀）在上、数字（大号琥珀）在下，
-  /// 超宽时等比缩小字号保证金额完整可见。
-  Widget _buildHeroAmountColumn(
+  /// 汇总卡指标列：标签在上、数值在下，二者均水平居中。
+  /// 标签与分摊详情表一致用 11px 三级色，数值统一用 12px 主色加粗。
+  Widget _buildSummaryMetric(
     BuildContext context,
-    double value,
     String label,
-    String currencyCode,
-    Color warn,
-    Color sub,
+    String value,
   ) {
     return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          getCurrencySymbol(currencyCode.toUpperCase()),
-          style: TextStyle(fontSize: 11, color: warn),
+          label,
+          style: TextStyle(
+            fontSize: 11,
+            color: SpitoutTokens.textTertiary(context),
+          ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 4),
         FittedBox(
           fit: BoxFit.scaleDown,
-          alignment: Alignment.centerLeft,
           child: Text(
-            formatMoneyCompact(value, maxDecimals: 2),
+            value,
+            maxLines: 1,
             style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w700,
-              color: warn,
-              height: 1,
+              fontSize: 12,
+              fontWeight: FontWeight.w600,
+              color: SpitoutTokens.textPrimary(context),
             ),
           ),
         ),
-        const SizedBox(height: 6),
-        Text(label, style: TextStyle(fontSize: 11, color: sub)),
       ],
     );
   }
 
-  /// 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡。
-  ///
-  /// 指定金额卡采用琥珀强调（浅底 + 琥珀边框/数字），
-  /// 不分摊卡用弱化中性色（不参与分摊），颜色统一走项目 token。
+  /// 分摊方式：人均分摊 / 指定金额 / 不分摊 笔数三卡。
+  /// 三个方式统一中性样式，不按方式区分颜色，避免视觉杂乱。
   Widget _buildSplitMethod(
     BuildContext context,
     AppLocalizations l10n,
@@ -408,7 +380,6 @@ class AaMemberDetailPage extends ConsumerWidget {
                 context,
                 aaCount,
                 l10n.aaStatisticsModePerPerson,
-                _MethodAccent.normal,
               ),
             ),
             const SizedBox(width: 10),
@@ -417,7 +388,6 @@ class AaMemberDetailPage extends ConsumerWidget {
                 context,
                 customCount,
                 l10n.aaStatisticsModeCustom,
-                _MethodAccent.warning,
               ),
             ),
             const SizedBox(width: 10),
@@ -426,7 +396,6 @@ class AaMemberDetailPage extends ConsumerWidget {
                 context,
                 noSplitCount,
                 l10n.aaModeNoSplit,
-                _MethodAccent.muted,
               ),
             ),
           ],
@@ -439,29 +408,12 @@ class AaMemberDetailPage extends ConsumerWidget {
     BuildContext context,
     int count,
     String label,
-    _MethodAccent accent,
   ) {
-    final warn = SpitoutTokens.warning(context);
-    final (bg, border, number, text) = switch (accent) {
-      _MethodAccent.normal => (
-        SpitoutTokens.surface(context),
-        SpitoutTokens.divider(context),
-        SpitoutTokens.textPrimary(context),
-        SpitoutTokens.textTertiary(context),
-      ),
-      _MethodAccent.warning => (
-        warn.withValues(alpha: 0.08),
-        warn.withValues(alpha: 0.3),
-        warn,
-        warn,
-      ),
-      _MethodAccent.muted => (
-        SpitoutTokens.surfaceSecondary(context),
-        SpitoutTokens.divider(context),
-        SpitoutTokens.textSecondary(context),
-        SpitoutTokens.textTertiary(context),
-      ),
-    };
+    // 三种分摊方式共用同一套表面/边框/文字 token。
+    final bg = SpitoutTokens.surface(context);
+    final border = SpitoutTokens.divider(context);
+    final number = SpitoutTokens.textPrimary(context);
+    final text = SpitoutTokens.textTertiary(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
       decoration: BoxDecoration(
@@ -566,7 +518,7 @@ class AaMemberDetailPage extends ConsumerWidget {
   }
 
   /// 单笔账单：分类图标 + 分类名/分摊方式徽标 + 备注 + 时间·付款人 +
-  /// 右侧本人支出/账单总额；AA 账单下方展开分摊明细，不分摊无明细。
+  /// 右侧账单总额；AA 账单下方展开分摊明细，不分摊无明细。
   Widget _buildBillRow(
     BuildContext context,
     AppLocalizations l10n,
@@ -648,32 +600,23 @@ class AaMemberDetailPage extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              // 右侧：本人支出（AA 为应摊额，不分摊为全额）+ 账单总额。
+              // 右侧：账单总额（红色加粗）。本人应摊金额已在下方的分摊明细中
+              // 展示，这里不再重复显示，副标题「账单总额」一并移除。
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   AmountText(
-                    value: -bill.myShare,
-                    signed: true,
+                    value: bill.totalAmount,
+                    signed: false,
                     showCurrency: true,
                     decimals: 2,
                     currencyCode: currencyCode,
+                    scaleDown: true,
                     style: TextStyle(
                       fontSize: 13,
                       fontWeight: FontWeight.w600,
                       color: SpitoutTokens.error(context),
                     ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    '${l10n.aaStatisticsTxTotalPrefix} '
-                    '${formatMoneyWithCurrency(bill.totalAmount, currencyCode: currencyCode)}',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -756,23 +699,14 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 分摊方式徽标：AA分摊（主题蓝）/ 指定金额（琥珀）/ 不分摊（中性灰），
-  /// 颜色走项目主题 token，不硬编码色值。
+  /// 分摊方式徽标：三种方式统一中性色，不按方式区分颜色。
   Widget _buildSplitBadge(
     BuildContext context,
     AaMode mode,
     AppLocalizations l10n,
   ) {
-    final primary = Theme.of(context).colorScheme.primary;
-    final warn = SpitoutTokens.warning(context);
-    final (color, bg) = switch (mode) {
-      AaMode.perPerson => (primary, primary.withValues(alpha: 0.08)),
-      AaMode.custom => (warn, warn.withValues(alpha: 0.08)),
-      AaMode.noSplit => (
-        SpitoutTokens.textSecondary(context),
-        SpitoutTokens.surfaceSecondary(context),
-      ),
-    };
+    final color = SpitoutTokens.textSecondary(context);
+    final bg = SpitoutTokens.surfaceSecondary(context);
     final label = switch (mode) {
       AaMode.perPerson => l10n.aaStatisticsModePerPerson,
       AaMode.custom => l10n.aaStatisticsModeCustom,

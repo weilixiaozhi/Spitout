@@ -227,9 +227,10 @@ void main() {
     // 账单主行：分类名 + 备注 + 分摊明细区。
     expect(find.text('昱阳米粉 晚餐'), findsOneWidget);
     expect(find.text('分摊明细'), findsOneWidget);
-    // 本人应摊 / 账单总额按项目金额口径渲染。
-    expect(find.text('- ¥ 56'), findsOneWidget);
-    expect(find.text('共 ¥ 168'), findsOneWidget);
+    // 汇总卡与账单行各展示一次总额；应摊金额只出现在分摊明细中。
+    expect(find.text('¥ 168'), findsNWidgets(2));
+    expect(find.text('共 ¥ 168'), findsNothing);
+    expect(find.text('- ¥ 56'), findsNothing);
     // 分摊明细中的本人追加「(我)」后缀。
     expect(find.text('张三 (我)', findRichText: true), findsWidgets);
 

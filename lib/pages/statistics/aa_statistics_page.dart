@@ -369,7 +369,8 @@ class AaStatisticsPage extends ConsumerWidget {
 
   /// 转账方案卡:每行 from 付给 to + 金额;已结清展示零转账提示。
   ///
-  /// 「付给」文案使用主题色(蓝色)以突出转账动作;转账金额采用中性色
+  /// 「付给」文案使用主题色(蓝色)以突出转账动作,字号与两侧用户名一致;
+  /// 转账金额采用中性色
   /// (与分摊详情表实付一致),不加粗,保持视觉克制。
   Widget _buildTransferCard(
     BuildContext context,
@@ -457,7 +458,7 @@ class AaStatisticsPage extends ConsumerWidget {
                                 child: Text(
                                   l10n.aaStatisticsTransferSeparator,
                                   style: TextStyle(
-                                    fontSize: 12,
+                                    fontSize: 14,
                                     // 「付给」使用主题色(蓝色),突出转账动作。
                                     color: primaryColor,
                                   ),

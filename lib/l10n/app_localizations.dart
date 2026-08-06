@@ -6970,12 +6970,6 @@ abstract class AppLocalizations {
   /// **'Total amount'**
   String get aaStatisticsTotal;
 
-  /// No description provided for @aaStatisticsAverage.
-  ///
-  /// In en, this message translates to:
-  /// **'Average amount'**
-  String get aaStatisticsAverage;
-
   /// No description provided for @aaStatisticsNetReceiveAmount.
   ///
   /// In en, this message translates to:
@@ -6997,7 +6991,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsModePerPerson.
   ///
   /// In en, this message translates to:
-  /// **'AA split'**
+  /// **'Split equally'**
   String get aaStatisticsModePerPerson;
 
   /// No description provided for @aaStatisticsModeCustom.
@@ -7011,12 +7005,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Split details'**
   String get aaStatisticsSplitDetail;
-
-  /// No description provided for @aaStatisticsTxTotalPrefix.
-  ///
-  /// In en, this message translates to:
-  /// **'Total'**
-  String get aaStatisticsTxTotalPrefix;
 
   /// No description provided for @aaStatisticsPayerPrefix.
   ///

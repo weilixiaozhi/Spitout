@@ -3773,9 +3773,6 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsTotal => '총 금액';
 
   @override
-  String get aaStatisticsAverage => '평균 금액';
-
-  @override
   String get aaStatisticsNetReceiveAmount => '받을 금액';
 
   @override
@@ -3785,16 +3782,13 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsSettled => '정산 완료';
 
   @override
-  String get aaStatisticsModePerPerson => 'AA 분담';
+  String get aaStatisticsModePerPerson => '균등 분담';
 
   @override
   String get aaStatisticsModeCustom => '지정 금액';
 
   @override
   String get aaStatisticsSplitDetail => '분담 상세';
-
-  @override
-  String get aaStatisticsTxTotalPrefix => '총';
 
   @override
   String get aaStatisticsPayerPrefix => '결제';

@@ -3728,9 +3728,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsTotal => '总金额';
 
   @override
-  String get aaStatisticsAverage => '平均金额';
-
-  @override
   String get aaStatisticsNetReceiveAmount => '应收金额';
 
   @override
@@ -3740,16 +3737,13 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsSettled => '已结清';
 
   @override
-  String get aaStatisticsModePerPerson => 'AA分摊';
+  String get aaStatisticsModePerPerson => '人均分摊';
 
   @override
   String get aaStatisticsModeCustom => '指定金额';
 
   @override
   String get aaStatisticsSplitDetail => '分摊明细';
-
-  @override
-  String get aaStatisticsTxTotalPrefix => '共';
 
   @override
   String get aaStatisticsPayerPrefix => '付款';
@@ -7574,9 +7568,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaStatisticsTotal => '總金額';
 
   @override
-  String get aaStatisticsAverage => '平均金額';
-
-  @override
   String get aaStatisticsNetReceiveAmount => '應收金額';
 
   @override
@@ -7586,16 +7577,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaStatisticsSettled => '已結清';
 
   @override
-  String get aaStatisticsModePerPerson => 'AA分攤';
+  String get aaStatisticsModePerPerson => '人均分攤';
 
   @override
   String get aaStatisticsModeCustom => '指定金額';
 
   @override
   String get aaStatisticsSplitDetail => '分攤明細';
-
-  @override
-  String get aaStatisticsTxTotalPrefix => '共';
 
   @override
   String get aaStatisticsPayerPrefix => '付款';

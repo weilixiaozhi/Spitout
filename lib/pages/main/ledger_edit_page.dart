@@ -695,6 +695,16 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     if (confirmed != true || !mounted) return;
 
     try {
+      // 移动/复制会基于数据库当前值生成云端副本，必须先落盘表单里尚未保存的
+      // 元数据（尤其是 AA 开关），否则会出现「界面上已开启、云端副本却是关闭」的
+      // 假状态。保存被用户取消（如币种变更确认）时中止本次归属操作。
+      if (_isEditing && !_isReadOnly) {
+        if (!_formKey.currentState!.validate()) return;
+        final name = _nameController.text.trim();
+        if (name.isEmpty) return;
+        final saved = await _saveExistingLedger(name);
+        if (!saved || !mounted) return;
+      }
       await action();
       if (!mounted) return;
       showToast(context, successText);

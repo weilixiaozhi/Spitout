@@ -3884,9 +3884,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsTotal => 'Total amount';
 
   @override
-  String get aaStatisticsAverage => 'Average amount';
-
-  @override
   String get aaStatisticsNetReceiveAmount => 'To receive';
 
   @override
@@ -3896,16 +3893,13 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsSettled => 'Settled';
 
   @override
-  String get aaStatisticsModePerPerson => 'AA split';
+  String get aaStatisticsModePerPerson => 'Split equally';
 
   @override
   String get aaStatisticsModeCustom => 'Custom amount';
 
   @override
   String get aaStatisticsSplitDetail => 'Split details';
-
-  @override
-  String get aaStatisticsTxTotalPrefix => 'Total';
 
   @override
   String get aaStatisticsPayerPrefix => 'Paid by';
