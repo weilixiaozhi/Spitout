@@ -1054,7 +1054,7 @@ class SyncEngine implements app.SyncService {
   ///   pull('') → pushUserGlobalEntities;
   /// - Phase 2(每个云端账本):复用同一次 storage.list 结果做 fullPush/增量
   ///   决策,无待推 + 已绑定(fast-skip)直接跳过;pull 是用户级全局流,
-  ///   不再逐账本空探针,统一由收尾处的单次 pull('') 覆盖。
+  ///   统一由收尾处的单次 pull('') 覆盖,不逐账本空探针。
   ///
   /// 为什么自实现决策循环而不是循环调 [sync]:
   /// - 保持"一次 list 复用全部账本"的请求优化;

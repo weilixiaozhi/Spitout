@@ -361,7 +361,7 @@ class SpitoutCloudSyncSectionState
   /// 账号头部行：已登录时只读展示账号（一行文案）；未登录时在账号行直接
   /// 给出登录按钮，统一跳转登录页手动输入。
   ///
-  /// 密码不再持久化（见 CloudServiceStore），因此不存在「用缓存凭证自动重登」
+  /// 密码不持久化（见 CloudServiceStore），因此不存在「用缓存凭证自动重登」
   /// 的路径；session 失效后由用户重新登录，避免明文密码落盘。
   Widget _buildAccountSection(BuildContext context, CloudUser? user) {
     final l10n = AppLocalizations.of(context);

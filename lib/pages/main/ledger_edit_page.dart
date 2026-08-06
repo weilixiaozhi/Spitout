@@ -1,7 +1,7 @@
 /// 账本编辑二级页面
 ///
 /// 承载新建 / 编辑（本地+共享）两种模式。
-/// 布局参考编辑分类页：PrimaryHeader + Card 模块列表 + 底部保存按钮。
+/// 布局：PrimaryHeader + Card 模块列表 + 底部保存按钮。
 library;
 
 import 'dart:async';

@@ -15,7 +15,7 @@ class MeSuffix extends StatelessWidget {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     // 间距统一由后缀文本自带的前导空格提供（「 (我)」），与 meSuffixSpan
-    // 口径完全一致；不再叠加 SizedBox，避免 4px + 1 空格的双重间距。
+    // 口径完全一致；不叠加 SizedBox，避免 4px + 1 空格的双重间距。
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [

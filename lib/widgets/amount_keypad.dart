@@ -41,8 +41,7 @@ class AmountKeypad extends StatelessWidget {
   /// 当前日期（日期键显示）
   final DateTime date;
 
-  /// 是否显示时间（开关决定日期键格式）。
-  /// 5 列滚轮始终含时分，此处保留参数兼容父 sheet 偏好。
+  /// 是否显示时间（决定日期键是单行日期还是日期 + 时间双行）。
   final bool showTime;
 
   /// 计算器状态机：waiting / operating / calculated
@@ -207,7 +206,7 @@ class AmountKeypad extends StatelessWidget {
                           fontWeight: FontWeight.w600,
                           // 双行日期字号从 u 派生：当前 u∈[30,35] 时 u*0.18
                           // 仅 5.4~6.3px，下限 7px 保证可读且能塞进最小键高；
-                          // 上限 9px 防未来 u 增大后溢出（消除 u<44 死分支）。
+                          // 上限 9px 防止 u 增大后溢出。
                           fontSize: (u * 0.18).clamp(7.0, 9.0)),
                     ),
                     const SizedBox(height: 2),

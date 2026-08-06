@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_route.dart';
 import '../theme/colors.dart';
 
-/// shadcn/ui 风格 Bottom Sheet wrapper(对应设计稿 AppSheet 语义组件)。
+/// shadcn/ui 风格 Bottom Sheet wrapper（AppSheet 语义组件）。
 ///
 /// 统一了拖拽条、顶部圆角(16px)、标题/副标题区、内容区、底部按钮区。
 /// 所有新 BottomSheet(月份选择、记录详情等)都走本组件,保证视觉一致。

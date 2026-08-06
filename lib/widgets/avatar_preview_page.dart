@@ -20,7 +20,7 @@ import '../theme/icons/app_icons.dart';
 ///
 /// - 纯黑背景 + 居中圆形大图（有头像）或品牌图标（无头像）。
 /// - 单点屏幕任意空白处可收起（关闭当前路由）。
-/// - 左上角关闭按钮（参考图位置，非右上）。
+/// - 左上角关闭按钮（非右上）。
 /// - 底部操作按钮：始终显示上传新头像，有头像时额外显示删除头像。
 ///
 /// [avatarPath] 头像本地文件绝对路径；为 null 表示无头像，全屏显示品牌图标。
@@ -82,7 +82,7 @@ class AvatarPreviewPage extends StatelessWidget {
                   // 无头像：全屏展示虚拟用户同等 person 图标占位
                   : Icon(AppIcons.person, size: 120.0, color: Colors.white70),
             ),
-            // 左上角关闭 X（参考图位置，非右上）
+            // 左上角关闭 X（非右上）
             SafeArea(
               child: Align(
                 alignment: Alignment.topLeft,

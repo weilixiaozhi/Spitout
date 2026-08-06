@@ -31,7 +31,7 @@ import 'package:spitout/services/data/tx_author_service.dart';
 // 此处 re-export 供消费方（picker / 反查 widget）统一引用。
 export 'package:spitout/providers/core/refresh_ticks.dart';
 // 共享账本成员 / 邀请 DTO 经 providers 层 barrel 转发给 UI，
-// data 层不再反向依赖 cloud 层（分层规则：data 不得 import cloud）。
+// data 层不反向依赖 cloud 层（分层规则：data 不得 import cloud）。
 export 'package:spitout/cloud/spitout_cloud.dart'
     show SpitoutCloudLedgerMember, SpitoutCloudInvite;
 

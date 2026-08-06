@@ -81,7 +81,7 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     );
     stepTime = DateTime.now();
 
-    // 一次性修复共享账本历史脏数据（旧版 pull 把 Owner 分类错绑到成员本地分类）
+    // 一次性修复共享账本历史脏数据（Owner 分类被错绑到成员本地分类）
     try {
       await ref.watch(sharedLedgerCategoryRepairRunProvider.future);
     } catch (e, st) {
@@ -160,7 +160,7 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
     });
 
     // 周期交易生成放到启动后异步执行：内部是「账本×模板×每笔」的 N+1 查询，
-    // 同步等待会拖长首屏。改为 fire-and-forget，完成后统一走 PostProcessor
+    // 同步等待会拖长首屏,这里 fire-and-forget,完成后统一走 PostProcessor
     // 刷新 + 触发同步（同步本身由数据变更驱动的 Coordinator 下沉，不依赖 UI）。
     unawaited(
       Future.microtask(() async {

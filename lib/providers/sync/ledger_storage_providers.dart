@@ -62,7 +62,7 @@ Future<void> moveLedgerToCloudProvider(
   _refreshAfterMove(ref);
 }
 
-/// 登录 Spitout Cloud 后执行全库本地身份迁移(方案 B)。
+/// 登录 Spitout Cloud 后执行全库本地身份迁移。
 ///
 /// 把库中所有 localSelfId 引用改写为云 userId,使本地账本的「我」与云身份统一。
 /// 幂等(标记位防重跑),失败仅记日志不阻塞 UI。

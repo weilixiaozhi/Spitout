@@ -87,7 +87,7 @@ class FileReaderService {
       int offset = 0;
 
       while (offset < length) {
-        // 每块读取前检查取消标志:大文件读取可及时中断,不再整文件读入。
+        // 每块读取前检查取消标志:大文件读取可及时中断,不整文件读入。
         if (isCancelled != null && isCancelled()) {
           throw const FileReadCancelledException();
         }

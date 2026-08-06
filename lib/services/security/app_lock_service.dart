@@ -80,11 +80,11 @@ class AppLockService {
 
     final ok = _verifyHash(pin, savedHash);
     if (ok) {
-      // 验证成功：清空失败计数；旧版无盐 SHA-256 哈希顺手升级为新格式。
+      // 验证成功：清空失败计数；存量无盐 SHA-256 哈希升级为加盐 PBKDF2。
       await _resetFailures(prefs);
       if (!savedHash.startsWith('$_pinHashVersion\$')) {
         await prefs.setString(prefsKeyPinHash, hashPin(pin));
-        logger.info('AppLock', '旧版 PIN 哈希已升级为加盐 PBKDF2');
+        logger.info('AppLock', '存量 PIN 哈希已升级为加盐 PBKDF2');
       }
     } else {
       await _recordFailure(prefs);
@@ -203,8 +203,7 @@ class AppLockService {
   static Future<bool> authenticateWithBiometrics(
       {String reason = '请验证身份以解锁应用'}) async {
     try {
-      // local_auth 3.x 起不再使用 AuthenticationOptions，
-      // 直接以命名参数指定：仅生物识别 + 跨前后台保持认证状态
+      // 以命名参数指定认证选项：仅生物识别 + 跨前后台保持认证状态
       return await _localAuth.authenticate(
         localizedReason: reason,
         biometricOnly: true,
@@ -216,7 +215,7 @@ class AppLockService {
     }
   }
 
-  /// 校验存储的哈希是否匹配（兼容旧版无盐 SHA-256）。
+  /// 校验存储的哈希是否匹配（兼容存量无盐 SHA-256）。
   static bool _verifyHash(String pin, String savedHash) {
     if (savedHash.startsWith('$_pinHashVersion\$')) {
       try {
@@ -238,7 +237,7 @@ class AppLockService {
         return false;
       }
     }
-    // 旧格式：无盐单次 SHA-256，仅用于校验存量哈希，验证成功后由调用方升级。
+    // 无盐单次 SHA-256 旧格式：仅用于校验存量哈希，验证成功后由调用方升级。
     return sha256.convert(utf8.encode(pin)).toString() == savedHash;
   }
 

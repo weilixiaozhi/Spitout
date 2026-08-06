@@ -111,7 +111,7 @@ Future<UserDisplayNameResolver> buildDisplayNameResolver(
   String? localOwnerDisplayName,
 }) async {
   // 同步 watch 登录态（StreamProvider）：登录 / 登出 / token 静默恢复后，
-  // 调用方 build 自动重建解析器，不再依赖其它依赖项恰好变化。
+  // 调用方 build 自动重建解析器，不依赖其它依赖项恰好变化。
   // 必须在首个 await 之前 watch，否则 Riverpod 会因 build 期间异步读取报错。
   final userAsync = ref.watch(cloudCurrentUserProvider);
   final localSelfId = await ref.read(localSelfIdProvider.future);

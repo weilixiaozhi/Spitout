@@ -59,8 +59,8 @@ class SpitoutMenuItem {
 
 /// 美化的弹出菜单组件
 ///
-/// 严格按「微信右上角更多菜单」参考图还原：
-/// - 菜单紧贴触发按钮下沿，纵向间距 4px（参考图视觉测距）
+/// 视觉规范：
+/// - 菜单紧贴触发按钮下沿，纵向间距 4px
 /// - 弹窗宽度固定 150px（覆盖屏幕右侧近 1/3 宽度，比省略号宽得多）
 /// - 每行高度 56px、行间用 0.5px 浅灰横线分隔（"虚线"观感实际为细实线）
 /// - 圆角 8px、轻阴影
@@ -79,17 +79,17 @@ class SpitoutPopupMenu extends StatelessWidget {
 
   /// 菜单相对触发按钮的偏移。
   ///
-  /// 默认 (-15, 50) 是针对「右上角省略号」场景的既有视觉调校；换到其它位置 /
-  /// 字号 / 无障碍缩放下应显式传入适配值，不再假设触发图标恒在右上角。
+  /// 默认 (-15, 50) 是针对「右上角省略号」场景的视觉调校；换到其它位置 /
+  /// 字号 / 无障碍缩放下应显式传入适配值，不假设触发图标恒在右上角。
   final Offset menuOffset;
 
   /// 提示文字
   final String? tooltip;
 
-  /// 菜单宽度：固定值让弹窗比省略号宽得多，匹配参考图观感
+  /// 菜单宽度：固定值让弹窗比省略号宽得多
   static const double _menuWidth = 150;
 
-  /// 每行高度：参考图视觉测距约 56px（与微信弹窗一致）
+  /// 每行高度：56px
   static const double _rowHeight = 56;
 
   const SpitoutPopupMenu({
@@ -107,8 +107,8 @@ class SpitoutPopupMenu extends StatelessWidget {
     final isDark = SpitoutTokens.isDark(context);
 
     // 设计要点：
-    // 1) offset (0, 4) 让弹窗紧贴省略号下沿（参考图纵向间距极小）；
-    // 2) shape 8px 圆角、elevation 阴影与参考图一致；
+    // 1) offset (0, 4) 让弹窗紧贴省略号下沿；
+    // 2) shape 8px 圆角、elevation 阴影；
     // 3) 单项宽度由 SizedBox(width: _menuWidth) 撑出，
     //    PopupMenuButton 会以最大子项宽度决定弹窗宽度。
     return PopupMenuButton<String>(
@@ -166,8 +166,8 @@ class SpitoutPopupMenu extends StatelessWidget {
     // 实现细节：
     // - padding 设为 zero，把水平 16px 内边距挪到 SizedBox 外层 Container，
     //   让底部细线能贯通至弹窗左右缘，避免被 padding 截断出现"线被截断"的瑕疵；
-    // - 0.5px 浅灰细线模拟参考图"虚线"观感；
-    // - height 56 + 居中竖直摆放，匹配参考图行高与左右边距。
+    // - 0.5px 浅灰细线模拟"虚线"观感；
+    // - height 56 + 居中竖直摆放。
     return PopupMenuItem<String>(
       value: item.value,
       height: _rowHeight,

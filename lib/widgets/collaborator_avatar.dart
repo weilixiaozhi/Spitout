@@ -48,7 +48,7 @@ class CollaboratorAvatarSlot extends StatelessWidget {
       return CircleAvatar(radius: radius, backgroundColor: bg);
     }
 
-    // 无头像:直接展示虚拟用户同等 person 图标,不再用昵称首字母兜底,
+    // 无头像:直接展示虚拟用户同等 person 图标,不用昵称首字母兜底,
     // 保证所有未设置头像的占位样式全局一致。
     if (resolved == null) {
       return PersonAvatar(size: radius * 2);

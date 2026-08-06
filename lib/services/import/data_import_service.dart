@@ -26,7 +26,7 @@ import '../../core/logging/logger_service.dart';
 /// 导入被用户取消时抛出。
 ///
 /// 由 UI 层的进度回调在批次间隙抛出,导入服务循环据此中止,
-/// 已落库的批次保留、未处理的批次不再写入。
+/// 已落库的批次保留、未处理的批次不写入。
 class ImportCancelledException implements Exception {
   const ImportCancelledException();
 }
@@ -364,7 +364,7 @@ class DataImportService {
     logger.info('TxImport', '开始导入交易: $total 条 (recordChanges=$recordChanges)');
 
     // 入口统一校验：同步 apply 等直接调用路径同样可能收到脏数据，
-    // 非法交易计入 failed 并跳过，不再拼进 SQL。
+    // 非法交易计入 failed 并跳过，不拼进 SQL。
     final validTransactions = <ImportTransaction>[];
     for (final t in transactions) {
       final errors = validateImportTransaction(t);

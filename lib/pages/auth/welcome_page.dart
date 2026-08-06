@@ -271,7 +271,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
                   const SizedBox(height: 12),
 
-                  // 老用户导入配置入口（紧凑样式，从原语言页迁移至此）
+                  // 导入配置入口（紧凑样式）
                   TextButton(
                     onPressed: _isImporting
                         ? null

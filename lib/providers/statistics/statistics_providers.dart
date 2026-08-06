@@ -52,7 +52,7 @@ final lastTodayExpenseProvider = NotifierProvider.family<
 
 // 统计：今日支出（本地时区自然日，全局仅支出模式）
 // now 在 provider 内部取 DateTime.now(),外部只需传 ledgerId。
-// 对应设计稿首页"本月支出汇总卡"的"今日"列。
+// 首页「本月支出汇总卡」的「今日」列。
 final todayExpenseProvider = FutureProvider.family
     .autoDispose<double, int>((ref, ledgerId) async {
   final repo = ref.watch(repositoryProvider);
@@ -75,7 +75,7 @@ final lastWeekExpenseProvider = NotifierProvider.family<
 );
 
 // 统计：本周支出（周一为起始的自然周，全局仅支出模式）
-// 对应设计稿首页"本月支出汇总卡"的"本周"列。
+// 首页「本月支出汇总卡」的「本周」列。
 final weekExpenseProvider = FutureProvider.family
     .autoDispose<double, int>((ref, ledgerId) async {
   final repo = ref.watch(repositoryProvider);

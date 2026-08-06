@@ -12,7 +12,7 @@ class EntitySerializer {
   ///
   /// AA 分摊字段(paidByUserId/aaMode/aaParticipants/aaSplits)采用"非空才发"
   /// 守卫：null 字段不发键,server merge 走缺键保护(保留本地既有值),
-  /// 旧 server 收不到未知键也不会崩(向后兼容)。
+  /// 旧 server 对未知键安全忽略(向后兼容)。
   static Map<String, dynamic> serializeTransaction(
     Transaction tx, {
     String? categoryName,

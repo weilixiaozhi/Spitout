@@ -211,7 +211,7 @@ class AaStatisticsService {
     }
     if (participants.isEmpty) return null;
 
-    // 数据库金额为整数分,直接转 Decimal,不再经 double 归一化。
+    // 数据库金额为整数分,直接转 Decimal,不经过 double 归一化。
     final totalDecimal = toDecimalFromCents(nativeCents);
     final shares = <String, double>{};
 

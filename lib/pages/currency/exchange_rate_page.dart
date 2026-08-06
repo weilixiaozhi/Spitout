@@ -52,7 +52,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
 
   @override
   void dispose() {
-    // 释放搜索框控制器,避免内存泄漏(TextField 在页面销毁后不再被引用)。
+    // 释放搜索框控制器,避免内存泄漏(TextField 在页面销毁后不被引用)。
     _searchController.dispose();
     super.dispose();
   }

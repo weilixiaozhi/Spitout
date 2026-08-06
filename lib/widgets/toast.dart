@@ -12,7 +12,7 @@ class _ActiveToast {
 }
 
 /// 按 Overlay 实例跟踪活跃 toast，避免根 / 嵌套多个 Overlay 互相干扰；
-/// 同一 Overlay 上「后到覆盖前到」，不再叠加多个全屏 OverlayEntry。
+/// 同一 Overlay 上「后到覆盖前到」，不叠加多个全屏 OverlayEntry。
 final Map<OverlayState, _ActiveToast> _activeToasts = {};
 
 /// 轻量 Toast（基础 UI 工具）：覆盖层展示，不占据布局，不顶起 FAB

@@ -38,7 +38,7 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
   late TextEditingController _searchController;
   late FocusNode _focusNode;
   // 锚点链接：浮层经 CompositedTransformFollower 跟随触发框，滚动 / 键盘 /
-  // 方向变化时自动跟随，不再依赖打开瞬间的静态坐标。
+  // 方向变化时自动跟随，不依赖打开瞬间的静态坐标。
   final LayerLink _layerLink = LayerLink();
   OverlayEntry? _overlayEntry;
   bool _isOpen = false;
@@ -87,7 +87,7 @@ class _SearchableDropdownState<T> extends State<SearchableDropdown<T>> {
     final renderBox = context.findRenderObject() as RenderBox;
     final size = renderBox.size;
     final offset = renderBox.localToGlobal(Offset.zero);
-    // 下方空间不足 240px（浮层最小高度）时改为向上展开，避免菜单溢出屏幕底部。
+    // 下方空间不足 240px（浮层最小高度）时向上展开，避免菜单溢出屏幕底部。
     final overlayBox =
         Overlay.of(context).context.findRenderObject() as RenderBox;
     final belowSpace = overlayBox.size.height - (offset.dy + size.height + 4);

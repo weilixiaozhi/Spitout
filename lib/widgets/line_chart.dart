@@ -24,10 +24,10 @@ String formatChartValueLabel(double v) {
 /// - 数据层（折线/数据点/虚线网格/刻度/常驻数值标注）交给 fl_chart 渲染，
 ///   避免手维护 700+ 行 CustomPainter 的几何/命中逻辑，降低回归风险。
 /// - 坐标轴骨架（L 形轴线 + 末端箭头 + X 轴单位标签）fl_chart 无法表达，
-///   由一个与 fl_chart 布局常量严格对齐的小 painter 绘制，保证视觉与设计稿一致。
+///   由一个与 fl_chart 布局常量严格对齐的小 painter 绘制，保证视觉一致。
 /// - 空数据态：只渲染轴骨架 + 虚线网格 + Y 刻度，不画任何折线
 ///   （空态底部无「0 值基线」蓝色线条）。
-/// - 右侧安全区：数据区右端距 X 轴箭头 46px（原 16px + 需求追加 30px），
+/// - 右侧安全区：数据区右端距 X 轴箭头 46px，
 ///   折线终点/数值标注/单位标签均不会遮盖箭头。
 class AnalyticsLineChart extends StatelessWidget {
   /// 折线数值序列（空列表 = 空数据态）。
@@ -211,7 +211,7 @@ class AnalyticsLineChart extends StatelessWidget {
                   enabled: false,
                   touchTooltipData: fl.LineTouchTooltipData(
                     getTooltipColor: (_) => Colors.transparent,
-                    // fl_chart 1.x 中圆角参数改为 BorderRadius 类型
+                    // 圆角参数为 BorderRadius 类型
                     tooltipBorderRadius: BorderRadius.zero,
                     tooltipPadding: EdgeInsets.zero,
                     tooltipMargin: 10,

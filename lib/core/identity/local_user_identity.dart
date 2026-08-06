@@ -7,11 +7,10 @@ import '../logging/logger_service.dart';
 ///
 /// 设计意图：未登录云时，本地账本的「我」需要一个稳定的标识，
 /// 用于 paidByUserId / createdByUserId / lastEditedByUserId /
-/// ledger.ownerUserId 等字段。历史上用字面量 'me' 占位，但它会
-/// 在界面上泄漏、且无法被登录后迁移覆盖。现在改为持久化的真 UUID，
-/// 每台设备首次启动生成一次、写入 SharedPreferences，此后稳定不变。
+/// ledger.ownerUserId 等字段。每台设备首次启动生成一次持久化的真 UUID、
+/// 写入 SharedPreferences，此后稳定不变。
 ///
-/// 与云身份的关系（方案 B）：
+/// 与云身份的关系：
 /// - 未登录：所有作者字段写 localSelfId。
 /// - 已登录：新数据写云 userId；首次登录时通过迁移服务把历史的
 ///   localSelfId 一次性改写为云 userId。

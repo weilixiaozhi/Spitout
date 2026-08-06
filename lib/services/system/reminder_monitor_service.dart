@@ -84,7 +84,7 @@ class ReminderMonitorService with WidgetsBindingObserver {
         final minute = prefs.getInt(ReminderPrefs.minute) ?? 0;
         final ctx = _contextProvider?.call();
         // 优先取注入的 BuildContext（跟随当前语言）；拿不到时按系统语言解析，
-        // 不再硬编码中文兜底（文案统一收敛到 l10n）。
+        // 不硬编码中文兜底（文案统一收敛到 l10n）。
         final l10n = (ctx != null && ctx.mounted)
             ? AppLocalizations.of(ctx)
             : lookupAppLocalizations(ui.PlatformDispatcher.instance.locale);

@@ -61,7 +61,7 @@ class _AaOptionRow extends StatelessWidget {
         child: Row(
           children: [
             // 参与人头像位:未设置头像时统一展示虚拟用户同等 person 图标,
-            // 虚拟用户与真实成员保持一致,不再用底色区分。
+            // 虚拟用户与真实成员保持一致,不用底色区分。
             const PersonAvatar(size: 32, iconSize: 16),
             const SizedBox(width: 12),
             Expanded(

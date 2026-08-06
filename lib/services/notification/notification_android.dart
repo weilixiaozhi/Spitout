@@ -21,7 +21,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     );
     const initSettings = InitializationSettings(android: androidSettings);
 
-    // 22.x 起 initialize 改为命名参数
+    // initialize 使用命名参数
     await _plugin.initialize(settings: initSettings);
 
     // 不在初始化阶段自动请求通知权限，避免应用首次安装启动即弹出系统权限弹窗。
@@ -246,7 +246,7 @@ class AndroidNotificationUtil implements util.NotificationUtil {
 
     const notificationDetails = NotificationDetails(android: androidDetails);
 
-    // 22.x 起 show 改为命名参数
+    // show 使用命名参数
     await _plugin.show(
       id: id,
       title: title,

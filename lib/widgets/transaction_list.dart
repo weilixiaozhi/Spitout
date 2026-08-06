@@ -115,7 +115,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
   void initState() {
     super.initState();
     _controller = widget.controller ?? FlutterListViewController();
-    // 首次进入即构建扁平列表，build 不再重复分组排序。
+    // 首次进入即构建扁平列表，build 不重复分组排序。
     _buildFlatItems();
   }
 

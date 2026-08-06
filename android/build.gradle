@@ -5,19 +5,14 @@ allprojects {
     }
 }
 
-// Gradle 9 移除了 project.buildDir 旧 API，改用 layout.buildDirectory 设置构建目录。
+// 将各模块构建目录统一重定向到仓库根目录的 build/ 下，便于统一清理。
 rootProject.layout.buildDirectory.set(layout.projectDirectory.dir("../build"))
 subprojects {
     project.layout.buildDirectory.set(rootProject.layout.buildDirectory.dir(project.name))
 }
 
-// file_picker 11.x 在 AGP 9 下不再应用 KGP（其 build.gradle 中通过
-// `if (!isAgp9OrAbove) { apply plugin: 'org.jetbrains.kotlin.android' }`
-// 分支跳过，转而依赖 AGP 内置 Kotlin 编译）。但本项目为兼容其他仍未迁移的插件，
-// 已在 gradle.properties 全局禁用内置 Kotlin（android.builtInKotlin=false），
-// 导致该插件模块的 Kotlin 源码没有编译器编译，最终 javac 阶段报
-// "找不到 FilePickerPlugin 类"。这里在 AGP 应用完成后为它单独补上 KGP，
-// 与其他仍使用 KGP 的插件保持一致。
+// 项目在 gradle.properties 中全局禁用了 AGP 内置 Kotlin（android.builtInKotlin=false），
+// 而 file_picker 模块自身的 Kotlin 源码需要 KGP 编译，这里在 AGP 应用完成后为其单独补上。
 subprojects {
     if (project.name == 'file_picker') {
         project.plugins.withId('com.android.library') {

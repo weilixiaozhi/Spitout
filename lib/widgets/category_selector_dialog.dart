@@ -60,7 +60,7 @@ Future<Category?> showCategorySelector(
 
 /// 显示选择所属分类的 BottomSheet（用于分类编辑页选择父分类）
 ///
-/// 设计参考 Figma 节点 22:1497：
+/// 内容结构：
 /// - 顶部标题"选择所属分类"
 /// - 搜索框（搜索分类名）
 /// - 分类列表（仅一级分类，每行含图标 + 名称 + 选中勾，行间细分割线分隔）
@@ -676,7 +676,7 @@ class _CategorySelectorDialogState
   Widget build(BuildContext context) {
     // 共享账本:WS shared_resource_change 推送后 tick bump 触发 rebuild
     // → 仅在该 tick 变化时重建分类加载 future（其余 rebuild 走缓存），
-    // 搜索 / 父级 setState 只做内存过滤，不再全量重查数据库。
+    // 搜索 / 父级 setState 只做内存过滤，不全量重查数据库。
     // 否则 A 改分类名 B 这边 picker 显示旧名,要重启 app。
     final sharedTick = ref.watch(sharedResourceRefreshProvider);
     if (_categoriesFuture == null || sharedTick != _loadedSharedResourceTick) {

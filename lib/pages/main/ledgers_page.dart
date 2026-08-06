@@ -90,7 +90,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   /// 下拉刷新回调：自增刷新信号触发本地 provider 重算，并 await 完成，
   /// 使 RefreshIndicator 的转圈能在数据就绪后正确收尾。
   ///
-  /// 为什么不弹结果 Toast:「远端账本」概念下线后刷新只是重查本地库,
+  /// 为什么不弹结果 Toast:刷新只是重查本地库,
   /// RefreshIndicator 的转圈收尾本身就是完成反馈,再弹 Toast 反而打扰。
   Future<void> _handleRefresh(WidgetRef ref) async {
     ref.read(ledgerListRefreshProvider.notifier).tick();

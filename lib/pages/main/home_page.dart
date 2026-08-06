@@ -674,7 +674,7 @@ class _HomePageState extends ConsumerState<HomePage>
     final ledgerId = ref.watch(currentLedgerIdProvider);
     // PageView 启用原生跟手滚动：手指左右拖动时页面完全跟随手指位移（ViewPager 驱动模式）。
     // 横向手势由 PageView 接管，竖向手势下沉给列表，由手势竞技场自动分流，
-    // 解决竖向列表滑动与横向月份切换的冲突（参考微信列表交互），禁止点击即切换或松手才动的生硬效果。
+    // 解决竖向列表滑动与横向月份切换的冲突：跟手切换，避免点击即切换或松手才动的生硬效果。
     // 外包统一水平内边距：让交易列表（及相邻页骨架屏）整体内缩，与头部卡片左右边缘对齐；
     // 仅收窄可视区，PageView 仍接管跟手切月手势，且阈值物理基于 viewportDimension 自适应，翻页逻辑不受影响。
     //
@@ -766,7 +766,7 @@ class _HomePageState extends ConsumerState<HomePage>
                     );
                   },
                   onDelete: (tx) async {
-                    // 设计稿删除确认:标题 + 含"分类名"的描述(恒定分类值,不用备注)
+                    // 删除确认:标题 + 含「分类名」的描述(恒定分类值,不用备注)
                     final l10n = AppLocalizations.of(context);
                     String categoryName = l10n.categoryEmpty;
                     if (tx.categoryId != null) {
@@ -830,9 +830,9 @@ class _HomePageState extends ConsumerState<HomePage>
   }
 }
 
-/// 头部汇总卡片:设计稿"本月支出汇总卡"(主色背景 + 白色文字 + 圆角 19px)。
+/// 头部汇总卡片:「本月支出汇总卡」(主色背景 + 白色文字 + 圆角 19px)。
 ///
-/// 布局(Figma 53:6):
+/// 布局:
 /// - 卡片内边距四边 20;内容自上而下:标题(本月支出) → 间距 10 → 主金额
 ///   (36px / Regular / 字距 -0.05em) → 间距 12 → 今日/本周小字。
 /// - 账本徽章以 tab 形式挂在卡片右缘(半透明白底、仅左侧圆角 5),

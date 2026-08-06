@@ -241,7 +241,7 @@ final aaParticipantOptionsProvider = FutureProvider.autoDispose
 /// 账本成员支出统计项(按 paidByUserId 聚合)。
 ///
 /// 设计意图:成员支出模块需要包含虚拟用户的支出,而云端 memberStats 仅含
-/// 真实成员。改为本地按交易 paidByUserId 聚合(支出人 = paidByUserId),
+/// 真实成员。按交易 paidByUserId 本地聚合(支出人 = paidByUserId),
 /// 关联参与人名册(真实成员 + 虚拟用户)拿展示名,与 AA 分摊统计口径一致。
 class MemberExpenseStatItem {
   const MemberExpenseStatItem({

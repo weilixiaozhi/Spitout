@@ -398,7 +398,7 @@ class LocalBackupService {
   /// 原子复制：先写同目录临时文件，再通过「旧文件先改名退避」的方式落位。
   ///
   /// 目标存在时直接 rename 在 Windows 上会失败，且"先删目标再 rename"
-  /// 存在目标缺失窗口；改为先把旧文件改名 .old，再 rename 新文件，
+  /// 存在目标缺失窗口；先把旧文件改名 .old，再 rename 新文件，
   /// 新文件落位失败时把 .old 换回，保证任意时刻目标路径要么是旧文件、
   /// 要么是新文件。
   Future<void> _copyAtomic(File source, File target) async {

@@ -72,5 +72,5 @@ export 'package:spitout/providers/import_export/public_export_dir_providers.dart
 // AA 分摊(统计 + 虚拟用户管理 + 账本开关)
 export 'package:spitout/providers/statistics/aa_statistics_providers.dart';
 
-// Riverpod 3 兼容的 provider.future 首值读取工具（UI 层经本门面统一使用）
+// provider.future 首值读取工具（UI 层经本门面统一使用）
 export 'package:spitout/providers/core/read_provider_future.dart';

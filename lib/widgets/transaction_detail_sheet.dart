@@ -27,7 +27,7 @@ import 'user_display_name_resolver.dart';
 import 'aa_fields_utils.dart';
 import '../theme/icons/app_icons.dart';
 
-/// 记录详情 Bottom Sheet(对应设计稿"记录详情 Bottom Sheet")。
+/// 记录详情 Bottom Sheet。
 ///
 /// 列表项点击 → 打开本 Sheet(展示详情) → 点"编辑记账"进入编辑器。
 /// 详情 Sheet 让用户先看再改,并集中展示协作成员与编辑历史(共享账本场景)。
@@ -274,7 +274,7 @@ class _TransactionDetailBody extends ConsumerWidget {
         children: [if (resolver.isSelf(id)) meSuffixSpan(context, l10n)],
       ));
     }
-    // 单人已全部展示，不再拼「（1人）」；双人保留人数标注；超过 2 人时
+    // 单人已全部展示，不拼「（1人）」；双人保留人数标注；超过 2 人时
     // 尾部表达被省略的人数。
     final tail = count > 2
         ? '…（${count - 2}${l10n.aaParticipantsUnit}）'
@@ -294,7 +294,7 @@ class _TransactionDetailBody extends ConsumerWidget {
     final t = transaction;
     final historyAsync = ref.watch(recordEditHistoryProvider(t.id));
     final categoryName = category?.name ?? l10n.homeDetailCategory;
-    // 账本是否开启分摊由调用方传入,详情 sheet 不再重复读取账本 provider,
+    // 账本是否开启分摊由调用方传入,详情 sheet 不重复读取账本 provider,
     // 避免与首页/分类详情页的口径分歧;AA 区块的展示仍按当前交易分摊态渲染。
     final aaOn = aaEnabled;
 
@@ -311,7 +311,7 @@ class _TransactionDetailBody extends ConsumerWidget {
 
     return AppSheet(
       // 删除 icon 内嵌到内容区分类标题行右侧(与分类标题同行对齐),
-      // 不再用 AppSheet.trailing,避免 trailing 单独成行撑高 header、
+      // 不用 AppSheet.trailing,避免 trailing 单独成行撑高 header、
       // 与分类标题错位。
       footer: aaOn
           ? Row(children: [
@@ -559,7 +559,7 @@ class _DeleteTrailingIcon extends StatelessWidget {
       padding: EdgeInsets.zero,
       // shrinkWrap 去除 Material 默认 8px 点击区域额外 padding,
       // 避免 IconButton 实际渲染高度超过 32px 把标题栏顶高、与分类标题错位。
-      // materialTapTargetSize 非 IconButton 构造参数(Flutter 3.27 已移除),
+      // materialTapTargetSize 不是 IconButton 构造参数,
       // 通过 style 传递;未设置 style.padding,不影响下方显式 padding。
       style: IconButton.styleFrom(
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,

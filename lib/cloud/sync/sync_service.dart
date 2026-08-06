@@ -120,8 +120,8 @@ class LocalOnlySyncService implements SyncService {
   /// 就会被 watch,若此处直接持有仓库实例,等于强迫每次构建都实例化数据库
   /// 仓库(widget 测试中还会触发 LoggerService 的异步定时器导致 pending
   /// timer 断言失败)。惰性解析把仓库创建推迟到真正执行删除的那一刻。
-  /// 可空:大量测试直接 `LocalOnlySyncService()` 构造且不触达删除路径,
-  /// 保持无参构造兼容;真正走删除时解析器为空则抛错提示配置缺失。
+  /// 可空:测试可直接无参构造且不触达删除路径;
+  /// 真正走删除时解析器为空则抛错提示配置缺失。
   // 参数保持公共名:私有字段不能作为跨库命名参数调用(如 sync_providers.dart 注入处)
   LocalOnlySyncService({LedgerRepository Function()? repoResolver})
       : _repoResolver = repoResolver; // ignore: prefer_initializing_formals

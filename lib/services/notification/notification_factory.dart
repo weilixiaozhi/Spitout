@@ -30,7 +30,7 @@ class NotificationFactory {
     try {
       tz.initializeTimeZones();
 
-      // 按设备当前 UTC 偏移推导时区，不再硬编码 Asia/Shanghai：
+      // 按设备当前 UTC 偏移推导时区，不硬编码 Asia/Shanghai：
       // 整小时偏移映射到 Etc/GMT±X（注意 Etc/GMT 的符号与 UTC 偏移相反），
       // 常见的半小时/45 分钟偏移映射到对应 IANA 时区。
       // 局限：跨夏令时的地区在切换日前后会差 1 小时，完整方案需

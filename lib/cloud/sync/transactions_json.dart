@@ -14,7 +14,7 @@ import '../../core/logging/logger_service.dart';
 /// 账本快照 JSON 的当前版本号。
 ///
 /// 快照导出（transactions_json / sync_engine_serialization 的 fullPush）
-/// 必须统一引用本常量，避免增量栈升级到 v8+ 时快照栈悄悄落后。
+/// 必须统一引用本常量，保证快照栈与增量栈版本一致。
 const int transactionsJsonVersion = 7;
 
 // --- 字符串清理 ---
@@ -119,11 +119,11 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
       // 缺键 = false(server snapshot 同语义),只为 true 时输出,保持 payload 干净。
       if (t.excludeFromStats) 'excludeFromStats': true,
       // 创建人(非空才发):供导入侧「默认支出人 = 创建人」兜底,与 AA 字段
-      // 同样的缺键兼容策略(v6 及更早备份无此键 → 导入兜底空串)。
+      // 同样的缺键兼容策略(旧备份无此键 → 导入兜底空串)。
       if (t.createdByUserId != null && t.createdByUserId!.isNotEmpty)
         'createdByUserId': t.createdByUserId,
       // AA 分摊字段(非空才发,与 serializer "非空才发"守卫一致):
-      // 缺键导入兜底为 null → 视为未启用 AA,与旧 v6 备份兼容。
+      // 缺键导入兜底为 null → 视为未启用 AA,与旧备份兼容。
       if (t.paidByUserId != null && t.paidByUserId!.isNotEmpty)
         'paidByUserId': t.paidByUserId,
       if (t.aaMode != null) 'aaMode': t.aaMode,
@@ -203,7 +203,7 @@ Future<String> exportTransactionsJson(SpitoutDatabase db, int ledgerId) async {
   final payload = {
     'version': transactionsJsonVersion, // v7:AA 分摊功能(paidByUserId/aaMode/aaParticipants/
     // aaSplits + ledger.aaEnabled + virtualUsers 数组)。
-    // v6 导入兜底为 null/空 → 视为未启用 AA,向后兼容。
+    // 缺键导入兜底为 null/空 → 视为未启用 AA,向后兼容。
     'exportedAt': DateTime.now().toUtc().toIso8601String(),
     'ledgerId': ledgerId,
     'ledgerName': ledger.name,

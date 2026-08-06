@@ -68,7 +68,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   ///
   /// 设计意图：SharedPreferences 在 Android 侧是明文 XML，保存密码会随
   /// 系统备份 / root 读取泄露；Spitout Cloud 已有 session token 持久化，
-  /// Supabase 同样由 SDK 持久化会话，密码不再需要兜底自动登录。
+  /// Supabase 同样由 SDK 持久化会话，密码不需要兜底自动登录。
   Future<void> _saveCredentials(String account, String password) async {
     try {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);

@@ -769,7 +769,7 @@ class _TransactionEditorSheetState
     // 空间不足时（系统键盘拉起、极小屏）压到 30 保底防溢出。
     // useSafeArea:true 时 route 不 removePadding，内部 padding.top 即真实
     // 状态栏高度（SafeArea 已自动把 sheet 顶到状态栏下面，这里仅用于可用
-    // 高度预算，不再做任何头部空白补偿）。
+    // 高度预算，不做任何头部空白补偿）。
     final topInset = mq.padding.top; // 状态栏（useSafeArea:true 下 route 内真实值）
     final bottomInset = mq.viewPadding.bottom; // 底部安全区（刘海/Home Indicator）
     final keyboardH = mq.viewInsets.bottom; // 系统键盘
@@ -1044,7 +1044,7 @@ class _TransactionEditorSheetState
   ///   与边框一起构成明确的可点击提示;
   /// - 小圆角(6px)+ 弱色小字号:保持弱化,不抢标题与金额输入区焦点。
   /// 尺寸与编辑分摊页 [AaEditPage._buildAaModeToggle] 一致(88x28 / 字号 12),
-  /// 保证两处切换体验统一、文案完整显示(不再过小截断)。
+  /// 保证两处切换体验统一、文案完整显示(不过小截断)。
   Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
     final modeText = switch (_aaMode) {
       AaMode.perPerson => l10n.aaModePerPerson,

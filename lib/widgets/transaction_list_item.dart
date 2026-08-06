@@ -14,7 +14,7 @@ import 'package:spitout/providers/providers.dart'
 import 'collaborator_avatar.dart';
 import 'amount_text.dart';
 
-/// 单条交易列表项(对应设计稿列表项紧凑双行布局)。
+/// 单条交易列表项（紧凑双行布局）。
 ///
 /// 视觉规范:
 /// - 分类图标:36×36 圆形,secondary 底 + primary 图标
@@ -125,7 +125,7 @@ class TransactionListItem extends ConsumerWidget {
   }
 
   /// 第二行时间源:优先 lastEditedAt(最后编辑时分),回退 happenedAt(记账时间)。
-  /// 设计稿列表项第二行的 HH:mm 语义是"最后编辑时间",但创建后从未编辑的记录
+  /// 列表项第二行的 HH:mm 语义是「最后编辑时间」,但创建后从未编辑的记录
   /// lastEditedAt 为 null,此时用记账时间兜底,保证每条记录都有时分可展示。
   DateTime? get _effectiveTime => lastEditedAt ?? happenedAt;
 
@@ -199,7 +199,7 @@ class TransactionListItem extends ConsumerWidget {
                 ),
               ),
             ),
-            // 右侧:金额列固定 116px(设计稿规范),右对齐,最多两行
+            // 右侧:金额列固定 116px,右对齐,最多两行
             SizedBox(
               width: 116,
               child: Column(
@@ -262,7 +262,7 @@ class TransactionListItem extends ConsumerWidget {
 
   /// 构建第二行:备注(独立行) · [最后编辑者头像] HH:mm · 不计收支标签。
   ///
-  /// 设计稿规范:
+  /// 第二行规范:
   /// - 备注独立成行(非括号),仅在「有分类 + 备注存在且不同于分类名」时展示(写死逻辑)
   /// - 头像仅共享账本([isShared] 为 true)展示,置于时间左侧
   /// - HH:mm 用 _effectiveTime(lastEditedAt 优先),showFullDate 模式展示完整日期,
@@ -301,7 +301,7 @@ class TransactionListItem extends ConsumerWidget {
             '${time.year}-${time.month.toString().padLeft(2, '0')}-${time.day.toString().padLeft(2, '0')} '
             '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       } else if (time.hour != 0 || time.minute != 0 || time.second != 0) {
-        // HH:mm(设计稿列表项时分格式)
+        // HH:mm(列表项时分格式)
         timeText =
             '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
       } else {

@@ -31,7 +31,7 @@ final AnimationStyle kSheetAnimationStyle = AnimationStyle(
 ///
 /// 设计意图：所有页面跳转统一走本工厂，配合 `app_theme.dart` 中配置的
 /// `PageTransitionsTheme`（左右滑动 + 线性曲线）实现全局一致的转场动画。
-/// 调用点不再直接使用裸 `MaterialPageRoute`，避免散落实现导致动画不一致。
+/// 调用点不直接使用裸 `MaterialPageRoute`，避免散落实现导致动画不一致。
 ///
 /// 动画来源：`MaterialPageRoute` 会自动应用主题中的 `pageTransitionsTheme`，
 /// 因此本工厂本身不指定 transitionsBuilder，仅做样式与参数的统一封装。

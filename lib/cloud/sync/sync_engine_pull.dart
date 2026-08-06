@@ -5,7 +5,7 @@ part of 'sync_engine.dart';
 /// cloud-sync 包的 `pullChanges` 解码完立刻保存 cursor 早于 app 端 apply,
 /// apply 抛错时 cursor 已跳到下一页,这页的 change 再也拉不回。
 ///
-/// 当前方案:
+/// 恢复机制:
 /// 1. cloud-sync 包 `pullChanges` 加 `persistCursor: false` 参数
 /// 2. app 调 `pullChanges(persistCursor: false)`,自己读 [AppCursorStore],
 ///    apply 成功后才 commit

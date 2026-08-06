@@ -24,7 +24,7 @@ class SharedLedgerCategoryRepairResult {
 
 /// 修复共享账本历史脏数据：同一账本内交易分类的存储表示按角色统一。
 ///
-/// 背景：旧版 pull 会把 Owner 分类按 syncId/名称解析成成员自己主表的正数分类 id，
+/// 存量数据中 Owner 分类可能被按 syncId/名称解析成成员自己主表的正数分类 id，
 /// 而成员本机新建的交易走 categorySyncIdOverride，导致统计出现两个同名分类、
 /// 分类汇总页查不到自己的交易。
 ///

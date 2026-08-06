@@ -11,7 +11,7 @@ import '../../services/cloud/cloud_connection_tester.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 
-// 云用户 DTO 经 providers 层 barrel 转发给 UI，data 层不再反向依赖 cloud 层。
+// 云用户 DTO 经 providers 层 barrel 转发给 UI，data 层不反向依赖 cloud 层。
 export 'package:spitout/cloud/spitout_cloud.dart' show CloudUser;
 // 连接测试服务经本文件暴露,页面只 import providers,不直接触碰 services/http。
 export '../../services/cloud/cloud_connection_tester.dart'
@@ -166,7 +166,7 @@ Stream<CloudUser?> _seedThenFollow(CloudAuthService auth) async* {
 /// 保持非 autoDispose：它不是 family，单槽位重建不会累积旧实例；且大量 UI
 /// 组件 watch 它，autoDispose 反而会造成频繁重建。旧云客户端的释放由
 /// [syncEngineProvider]（以实例为 key 的 autoDispose family）负责——旧 entry
-/// 被 GC 时即不再持有该实例引用。
+/// 被 GC 时即释放该实例引用。
 final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
   ref,
 ) async {
@@ -194,7 +194,7 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
 
     final account = config.spitoutCloudAccount;
 
-    // 密码不再持久化（见 CloudServiceStore），因此只注入账号用于日志兜底；
+    // 密码不持久化（见 CloudServiceStore），因此只注入账号用于日志兜底；
     // session 失效后由用户手动重新登录，避免明文密码落盘。
     if (services.auth is SpitoutCloudAuthService) {
       (services.auth as SpitoutCloudAuthService).setRecoveryCredentials(

@@ -21,7 +21,7 @@ enum _MethodAccent { normal, warning, muted }
 
 /// 成员账单详情页（按支出人维度汇总）。
 ///
-/// 内容结构（自上而下，严格参考设计稿）：
+/// 内容结构（自上而下）：
 /// 1. 头部：返回 + 成员头像 + 成员名 / 账本名；
 /// 2. 汇总卡（深色英雄卡）：账单汇总 - 总笔数 / 总金额 / 平均金额，
 ///    底部展示该成员应收（应付）金额；
@@ -84,7 +84,7 @@ class AaMemberDetailPage extends ConsumerWidget {
 
   /// 头部：返回 + 成员头像 + 成员名 + 账本名副标题。
   ///
-  /// 设计稿头部含前导头像，而 [PrimaryHeader] 的标题区不支持前导头像，
+  /// [PrimaryHeader] 的标题区不支持前导头像，
   /// 故此处按 PrimaryHeader 同一规格（返回图标 20px / 热区 30×30 /
   /// 顶部留白 10 / 左右留白 14）自定义头部行，保证与全局头部视觉一致。
   Widget _buildHeader(BuildContext context, String? ledgerName) {
@@ -229,7 +229,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     String currencyCode,
   ) {
     // 深色卡上的文字统一用「反色文字 + 透明度」表达层级，
-    // 强调数字用项目琥珀（warning）而非设计稿写死的 #amber-400。
+    // 强调数字用项目琥珀（warning）而非写死的 #amber-400。
     final heroText = SpitoutTokens.textOnPrimary(context);
     final heroSub = heroText.withValues(alpha: 0.5);
     final warn = SpitoutTokens.warning(context);
@@ -378,7 +378,7 @@ class AaMemberDetailPage extends ConsumerWidget {
 
   /// 分摊方式：AA分摊 / 指定金额 / 不分摊 笔数三卡。
   ///
-  /// 指定金额卡沿用设计稿的琥珀强调（浅底 + 琥珀边框/数字），
+  /// 指定金额卡采用琥珀强调（浅底 + 琥珀边框/数字），
   /// 不分摊卡用弱化中性色（不参与分摊），颜色统一走项目 token。
   Widget _buildSplitMethod(
     BuildContext context,
@@ -757,7 +757,7 @@ class AaMemberDetailPage extends ConsumerWidget {
   }
 
   /// 分摊方式徽标：AA分摊（主题蓝）/ 指定金额（琥珀）/ 不分摊（中性灰），
-  /// 颜色走项目主题 token，不硬编码设计稿色值。
+  /// 颜色走项目主题 token，不硬编码色值。
   Widget _buildSplitBadge(
     BuildContext context,
     AaMode mode,

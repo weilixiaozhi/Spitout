@@ -545,7 +545,7 @@ class _MemberManagementSectionState
 
   /// 真实错误态:展示错误文案 + 重试按钮,点击重试 invalidate provider 重拉。
   ///
-  /// 不再无条件转 loading:网络失败/权限错误等永久 loading 会让用户得不到
+  /// 不无条件转 loading:网络失败/权限错误等永久 loading 会让用户得不到
   /// 任何反馈,违反错误处理原则。此处展示具体错误 + 重试入口,
   /// 让用户主动决策是否重试。
   Widget _buildErrorCard(
@@ -597,7 +597,7 @@ class _MemberManagementSectionState
   /// 2. 虚拟用户行(可改名 / 可删除,AA 开启时显示)
   /// 3. 邀请新成员模块(仅 Owner 且 [showInviteEntry] 为 true 时显示)
   ///
-  /// AA 分摊开关已移至模块标题行(_buildHeader),不再占用卡片内空间。
+  /// AA 分摊开关位于模块标题行(_buildHeader),不占用卡片内空间。
   Widget _buildContent(
     BuildContext context,
     List<SpitoutCloudLedgerMember> members,
@@ -651,7 +651,7 @@ class _MemberManagementSectionState
   /// displayName,否则留空交给 _MemberTile 统一处理占位:
   /// - 有 account:标题回退到 account,保证可读性;
 /// - 无 account:标题展示「未设置昵称」占位,头像位展示 person 图标,
-///   不再回退"你",避免头像/昵称/括号三处重复展示。
+///   不回退为「你」,避免头像/昵称/括号三处重复展示。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
     final hasName = _ownerDisplayName?.isNotEmpty == true;
     final account = _ownerAccount ?? '';
@@ -1009,7 +1009,7 @@ class _MemberManagementSectionState
 
 /// 单个真实成员行:头像 + 名称 + (自己) + 移除按钮 + 角色标签。
 ///
-/// 只展示一行标题(昵称优先、无昵称回退账号),不再展示账号副标题,
+/// 只展示一行标题(昵称优先、无昵称回退账号),不展示账号副标题,
 /// 避免与昵称重复占用行高;账号/用户名可从其他入口获取。
 class _MemberTile extends ConsumerWidget {
   const _MemberTile({
@@ -1135,7 +1135,7 @@ class _MemberAvatar extends ConsumerWidget {
 
     final relativeUrl = member.avatarUrl;
     if (relativeUrl == null || relativeUrl.isEmpty) {
-      // 未配置头像:统一展示虚拟用户同等 person 图标,不再用昵称首字母,
+      // 未配置头像:统一展示与虚拟用户相同的 person 图标,不用昵称首字母,
       // 保证所有未设置头像的占位样式全局一致。
       return const PersonAvatar(size: 40, iconSize: 18);
     }
@@ -1197,9 +1197,8 @@ class _VirtualUserTile extends StatefulWidget {
 class _VirtualUserTileState extends State<_VirtualUserTile> {
   /// 行内编辑控制器：由 State 持有并在 dispose 释放。
   ///
-  /// 修复点：原先在 build 中每次新建 controller（无 dispose），父组件任何
-  /// setState 都会重建并丢掉正在输入但未失焦的内容；改为 State 持有后，
-  /// 滚动 / 刷新 / 无关重建都不会打断输入，也不会累积未释放的 controller。
+  /// 在 build 中每次新建 controller 会在父组件重建时丢失未失焦输入且无法释放；
+  /// 由 State 持有后，滚动 / 刷新 / 无关重建都不会打断输入，也不会累积未释放的 controller。
   late final TextEditingController _controller;
 
   /// 是否已触发重命名回调（防止失焦 + 提交重复触发）；文本再次变化后复位。

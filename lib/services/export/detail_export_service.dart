@@ -154,7 +154,7 @@ Future<DetailExportResult> exportDetailCsv({
     }
   }
 
-  // csv 8.x 起 ListToCsvConverter 更名为 CsvEncoder，行分隔符参数改为 lineDelimiter
+  // CsvEncoder 按 \n 行分隔符输出 CSV。
   final csvStr = const CsvEncoder(lineDelimiter: '\n').convert(rows);
   final ts = DateFormat('yyyyMMdd_HHmmss').format(DateTime.now());
   final fileName = 'spitout_$ts.csv';

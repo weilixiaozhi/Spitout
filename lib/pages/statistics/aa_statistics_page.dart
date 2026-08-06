@@ -286,7 +286,7 @@ class AaStatisticsPage extends ConsumerWidget {
   }
 
   /// 成员模块的「查看详情」徽章：主题色浅底 + 主题色文字/箭头，
-  /// 与模块标题色条同源，不引入设计稿的成员专属渐变配色。
+  /// 与模块标题色条同源，不引入成员专属渐变配色。
   Widget _buildViewDetailsPill(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(

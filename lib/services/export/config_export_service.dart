@@ -1332,7 +1332,7 @@ class ConfigExportService {
     final config = AppConfig.fromYaml(doc);
     final prefs = await SharedPreferences.getInstance();
     // 云配置统一经 CloudServiceStore 写入（内部完成剥离、凭据合并与迁移），
-    // 业务层不再直接 setString 云配置键，避免绕过安全边界。
+    // 业务层不直接 setString 云配置键，避免绕过安全边界。
     final cloudStore = store ?? CloudServiceStore();
 
     // 导入Supabase配置

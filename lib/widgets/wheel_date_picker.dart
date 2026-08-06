@@ -552,7 +552,7 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
         body = group([yearPicker, weekPicker]);
       case WheelDatePickerMode.datetime:
         // 时/分按边界日逐列钳制（见 _hourListForDateTime），用户在边界日
-        // 选不到越界时刻，不再被整体 _clamp 静默改成 min/max。
+        // 选不到越界时刻，不被整体 _clamp 静默改成 min/max。
         final hours = _hourListForDateTime();
         final minutes = _minuteListForDateTime(hour);
         final hourPicker = _buildPicker(

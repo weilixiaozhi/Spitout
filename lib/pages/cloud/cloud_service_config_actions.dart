@@ -50,7 +50,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
         initialUrl: existing?.spitoutCloudBaseUrl ?? '',
         initialApiPrefix: existing?.spitoutCloudApiPrefix ?? '/api/v1',
         initialAccount: existing?.spitoutCloudAccount ?? '',
-        // 密码不持久化(见 CloudServiceStore):即使旧版本残留过密码也不回填,
+        // 密码不持久化(见 CloudServiceStore):即使历史版本残留过密码也不回填,
         // 避免把已失效的明文凭据再次展示/复用。
         initialPassword: '',
         canDelete: existing != null,

@@ -358,7 +358,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   /// 排版完全照搬账单详情头部模块(字号/间距/字体颜色),不硬编码:
   /// - 顶部:36x36 icon 容器(圆角12) + 类目(16px/w600/textPrimary);
   /// - 12px 间距后接分隔线,再接日期/金额/货币信息行(14px,与详情 _InfoRow 一致)。
-  /// 分摊方式已拆为独立区块标题(见 [_buildSplitModeSection]),不再归属此卡。
+  /// 分摊方式使用独立区块标题(见 [_buildSplitModeSection]),不归属此卡。
   Widget _buildSubjectCard(
       BuildContext context, AppLocalizations l10n, String? currencyCode) {
     final d = widget.args.date.toLocal();
@@ -456,7 +456,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             ),
           ),
           const Spacer(),
-          // 三态切换按钮:标题已表达语义,不再重复左侧文案
+          // 三态切换按钮:标题已表达语义,不重复左侧文案
           _buildAaModeToggle(context, l10n),
         ],
       ),
@@ -620,7 +620,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             .firstOrNull
             ?.isSelf ??
             false;
-    // 纯名展示:未手选时本地昵称 / 「未设置昵称」兜底(不再拼接「(我)」,
+    // 纯名展示:未手选时本地昵称 / 「未设置昵称」兜底(不拼接「(我)」,
     // 后缀交给 UI 层共享 meSuffixSpan 统一渲染);手选反查名册名。
     final payerName = _paidById == null
         ? (localName.isNotEmpty ? localName : l10n.mineSlogan)
@@ -714,7 +714,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
   /// 单个参与人行:方框勾选 + 名称 + 右对齐金额输入框。
   ///
-  /// 只读态统一(参考编辑账本只读态):人均分摊金额、指定分摊未勾选/支出人
+  /// 只读态统一:人均分摊金额、指定分摊未勾选/支出人
   /// 锁定的金额,均以纯文字展示(无边框/无色块),可用态用 textPrimary,
   /// 置灰态用 disabledColor,避免同页面出现两套只读色。
   /// 复选按钮:支出人锁定时做置灰只读态(边框/勾用 disabledColor),而非

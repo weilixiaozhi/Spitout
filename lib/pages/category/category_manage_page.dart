@@ -296,7 +296,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
 
   /// 删除模式底部操作区
   ///
-  /// 顶部一行左右排放"确认删除"与"清空未使用分类"（布局参考子分类弹窗底部）：
+  /// 顶部一行左右排放「确认删除」与「清空未使用分类」：
   /// - "确认删除"：基于复选选中的分类执行删除，0 选中时禁用
   /// - "清空未使用分类"：独立逻辑，不与复选选中关联，直接清空交易数为 0 的分类
   /// 下方为三个删除策略单选项（仅作用于"确认删除"）。
@@ -1095,7 +1095,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
             mainAxisSpacing: 12,
             childAspectRatio: 1,
             // 自定义拖拽中的卡片外观：包默认用 Material(elevation: 3) 包裹，
-            // 会在圆角卡片底部衬出一个方形背景；换成透明 Material 去掉该背景，
+            // 会在圆角卡片底部衬出一个方形背景；用透明 Material 去掉该背景，
             // 拖拽时只呈现卡片自身的圆角样式。
             dragWidgetBuilderV2: DragWidgetBuilderV2(
               builder: (index, child, screenshot) => Material(
@@ -1765,7 +1765,7 @@ class _MigrateCategoryChip extends StatelessWidget {
 /// 正常模式：标题旁"编辑父分类"文字链，网格展示子分类，
 /// 底部"添加子分类"/"删除子分类"文字链。
 /// 删除模式：卡片右上角显示复选框，底部"确认删除" + 两个删除策略单选项
-/// （删除全部数据 / 迁移数据后删除），逻辑参考本页分类管理的删除模式。
+/// （删除全部数据 / 迁移数据后删除），逻辑与本页分类管理的删除模式一致。
 class _SubcategoryDialog extends ConsumerStatefulWidget {
   final db.Category parentCategory;
   final List<({db.Category category, int transactionCount})> categoriesWithCount;
@@ -1839,7 +1839,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
         });
       }
     } catch (e, st) {
-      // 加载失败不再永久转圈:进入失败态,用户可点重试重新查询。
+      // 加载失败进入失败态,用户可点重试重新查询。
       logger.error(
         'CategoryManage',
         '加载子分类失败 parentId=${widget.parentCategory.id}',
@@ -2151,7 +2151,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
 
   /// 删除模式底部："确认删除"（居中）+ 两个删除策略单选项
   ///
-  /// 布局顺序参考 UI 稿：确认删除在上、单选项在下。
+  /// 布局顺序：确认删除在上、单选项在下。
   Widget _buildDeleteModeFooter(BuildContext context, AppLocalizations l10n) {
     // 0 选中时确认删除不可点击（禁用色 + 不响应点击）
     final isDisabled = _selectedCategoryIds.isEmpty;
