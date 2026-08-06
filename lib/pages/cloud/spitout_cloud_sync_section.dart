@@ -27,7 +27,7 @@ import '../../theme/icons/app_icons.dart';
 ///
 /// 区块结构(单张卡片):
 ///   1. 头部:账号 + 2FA 各占一行文案,不独立成模块。
-///      - 已登录:账号行只读展示邮箱;2FA 行展示启用状态(拉不到时自动隐藏)。
+///      - 已登录:账号行只读展示账号;2FA 行展示启用状态(拉不到时自动隐藏)。
 ///      - 未登录:账号行直接渲染登录按钮(有保存邮密 → "重新登录"复用凭证,
 ///        否则跳登录页),不伪装成可点行,避免"看着能点却点不动"的误导。
 ///      - 专属图标作分类标识:已登录账号 verifiedUser、登录按钮 login、
@@ -358,7 +358,7 @@ class SpitoutCloudSyncSectionState
     );
   }
 
-  /// 账号头部行：已登录时只读展示邮箱（一行文案）；未登录时在账号行直接
+  /// 账号头部行：已登录时只读展示账号（一行文案）；未登录时在账号行直接
   /// 给出登录按钮，统一跳转登录页手动输入。
   ///
   /// 密码不再持久化（见 CloudServiceStore），因此不存在「用缓存凭证自动重登」
@@ -371,7 +371,7 @@ class SpitoutCloudSyncSectionState
     if (user != null) {
       return AppListTile(
         leading: AppIcons.verifiedUser,
-        title: user.email ?? l10n.mineLoggedInEmail,
+        title: user.account ?? l10n.mineLoggedInAccount,
         trailing: const SizedBox.shrink(),
       );
     }

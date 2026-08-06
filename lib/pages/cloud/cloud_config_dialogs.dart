@@ -121,10 +121,10 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
               decoration: InputDecoration(
                 labelText: AppLocalizations.of(
                   context,
-                ).cloudSpitoutCloudEmailLabel,
+                ).cloudSpitoutCloudAccountLabel,
                 hintText: AppLocalizations.of(
                   context,
-                ).cloudSpitoutCloudEmailHint,
+                ).cloudSpitoutCloudAccountHint,
               ),
               keyboardType: TextInputType.text,
             ),

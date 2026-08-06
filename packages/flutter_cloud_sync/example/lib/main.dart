@@ -34,7 +34,7 @@ void main() async {
   // Step 4: Authenticate (in mock provider, this is automatic)
   print('\n--- Authentication ---');
   final user = await provider.auth.currentUser;
-  print('Current user: ${user?.email}\n');
+  print('Current user: ${user?.account}\n');
 
   // Step 5: Create a note
   print('--- Creating a note ---');
@@ -196,7 +196,7 @@ class MockCloudProvider implements CloudProvider {
     // Auto-login for demo
     _auth._currentUser = const CloudUser(
       id: 'demo-user',
-      email: 'demo@example.com',
+      account: 'demo@example.com',
     );
   }
 
@@ -217,15 +217,15 @@ class MockAuthService implements CloudAuthService {
   Stream<CloudUser?> get authStateChanges => Stream.value(_currentUser);
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async =>
       throw UnimplementedError();
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async =>
       throw UnimplementedError();
@@ -234,10 +234,10 @@ class MockAuthService implements CloudAuthService {
   Future<void> signOut() async => _currentUser = null;
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {}
+  Future<void> sendPasswordResetAccount({required String account}) async {}
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {}
+  Future<void> resendAccountVerification({required String account}) async {}
 }
 
 class MockStorageService implements CloudStorageService {

@@ -11,7 +11,7 @@ class SupabaseAuthService implements CloudAuthService {
   Stream<CloudUser?> get authStateChanges {
     return client.auth.onAuthStateChange.map((event) {
       final u = event.session?.user;
-      return u != null ? CloudUser(id: u.id, email: u.email) : null;
+      return u != null ? CloudUser(id: u.id, account: u.email) : null;
     });
   }
 
@@ -19,57 +19,57 @@ class SupabaseAuthService implements CloudAuthService {
   Future<CloudUser?> get currentUser async {
     final u = client.auth.currentUser;
     if (u == null) return null;
-    return CloudUser(id: u.id, email: u.email);
+    return CloudUser(id: u.id, account: u.email);
   }
 
   @override
   Future<void> signOut() => client.auth.signOut();
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     final res = await client.auth.signInWithPassword(
-      email: email,
+      email: account,
       password: password,
     );
     final u = res.user;
     if (u == null) {
-      // 邮箱验证未完成或服务端未返回会话时 user 为 null，不能强解包。
+      // 账号验证未完成或服务端未返回会话时 user 为 null，不能强解包。
       throw CloudAuthException(
-        '登录成功但未返回用户会话，请检查邮箱验证状态或稍后重试',
+        '登录成功但未返回用户会话，请检查验证状态或稍后重试',
       );
     }
-    return CloudUser(id: u.id, email: u.email);
+    return CloudUser(id: u.id, account: u.email);
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async {
-    final res = await client.auth.signUp(email: email, password: password);
+    final res = await client.auth.signUp(email: account, password: password);
     final u = res.user;
     if (u == null) {
-      // 邮箱验证未完成或服务端未返回会话时 user 为 null，不能强解包。
+      // 账号验证未完成或服务端未返回会话时 user 为 null，不能强解包。
       throw CloudAuthException(
-        '注册成功但未返回用户会话，请先完成邮箱验证后再登录',
+        '注册成功但未返回用户会话，请先完成验证后再登录',
       );
     }
-    return CloudUser(id: u.id, email: u.email);
+    return CloudUser(id: u.id, account: u.email);
   }
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {
-    await client.auth.resetPasswordForEmail(email);
+  Future<void> sendPasswordResetAccount({required String account}) async {
+    await client.auth.resetPasswordForEmail(account);
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
+  Future<void> resendAccountVerification({required String account}) async {
     await client.auth.resend(
       type: s.OtpType.signup,
-      email: email,
+      email: account,
     );
   }
 }

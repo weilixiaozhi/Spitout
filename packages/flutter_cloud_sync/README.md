@@ -160,10 +160,10 @@ final syncStatusProvider = FutureProvider.family<SyncStatus, int>((ref, ledgerId
 
 | Provider | Package | Authentication | Storage |
 |----------|---------|----------------|---------|
-| Supabase | `flutter_cloud_sync_supabase` | ✅ Email/Password | ✅ Storage API |
+| Supabase | `flutter_cloud_sync_supabase` | ✅ Account/Password | ✅ Storage API |
 | WebDAV | `flutter_cloud_sync_webdav` | ✅ Basic Auth | ✅ WebDAV |
 | AWS S3 | `flutter_cloud_sync_s3` | ❌ Uses IAM | ✅ S3 API |
-| Spitout Cloud | `flutter_cloud_sync_spitout_cloud` | ✅ Email/Password + Session | ✅ Sync Engine |
+| Spitout Cloud | `flutter_cloud_sync_spitout_cloud` | ✅ Account/Password + Session | ✅ Sync Engine |
 
 ## Security Notes
 

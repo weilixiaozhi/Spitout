@@ -6,15 +6,15 @@ class CloudUser {
   /// 用户唯一标识。
   final String id;
 
-  /// 用户邮箱（可选，取决于提供方）。
-  final String? email;
+  /// 用户账号（可选，取决于提供方）。
+  final String? account;
 
   /// 附加用户元数据（提供方特有）。
   final Map<String, dynamic>? metadata;
 
   const CloudUser({
     required this.id,
-    this.email,
+    this.account,
     this.metadata,
   });
 
@@ -27,7 +27,7 @@ class CloudUser {
   int get hashCode => id.hashCode;
 
   @override
-  String toString() => 'CloudUser(id: $id, email: $email)';
+  String toString() => 'CloudUser(id: $id, account: $account)';
 }
 
 /// 云认证服务抽象接口。
@@ -43,20 +43,20 @@ abstract class CloudAuthService {
   /// 未登录时返回 null。
   Future<CloudUser?> get currentUser;
 
-  /// 使用邮箱 + 密码登录。
+  /// 使用账号 + 密码登录。
   ///
   /// 登录失败时抛出 [CloudAuthException]。
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   });
 
-  /// 使用邮箱 + 密码注册。
+  /// 使用账号 + 密码注册。
   ///
   /// 注册失败时抛出 [CloudAuthException]。
-  /// 注意：部分提供方（如 Supabase）要求邮箱验证。
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  /// 注意：部分提供方（如 Supabase）要求账号验证。
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   });
 
@@ -68,12 +68,12 @@ abstract class CloudAuthService {
   /// 发送密码重置邮件。
   ///
   /// 失败时抛出 [CloudAuthException]。
-  Future<void> sendPasswordResetEmail({required String email});
+  Future<void> sendPasswordResetAccount({required String account});
 
-  /// 重新发送邮箱验证邮件。
+  /// 重新发送账号验证邮件。
   ///
   /// 失败时抛出 [CloudAuthException]。
-  Future<void> resendEmailVerification({required String email});
+  Future<void> resendAccountVerification({required String account});
 }
 
 /// 无需认证的提供方使用的空实现。
@@ -85,16 +85,16 @@ class NoopAuthService implements CloudAuthService {
   Future<CloudUser?> get currentUser async => null;
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     throw UnsupportedError('Auth is not configured');
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async {
     throw UnsupportedError('Auth is not configured');
@@ -104,12 +104,12 @@ class NoopAuthService implements CloudAuthService {
   Future<void> signOut() async {}
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {
+  Future<void> sendPasswordResetAccount({required String account}) async {
     throw UnsupportedError('Auth is not configured');
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
+  Future<void> resendAccountVerification({required String account}) async {
     throw UnsupportedError('Auth is not configured');
   }
 }

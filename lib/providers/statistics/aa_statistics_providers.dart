@@ -176,12 +176,12 @@ final aaParticipantOptionsProvider = FutureProvider.autoDispose
         try {
           final members = await ref.read(ledgerMembersProvider(syncId).future);
           for (final m in members) {
-            // displayName 可能为 null/空,email 兜底(email 为非空字段)。
+            // displayName 可能为 null/空,account 兜底(account 为非空字段)。
             final dn = m.displayName;
             options.add(
               AaParticipantOption(
                 id: m.userId,
-                name: (dn != null && dn.isNotEmpty) ? dn : m.email,
+                name: (dn != null && dn.isNotEmpty) ? dn : m.account,
                 isVirtual: false,
                 // 本人标记:UI 据此统一渲染「(我)」后缀,与成员管理模块一致。
                 isSelf: m.isSelf,
@@ -257,7 +257,7 @@ class MemberExpenseStatItem {
   /// 参与人标识(userId 或虚拟用户 syncId)。
   final String participantId;
 
-  /// 展示名(真实成员 displayName/email、虚拟用户 name)。
+  /// 展示名(真实成员 displayName/account、虚拟用户 name)。
   ///
   /// 本人时已剥离「(我)」后缀(仅保留纯名字),「(我)」标记由 UI 层
   /// 统一渲染,保证与成员管理模块的字号/颜色/空格一致。
@@ -339,7 +339,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
             final dn = m.displayName;
             displayNameMap[m.userId] = (dn != null && dn.isNotEmpty)
                 ? dn
-                : m.email;
+                : m.account;
             selfMap[m.userId] = m.isSelf;
             avatarUrlMap[m.userId] = m.avatarUrl;
           }
@@ -439,11 +439,11 @@ final aaStatisticsProvider = FutureProvider.autoDispose
           );
           for (final m in members) {
             participantIds.add(m.userId);
-            // displayName 可能为 null/空,email 兜底(email 为非空字段)。
+            // displayName 可能为 null/空,account 兜底(account 为非空字段)。
             final dn = m.displayName;
             displayNameMap[m.userId] = (dn != null && dn.isNotEmpty)
                 ? dn
-                : m.email;
+                : m.account;
             selfMap[m.userId] = m.isSelf;
           }
         } catch (e, st) {

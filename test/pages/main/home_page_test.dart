@@ -689,7 +689,7 @@ void main() {
     final members = <SpitoutCloudLedgerMember>[
       SpitoutCloudLedgerMember(
         userId: 'user-001',
-        email: 'alice@example.com',
+        account: 'alice@example.com',
         role: 'owner',
         joinedAt: DateTime(2024, 1, 1),
         isSelf: true,
@@ -697,7 +697,7 @@ void main() {
       ),
       SpitoutCloudLedgerMember(
         userId: 'user-002',
-        email: 'bob@example.com',
+        account: 'bob@example.com',
         role: 'editor',
         joinedAt: DateTime(2024, 1, 2),
         isSelf: false,

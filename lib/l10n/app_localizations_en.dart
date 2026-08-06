@@ -781,7 +781,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudReloginSuccess => 'Re-logged in';
 
   @override
-  String get mineLoggedInEmail => 'Logged in';
+  String get mineLoggedInAccount => 'Logged in';
 
   @override
   String get mineLogoutSubtitle => 'Tap to logout';
@@ -1437,8 +1437,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authRememberAccount => 'Remember account';
 
   @override
-  String get authRememberAccountHint =>
-      'Auto-fill on next login';
+  String get authRememberAccountHint => 'Auto-fill on next login';
 
   @override
   String get cloudFirstSaveSwitchTitle => 'Configuration Saved';
@@ -1474,20 +1473,20 @@ class AppLocalizationsEn extends AppLocalizations {
   String get authLogin => 'Login';
 
   @override
-  String get authEmail => 'Account';
+  String get authAccount => 'Account';
 
   @override
   String get authPassword => 'Password';
 
   @override
-  String get authInvalidEmail => 'Please enter your account';
+  String get authInvalidAccount => 'Please enter your account';
 
   @override
   String get authErrorInvalidCredentials => 'Account or password is incorrect.';
 
   @override
-  String get authErrorEmailNotConfirmed =>
-      'Email not verified, please complete verification in your email before logging in.';
+  String get authErrorAccountNotConfirmed =>
+      'Account not verified, please complete verification before logging in.';
 
   @override
   String get authErrorRateLimit => 'Too many attempts, please try again later.';
@@ -1918,10 +1917,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => 'Account';
+  String get cloudSpitoutCloudAccountLabel => 'Account';
 
   @override
-  String get cloudSpitoutCloudEmailHint => 'Account or email';
+  String get cloudSpitoutCloudAccountHint => 'Account name';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => 'Password';
@@ -2243,7 +2242,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cloudTutorialStep2Desc =>
-      'Spitout Cloud does NOT offer self-registration (to prevent abuse on public servers). If you self-host: the first Docker boot prints a random admin email + password to the logs — use that. Joining someone else\'s server: ask the admin to create an account for you in Web → Users.';
+      'Spitout Cloud does NOT offer self-registration (to prevent abuse on public servers). If you self-host: the first Docker boot prints a random admin account + password to the logs — use that. Joining someone else\'s server: ask the admin to create an account for you in Web → Users.';
 
   @override
   String get cloudTutorialStep3Title => 'Step 3: Login + enable sync';

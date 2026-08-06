@@ -61,7 +61,7 @@ await provider.initialize({
 
 // After initialization, you're authenticated
 final user = await provider.auth.currentUser;
-print('Authenticated as: ${user?.email}');
+print('Authenticated as: ${user?.account}');
 
 // Sign out (clears credentials)
 await provider.auth.signOut();

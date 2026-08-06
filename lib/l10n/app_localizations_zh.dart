@@ -767,7 +767,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudReloginSuccess => '已重新登录';
 
   @override
-  String get mineLoggedInEmail => '已登录';
+  String get mineLoggedInAccount => '已登录';
 
   @override
   String get mineLogoutSubtitle => '点击可退出登录';
@@ -1414,19 +1414,19 @@ class AppLocalizationsZh extends AppLocalizations {
   String get authLogin => '登录';
 
   @override
-  String get authEmail => '账号';
+  String get authAccount => '账号';
 
   @override
   String get authPassword => '密码';
 
   @override
-  String get authInvalidEmail => '请输入账号';
+  String get authInvalidAccount => '请输入账号';
 
   @override
   String get authErrorInvalidCredentials => '账号或密码不正确。';
 
   @override
-  String get authErrorEmailNotConfirmed => '邮箱未验证，请先到邮箱完成验证再登录。';
+  String get authErrorAccountNotConfirmed => '账号未验证，请先完成验证再登录。';
 
   @override
   String get authErrorRateLimit => '操作过于频繁，请稍后再试。';
@@ -1839,10 +1839,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '账号';
+  String get cloudSpitoutCloudAccountLabel => '账号';
 
   @override
-  String get cloudSpitoutCloudEmailHint => '账号或邮箱';
+  String get cloudSpitoutCloudAccountHint => '账号名';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '密码';
@@ -4614,7 +4614,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudReloginSuccess => '已重新登入';
 
   @override
-  String get mineLoggedInEmail => '已登入';
+  String get mineLoggedInAccount => '已登入';
 
   @override
   String get mineLogoutSubtitle => '點擊可退出登入';
@@ -5261,19 +5261,19 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get authLogin => '登入';
 
   @override
-  String get authEmail => '帳號';
+  String get authAccount => '帳號';
 
   @override
   String get authPassword => '密碼';
 
   @override
-  String get authInvalidEmail => '請輸入帳號';
+  String get authInvalidAccount => '請輸入帳號';
 
   @override
   String get authErrorInvalidCredentials => '帳號或密碼不正確。';
 
   @override
-  String get authErrorEmailNotConfirmed => '電子郵件未驗證，請先到電子郵件完成驗證再登入。';
+  String get authErrorAccountNotConfirmed => '帳號未驗證，請先完成驗證再登入。';
 
   @override
   String get authErrorRateLimit => '操作過於頻繁，請稍後再試。';
@@ -5686,10 +5686,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '帳號';
+  String get cloudSpitoutCloudAccountLabel => '帳號';
 
   @override
-  String get cloudSpitoutCloudEmailHint => '帳號或電子郵件';
+  String get cloudSpitoutCloudAccountHint => '帳號名稱';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '密碼';

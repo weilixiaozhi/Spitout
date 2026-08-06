@@ -69,7 +69,7 @@ void main() {
     test('LedgerMember 缺 joined_at 时返回 null', () {
       final member = SpitoutCloudLedgerMember.fromJson(const {
         'user_id': 'u-1',
-        'email': 'a@b.com',
+        'account': 'a@b.com',
         'role': 'editor',
         'is_self': false,
       });

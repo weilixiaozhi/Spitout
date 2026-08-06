@@ -40,7 +40,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       sessionKey: jsonEncode({
         'userId': 'u1',
-        'email': 'u1@example.com',
+        'account': 'u1@example.com',
         'accessToken': accessToken,
         'refreshToken': refreshToken,
         'accessTokenExpiresAt': DateTime.now()
@@ -146,7 +146,7 @@ void main() {
           captured = request;
           return http.Response(
             jsonEncode({
-              'user': {'id': 'u1', 'email': 'u1@example.com'},
+              'user': {'id': 'u1', 'account': 'u1@example.com'},
               'access_token': 'new_access_token',
               'refresh_token': 'new_refresh_token',
               'expires_in': 3600,

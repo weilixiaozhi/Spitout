@@ -35,7 +35,7 @@ SpitoutCloudLedgerMember _member({
 }) =>
     SpitoutCloudLedgerMember(
       userId: userId,
-      email: '$userId@example.com',
+      account: '$userId@example.com',
       role: role,
       joinedAt: DateTime.utc(2026, 1, 1),
       isSelf: isSelf,

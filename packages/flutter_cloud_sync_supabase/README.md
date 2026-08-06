@@ -78,21 +78,21 @@ await provider.initialize({
 
 ```dart
 // Sign up
-final user = await provider.auth.signUpWithEmail(
-  email: 'user@example.com',
+final user = await provider.auth.signUpWithAccount(
+  account: 'user@example.com',
   password: 'password123',
 );
 
 // Sign in
-final user = await provider.auth.signInWithEmail(
-  email: 'user@example.com',
+final user = await provider.auth.signInWithAccount(
+  account: 'user@example.com',
   password: 'password123',
 );
 
 // Listen to auth state
 provider.auth.authStateChanges.listen((user) {
   if (user != null) {
-    print('Signed in: ${user.email}');
+    print('Signed in: ${user.account}');
   } else {
     print('Signed out');
   }

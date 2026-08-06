@@ -21,9 +21,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Exposed `databaseService`, `realtimeService`, and `client` in `SupabaseProvider`
 - Initial release of flutter_cloud_sync_supabase
 - Full Supabase authentication integration
-  - Email/password sign up and sign in
-  - Password reset email
-  - Email verification resend
+  - Account/password sign up and sign in
+  - Password reset account
+  - Account verification resend
   - Auth state change stream
   - PKCE authentication flow
 - Supabase Storage integration

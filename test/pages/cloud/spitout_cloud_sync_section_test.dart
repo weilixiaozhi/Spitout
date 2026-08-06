@@ -53,14 +53,14 @@ class _LoggedInAuthService implements CloudAuthService {
   Future<CloudUser?> get currentUser async => user;
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async => user;
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async => user;
 
@@ -68,10 +68,10 @@ class _LoggedInAuthService implements CloudAuthService {
   Future<void> signOut() async {}
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {}
+  Future<void> sendPasswordResetAccount({required String account}) async {}
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {}
+  Future<void> resendAccountVerification({required String account}) async {}
 }
 
 /// 无保存凭证的 Spitout Cloud 激活配置。
@@ -86,7 +86,7 @@ CloudServiceConfig _spitoutActiveWithCredentials() => const CloudServiceConfig(
   type: CloudBackendType.spitoutCloud,
   name: 'Spitout Cloud',
   spitoutCloudBaseUrl: 'https://cloud.example.com',
-  spitoutCloudEmail: 'saved@example.com',
+  spitoutCloudAccount: 'saved@example.com',
   spitoutCloudPassword: 'secret',
 );
 
@@ -212,7 +212,7 @@ void main() {
       tester,
       active: _spitoutActive(),
       auth: _LoggedInAuthService(
-        const CloudUser(id: 'u1', email: 'user@example.com'),
+        const CloudUser(id: 'u1', account: 'user@example.com'),
       ),
     );
 

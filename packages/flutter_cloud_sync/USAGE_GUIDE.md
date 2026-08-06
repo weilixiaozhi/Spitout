@@ -179,11 +179,11 @@ final syncManager = CloudSyncManager<int>(
 ```dart
 // Sign in
 try {
-  final user = await provider.auth.signInWithEmail(
-    email: 'user@example.com',
+  final user = await provider.auth.signInWithAccount(
+    account: 'user@example.com',
     password: 'password',
   );
-  print('Signed in: ${user.email}');
+  print('Signed in: ${user.account}');
 } on CloudAuthException catch (e) {
   print('Auth failed: ${e.message}');
 }
@@ -191,7 +191,7 @@ try {
 // Listen to auth state
 provider.auth.authStateChanges.listen((user) {
   if (user != null) {
-    print('User signed in: ${user.email}');
+    print('User signed in: ${user.account}');
   } else {
     print('User signed out');
   }
@@ -467,7 +467,7 @@ await syncManager.upload(data: ledgerId, path: path);
 ```dart
 final user = await provider.auth.currentUser;
 if (user == null) {
-  await provider.auth.signInWithEmail(email: email, password: password);
+  await provider.auth.signInWithAccount(account: account, password: password);
 }
 ```
 

@@ -15,7 +15,7 @@ class WebDAVAuthService implements CloudAuthService {
     // Create virtual user from username
     _currentUser = CloudUser(
       id: username,
-      email: '$username@webdav',
+      account: '$username@webdav',
     );
 
     // Create broadcast stream that sends current state on listen
@@ -45,29 +45,29 @@ class WebDAVAuthService implements CloudAuthService {
   }
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
-    throw CloudAuthException('WebDAV does not support email sign in');
+    throw CloudAuthException('WebDAV does not support account sign in');
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async {
     throw CloudAuthException('WebDAV does not support sign up');
   }
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {
+  Future<void> sendPasswordResetAccount({required String account}) async {
     throw CloudAuthException('WebDAV does not support password reset');
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
-    throw CloudAuthException('WebDAV does not support email verification');
+  Future<void> resendAccountVerification({required String account}) async {
+    throw CloudAuthException('WebDAV does not support account verification');
   }
 
   void dispose() {

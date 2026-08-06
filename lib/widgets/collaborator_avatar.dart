@@ -141,8 +141,8 @@ class CollaboratorAvatarGroup extends StatelessWidget {
 
     final samePerson = creatorUserId == editorUserId;
 
-    final creatorName = creator?.displayName ?? creator?.email ?? creatorUserId ?? '';
-    final editorName = editor?.displayName ?? editor?.email ?? editorUserId ?? '';
+    final creatorName = creator?.displayName ?? creator?.account ?? creatorUserId ?? '';
+    final editorName = editor?.displayName ?? editor?.account ?? editorUserId ?? '';
 
     // 同一人 → 1 个头像
     if (samePerson) {

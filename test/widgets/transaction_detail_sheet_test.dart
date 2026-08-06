@@ -1,6 +1,6 @@
 /// 记录详情 Bottom Sheet 展示名四级兜底测试。
 ///
-/// 锁定:共享账本成员表(昵称 → 完整邮箱) → 本地昵称 → 原始 id 的兜底顺序;
+/// 锁定:共享账本成员表(昵称 → 完整账号) → 本地昵称 → 原始 id 的兜底顺序;
 /// 本地账本(无成员表)只要设置了本地昵称就必须显示昵称而非 id,与云端登录态无关。
 library;
 
@@ -152,7 +152,7 @@ void main() {
       memberDisplayMap: {
         'u_cloud': SpitoutCloudLedgerMember(
           userId: 'u_cloud',
-          email: 'cloud@example.com',
+          account: 'cloud@example.com',
           role: 'owner',
           joinedAt: DateTime.utc(2026, 1, 1),
           isSelf: true,
@@ -176,7 +176,7 @@ void main() {
       memberDisplayMap: {
         'u_creator': SpitoutCloudLedgerMember(
           userId: 'u_creator',
-          email: 'creator@example.com',
+          account: 'creator@example.com',
           role: 'editor',
           joinedAt: DateTime.utc(2026, 1, 1),
           isSelf: false,
@@ -186,7 +186,7 @@ void main() {
       localOwnerDisplayName: '本地昵称',
     );
 
-    // u_creator 在成员表但 displayName 为空 → 展示完整邮箱;u_editor 不在成员表 → 本地昵称
+    // u_creator 在成员表但 displayName 为空 → 展示完整账号;u_editor 不在成员表 → 本地昵称
     expect(find.text('本地昵称'), findsOneWidget);
     expect(find.text('creator@example.com'), findsOneWidget);
     expect(find.text('u_creator'), findsNothing);

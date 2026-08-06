@@ -20,7 +20,7 @@ class AaMemberDetailArgs {
   /// 参与人标识（真实成员 userId 或虚拟用户 syncId）。
   final String participantId;
 
-  /// 参与人显示名（真实成员 displayName/email、虚拟用户 name）。
+  /// 参与人显示名（真实成员 displayName/account、虚拟用户 name）。
   final String displayName;
 
   /// 是否本人；UI 据此渲染「(我)」共享后缀与本地头像。

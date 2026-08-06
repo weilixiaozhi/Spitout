@@ -37,7 +37,7 @@
 
 **实现内容**:
 - `SupabaseProvider` - Supabase 集成
-- `SupabaseAuthService` - 邮箱/密码认证
+- `SupabaseAuthService` - 账号/密码认证
 - `SupabaseStorageService` - Supabase Storage API
 - 用户路径管理 (`users/{userId}/...`)
 - 可选的元数据表支持

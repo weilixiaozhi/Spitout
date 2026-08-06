@@ -192,13 +192,13 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
     if (services.provider is! SpitoutCloudSyncBackend) return null;
     final provider = services.provider as SpitoutCloudSyncBackend;
 
-    final account = config.spitoutCloudEmail;
+    final account = config.spitoutCloudAccount;
 
     // 密码不再持久化（见 CloudServiceStore），因此只注入账号用于日志兜底；
     // session 失效后由用户手动重新登录，避免明文密码落盘。
     if (services.auth is SpitoutCloudAuthService) {
       (services.auth as SpitoutCloudAuthService).setRecoveryCredentials(
-        email: account,
+        account: account,
       );
     }
 
@@ -211,7 +211,7 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
         if (user != null) {
           logger.info(
             'CloudSync',
-            'Spitout Cloud session ready: ${user.email}',
+            'Spitout Cloud session ready: ${user.account}',
           );
         } else if (account != null && account.isNotEmpty) {
           logger.info('CloudSync', 'Spitout Cloud 未登录,等首次 API 触发恢复');
@@ -231,7 +231,7 @@ final spitoutCloudProviderInstance = FutureProvider<SpitoutCloudSyncBackend?>((
 ///
 /// 默认委托给包级顶层函数 [createCloudServices]；页面里的 Spitout 登录块通过
 /// 本 provider 拿到「配置 → (provider, auth)」的服务实例，而测试可经 `overrideWith`
-/// 注入桩函数（例如返回带 `signInWithEmail` 断言的 Fake auth），从而不触网地验证
+/// 注入桩函数（例如返回带 `signInWithAccount` 断言的 Fake auth），从而不触网地验证
 /// 「保存并切换时登录」与「暂不切换时不登录」两个分支。运行时永远走真实实现。
 ///
 /// 之所以不直接暴露 [createCloudServices]（它是顶层函数无法被 Riverpod override），

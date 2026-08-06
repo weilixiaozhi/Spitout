@@ -35,7 +35,7 @@ void main() {
     SharedPreferences.setMockInitialValues({
       'spitout_cloud_session_$digest': jsonEncode({
         'userId': 'u1',
-        'email': 'u1@example.com',
+        'account': 'u1@example.com',
         'accessToken': accessToken,
         'refreshToken': 'refresh_token',
         'accessTokenExpiresAt': DateTime.now()

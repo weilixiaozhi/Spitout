@@ -33,10 +33,10 @@ String friendlyAuthError(Object? e, BuildContext context) {
     switch (e.code) {
       case 'invalid_credentials':
         return l10n.authErrorInvalidCredentials;
-      case 'email_address_not_confirmed':
-      case 'email_not_confirmed':
-        return l10n.authErrorEmailNotConfirmed;
-      case 'over_email_send_rate_limit':
+      case 'account_address_not_confirmed':
+      case 'account_not_confirmed':
+        return l10n.authErrorAccountNotConfirmed;
+      case 'over_account_send_rate_limit':
         return l10n.authErrorRateLimit;
     }
   }
@@ -53,9 +53,9 @@ String friendlyAuthError(Object? e, BuildContext context) {
   // 3. 包内 CloudAuthException：message 已是清晰的英文/中文描述，按语义细分。
   if (e is CloudAuthException) {
     final lower = e.message.toLowerCase();
-    // 账号相关：含 invalid + (email/password/credential)，或 not found。
+    // 账号相关：含 invalid + (account/password/credential)，或 not found。
     if ((lower.contains('invalid') &&
-            (lower.contains('email') ||
+            (lower.contains('account') ||
                 lower.contains('password') ||
                 lower.contains('credential'))) ||
         lower.contains('not found')) {
@@ -65,11 +65,11 @@ String friendlyAuthError(Object? e, BuildContext context) {
     if (lower.contains('rate') || lower.contains('too many')) {
       return l10n.authErrorRateLimit;
     }
-    // 邮箱未验证。
-    if (lower.contains('email') &&
+    // 账号未验证。
+    if (lower.contains('account') &&
         lower.contains('not') &&
         lower.contains('confirm')) {
-      return l10n.authErrorEmailNotConfirmed;
+      return l10n.authErrorAccountNotConfirmed;
     }
     // 其余 CloudAuthException 视为通用登录失败。
     return l10n.authErrorLoginFailed;
@@ -78,8 +78,8 @@ String friendlyAuthError(Object? e, BuildContext context) {
   // 4. 兜底：对异常字符串做关键词匹配，尽量区分类型后回落到通用文案。
   //    仅当上述类型判断都未命中时才走到这里（例如非 Supabase 的其它异常源）。
   final msg = (e?.toString() ?? '').toLowerCase();
-  if (msg.contains('email') && msg.contains('not') && msg.contains('confirm')) {
-    return l10n.authErrorEmailNotConfirmed;
+  if (msg.contains('account') && msg.contains('not') && msg.contains('confirm')) {
+    return l10n.authErrorAccountNotConfirmed;
   }
   if (msg.contains('invalid') &&
       (msg.contains('login') ||

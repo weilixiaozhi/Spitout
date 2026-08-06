@@ -250,10 +250,10 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
 
   final CloudSyncLogger _logger;
 
-  /// 在 App 启动时设置一次。auth service 处理 signInWithEmail 时,server
+  /// 在 App 启动时设置一次。auth service 处理 signInWithAccount 时,server
   /// 若返回 requires_2fa=true,会调这个 handler 让 App 弹输码 UI。
   /// 不设置 = 老 App / 服务端未启 2FA 行为不变;若 server 要求 2FA 而 App
-  /// 没注册 handler,signInWithEmail 会抛 [CloudAuthException]。
+  /// 没注册 handler,signInWithAccount 会抛 [CloudAuthException]。
   static TwoFactorChallengeHandler? globalTwoFactorHandler;
 
   SpitoutCloudAuthService? _auth;

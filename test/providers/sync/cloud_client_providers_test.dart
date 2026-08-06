@@ -106,7 +106,7 @@ void main() {
 
   test('cloudCurrentUserProvider: 已登录 → 种子当前用户，不卡 loading（回归点）',
       () async {
-    final user = const CloudUser(id: 'u1', email: 'a@b.com');
+    final user = const CloudUser(id: 'u1', account: 'a@b.com');
     final container = ProviderContainer(overrides: [
       authServiceProvider.overrideWith((ref) async => _LoggedInAuth(user)),
     ]);
@@ -121,7 +121,7 @@ void main() {
 
   test('cloudCurrentUserProvider: 登出事件(null)经流传播，最终回退未登录',
       () async {
-    final user = const CloudUser(id: 'u2', email: 'b@b.com');
+    final user = const CloudUser(id: 'u2', account: 'b@b.com');
     final container = ProviderContainer(overrides: [
       authServiceProvider.overrideWith((ref) async => _SeqAuth(user)),
     ]);

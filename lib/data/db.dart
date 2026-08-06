@@ -334,7 +334,7 @@ class SnapshotDirtyLedgers extends Table {
 class LedgerMembers extends Table {
   TextColumn get ledgerSyncId => text()();        // ledger.syncId(全 user 唯一)
   TextColumn get userId => text()();
-  TextColumn get email => text().nullable()();
+  TextColumn get account => text().nullable()();
   TextColumn get displayName => text().nullable()();
   TextColumn get avatarUrl => text().nullable()();
   TextColumn get role => text()();                // owner / editor
@@ -445,8 +445,9 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   ///     Ledgers/Categories/Transactions/ExchangeRateOverrides/
   ///     LedgerVirtualUsers 的 sync_id 与 SyncState(device_id,provider_type)
   ///     加唯一索引;高频查询列加二级索引;关键不变量加 CHECK 约束。
+  /// v5: 账号语义统一 ——— ledger_members.email 改名为 account（数据不变）。
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 5;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -761,6 +762,22 @@ class SpitoutDatabase extends _$SpitoutDatabase {
                 'ON exchange_rate_overrides (base_currency, quote_currency);');
 
             logger.info('DBMigration', 'v4 迁移完成');
+          }
+
+          if (from < 5) {
+            // v5: 账号语义统一 ——— ledger_members.email → account。
+            // 旧库里这一列实际存的就是账号名，只做列名迁移，不碰数据。
+            logger.info(
+              'DBMigration',
+              '开始迁移到 v5: ledger_members.email -> account',
+            );
+            await renameColumnIfExists(
+              'ledger_members',
+              'email',
+              'account',
+              'ALTER TABLE ledger_members RENAME COLUMN email TO account;',
+            );
+            logger.info('DBMigration', 'v5 迁移完成');
           }
         },
 

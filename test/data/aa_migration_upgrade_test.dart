@@ -9,13 +9,13 @@ import 'package:spitout/data/db.dart';
 
 import '../helpers/test_isolation.dart';
 
-/// v2 → v4 迁移「端到端升级」测试(v3 数据回填 + v4 完整性加固)。
+/// v2 → v5 迁移「端到端升级」测试(v3 数据回填 + v4 完整性加固 + v5 列名统一)。
 ///
 /// 与 `aa_statistics_schema_test.dart`（在新建库上手动执行迁移 SQL 副本）不同，
 /// 本文件验证的是真实升级路径：
 ///   1. 构造一个「停留在 v2 版本」的旧库（含 v2 存量数据）；
-///   2. 用当前 `SpitoutDatabase`（schemaVersion=4）重新打开同一数据库文件，
-///      由 drift 自动检测 `user_version=2 < 4` 并触发真实的 `onUpgrade(2→4)`；
+///   2. 用当前 `SpitoutDatabase`（schemaVersion=5）重新打开同一数据库文件，
+///      由 drift 自动检测 `user_version=2 < 5` 并触发真实的 `onUpgrade(2→5)`；
 ///   3. 验证 v3 回填语义（空支出人按 创建人→编辑人→空串 回填）与重复升级幂等。
 ///
 /// 构造方式说明：v3 迁移块只包含数据回填 UPDATE、无任何 DDL（见
@@ -141,7 +141,7 @@ void main() {
     );
     await db1.close();
 
-    // 重新打开同一文件：drift 检测到 user_version=2 < schemaVersion=3，
+    // 重新打开同一文件：drift 检测到 user_version=2 < schemaVersion=5，
     // 触发真实的 onUpgrade(2→3)，执行 v3 回填迁移。
     final db2 = SpitoutDatabase.forTesting(NativeDatabase(dbFile));
     openedDbs.add(db2);
@@ -149,9 +149,9 @@ void main() {
       'SELECT note, paid_by_user_id FROM transactions ORDER BY id;',
     ).get();
 
-    // 迁移后 user_version 应推进到 3（drift 在 onUpgrade 成功后写入）。
+    // 迁移后 user_version 应推进到 5（drift 在 onUpgrade 成功后写入）。
     final versionRow = await db2.customSelect('PRAGMA user_version;').getSingle();
-    expect(versionRow.read<int>('user_version'), 4, reason: '升级后 user_version 应为 4');
+    expect(versionRow.read<int>('user_version'), 5, reason: '升级后 user_version 应为 5');
 
     // 断言五种场景的回填结果。
     final byNote = {

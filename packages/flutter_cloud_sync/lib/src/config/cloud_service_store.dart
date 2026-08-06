@@ -156,7 +156,7 @@ class CloudServiceStore {
     await _writeConfig(sp, cfg.type, merged);
   }
 
-  /// 剥离 Spitout Cloud / Supabase 的登录密码，仅保留邮箱等非敏感配置。
+  /// 剥离 Spitout Cloud / Supabase 的登录密码，仅保留账号等非敏感配置。
   ///
   /// 设计意图：登录密码只作为一次性输入使用，不写入 SharedPreferences
   /// （Android 侧为明文 XML，且可能随系统备份带走）。WebDAV / S3 的
@@ -171,11 +171,11 @@ class CloudServiceStore {
       name: cfg.name,
       spitoutCloudBaseUrl: cfg.spitoutCloudBaseUrl,
       spitoutCloudApiPrefix: cfg.spitoutCloudApiPrefix,
-      spitoutCloudEmail: cfg.spitoutCloudEmail,
+      spitoutCloudAccount: cfg.spitoutCloudAccount,
       supabaseUrl: cfg.supabaseUrl,
       supabaseAnonKey: cfg.supabaseAnonKey,
       supabaseBucket: cfg.supabaseBucket,
-      supabaseEmail: cfg.supabaseEmail,
+      supabaseAccount: cfg.supabaseAccount,
     );
   }
 
@@ -202,13 +202,13 @@ class CloudServiceStore {
       name: incoming.name,
       spitoutCloudBaseUrl: incoming.spitoutCloudBaseUrl,
       spitoutCloudApiPrefix: incoming.spitoutCloudApiPrefix,
-      spitoutCloudEmail: incoming.spitoutCloudEmail,
+      spitoutCloudAccount: incoming.spitoutCloudAccount,
       // 登录密码永不清真存储，导入后由用户在下一次登录时输入。
       spitoutCloudPassword: null,
       supabaseUrl: incoming.supabaseUrl,
       supabaseAnonKey: incoming.supabaseAnonKey,
       supabaseBucket: incoming.supabaseBucket,
-      supabaseEmail: incoming.supabaseEmail,
+      supabaseAccount: incoming.supabaseAccount,
       supabasePassword: null,
       webdavUrl: incoming.webdavUrl,
       webdavUsername: incoming.webdavUsername,
@@ -307,11 +307,11 @@ class CloudServiceStore {
         name: cfg.name,
         spitoutCloudBaseUrl: cfg.spitoutCloudBaseUrl,
         spitoutCloudApiPrefix: cfg.spitoutCloudApiPrefix,
-        spitoutCloudEmail: cfg.spitoutCloudEmail,
+        spitoutCloudAccount: cfg.spitoutCloudAccount,
         supabaseUrl: cfg.supabaseUrl,
         supabaseAnonKey: cfg.supabaseAnonKey,
         supabaseBucket: cfg.supabaseBucket,
-        supabaseEmail: cfg.supabaseEmail,
+        supabaseAccount: cfg.supabaseAccount,
         webdavUrl: cfg.webdavUrl,
         webdavUsername: cfg.webdavUsername,
         webdavPassword:
@@ -367,11 +367,11 @@ class CloudServiceStore {
       name: cfg.name,
       spitoutCloudBaseUrl: cfg.spitoutCloudBaseUrl,
       spitoutCloudApiPrefix: cfg.spitoutCloudApiPrefix,
-      spitoutCloudEmail: cfg.spitoutCloudEmail,
+      spitoutCloudAccount: cfg.spitoutCloudAccount,
       supabaseUrl: cfg.supabaseUrl,
       supabaseAnonKey: cfg.supabaseAnonKey,
       supabaseBucket: cfg.supabaseBucket,
-      supabaseEmail: cfg.supabaseEmail,
+      supabaseAccount: cfg.supabaseAccount,
       webdavUrl: cfg.webdavUrl,
       webdavUsername: cfg.webdavUsername,
       webdavRemotePath: cfg.webdavRemotePath,

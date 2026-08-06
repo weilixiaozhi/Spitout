@@ -251,7 +251,7 @@ class SpitoutCloudReadTransaction {
     this.ledgerId,
     this.ledgerName,
     this.createdByUserId,
-    this.createdByEmail,
+    this.createdByAccount,
     this.createdByDisplayName,
     this.createdByAvatarUrl,
     this.createdByAvatarVersion,
@@ -273,7 +273,7 @@ class SpitoutCloudReadTransaction {
   final String? ledgerId;
   final String? ledgerName;
   final String? createdByUserId;
-  final String? createdByEmail;
+  final String? createdByAccount;
   final String? createdByDisplayName;
   final String? createdByAvatarUrl;
   final int? createdByAvatarVersion;
@@ -297,7 +297,7 @@ class SpitoutCloudReadTransaction {
       ledgerId: json['ledger_id'] as String?,
       ledgerName: json['ledger_name'] as String?,
       createdByUserId: json['created_by_user_id'] as String?,
-      createdByEmail: json['created_by_email'] as String?,
+      createdByAccount: json['created_by_account'] as String?,
       createdByDisplayName:
           trimOrNull(json['created_by_display_name'] as String?),
       createdByAvatarUrl: trimOrNull(json['created_by_avatar_url'] as String?),
@@ -310,7 +310,7 @@ class SpitoutCloudReadTransaction {
 class SpitoutCloudProfile {
   const SpitoutCloudProfile({
     required this.userId,
-    this.email,
+    this.account,
     this.displayName,
     this.avatarUrl,
     this.avatarVersion = 0,
@@ -320,7 +320,7 @@ class SpitoutCloudProfile {
   });
 
   final String userId;
-  final String? email;
+  final String? account;
   final String? displayName;
   final String? avatarUrl;
   final int avatarVersion;
@@ -339,7 +339,7 @@ class SpitoutCloudProfile {
     final aiConfigRaw = json['ai_config'];
     return SpitoutCloudProfile(
       userId: requireNonEmptyString(json, 'user_id', 'SpitoutCloudProfile'),
-      email: trimOrNull(json['email'] as String?),
+      account: trimOrNull(json['account'] as String?),
       displayName: trimOrNull(json['display_name'] as String?),
       avatarUrl: trimOrNull(json['avatar_url'] as String?),
       avatarVersion: (json['avatar_version'] as num?)?.toInt() ?? 0,
@@ -384,7 +384,7 @@ class SpitoutCloudReadCategory {
     this.ledgerId,
     this.ledgerName,
     this.createdByUserId,
-    this.createdByEmail,
+    this.createdByAccount,
   });
 
   final String id;
@@ -398,7 +398,7 @@ class SpitoutCloudReadCategory {
   final String? ledgerId;
   final String? ledgerName;
   final String? createdByUserId;
-  final String? createdByEmail;
+  final String? createdByAccount;
 
   factory SpitoutCloudReadCategory.fromJson(Map<String, dynamic> json) {
     return SpitoutCloudReadCategory(
@@ -414,7 +414,7 @@ class SpitoutCloudReadCategory {
       ledgerId: json['ledger_id'] as String?,
       ledgerName: json['ledger_name'] as String?,
       createdByUserId: json['created_by_user_id'] as String?,
-      createdByEmail: json['created_by_email'] as String?,
+      createdByAccount: json['created_by_account'] as String?,
     );
   }
 }
@@ -595,7 +595,7 @@ class SpitoutCloudInviteAcceptResult {
 class SpitoutCloudLedgerMember {
   const SpitoutCloudLedgerMember({
     required this.userId,
-    required this.email,
+    required this.account,
     required this.role,
     required this.joinedAt,
     required this.isSelf,
@@ -606,7 +606,7 @@ class SpitoutCloudLedgerMember {
   });
 
   final String userId;
-  final String email;
+  final String account;
   final String? displayName;
   final String role;
   final DateTime? joinedAt;
@@ -621,7 +621,7 @@ class SpitoutCloudLedgerMember {
     return SpitoutCloudLedgerMember(
       userId:
           requireNonEmptyString(json, 'user_id', 'SpitoutCloudLedgerMember'),
-      email: requireNonEmptyString(json, 'email', 'SpitoutCloudLedgerMember'),
+      account: requireNonEmptyString(json, 'account', 'SpitoutCloudLedgerMember'),
       displayName: json['display_name'] as String?,
       role: (json['role'] as String?)?.trim() ?? 'editor',
       joinedAt: DateTime.tryParse(json['joined_at'] as String? ?? '')?.toUtc(),
@@ -760,14 +760,14 @@ class SpitoutCloudMemberStatItem {
     required this.role,
     required this.expenseTotal,
     required this.txCount,
-    this.email,
+    this.account,
     this.displayName,
     this.avatarUrl,
     this.avatarVersion = 0,
   });
 
   final String userId;
-  final String? email;
+  final String? account;
   final String? displayName;
 
   /// server-side relative path,例 "/api/v1/profile/avatar/{uid}?v=N"。null = 用户未上传头像。
@@ -784,9 +784,9 @@ class SpitoutCloudMemberStatItem {
     return SpitoutCloudMemberStatItem(
       userId:
           requireNonEmptyString(json, 'user_id', 'SpitoutCloudMemberStatItem'),
-      email: (json['email'] as String?)?.trim().isEmpty == true
+      account: (json['account'] as String?)?.trim().isEmpty == true
           ? null
-          : json['email'] as String?,
+          : json['account'] as String?,
       displayName: json['display_name'] as String?,
       avatarUrl: (avatar == null || avatar.isEmpty) ? null : avatar,
       avatarVersion: (json['avatar_version'] as num?)?.toInt() ?? 0,

@@ -124,7 +124,7 @@ void main() {
 
       expect(user, isNotNull);
       expect(user!.id, equals('test-user'));
-      expect(user.email, equals('test-user@webdav'));
+      expect(user.account, equals('test-user@webdav'));
     });
 
     test('should emit auth state changes', () async {
@@ -136,7 +136,7 @@ void main() {
       await Future.delayed(const Duration(milliseconds: 100));
 
       expect(states.length, greaterThan(0));
-      expect(states.last?.email, equals('test-user@webdav'));
+      expect(states.last?.account, equals('test-user@webdav'));
 
       await subscription.cancel();
       authService.dispose();
@@ -156,22 +156,22 @@ void main() {
       authService.dispose();
     });
 
-    test('sendPasswordResetEmail should throw exception', () async {
+    test('sendPasswordResetAccount should throw exception', () async {
       final authService = WebDAVAuthService('test-user');
 
       expect(
-        () => authService.sendPasswordResetEmail(email: 'user@example.com'),
+        () => authService.sendPasswordResetAccount(account: 'user@example.com'),
         throwsA(isA<CloudAuthException>()),
       );
 
       authService.dispose();
     });
 
-    test('resendEmailVerification should throw exception', () async {
+    test('resendAccountVerification should throw exception', () async {
       final authService = WebDAVAuthService('test-user');
 
       expect(
-        () => authService.resendEmailVerification(email: 'user@example.com'),
+        () => authService.resendAccountVerification(account: 'user@example.com'),
         throwsA(isA<CloudAuthException>()),
       );
 

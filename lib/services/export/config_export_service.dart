@@ -152,14 +152,14 @@ class SupabaseConfig {
   final String url;
   final String anonKey;
   final String? bucket;
-  final String? email;
+  final String? account;
   final String? password;
 
   const SupabaseConfig({
     required this.url,
     required this.anonKey,
     this.bucket,
-    this.email,
+    this.account,
     this.password,
   });
 
@@ -168,8 +168,8 @@ class SupabaseConfig {
     if (bucket != null && bucket!.isNotEmpty) {
       map['bucket'] = bucket;
     }
-    if (email != null && email!.isNotEmpty) {
-      map['email'] = email;
+    if (account != null && account!.isNotEmpty) {
+      map['account'] = account;
     }
     if (password != null && password!.isNotEmpty) {
       // 默认脱敏：只有显式勾选“包含凭据”才写入明文密码。
@@ -182,7 +182,7 @@ class SupabaseConfig {
     url: map['url'] as String,
     anonKey: map['anon_key'] as String,
     bucket: map['bucket'] as String?,
-    email: map['email'] as String?,
+    account: map['account'] as String?,
     password: map['password'] as String?,
   );
 }
@@ -196,7 +196,7 @@ class SupabaseConfig {
 /// 保管。导出 UI 应默认不带 token，只有显式勾选"包含登录态"才会写进来。
 class SpitoutCloudConfig {
   final String baseUrl;
-  final String? email;
+  final String? account;
   final String? password;
   final String? accessToken;
   final String? refreshToken;
@@ -204,7 +204,7 @@ class SpitoutCloudConfig {
 
   const SpitoutCloudConfig({
     required this.baseUrl,
-    this.email,
+    this.account,
     this.password,
     this.accessToken,
     this.refreshToken,
@@ -213,7 +213,7 @@ class SpitoutCloudConfig {
 
   Map<String, dynamic> toMap({bool includeCredentials = false}) {
     final map = <String, dynamic>{'base_url': baseUrl};
-    if (email != null && email!.isNotEmpty) map['email'] = email;
+    if (account != null && account!.isNotEmpty) map['account'] = account;
     if (password != null && password!.isNotEmpty) {
       map['password'] = includeCredentials ? password : '***';
     }
@@ -233,7 +233,7 @@ class SpitoutCloudConfig {
   static SpitoutCloudConfig fromMap(Map<String, dynamic> map) =>
       SpitoutCloudConfig(
         baseUrl: map['base_url'] as String,
-        email: map['email'] as String?,
+        account: map['account'] as String?,
         password: map['password'] as String?,
         accessToken: map['access_token'] as String?,
         refreshToken: map['refresh_token'] as String?,
@@ -770,7 +770,7 @@ class ConfigExportService {
         url: supabaseCfg.supabaseUrl!,
         anonKey: supabaseCfg.supabaseAnonKey!,
         bucket: supabaseCfg.supabaseBucket,
-        email: supabaseCfg.supabaseEmail,
+        account: supabaseCfg.supabaseAccount,
         password: supabaseCfg.supabasePassword,
       );
     }
@@ -810,7 +810,7 @@ class ConfigExportService {
       );
     }
 
-    // 读取 Spitout Cloud 配置。base_url + email 总是导出（方便 B 设备导入
+    // 读取 Spitout Cloud 配置。base_url + account 总是导出（方便 B 设备导入
     // 快速填回登录表单）；登录密码不落盘，因此导出时无明文可写；access/refresh
     // token 属于登录态，需 options 显式勾选才带上。
     SpitoutCloudConfig? spitoutCloudConfig;
@@ -819,7 +819,7 @@ class ConfigExportService {
     if (baseUrl.isNotEmpty) {
       spitoutCloudConfig = SpitoutCloudConfig(
         baseUrl: baseUrl,
-        email: spitoutCfg?.spitoutCloudEmail,
+        account: spitoutCfg?.spitoutCloudAccount,
         // 密码不持久化（见 CloudServiceStore），此处恒为 null，yaml 不写。
         password: spitoutCfg?.spitoutCloudPassword,
       );
@@ -1052,11 +1052,11 @@ class ConfigExportService {
         buffer.writeln('  # Storage bucket 名称，留空则使用默认值 spitout-backups');
         buffer.writeln('  bucket: ${_yamlQuote(sb['bucket'])}');
       }
-      if (sb.containsKey('email') || sb.containsKey('password')) {
+      if (sb.containsKey('account') || sb.containsKey('password')) {
         buffer.writeln('  # 记住账号密码功能：导入后登录页面会自动填充');
       }
-      if (sb.containsKey('email')) {
-        buffer.writeln('  email: ${_yamlQuote(sb['email'])}');
+      if (sb.containsKey('account')) {
+        buffer.writeln('  account: ${_yamlQuote(sb['account'])}');
       }
       if (sb.containsKey('password')) {
         buffer.writeln('  password: ${_yamlQuote(sb['password'])}');
@@ -1098,11 +1098,11 @@ class ConfigExportService {
       final bc = yamlMap['spitout_cloud'] as Map<String, dynamic>;
       buffer.writeln('  # Spitout Cloud 自部署后端配置');
       buffer.writeln('  base_url: ${_yamlQuote(bc['base_url'])}');
-      if (bc.containsKey('email') || bc.containsKey('password')) {
+      if (bc.containsKey('account') || bc.containsKey('password')) {
         buffer.writeln('  # 记住账号密码功能：导入后登录页面会自动填充');
       }
-      if (bc.containsKey('email')) {
-        buffer.writeln('  email: ${_yamlQuote(bc['email'])}');
+      if (bc.containsKey('account')) {
+        buffer.writeln('  account: ${_yamlQuote(bc['account'])}');
       }
       if (bc.containsKey('password')) {
         buffer.writeln('  password: ${_yamlQuote(bc['password'])}');
@@ -1344,7 +1344,7 @@ class ConfigExportService {
         supabaseAnonKey: config.supabase!.anonKey,
         supabaseBucket:
             config.supabase!.bucket ?? 'spitout-backups', // 导入时也提供默认值
-        supabaseEmail: config.supabase!.email,
+        supabaseAccount: config.supabase!.account,
         // 登录密码与 CloudServiceStore 的落盘策略一致:永不清真存储,
         // 即使 YAML 显式携带密码,也由 Store 统一剥离,密码由用户在下一次登录时输入。
         supabasePassword: config.supabase!.password,
@@ -1393,15 +1393,15 @@ class ConfigExportService {
       logger.info('ConfigImport', 'S3配置已导入');
     }
 
-    // 导入 Spitout Cloud 配置（base_url + 可选 email）。
-    // 登录密码不落盘（与 CloudServiceStore 一致）:导入后登录页预填邮箱,
+    // 导入 Spitout Cloud 配置（base_url + 可选 account）。
+    // 登录密码不落盘（与 CloudServiceStore 一致）:导入后登录页预填账号,
     // 密码由用户输入;自动登录依赖 session token,不依赖明文密码。
     if (options.appSettings && config.spitoutCloud != null) {
       final bcCfg = CloudServiceConfig(
         type: CloudBackendType.spitoutCloud,
         name: 'Spitout Cloud',
         spitoutCloudBaseUrl: config.spitoutCloud!.baseUrl,
-        spitoutCloudEmail: config.spitoutCloud!.email,
+        spitoutCloudAccount: config.spitoutCloud!.account,
         // 登录密码同样交给 Store 统一剥离，绝不落盘。
         spitoutCloudPassword: config.spitoutCloud!.password,
       );
@@ -1412,7 +1412,7 @@ class ConfigExportService {
       logger.info(
         'ConfigImport',
         'Spitout Cloud 配置已导入 url=${config.spitoutCloud!.baseUrl} '
-            'hasEmail=${config.spitoutCloud!.email != null} '
+            'hasAccount=${config.spitoutCloud!.account != null} '
             'password=skipped',
       );
     }

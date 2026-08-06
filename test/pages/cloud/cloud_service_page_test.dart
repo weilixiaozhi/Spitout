@@ -34,11 +34,11 @@ import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/widgets.dart';
 
-/// 桩 auth：记录 [CloudAuthService.signInWithEmail] 是否被调用及入参，
+/// 桩 auth：记录 [CloudAuthService.signInWithAccount] 是否被调用及入参，
 /// 用于断言「保存并立即切换 → 登录」与「保存但暂不切换 → 不登录」两个分支。
 class _FakeSpitoutAuth extends CloudAuthService {
   bool signInCalled = false;
-  String? emailUsed;
+  String? accountUsed;
   String? passwordUsed;
 
   @override
@@ -48,30 +48,30 @@ class _FakeSpitoutAuth extends CloudAuthService {
   Future<CloudUser?> get currentUser async => null;
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     signInCalled = true;
-    emailUsed = email;
+    accountUsed = account;
     passwordUsed = password;
-    return const CloudUser(id: 'fake-uid', email: 'fake@x.com');
+    return const CloudUser(id: 'fake-uid', account: 'fake@x.com');
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
-  }) async => const CloudUser(id: 'fake-uid', email: 'fake@x.com');
+  }) async => const CloudUser(id: 'fake-uid', account: 'fake@x.com');
 
   @override
   Future<void> signOut() async {}
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {}
+  Future<void> sendPasswordResetAccount({required String account}) async {}
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {}
+  Future<void> resendAccountVerification({required String account}) async {}
 }
 
 /// 桩 auth：登录抛 [CloudAuthException]（账号鉴权失败分支）。
@@ -80,8 +80,8 @@ class _FakeSpitoutAuth extends CloudAuthService {
 /// credential 关键词，[friendlyAuthError] 据此映射到「账号或密码不正确」。
 class _CloudPageAuthAccountFail extends _FakeSpitoutAuth {
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     signInCalled = true;
@@ -94,8 +94,8 @@ class _CloudPageAuthAccountFail extends _FakeSpitoutAuth {
 /// 用于回归「网络异常 → 弹网络友好文案且不激活服务」。
 class _CloudPageAuthNetworkFail extends _FakeSpitoutAuth {
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     signInCalled = true;
@@ -728,7 +728,7 @@ void main() {
 
       // 1) 登录被调用，且账号/密码正确透传
       expect(fakeAuth.signInCalled, isTrue);
-      expect(fakeAuth.emailUsed, 'user@example.com');
+      expect(fakeAuth.accountUsed, 'user@example.com');
       expect(fakeAuth.passwordUsed, 'secret');
 
       // 2) 自动同步被置为 true（持久化到 SharedPreferences）

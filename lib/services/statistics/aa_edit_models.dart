@@ -16,7 +16,7 @@ class AaParticipantOption {
   /// 参与人标识(userId 或虚拟用户 syncId)。
   final String id;
 
-  /// 显示名(真实成员取 displayName/email,虚拟用户取 name)。
+  /// 显示名(真实成员取 displayName/account,虚拟用户取 name)。
   ///
   /// 本人时已剥离「(我)」后缀(仅保留纯名字),「(我)」标记由 UI 层
   /// 统一渲染,保证与成员管理/成员支出模块的字号/颜色/空格一致。

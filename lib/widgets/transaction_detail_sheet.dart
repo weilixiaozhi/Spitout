@@ -103,7 +103,7 @@ class _TransactionDetailBody extends ConsumerWidget {
 
   /// 构建用户展示名解析器(同步读缓存值,sheet 打开时 provider 已就绪)。
   ///
-  /// 统一解析 userId → 展示名,修复「同一账号在不同账本显示为 id/邮箱/昵称混用」:
+  /// 统一解析 userId → 展示名,修复「同一账号在不同账本显示为 id/账号/昵称混用」:
   /// memberDisplayMap → 当前登录用户(userId 命中 cloudUserId)→ localSelfId → 虚拟用户 → 兜底。
   UserDisplayNameResolver _buildResolver(
     WidgetRef ref,
@@ -305,7 +305,7 @@ class _TransactionDetailBody extends ConsumerWidget {
               const [])
         v.syncId ?? 'vu_${v.id}': v.name,
     };
-    // 统一展示名解析器:修复 id/邮箱/昵称混用,统一走 memberDisplayMap→
+    // 统一展示名解析器:修复 id/账号/昵称混用,统一走 memberDisplayMap→
     // 当前登录用户→localSelfId→虚拟用户→兜底。
     final resolver = _buildResolver(ref, l10n, virtualNames);
 

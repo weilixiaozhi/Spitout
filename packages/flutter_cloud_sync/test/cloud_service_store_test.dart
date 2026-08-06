@@ -196,7 +196,7 @@ void main() {
         name: 'Supabase',
         supabaseUrl: 'https://xxx.supabase.co',
         supabaseAnonKey: 'anon-key',
-        supabaseEmail: 'a@b.com',
+        supabaseAccount: 'a@b.com',
         supabasePassword: 'super-secret',
       );
       await store.saveImported(incoming, includeCredentials: true);
@@ -204,7 +204,7 @@ void main() {
       final loaded = await store.loadSupabase();
       expect(loaded, isNotNull);
       expect(loaded!.supabasePassword, isNull);
-      expect(loaded.supabaseEmail, 'a@b.com');
+      expect(loaded.supabaseAccount, 'a@b.com');
 
       final sp = await SharedPreferences.getInstance();
       final raw = sp.getString('cloud_supabase_cfg')!;

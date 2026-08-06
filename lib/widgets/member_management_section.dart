@@ -134,7 +134,7 @@ class _MemberManagementSectionState
 
   /// 新建态下推导的当前用户信息(异步加载,用于展示"所有者(我)")。
   String? _ownerDisplayName;
-  String? _ownerEmail;
+  String? _ownerAccount;
 
   /// 无 syncId 时点击邀请入口,父组件正在保存/同步拿 syncId 的等待态。
   bool _inviteBusy = false;
@@ -158,12 +158,12 @@ class _MemberManagementSectionState
       final me = await cloud?.auth.currentUser;
       if (!mounted) return;
       setState(() {
-        // CloudUser 仅有 id/email,显示名以本地 displayNameProvider 为准;
-        // 兜底回退到 email,email 也没有时由渲染层兜底"我"。
+        // CloudUser 仅有 id/account,显示名以本地 displayNameProvider 为准;
+        // 兜底回退到 account,account 也没有时由渲染层兜底"我"。
         final localName = ref.read(displayNameProvider);
         _ownerDisplayName =
-            localName.trim().isNotEmpty ? localName : me?.email;
-        _ownerEmail = me?.email;
+            localName.trim().isNotEmpty ? localName : me?.account;
+        _ownerAccount = me?.account;
       });
     } catch (e) {
       // 推导失败不影响 UI,所有者行仍会展示兜底文本"我"。
@@ -647,18 +647,18 @@ class _MemberManagementSectionState
 
   /// 新建态/本地账本:构造"所有者(我)"行作为唯一成员。
   ///
-  /// 从 [_ownerDisplayName]/[_ownerEmail] 推导;仅在确有显示名时设置
+  /// 从 [_ownerDisplayName]/[_ownerAccount] 推导;仅在确有显示名时设置
   /// displayName,否则留空交给 _MemberTile 统一处理占位:
-  /// - 有 email:标题回退到 email,保证可读性;
-/// - 无 email:标题展示「未设置昵称」占位,头像位展示 person 图标,
+  /// - 有 account:标题回退到 account,保证可读性;
+/// - 无 account:标题展示「未设置昵称」占位,头像位展示 person 图标,
 ///   不再回退"你",避免头像/昵称/括号三处重复展示。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
     final hasName = _ownerDisplayName?.isNotEmpty == true;
-    final email = _ownerEmail ?? '';
+    final account = _ownerAccount ?? '';
     return [
       SpitoutCloudLedgerMember(
         userId: '',
-        email: email,
+        account: account,
         displayName: hasName ? _ownerDisplayName : null,
         role: 'owner',
         joinedAt: DateTime.now().toUtc(),
@@ -977,7 +977,7 @@ class _MemberManagementSectionState
       builder: (_) => AlertDialog(
         title: Text(l10n.sharedMembersRemoveTitle),
         content: Text(l10n.sharedMembersRemoveConfirm(
-            target.displayName ?? target.email)),
+            target.displayName ?? target.account)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1009,8 +1009,8 @@ class _MemberManagementSectionState
 
 /// 单个真实成员行:头像 + 名称 + (自己) + 移除按钮 + 角色标签。
 ///
-/// 只展示一行标题(昵称优先、无昵称回退邮箱),不再展示邮箱副标题,
-/// 避免与昵称重复占用行高;邮箱/用户名可从其他入口获取。
+/// 只展示一行标题(昵称优先、无昵称回退账号),不再展示账号副标题,
+/// 避免与昵称重复占用行高;账号/用户名可从其他入口获取。
 class _MemberTile extends ConsumerWidget {
   const _MemberTile({
     required this.member,
@@ -1025,13 +1025,13 @@ class _MemberTile extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context);
-    // 标题优先用昵称;昵称为空时回退到邮箱,保证每一行都能看到可读名称。
+    // 标题优先用昵称;昵称为空时回退到账号,保证每一行都能看到可读名称。
     final hasDisplayName = member.displayName?.isNotEmpty == true;
-    final hasEmail = member.email.isNotEmpty;
+    final hasAccount = member.account.isNotEmpty;
     final displayName = hasDisplayName
         ? member.displayName!
-        : hasEmail
-            ? member.email
+        : hasAccount
+            ? member.account
             : l10n.mineSlogan;
     final isOwner = member.role == 'owner';
     return ListTile(

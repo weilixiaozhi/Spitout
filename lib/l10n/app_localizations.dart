@@ -1462,11 +1462,11 @@ abstract class AppLocalizations {
   /// **'Re-logged in'**
   String get cloudReloginSuccess;
 
-  /// No description provided for @mineLoggedInEmail.
+  /// No description provided for @mineLoggedInAccount.
   ///
   /// In en, this message translates to:
   /// **'Logged in'**
-  String get mineLoggedInEmail;
+  String get mineLoggedInAccount;
 
   /// No description provided for @mineLogoutSubtitle.
   ///
@@ -2611,7 +2611,7 @@ abstract class AppLocalizations {
   /// No description provided for @authRememberAccountHint.
   ///
   /// In en, this message translates to:
-  /// **'Auto-fill on next login (Supabase only)'**
+  /// **'Auto-fill on next login'**
   String get authRememberAccountHint;
 
   /// No description provided for @cloudFirstSaveSwitchTitle.
@@ -2674,11 +2674,11 @@ abstract class AppLocalizations {
   /// **'Login'**
   String get authLogin;
 
-  /// No description provided for @authEmail.
+  /// No description provided for @authAccount.
   ///
   /// In en, this message translates to:
-  /// **'Email'**
-  String get authEmail;
+  /// **'Account'**
+  String get authAccount;
 
   /// No description provided for @authPassword.
   ///
@@ -2686,23 +2686,23 @@ abstract class AppLocalizations {
   /// **'Password'**
   String get authPassword;
 
-  /// No description provided for @authInvalidEmail.
+  /// No description provided for @authInvalidAccount.
   ///
   /// In en, this message translates to:
-  /// **'Please enter a valid email address'**
-  String get authInvalidEmail;
+  /// **'Please enter your account'**
+  String get authInvalidAccount;
 
   /// No description provided for @authErrorInvalidCredentials.
   ///
   /// In en, this message translates to:
-  /// **'Email or password is incorrect.'**
+  /// **'Account or password is incorrect.'**
   String get authErrorInvalidCredentials;
 
-  /// No description provided for @authErrorEmailNotConfirmed.
+  /// No description provided for @authErrorAccountNotConfirmed.
   ///
   /// In en, this message translates to:
-  /// **'Email not verified, please complete verification in your email before logging in.'**
-  String get authErrorEmailNotConfirmed;
+  /// **'Account not verified, please complete verification before logging in.'**
+  String get authErrorAccountNotConfirmed;
 
   /// No description provided for @authErrorRateLimit.
   ///
@@ -3490,17 +3490,17 @@ abstract class AppLocalizations {
   /// **'https://your-server.com'**
   String get cloudSpitoutCloudUrlHint;
 
-  /// No description provided for @cloudSpitoutCloudEmailLabel.
+  /// No description provided for @cloudSpitoutCloudAccountLabel.
   ///
   /// In en, this message translates to:
-  /// **'Email'**
-  String get cloudSpitoutCloudEmailLabel;
+  /// **'Account'**
+  String get cloudSpitoutCloudAccountLabel;
 
-  /// No description provided for @cloudSpitoutCloudEmailHint.
+  /// No description provided for @cloudSpitoutCloudAccountHint.
   ///
   /// In en, this message translates to:
-  /// **'your@email.com'**
-  String get cloudSpitoutCloudEmailHint;
+  /// **'Account name'**
+  String get cloudSpitoutCloudAccountHint;
 
   /// No description provided for @cloudSpitoutCloudPasswordLabel.
   ///
@@ -4075,7 +4075,7 @@ abstract class AppLocalizations {
   /// No description provided for @cloudTutorialStep2Desc.
   ///
   /// In en, this message translates to:
-  /// **'Spitout Cloud does NOT offer self-registration (to prevent abuse on public servers). If you self-host: the first Docker boot prints a random admin email + password to the logs — use that. Joining someone else\'s server: ask the admin to create an account for you in Web → Users.'**
+  /// **'Spitout Cloud does NOT offer self-registration (to prevent abuse on public servers). If you self-host: the first Docker boot prints a random admin account + password to the logs — use that. Joining someone else\'s server: ask the admin to create an account for you in Web → Users.'**
   String get cloudTutorialStep2Desc;
 
   /// No description provided for @cloudTutorialStep3Title.

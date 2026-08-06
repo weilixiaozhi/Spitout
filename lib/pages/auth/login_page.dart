@@ -44,10 +44,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
       final cloudConfig = await ref.read(activeCloudConfigProvider.future);
       String? savedAccount;
       if (cloudConfig.type == CloudBackendType.supabase) {
-        savedAccount = cloudConfig.supabaseEmail;
+        savedAccount = cloudConfig.supabaseAccount;
       } else if (cloudConfig.type == CloudBackendType.spitoutCloud) {
         // Spitout Cloud 与 Supabase 一致：仅持久化账号，密码不落盘。
-        savedAccount = cloudConfig.spitoutCloudEmail;
+        savedAccount = cloudConfig.spitoutCloudAccount;
       } else {
         return;
       }
@@ -81,7 +81,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           supabaseUrl: cloudConfig.supabaseUrl,
           supabaseAnonKey: cloudConfig.supabaseAnonKey,
           supabaseBucket: cloudConfig.supabaseBucket ?? 'spitout-backups',
-          supabaseEmail: _rememberAccount ? account : null,
+          supabaseAccount: _rememberAccount ? account : null,
           supabasePassword: null,
         );
         await store.saveOnly(updatedConfig);
@@ -100,7 +100,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           name: cloudConfig.name,
           spitoutCloudBaseUrl: cloudConfig.spitoutCloudBaseUrl,
           spitoutCloudApiPrefix: cloudConfig.spitoutCloudApiPrefix,
-          spitoutCloudEmail: _rememberAccount ? account : null,
+          spitoutCloudAccount: _rememberAccount ? account : null,
           spitoutCloudPassword: null,
         );
         await store.saveOnly(updatedConfig);
@@ -116,7 +116,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
     }
   }
 
-  /// 日志脱敏：避免完整账号落入日志；邮箱仍保留前缀与域名便于排查。
+  /// 日志脱敏：避免完整账号落入日志；账号仍保留前缀与域名便于排查。
   String _maskAccount(String account) {
     final t = account.trim();
     if (t.length <= 2) return '***';
@@ -267,7 +267,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           controller: accountCtrl,
                           keyboardType: TextInputType.text,
                           decoration: InputDecoration(
-                            labelText: AppLocalizations.of(context).authEmail,
+                            labelText: AppLocalizations.of(context).authAccount,
                           ),
                         ),
                         const SizedBox(height: 8),
@@ -371,7 +371,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                       setState(
                                         () => errorText = AppLocalizations.of(
                                           context,
-                                        ).authInvalidEmail,
+                                        ).authInvalidAccount,
                                       );
                                       return;
                                     }
@@ -386,8 +386,8 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                       final auth = await ref.read(
                                         authServiceProvider.future,
                                       );
-                                      await auth.signInWithEmail(
-                                        email: account,
+                                      await auth.signInWithAccount(
+                                        account: account,
                                         password: pwd,
                                       );
                                       if (!context.mounted) return;

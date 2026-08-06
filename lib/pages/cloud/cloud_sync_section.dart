@@ -490,13 +490,13 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                               leading: user == null
                                   ? AppIcons.login
                                   : AppIcons.verifiedUser,
-                              // 本行仅 Supabase 激活时渲染，直接显示邮箱；
+                              // 本行仅 Supabase 激活时渲染，直接显示账号；
                               // 原 WebDAV 分支（user.id 去后缀）在本上下文中不可达，已按死代码清理。
                               title: user == null
                                   ? AppLocalizations.of(context).mineLoginTitle
-                                  : user.email ??
+                                  : user.account ??
                                       AppLocalizations.of(context)
-                                          .mineLoggedInEmail,
+                                          .mineLoggedInAccount,
                               subtitle: user == null
                                   ? AppLocalizations.of(context)
                                       .mineLoginSubtitle

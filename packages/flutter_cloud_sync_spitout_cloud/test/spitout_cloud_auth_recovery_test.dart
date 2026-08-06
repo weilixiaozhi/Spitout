@@ -1,6 +1,6 @@
 /// SpitoutCloudAuthService 静默恢复凭据生命周期测试。
 ///
-/// 覆盖 signOut() 必须清空 _recoveryEmail/_recoveryPassword,
+/// 覆盖 signOut() 必须清空 _recoveryAccount/_recoveryPassword,
 /// 否则登出后 provider 重建触发 currentUser → _tryRecoveryLogin,
 /// 会拿旧邮密自动 POST /auth/login 把云端账本"拉回来"——用户明明登出,
 /// 下一轮 UI rebuild 又被静默登录,这就是"复活链"的根因。
@@ -36,7 +36,7 @@ MockClient _mockAuthClient(List<String> log) {
       // 让断言精确落在"recovery 是否再次触发 login"这一个行为上。
       return http.Response(
         jsonEncode({
-          'user': {'id': 'user-1', 'email': 'a@b.com'},
+          'user': {'id': 'user-1', 'account': 'a@b.com'},
           'access_token': 'access-token-1',
           'refresh_token': 'refresh-token-1',
           'expires_in': 3600,
@@ -88,11 +88,11 @@ void main() {
       );
 
       // 1. 显式登录,建立本地 session
-      await auth.signInWithEmail(email: 'a@b.com', password: 'pw');
+      await auth.signInWithAccount(account: 'a@b.com', password: 'pw');
       expect(_loginCount(log), 1, reason: '显式登录应恰好 1 次 /auth/login');
 
       // 2. 注入恢复邮密,模拟用户在云配置页保存过凭证
-      auth.setRecoveryCredentials(email: 'a@b.com', password: 'pw');
+      auth.setRecoveryCredentials(account: 'a@b.com', password: 'pw');
 
       // 3. 用户主动登出
       await auth.signOut();
@@ -116,12 +116,12 @@ void main() {
         sessionStore: SharedPreferencesSessionStore(),
       );
 
-      await auth.signInWithEmail(email: 'a@b.com', password: 'pw');
-      auth.setRecoveryCredentials(email: 'a@b.com', password: 'pw');
+      await auth.signInWithAccount(account: 'a@b.com', password: 'pw');
+      auth.setRecoveryCredentials(account: 'a@b.com', password: 'pw');
       await auth.signOut();
 
       // 重新注入(用户再次在配置页保存邮密)
-      auth.setRecoveryCredentials(email: 'a@b.com', password: 'pw');
+      auth.setRecoveryCredentials(account: 'a@b.com', password: 'pw');
 
       // 下一次鉴权探测应能走恢复登录,证明清空逻辑没有破坏"注入→恢复"能力
       final before = _loginCount(log);
@@ -144,7 +144,7 @@ void main() {
         silentRecoveryCooldown: Duration.zero,
       );
 
-      auth.setRecoveryCredentials(email: 'a@b.com', password: 'wrong-pw');
+      auth.setRecoveryCredentials(account: 'a@b.com', password: 'wrong-pw');
 
       // 前 3 次各打一次 /auth/login 并被拒。
       for (var i = 0; i < 3; i++) {

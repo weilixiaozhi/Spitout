@@ -4858,10 +4858,10 @@ class $LedgerMembersTable extends LedgerMembers
     type: DriftSqlType.string,
     requiredDuringInsert: true,
   );
-  static const VerificationMeta _emailMeta = const VerificationMeta('email');
+  static const VerificationMeta _accountMeta = const VerificationMeta('account');
   @override
-  late final GeneratedColumn<String> email = GeneratedColumn<String>(
-    'email',
+  late final GeneratedColumn<String> account = GeneratedColumn<String>(
+    'account',
     aliasedName,
     true,
     type: DriftSqlType.string,
@@ -4924,7 +4924,7 @@ class $LedgerMembersTable extends LedgerMembers
   List<GeneratedColumn> get $columns => [
     ledgerSyncId,
     userId,
-    email,
+    account,
     displayName,
     avatarUrl,
     role,
@@ -4962,10 +4962,10 @@ class $LedgerMembersTable extends LedgerMembers
     } else if (isInserting) {
       context.missing(_userIdMeta);
     }
-    if (data.containsKey('email')) {
+    if (data.containsKey('account')) {
       context.handle(
-        _emailMeta,
-        email.isAcceptableOrUnknown(data['email']!, _emailMeta),
+        _accountMeta,
+        account.isAcceptableOrUnknown(data['account']!, _accountMeta),
       );
     }
     if (data.containsKey('display_name')) {
@@ -5024,9 +5024,9 @@ class $LedgerMembersTable extends LedgerMembers
         DriftSqlType.string,
         data['${effectivePrefix}user_id'],
       )!,
-      email: attachedDatabase.typeMapping.read(
+      account: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
-        data['${effectivePrefix}email'],
+        data['${effectivePrefix}account'],
       ),
       displayName: attachedDatabase.typeMapping.read(
         DriftSqlType.string,
@@ -5060,7 +5060,7 @@ class $LedgerMembersTable extends LedgerMembers
 class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   final String ledgerSyncId;
   final String userId;
-  final String? email;
+  final String? account;
   final String? displayName;
   final String? avatarUrl;
   final String role;
@@ -5069,7 +5069,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   const LedgerMember({
     required this.ledgerSyncId,
     required this.userId,
-    this.email,
+    this.account,
     this.displayName,
     this.avatarUrl,
     required this.role,
@@ -5081,8 +5081,8 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     final map = <String, Expression>{};
     map['ledger_sync_id'] = Variable<String>(ledgerSyncId);
     map['user_id'] = Variable<String>(userId);
-    if (!nullToAbsent || email != null) {
-      map['email'] = Variable<String>(email);
+    if (!nullToAbsent || account != null) {
+      map['account'] = Variable<String>(account);
     }
     if (!nullToAbsent || displayName != null) {
       map['display_name'] = Variable<String>(displayName);
@@ -5100,9 +5100,9 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     return LedgerMembersCompanion(
       ledgerSyncId: Value(ledgerSyncId),
       userId: Value(userId),
-      email: email == null && nullToAbsent
+      account: account == null && nullToAbsent
           ? const Value.absent()
-          : Value(email),
+          : Value(account),
       displayName: displayName == null && nullToAbsent
           ? const Value.absent()
           : Value(displayName),
@@ -5123,7 +5123,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     return LedgerMember(
       ledgerSyncId: serializer.fromJson<String>(json['ledgerSyncId']),
       userId: serializer.fromJson<String>(json['userId']),
-      email: serializer.fromJson<String?>(json['email']),
+      account: serializer.fromJson<String?>(json['account']),
       displayName: serializer.fromJson<String?>(json['displayName']),
       avatarUrl: serializer.fromJson<String?>(json['avatarUrl']),
       role: serializer.fromJson<String>(json['role']),
@@ -5137,7 +5137,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     return <String, dynamic>{
       'ledgerSyncId': serializer.toJson<String>(ledgerSyncId),
       'userId': serializer.toJson<String>(userId),
-      'email': serializer.toJson<String?>(email),
+      'account': serializer.toJson<String?>(account),
       'displayName': serializer.toJson<String?>(displayName),
       'avatarUrl': serializer.toJson<String?>(avatarUrl),
       'role': serializer.toJson<String>(role),
@@ -5149,7 +5149,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   LedgerMember copyWith({
     String? ledgerSyncId,
     String? userId,
-    Value<String?> email = const Value.absent(),
+    Value<String?> account = const Value.absent(),
     Value<String?> displayName = const Value.absent(),
     Value<String?> avatarUrl = const Value.absent(),
     String? role,
@@ -5158,7 +5158,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   }) => LedgerMember(
     ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
     userId: userId ?? this.userId,
-    email: email.present ? email.value : this.email,
+    account: account.present ? account.value : this.account,
     displayName: displayName.present ? displayName.value : this.displayName,
     avatarUrl: avatarUrl.present ? avatarUrl.value : this.avatarUrl,
     role: role ?? this.role,
@@ -5171,7 +5171,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
           ? data.ledgerSyncId.value
           : this.ledgerSyncId,
       userId: data.userId.present ? data.userId.value : this.userId,
-      email: data.email.present ? data.email.value : this.email,
+      account: data.account.present ? data.account.value : this.account,
       displayName: data.displayName.present
           ? data.displayName.value
           : this.displayName,
@@ -5187,7 +5187,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
     return (StringBuffer('LedgerMember(')
           ..write('ledgerSyncId: $ledgerSyncId, ')
           ..write('userId: $userId, ')
-          ..write('email: $email, ')
+          ..write('account: $account, ')
           ..write('displayName: $displayName, ')
           ..write('avatarUrl: $avatarUrl, ')
           ..write('role: $role, ')
@@ -5201,7 +5201,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
   int get hashCode => Object.hash(
     ledgerSyncId,
     userId,
-    email,
+    account,
     displayName,
     avatarUrl,
     role,
@@ -5214,7 +5214,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
       (other is LedgerMember &&
           other.ledgerSyncId == this.ledgerSyncId &&
           other.userId == this.userId &&
-          other.email == this.email &&
+          other.account == this.account &&
           other.displayName == this.displayName &&
           other.avatarUrl == this.avatarUrl &&
           other.role == this.role &&
@@ -5225,7 +5225,7 @@ class LedgerMember extends DataClass implements Insertable<LedgerMember> {
 class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
   final Value<String> ledgerSyncId;
   final Value<String> userId;
-  final Value<String?> email;
+  final Value<String?> account;
   final Value<String?> displayName;
   final Value<String?> avatarUrl;
   final Value<String> role;
@@ -5235,7 +5235,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
   const LedgerMembersCompanion({
     this.ledgerSyncId = const Value.absent(),
     this.userId = const Value.absent(),
-    this.email = const Value.absent(),
+    this.account = const Value.absent(),
     this.displayName = const Value.absent(),
     this.avatarUrl = const Value.absent(),
     this.role = const Value.absent(),
@@ -5246,7 +5246,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
   LedgerMembersCompanion.insert({
     required String ledgerSyncId,
     required String userId,
-    this.email = const Value.absent(),
+    this.account = const Value.absent(),
     this.displayName = const Value.absent(),
     this.avatarUrl = const Value.absent(),
     required String role,
@@ -5261,7 +5261,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
   static Insertable<LedgerMember> custom({
     Expression<String>? ledgerSyncId,
     Expression<String>? userId,
-    Expression<String>? email,
+    Expression<String>? account,
     Expression<String>? displayName,
     Expression<String>? avatarUrl,
     Expression<String>? role,
@@ -5272,7 +5272,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     return RawValuesInsertable({
       if (ledgerSyncId != null) 'ledger_sync_id': ledgerSyncId,
       if (userId != null) 'user_id': userId,
-      if (email != null) 'email': email,
+      if (account != null) 'account': account,
       if (displayName != null) 'display_name': displayName,
       if (avatarUrl != null) 'avatar_url': avatarUrl,
       if (role != null) 'role': role,
@@ -5285,7 +5285,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
   LedgerMembersCompanion copyWith({
     Value<String>? ledgerSyncId,
     Value<String>? userId,
-    Value<String?>? email,
+    Value<String?>? account,
     Value<String?>? displayName,
     Value<String?>? avatarUrl,
     Value<String>? role,
@@ -5296,7 +5296,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     return LedgerMembersCompanion(
       ledgerSyncId: ledgerSyncId ?? this.ledgerSyncId,
       userId: userId ?? this.userId,
-      email: email ?? this.email,
+      account: account ?? this.account,
       displayName: displayName ?? this.displayName,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       role: role ?? this.role,
@@ -5315,8 +5315,8 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     if (userId.present) {
       map['user_id'] = Variable<String>(userId.value);
     }
-    if (email.present) {
-      map['email'] = Variable<String>(email.value);
+    if (account.present) {
+      map['account'] = Variable<String>(account.value);
     }
     if (displayName.present) {
       map['display_name'] = Variable<String>(displayName.value);
@@ -5344,7 +5344,7 @@ class LedgerMembersCompanion extends UpdateCompanion<LedgerMember> {
     return (StringBuffer('LedgerMembersCompanion(')
           ..write('ledgerSyncId: $ledgerSyncId, ')
           ..write('userId: $userId, ')
-          ..write('email: $email, ')
+          ..write('account: $account, ')
           ..write('displayName: $displayName, ')
           ..write('avatarUrl: $avatarUrl, ')
           ..write('role: $role, ')
@@ -11814,7 +11814,7 @@ typedef $$LedgerMembersTableCreateCompanionBuilder =
     LedgerMembersCompanion Function({
       required String ledgerSyncId,
       required String userId,
-      Value<String?> email,
+      Value<String?> account,
       Value<String?> displayName,
       Value<String?> avatarUrl,
       required String role,
@@ -11826,7 +11826,7 @@ typedef $$LedgerMembersTableUpdateCompanionBuilder =
     LedgerMembersCompanion Function({
       Value<String> ledgerSyncId,
       Value<String> userId,
-      Value<String?> email,
+      Value<String?> account,
       Value<String?> displayName,
       Value<String?> avatarUrl,
       Value<String> role,
@@ -11854,8 +11854,8 @@ class $$LedgerMembersTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnFilters<String> get email => $composableBuilder(
-    column: $table.email,
+  ColumnFilters<String> get account => $composableBuilder(
+    column: $table.account,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -11904,8 +11904,8 @@ class $$LedgerMembersTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<String> get email => $composableBuilder(
-    column: $table.email,
+  ColumnOrderings<String> get account => $composableBuilder(
+    column: $table.account,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -11952,8 +11952,8 @@ class $$LedgerMembersTableAnnotationComposer
   GeneratedColumn<String> get userId =>
       $composableBuilder(column: $table.userId, builder: (column) => column);
 
-  GeneratedColumn<String> get email =>
-      $composableBuilder(column: $table.email, builder: (column) => column);
+  GeneratedColumn<String> get account =>
+      $composableBuilder(column: $table.account, builder: (column) => column);
 
   GeneratedColumn<String> get displayName => $composableBuilder(
     column: $table.displayName,
@@ -12012,7 +12012,7 @@ class $$LedgerMembersTableTableManager
               ({
                 Value<String> ledgerSyncId = const Value.absent(),
                 Value<String> userId = const Value.absent(),
-                Value<String?> email = const Value.absent(),
+                Value<String?> account = const Value.absent(),
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> avatarUrl = const Value.absent(),
                 Value<String> role = const Value.absent(),
@@ -12022,7 +12022,7 @@ class $$LedgerMembersTableTableManager
               }) => LedgerMembersCompanion(
                 ledgerSyncId: ledgerSyncId,
                 userId: userId,
-                email: email,
+                account: account,
                 displayName: displayName,
                 avatarUrl: avatarUrl,
                 role: role,
@@ -12034,7 +12034,7 @@ class $$LedgerMembersTableTableManager
               ({
                 required String ledgerSyncId,
                 required String userId,
-                Value<String?> email = const Value.absent(),
+                Value<String?> account = const Value.absent(),
                 Value<String?> displayName = const Value.absent(),
                 Value<String?> avatarUrl = const Value.absent(),
                 required String role,
@@ -12044,7 +12044,7 @@ class $$LedgerMembersTableTableManager
               }) => LedgerMembersCompanion.insert(
                 ledgerSyncId: ledgerSyncId,
                 userId: userId,
-                email: email,
+                account: account,
                 displayName: displayName,
                 avatarUrl: avatarUrl,
                 role: role,

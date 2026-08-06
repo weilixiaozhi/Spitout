@@ -19,7 +19,7 @@ import 'session_store.dart';
 // 设计要点:
 // - 启用 / 管理 UI 只在 Web 端;App 仅承担"登录时若 server 要 2FA → 弹出输码视图"
 // - 两处登录入口(cloud_service_page 配置确认 / spitout_cloud_sync_page 重新登录)
-//   不感知 2FA — 只 await `signInWithEmail()`,2FA 流程被封装在 service 内部
+//   不感知 2FA — 只 await `signInWithAccount()`,2FA 流程被封装在 service 内部
 // - service 通过 `SpitoutCloudProvider.globalTwoFactorHandler` 拿到回调,
 //   handler 由 App 在启动时注册(典型实现:用全局 navigator key push 一个
 //   `Login2FAChallengeView`,等用户输完码后 resolve)
@@ -34,13 +34,13 @@ import 'session_store.dart';
 class TwoFactorChallengeRequest {
   final String challengeToken;
   final List<String> availableMethods; // ['totp', 'recovery_code']
-  final String email;
+  final String account;
   final Future<String?> Function(String method, String code) verify;
 
   const TwoFactorChallengeRequest({
     required this.challengeToken,
     required this.availableMethods,
-    required this.email,
+    required this.account,
     required this.verify,
   });
 }
@@ -131,7 +131,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
   /// 离线恢复凭证:token 全部失效(refresh_token 过期 / server 认不出来)时,
   /// 如果注入了邮密,currentUser/requireAccessToken 会用这对凭证自动再登一次,
   /// 让 API 调用方无感恢复,不用用户手动去配置页点确定。
-  String? _recoveryEmail;
+  String? _recoveryAccount;
   String? _recoveryPassword;
   Future<CloudUser>? _recoveryInFlight;
 
@@ -154,8 +154,8 @@ class SpitoutCloudAuthService implements CloudAuthService {
   /// 连续拒绝阈值:达到后清空恢复邮密,仅保留手动登录入口。
   static const _maxCredentialRejectionsBeforeDisableRecovery = 3;
 
-  void setRecoveryCredentials({String? email, String? password}) {
-    _recoveryEmail = (email != null && email.isNotEmpty) ? email : null;
+  void setRecoveryCredentials({String? account, String? password}) {
+    _recoveryAccount = (account != null && account.isNotEmpty) ? account : null;
     _recoveryPassword =
         (password != null && password.isNotEmpty) ? password : null;
     // 凭证更新 = 用户在 cloud 配置页保存了新邮密 / 切回 Spitout,清掉旧冷却,
@@ -283,9 +283,9 @@ class SpitoutCloudAuthService implements CloudAuthService {
   /// 防止 UI 频繁 rebuild 导致每次都 POST /auth/login,撞 server 30/min 限流,
   /// 让用户主动点「重新登录」时反而被 429 挡掉。
   Future<CloudUser?> _tryRecoveryLogin() async {
-    final email = _recoveryEmail;
+    final account = _recoveryAccount;
     final password = _recoveryPassword;
-    if (email == null || password == null) return null;
+    if (account == null || password == null) return null;
 
     // 冷却期内直接返 null,不打网络请求
     final cooldown = _silentRecoveryCooldownUntil;
@@ -303,7 +303,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
     }
     // 后台恢复用 silent 模式:遇到 2FA 不弹 dialog,直接当登录失败处理,
     // 让用户在 sync page 主动点「重新登录」时再触发。
-    final future = _signInWithEmailSilent(email: email, password: password);
+    final future = _signInWithAccountSilent(account: account, password: password);
     _recoveryInFlight = future;
     try {
       return await future;
@@ -316,7 +316,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
       _consecutiveCredentialRejections++;
       if (_consecutiveCredentialRejections >=
           _maxCredentialRejectionsBeforeDisableRecovery) {
-        _recoveryEmail = null;
+        _recoveryAccount = null;
         _recoveryPassword = null;
         _logger.warning('[SpitoutCloud-Auth] 恢复凭证连续被拒 '
             '$_maxCredentialRejectionsBeforeDisableRecovery 次,已停用静默恢复,请手动登录');
@@ -400,7 +400,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
       _consecutiveCredentialRejections++;
       if (_consecutiveCredentialRejections >=
           _maxCredentialRejectionsBeforeDisableRecovery) {
-        _recoveryEmail = null;
+        _recoveryAccount = null;
         _recoveryPassword = null;
         _logger.warning('[SpitoutCloud-Auth] refresh 连续被拒 '
             '$_maxCredentialRejectionsBeforeDisableRecovery 次,'
@@ -424,12 +424,12 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }
 
   Future<Map<String, dynamic>> _buildAuthBody({
-    required String email,
+    required String account,
     required String password,
   }) async {
     final metadata = await _resolveDeviceMetadata();
     return <String, dynamic>{
-      'email': email,
+      'account': account,
       'password': password,
       'device_id': metadata.deviceId,
       'device_name': metadata.deviceName,
@@ -617,11 +617,11 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
-    final body = await _buildAuthBody(email: email, password: password);
+    final body = await _buildAuthBody(account: account, password: password);
     try {
       final session = await _authenticate(
         path: '/auth/login',
@@ -639,12 +639,12 @@ class SpitoutCloudAuthService implements CloudAuthService {
   /// 内部用:登录但**不弹** 2FA dialog。供后台 token recovery / 自动登录场景调用,
   /// 避免用户没主动操作就被弹出输码框。如果服务端要求 2FA 而我们处于 silent 模式,
   /// 抛 [TwoFactorCancelledException],调用方用 try/catch 当作"恢复失败"处理,
-  /// 让 UI 上的「重新登录」按钮继续兜底(那条路径走的是公开 signInWithEmail,会弹)。
-  Future<CloudUser> _signInWithEmailSilent({
-    required String email,
+  /// 让 UI 上的「重新登录」按钮继续兜底(那条路径走的是公开 signInWithAccount,会弹)。
+  Future<CloudUser> _signInWithAccountSilent({
+    required String account,
     required String password,
   }) async {
-    final body = await _buildAuthBody(email: email, password: password);
+    final body = await _buildAuthBody(account: account, password: password);
     final session = await _authenticate(
       path: '/auth/login',
       body: body,
@@ -655,11 +655,11 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async {
-    final body = await _buildAuthBody(email: email, password: password);
+    final body = await _buildAuthBody(account: account, password: password);
     try {
       final session = await _authenticate(
         path: '/auth/register',
@@ -678,7 +678,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
     // 若不清,provider 重建 / UI rebuild 后 currentUser 会拿旧邮密
     // 自动 POST /auth/login 把已登出的账号"复活"回来——这就是复活链根因:
     // 用户明明点了登出,下一轮鉴权探测又被静默登录,云端账本也被重新拉回。
-    _recoveryEmail = null;
+    _recoveryAccount = null;
     _recoveryPassword = null;
     _consecutiveCredentialRejections = 0;
     final session = _session;
@@ -701,15 +701,15 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {
+  Future<void> sendPasswordResetAccount({required String account}) async {
     throw CloudAuthException(
         'Spitout Cloud v1 does not support password reset.');
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
+  Future<void> resendAccountVerification({required String account}) async {
     throw CloudAuthException(
-        'Spitout Cloud v1 does not require email verification.');
+        'Spitout Cloud v1 does not require account verification.');
   }
 
   void dispose() {
@@ -743,7 +743,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
     if (payload['requires_2fa'] == true) {
       // 后台 token recovery / 自动恢复登录场景:silent2fa=true,直接跑 cancel 异常,
       // 不弹 dialog。让 UI 上的「重新登录」按钮触发用户感知到的登录,那条路径走的是
-      // 公开 signInWithEmail,会正常弹。
+      // 公开 signInWithAccount,会正常弹。
       if (silent2fa) {
         throw const TwoFactorCancelledException(
             '2FA required but skipped in silent recovery mode');
@@ -786,7 +786,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
 
     Future<String?> verify(String method, String code) async {
       final verifyBody = Map<String, dynamic>.of(loginBody)
-        ..remove('email')
+        ..remove('account')
         ..remove('password');
       verifyBody['challenge_token'] = challengeToken;
       verifyBody['method'] = method;
@@ -811,7 +811,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
     final ok = await handler(TwoFactorChallengeRequest(
       challengeToken: challengeToken,
       availableMethods: methods,
-      email: (loginBody['email'] as String?) ?? '',
+      account: (loginBody['account'] as String?) ?? '',
       verify: verify,
     ));
     if (!ok || successSession == null) {
@@ -923,7 +923,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
   CloudUser _toCloudUser(_SpitoutCloudSession session) {
     return CloudUser(
       id: session.userId,
-      email: session.email,
+      account: session.account,
       metadata: {
         'provider': 'spitout_cloud',
         'deviceId': session.deviceId,
@@ -945,7 +945,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }) async {
     final uri = Uri.parse('$baseUrl$apiPrefix$path');
     if (!isHttpTransportAllowed(uri)) {
-      // 远程地址强制 https:防止邮箱 + 密码 / token 明文走网络。
+      // 远程地址强制 https:防止账号 + 密码 / token 明文走网络。
       // localhost 与私网段测试地址除外。
       throw CloudConfigurationException(
         'Insecure HTTP transport is not allowed for remote Spitout Cloud '
@@ -969,7 +969,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
 class _SpitoutCloudSession {
   const _SpitoutCloudSession({
     required this.userId,
-    required this.email,
+    required this.account,
     required this.accessToken,
     required this.refreshToken,
     required this.accessTokenExpiresAt,
@@ -977,7 +977,7 @@ class _SpitoutCloudSession {
   });
 
   final String userId;
-  final String? email;
+  final String? account;
   final String accessToken;
   final String refreshToken;
   final DateTime accessTokenExpiresAt;
@@ -1005,7 +1005,8 @@ class _SpitoutCloudSession {
 
     return _SpitoutCloudSession(
       userId: userId,
-      email: user['email'] as String?,
+      account:
+          (user['account'] as String?) ?? user['email'] as String?,
       accessToken: accessToken,
       refreshToken: refreshToken,
       accessTokenExpiresAt:
@@ -1017,7 +1018,7 @@ class _SpitoutCloudSession {
   factory _SpitoutCloudSession.fromJson(Map<String, dynamic> json) {
     return _SpitoutCloudSession(
       userId: json['userId'] as String,
-      email: json['email'] as String?,
+      account: (json['account'] as String?) ?? json['email'] as String?,
       accessToken: json['accessToken'] as String,
       refreshToken: json['refreshToken'] as String,
       accessTokenExpiresAt:
@@ -1029,7 +1030,7 @@ class _SpitoutCloudSession {
   Map<String, dynamic> toJson() {
     return {
       'userId': userId,
-      'email': email,
+      'account': account,
       'accessToken': accessToken,
       'refreshToken': refreshToken,
       'accessTokenExpiresAt': accessTokenExpiresAt.toIso8601String(),

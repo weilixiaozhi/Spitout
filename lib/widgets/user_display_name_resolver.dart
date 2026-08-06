@@ -8,14 +8,14 @@ import '../../providers/ui/theme_providers.dart';
 
 /// 用户展示名统一解析器。
 ///
-/// 修复「同一账号在不同账本显示为 id / 邮箱 / 昵称混用」的问题。
+/// 修复「同一账号在不同账本显示为 id / 账号 / 昵称混用」的问题。
 /// 根因:展示层只查 memberDisplayMap,查不到就裸展示 userId 字符串。
 /// 实际上 userId 可能是当前登录用户(本地账本无成员表)或 localSelfId,
-/// 这些都应解析为昵称/邮箱/「我」,而非裸 id。
+/// 这些都应解析为昵称/账号/「我」,而非裸 id。
 ///
 /// 解析优先级:
-/// 1. 共享账本成员表(昵称 → 邮箱)
-/// 2. 当前登录用户(userId == cloudUserId → 邮箱,或本地昵称)
+/// 1. 共享账本成员表(昵称 → 账号)
+/// 2. 当前登录用户(userId == cloudUserId → 账号,或本地昵称)
 /// 3. localSelfId(本地账本未登录的「我」→ 本地昵称/「我」)
 /// 4. 虚拟用户名(由调用方传入)
 /// 5. 本地昵称兜底(本地账本无成员表时,任何作者位都属于「我」,统一展示昵称)
@@ -44,20 +44,20 @@ class UserDisplayNameResolver {
   String resolve(String? userId) {
     if (userId == null || userId.isEmpty) return '';
 
-    // 1. 共享账本成员表:昵称 → 邮箱
+    // 1. 共享账本成员表:昵称 → 账号
     final member = memberDisplayMap[userId];
     if (member != null) {
       final dn = member.displayName?.trim() ?? '';
       if (dn.isNotEmpty) return dn;
-      final email = member.email.trim();
-      if (email.isNotEmpty) return email;
+      final account = member.account.trim();
+      if (account.isNotEmpty) return account;
     }
 
-    // 2. 当前登录用户:userId == cloudUserId 时,用邮箱兜底(本地昵称由 3 覆盖)
+    // 2. 当前登录用户:userId == cloudUserId 时,用账号兜底(本地昵称由 3 覆盖)
     if (currentUser != null && userId == currentUser!.id) {
-      final email = currentUser!.email?.trim() ?? '';
-      if (email.isNotEmpty) return email;
-      // 云 userId 命中但无邮箱:走本地昵称兜底
+      final account = currentUser!.account?.trim() ?? '';
+      if (account.isNotEmpty) return account;
+      // 云 userId 命中但无账号:走本地昵称兜底
       final localName = localOwnerDisplayName?.trim() ?? '';
       if (localName.isNotEmpty) return localName;
       // 无昵称兜底:仅返回纯名「未设置昵称」,「(我)」后缀由 UI 层通过

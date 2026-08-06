@@ -49,7 +49,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
       child: SpitoutCloudConfigDialog(
         initialUrl: existing?.spitoutCloudBaseUrl ?? '',
         initialApiPrefix: existing?.spitoutCloudApiPrefix ?? '/api/v1',
-        initialAccount: existing?.spitoutCloudEmail ?? '',
+        initialAccount: existing?.spitoutCloudAccount ?? '',
         // 密码不持久化(见 CloudServiceStore):即使旧版本残留过密码也不回填,
         // 避免把已失效的明文凭据再次展示/复用。
         initialPassword: '',
@@ -75,7 +75,7 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
         name: l10n.cloudSpitoutCloudTitle,
         spitoutCloudBaseUrl: url,
         spitoutCloudApiPrefix: apiPrefix.isEmpty ? '/api/v1' : apiPrefix,
-        spitoutCloudEmail: account.isNotEmpty ? account : null,
+        spitoutCloudAccount: account.isNotEmpty ? account : null,
       );
 
       try {
@@ -99,8 +99,8 @@ mixin CloudServiceConfigActions<T extends ConsumerStatefulWidget>
                 cfg,
               );
               if (services.auth != null) {
-                await services.auth!.signInWithEmail(
-                  email: account,
+                await services.auth!.signInWithAccount(
+                  account: account,
                   password: password,
                 );
                 // 标记自动同步开启并刷新开关状态；不 invalidate 任何云端 provider，

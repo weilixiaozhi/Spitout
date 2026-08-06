@@ -25,6 +25,21 @@ extension IdempotentMigrationHelpers on GeneratedDatabase {
     await customStatement(alterSql);
   }
 
+  /// 幂等重命名列：旧列存在且新列不存在时才执行 [renameSql]。
+  ///
+  /// 用于“字段语义改名但数据不变”的迁移（如 email → account），
+  /// 避免升级中断重跑时因列已改名而报 duplicate column。
+  Future<void> renameColumnIfExists(
+    String table,
+    String oldName,
+    String newName,
+    String renameSql,
+  ) async {
+    if (!await _hasColumn(table, oldName)) return;
+    if (await _hasColumn(table, newName)) return;
+    await customStatement(renameSql);
+  }
+
   /// 幂等建表：表不存在才调 `m.createTable`，已存在则跳过。
   ///
   /// 表名查询走参数化（Variable）而非字符串拼接，防止注入。

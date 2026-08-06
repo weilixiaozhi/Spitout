@@ -16,14 +16,14 @@ class CloudServiceConfig {
   // Spitout Cloud 配置
   final String? spitoutCloudBaseUrl;
   final String? spitoutCloudApiPrefix;
-  final String? spitoutCloudEmail; // 保存的账号（用于记住账号功能）
+  final String? spitoutCloudAccount; // 保存的账号（用于记住账号功能）
   final String? spitoutCloudPassword; // 保存的密码（用于记住账号功能）
 
   // Supabase 配置
   final String? supabaseUrl;
   final String? supabaseAnonKey;
   final String? supabaseBucket; // Storage bucket 名称
-  final String? supabaseEmail; // 保存的账号（用于记住账号功能）
+  final String? supabaseAccount; // 保存的账号（用于记住账号功能）
   final String? supabasePassword; // 保存的密码（用于记住账号功能）
 
   // WebDAV 配置
@@ -47,13 +47,13 @@ class CloudServiceConfig {
     // Spitout Cloud
     this.spitoutCloudBaseUrl,
     this.spitoutCloudApiPrefix,
-    this.spitoutCloudEmail,
+    this.spitoutCloudAccount,
     this.spitoutCloudPassword,
     // Supabase
     this.supabaseUrl,
     this.supabaseAnonKey,
     this.supabaseBucket,
-    this.supabaseEmail,
+    this.supabaseAccount,
     this.supabasePassword,
     // WebDAV
     this.webdavUrl,
@@ -99,13 +99,13 @@ class CloudServiceConfig {
         // Spitout Cloud
         'spitoutCloudBaseUrl': spitoutCloudBaseUrl,
         'spitoutCloudApiPrefix': spitoutCloudApiPrefix,
-        'spitoutCloudEmail': spitoutCloudEmail,
+        'spitoutCloudAccount': spitoutCloudAccount,
         'spitoutCloudPassword': spitoutCloudPassword,
         // Supabase
         'supabaseUrl': supabaseUrl,
         'supabaseAnonKey': supabaseAnonKey,
         'supabaseBucket': supabaseBucket,
-        'supabaseEmail': supabaseEmail,
+        'supabaseAccount': supabaseAccount,
         'supabasePassword': supabasePassword,
         // WebDAV
         'webdavUrl': webdavUrl,
@@ -136,13 +136,16 @@ class CloudServiceConfig {
       // Spitout Cloud
       spitoutCloudBaseUrl: j['spitoutCloudBaseUrl'] as String?,
       spitoutCloudApiPrefix: j['spitoutCloudApiPrefix'] as String?,
-      spitoutCloudEmail: j['spitoutCloudEmail'] as String?,
+      spitoutCloudAccount:
+          (j['spitoutCloudAccount'] as String?) ??
+          j['spitoutCloudEmail'] as String?,
       spitoutCloudPassword: j['spitoutCloudPassword'] as String?,
       // Supabase
       supabaseUrl: j['supabaseUrl'] as String?,
       supabaseAnonKey: j['supabaseAnonKey'] as String?,
       supabaseBucket: j['supabaseBucket'] as String?,
-      supabaseEmail: j['supabaseEmail'] as String?,
+      supabaseAccount:
+          (j['supabaseAccount'] as String?) ?? j['supabaseEmail'] as String?,
       supabasePassword: j['supabasePassword'] as String?,
       // WebDAV
       webdavUrl: j['webdavUrl'] as String?,

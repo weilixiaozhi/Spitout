@@ -20,7 +20,7 @@ synchronization using the Spitout private cloud protocol.
   不会明文写入 SharedPreferences；旧版本明文 session 会在首次初始化时
   自动迁移并清理。
 - 远程 `baseUrl` 强制使用 https；http 仅允许 localhost / 私网测试地址，
-  防止邮箱 + 密码 / token 明文走网络。
+  防止账号 + 密码 / token 明文走网络。
 - WebSocket 鉴权通过握手后首帧消息携带 token，token 不会出现在 URL query /
   代理日志中。
 - 已知风险：服务端头像下载端点当前不校验 auth（为 Web `<img>` 无头加载而

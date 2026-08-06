@@ -8,7 +8,7 @@ import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
 
-/// 2FA 输码对话框 — 当 SpitoutCloudAuthService.signInWithEmail 收到 server 的
+/// 2FA 输码对话框 — 当 SpitoutCloudAuthService.signInWithAccount 收到 server 的
 /// requires_2fa=true 响应时,通过 [SpitoutCloudProvider.globalTwoFactorHandler]
 /// 注册的回调把它弹出来,让用户输 6 位 TOTP 或 recovery code。
 ///
@@ -129,7 +129,7 @@ class _Login2FAChallengeDialogState
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              widget.request.email,
+              widget.request.account,
               style: TextStyle(
                 color: SpitoutTokens.textSecondary(context),
                 fontSize: 12,

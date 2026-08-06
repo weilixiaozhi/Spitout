@@ -27,7 +27,7 @@ class S3AuthService implements CloudAuthService {
     // 实际的连接验证在 provider.initialize() 时已完成
     return CloudUser(
       id: _userId,
-      email: null, // S3 无 email
+      account: null, // S3 无 account
       metadata: {
         'bucket': bucket,
         'endpoint': client.endpoint,
@@ -47,7 +47,7 @@ class S3AuthService implements CloudAuthService {
     // S3 无状态变化概念，返回固定流
     return Stream.value(CloudUser(
       id: _userId,
-      email: null,
+      account: null,
       metadata: {
         'bucket': bucket,
         'endpoint': client.endpoint,
@@ -62,29 +62,29 @@ class S3AuthService implements CloudAuthService {
   }
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
-    throw CloudAuthException('S3 does not support email authentication');
+    throw CloudAuthException('S3 does not support account authentication');
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
     Map<String, dynamic>? metadata,
   }) async {
-    throw CloudAuthException('S3 does not support email registration');
+    throw CloudAuthException('S3 does not support account registration');
   }
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {
+  Future<void> sendPasswordResetAccount({required String account}) async {
     throw CloudAuthException('S3 does not support password reset');
   }
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {
-    throw CloudAuthException('S3 does not support email verification');
+  Future<void> resendAccountVerification({required String account}) async {
+    throw CloudAuthException('S3 does not support account verification');
   }
 }

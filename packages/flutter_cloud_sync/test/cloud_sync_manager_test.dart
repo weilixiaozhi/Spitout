@@ -44,16 +44,16 @@ class MockCloudAuthService implements CloudAuthService {
   Stream<CloudUser?> get authStateChanges => Stream.value(_currentUser);
 
   @override
-  Future<CloudUser> signInWithEmail({
-    required String email,
+  Future<CloudUser> signInWithAccount({
+    required String account,
     required String password,
   }) async {
     throw UnimplementedError();
   }
 
   @override
-  Future<CloudUser> signUpWithEmail({
-    required String email,
+  Future<CloudUser> signUpWithAccount({
+    required String account,
     required String password,
   }) async {
     throw UnimplementedError();
@@ -63,10 +63,10 @@ class MockCloudAuthService implements CloudAuthService {
   Future<void> signOut() async {}
 
   @override
-  Future<void> sendPasswordResetEmail({required String email}) async {}
+  Future<void> sendPasswordResetAccount({required String account}) async {}
 
   @override
-  Future<void> resendEmailVerification({required String email}) async {}
+  Future<void> resendAccountVerification({required String account}) async {}
 }
 
 class MockCloudStorageService implements CloudStorageService {
@@ -193,7 +193,7 @@ void main() {
 
     test('should upload data successfully when authenticated', () async {
       // Arrange
-      const testUser = CloudUser(id: 'user123', email: 'test@example.com');
+      const testUser = CloudUser(id: 'user123', account: 'test@example.com');
       const testData = 123;
       const testPath = 'ledgers/123.json';
 

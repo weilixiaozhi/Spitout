@@ -772,7 +772,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudReloginSuccess => '다시 로그인했습니다';
 
   @override
-  String get mineLoggedInEmail => '로그인됨';
+  String get mineLoggedInAccount => '로그인됨';
 
   @override
   String get mineLogoutSubtitle => '눌러서 로그아웃';
@@ -1425,20 +1425,20 @@ class AppLocalizationsKo extends AppLocalizations {
   String get authLogin => '로그인';
 
   @override
-  String get authEmail => '계정';
+  String get authAccount => '계정';
 
   @override
   String get authPassword => '비밀번호';
 
   @override
-  String get authInvalidEmail => '계정을 입력해 주세요';
+  String get authInvalidAccount => '계정을 입력해 주세요';
 
   @override
   String get authErrorInvalidCredentials => '계정 또는 비밀번호가 올바르지 않습니다.';
 
   @override
-  String get authErrorEmailNotConfirmed =>
-      '이메일이 인증되지 않았습니다. 로그인하기 전에 이메일에서 인증을 완료해 주세요.';
+  String get authErrorAccountNotConfirmed =>
+      '계정이 인증되지 않았습니다. 로그인하기 전에 인증을 완료해 주세요.';
 
   @override
   String get authErrorRateLimit => '시도 횟수가 너무 많습니다. 잠시 후 다시 시도해 주세요.';
@@ -1854,10 +1854,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get cloudSpitoutCloudUrlHint => 'https://your-server.com';
 
   @override
-  String get cloudSpitoutCloudEmailLabel => '계정';
+  String get cloudSpitoutCloudAccountLabel => '계정';
 
   @override
-  String get cloudSpitoutCloudEmailHint => '계정 또는 이메일';
+  String get cloudSpitoutCloudAccountHint => '계정 이름';
 
   @override
   String get cloudSpitoutCloudPasswordLabel => '비밀번호';
@@ -2162,7 +2162,7 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get cloudTutorialStep2Desc =>
-      'Spitout Cloud는 (공개 서버 악용을 막기 위해) 자체 가입 기능을 제공하지 않습니다. 직접 호스팅하는 경우: Docker를 처음 실행하면 로그에 무작위 관리자 이메일과 비밀번호가 출력되니 이를 사용하세요. 다른 사람의 서버에 참여하는 경우: 관리자에게 웹 → 사용자에서 계정을 만들어 달라고 요청하세요.';
+      'Spitout Cloud는 (공개 서버 악용을 막기 위해) 자체 가입 기능을 제공하지 않습니다. 직접 호스팅하는 경우: Docker를 처음 실행하면 로그에 무작위 관리자 계정과 비밀번호가 출력되니 이를 사용하세요. 다른 사람의 서버에 참여하는 경우: 관리자에게 웹 → 사용자에서 계정을 만들어 달라고 요청하세요.';
 
   @override
   String get cloudTutorialStep3Title => '3단계: 로그인 및 동기화 활성화';

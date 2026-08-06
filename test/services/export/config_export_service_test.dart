@@ -45,7 +45,7 @@ void main() {
           name: 'Supabase',
           supabaseUrl: 'https://example.supabase.co',
           supabaseAnonKey: 'anon-key',
-          supabaseEmail: 'a@b.c',
+          supabaseAccount: 'a@b.c',
           supabasePassword: 'p@ss"word\nline2',
         ),
       ),
@@ -135,7 +135,7 @@ void main() {
   test('Spitout Cloud 登录态 token 与密码同级受凭据开关控制', () async {
     const cfg = SpitoutCloudConfig(
       baseUrl: 'https://cloud.example.com',
-      email: 'a@b.c',
+      account: 'a@b.c',
       password: 'pw',
       accessToken: 'at',
       refreshToken: 'rt',
