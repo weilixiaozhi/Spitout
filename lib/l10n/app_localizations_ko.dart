@@ -1844,6 +1844,10 @@ class AppLocalizationsKo extends AppLocalizations {
       '「권한 부여」를 눌러 시스템 설정에서 「모든 파일 액세스」를 켜세요. 돌아오면 이 페이지가 자동으로 새로고침되어 이전 백업이 다시 표시됩니다.';
 
   @override
+  String get localBackupOldHowBodyGranted =>
+      '「모든 파일 액세스」가 사용 중이므로 이전 백업이 다시 표시되어야 합니다. 그래도 보이지 않으면 「파일에서 복원」으로 직접 파일을 선택하세요.';
+
+  @override
   String get localBackupOldSafeTitle => '보안 안내';
 
   @override
@@ -1852,6 +1856,9 @@ class AppLocalizationsKo extends AppLocalizations {
 
   @override
   String get localBackupOldGrant => '권한 부여';
+
+  @override
+  String get localBackupOldGranted => '사용 중';
 
   @override
   String get localBackupOldLater => '나중에';

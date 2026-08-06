@@ -48,3 +48,11 @@ final showOldBackupLinkProvider = Provider<bool>((ref) => Platform.isAndroid);
 final requestAllFilesAccessProvider = Provider<Future<void> Function()>((ref) {
   return () => const PublicExportDirService().requestAccess();
 });
+
+/// 查询系统「所有文件访问」是否已授予的动作。
+///
+/// 页面不直接触碰 permission_handler，通过本 Provider 注入/覆盖；
+/// 组件测试可替换为桩实现，避免依赖平台通道。
+final allFilesAccessCheckerProvider = Provider<Future<bool> Function()>((ref) {
+  return () => const PublicExportDirService().hasAllFilesAccess();
+});

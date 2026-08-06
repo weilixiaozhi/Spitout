@@ -115,12 +115,16 @@ Future<void> _pumpPage(
   required LocalBackupService service,
   bool showOldBackupLink = true,
   Future<void> Function()? requestAllFilesAccess,
+  Future<bool> Function()? allFilesAccessChecker,
 }) async {
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
         localBackupServiceProvider.overrideWithValue(service),
         showOldBackupLinkProvider.overrideWithValue(showOldBackupLink),
+        allFilesAccessCheckerProvider.overrideWithValue(
+          allFilesAccessChecker ?? () async => false,
+        ),
         if (requestAllFilesAccess != null)
           requestAllFilesAccessProvider.overrideWithValue(
             requestAllFilesAccess,
@@ -215,6 +219,13 @@ void main() {
 
     // 入口文字链常驻渲染
     expect(find.text('看不到旧版本备份？'), findsOneWidget);
+    // 链接所在行水平居中
+    final linkAlign = tester.widget<Align>(
+      find
+          .ancestor(of: find.text('看不到旧版本备份？'), matching: find.byType(Align))
+          .first,
+    );
+    expect(linkAlign.alignment, Alignment.center);
 
     await tester.tap(find.text('看不到旧版本备份？'));
     await tester.pumpAndSettle();
@@ -233,6 +244,29 @@ void main() {
 
     expect(grantCalls, 1);
     expect(find.text('找回旧版本备份'), findsNothing);
+  });
+
+  testWidgets('权限已开启时弹窗主按钮显示「已开启」且不拉起权限', (tester) async {
+    var grantCalls = 0;
+    await _pumpPage(
+      tester,
+      service: StubLocalBackupService(),
+      requestAllFilesAccess: () async => grantCalls++,
+      allFilesAccessChecker: () async => true,
+    );
+
+    await tester.tap(find.text('看不到旧版本备份？'));
+    await tester.pumpAndSettle();
+
+    // 已开启：主按钮变为「已开启」，不再出现「去开启」
+    expect(find.text('已开启'), findsOneWidget);
+    expect(find.text('去开启'), findsNothing);
+
+    // 已开启按钮不可点击：点击后弹窗仍在、不拉起权限
+    await tester.tap(find.text('已开启'), warnIfMissed: false);
+    await tester.pumpAndSettle();
+    expect(grantCalls, 0);
+    expect(find.text('找回旧版本备份'), findsOneWidget);
   });
 
   testWidgets('找回旧备份弹窗：点「暂不」关闭弹窗且不拉起权限', (tester) async {

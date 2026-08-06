@@ -1829,6 +1829,10 @@ class AppLocalizationsZh extends AppLocalizations {
       '点击「去开启」，跳到系统设置打开「所有文件访问」，返回后本页会自动刷新，旧备份会重新出现。';
 
   @override
+  String get localBackupOldHowBodyGranted =>
+      '「所有文件访问」已开启，旧备份应该已经重新显示；如果仍然看不到，请使用「导入文件恢复」手动选择文件。';
+
+  @override
   String get localBackupOldSafeTitle => '安全说明';
 
   @override
@@ -1837,6 +1841,9 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get localBackupOldGrant => '去开启';
+
+  @override
+  String get localBackupOldGranted => '已开启';
 
   @override
   String get localBackupOldLater => '暂不';
@@ -5709,6 +5716,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
       '點擊「去開啟」，跳到系統設定開啟「所有檔案存取」，返回後本頁會自動重新整理，舊備份會重新出現。';
 
   @override
+  String get localBackupOldHowBodyGranted =>
+      '「所有檔案存取」已開啟，舊備份應該已經重新顯示；如果仍然看不到，請使用「匯入檔案恢復」手動選擇檔案。';
+
+  @override
   String get localBackupOldSafeTitle => '安全說明';
 
   @override
@@ -5717,6 +5728,9 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get localBackupOldGrant => '去開啟';
+
+  @override
+  String get localBackupOldGranted => '已開啟';
 
   @override
   String get localBackupOldLater => '暫不';

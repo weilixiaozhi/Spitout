@@ -3466,6 +3466,12 @@ abstract class AppLocalizations {
   /// **'Tap \"Grant access\" to open system settings and enable \"All files access\". When you return, this page refreshes automatically and older backups reappear.'**
   String get localBackupOldHowBody;
 
+  /// No description provided for @localBackupOldHowBodyGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'All files access is already enabled, so older backups should be visible now. If they still don\'t appear, use \"Import from file\" to pick one manually.'**
+  String get localBackupOldHowBodyGranted;
+
   /// No description provided for @localBackupOldSafeTitle.
   ///
   /// In en, this message translates to:
@@ -3483,6 +3489,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Grant access'**
   String get localBackupOldGrant;
+
+  /// No description provided for @localBackupOldGranted.
+  ///
+  /// In en, this message translates to:
+  /// **'Enabled'**
+  String get localBackupOldGranted;
 
   /// No description provided for @localBackupOldLater.
   ///

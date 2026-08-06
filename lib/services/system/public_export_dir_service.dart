@@ -69,11 +69,14 @@ class PublicExportDirService {
       logger.error('PublicExportDir', '外部存储不可用，无法解析导出目录');
       return null;
     }
-    final fallback =
-        subDir == null ? extDir : Directory(p.join(extDir.path, subDir));
+    final fallback = subDir == null
+        ? extDir
+        : Directory(p.join(extDir.path, subDir));
     await fallback.create(recursive: true);
     logger.warning(
-        'PublicExportDir', '公共 Download 不可写，降级到应用专属目录: ${fallback.path}');
+      'PublicExportDir',
+      '公共 Download 不可写，降级到应用专属目录: ${fallback.path}',
+    );
     return PublicExportDir(
       dir: fallback,
       displayPath: fallback.path,
@@ -94,8 +97,9 @@ class PublicExportDirService {
     if (publicDir != null && await publicDir.exists()) dirs.add(publicDir);
     final extDir = await getExternalStorageDirectory();
     if (extDir != null) {
-      final fallback =
-          subDir == null ? extDir : Directory(p.join(extDir.path, subDir));
+      final fallback = subDir == null
+          ? extDir
+          : Directory(p.join(extDir.path, subDir));
       if (await fallback.exists()) dirs.add(fallback);
     }
     return dirs;
@@ -120,6 +124,20 @@ class PublicExportDirService {
     }
   }
 
+  /// 查询「所有文件访问」是否已授予。
+  ///
+  /// API ≤ 29 上 manageExternalStorage 恒 granted，直接返回 true；
+  /// 查询失败按未授予处理（UI 保持「去开启」，用户仍可手动跳转）。
+  Future<bool> hasAllFilesAccess() async {
+    if (!Platform.isAndroid) return false;
+    try {
+      return await Permission.manageExternalStorage.isGranted;
+    } catch (e, st) {
+      logger.warning('PublicExportDir', '查询「所有文件访问」状态失败: $e', st);
+      return false;
+    }
+  }
+
   /// 推导公共 `Download/Spitout` 目录。
   ///
   /// 设计意图：不硬编码 `/storage/emulated/0`——借助 path_provider 返回的
@@ -133,9 +151,11 @@ class PublicExportDirService {
     // 路径形态异常（不含 Android/data 层级）时放弃公共目录，走降级
     if (androidIdx <= 0) return null;
     final root = p.joinAll(segments.sublist(0, androidIdx));
-    return Directory(subDir == null
-        ? p.join(root, 'Download', appDirName)
-        : p.join(root, 'Download', appDirName, subDir));
+    return Directory(
+      subDir == null
+          ? p.join(root, 'Download', appDirName)
+          : p.join(root, 'Download', appDirName, subDir),
+    );
   }
 
   /// 能力探测：目标目录是否真实可写（试建目录 + 试写探针文件后立即删除）。

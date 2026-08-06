@@ -293,39 +293,36 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                         ),
                         if (showOldBackupLink)
                           Align(
-                            alignment: Alignment.centerLeft,
-                            child: Padding(
-                              padding: const EdgeInsets.only(left: 12),
-                              child: InkWell(
-                                borderRadius: BorderRadius.circular(8),
-                                onTap: _showOldBackupHelpDialog,
-                                child: Padding(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 8,
-                                    vertical: 6,
-                                  ),
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        AppIcons.help,
-                                        size: 14,
+                            alignment: Alignment.center,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(8),
+                              onTap: _showOldBackupHelpDialog,
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 6,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      AppIcons.help,
+                                      size: 14,
+                                      color: SpitoutTokens.textSecondary(
+                                        context,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      l10n.localBackupOldLink,
+                                      style: TextStyle(
+                                        fontSize: 13,
                                         color: SpitoutTokens.textSecondary(
                                           context,
                                         ),
                                       ),
-                                      const SizedBox(width: 4),
-                                      Text(
-                                        l10n.localBackupOldLink,
-                                        style: TextStyle(
-                                          fontSize: 13,
-                                          color: SpitoutTokens.textSecondary(
-                                            context,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
+                                    ),
+                                  ],
                                 ),
                               ),
                             ),
@@ -447,6 +444,15 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
   /// 并提供「去开启」拉起系统「所有文件访问」授权；返回后由 resume 自动刷新。
   Future<void> _showOldBackupHelpDialog() async {
     final l10n = AppLocalizations.of(context);
+    // 打开弹窗前查询「所有文件访问」状态：已开启时主按钮显示「已开启」，
+    // 避免用户重复点击「去开启」却无反应（已授权时系统不再跳转设置页）。
+    var allFilesGranted = false;
+    try {
+      allFilesGranted = await ref.read(allFilesAccessCheckerProvider)();
+    } catch (e, st) {
+      logger.warning('LocalBackup', '查询「所有文件访问」状态失败: $e', st);
+    }
+    if (!mounted) return;
     final grant = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
@@ -489,7 +495,9 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                 icon: AppIcons.settings,
                 iconColor: Theme.of(dialogContext).colorScheme.primary,
                 title: l10n.localBackupOldHowTitle,
-                body: l10n.localBackupOldHowBody,
+                body: allFilesGranted
+                    ? l10n.localBackupOldHowBodyGranted
+                    : l10n.localBackupOldHowBody,
               ),
               const SizedBox(height: 16),
               _buildOldBackupGuideSection(
@@ -512,16 +520,38 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
               ),
             ),
           ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            child: Text(
-              l10n.localBackupOldGrant,
-              style: TextStyle(
-                color: Theme.of(dialogContext).colorScheme.primary,
-                fontWeight: FontWeight.w600,
+          if (allFilesGranted)
+            TextButton(
+              onPressed: null,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    AppIcons.check,
+                    size: 16,
+                    color: Theme.of(dialogContext).disabledColor,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    l10n.localBackupOldGranted,
+                    style: TextStyle(
+                      color: Theme.of(dialogContext).disabledColor,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext, true),
+              child: Text(
+                l10n.localBackupOldGrant,
+                style: TextStyle(
+                  color: Theme.of(dialogContext).colorScheme.primary,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
-          ),
         ],
       ),
     );

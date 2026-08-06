@@ -1904,6 +1904,10 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap \"Grant access\" to open system settings and enable \"All files access\". When you return, this page refreshes automatically and older backups reappear.';
 
   @override
+  String get localBackupOldHowBodyGranted =>
+      'All files access is already enabled, so older backups should be visible now. If they still don\'t appear, use \"Import from file\" to pick one manually.';
+
+  @override
   String get localBackupOldSafeTitle => 'Privacy note';
 
   @override
@@ -1912,6 +1916,9 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get localBackupOldGrant => 'Grant access';
+
+  @override
+  String get localBackupOldGranted => 'Enabled';
 
   @override
   String get localBackupOldLater => 'Not now';
