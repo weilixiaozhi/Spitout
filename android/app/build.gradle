@@ -2,8 +2,10 @@ import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 
 plugins {
     id "com.android.application"
+    // 项目在 gradle.properties 中禁用了 AGP 内置 Kotlin（android.builtInKotlin=false），
+    // 因此 app 模块的 Kotlin 源码与 JvmTarget 配置必须由 KGP 提供。
+    id "org.jetbrains.kotlin.android"
     // The Flutter Gradle Plugin must be applied after the Android Gradle plugin.
-    // AGP 9.0 起内置 Kotlin 支持，无需再单独应用 kotlin-android 插件。
     id "dev.flutter.flutter-gradle-plugin"
 }
 
@@ -17,8 +19,6 @@ if (keystorePropertiesFile.exists()) {
 android {
     namespace = "com.weilixiaozhi.spitout"
     // compileSdk 与 Flutter 3.44 模板常量一致（36），CI 可通过 stable 渠道直接安装 platforms;android-36。
-    // 此前因 permission_handler_android 14.x 要求 37 而临时提升；现已将 permission_handler 降级至
-    // 12.0.3（android 插件 13.0.1，compileSdk=35），不再需要处于 Canary 渠道的 API 37 平台。
     compileSdk = 36
     // 与 Flutter 模板常量保持一致，满足全部插件（15 个）要求的 NDK 版本，避免对齐报错。
     ndkVersion = "28.2.13676358"
@@ -32,16 +32,13 @@ android {
     }
 
     defaultConfig {
-        // TODO: Specify your own unique Application ID (https://developer.android.com/studio/build/application-id.html).
         applicationId = "com.weilixiaozhi.spitout"
-        // You can update the following values to match your application needs.
-        // For more information, see: https://flutter.dev/to/review-gradle-config.
         minSdkVersion = flutter.minSdkVersion  // Required by record_android for voice recording
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-    // 当未在命令行指定 --flavor 时，默认选择 dev 风味，避免 Flutter 调试找不到 APK。
-    missingDimensionStrategy "env", "dev"
+        // 未在命令行指定 --flavor 时默认选择 dev 风味，避免 Flutter 调试找不到 APK。
+        missingDimensionStrategy "env", "dev"
     }
 
     flavorDimensions += ["env"]
@@ -49,15 +46,13 @@ android {
         dev {
             dimension "env"
             applicationIdSuffix ".dev"
-            // 注意：app_name 不再用 resValue 写死。resValue 生成的资源优先级低于
-            // src/main/res/values*/strings.xml，会被正式版名称覆盖导致 debug/release 同名。
-            // debug 构建的启动器名称改由 android/app/src/debug/res/values*/strings.xml 覆盖，
-            // 该 source set 优先级最高，确保 debug 包始终带「Debug」标识。
+            // 启动器名称取自 src/main/res/values*/strings.xml；debug 构建由
+            // src/debug/res/values*/strings.xml 覆盖，确保 debug 包始终带「Debug」标识。
         }
         prod {
             dimension "env"
-            // 不再用 resValue 写死 app_name，改由设备语言从 res/values-*/strings.xml 读取，
-            // 实现「英文=Spitout，中文/其他语言=芝麻记」的本地化启动器名称。
+            // 启动器名称由设备语言从 res/values-*/strings.xml 读取，
+            // 实现「英文=Spitout，中文/其他语言=芝麻记」的本地化名称。
         }
     }
 
@@ -122,8 +117,7 @@ android {
             // Debug 构建追加独立后缀，便于与生产包共存（applicationId / versionName 区分）
             applicationIdSuffix ".debug"
             versionNameSuffix "-debug"
-            // 启动器名称的「Debug」标识由 src/debug/res/values*/strings.xml 提供，
-            // 这里不再用 resValue（优先级低于正式版 strings.xml，且会与上述 xml 冲突）。
+            // 启动器名称的「Debug」标识由 src/debug/res/values*/strings.xml 提供。
         }
         release {
             // Use a stable release keystore so upgrades don't require uninstall
@@ -142,17 +136,12 @@ android {
         }
     }
 
-    // 当存在 flavors 时，assembleDebug 会聚合构建所有 debug 变体（devDebug、prodDebug），
-    // 这会让 Flutter 工具无法确定唯一 APK 路径。这里禁用 prodDebug，仅保留 devDebug，
-    // 从而让不带 --flavor 的 `flutter run` 正常工作并默认使用 dev。
-    // AGP 9.0 移除了 variantFilter，等价逻辑迁移到下方 androidComponents.beforeVariants。
+    // 禁用 prodDebug，仅保留 devDebug，让不带 --flavor 的 `flutter run` 默认使用 dev。
 }
 
-// AGP 9.0 移除了 applicationVariants/variantFilter 旧版 Variant API，统一迁移到 androidComponents 新 API。
-// AGP 9.0 同时移除了 outputFileName 自定义 APK 命名的能力，Release APK 统一命名为
-// app-<flavor>-release.apk，版本信息交由 CI 发布环节按 tag 重命名。
+// 通过 beforeVariants 禁用 prodDebug；Release APK 统一命名为 app-<flavor>-release.apk，
+// 版本信息由 CI 发布环节按 tag 重命名。
 androidComponents {
-    // AGP 9 要求 beforeVariants/onVariants 显式传入 VariantSelector，不再提供单参数重载。
     beforeVariants(selector().withBuildType("debug")) { variantBuilder ->
         if (variantBuilder.flavorName == 'prod') {
             variantBuilder.enabled = false
@@ -161,7 +150,7 @@ androidComponents {
 }
 
 kotlin {
-    // AGP 9.0 内置 Kotlin 支持下的编译器选项配置（kotlinOptions 已废弃）
+    // Kotlin 编译目标与 Java 17 保持一致。
     compilerOptions {
         jvmTarget = JvmTarget.JVM_17
     }
