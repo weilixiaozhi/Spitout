@@ -21,7 +21,7 @@ import 'press_key.dart';
 ///
 /// 宽度对齐规则（与下方 4×4 键盘列宽一致，键盘 colWidth = (总宽 - 3×2) / 4）：
 /// - 币种框宽度 = 1 列（对齐数字 1 键）；
-/// - 金额区宽度 = 2 列 + 中间 2px 间距（对齐数字 2+3 键）；
+/// - 金额区宽度 = 2 列 + 中间 [KeypadLayout.gap] 间距（对齐数字 2+3 键）；
 /// - 删除键宽度 = 1 列（对齐运算符键）。
 ///
 /// 行高：由父级键盘容器按剩余空间算好后以 SizedBox 提供，本组件行内
@@ -360,7 +360,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       builder: (ctx, c) {
         // 与 AmountKeypad 的列宽公式保持一致：(总宽 - 3 个键间距) / 4，
         // 键间距统一来自 KeypadLayout.gap。
-        // 三区块按 1 / 2+2px / 1 列分配，宽度恰好铺满整行并与键盘键位一一对齐：
+        // 三区块按 1 / 2 列+[KeypadLayout.gap] / 1 列分配，宽度恰好铺满整行并与键盘键位一一对齐：
         //   币种框 ↔ 数字 1；金额区 ↔ 数字 2+3（含中间间距）；删除键 ↔ 运算符键。
         final colWidth = (c.maxWidth - 3 * KeypadLayout.gap) / 4;
         // 行高 h：金额栏是 6 行键盘中的 1 行，高度由父级 SizedBox 提供

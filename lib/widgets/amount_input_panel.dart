@@ -449,7 +449,7 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
     // 本面板内部：金额栏 = 单行高 h，键盘 = 4h + 3 个行距。
     return LayoutBuilder(
       builder: (ctx, c) {
-        // 面板 = 金额栏(1 行) + 键盘(4 行)，含 4 个 2px 行距
+        // 面板 = 金额栏(1 行) + 键盘(4 行)，含 4 个行距
         // （金额栏↔键盘 1 个 + 键盘内部 3 个）
         final h = (c.maxHeight - 4 * KeypadLayout.rowGap) / 5;
         return Column(

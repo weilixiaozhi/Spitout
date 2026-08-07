@@ -590,9 +590,9 @@ class _TransactionEditorSheetState
                       padding: const EdgeInsets.fromLTRB(10, 10, 10, 40),
                       child: LayoutBuilder(
                         builder: (ctx, c) {
-                          // 6 行均分：备注行永远比其余 5 行矮 10px，
+                          // 6 行均分：备注行永远比其余 5 行矮 [KeypadLayout.noteRowDelta]px，
                           // 其余 5 行（金额栏 + 3 行数字 + 底部行）等高，
-                          // 相邻行纵向间距全局 2px。
+                          // 相邻行纵向间距全局 [KeypadLayout.rowGap]px。
                           final h = KeypadLayout.rowHeight(c.maxHeight);
                           final noteH = math.max(
                             0.0,

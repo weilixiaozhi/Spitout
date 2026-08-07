@@ -12,7 +12,7 @@ import 'press_key.dart';
 ///   [onRollback] 回滚最近一次提交，做到与系统键盘一样的"按下即反馈"；
 /// - 完成键（提交/等号）：等号按下即算，提交松手触发，避免误触直接关页；
 /// - 触觉反馈由父级金额面板统一触发，本组件不重复触发；
-/// - 水平键距 2px、行距 2px、按键圆角 5px（统一来自 KeypadLayout）；
+/// - 水平键距 4px、行距 4px、按键圆角 5px（统一来自 KeypadLayout）；
 /// - 数字/运算符/日期为白色色块（keyDigit），完成键为主题主色。
 ///
 /// 布局：
@@ -26,7 +26,7 @@ import 'press_key.dart';
 ///
 /// 尺寸自适应：
 /// - 行高不写死：键盘容器在 sheet 中以 Expanded 撑满剩余空间，本组件
-///   从自身约束反推单行高 h（(高 - 3×2px 行距) / 4），行高、字号均从 h 派生；
+///   从自身约束反推单行高 h（(高 - 3×[KeypadLayout.rowGap]) / 4），行高、字号均从 h 派生；
 /// - 文字缩放跟随全局（main.dart 统一 ×0.85 缩小）并在 [0.85, 1.0] 封顶，
 ///   防止系统大字撑爆按钮。
 class AmountKeypad extends StatelessWidget {
@@ -294,7 +294,7 @@ class AmountKeypad extends StatelessWidget {
       data: MediaQuery.of(context).copyWith(textScaler: capped),
       child: LayoutBuilder(
         builder: (ctx, c) {
-          // 4 行（3 行数字网格 + 1 行底部）之间 3 个 2px 行距反推单行高
+          // 4 行（3 行数字网格 + 1 行底部）之间 3 个行距反推单行高
           final h = (c.maxHeight - 3 * KeypadLayout.rowGap) / 4;
           // 4 列等宽（间隙统一来自 KeypadLayout.gap）
           final colWidth = (c.maxWidth - 3 * KeypadLayout.gap) / 4;
@@ -307,7 +307,7 @@ class AmountKeypad extends StatelessWidget {
                 height: 3 * h + 2 * KeypadLayout.rowGap,
                 child: Row(
                   children: [
-                    // 左侧 3×3 数字网格：三行 Expanded 均分 + 2px 行距
+                    // 左侧 3×3 数字网格：三行 Expanded 均分 + 行距
                     SizedBox(
                       width: colWidth * 3 + 2 * KeypadLayout.gap,
                       child: Column(

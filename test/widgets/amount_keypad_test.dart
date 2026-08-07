@@ -9,11 +9,12 @@
 ///     6. isSubmitting=true 显示 loading 指示器。
 ///
 ///   B. 布局：
-///     7. 单行高 h = (键盘高 - 3×2px 行距) / 4，数字网格区 = 3h + 2×2px，
+///     7. 单行高 h = (键盘高 - 3×[KeypadLayout.rowGap]) / 4，数字网格区 =
+///        3h + 2×[KeypadLayout.rowGap]，
 ///        底部行 = h，随容器高度伸缩（无绝对像素行高）；
 ///     8. 运算符顺序自上而下 + - × ÷；
 ///     9. 数字/运算符/日期为白色色块，完成为主题主色；
-///     10. 键距/行距全局 2px、按键圆角统一 5px；
+///     10. 键距/行距全局 4px、按键圆角统一 5px；
 ///     11. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
 
@@ -390,7 +391,7 @@ void main() {
       expect(tester.widget<PressKey>(doneKey).backgroundColor, primary);
     });
 
-    testWidgets('键距/行距全局 2px、按键圆角统一 5px', (tester) async {
+    testWidgets('键距/行距全局 4px、按键圆角统一 5px', (tester) async {
       await tester.pumpWidget(
         buildHarness(
           keypadHeight: 400,
@@ -403,17 +404,17 @@ void main() {
       );
 
       // 常量单一来源
-      expect(KeypadLayout.gap, 2);
-      expect(KeypadLayout.rowGap, 2);
+      expect(KeypadLayout.gap, 4);
+      expect(KeypadLayout.rowGap, 4);
       expect(KeypadLayout.keyRadius, 5);
 
-      // 底部行水平键距 2px：'0' 与 '.' 中心距 = 列宽 + 2
+      // 底部行水平键距 4px：'0' 与 '.' 中心距 = 列宽 + 4
       final colWidth = (360 - 3 * KeypadLayout.gap) / 4;
       final x0 = tester.getCenter(find.text('0')).dx;
       final xDot = tester.getCenter(find.text('.')).dx;
       expect(xDot - x0, closeTo(colWidth + KeypadLayout.gap, 0.01));
 
-      // 数字网格区与底部行纵向行距 2px
+      // 数字网格区与底部行纵向行距 4px
       final gridBottom = tester
           .getBottomLeft(find.byKey(const ValueKey('keypad_num_grid')))
           .dy;

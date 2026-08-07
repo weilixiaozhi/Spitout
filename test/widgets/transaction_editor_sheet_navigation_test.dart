@@ -158,7 +158,7 @@ void main() {
     expect(amountText('12'), findsOneWidget, reason: '返回后已输入的金额应保留');
   });
 
-  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 5、间距 2、内边距 10/40、无阴影', (tester) async {
+  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 5、间距 4、内边距 10/40、无阴影', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('open-sheet'));
     await tester.pumpAndSettle();
@@ -177,14 +177,14 @@ void main() {
       reason: '备注行永远比其余 5 行矮 5px',
     );
 
-    // 相邻两行纵向间距全局 2px：备注 ↔ 金额栏、金额栏 ↔ 键盘
+    // 相邻两行纵向间距全局 4px：备注 ↔ 金额栏、金额栏 ↔ 键盘
     final noteBottom = tester.getBottomLeft(find.byType(NoteInputRow)).dy;
     final barTop = tester.getTopLeft(find.byType(AmountExpressionBar)).dy;
-    expect(barTop - noteBottom, KeypadLayout.rowGap, reason: '备注行与金额栏间距应为 2');
+    expect(barTop - noteBottom, KeypadLayout.rowGap, reason: '备注行与金额栏间距应为 4');
 
     final barBottom = tester.getBottomLeft(find.byType(AmountExpressionBar)).dy;
     final keypadTop = tester.getTopLeft(find.byType(AmountKeypad)).dy;
-    expect(keypadTop - barBottom, KeypadLayout.rowGap, reason: '金额栏与键盘间距应为 2');
+    expect(keypadTop - barBottom, KeypadLayout.rowGap, reason: '金额栏与键盘间距应为 4');
 
     // 键盘区高度按可用高度占比计算：测试面 600 高 → 固定 40% = 240px
     final keyboardContainer = find.byWidgetPredicate(

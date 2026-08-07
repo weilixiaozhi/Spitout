@@ -4,10 +4,10 @@ class KeypadLayout {
   const KeypadLayout._();
 
   /// 相邻键位水平间距（px）。
-  static const double gap = 2;
+  static const double gap = 4;
 
   /// 键盘相邻两行之间的纵向行距（px）。
-  static const double rowGap = 2;
+  static const double rowGap = 4;
 
   /// 按键圆角（px）。
   static const double keyRadius = 5;
@@ -17,7 +17,7 @@ class KeypadLayout {
 
   /// 6 行键盘容器（备注 + 金额栏 + 数字网格 + 底部行）的单行高度。
   ///
-  /// 容器高度 = 备注行(单行-5) + 5 个 2px 行距 + 其余 5 行(每行单行高)，
+  /// 容器高度 = 备注行(单行-5) + 5 个 [rowGap] 行距 + 其余 5 行(每行单行高)，
   /// 反推单行高：其余 5 行均分、备注行永远矮 [noteRowDelta]。
   static double rowHeight(double containerHeight) =>
       (containerHeight - 5 * rowGap + noteRowDelta) / 6;
