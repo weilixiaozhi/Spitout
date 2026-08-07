@@ -218,4 +218,48 @@ void main() {
     );
     expect(shadowed, findsNothing, reason: '底部键盘容器不应有向上阴影');
   });
+
+  testWidgets('系统键盘拉起时键盘区保持目标高度，收缩由分类区承担', (tester) async {
+    // 用 400x800 竖屏模拟主流手机：全屏可用高度 40% 目标 = 320px
+    tester.view.physicalSize = const Size(400, 800);
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.reset);
+
+    await tester.pumpWidget(buildApp());
+    await tester.tap(find.text('open-sheet'));
+    await tester.pumpAndSettle();
+
+    final keypadContainer = find.byWidgetPredicate(
+      (w) => w is Container && w.color == SpitoutColors.lightKeypadBackground,
+    );
+    final closedKeypadH = tester.getSize(keypadContainer).height;
+    final closedCategoryH = tester.getSize(
+      find.byType(CategoryGridSection),
+    ).height;
+
+    // 模拟备注聚焦后系统键盘拉起（底部 inset 300px）
+    tester.view.viewInsets = const FakeViewPadding(bottom: 300);
+    await tester.pumpAndSettle();
+
+    final openKeypadH = tester.getSize(keypadContainer).height;
+    final openCategoryH = tester.getSize(
+      find.byType(CategoryGridSection),
+    ).height;
+
+    expect(
+      openKeypadH,
+      closedKeypadH,
+      reason: '系统键盘拉起时键盘区应保持目标高度，不再整体压缩',
+    );
+    expect(
+      openCategoryH,
+      lessThan(closedCategoryH),
+      reason: '系统键盘拉起时收缩应主要由分类区承担',
+    );
+    expect(
+      openCategoryH,
+      greaterThanOrEqualTo(0),
+      reason: '分类区不应溢出布局',
+    );
+  });
 }

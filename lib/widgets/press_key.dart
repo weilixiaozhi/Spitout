@@ -57,21 +57,26 @@ class PressKey extends StatefulWidget {
 class _PressKeyState extends State<PressKey> {
   bool _pressed = false;
 
+  /// 统一切换按压态，避免重复 setState。
+  void _setPressed(bool value) {
+    if (!mounted || _pressed == value) return;
+    setState(() => _pressed = value);
+  }
+
   void _handleDown(TapDownDetails _) {
     if (!widget.enabled) return;
-    setState(() => _pressed = true);
     widget.onDown?.call();
   }
 
   void _handleUp(TapUpDetails _) {
     if (!widget.enabled) return;
-    setState(() => _pressed = false);
+    _setPressed(false);
     widget.onUp?.call();
   }
 
   void _handleCancel() {
     if (!widget.enabled) return;
-    setState(() => _pressed = false);
+    _setPressed(false);
     widget.onCancel?.call();
   }
 
@@ -113,15 +118,27 @@ class _PressKeyState extends State<PressKey> {
       onLongPress: widget.enabled && widget.onLongPress != null
           ? _handleLongPress
           : null,
-      child: AnimatedScale(
-        scale: _pressed ? widget.scale : 1.0,
-        duration: const Duration(milliseconds: 70),
-        curve: Curves.easeOut,
-        child: Material(
-          color: color,
-          borderRadius: widget.borderRadius ?? BorderRadius.zero,
-          clipBehavior: Clip.antiAlias,
-          child: widget.child,
+      // 按压视觉由原始指针事件驱动（Listener 不走手势竞技场），而不是
+      // 依赖 TapGestureRecognizer.onTapDown：在 BottomSheet 里按键会和
+      // sheet 自带的竖向拖拽识别器竞争手势竞技场，onTapDown 会被推迟到
+      // 100ms 超时或抬手才触发，快速点击时按压态一帧都渲染不出来。
+      // 回调（onDown/onUp/onCancel/onLongPress）仍由 GestureDetector 负责，
+      // 语义与之前完全一致。
+      child: Listener(
+        behavior: HitTestBehavior.deferToChild,
+        onPointerDown: widget.enabled ? (_) => _setPressed(true) : null,
+        onPointerUp: widget.enabled ? (_) => _setPressed(false) : null,
+        onPointerCancel: widget.enabled ? (_) => _setPressed(false) : null,
+        child: AnimatedScale(
+          scale: _pressed ? widget.scale : 1.0,
+          duration: const Duration(milliseconds: 70),
+          curve: Curves.easeOut,
+          child: Material(
+            color: color,
+            borderRadius: widget.borderRadius ?? BorderRadius.zero,
+            clipBehavior: Clip.antiAlias,
+            child: widget.child,
+          ),
         ),
       ),
     );

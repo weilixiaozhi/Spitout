@@ -475,6 +475,8 @@ class _TransactionEditorSheetState
     final keyboardOpen = mq.viewInsets.bottom > 0;
     // —— 高度自适应 ——
     final bottomInset = mq.viewPadding.bottom; // 底部安全区（刘海/Home Indicator）
+    // 系统键盘拉起时底部安全区已被键盘覆盖，不再额外留白
+    final effectiveBottomInset = keyboardOpen ? 0.0 : bottomInset;
     final keyboardH = mq.viewInsets.bottom; // 系统键盘
     // 背景高度上限 = 全屏 − 系统键盘；实际受 route 约束（SafeArea 已扣顶部
     // 状态栏）限制，顶部正好顶到状态栏下面、底部铺到屏幕底。
@@ -483,14 +485,24 @@ class _TransactionEditorSheetState
     // 真实高度由内容决定，仅作为 Container 上限封顶。
     final sheetMaxH = available;
     // —— 键盘区占比 ——
-    // 固定占可用高度 40%（参考安卓虚拟键盘常见屏占比），
-    // 以 200px 下限 / 360px 上限兜底。分类区（Expanded）自动吃剩余空间；
-    // 极端紧凑时键盘让位，避免溢出。
-    final usableH = available - mq.padding.top - bottomInset;
-    final keypadAreaH = math.min(
-      (usableH * 0.40).clamp(200.0, 360.0),
-      math.max(0.0, usableH - 50),
+    // 目标高度按「无键盘的全屏可用高度」40% 计算（200px 下限 / 360px 上限），
+    // 而不是按扣掉系统键盘后的剩余高度重算——否则备注聚焦、系统键盘拉起时
+    // 自定义键盘会整体缩到 200px 下限，行高/字号随之大幅压缩。
+    // 键盘拉起时键盘区保持目标尺寸整体上移，收缩主要由分类区（Expanded）
+    // 承担；极端紧凑时键盘区让位（保底 160px），同时给分类区留出最低可见高度。
+    final fullUsableH = mq.size.height - mq.padding.top - bottomInset;
+    final keypadTarget = math.min(
+      (fullUsableH * 0.40).clamp(200.0, 360.0),
+      math.max(0.0, fullUsableH - 50),
     );
+    final usableH = available - mq.padding.top - effectiveBottomInset;
+    final keypadAreaH = math
+        .min(
+          keypadTarget,
+          math.max(160.0, usableH - 50 - 56),
+        )
+        .clamp(0.0, math.max(0.0, usableH - 50))
+        .toDouble();
 
     // AA 区块仅账本开启 AA 时展示(功能隔离)
     final aaEnabled =
@@ -520,8 +532,9 @@ class _TransactionEditorSheetState
           ),
           child: Padding(
             // sheet 背景已由 SafeArea 顶到状态栏下面，顶部无需再内缩；
-            // 仅底部内缩 Home Indicator 高度，最底排按键不被手势条压住。
-            padding: EdgeInsets.only(bottom: bottomInset),
+            // 仅底部内缩 Home Indicator 高度，最底排按键不被手势条压住；
+            // 系统键盘拉起时键盘已覆盖手势条区域，不再留白。
+            padding: EdgeInsets.only(bottom: effectiveBottomInset),
             child: Column(
               // 始终填满可用高度：分类区用 Expanded 占据剩余空间并独立滚动。
               // sheetMaxH = available（全屏 − 键盘）。键盘拉起时整页上移且不收起内容，

@@ -224,4 +224,55 @@ void main() {
     expect(large, closeTo((80 * 0.36).clamp(12.0, 20.0), 0.01));
     expect(large, greaterThan(small!), reason: '行高变大时币种字体应同步变大');
   });
+
+  testWidgets('金额超宽时自动滚动到末尾：reverse 视图应停在 offset 0', (tester) async {
+    await tester.pumpWidget(buildHarness(rowHeight: 80, amountStr: '0'));
+    final scrollable = find.descendant(
+      of: find.byType(AmountExpressionBar),
+      matching: find.byType(Scrollable),
+    );
+
+    const long = '123456789012345678901234567890';
+    await tester.pumpWidget(buildHarness(rowHeight: 80, amountStr: long));
+    await tester.pump(); // 执行 post-frame 的滚动到末尾
+
+    final pos = tester.state<ScrollableState>(scrollable.first).position;
+    expect(pos.maxScrollExtent, greaterThan(0), reason: '金额应超出可视区');
+    expect(
+      pos.pixels,
+      0,
+      reason: 'reverse 横向滚动视图 offset 0 才是内容末端（最新输入），'
+          '跳到 maxScrollExtent 会滚回开头',
+    );
+  });
+
+  testWidgets('operating 算式超宽时滚动到 = 预览（reverse 视图 offset 0）', (
+    tester,
+  ) async {
+    await tester.pumpWidget(buildHarness(rowHeight: 80, amountStr: '0'));
+    final scrollable = find.descendant(
+      of: find.byType(AmountExpressionBar),
+      matching: find.byType(Scrollable),
+    );
+
+    await tester.pumpWidget(
+      buildHarness(
+        rowHeight: 80,
+        amountStr: '11111111111111111111',
+        calcState: 'operating',
+        acc: 999999,
+        op: '+',
+        equalsTotal: 1e19,
+      ),
+    );
+    await tester.pump(); // 执行 post-frame 的滚动到末尾
+
+    final pos = tester.state<ScrollableState>(scrollable.first).position;
+    expect(pos.maxScrollExtent, greaterThan(0), reason: '算式应超出可视区');
+    expect(
+      pos.pixels,
+      0,
+      reason: 'operating 模式应把 `= 预览` 滚到可见，而不是停在累加值/运算符',
+    );
+  });
 }

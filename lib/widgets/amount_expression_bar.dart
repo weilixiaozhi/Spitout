@@ -106,11 +106,15 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     super.dispose();
   }
 
-  /// 金额变化后自动滚动到末尾（自动显示末尾输入）
+  /// 金额变化后自动滚动到末尾（自动显示末尾输入）。
+  ///
+  /// 金额区是 `reverse: true` 的横向滚动视图（锚定右侧），offset 0 即内容
+  /// 末端；不要跳 `maxScrollExtent`——reverse 模式下那对应内容起点，会把
+  /// 视图滚回开头，导致超宽金额/算式停在开头而不是最新输入/`=` 预览。
   void _scrollToEnd() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_amountScrollCtrl.hasClients) {
-        _amountScrollCtrl.jumpTo(_amountScrollCtrl.position.maxScrollExtent);
+        _amountScrollCtrl.jumpTo(0);
       }
     });
   }
