@@ -1111,6 +1111,7 @@ class LocalRepository extends BaseRepository {
 
   /// 回填交易作者字段(createdByUserId / lastEditedByUserId / paidByUserId)。
   /// 详见 [LocalTransactionRepository.markTxAuthor]。
+  @override
   Future<void> markTxAuthor({
     required int txId,
     required String userId,
