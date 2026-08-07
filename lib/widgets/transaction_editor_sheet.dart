@@ -24,6 +24,7 @@ import 'note_input_row.dart';
 import 'collaborator_avatar.dart';
 import 'aa_fields_utils.dart';
 import '../theme/icons/app_icons.dart';
+import 'aa_mode_toggle.dart';
 
 /// 记账编辑 BottomSheet（单页：分类 + 金额 + 备注 + 键盘同页）。
 ///
@@ -689,7 +690,11 @@ class _TransactionEditorSheetState
                     ),
                   ),
                   const SizedBox(width: 10),
-                  _buildAaModeToggle(context, l10n),
+                  AaModeToggle(
+                    modeText: _aaModeToggleText(l10n),
+                    onTap: _cycleAaMode,
+                    toggleKey: const ValueKey('editor_aa_mode_toggle'),
+                  ),
                 ],
               ),
             ),
@@ -720,63 +725,13 @@ class _TransactionEditorSheetState
     );
   }
 
-  /// 分摊方式切换按钮:固定宽度,左右箭头 + 中间方式文本,单点循环切换。
-  ///
-  /// 设计意图:
-  /// - 固定宽度:边框不随「人均分摊/不分摊/指定分摊」字符数变化而抖动;
-  /// - 左右箭头:直观暗示「可切换」(左/右箭头指向切换方向),
-  ///   与边框一起构成明确的可点击提示;
-  /// - 小圆角(6px)+ 弱色小字号:保持弱化,不抢标题与金额输入区焦点。
-  /// 尺寸与编辑分摊页 [AaEditPage._buildAaModeToggle] 一致(88x28 / 字号 12),
-  /// 保证两处切换体验统一、文案完整显示(不过小截断)。
-  Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
-    final modeText = switch (_aaMode) {
+  /// 当前分摊方式文案（与编辑分摊页共用的 [AaModeToggle] 展示）。
+  String _aaModeToggleText(AppLocalizations l10n) {
+    return switch (_aaMode) {
       AaMode.perPerson => l10n.aaModePerPerson,
       AaMode.noSplit => l10n.aaModeNoSplit,
       AaMode.custom => l10n.aaModeCustom,
     };
-    // 边框色:文字三级色 35% 透明度,亮暗模式下均清晰可见但不抢眼
-    final borderColor = SpitoutTokens.textTertiary(
-      context,
-    ).withValues(alpha: 0.35);
-    final arrowColor = SpitoutTokens.iconTertiary(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _cycleAaMode,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          // 固定宽度 88:容纳最长文案「人均分摊」(4 字 @12px ≈48px)
-          // + 左右箭头(24px) + 内边距,不随当前方式文字长度变化
-          width: 88,
-          height: 28,
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: borderColor),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              Icon(AppIcons.chevronLeft, size: 12, color: arrowColor),
-              Expanded(
-                child: Text(
-                  modeText,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
-                ),
-              ),
-              Icon(AppIcons.chevronRight, size: 12, color: arrowColor),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 }
 
