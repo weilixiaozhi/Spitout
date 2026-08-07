@@ -5,7 +5,6 @@ import '../../core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
-import 'package:spitout/providers/statistics/statistics_providers.dart';
 
 // 账本列表 provider（统一本地列表）。
 //
@@ -30,7 +29,8 @@ final localLedgersProvider =
     FutureProvider<List<LedgerDisplayItem>>((ref) async {
   // 监听刷新触发器（账本列表和统计信息）
   ref.watch(ledgerListRefreshProvider);
-  ref.watch(statsRefreshProvider); // 监听统计刷新，确保自动记账后刷新
+  // 监听统一数据变更信号，确保任意写库（自动记账/导入/同步）后刷新统计信息。
+  ref.watch(dataChangeSignalProvider);
 
   try {
     final repo = ref.watch(repositoryProvider);

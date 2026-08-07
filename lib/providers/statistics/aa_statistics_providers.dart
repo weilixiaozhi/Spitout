@@ -23,7 +23,6 @@ import '../../l10n/app_localizations.dart';
 import '../../providers/core/database_providers.dart';
 import '../../providers/sync/cloud_client_providers.dart';
 import '../../providers/sync/shared_ledger_providers.dart';
-import '../../providers/sync/sync_state_providers.dart';
 import '../ui/avatar_providers.dart';
 import '../../providers/ui/language_provider.dart';
 import '../../providers/ui/theme_providers.dart';
@@ -286,7 +285,8 @@ class MemberExpenseStatItem {
 /// 口径一致。paidByUserId 为空的交易不计入(支出人未知,无法归属)。
 final memberExpenseStatsProvider = FutureProvider.autoDispose
     .family<List<MemberExpenseStatItem>, int>((ref, ledgerId) async {
-      ref.watch(syncGenerationProvider);
+      // 监听统一数据变更信号：任何交易/成员/虚拟用户写入都会自动重算。
+      ref.watch(dataChangeSignalProvider);
       ref.watch(sharedResourceRefreshProvider);
       // 本人头像变化时成员支出列表也要跟着刷新
       ref.watch(avatarRefreshProvider);
@@ -391,12 +391,12 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
 
 /// 账本 AA 分摊汇总(纯计算,依赖交易+成员+虚拟用户)。
 ///
-/// watch [syncGenerationProvider] 让云同步 pull 后自动重算;
+/// watch [dataChangeSignalProvider] 让任意写库（含云同步 pull）后自动重算;
 /// watch [sharedResourceRefreshProvider] 让成员变更后自动重算。
 final aaStatisticsProvider = FutureProvider.autoDispose
     .family<AaLedgerStatistics, int>((ref, ledgerId) async {
-      // 依赖同步代数 + 共享资源刷新 tick,数据变化时自动重算。
-      ref.watch(syncGenerationProvider);
+      // 依赖统一数据变更信号 + 共享资源刷新 tick,数据变化时自动重算。
+      ref.watch(dataChangeSignalProvider);
       ref.watch(sharedResourceRefreshProvider);
 
       final repo = ref.read(repositoryProvider);

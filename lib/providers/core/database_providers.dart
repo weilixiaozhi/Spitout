@@ -1,3 +1,4 @@
+import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -16,6 +17,33 @@ import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
 
 // 数据库Provider
+/// 统一业务数据变更信号：任何业务表发生写入（插入/更新/删除）都会发射一次。
+///
+/// 设计意图：所有汇总/统计 provider 只依赖这一个信号，即可保证「无论从哪条路径
+/// 写库（UI 记账、导入、云端同步、后台任务、维护工具等）都会自动刷新」，
+/// 不再要求每个调用方手动 bump 分散的 tick，从根上消除「漏刷一处」与多份
+/// 刷新状态不一致的问题。
+///
+/// 只订阅业务表，排除同步簿记表（local_changes / sync_state / sync_pull_errors /
+/// snapshot_dirty_ledgers）与编辑历史表，避免伴随业务写入产生的流水噪声触发
+/// 无意义重算。
+final dataChangeSignalProvider = StreamProvider<Set<TableUpdate>>((ref) {
+  final db = ref.watch(databaseProvider);
+  return db.tableUpdates(
+    TableUpdateQuery.onAllTables([
+      db.ledgers,
+      db.categories,
+      db.transactions,
+      db.recurringTransactions,
+      db.ledgerMembers,
+      db.sharedLedgerCategories,
+      db.exchangeRates,
+      db.exchangeRateOverrides,
+      db.ledgerVirtualUsers,
+    ]),
+  );
+});
+
 final databaseProvider = Provider<SpitoutDatabase>((ref) {
   final db = SpitoutDatabase();
   ref.onDispose(() async {
@@ -282,8 +310,8 @@ final appInitProvider = FutureProvider<void>((ref) async {
 
 // 分类Provider
 final categoriesProvider = FutureProvider<List<Category>>((ref) async {
-  // 同步代数 bump 后重算，让 web 改分类能立即反映到 mobile。
-  ref.watch(syncGenerationProvider);
+  // 任何分类/交易等业务表写入都会经统一数据变更信号触发重算。
+  ref.watch(dataChangeSignalProvider);
   final repo = ref.watch(repositoryProvider);
   return await repo.getAllCategories();
 });

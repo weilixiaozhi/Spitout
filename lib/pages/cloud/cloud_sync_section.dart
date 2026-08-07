@@ -650,9 +650,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                   ref
                                       .read(syncStatusRefreshProvider.notifier)
                                       .tick();
-                                  ref
-                                      .read(statsRefreshProvider.notifier)
-                                      .tick();
+                                  // 汇总/统计刷新由统一数据变更信号自动驱动。
                                 } else {
                                   final confirmed =
                                       await AppDialog.confirm<bool>(
@@ -687,9 +685,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                           syncStatusRefreshProvider.notifier,
                                         )
                                         .tick();
-                                    ref
-                                        .read(statsRefreshProvider.notifier)
-                                        .tick();
+                                    // 汇总/统计刷新由统一数据变更信号自动驱动。
 
                                     // Surface 2：登出即云失活，全量清本地
                                     // 云端账本（本地账本不受影响）。放到

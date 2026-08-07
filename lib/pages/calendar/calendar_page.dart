@@ -33,10 +33,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     // 避免下游直接比较 DateTime 时被时分秒干扰。
     _selectedDay = DateTime(now.year, now.month, now.day);
 
-    // 同步到 Provider
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
-      ref.read(calendarSelectedDateProvider.notifier).set(_selectedDay);
+    // 日历页常驻 IndexedStack：切月会清空选中态，重新进入日历 tab 时若
+    // 无选中日期，自动回到本月并选中今天，保证「自动选中当天日期」。
+    ref.listenManual<int>(bottomTabIndexProvider, (prev, next) {
+      if (prev == 2 || next != 2 || _selectedDay != null) return;
+      final current = DateTime.now();
+      setState(() {
+        _focusedMonth = DateTime(current.year, current.month, 1);
+        _selectedDay = DateTime(current.year, current.month, current.day);
+      });
     });
   }
 
@@ -47,18 +52,18 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       // 避免"选中日落在相邻月、统计仍按原月"的口径不一致。
       _focusedMonth = DateTime(selectedDay.year, selectedDay.month, 1);
     });
-    ref.read(calendarSelectedDateProvider.notifier).set(selectedDay);
-    ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
   }
 
   void _onPageChanged(DateTime focusedMonth) {
     setState(() {
       _focusedMonth = focusedMonth;
-      // 切换月份时，清空选中日期
-      _selectedDay = null;
+      // 切到其他月清空选中；回到本月时自动重新选中今天。
+      final now = DateTime.now();
+      _selectedDay =
+          (focusedMonth.year == now.year && focusedMonth.month == now.month)
+              ? DateTime(now.year, now.month, now.day)
+              : null;
     });
-    ref.read(calendarSelectedMonthProvider.notifier).set(focusedMonth);
-    ref.read(calendarSelectedDateProvider.notifier).set(null);
   }
 
   void _jumpToToday() {
@@ -67,8 +72,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       _focusedMonth = DateTime(now.year, now.month, 1);
       _selectedDay = DateTime(now.year, now.month, now.day);
     });
-    ref.read(calendarSelectedMonthProvider.notifier).set(_focusedMonth);
-    ref.read(calendarSelectedDateProvider.notifier).set(_selectedDay);
   }
 
   Future<void> _addTransactionForSelectedDate() async {
@@ -83,12 +86,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
       initialKind: 'expense',
       initialDate: initialDate,
     );
-
-    // 编辑器关闭后,主动刷新日历的统计与当日交易列表
-    // (FutureProvider 不会因 Drift 写入自动重算)
-    if (mounted) {
-      ref.read(calendarRefreshProvider.notifier).tick();
-    }
   }
 
   @override
@@ -104,9 +101,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
     // 从 ISO 4217 映射取真实符号（如 ¥ / $ / JP¥），杜绝硬编码。
     final currencySymbol = getCurrencySymbol(ledgerCurrencyCode);
-
-    // 监听数据刷新
-    ref.watch(calendarRefreshProvider);
 
     // 获取当月统计数据
     final dailyTotalsAsync = ref.watch(
@@ -143,7 +137,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                 SectionCard(
                   margin: EdgeInsets.zero,
                   child: dailyTotalsAsync.when(
-                    // 记账等触发 calendarRefreshProvider 时不切到 loading,
+                    // 数据变更信号触发重算时不切到 loading,
                     // 旧统计保留,等新数据来无缝替换 — 避免日历整页 spinner 闪烁
                     skipLoadingOnReload: true,
                     data: (dailyTotals) =>
@@ -193,7 +187,13 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   ) {
     final locale = Localizations.localeOf(context);
 
+    // firstDay 会随账本最早交易月动态变化；table_calendar 在 firstDay 于页面
+    // 存活期间跳变后，内部 PageController 会失效（箭头/手势切月无响应）。
+    // 用 firstDay 做 key 强制重建日历，重置翻页状态，避免「点不动」。
     return TableCalendar(
+      key: ValueKey(
+        'calendar_first_${firstDay.year}_${firstDay.month}',
+      ),
       locale: locale.toString(),
       firstDay: firstDay,
       lastDay: DateTime.now().add(const Duration(days: 365)),

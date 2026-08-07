@@ -5,8 +5,8 @@ import 'package:flutter_list_view/flutter_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
 import '../data/models.dart';
 // 列表项的删除/编辑动作由调用方注入，组件内不直接依赖
-// repositoryProvider / currentLedgerIdProvider / statsRefreshProvider /
-// countsForLedgerProvider，故不 import 对应 providers。
+// repositoryProvider / currentLedgerIdProvider / countsForLedgerProvider，
+// 故不 import 对应 providers。
 // 仍用 TransactionDisplayItem 类型别名，故保留对 ui_state_providers 的引入。
 import 'package:spitout/providers/ui/ui_state_providers.dart'
     show TransactionDisplayItem;

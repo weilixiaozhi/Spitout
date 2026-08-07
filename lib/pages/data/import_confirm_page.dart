@@ -612,8 +612,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
               .set(ImportProgress.empty);
           // 刷新"我的"页统计（笔数/天数）
           container.invalidate(countsForLedgerProvider(ledgerId));
-          // 触发全局统计刷新（用于"我的"页顶部聚合信息）
-          container.read(statsRefreshProvider.notifier).tick();
+          // 汇总/统计刷新由统一数据变更信号自动驱动（导入写库即触发）。
           // 触发一次同步状态刷新（UI 端会复用缓存避免闪烁）
           container.read(syncStatusRefreshProvider.notifier).tick();
         } catch (_) {
@@ -687,11 +686,6 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         Navigator.of(currentContext).pop(); // Close ImportConfirmPage
       }
     }
-    // 返回后再显式刷新一次全局统计，确保顶部汇总即时更新
-    try {
-      container.read(statsRefreshProvider.notifier).tick();
-    } catch (_) {}
-
     // 导入完成后，账本列表页面会通过监听 importProgressProvider 自动刷新
     // ledgerId 已经在上面的 importProgressProvider 中设置
   }

@@ -8,7 +8,7 @@ import 'package:spitout/providers/providers.dart';
 
 import '../../helpers/test_isolation.dart';
 
-/// 记录调用的同步服务替身：锁定 PostProcessor 只标记本地变更 + 刷新信号，
+/// 记录调用的同步服务替身：锁定 PostProcessor 只标记本地变更 + 刷新状态信号，
 /// 不直接上传（上传统一由 SyncCoordinator / SnapshotSyncCoordinator 数据驱动）。
 class _RecordingSyncService extends LocalOnlySyncService {
   final List<int> marked = [];
@@ -28,8 +28,9 @@ class _RecordingSyncService extends LocalOnlySyncService {
 }
 
 /// PostProcessor 行为锁定测试：
-/// 先固化 run/sync 系列（container/Ref 两种载体）的既有行为，
-/// 再进行「三套 _doSync 实现三合一」重构，保证重构前后行为一致。
+/// 数据汇总刷新已由统一数据变更信号（dataChangeSignalProvider）驱动，
+/// 本测试只锁定 PostProcessor 的同步状态编排职责（markLocalChanged +
+/// 状态/列表信号），不直接上传。
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
@@ -46,16 +47,14 @@ void main() {
 
   tearDown(() => container.dispose());
 
-  /// 读取三个刷新信号的当前值，便于断言 bump 次数
-  ({int stats, int calendar, int syncStatus, int ledgerList}) ticks() => (
-    stats: container.read(statsRefreshProvider),
-    calendar: container.read(calendarRefreshProvider),
+  /// 读取状态刷新信号的当前值，便于断言 bump 次数。
+  ({int syncStatus, int ledgerList}) ticks() => (
     syncStatus: container.read(syncStatusRefreshProvider),
     ledgerList: container.read(ledgerListRefreshProvider),
   );
 
   group('syncC（ProviderContainer 载体）', () {
-    test('标记本地变更 + bump 日历/同步状态/账本列表；不直接上传（数据驱动）', () async {
+    test('标记本地变更 + bump 同步状态/账本列表；不直接上传（数据驱动）', () async {
       final before = ticks();
       await PostProcessor.syncC(container, ledgerId: 7);
       // 让内部 fire-and-forget 的后台 Future 有机会执行
@@ -63,10 +62,8 @@ void main() {
 
       final after = ticks();
       expect(sync.marked, [7]);
-      expect(after.calendar, before.calendar + 1);
       expect(after.syncStatus, before.syncStatus + 1);
       expect(after.ledgerList, before.ledgerList + 1);
-      expect(after.stats, before.stats, reason: 'sync 系列不刷统计');
       expect(
         sync.uploaded,
         isEmpty,
@@ -100,15 +97,13 @@ void main() {
   });
 
   group('runC（ProviderContainer 载体）', () {
-    test('在 sync 基础上额外 bump 统计刷新', () async {
+    test('与 sync 一致：只标记本地变更 + 刷新状态信号，不直接上传', () async {
       final before = ticks();
       await PostProcessor.runC(container, ledgerId: 5);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final after = ticks();
       expect(sync.marked, [5]);
-      expect(after.stats, before.stats + 1);
-      expect(after.calendar, before.calendar + 1);
       expect(after.syncStatus, before.syncStatus + 1);
       expect(after.ledgerList, before.ledgerList + 1);
     });
@@ -127,22 +122,18 @@ void main() {
 
       final after = ticks();
       expect(sync.marked, [11, 12]);
-      expect(after.stats, before.stats + 1, reason: '仅 runR 刷统计');
-      expect(after.calendar, before.calendar + 2);
       expect(after.syncStatus, before.syncStatus + 2);
       expect(after.ledgerList, before.ledgerList + 2);
     });
   });
 
   group('runAfterDownloadC', () {
-    test('只刷新四个信号，不触发任何同步', () async {
+    test('只刷新状态信号，不触发任何同步（数据汇总由统一信号驱动）', () async {
       final before = ticks();
       PostProcessor.runAfterDownloadC(container);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
       final after = ticks();
-      expect(after.stats, before.stats + 1);
-      expect(after.calendar, before.calendar + 1);
       expect(after.syncStatus, before.syncStatus + 1);
       expect(after.ledgerList, before.ledgerList + 1);
       expect(sync.marked, isEmpty);

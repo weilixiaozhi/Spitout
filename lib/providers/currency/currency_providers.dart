@@ -12,7 +12,6 @@ import '../../utils/currency/rate_math.dart';
 import '../../services/currency/exchange_rate_service.dart';
 import '../../utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/providers/statistics/statistics_providers.dart';
 // 只依赖叶子模块拿云客户端实例（server 汇率源），不 import 编排器
 // sync_providers.dart，避免「域 → 编排」反向边成环。
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
@@ -210,7 +209,7 @@ final currentLedgerCurrencyProvider = Provider<String>((ref) {
 final effectiveRatesForLedgerProvider =
     FutureProvider<Map<String, EffectiveRate>>((ref) async {
   ref.watch(rateRefreshTickProvider);
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   final base = ref.watch(currentLedgerCurrencyProvider);
   final repo = ref.watch(repositoryProvider);
   final autos = await repo.getLatestAutoRates(base);
@@ -229,7 +228,7 @@ final effectiveRatesForLedgerProvider =
 /// 当前账本「未折算外币交易」条数:>0 时统计页显示补折算横幅。
 /// watch statsRefresh(重算完成/交易变动后重查)。
 final ledgerUnconvertedForeignTxCountProvider = FutureProvider<int>((ref) async {
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   ref.watch(rateRefreshTickProvider);
   final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return 0;
@@ -239,7 +238,7 @@ final ledgerUnconvertedForeignTxCountProvider = FutureProvider<int>((ref) async 
 
 /// 当前账本外币交易条数(含已折算):>0 时账本统计页显示折算脚注。
 final ledgerForeignTxCountProvider = FutureProvider<int>((ref) async {
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return 0;
   final repo = ref.watch(repositoryProvider);

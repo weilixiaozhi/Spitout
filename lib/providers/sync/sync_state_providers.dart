@@ -90,17 +90,6 @@ final s3ConfigProvider = FutureProvider<CloudServiceConfig?>((ref) async {
 
 // ====== 同步状态刷新 tick ======
 
-/// 同步代数计数器：每次 pull 把远端变更写入本地 Drift 之后 +1。
-/// 派生 Provider（首页交易列表/统计/账户等）watch 这个值，即可在增量同步
-/// 完成后重新运行，UI 不读到旧缓存。
-///
-/// 为什么不直接 `ref.invalidate(watchTransactionsProvider)`：Supabase Realtime
-/// 通道绑在同一个 stream provider 上，invalidate 会把通道拆掉再建，反而更慢；
-/// 用一个独立 bump 计数器是最便宜的信号。
-final syncGenerationProvider = NotifierProvider<TickStateNotifier, int>(
-  () => TickStateNotifier((ref) => 0),
-);
-
 /// 最近一次同步错误信息（供 UI 状态栏展示）。
 /// PostProcessor / SyncEngine 的 catch 分支把错误写到这里，避免 silent swallow。
 final lastSyncErrorProvider =

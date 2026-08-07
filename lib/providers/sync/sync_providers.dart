@@ -18,10 +18,8 @@ import '../../services/data/local_identity_migration_service.dart';
 import '../../services/storage/avatar_storage.dart';
 import '../../services/backup/local_backup_service.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
-import 'package:spitout/providers/statistics/calendar_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
-import 'package:spitout/providers/statistics/statistics_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/ledger_list_providers.dart';
@@ -190,9 +188,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           // currentLedgerProvider 已是 StreamProvider(Drift watch 自动推送),
           // 此 invalidate 仅作防御性重订阅(如流曾进入 error 态),正常路径冗余无害。
           ref.invalidate(currentLedgerProvider);
-          ref.read(syncGenerationProvider.notifier).tick();
-          ref.read(statsRefreshProvider.notifier).tick();
-          ref.read(calendarRefreshProvider.notifier).tick();
+          // 汇总/统计刷新由统一数据变更信号自动驱动（业务表写入即触发）。
           // 切到 Stream 模式 — 否则 Drift 已更新但 TransactionList 仍用
           // Splash 阶段 cache 住的 accountName。不清 cachedTransactionsProvider:
           // 切到 stream 模式后 cache 不被读取,留旧值给到 stream 推送之前
@@ -363,9 +359,7 @@ final syncServiceProvider = Provider<SyncService>((ref) {
               'skipped=${result.skipped}, elapsedMs=${result.elapsedMs}');
           ref.read(syncStatusRefreshProvider.notifier).tick();
           ref.read(ledgerListRefreshProvider.notifier).tick();
-          ref.read(syncGenerationProvider.notifier).tick();
-          ref.read(statsRefreshProvider.notifier).tick();
-          ref.read(calendarRefreshProvider.notifier).tick();
+          // 汇总/统计刷新由统一数据变更信号自动驱动（业务表写入即触发）。
           ref.read(homeSwitchToStreamProvider.notifier).tick();
           ref.read(cachedTransactionsProvider.notifier).set(null);
           // 不无条件 bump avatarRefreshProvider — AvatarChanged 事件

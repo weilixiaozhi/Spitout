@@ -1088,7 +1088,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 保证快速退出后列表页/统计页仍能收到信号。
     container.read(ledgerListRefreshProvider.notifier).tick();
     container.invalidate(currentLedgerProvider);
-    container.read(statsRefreshProvider.notifier).tick();
+    // 汇总/统计刷新由统一数据变更信号自动驱动（写库即触发）。
 
     // PostProcessor.syncC 只负责清同步状态缓存与刷新 UI 信号（不依赖页面挂载）；
     // 真正的云端推送由 SyncCoordinator 监听 local_changes 自动触发，不会双发。
@@ -1125,7 +1125,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
       if (!mounted) return;
       ref.read(ledgerListRefreshProvider.notifier).tick();
-      ref.read(statsRefreshProvider.notifier).tick();
       showToast(context, l10n.ledgersClearSuccess);
     } catch (e, st) {
       logger.error('LedgerEditPage', '清空账本失败', e, st);
@@ -1177,7 +1176,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       if (!mounted) return;
       ref.invalidate(currentLedgerProvider);
       ref.read(ledgerListRefreshProvider.notifier).tick();
-      ref.read(statsRefreshProvider.notifier).tick();
 
       showToast(context, l10n.ledgersDeleted);
       // 删除成功后返回上一页
@@ -1236,7 +1234,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       }
       ref.invalidate(currentLedgerProvider);
       ref.read(ledgerListRefreshProvider.notifier).tick();
-      ref.read(statsRefreshProvider.notifier).tick();
 
       if (!mounted) return;
       showToast(context, l10n.ledgersLeaveAndDeleteSuccess);
@@ -1290,7 +1287,6 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       }
       ref.invalidate(currentLedgerProvider);
       ref.read(ledgerListRefreshProvider.notifier).tick();
-      ref.read(statsRefreshProvider.notifier).tick();
 
       if (!mounted) return;
       showToast(context, l10n.ledgersDeleteSharedSuccess);

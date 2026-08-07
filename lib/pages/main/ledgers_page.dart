@@ -302,9 +302,8 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
 
     // 正常切换账本
     ref.read(currentLedgerIdProvider.notifier).set(ledger.id);
-    // 切换账本后强制刷新统计页与日历（部分 provider 仅监听刷新信号，不随 ledgerId 参数重算）
-    ref.read(statsRefreshProvider.notifier).tick();
-    ref.read(calendarRefreshProvider.notifier).tick();
+    // 切换账本后 family 参数（ledgerId）变化即触发各汇总重算；
+    // 数据刷新由统一数据变更信号自动驱动，无需手动 bump。
     showToast(
       context,
       AppLocalizations.of(
@@ -531,9 +530,6 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                         await PostProcessor.sync(ref, ledgerId: ledger.id);
 
                         if (!mounted) return;
-
-                        // 刷新统计
-                        ref.read(statsRefreshProvider.notifier).tick();
 
                         showToast(
                           this.context,

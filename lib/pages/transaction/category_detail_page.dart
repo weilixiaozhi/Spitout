@@ -357,7 +357,6 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
 
       // 刷新：账本笔数与全局统计
       ref.invalidate(countsForLedgerProvider(ledgerId));
-      ref.read(statsRefreshProvider.notifier).tick();
 
       // 同步失败单独记录:删除已成功,不应误报为「删除失败」,
       // 数据会由后续自动同步机制补推。

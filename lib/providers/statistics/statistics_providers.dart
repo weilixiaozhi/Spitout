@@ -6,16 +6,12 @@ import 'package:spitout/providers/core/simple_state_notifier.dart';
 final countsForLedgerProvider = FutureProvider.family
     .autoDispose<({int dayCount, int txCount}), int>((ref, ledgerId) async {
   final repo = ref.watch(repositoryProvider);
-  // 依赖 tick 触发刷新
-  ref.watch(statsRefreshProvider);
+  // 依赖统一数据变更信号触发刷新（任何业务表写入都会自动重算）。
+  ref.watch(dataChangeSignalProvider);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   return repo.getCountsForLedger(ledgerId: ledgerId);
 });
-
-// 统计刷新 tick（全局）：每次 +1 触发统计相关 Provider 重新获取
-final statsRefreshProvider =
-    NotifierProvider<TickStateNotifier, int>(() => TickStateNotifier((ref) => 0));
 
 // 统计：月度支出汇总最近值（避免 loading 闪烁），全局仅支出模式
 final lastMonthlyTotalsProvider = NotifierProvider.family<
@@ -30,8 +26,8 @@ final monthlyTotalsProvider = FutureProvider.family
     .autoDispose<double, ({int ledgerId, DateTime month})>(
         (ref, params) async {
   final repo = ref.watch(repositoryProvider);
-  // 依赖 tick 触发刷新
-  ref.watch(statsRefreshProvider);
+  // 依赖统一数据变更信号触发刷新。
+  ref.watch(dataChangeSignalProvider);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   final res = await repo.monthlyTotals(ledgerId: params.ledgerId, month: params.month);
@@ -56,8 +52,8 @@ final lastTodayExpenseProvider = NotifierProvider.family<
 final todayExpenseProvider = FutureProvider.family
     .autoDispose<double, int>((ref, ledgerId) async {
   final repo = ref.watch(repositoryProvider);
-  // 依赖 tick 触发刷新(与 monthlyTotals 同 tick,手动刷新/恢复后同步更新)
-  ref.watch(statsRefreshProvider);
+  // 依赖统一数据变更信号触发刷新（与 monthlyTotals 同一信号源）。
+  ref.watch(dataChangeSignalProvider);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   final expense =
@@ -79,7 +75,7 @@ final lastWeekExpenseProvider = NotifierProvider.family<
 final weekExpenseProvider = FutureProvider.family
     .autoDispose<double, int>((ref, ledgerId) async {
   final repo = ref.watch(repositoryProvider);
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   final expense =
@@ -91,9 +87,9 @@ final weekExpenseProvider = FutureProvider.family
 // ---------- 统计页（AnalyticsPage）专用 provider ----------
 
 /// 统计页：当前账本是否有任意支出交易（区分全局空数据 vs 局部空数据）。
-/// watch statsRefresh 确保同步/导入后重判。
+/// watch 统一数据变更信号，确保任意写库路径（同步/导入等）后重判。
 final analyticsHasAnyExpenseProvider = FutureProvider<bool>((ref) async {
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return false;
   final repo = ref.watch(repositoryProvider);
@@ -104,7 +100,7 @@ final analyticsHasAnyExpenseProvider = FutureProvider<bool>((ref) async {
 /// 数据范围生成。无数据返回 (null, null)。
 final analyticsDataRangeProvider =
     FutureProvider<({DateTime? earliest, DateTime? latest})>((ref) async {
-  ref.watch(statsRefreshProvider);
+  ref.watch(dataChangeSignalProvider);
   final ledger = ref.watch(currentLedgerProvider).value;
   if (ledger == null) return (earliest: null, latest: null);
   final repo = ref.watch(repositoryProvider);

@@ -114,7 +114,6 @@ Future<bool> applyLedgerCurrencyChange(
   // 此 invalidate 仅作防御性重订阅(如流曾进入 error 态),正常路径冗余无害。
   ref.invalidate(currentLedgerProvider);
   ref.invalidate(monthlyTotalsProvider);
-  ref.read(statsRefreshProvider.notifier).tick();
 
   // 8. 触发同步把账本元数据 + 重算 change 推到云端;失败仅告警,本地已生效
   try {

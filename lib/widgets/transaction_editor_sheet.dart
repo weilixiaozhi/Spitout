@@ -430,9 +430,8 @@ class _TransactionEditorSheetState
 
       // 统一处理：自动/手动同步与状态刷新（后台静默）
       PostProcessor.sync(ref, ledgerId: _ledgerId);
-      // 刷新：账本笔数与全局统计
+      // 账本笔数缓存失效；汇总/统计由统一数据变更信号自动刷新。
       ref.invalidate(countsForLedgerProvider(_ledgerId));
-      ref.read(statsRefreshProvider.notifier).tick();
 
       // 提交成功后关闭编辑器 sheet。
       // 若本次提交跳转过 AaEditPage,AA 页退场固定为下滑动画(见

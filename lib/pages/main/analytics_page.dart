@@ -76,7 +76,8 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   Future<_AnalyticsData>? _dataFuture;
   // 上一次刷新计数与账本 id 快照：用于检测「数据或账本已变更」，
   // 保存/删除/导入/清空/切换账本后必须让缓存 Future 失效，否则 FutureBuilder 始终消费旧数据。
-  int _lastStatsRefresh = 0;
+  // 统一数据变更信号（AsyncValue），任一业务表写入都会产生新实例。
+  Object? _lastDataSignal;
   int? _lastLedgerId;
   // 重试 tick：错误态点击重试时 +1，触发 Future 重建。
   int _retryTick = 0;
@@ -628,7 +629,6 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
           AmountText(
             value: sum,
             signed: false,
-            decimals: 0,
             showCurrency: true,
           ),
         ),
@@ -666,7 +666,6 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
           AmountText(
             value: dailyAvg,
             signed: false,
-            decimals: 0,
             showCurrency: true,
           ),
         ),
@@ -732,14 +731,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
 
   @override
   Widget build(BuildContext context) {
-    // 监听刷新信号，交易增删改/导入/清空后重新统计
-    final statsTick = ref.watch(statsRefreshProvider);
+    // 监听统一数据变更信号，交易增删改/导入/清空/同步后重新统计
+    final dataSignal = ref.watch(dataChangeSignalProvider);
     // 同时监听当前账本：切换账本后统计页必须整体重算，否则仍显示旧账本数据
     final ledgerId = ref.watch(currentLedgerIdProvider);
-    // statsRefresh 自增或切换账本都说明数据已变更，必须让缓存 Future 失效；
+    // 数据变更信号或切换账本都说明数据已变更，必须让缓存 Future 失效；
     // 否则 FutureBuilder 始终消费旧 _dataFuture，导致新增/删除/导入/清空/切换账本后统计页不渲染。
-    if (statsTick != _lastStatsRefresh || ledgerId != _lastLedgerId) {
-      _lastStatsRefresh = statsTick;
+    if (dataSignal != _lastDataSignal || ledgerId != _lastLedgerId) {
+      _lastDataSignal = dataSignal;
       _lastLedgerId = ledgerId;
       _dataFuture = null;
       _lastEnsuredTabId = null;
@@ -1331,8 +1330,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       final n = await repo.recomputeForeignTxForLedger(ledgerId);
       if (!mounted) return;
       showToast(context, l10n.recalcForeignTxDone(n));
-      // bump 统计刷新：横幅重查消失 + 各统计图表按新折算重算
-      ref.read(statsRefreshProvider.notifier).tick();
+      // 汇总/统计刷新由统一数据变更信号自动驱动（重算即写库）。
     } catch (e, st) {
       logger.error('AnalyticsPage', '一键补折算失败', e, st);
       if (mounted) {

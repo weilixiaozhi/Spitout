@@ -21,8 +21,6 @@ import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/ledger_list_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
-import 'package:spitout/providers/sync/sync_state_providers.dart';
-import 'package:spitout/providers/statistics/statistics_providers.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
 import '../core/local_self_id_providers.dart';
 import 'package:spitout/services/data/tx_author_service.dart';
@@ -175,8 +173,7 @@ Future<SpitoutCloudInviteAcceptResult> acceptSharedLedgerInvite(
     // invalidate 是无条件 dispose + 下次 watch 重新 build)
     ref.invalidate(localLedgersProvider);
     ref.read(ledgerListRefreshProvider.notifier).tick();
-    ref.read(syncGenerationProvider.notifier).tick();
-    ref.read(statsRefreshProvider.notifier).tick();
+    // 汇总/统计刷新由统一数据变更信号自动驱动（邀请落库即触发）。
   } catch (e, st) {
     // 静默,UI 自己刷不到下次 sync 再补;但 log 出来便于诊断
     logger.warning('JoinSharedLedger',

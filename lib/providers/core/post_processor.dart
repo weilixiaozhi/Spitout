@@ -1,8 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import '../../core/logging/logger_service.dart';
-import 'package:spitout/providers/statistics/calendar_providers.dart';
-import 'package:spitout/providers/statistics/statistics_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart';
 
 /// 统一的 provider 读取函数签名。
@@ -17,8 +15,12 @@ typedef _Read = T Function<T>(ProviderListenable<T> provider);
 /// services 层只保留不感知 Riverpod 的纯服务。
 ///
 /// 两类方法：
-/// - `run` 系列：交易创建后使用，刷新统计 + 同步
+/// - `run` 系列：交易创建后使用，编排同步
 /// - `sync` 系列：其他数据变更后使用（分类等），仅同步
+///
+/// 所有汇总/统计的刷新已由统一数据变更信号（dataChangeSignalProvider）自动
+/// 驱动——任何业务表写入都会触发首页/统计/日历/分类/成员/AA 重算，本服务不再
+/// 负责 bump 数据刷新 tick，只处理同步状态缓存与 UI 状态信号。
 ///
 /// 每类各有 3 个入口（WidgetRef / ProviderContainer / Ref），
 /// 仅载体不同，内部全部收敛到同一份实现。
@@ -49,8 +51,6 @@ class PostProcessor {
   // ============ 仅同步 ============
 
   /// UI 层使用（WidgetRef）
-  /// 注：统计页刷新由各调用方在 sync 之后自行 bump statsRefreshProvider；
-  /// 这里统一补上日历刷新，避免「新增/删除/导入/清空」后日历不渲染。
   static Future<void> sync(WidgetRef ref, {required int ledgerId}) =>
       _sync(ref.read, ledgerId);
 
@@ -75,25 +75,19 @@ class PostProcessor {
 
   // ============ 内部统一实现 ============
 
-  /// 交易后完整处理：刷新统计 + 日历，再走同步
+  /// 交易后完整处理：再走同步（汇总刷新由数据变更信号自动完成）
   static Future<void> _run(_Read read, int ledgerId) async {
-    read(statsRefreshProvider.notifier).tick();
-    // 数据已变更：同时刷新日历（与统计页一致），覆盖新增/删除/导入/清空等场景
-    read(calendarRefreshProvider.notifier).tick();
     await _doSync(read, ledgerId);
   }
 
-  /// 仅同步：补日历刷新后走同步
+  /// 仅同步
   static Future<void> _sync(_Read read, int ledgerId) async {
-    read(calendarRefreshProvider.notifier).tick();
     await _doSync(read, ledgerId);
   }
 
-  /// 云端下载后：只刷新四个信号，不触发同步上传
+  /// 云端下载后：只刷新同步状态/账本列表信号，不触发同步上传
+  /// （汇总刷新由数据变更信号自动完成）
   static void _runAfterDownload(_Read read) {
-    read(statsRefreshProvider.notifier).tick();
-    // 云端拉取的记录同样要刷新日历
-    read(calendarRefreshProvider.notifier).tick();
     read(syncStatusRefreshProvider.notifier).tick();
     read(ledgerListRefreshProvider.notifier).tick();
     logger.info('PostProcessor', '云端下载后刷新完成');

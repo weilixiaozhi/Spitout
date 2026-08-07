@@ -224,7 +224,6 @@ class _HomePageState extends ConsumerState<HomePage>
     // 刷新统计页相关 provider，清除「全局无数据」空态
     ref.invalidate(analyticsHasAnyExpenseProvider);
     ref.invalidate(analyticsDataRangeProvider);
-    ref.read(statsRefreshProvider.notifier).tick();
     showToast(context, '已填充 $count 条测试数据');
   }
 
@@ -368,10 +367,10 @@ class _HomePageState extends ConsumerState<HomePage>
   Future<void> _runLocalRefresh() async {
     // 刷新汇率（force 跳过 24h 节流），并 bump 全局汇率 tick 触发相关 provider 重算。
     await refreshExchangeRatesFromUi(ref, force: true);
-    // 重新汇总与列表：invalidate 月度汇总 + 当前账本 + 统计刷新信号。
+    // 重新汇总与列表：invalidate 月度汇总 + 当前账本；
+    // 汇总/统计重算由统一数据变更信号自动驱动（写库即触发）。
     ref.invalidate(monthlyTotalsProvider);
     ref.invalidate(currentLedgerProvider);
-    ref.read(statsRefreshProvider.notifier).tick();
     // 重新拉一次个性化设置（颜色方案 / 主题模式）以确保与磁盘一致。
     await ref.read(themeModeInitProvider.future);
     await ref.read(expenseColorSchemeInitProvider.future);
@@ -397,7 +396,6 @@ class _HomePageState extends ConsumerState<HomePage>
           // 同时 invalidate 月度汇总让「今日/本月」卡片立刻刷新。
           ref.invalidate(monthlyTotalsProvider);
           ref.invalidate(currentLedgerProvider);
-          ref.read(statsRefreshProvider.notifier).tick();
         }
       }
     } catch (e) {
@@ -799,7 +797,6 @@ class _HomePageState extends ConsumerState<HomePage>
                     await repo.deleteTransaction(tx.id);
                     if (!context.mounted) return;
                     ref.invalidate(countsForLedgerProvider(ledgerId));
-                    ref.read(statsRefreshProvider.notifier).tick();
                     PostProcessor.sync(ref, ledgerId: ledgerId);
                     if (context.mounted) {
                       showToast(context, l10n.ledgersDeleted);
