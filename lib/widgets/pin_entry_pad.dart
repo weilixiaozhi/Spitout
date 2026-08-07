@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import 'press_key.dart';
 
 /// PIN 码圆点指示器
 class PinDotIndicator extends ConsumerWidget {
@@ -127,24 +128,20 @@ class NumberPad extends ConsumerWidget {
     VoidCallback? onTap,
   }) {
     final size = 72.0;
-    return GestureDetector(
-      onTap: () {
-        if (onTap != null) {
-          HapticFeedback.lightImpact();
-          onTap();
-        }
-      },
-      child: Container(
+    return PressKey(
+      enabled: onTap != null,
+      scale: 0.94,
+      // 触觉在按下瞬间触发，视觉按压态立即呈现；数字提交仍走松手，避免误触
+      onDown: onTap == null ? null : () => HapticFeedback.lightImpact(),
+      onUp: onTap,
+      backgroundColor: onTap != null
+          ? SpitoutTokens.surfaceSecondary(context)
+          : Colors.transparent,
+      borderRadius: BorderRadius.circular(size / 2),
+      child: SizedBox(
         width: size,
         height: size,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: onTap != null
-              ? SpitoutTokens.surfaceSecondary(context)
-              : Colors.transparent,
-        ),
-        child: child,
+        child: Center(child: child),
       ),
     );
   }

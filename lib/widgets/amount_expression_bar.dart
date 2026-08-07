@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../l10n/app_localizations.dart';
@@ -7,6 +6,7 @@ import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
 import 'currency_flag.dart';
 import 'keypad_constants.dart';
+import 'press_key.dart';
 
 /// 金额栏行：[币种触发器] [金额 / 算式 / 预览结果] [删除键]。
 ///
@@ -64,6 +64,8 @@ class AmountExpressionBar extends ConsumerStatefulWidget {
   final VoidCallback onEditRate;
   final VoidCallback onClearAmount; // 长按清空回调
   final VoidCallback onDeleteOne; // 轻触删一位回调
+  /// 滑出取消时回滚最近一次按下提交（由父面板提供）。
+  final VoidCallback? onRollback;
 
   const AmountExpressionBar({
     super.key,
@@ -83,6 +85,7 @@ class AmountExpressionBar extends ConsumerStatefulWidget {
     required this.onEditRate,
     required this.onClearAmount,
     required this.onDeleteOne,
+    this.onRollback,
   });
 
   @override
@@ -243,29 +246,21 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
   }
 
   /// 删除键：Delete 图标 + 「长按清空」文本。
-  /// 轻触删最后一位，长按 560ms 清空完整表达式和金额。
+  /// 按下瞬间删最后一位（滑出取消回滚），长按 560ms 清空完整表达式和金额。
   Widget _buildDeleteKey(BuildContext context) {
     final l10n = AppLocalizations.of(context);
-    return GestureDetector(
-      // 轻触：删一位
-      onTap: () {
-        SystemSound.play(SystemSoundType.click);
-        widget.onDeleteOne();
-      },
-      // 长按 560ms：清空
-      onLongPress: () {
-        HapticFeedback.mediumImpact();
-        widget.onClearAmount();
-      },
-      onLongPressStart: (_) => HapticFeedback.selectionClick(),
-      behavior: HitTestBehavior.opaque,
+    return PressKey(
+      scale: 1.0,
+      // 按下瞬间删一位，滑出取消回滚
+      onDown: widget.onDeleteOne,
+      onCancel: widget.onRollback,
+      // 长按 560ms：清空（触觉由面板统一触发）
+      onLongPress: widget.onClearAmount,
+      backgroundColor: SpitoutTokens.surfaceKeySecondary(context),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
         key: const ValueKey('amount_delete_key'),
         height: 35,
-        decoration: BoxDecoration(
-          color: SpitoutTokens.surfaceKeySecondary(context),
-          borderRadius: BorderRadius.circular(12),
-        ),
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
