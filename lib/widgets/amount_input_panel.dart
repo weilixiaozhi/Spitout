@@ -27,7 +27,6 @@ class AmountInputPanel extends ConsumerStatefulWidget {
     required this.initialNativeAmount,
     required this.date,
     required this.categorySelected,
-    required this.isSubmitting,
     required this.onPickDate,
     required this.onSubmit,
   });
@@ -42,9 +41,6 @@ class AmountInputPanel extends ConsumerStatefulWidget {
 
   /// 是否已选分类（完成键可用性的一部分）。
   final bool categorySelected;
-
-  /// 是否正在提交（完成键显示 loading 并禁用）。
-  final bool isSubmitting;
 
   /// 打开日期滚轮（父 sheet 负责收起键盘与回写日期）。
   final VoidCallback onPickDate;
@@ -439,11 +435,12 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
     }
 
     final isInCalcMode = _calcState == _CalcState.operating;
-    // 完成键可用性：operating 始终可用；waiting/calculated = 金额>0 且分类已选且未提交
+    // 完成键可用性：operating 始终可用；waiting/calculated = 金额>0 且分类已选。
+    // 提交期间不改变按钮外观（本地落库仅数毫秒，loading/置灰会一闪而过），
+    // 重复点击由父 sheet 的 _onSubmit 内 _isSubmitting 守卫拦截。
     final doneEnabled =
         (isInCalcMode || _currentTotal.abs() > 0) &&
-        widget.categorySelected &&
-        !widget.isSubmitting;
+        widget.categorySelected;
 
     // 行高由父 sheet 的键盘容器按剩余空间均分后以 SizedBox 提供，
     // 本面板内部：金额栏 = 单行高 h，键盘 = 4h + 3 个行距。
@@ -484,7 +481,6 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
                 calcState: _calcStateStr,
                 op: _op,
                 isDoneEnabled: doneEnabled,
-                isSubmitting: widget.isSubmitting,
                 opGlyph: _opGlyph,
                 onAppend: _append,
                 onApplyOp: _applyOp,

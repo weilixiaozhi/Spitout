@@ -450,7 +450,7 @@ class _TransactionEditorSheetState
         showToast(context, '${AppLocalizations.of(context).commonError}: $e');
       }
     } finally {
-      // 无论成功 / 失败 / 取消都必须复位，防止提交按钮永久转圈。
+      // 无论成功 / 失败 / 取消都必须复位，防止提交状态永久卡死、后续无法再次提交。
       if (mounted) setState(() => _isSubmitting = false);
     }
   }
@@ -622,7 +622,6 @@ class _TransactionEditorSheetState
                                       widget.initialNativeAmount,
                                   date: _date,
                                   categorySelected: _selectedCategory != null,
-                                  isSubmitting: _isSubmitting,
                                   onPickDate: _pickDate,
                                   onSubmit: _onSubmit,
                                 ),

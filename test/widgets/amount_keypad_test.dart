@@ -6,16 +6,16 @@
 ///     3. operating 态显示 `=` 并点击 → onApplyEquals；
 ///     4. waiting/calculated 态显示 Enter 图标，isDoneEnabled=true 点击 → onSubmit；
 ///     5. isDoneEnabled=false 完成键禁用，不触发回调；
-///     6. isSubmitting=true 显示 loading 指示器。
+///     6. 提交中不显示 loading 指示器（按钮保持原样，防重复点击由父层 _isSubmitting 守卫）。
 ///
 ///   B. 布局：
-///     7. 单行高 h = (键盘高 - 3×[KeypadLayout.rowGap]) / 4，数字网格区 =
+///     6. 单行高 h = (键盘高 - 3×[KeypadLayout.rowGap]) / 4，数字网格区 =
 ///        3h + 2×[KeypadLayout.rowGap]，
 ///        底部行 = h，随容器高度伸缩（无绝对像素行高）；
-///     8. 运算符顺序自上而下 + - × ÷；
-///     9. 数字/运算符/日期为白色色块，完成为主题主色；
-///     10. 键距/行距全局 4px、按键圆角统一 5px；
-///     11. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
+///     7. 运算符顺序自上而下 + - × ÷；
+///     8. 数字/运算符/日期为白色色块，完成为主题主色；
+///     9. 键距/行距全局 4px、按键圆角统一 5px；
+///     10. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
 
 import 'package:flutter/material.dart';
@@ -46,7 +46,6 @@ void main() {
     String calcState = 'waiting',
     String? op,
     bool isDoneEnabled = true,
-    bool isSubmitting = false,
     double screenWidth = 360,
     TextScaler? textScaler,
     required ValueChanged<String> onAppend,
@@ -82,7 +81,6 @@ void main() {
                     calcState: calcState,
                     op: op,
                     isDoneEnabled: isDoneEnabled,
-                    isSubmitting: isSubmitting,
                     opGlyph: (o) => o,
                     onAppend: onAppend,
                     onApplyOp: onApplyOp,
@@ -239,6 +237,9 @@ void main() {
       expect(icon, findsOneWidget);
       await tester.tap(icon);
       expect(submitted, isTrue);
+      // 提交后不应出现 loading 指示器，防止快速落库时按钮闪烁
+      await tester.pump();
+      expect(find.byType(CircularProgressIndicator), findsNothing);
     });
 
     testWidgets('isDoneEnabled=false 完成键禁用，不触发 onSubmit', (tester) async {
@@ -264,21 +265,6 @@ void main() {
       expect(submitted, isFalse);
     });
 
-    testWidgets('isSubmitting=true 显示 loading 指示器', (tester) async {
-      await tester.pumpWidget(
-        buildHarness(
-          keypadHeight: 400,
-          isSubmitting: true,
-          onAppend: noopAppend,
-          onApplyOp: noopOp,
-          onApplyEquals: noop,
-          onPickDate: noop,
-          onSubmit: noop,
-        ),
-      );
-
-      expect(find.byType(CircularProgressIndicator), findsOneWidget);
-    });
   });
 
   group('B. 布局重构（无绝对像素行高）', () {

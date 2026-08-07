@@ -45,9 +45,6 @@ class AmountKeypad extends StatelessWidget {
   /// 完成按钮是否可用（waiting/calculated 状态下：金额 > 0 且分类已选）
   final bool isDoneEnabled;
 
-  /// 是否正在提交（显示 loading）
-  final bool isSubmitting;
-
   /// 运算符显示字形
   final String Function(String op) opGlyph;
 
@@ -67,7 +64,6 @@ class AmountKeypad extends StatelessWidget {
     required this.calcState,
     required this.op,
     required this.isDoneEnabled,
-    required this.isSubmitting,
     required this.opGlyph,
     required this.onAppend,
     required this.onApplyOp,
@@ -249,16 +245,7 @@ class AmountKeypad extends StatelessWidget {
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         alignment: Alignment.center,
-        child: isSubmitting
-            ? SizedBox(
-                width: h * 0.36,
-                height: h * 0.36,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                ),
-              )
-            : isInCalcMode
+        child: isInCalcMode
             ? Text(
                 '=',
                 style: TextStyle(
