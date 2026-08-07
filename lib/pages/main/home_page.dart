@@ -267,7 +267,8 @@ class _HomePageState extends ConsumerState<HomePage>
     final ledger = ref.read(currentLedgerProvider).value;
     final isLocalOnlyLedger = ledger != null &&
         ledger.storageMode == 'local' &&
-        !ledger.isShared;
+        !ledger.isShared &&
+        (ledger.syncId == null || ledger.syncId!.isEmpty);
 
     // 云同步结果分类：
     // - isCloud=true 且 cloudOk=true  → 云端成功

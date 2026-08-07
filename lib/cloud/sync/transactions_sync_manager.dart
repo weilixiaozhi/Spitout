@@ -124,9 +124,11 @@ class TransactionsSyncManager implements SyncService {
     final row = await (db.select(db.ledgers)
           ..where((l) => l.id.equals(ledgerId)))
         .getSingleOrNull();
-    // 与 SyncEngine.sync() 的闸门一致:storage_mode='local' 且非共享的账本
-    // 不上云,即使异常中间态残留了 syncId 也不应发起快照下载。
-    return row != null && row.isLocalLedger;
+    // 纯本地账本 = storage_mode='local' 且非共享、且未绑定 syncId。
+    // 带 syncId 的 local 行按可同步账本处理,避免误跳过云端快照下载。
+    return row != null &&
+        row.isLocalLedger &&
+        (row.syncId == null || row.syncId!.isEmpty);
   }
 
   String _pathForLedger(int ledgerId) {

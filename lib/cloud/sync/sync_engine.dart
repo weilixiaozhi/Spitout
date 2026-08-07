@@ -546,9 +546,12 @@ class SyncEngine implements app.SyncService {
     final row = await (db.select(db.ledgers)
           ..where((l) => l.id.equals(ledgerId)))
         .getSingleOrNull();
-    // 与 sync() 的闸门一致:storage_mode='local' 且非共享的账本一律不上云,
-    // 即使异常中间态残留了 syncId 也不应发起拉取。
-    return row != null && row.isLocalLedger;
+    // 纯本地账本 = storage_mode='local' 且非共享、且未绑定 syncId。
+    // 带 syncId 的 local 行是「云端账本但 storage_mode 未回填」的中间态,
+    // 仍按可同步账本处理,否则 e2e/真实迁移路径会误跳过云端拉取。
+    return row != null &&
+        row.isLocalLedger &&
+        (row.syncId == null || row.syncId!.isEmpty);
   }
 
   @override
