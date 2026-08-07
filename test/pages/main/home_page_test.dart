@@ -362,7 +362,7 @@ void main() {
       await prime(tester);
 
       final l10n = AppLocalizations.of(tester.element(find.byType(HomePage)));
-      // 重构后今日/本周行由 Row(标签 + 金额 + 分隔符)组成,不再是一个拼接字符串。
+      // 今日/本周行由 Row(标签 + 金额 + 分隔符)组成,不是拼接字符串。
       // 非当月金额位以 '-' 占位:今日/本周各一个 '-',中间用 '·'/'|' 分隔。
       expect(
         find.text(l10n.homeTodayExpense),
@@ -419,9 +419,8 @@ void main() {
   });
 
   // ==================== 首页头部布局（Figma 53:6 回归） ====================
-  // 验证头部按 UI 稿重排：首行「日期 + 刷新」同行、日历入口已迁至底部导航栏
-  // （首页头部不再渲染日历本按钮）、轻扫提示移到汇总卡下方并左缩进 16、账本徽章
-  // 以 tab 挂在卡片右缘。防止后续提交误改回旧布局。
+  // 验证头部布局：首行「日期 + 刷新」同行、无日历本按钮（入口在底部导航栏）、
+  // 轻扫提示在汇总卡下方并左缩进 16、账本徽章以 tab 挂在卡片右缘。
   // 旧布局。Padding 值用 byWidgetPredicate + ancestor 限定作用域，避免依赖
   // 私有组件类型，断言稳定且可读。
   group('首页头部布局（Figma 53:6）', () {
@@ -431,8 +430,8 @@ void main() {
       await tester.pumpWidget(buildApp());
       await prime(tester);
 
-      // 首行已收敛到全局统一头部组件：留白规范（上/下 10、左/右 14）由组件默认值承载，
-      // 页面侧不再手写 SafeArea/Padding 首行，防止后续提交回退到手写头部。
+      // 首行使用全局统一头部组件：留白规范（上/下 10、左/右 14）由组件默认值承载，
+      // 页面侧不手写 SafeArea/Padding。
       final headerFinder = find.byType(PrimaryHeader);
       expect(headerFinder, findsOneWidget, reason: '首页首行应由 PrimaryHeader 渲染');
       final header = tester.widget<PrimaryHeader>(headerFinder);
@@ -708,7 +707,7 @@ void main() {
     await tester.pumpWidget(
       buildApp(
         extraOverrides: [
-          // 关键：返回「非空」成员列表，触发原本会崩溃的 fold 写入路径。
+          // 返回「非空」成员列表，覆盖 fold 写入路径。
           ledgerMembersProvider.overrideWith(
             (ref, ledgerId) => Future.value(members),
           ),
@@ -724,7 +723,7 @@ void main() {
     expect(find.byType(HomePage), findsOneWidget);
   });
 
-  // ==================== 下拉刷新：结果在指示器内展示（不再弹 toast） ====================
+  // ==================== 下拉刷新：结果在指示器内展示（不弹 toast） ====================
   /// 通过下发 [ScrollNotification] 模拟"从顶部下拉"手势触发下拉刷新，
   /// 避免依赖真实可滚动内容的手势识别（测试账本数据为空、无内部滚动视图）。
   ///

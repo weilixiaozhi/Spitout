@@ -306,7 +306,7 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
   // ====== leaveLedger / deleteLedger(共享账本退出 / 全局删除) ======
   // 注意:facade 真实现走 `_storage`(私有字段),而 fake 的 `_storage` 为 null,
   // 不覆盖会抛 CloudConfigurationException。这里直接覆盖,内存模拟 server 行为:
-  // server 移除成员 / 级联删账本后不再返回该账本,故从 [_serverLedgers] 摘除。
+  // server 移除成员 / 级联删账本后不返回该账本,故从 [_serverLedgers] 摘除。
 
   /// 历次 leaveLedger 调用记录(测试断言用)
   final List<String> leaveLedgerCalls = [];
@@ -314,7 +314,7 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
   @override
   Future<void> leaveLedger({required String ledgerId}) async {
     leaveLedgerCalls.add(ledgerId);
-    // 模拟 server 移除成员后不再返回该账本
+    // 模拟 server 移除成员后不返回该账本
     _serverLedgers.removeWhere((l) => l.ledgerId == ledgerId);
   }
 
@@ -338,7 +338,7 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
     // 调用方(moveToLocal)必须 fail-closed —— 不许翻 mode / 清 syncId。
     final injected = deleteLedgerErrorInjector;
     if (injected != null) throw injected();
-    // 模拟 server 级联删除:server 不再返回该账本
+    // 模拟 server 级联删除:server 不返回该账本
     _serverLedgers.removeWhere((l) => l.ledgerId == ledgerId);
   }
 

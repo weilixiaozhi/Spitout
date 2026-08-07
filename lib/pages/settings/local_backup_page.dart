@@ -445,7 +445,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
   Future<void> _showOldBackupHelpDialog() async {
     final l10n = AppLocalizations.of(context);
     // 打开弹窗前查询「所有文件访问」状态：已开启时主按钮显示「已开启」，
-    // 避免用户重复点击「去开启」却无反应（已授权时系统不再跳转设置页）。
+    // 避免用户重复点击「去开启」却无反应（已授权时系统不跳转设置页）。
     var allFilesGranted = false;
     try {
       allFilesGranted = await ref.read(allFilesAccessCheckerProvider)();

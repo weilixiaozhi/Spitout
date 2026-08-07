@@ -17,7 +17,7 @@ import 'category_template_hierarchical_page.dart';
 
 /// 分类管理页面
 ///
-/// 全局仅支出模式：去掉 Tab 栏，直接展示支出分类网格。
+/// 全局仅支出模式：无 Tab 栏，直接展示支出分类网格。
 /// 支持长按拖拽排序、添加分类、复选删除模式（三种删除策略）。
 class CategoryManagePage extends ConsumerStatefulWidget {
   const CategoryManagePage({super.key});
@@ -72,10 +72,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
             _buildSharedLedgerBanner(context, l10n),
             Expanded(
               child: categoriesWithCountAsync.when(
-                loading: () =>
-                    const Center(child: CircularProgressIndicator()),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) => Center(
-                    child: Text(l10n.categoryLoadFailed(error.toString()))),
+                  child: Text(l10n.categoryLoadFailed(error.toString())),
+                ),
                 data: (categoriesWithCount) {
                   return _buildBody(context, l10n, categoriesWithCount);
                 },
@@ -198,18 +198,15 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
     required Widget page,
   }) {
     return OutlinedButton.icon(
-      onPressed: () => Navigator.of(context).push(
-        appPageRoute(builder: (_) => page),
-      ),
+      onPressed: () =>
+          Navigator.of(context).push(appPageRoute(builder: (_) => page)),
       icon: Icon(icon, size: 16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor: SpitoutTokens.primary(context),
         side: BorderSide(color: SpitoutTokens.borderStrong(context)),
         padding: const EdgeInsets.symmetric(vertical: 10),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
       ),
     );
@@ -247,7 +244,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   ///
   /// 作为网格 footer 随内容滚动，点击进入删除模式。
   /// 字号与原"清空未使用分类"一致（15），icon 使用删除语义图标。
-  Widget _buildDeleteCategoryButton(BuildContext context, AppLocalizations l10n) {
+  Widget _buildDeleteCategoryButton(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
       child: Center(
@@ -440,13 +440,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: color,
-                ),
-              ),
+              child: Text(label, style: TextStyle(fontSize: 11, color: color)),
             ),
           ],
         ),
@@ -527,9 +521,11 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
 
     // 收集待删除分类信息
     final selectedCategories = categoriesWithCount
-        .where((item) =>
-            _selectedCategoryIds.contains(item.category.id) &&
-            item.category.level == 1)
+        .where(
+          (item) =>
+              _selectedCategoryIds.contains(item.category.id) &&
+              item.category.level == 1,
+        )
         .toList();
 
     // 构建弹窗内容列表
@@ -568,8 +564,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
             .where((sub) => sub.category.parentId == item.category.id)
             .toList();
         for (final sub in subCategories) {
-          final subName =
-              CategoryUtils.getDisplayName(sub.category.name, context);
+          final subName = CategoryUtils.getDisplayName(
+            sub.category.name,
+            context,
+          );
           listWidgets.add(
             Padding(
               padding: const EdgeInsets.only(left: 20, top: 2, bottom: 2),
@@ -593,7 +591,8 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
                   ),
                   Text(
                     l10n.categoryMigrationTransactionLabel(
-                        sub.transactionCount),
+                      sub.transactionCount,
+                    ),
                     style: TextStyle(
                       fontSize: 11,
                       color: SpitoutTokens.textTertiary(context),
@@ -615,8 +614,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
       context: context,
       builder: (context) => AlertDialog(
         backgroundColor: SpitoutTokens.surfaceElevated(context),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.categoryDeleteSelectedTitle,
           textAlign: TextAlign.center,
@@ -815,9 +813,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
   /// 跳转到新增分类页面
   void _addCategory() async {
     await Navigator.of(context).push(
-      appPageRoute(
-        builder: (_) => const CategoryEditPage(kind: 'expense'),
-      ),
+      appPageRoute(builder: (_) => const CategoryEditPage(kind: 'expense')),
     );
   }
 
@@ -842,8 +838,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
     // 收集将被删除的分类信息（包括子分类）
     final toDeleteList = <String>[];
     for (final item in unusedCategories) {
-      final categoryName =
-          CategoryUtils.getDisplayName(item.category.name, context);
+      final categoryName = CategoryUtils.getDisplayName(
+        item.category.name,
+        context,
+      );
       toDeleteList.add(categoryName);
 
       // 如果是父分类，添加其所有将被删除的子分类
@@ -852,8 +850,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
             .where((c) => c.category.parentId == item.category.id)
             .toList();
         for (final child in children) {
-          final childName =
-              CategoryUtils.getDisplayName(child.category.name, context);
+          final childName = CategoryUtils.getDisplayName(
+            child.category.name,
+            context,
+          );
           toDeleteList.add('  ├─ $childName');
         }
       }
@@ -875,10 +875,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
-            Text(
-              toDeleteList.join('\n'),
-              style: const TextStyle(fontSize: 13),
-            ),
+            Text(toDeleteList.join('\n'), style: const TextStyle(fontSize: 13)),
           ],
         ),
         actions: [
@@ -926,7 +923,8 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
 /// 正常模式：可长按拖拽排序，点击进入编辑/子分类对话框
 /// 删除模式：显示复选框，点击切换选中状态
 class _CategoryGridView extends ConsumerStatefulWidget {
-  final List<({db.Category category, int transactionCount})> categoriesWithCount;
+  final List<({db.Category category, int transactionCount})>
+  categoriesWithCount;
   final String kind;
 
   /// 是否处于删除模式
@@ -978,14 +976,16 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   void _loadData() {
     // 获取当前类型的一级分类
     final topLevelCategories = widget.categoriesWithCount
-        .where((item) =>
-            item.category.kind == widget.kind &&
-            item.category.level == 1)
+        .where(
+          (item) =>
+              item.category.kind == widget.kind && item.category.level == 1,
+        )
         .toList();
 
     // 按 sortOrder 排序
-    topLevelCategories.sort((a, b) =>
-        a.category.sortOrder.compareTo(b.category.sortOrder));
+    topLevelCategories.sort(
+      (a, b) => a.category.sortOrder.compareTo(b.category.sortOrder),
+    );
 
     // 构建父分类 ID 集合，用于快速判断是否有子分类
     final parentIds = widget.categoriesWithCount
@@ -1000,13 +1000,15 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
       final hasSubCategories = parentIds.contains(topItem.category.id);
 
       // transactionCount 已经包含了所有子分类的交易数，不需要再累加
-      flatList.add(_CategoryItem(
-        category: topItem.category,
-        transactionCount: topItem.transactionCount,
-        isDefault: false,
-        isSubCategory: false,
-        hasSubCategories: hasSubCategories,
-      ));
+      flatList.add(
+        _CategoryItem(
+          category: topItem.category,
+          transactionCount: topItem.transactionCount,
+          isDefault: false,
+          isSubCategory: false,
+          hasSubCategories: hasSubCategories,
+        ),
+      );
     }
 
     setState(() {
@@ -1023,8 +1025,9 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
     }
 
     // 过滤出一级分类
-    final topLevelCategories =
-        _flatList.where((item) => !item.isSubCategory).toList();
+    final topLevelCategories = _flatList
+        .where((item) => !item.isSubCategory)
+        .toList();
 
     if (topLevelCategories.isEmpty) {
       return Center(
@@ -1040,8 +1043,8 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
             Text(
               AppLocalizations.of(context).categoryEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                color: SpitoutTokens.textSecondary(context),
+              ),
             ),
           ],
         ),
@@ -1063,24 +1066,21 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
                 mainAxisSpacing: 12,
                 childAspectRatio: 1,
               ),
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final item = topLevelCategories[index];
-                  return _CategoryCard(
-                    key: ValueKey(item.category.id),
-                    item: item,
-                    isDeleteMode: true,
-                    isSelected: widget.selectedCategoryIds
-                        .contains(item.category.id),
-                    onTap: () => widget.onToggleSelect(item.category.id),
-                  );
-                },
-                childCount: topLevelCategories.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final item = topLevelCategories[index];
+                return _CategoryCard(
+                  key: ValueKey(item.category.id),
+                  item: item,
+                  isDeleteMode: true,
+                  isSelected: widget.selectedCategoryIds.contains(
+                    item.category.id,
+                  ),
+                  onTap: () => widget.onToggleSelect(item.category.id),
+                );
+              }, childCount: topLevelCategories.length),
             ),
           ),
-          if (widget.footer != null)
-            SliverToBoxAdapter(child: widget.footer),
+          if (widget.footer != null) SliverToBoxAdapter(child: widget.footer),
         ],
       );
     }
@@ -1095,13 +1095,11 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
             mainAxisSpacing: 12,
             childAspectRatio: 1,
             // 自定义拖拽中的卡片外观：包默认用 Material(elevation: 3) 包裹，
-            // 会在圆角卡片底部衬出一个方形背景；用透明 Material 去掉该背景，
+            // 会在圆角卡片底部衬出一个方形背景；用透明 Material 不绘制该背景，
             // 拖拽时只呈现卡片自身的圆角样式。
             dragWidgetBuilderV2: DragWidgetBuilderV2(
-              builder: (index, child, screenshot) => Material(
-                type: MaterialType.transparency,
-                child: child,
-              ),
+              builder: (index, child, screenshot) =>
+                  Material(type: MaterialType.transparency, child: child),
             ),
             onReorder: (oldIndex, newIndex) {
               _onReorderTopLevel(oldIndex, newIndex, topLevelCategories);
@@ -1130,7 +1128,10 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   /// 切勿再做 `if (oldIndex < newIndex) newIndex -= 1` 的修正，
   /// 否则向右相邻一格拖拽会变成 remove 后原样 insert，表现为「移动失败、跳回原位」。
   Future<void> _onReorderTopLevel(
-      int oldIndex, int newIndex, List<_CategoryItem> topLevelCategories) async {
+    int oldIndex,
+    int newIndex,
+    List<_CategoryItem> topLevelCategories,
+  ) async {
     // 同步获取文案，避免在异步 gap 后跨 BuildContext 读取
     final l10n = AppLocalizations.of(context);
     final failMessage = l10n.categorySortSaveFailed;
@@ -1221,10 +1222,8 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   Future<void> _onEditCategory(db.Category category) async {
     await Navigator.of(context).push(
       appPageRoute(
-        builder: (_) => CategoryEditPage(
-          category: category,
-          kind: category.kind,
-        ),
+        builder: (_) =>
+            CategoryEditPage(category: category, kind: category.kind),
       ),
     );
   }
@@ -1233,10 +1232,8 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
   Future<void> _onAddSubCategory(db.Category parent) async {
     await Navigator.of(context).push(
       appPageRoute(
-        builder: (_) => CategoryEditPage(
-          kind: parent.kind,
-          parentCategory: parent,
-        ),
+        builder: (_) =>
+            CategoryEditPage(kind: parent.kind, parentCategory: parent),
       ),
     );
     _loadData();
@@ -1293,8 +1290,8 @@ class _CategoryCard extends ConsumerWidget {
     final borderColor = isSelected
         ? SpitoutTokens.error(context)
         : (item.isSubCategory
-            ? Colors.orange.withValues(alpha: 0.3)
-            : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3));
+              ? Colors.orange.withValues(alpha: 0.3)
+              : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3));
 
     return InkWell(
       onTap: onTap,
@@ -1303,10 +1300,7 @@ class _CategoryCard extends ConsumerWidget {
         decoration: BoxDecoration(
           color: backgroundColor,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: borderColor,
-            width: isSelected ? 2 : 1,
-          ),
+          border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         ),
         child: Stack(
           children: [
@@ -1322,10 +1316,9 @@ class _CategoryCard extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: item.isSubCategory
                           ? Colors.orange.withValues(alpha: 0.2)
-                          : Theme.of(context)
-                              .colorScheme
-                              .primary
-                              .withValues(alpha: 0.1),
+                          : Theme.of(
+                              context,
+                            ).colorScheme.primary.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                     child: CategoryIconWidget(
@@ -1341,14 +1334,11 @@ class _CategoryCard extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(
-                      CategoryUtils.getDisplayName(
-                          item.category.name, context),
+                      CategoryUtils.getDisplayName(item.category.name, context),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: item.isSubCategory ? 10 : 12,
-                            color: item.isSubCategory
-                                ? Colors.orange[900]
-                                : null,
-                          ),
+                        fontSize: item.isSubCategory ? 10 : 12,
+                        color: item.isSubCategory ? Colors.orange[900] : null,
+                      ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -1356,14 +1346,15 @@ class _CategoryCard extends ConsumerWidget {
                   ),
                   const SizedBox(height: 2),
                   Text(
-                    AppLocalizations.of(context)
-                        .categoryMigrationTransactionLabel(item.transactionCount),
+                    AppLocalizations.of(
+                      context,
+                    ).categoryMigrationTransactionLabel(item.transactionCount),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: item.isSubCategory
-                              ? Colors.orange[700]
-                              : Theme.of(context).colorScheme.outline,
-                          fontSize: item.isSubCategory ? 9 : 10,
-                        ),
+                      color: item.isSubCategory
+                          ? Colors.orange[700]
+                          : Theme.of(context).colorScheme.outline,
+                      fontSize: item.isSubCategory ? 9 : 10,
+                    ),
                     textAlign: TextAlign.center,
                   ),
                 ],
@@ -1400,7 +1391,6 @@ class _CategoryCard extends ConsumerWidget {
       ),
     );
   }
-
 }
 
 /// 删除模式复选框（管理页一级分类网格与子分类弹窗共用）
@@ -1426,11 +1416,7 @@ class _DeleteModeCheckbox extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1.5),
         ),
-        child: const Icon(
-          Icons.check,
-          size: 12,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.check, size: 12, color: Colors.white),
       );
     }
 
@@ -1462,7 +1448,7 @@ class _DeleteModeCheckbox extends StatelessWidget {
 Future<int?> showMigrateTargetSheet(
   BuildContext context, {
   required List<({db.Category category, int transactionCount})>
-      availableCategories,
+  availableCategories,
 }) {
   return showModalBottomSheet<int>(
     context: context,
@@ -1483,7 +1469,7 @@ Future<int?> showMigrateTargetSheet(
 class _MigrateTargetSheet extends StatefulWidget {
   /// 可选的迁移目标分类（调用方已完成排除过滤）
   final List<({db.Category category, int transactionCount})>
-      availableCategories;
+  availableCategories;
 
   const _MigrateTargetSheet({required this.availableCategories});
 
@@ -1522,10 +1508,11 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
     final ordered = <({db.Category category, int transactionCount})>[];
     for (final parent in parents) {
       ordered.add(parent);
-      final children = all
-          .where((i) => i.category.parentId == parent.category.id)
-          .toList()
-        ..sort((a, b) => a.category.sortOrder.compareTo(b.category.sortOrder));
+      final children =
+          all.where((i) => i.category.parentId == parent.category.id).toList()
+            ..sort(
+              (a, b) => a.category.sortOrder.compareTo(b.category.sortOrder),
+            );
       ordered.addAll(children);
     }
     return ordered;
@@ -1536,8 +1523,10 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
     final ordered = _buildOrderedList();
     if (_searchText.isEmpty) return ordered;
     return ordered.where((i) {
-      final name =
-          CategoryUtils.getDisplayName(i.category.name, context).toLowerCase();
+      final name = CategoryUtils.getDisplayName(
+        i.category.name,
+        context,
+      ).toLowerCase();
       return name.contains(_searchText);
     }).toList();
   }
@@ -1629,7 +1618,8 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
                     badgeLabel: category.level == 1
                         ? l10n.categoryTopLevelLabel
                         : l10n.categoryMigrateChildLabel(
-                            _parentDisplayName(category.parentId ?? 0)),
+                            _parentDisplayName(category.parentId ?? 0),
+                          ),
                     onTap: () => setState(() {
                       _selectedTargetId = category.id;
                     }),
@@ -1648,8 +1638,7 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
                   : () => Navigator.pop(context, _selectedTargetId),
               style: FilledButton.styleFrom(
                 backgroundColor: SpitoutTokens.error(context),
-                disabledBackgroundColor:
-                    SpitoutTokens.buttonDisabled(context),
+                disabledBackgroundColor: SpitoutTokens.buttonDisabled(context),
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
               child: Text(
@@ -1744,8 +1733,9 @@ class _MigrateCategoryChip extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
             Text(
-              AppLocalizations.of(context)
-                  .categoryMigrationTransactionLabel(item.transactionCount),
+              AppLocalizations.of(
+                context,
+              ).categoryMigrationTransactionLabel(item.transactionCount),
               style: TextStyle(
                 fontSize: 9,
                 color: SpitoutTokens.textSecondary(context),
@@ -1768,7 +1758,8 @@ class _MigrateCategoryChip extends StatelessWidget {
 /// （删除全部数据 / 迁移数据后删除），逻辑与本页分类管理的删除模式一致。
 class _SubcategoryDialog extends ConsumerStatefulWidget {
   final db.Category parentCategory;
-  final List<({db.Category category, int transactionCount})> categoriesWithCount;
+  final List<({db.Category category, int transactionCount})>
+  categoriesWithCount;
   final Function(db.Category) onSubCategoryTap;
   final VoidCallback onAddSubCategory;
   final VoidCallback onEditParentCategory;
@@ -1788,6 +1779,7 @@ class _SubcategoryDialog extends ConsumerStatefulWidget {
 class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
   List<({db.Category category, int transactionCount})>? _subCategories;
   bool _isLoading = true;
+
   /// 加载失败标志:失败时展示重试入口,避免弹窗永久转圈。
   bool _loadFailed = false;
 
@@ -1818,7 +1810,8 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
         widget.parentCategory.id,
       );
 
-      final countsSource = ref.read(categoriesWithCountProvider).value ??
+      final countsSource =
+          ref.read(categoriesWithCountProvider).value ??
           widget.categoriesWithCount;
       final result = <({db.Category category, int transactionCount})>[];
       for (final subCat in subCategories) {
@@ -1862,8 +1855,9 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
     if (_subCategories == null) return;
 
     // 1. 乐观更新本地列表顺序，立即刷新弹窗网格
-    final reordered =
-        List<({db.Category category, int transactionCount})>.from(_subCategories!);
+    final reordered = List<({db.Category category, int transactionCount})>.from(
+      _subCategories!,
+    );
     final moved = reordered.removeAt(oldIndex);
     reordered.insert(newIndex, moved);
 
@@ -2012,11 +2006,11 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
                       dragEnabled: !_isDeleteMode,
                       gridDelegate:
                           const SliverGridDelegateWithFixedCrossAxisCount(
-                        crossAxisCount: 4,
-                        crossAxisSpacing: 10,
-                        mainAxisSpacing: 10,
-                        childAspectRatio: 1,
-                      ),
+                            crossAxisCount: 4,
+                            crossAxisSpacing: 10,
+                            mainAxisSpacing: 10,
+                            childAspectRatio: 1,
+                          ),
                       itemCount: _subCategories!.length,
                       itemBuilder: (context, index) {
                         final item = _subCategories![index];
@@ -2025,8 +2019,9 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
                           category: item.category,
                           transactionCount: item.transactionCount,
                           isDeleteMode: _isDeleteMode,
-                          isSelected:
-                              _selectedCategoryIds.contains(item.category.id),
+                          isSelected: _selectedCategoryIds.contains(
+                            item.category.id,
+                          ),
                           onTap: () {
                             if (_isDeleteMode) {
                               _toggleSelect(item.category.id);
@@ -2036,12 +2031,10 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
                           },
                         );
                       },
-                      // 去掉拖拽时默认的白底方块背景，保持卡片原样
+                      // 不绘制拖拽时默认的白底方块背景，保持卡片原样
                       dragWidgetBuilderV2: DragWidgetBuilderV2(
-                        builder: (index, child, screenshot) => Material(
-                          color: Colors.transparent,
-                          child: child,
-                        ),
+                        builder: (index, child, screenshot) =>
+                            Material(color: Colors.transparent, child: child),
                       ),
                       onReorder: (oldIndex, newIndex) {
                         _onReorderSubCategory(oldIndex, newIndex);
@@ -2094,10 +2087,12 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
               Flexible(
                 child: Text(
                   CategoryUtils.getDisplayName(
-                      widget.parentCategory.name, context),
+                    widget.parentCategory.name,
+                    context,
+                  ),
                   style: Theme.of(context).textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
+                    fontWeight: FontWeight.w600,
+                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -2253,13 +2248,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: Text(
-                label,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: color,
-                ),
-              ),
+              child: Text(label, style: TextStyle(fontSize: 11, color: color)),
             ),
           ],
         ),
@@ -2330,8 +2319,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: SpitoutTokens.surfaceElevated(dialogContext),
-        shape:
-            RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(
           l10n.categoryDeleteSelectedTitle,
           textAlign: TextAlign.center,
@@ -2365,7 +2353,9 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
                         Expanded(
                           child: Text(
                             CategoryUtils.getDisplayName(
-                                item.category.name, dialogContext),
+                              item.category.name,
+                              dialogContext,
+                            ),
                             style: TextStyle(
                               fontSize: 13,
                               color: SpitoutTokens.textPrimary(dialogContext),
@@ -2374,7 +2364,8 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
                         ),
                         Text(
                           l10n.categoryMigrationTransactionLabel(
-                              item.transactionCount),
+                            item.transactionCount,
+                          ),
                           style: TextStyle(
                             fontSize: 12,
                             color: SpitoutTokens.textSecondary(dialogContext),
@@ -2418,7 +2409,8 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
     final l10n = AppLocalizations.of(context);
 
     // 取最新分类数据；排除待删除的子分类自身
-    final countsSource = ref.read(categoriesWithCountProvider).value ??
+    final countsSource =
+        ref.read(categoriesWithCountProvider).value ??
         widget.categoriesWithCount;
     final availableCategories = countsSource.where((item) {
       if (_selectedCategoryIds.contains(item.category.id)) return false;
@@ -2577,22 +2569,22 @@ class _DialogSubCategoryCard extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(horizontal: 2),
                     child: Text(
                       CategoryUtils.getDisplayName(category.name, context),
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelSmall
-                          ?.copyWith(fontSize: 10),
+                      style: Theme.of(
+                        context,
+                      ).textTheme.labelSmall?.copyWith(fontSize: 10),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
                   Text(
-                    AppLocalizations.of(context)
-                        .categoryMigrationTransactionLabel(transactionCount),
+                    AppLocalizations.of(
+                      context,
+                    ).categoryMigrationTransactionLabel(transactionCount),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                          color: Theme.of(context).colorScheme.outline,
-                          fontSize: 9,
-                        ),
+                      color: Theme.of(context).colorScheme.outline,
+                      fontSize: 9,
+                    ),
                   ),
                 ],
               ),

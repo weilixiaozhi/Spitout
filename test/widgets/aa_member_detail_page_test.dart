@@ -160,7 +160,7 @@ void main() {
     expect(find.text('指定金额'), findsNWidgets(2));
     expect(find.text('不分摊'), findsNWidgets(2));
     expect(find.text('1'), findsNWidgets(3));
-    // 汇总卡不再展示平均金额。
+    // 汇总卡不展示平均金额。
     expect(find.text('平均金额'), findsNothing);
     // 账单行：备注、账单总额（红色总额；应摊金额只出现在分摊明细中）。
     expect(find.text('昱阳米粉 晚餐'), findsOneWidget);

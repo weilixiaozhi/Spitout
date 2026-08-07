@@ -1,6 +1,6 @@
 /// LedgerSelectorDialog 账本列表 future 缓存回归测试。
 ///
-/// 修复点：账本列表 future 由 State 持有，父级重建不再重复查 DB。
+/// 账本列表 future 由 State 持有，父级重建复用缓存，不重复查 DB。
 library;
 
 import 'package:flutter/material.dart';
@@ -18,18 +18,18 @@ import 'package:spitout/widgets/ledger_selector_dialog.dart';
 class _MockRepo extends Mock implements BaseRepository {}
 
 Ledger _ledger(int id, String name) => Ledger(
-      id: id,
-      name: name,
-      currency: 'CNY',
-      type: 'personal',
-      createdAt: DateTime(2026, 1, 1),
-      myRole: 'owner',
-      memberCount: 1,
-      isShared: false,
-      monthStartDay: 1,
-      storageMode: 'local',
-      aaEnabled: false,
-    );
+  id: id,
+  name: name,
+  currency: 'CNY',
+  type: 'personal',
+  createdAt: DateTime(2026, 1, 1),
+  myRole: 'owner',
+  memberCount: 1,
+  isShared: false,
+  monthStartDay: 1,
+  storageMode: 'local',
+  aaEnabled: false,
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -38,16 +38,14 @@ void main() {
 
   setUp(() {
     repo = _MockRepo();
-    when(() => repo.getAllLedgers()).thenAnswer(
-      (_) async => [_ledger(1, '账本一'), _ledger(2, '账本二')],
-    );
+    when(
+      () => repo.getAllLedgers(),
+    ).thenAnswer((_) async => [_ledger(1, '账本一'), _ledger(2, '账本二')]);
   });
 
   Widget buildApp(ValueNotifier<int> trigger) {
     return ProviderScope(
-      overrides: [
-        repositoryProvider.overrideWithValue(repo),
-      ],
+      overrides: [repositoryProvider.overrideWithValue(repo)],
       child: MaterialApp(
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -60,9 +58,7 @@ void main() {
         home: ValueListenableBuilder<int>(
           valueListenable: trigger,
           builder: (context, _, _) => Scaffold(
-            body: Center(
-              child: LedgerSelectorDialog(currentLedgerId: 1),
-            ),
+            body: Center(child: LedgerSelectorDialog(currentLedgerId: 1)),
           ),
         ),
       ),
@@ -84,7 +80,7 @@ void main() {
     expect(find.text('账本二'), findsOneWidget);
     expect(queries, 1);
 
-    // 触发父级重建：State 保留，future 缓存命中，不再查 DB
+    // 触发父级重建：State 保留，future 缓存命中，不查 DB
     trigger.value++;
     await tester.pumpAndSettle();
 

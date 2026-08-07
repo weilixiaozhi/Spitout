@@ -9,7 +9,7 @@ import 'package:spitout/providers/providers.dart';
 import '../../helpers/test_isolation.dart';
 
 /// 记录调用的同步服务替身：锁定 PostProcessor 只标记本地变更 + 刷新信号，
-/// 不再直接上传（上传统一由 SyncCoordinator / SnapshotSyncCoordinator 数据驱动）。
+/// 不直接上传（上传统一由 SyncCoordinator / SnapshotSyncCoordinator 数据驱动）。
 class _RecordingSyncService extends LocalOnlySyncService {
   final List<int> marked = [];
   final List<int> uploaded = [];
@@ -39,20 +39,20 @@ void main() {
   setUp(() {
     resetGlobalTestState();
     sync = _RecordingSyncService();
-    container = ProviderContainer(overrides: [
-      syncServiceProvider.overrideWithValue(sync),
-    ]);
+    container = ProviderContainer(
+      overrides: [syncServiceProvider.overrideWithValue(sync)],
+    );
   });
 
   tearDown(() => container.dispose());
 
   /// 读取三个刷新信号的当前值，便于断言 bump 次数
   ({int stats, int calendar, int syncStatus, int ledgerList}) ticks() => (
-        stats: container.read(statsRefreshProvider),
-        calendar: container.read(calendarRefreshProvider),
-        syncStatus: container.read(syncStatusRefreshProvider),
-        ledgerList: container.read(ledgerListRefreshProvider),
-      );
+    stats: container.read(statsRefreshProvider),
+    calendar: container.read(calendarRefreshProvider),
+    syncStatus: container.read(syncStatusRefreshProvider),
+    ledgerList: container.read(ledgerListRefreshProvider),
+  );
 
   group('syncC（ProviderContainer 载体）', () {
     test('标记本地变更 + bump 日历/同步状态/账本列表；不直接上传（数据驱动）', () async {
@@ -67,8 +67,11 @@ void main() {
       expect(after.syncStatus, before.syncStatus + 1);
       expect(after.ledgerList, before.ledgerList + 1);
       expect(after.stats, before.stats, reason: 'sync 系列不刷统计');
-      expect(sync.uploaded, isEmpty,
-          reason: 'PostProcessor 不得直接上传，触发权交给 SnapshotSyncCoordinator');
+      expect(
+        sync.uploaded,
+        isEmpty,
+        reason: 'PostProcessor 不得直接上传，触发权交给 SnapshotSyncCoordinator',
+      );
     });
 
     test('即使 auto_sync 开启也不再直接上传，同步状态只 bump 一次', () async {
@@ -77,9 +80,12 @@ void main() {
       await PostProcessor.syncC(container, ledgerId: 9);
       await Future<void>.delayed(const Duration(milliseconds: 50));
 
-      expect(sync.uploaded, isEmpty,
-          reason: '上传由 SnapshotSyncCoordinator 基于脏信号触发，与开关无关');
-      // 不再有「上传完成后再 bump 一次」的第二轮刷新。
+      expect(
+        sync.uploaded,
+        isEmpty,
+        reason: '上传由 SnapshotSyncCoordinator 基于脏信号触发，与开关无关',
+      );
+      // 无「上传完成后再 bump 一次」的第二轮刷新。
       expect(container.read(syncStatusRefreshProvider), before.syncStatus + 1);
     });
 

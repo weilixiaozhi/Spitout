@@ -18,12 +18,12 @@ import '../../helpers/test_isolation.dart';
 /// [leaveAndDeleteSharedLedgerProvider] 与 [deleteSharedLedgerAsOwnerProvider]
 /// 的集成测试（cloud-first 编排）。
 ///
-/// 设计意图：这两个 provider 是本次修复的"业务入口"，串联「先云端操作
+/// 设计意图：这两个 provider 是"业务入口"，串联「先云端操作
 /// （退出/删除）→ 再本地 purge → 失效相关缓存」。测试用真实的
 /// [SyncEngine] + 真实 [LocalRepository] + 测试桩 [FakeSpitoutCloudProvider]
 /// 跑完整链路，断言：
 ///   1) 云端方法确实被调用（协作者走 leaveLedger / Owner 走 deleteLedger）；
-///   2) 本地账本及其交易被 purge 干净（幽灵账本不再复活）；
+///   2) 本地账本及其交易被 purge 干净（幽灵账本不复活）；
 ///   3) 缓存失效调用不抛错。
 ///
 /// 说明：两个 provider 是顶层异步函数（签名为 (WidgetRef, {ledgerId})），
@@ -38,18 +38,32 @@ void main() {
     final tracker = ChangeTracker(db);
     final repo = LocalRepository(db, changeTracker: tracker);
     final fake = FakeSpitoutCloudProvider();
-    final engine =
-        SyncEngine(db: db, provider: fake, changeTracker: tracker, repo: repo);
-    final container = ProviderContainer(overrides: [
-      spitoutCloudProviderInstance.overrideWith((ref) async => fake),
-      syncEngineProvider.overrideWith((ref, arg) => engine),
-      currentLedgerProvider.overrideWith((ref) => Stream<Ledger?>.value(null)),
-    ]);
+    final engine = SyncEngine(
+      db: db,
+      provider: fake,
+      changeTracker: tracker,
+      repo: repo,
+    );
+    final container = ProviderContainer(
+      overrides: [
+        spitoutCloudProviderInstance.overrideWith((ref) async => fake),
+        syncEngineProvider.overrideWith((ref, arg) => engine),
+        currentLedgerProvider.overrideWith(
+          (ref) => Stream<Ledger?>.value(null),
+        ),
+      ],
+    );
     return _Harness(db, repo, fake, container);
   }
 
-  Future<int> seedSharedLedger(SpitoutDatabase db, String extId, String myRole) async {
-    final localId = await db.into(db.ledgers).insert(
+  Future<int> seedSharedLedger(
+    SpitoutDatabase db,
+    String extId,
+    String myRole,
+  ) async {
+    final localId = await db
+        .into(db.ledgers)
+        .insert(
           LedgersCompanion.insert(
             name: 'Shared-$extId',
             syncId: Value(extId),
@@ -57,7 +71,9 @@ void main() {
             myRole: Value(myRole),
           ),
         );
-    await db.into(db.transactions).insert(
+    await db
+        .into(db.transactions)
+        .insert(
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
@@ -65,7 +81,9 @@ void main() {
             syncId: Value('tx-$extId'),
           ),
         );
-    await db.into(db.localChanges).insert(
+    await db
+        .into(db.localChanges)
+        .insert(
           LocalChangesCompanion.insert(
             entityType: 'ledger',
             entityId: localId,
@@ -78,11 +96,15 @@ void main() {
   }
 
   Future<bool> ledgerExists(SpitoutDatabase db, String extId) async =>
-      (await (db.select(db.ledgers)..where((l) => l.syncId.equals(extId))).get())
-          .isNotEmpty;
+      (await (db.select(
+        db.ledgers,
+      )..where((l) => l.syncId.equals(extId))).get()).isNotEmpty;
 
   /// 通过 Consumer 在 build 阶段取回真实 WidgetRef。
-  Future<WidgetRef> captureRef(WidgetTester tester, ProviderContainer container) async {
+  Future<WidgetRef> captureRef(
+    WidgetTester tester,
+    ProviderContainer container,
+  ) async {
     final refCompleter = Completer<WidgetRef>();
     await tester.pumpWidget(
       UncontrolledProviderScope(
@@ -98,8 +120,7 @@ void main() {
     return refCompleter.future;
   }
 
-  testWidgets('协作者退出并删除：先 leaveLedger，再本地 purge，且不残留删除标记',
-      (tester) async {
+  testWidgets('协作者退出并删除：先 leaveLedger，再本地 purge，且不残留删除标记', (tester) async {
     final h = await harness();
     final localId = await seedSharedLedger(h.db, 'ext-1', 'editor');
     final ref = await captureRef(tester, h.container);
@@ -117,9 +138,9 @@ void main() {
     expect(await ledgerExists(h.db, 'ext-1'), isFalse);
     // 3) 交易被清掉
     expect(
-      await (h.db.select(h.db.transactions)
-            ..where((t) => t.ledgerId.equals(localId)))
-          .get(),
+      await (h.db.select(
+        h.db.transactions,
+      )..where((t) => t.ledgerId.equals(localId))).get(),
       isEmpty,
     );
     // 4) 关键：删除标记被清掉（否则 sync 会重新 upsert 回来）
@@ -150,9 +171,9 @@ void main() {
     // 2) 本地账本被 purge
     expect(await ledgerExists(h.db, 'ext-1'), isFalse);
     expect(
-      await (h.db.select(h.db.transactions)
-            ..where((t) => t.ledgerId.equals(localId)))
-          .get(),
+      await (h.db.select(
+        h.db.transactions,
+      )..where((t) => t.ledgerId.equals(localId))).get(),
       isEmpty,
     );
 

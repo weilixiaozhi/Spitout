@@ -15,9 +15,9 @@ import 'keypad_constants.dart';
 ///
 /// 设计意图：
 /// - 金额输入状态（_amountStr/_acc/_op/_calcState）与币种汇率状态全部下沉到本组件，
-///   每次按键只重建本面板，不再带动 Header/分类网格/备注行整树重建；
+///   每次按键只重建本面板，不带动 Header/分类网格/备注行整树重建；
 /// - 按键在按下瞬间提交（PressKey），滑出取消时通过 [_rollbackLast] 回滚最近一次提交；
-/// - 反馈单一来源：触觉反馈由本面板状态变更统一触发，组件层不再重复触发；
+/// - 反馈单一来源：触觉反馈由本面板状态变更统一触发，组件层不重复触发；
 /// - "完成"提交仍由键盘松手触发（防误触），由父 sheet 的 [onSubmit] 处理落库。
 class AmountInputPanel extends ConsumerStatefulWidget {
   const AmountInputPanel({

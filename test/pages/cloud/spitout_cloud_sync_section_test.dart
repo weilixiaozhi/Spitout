@@ -2,7 +2,7 @@
 ///
 /// 验证「账号 + 2FA + 同步状态」合并为单张卡片：
 /// - 账号 / 2FA 作为卡片头部,各占一行文案;未登录时账号行直接渲染登录按钮
-///   (密码不再持久化,统一显示 "登录" 并跳转登录页),不再伪装成可点行。
+///   (密码不持久化,统一显示 "登录" 并跳转登录页),账号行不伪装成可点行。
 /// - 卡片下半部为同步状态详情(常驻逐项计数:当前账本 / 全部账本 / 未推送变更
 ///   的本地·云端计数),分类行不带 icon。
 /// - 卡片不渲染右箭头,改用专属图标作分类标识(已登录账号 verifiedUser、
@@ -189,7 +189,7 @@ void main() {
   testWidgets('未登录（含已保存账号）：显示「登录」按钮且带 login 图标', (tester) async {
     await _pumpSection(tester, active: _spitoutActiveWithCredentials());
 
-    // 密码不再持久化 → 账号行统一渲染"登录"按钮(跳转登录页手动输入)。
+    // 密码不持久化 → 账号行统一渲染"登录"按钮(跳转登录页手动输入)。
     // 同上,用文案 + 图标断言按钮存在(避免 byType(FilledButton) 的子类问题)。
     expect(find.text('登录'), findsOneWidget);
     expect(
@@ -529,7 +529,7 @@ void main() {
     testWidgets('含已保存账号时也不显示「重新登录」，点击进入登录页手动输入', (tester) async {
       await _pumpSection(tester, active: _spitoutActiveWithCredentials());
 
-      // 密码不再持久化 → 未登录时不存在「重新登录」入口。
+      // 密码不持久化 → 未登录时不存在「重新登录」入口。
       expect(find.text('重新登录'), findsNothing);
       expect(find.text('登录'), findsOneWidget);
 

@@ -1,4 +1,4 @@
-/// 针对本次修复新增/改写的 provider 单元测试。
+/// provider 单元测试。
 ///
 /// 固化两类关键行为，避免回归：
 /// 1. [authServiceProvider] 各类配置的降级路径（本地 / Spitout 但 provider 未就绪）
@@ -53,20 +53,25 @@ class _SeqAuth extends Fake implements CloudAuthService {
 
 /// 合法的 Spitout Cloud 激活配置（带 baseUrl → valid 为 true，能走到 Spitout 分支）。
 CloudServiceConfig _spitoutActive() => const CloudServiceConfig(
-      type: CloudBackendType.spitoutCloud,
-      name: 'Spitout Cloud',
-      spitoutCloudBaseUrl: 'https://cloud.example.com',
-    );
+  type: CloudBackendType.spitoutCloud,
+  name: 'Spitout Cloud',
+  spitoutCloudBaseUrl: 'https://cloud.example.com',
+);
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('authServiceProvider: 本地模式降级 NoopAuthService', () async {
-    final container = ProviderContainer(overrides: [
-      activeCloudConfigProvider.overrideWith((ref) async =>
-          const CloudServiceConfig(
-              type: CloudBackendType.local, name: 'Local')),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        activeCloudConfigProvider.overrideWith(
+          (ref) async => const CloudServiceConfig(
+            type: CloudBackendType.local,
+            name: 'Local',
+          ),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
     // 先 materialize 依赖，规避嵌套 FutureProvider 经 .future 直读时的 zone 时序问题。
     await container.read(activeCloudConfigProvider.future);
@@ -74,13 +79,14 @@ void main() {
     expect(auth, isA<NoopAuthService>());
   });
 
-  test('authServiceProvider: Spitout 配置但 provider 未就绪 → Noop（不抛）',
-      () async {
-    final container = ProviderContainer(overrides: [
-      activeCloudConfigProvider.overrideWith((ref) async => _spitoutActive()),
-      // provider 实例为 null：Spitout 分支应安全降级 Noop，而非抛异常。
-      spitoutCloudProviderInstance.overrideWith((ref) async => null),
-    ]);
+  test('authServiceProvider: Spitout 配置但 provider 未就绪 → Noop（不抛）', () async {
+    final container = ProviderContainer(
+      overrides: [
+        activeCloudConfigProvider.overrideWith((ref) async => _spitoutActive()),
+        // provider 实例为 null：Spitout 分支应安全降级 Noop，而非抛异常。
+        spitoutCloudProviderInstance.overrideWith((ref) async => null),
+      ],
+    );
     addTearDown(container.dispose);
     await container.read(activeCloudConfigProvider.future);
     await container.read(spitoutCloudProviderInstance.future);
@@ -88,28 +94,33 @@ void main() {
     expect(auth, isA<NoopAuthService>());
   });
 
-  test('cloudCurrentUserProvider: NoopAuthService → 单发 null，不卡 loading',
-      () async {
-    final container = ProviderContainer(overrides: [
-      authServiceProvider.overrideWith((ref) async => NoopAuthService()),
-    ]);
-    addTearDown(container.dispose);
-    // 先让 authServiceProvider 进入 data 态，cloudCurrentUserProvider 才会返回
-    // 单发 null 的流（而非等待依赖的空流），避免 .future 捕获到永远 loading 的空流。
-    await container.read(authServiceProvider.future);
-    final user = await readProviderFutureFromContainer(
-      container,
-      cloudCurrentUserProvider.future,
-    );
-    expect(user, isNull);
-  });
+  test(
+    'cloudCurrentUserProvider: NoopAuthService → 单发 null，不卡 loading',
+    () async {
+      final container = ProviderContainer(
+        overrides: [
+          authServiceProvider.overrideWith((ref) async => NoopAuthService()),
+        ],
+      );
+      addTearDown(container.dispose);
+      // 先让 authServiceProvider 进入 data 态，cloudCurrentUserProvider 才会返回
+      // 单发 null 的流（而非等待依赖的空流），避免 .future 捕获到永远 loading 的空流。
+      await container.read(authServiceProvider.future);
+      final user = await readProviderFutureFromContainer(
+        container,
+        cloudCurrentUserProvider.future,
+      );
+      expect(user, isNull);
+    },
+  );
 
-  test('cloudCurrentUserProvider: 已登录 → 种子当前用户，不卡 loading（回归点）',
-      () async {
+  test('cloudCurrentUserProvider: 已登录 → 种子当前用户，不卡 loading（回归点）', () async {
     final user = const CloudUser(id: 'u1', account: 'a@b.com');
-    final container = ProviderContainer(overrides: [
-      authServiceProvider.overrideWith((ref) async => _LoggedInAuth(user)),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        authServiceProvider.overrideWith((ref) async => _LoggedInAuth(user)),
+      ],
+    );
     addTearDown(container.dispose);
     await container.read(authServiceProvider.future);
     final resolved = await readProviderFutureFromContainer(
@@ -119,24 +130,21 @@ void main() {
     expect(resolved, user);
   });
 
-  test('cloudCurrentUserProvider: 登出事件(null)经流传播，最终回退未登录',
-      () async {
+  test('cloudCurrentUserProvider: 登出事件(null)经流传播，最终回退未登录', () async {
     final user = const CloudUser(id: 'u2', account: 'b@b.com');
-    final container = ProviderContainer(overrides: [
-      authServiceProvider.overrideWith((ref) async => _SeqAuth(user)),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        authServiceProvider.overrideWith((ref) async => _SeqAuth(user)),
+      ],
+    );
     addTearDown(container.dispose);
     await container.read(authServiceProvider.future);
 
     // StreamProvider.future 只返回首值，无法观测登出事件；用 listen 收集全部态迁移。
     final seen = <CloudUser?>[];
-    final sub = container.listen(
-      cloudCurrentUserProvider,
-      (prev, next) {
-        if (next.hasValue) seen.add(next.value);
-      },
-      fireImmediately: true,
-    );
+    final sub = container.listen(cloudCurrentUserProvider, (prev, next) {
+      if (next.hasValue) seen.add(next.value);
+    }, fireImmediately: true);
     // 等待种子（user）与顺序事件（user、null）全部流入流。
     await Future<void>.delayed(Duration.zero);
     await Future<void>.delayed(Duration.zero);
@@ -147,11 +155,16 @@ void main() {
   });
 
   test('invalidate(activeCloudConfigProvider) 级联重建 auth/sync provider', () async {
-    final container = ProviderContainer(overrides: [
-      activeCloudConfigProvider.overrideWith((ref) async =>
-          const CloudServiceConfig(
-              type: CloudBackendType.local, name: 'Local')),
-    ]);
+    final container = ProviderContainer(
+      overrides: [
+        activeCloudConfigProvider.overrideWith(
+          (ref) async => const CloudServiceConfig(
+            type: CloudBackendType.local,
+            name: 'Local',
+          ),
+        ),
+      ],
+    );
     addTearDown(container.dispose);
 
     // 先 materialize 依赖，规避嵌套 FutureProvider 经 .future 直读时的 zone 时序问题。

@@ -257,7 +257,7 @@ class AaMemberDetailPage extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           // 总笔数 / 总金额：两个指标共用同一套标签在上、数值在下的居中样式，
-          // 与分摊详情表的成员指标视觉一致，不再为不同字段区分字号和颜色。
+          // 与分摊详情表的成员指标视觉一致，不为不同字段区分字号和颜色。
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -319,11 +319,7 @@ class AaMemberDetailPage extends ConsumerWidget {
 
   /// 汇总卡指标列：标签在上、数值在下，二者均水平居中。
   /// 标签与分摊详情表一致用 11px 三级色，数值统一用 12px 主色加粗。
-  Widget _buildSummaryMetric(
-    BuildContext context,
-    String label,
-    String value,
-  ) {
+  Widget _buildSummaryMetric(BuildContext context, String label, String value) {
     return Column(
       children: [
         Text(
@@ -404,11 +400,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  Widget _buildMethodCard(
-    BuildContext context,
-    int count,
-    String label,
-  ) {
+  Widget _buildMethodCard(BuildContext context, int count, String label) {
     // 三种分摊方式共用同一套表面/边框/文字 token。
     final bg = SpitoutTokens.surface(context);
     final border = SpitoutTokens.divider(context);
@@ -478,7 +470,7 @@ class AaMemberDetailPage extends ConsumerWidget {
   }
 
   /// 单笔账单行容器:组首行负责卡片顶部圆角与阴影,组尾行负责底部圆角
-  /// 与组间距,中间行仅提供表面底色 + 上分割线,整体视觉等同原来的一张
+  /// 与组间距,中间行仅提供表面底色 + 上分割线,整体视觉等同单张
   /// SectionCard,但每一行可被 ListView.builder 独立懒加载。
   Widget _buildBillRowItem(
     BuildContext context,
@@ -503,8 +495,8 @@ class AaMemberDetailPage extends ConsumerWidget {
         boxShadow: SpitoutTokens.isDark(context)
             ? null
             : (entry.isFirstInGroup || entry.isLastInGroup)
-                ? SpitoutShadows.card
-                : null,
+            ? SpitoutShadows.card
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -601,7 +593,7 @@ class AaMemberDetailPage extends ConsumerWidget {
               ),
               const SizedBox(width: 12),
               // 右侧：账单总额（红色加粗）。本人应摊金额已在下方的分摊明细中
-              // 展示，这里不再重复显示，副标题「账单总额」一并移除。
+              // 展示，这里不重复显示，副标题「账单总额」一并移除。
               Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -771,7 +763,7 @@ class _BillDateHeader {
 /// 账单列表扁平化条目:单笔账单行。
 ///
 /// [isFirstInGroup]/[isLastInGroup] 用于渲染组卡片的首尾圆角、分割线与
-/// 组尾间距,保证懒加载拆分后视觉与原来的整张卡片一致。
+/// 组尾间距,保证懒加载拆分后视觉与整张卡片一致。
 class _BillRowEntry {
   final AaMemberBill bill;
   final bool isFirstInGroup;

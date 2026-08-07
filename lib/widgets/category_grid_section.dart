@@ -80,7 +80,7 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
   Widget build(BuildContext context) {
     final treeAsync = ref.watch(categoryPickerTreeProvider(widget.kind));
     return treeAsync.when(
-      // 与旧 FutureBuilder 行为一致：加载中/出错不显示 loading，避免一闪。
+      // 加载中/出错不显示 loading，避免一闪。
       // 缓存已预热时首帧即走 data 分支，无空白期。
       loading: () => const SizedBox.shrink(),
       error: (_, _) => const SizedBox.shrink(),
@@ -124,14 +124,12 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
 
       displayItems.add(
         Container(
-          key: _keys.putIfAbsent(
-              firstCategoryInRow.id, () => GlobalKey()),
+          key: _keys.putIfAbsent(firstCategoryInRow.id, () => GlobalKey()),
           child: GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             padding: EdgeInsets.zero,
-            gridDelegate:
-                const SliverGridDelegateWithFixedCrossAxisCount(
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: _kColumns,
               // 父分类水平间距 8px
               crossAxisSpacing: 8,
@@ -285,8 +283,9 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
     final ledger = ref.watch(currentLedgerProvider).value;
     final isEditorInShared =
         ledger != null && ledger.isShared && ledger.myRole != 'owner';
-    final entryColor =
-        isEditorInShared ? SpitoutTokens.textDisabled(context) : primary;
+    final entryColor = isEditorInShared
+        ? SpitoutTokens.textDisabled(context)
+        : primary;
     return Center(
       child: InkWell(
         // 本入口位于记账 sheet 内，用户是「临时离开建分类、回来继续记这笔账」：
@@ -295,19 +294,14 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
         // 完成被当作「用户取消」。
         onTap: isEditorInShared
             ? null
-            : () =>
-                Navigator.of(context).pushNamed(Routes.categoryManage),
+            : () => Navigator.of(context).pushNamed(Routes.categoryManage),
         borderRadius: BorderRadius.circular(24),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
-                AppIcons.edit,
-                size: 18,
-                color: entryColor,
-              ),
+              Icon(AppIcons.edit, size: 18, color: entryColor),
               const SizedBox(width: 6),
               Text(
                 isEditorInShared
@@ -360,8 +354,9 @@ class _SubcategorySelectorCard extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         // bg-secondary/70 容器
-        color: SpitoutTokens.surfaceCategoryIconLight(context)
-            .withValues(alpha: isDark ? 1.0 : 0.7),
+        color: SpitoutTokens.surfaceCategoryIconLight(
+          context,
+        ).withValues(alpha: isDark ? 1.0 : 0.7),
         borderRadius: BorderRadius.circular(20),
         border: isDark
             ? Border.all(color: SpitoutTokens.border(context))

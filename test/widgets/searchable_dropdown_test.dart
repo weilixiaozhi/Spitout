@@ -1,7 +1,6 @@
-/// SearchableDropdown 浮层回归测试。
+/// SearchableDropdown 浮层测试。
 ///
-/// 修复点：
-/// - 浮层改为 CompositedTransformFollower 跟随触发框（滚动不再错位）；
+/// - 浮层通过 CompositedTransformFollower 跟随触发框；
 /// - 全屏 barrier 支持「点击浮层外部关闭」。
 library;
 
@@ -38,15 +37,13 @@ void main() {
 
     await tester.tap(find.byType(SearchableDropdown<String>));
     await tester.pump();
-    expect(find.text('搜索...'), findsOneWidget,
-        reason: '打开后应显示搜索输入框');
+    expect(find.text('搜索...'), findsOneWidget, reason: '打开后应显示搜索输入框');
 
     // 点击浮层外（左上角）→ barrier 命中 → 关闭
     await tester.tapAt(const Offset(20, 20));
     await tester.pump();
 
-    expect(find.text('搜索...'), findsNothing,
-        reason: '点击浮层外部必须关闭下拉');
+    expect(find.text('搜索...'), findsNothing, reason: '点击浮层外部必须关闭下拉');
   });
 
   testWidgets('选中项回调并自动关闭', (tester) async {
@@ -60,8 +57,7 @@ void main() {
     await tester.pump();
 
     expect(selected, ['香蕉']);
-    expect(find.text('搜索...'), findsNothing,
-        reason: '选中后浮层应自动关闭');
+    expect(find.text('搜索...'), findsNothing, reason: '选中后浮层应自动关闭');
   });
 
   testWidgets('搜索过滤即时生效', (tester) async {
@@ -81,6 +77,7 @@ void main() {
     expect(
       find.descendant(of: find.byType(ListView), matching: find.text('香蕉')),
       findsNothing,
-        reason: '过滤后不匹配项应隐藏');
+      reason: '过滤后不匹配项应隐藏',
+    );
   });
 }

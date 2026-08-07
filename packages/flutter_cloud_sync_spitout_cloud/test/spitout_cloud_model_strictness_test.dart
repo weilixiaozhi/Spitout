@@ -2,7 +2,7 @@
 ///
 /// 覆盖审查项:
 /// - 关键标识字段缺失时抛 [FormatException],不允许空串进入同步逻辑;
-/// - 邀请 / 成员时间戳缺失或格式异常时为 null,不再伪造 DateTime.now()。
+/// - 邀请 / 成员时间戳缺失或格式异常时为 null,不伪造 DateTime.now()。
 library;
 
 import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';

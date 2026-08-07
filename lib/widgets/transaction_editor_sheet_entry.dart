@@ -37,10 +37,10 @@ Future<void> showTransactionEditorSheet(
     isScrollControlled: true,
     // useSafeArea: true —— sheet 顶部正好顶到状态栏下面(SafeArea 自动计算
     // 各机型安全区,无需手动捕获/传入状态栏高度,避免不同手机效果不一致)。
-    // 同时去掉遮罩(barrierColor 透明):顶部状态栏区域透出下层页面,无
-    // 半透明黑雾遮罩。
+    // 遮罩透明（barrierColor 透明）：顶部状态栏区域透出下层页面，
+    // 无半透明黑雾遮罩。
     useSafeArea: true,
-    // 去掉遮罩:sheet 从状态栏下沿开始铺到屏幕底,顶部无 sheet 背景覆盖,
+    // 无遮罩：sheet 从状态栏下沿开始铺到屏幕底，顶部无 sheet 背景覆盖，
     // 遮罩若保留会在状态栏区域透出半透明黑雾。
     barrierColor: Colors.transparent,
     // 透明背景:圆角容器自行绘制,避免双层底色

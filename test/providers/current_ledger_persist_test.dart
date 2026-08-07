@@ -53,7 +53,10 @@ void main() {
       overrides: [databaseProvider.overrideWithValue(db)],
     );
 
-    await _triggerAndAwaitResolve(container, initialPrefs: {'current_ledger_id': id});
+    await _triggerAndAwaitResolve(
+      container,
+      initialPrefs: {'current_ledger_id': id},
+    );
 
     expect(container.read(currentLedgerIdProvider), id);
     container.dispose();
@@ -68,7 +71,10 @@ void main() {
       overrides: [databaseProvider.overrideWithValue(db)],
     );
 
-    await _triggerAndAwaitResolve(container, initialPrefs: {'current_ledger_id': 777});
+    await _triggerAndAwaitResolve(
+      container,
+      initialPrefs: {'current_ledger_id': 777},
+    );
 
     expect(container.read(currentLedgerIdProvider), id);
     container.dispose();
@@ -118,18 +124,24 @@ void main() {
 
     // 第一步：空库触发启动解析（模拟 main() 预加载阶段），应保持哨兵 0。
     await _triggerAndAwaitResolve(container, initialPrefs: {});
-    expect(container.read(currentLedgerIdProvider), 0,
-        reason: '空库时启动解析不应选中任何账本');
+    expect(
+      container.read(currentLedgerIdProvider),
+      0,
+      reason: '空库时启动解析不应选中任何账本',
+    );
 
     // 第二步：模拟引导完成后 SeedService.ensureSeed 创建默认账本。
     // 注意启动解析是一次性的，此时重新 read provider 不会重跑解析。
     final id = await _insertSingleLedger(db, '引导默认账本');
     container.read(currentLedgerPersistProvider);
     await Future.delayed(const Duration(milliseconds: 150));
-    expect(container.read(currentLedgerIdProvider), 0,
-        reason: '启动解析不会重跑，仅靠它无法感知账本从无到有');
+    expect(
+      container.read(currentLedgerIdProvider),
+      0,
+      reason: '启动解析不会重跑，仅靠它无法感知账本从无到有',
+    );
 
-    // 第三步：引导完成处显式调用 selectFirstLedger（welcome_page 的修复点），
+    // 第三步：引导完成处显式调用 selectFirstLedger（welcome_page 行为），
     // 应选中首个账本并把 id 写回 prefs，保证下次启动稳定恢复。
     await selectFirstLedger(container.read);
     expect(container.read(currentLedgerIdProvider), id);
@@ -154,8 +166,11 @@ void main() {
 
     await selectFirstLedger(container.read);
 
-    expect(container.read(currentLedgerIdProvider), second,
-        reason: '已选中且有效的账本必须被尊重，不得被回退到 first');
+    expect(
+      container.read(currentLedgerIdProvider),
+      second,
+      reason: '已选中且有效的账本必须被尊重，不得被回退到 first',
+    );
     container.dispose();
     await db.close();
   });
@@ -177,14 +192,20 @@ void main() {
     container.read(repositoryProvider);
     container.read(currentLedgerIdProvider.notifier).set(999);
 
-    // 恢复成功 → invalidate 新库 → 复用 selectFirstLedger 校验并回退（local_backup_page 的修复点）。
+    // 恢复成功 → invalidate 新库 → 复用 selectFirstLedger 校验并回退（local_backup_page 行为）。
     await selectFirstLedger(container.read);
 
-    expect(container.read(currentLedgerIdProvider), newLedger,
-        reason: '旧 id 在新库无效时必须回退到新库首个账本，而非保持失效的旧 id');
+    expect(
+      container.read(currentLedgerIdProvider),
+      newLedger,
+      reason: '旧 id 在新库无效时必须回退到新库首个账本，而非保持失效的旧 id',
+    );
     final prefs = await SharedPreferences.getInstance();
-    expect(prefs.getInt('current_ledger_id'), newLedger,
-        reason: '回退后必须把生效的账本 id 写回 prefs，保证下次启动稳定恢复');
+    expect(
+      prefs.getInt('current_ledger_id'),
+      newLedger,
+      reason: '回退后必须把生效的账本 id 写回 prefs，保证下次启动稳定恢复',
+    );
     container.dispose();
     await db.close();
   });

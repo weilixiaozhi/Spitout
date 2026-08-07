@@ -1,8 +1,7 @@
-/// WheelDatePicker 边界回归测试。
+/// WheelDatePicker 边界测试。
 ///
-/// 修复点：
 /// - 入口校验 minDate ≤ maxDate，避免年份列表为空时 CupertinoPicker 崩溃；
-/// - datetime 模式时/分列按边界日逐列钳制，不再由整体 _clamp 静默改值。
+/// - datetime 模式时/分列按边界日逐列钳制，不整体改值。
 library;
 
 import 'package:flutter/material.dart';
@@ -41,11 +40,9 @@ void main() {
 
     final hours = hourRangeForDateTime(date: date, min: min, max: max);
 
-    expect(hours.first, 9,
-        reason: '边界日（min=09:00）小时列应从 09 开始，08 不可选');
+    expect(hours.first, 9, reason: '边界日（min=09:00）小时列应从 09 开始，08 不可选');
     expect(hours.contains(8), isFalse);
-    expect(hours.last, 18,
-        reason: '边界日（max=18:30）小时列应到 18 结束');
+    expect(hours.last, 18, reason: '边界日（max=18:30）小时列应到 18 结束');
     expect(hours.contains(19), isFalse);
   });
 
@@ -55,13 +52,21 @@ void main() {
     final max = DateTime(2026, 8, 5, 18, 30);
 
     // 非边界小时：0-59 全量
-    final freeMinutes =
-        minuteRangeForDateTime(date: date, hour: 12, min: min, max: max);
+    final freeMinutes = minuteRangeForDateTime(
+      date: date,
+      hour: 12,
+      min: min,
+      max: max,
+    );
     expect(freeMinutes, hasLength(60));
 
     // 边界小时 18：到 30 结束
-    final maxMinutes =
-        minuteRangeForDateTime(date: date, hour: 18, min: min, max: max);
+    final maxMinutes = minuteRangeForDateTime(
+      date: date,
+      hour: 18,
+      min: min,
+      max: max,
+    );
     expect(maxMinutes.last, 30);
     expect(maxMinutes.contains(31), isFalse);
   });

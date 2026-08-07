@@ -8,7 +8,8 @@ import '../data/models.dart';
 // repositoryProvider / currentLedgerIdProvider / statsRefreshProvider /
 // countsForLedgerProvider，故不 import 对应 providers。
 // 仍用 TransactionDisplayItem 类型别名，故保留对 ui_state_providers 的引入。
-import 'package:spitout/providers/ui/ui_state_providers.dart' show TransactionDisplayItem;
+import 'package:spitout/providers/ui/ui_state_providers.dart'
+    show TransactionDisplayItem;
 import 'package:spitout/providers/providers.dart'
     show SpitoutCloudLedgerMember, currentLedgerProvider;
 import '../core/logging/logger_service.dart';
@@ -86,13 +87,15 @@ class TransactionList extends ConsumerStatefulWidget {
     this.controller,
     this.onEdit,
     this.onDelete,
-        this.onCategoryTap,
+    this.onCategoryTap,
     this.memberDisplayMap,
     this.isShared = false,
     this.onRefresh,
     this.useExternalRefresh = false,
-  }) : assert(transactionsWithDetails != null || transactions != null,
-            'Either transactionsWithDetails or transactions must be provided');
+  }) : assert(
+         transactionsWithDetails != null || transactions != null,
+         'Either transactionsWithDetails or transactions must be provided',
+       );
 
   @override
   ConsumerState<TransactionList> createState() => TransactionListState();
@@ -135,6 +138,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
       _buildFlatItems();
     }
   }
+
   @override
   void dispose() {
     if (widget.controller == null) {
@@ -174,7 +178,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
   /// 共享账本 WS 推送强制切到 Stream 模式 — 没有导航动画顾虑,立即切。
   /// 用于 sharedResourceRefreshProvider tick 触发的场景:Owner 改 tx 引用的
   /// category,Editor 这边需要立即丢掉 preloaded(里面挂的是
-  /// Splash 阶段的旧值)走 provider 拉新值。
+  /// Splash 阶段的值)走 provider 拉新值。
   void forceStreamModeImmediate() {
     if (!mounted) return;
     if (!_usePreloadedData) return;
@@ -193,7 +197,10 @@ class TransactionListState extends ConsumerState<TransactionList> {
       final parts = entry.key.split('-');
       if (parts.length != 3) continue;
       final d = DateTime(
-          int.parse(parts[0]), int.parse(parts[1]), int.parse(parts[2]));
+        int.parse(parts[0]),
+        int.parse(parts[1]),
+        int.parse(parts[2]),
+      );
       if (!d.isBefore(range.start) && d.isBefore(range.end)) {
         try {
           _controller.sliverController.jumpToIndex(entry.value);
@@ -237,7 +244,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
         _flatItems.add(('transaction', item, list));
       }
     }
-
   }
 
   @override
@@ -247,7 +253,8 @@ class TransactionListState extends ConsumerState<TransactionList> {
     // 想下拉从云端同步数据进来"。用 SingleChildScrollView +
     // AlwaysScrollableScrollPhysics 包一层,内容尺寸为 0 也能触发下拉。
     if (_flatItems.isEmpty) {
-      final empty = widget.emptyWidget ??
+      final empty =
+          widget.emptyWidget ??
           AppEmpty(
             text: AppLocalizations.of(context).commonEmpty,
             subtext: AppLocalizations.of(context).homeNoRecords,
@@ -264,10 +271,7 @@ class TransactionListState extends ConsumerState<TransactionList> {
           physics: const BouncingScrollPhysics(
             parent: AlwaysScrollableScrollPhysics(),
           ),
-          child: SizedBox(
-            height: constraints.maxHeight,
-            child: empty,
-          ),
+          child: SizedBox(height: constraints.maxHeight, child: empty),
         ),
       );
 
@@ -292,94 +296,101 @@ class TransactionListState extends ConsumerState<TransactionList> {
       physics: const BouncingScrollPhysics(
         parent: AlwaysScrollableScrollPhysics(),
       ),
-      delegate: FlutterListViewDelegate(
-        (BuildContext context, int index) {
-          final item = _flatItems[index];
-          final type = item.$1 as String;
+      delegate: FlutterListViewDelegate((BuildContext context, int index) {
+        final item = _flatItems[index];
+        final type = item.$1 as String;
 
-          if (type == 'header') {
-            // 渲染日期头部
-            final dateKey = item.$2 as String;
-            final list = item.$3 as List<({Transaction t, Category? category})>;
-            // 整数分累加,避免 double 尾差;展示时再转"元"。
-            int dayExpense = 0;
-            for (final it in list) {
-              // 全局仅支出模式，type 固定为 'expense'
-              if (it.t.type == 'expense') {
-                dayExpense += it.t.nativeAmount ?? it.t.amount;
-              }
+        if (type == 'header') {
+          // 渲染日期头部
+          final dateKey = item.$2 as String;
+          final list = item.$3 as List<({Transaction t, Category? category})>;
+          // 整数分累加,避免 double 尾差;展示时再转"元"。
+          int dayExpense = 0;
+          for (final it in list) {
+            // 全局仅支出模式，type 固定为 'expense'
+            if (it.t.type == 'expense') {
+              dayExpense += it.t.nativeAmount ?? it.t.amount;
             }
-            // 日支出汇总统一以账本本位币符号展示（nativeAmount 已折算为本位币），
-            // currencyCode 为 null 时 DaySectionHeader 回退为无符号纯数字。
-            final ledgerCurrency =
-                ref.watch(currentLedgerProvider).asData?.value?.currency;
-            // 不在每个 DaySectionHeader 上方画分割线。
-            // 视觉上"天"靠日期标题 + 行间分割线区分,避免每天顶部都出现一条
-            // 横线导致列表显得零碎;数据行之间的分割线由 _TransactionListRow
-            // 内部的 SpitoutDivider.short 保持(每个交易项之间仍有分割线)。
-            Widget header = DaySectionHeader(
-              dateText: dateKey,
-              expense: dayExpense / 100,
-              currencyCode: ledgerCurrency,
-            );
+          }
+          // 日支出汇总统一以账本本位币符号展示（nativeAmount 已折算为本位币），
+          // currencyCode 为 null 时 DaySectionHeader 回退为无符号纯数字。
+          final ledgerCurrency = ref
+              .watch(currentLedgerProvider)
+              .asData
+              ?.value
+              ?.currency;
+          // 不在每个 DaySectionHeader 上方画分割线。
+          // 视觉上"天"靠日期标题 + 行间分割线区分,避免每天顶部都出现一条
+          // 横线导致列表显得零碎;数据行之间的分割线由 _TransactionListRow
+          // 内部的 SpitoutDivider.short 保持(每个交易项之间仍有分割线)。
+          Widget header = DaySectionHeader(
+            dateText: dateKey,
+            expense: dayExpense / 100,
+            currencyCode: ledgerCurrency,
+          );
 
-            // 如果启用可见性跟踪，则包装VisibilityDetector
-            if (widget.enableVisibilityTracking && widget.onDateVisibilityChanged != null) {
-              header = VisibilityDetector(
-                key: Key('header-$dateKey'),
-                onVisibilityChanged: (VisibilityInfo info) {
-                  // 当可见比例大于50%时认为可见
-                  widget.onDateVisibilityChanged!(dateKey, info.visibleFraction > 0.5);
-                },
-                child: header,
-              );
-            }
-
-            return header;
-          } else {
-            // 渲染交易项
-            final it = item.$2 as ({Transaction t, Category? category});
-            final allItemsInDay = item.$3 as List<({Transaction t, Category? category})>;
-            final isExpense = it.t.type == 'expense';
-
-            // 获取分类显示名称
-            final categoryName =
-                CategoryUtils.getDisplayName(it.category?.name, context);
-
-            // 删除入口为长按 → 外部 onDelete 回调。
-            return _TransactionListRow(
-              index: index,
-              it: it,
-              categoryName: categoryName,
-              isExpense: isExpense,
-              allItemsInDay: allItemsInDay,
-              memberDisplayMap: widget.memberDisplayMap,
-              isShared: widget.isShared,
-              onTap: widget.onEdit == null
-                  ? null
-                  : () async {
-                      switchToStreamMode();
-                      await widget.onEdit!(it.t, it.category);
-                    },
-              onCategoryTap: (widget.onCategoryTap == null ||
-                      it.category?.id == null)
-                  ? null
-                  : () async {
-                      switchToStreamMode();
-                      await widget.onCategoryTap!(it.category!);
-                    },
-        onLongPress: widget.onDelete == null
-            ? null
-            : () async {
-                // 删除确认统一由调用方(onDelete)负责(首页会展示"将删除{分类}"提示),
-                // 此处不重复弹窗,避免双重确认。
-                await widget.onDelete!(it.t);
+          // 如果启用可见性跟踪，则包装VisibilityDetector
+          if (widget.enableVisibilityTracking &&
+              widget.onDateVisibilityChanged != null) {
+            header = VisibilityDetector(
+              key: Key('header-$dateKey'),
+              onVisibilityChanged: (VisibilityInfo info) {
+                // 当可见比例大于50%时认为可见
+                widget.onDateVisibilityChanged!(
+                  dateKey,
+                  info.visibleFraction > 0.5,
+                );
               },
+              child: header,
             );
           }
-        },
-        childCount: _flatItems.length,
-      ),
+
+          return header;
+        } else {
+          // 渲染交易项
+          final it = item.$2 as ({Transaction t, Category? category});
+          final allItemsInDay =
+              item.$3 as List<({Transaction t, Category? category})>;
+          final isExpense = it.t.type == 'expense';
+
+          // 获取分类显示名称
+          final categoryName = CategoryUtils.getDisplayName(
+            it.category?.name,
+            context,
+          );
+
+          // 删除入口为长按 → 外部 onDelete 回调。
+          return _TransactionListRow(
+            index: index,
+            it: it,
+            categoryName: categoryName,
+            isExpense: isExpense,
+            allItemsInDay: allItemsInDay,
+            memberDisplayMap: widget.memberDisplayMap,
+            isShared: widget.isShared,
+            onTap: widget.onEdit == null
+                ? null
+                : () async {
+                    switchToStreamMode();
+                    await widget.onEdit!(it.t, it.category);
+                  },
+            onCategoryTap:
+                (widget.onCategoryTap == null || it.category?.id == null)
+                ? null
+                : () async {
+                    switchToStreamMode();
+                    await widget.onCategoryTap!(it.category!);
+                  },
+            onLongPress: widget.onDelete == null
+                ? null
+                : () async {
+                    // 删除确认统一由调用方(onDelete)负责(首页会展示"将删除{分类}"提示),
+                    // 此处不重复弹窗,避免双重确认。
+                    await widget.onDelete!(it.t);
+                  },
+          );
+        }
+      }, childCount: _flatItems.length),
     );
     // 外部刷新模式：不包 RefreshIndicator，直接返回可滚动列表
     // 外部（HomePage）通过 NotificationListener 跟踪 overscroll 实现自定义指示器
@@ -447,7 +458,8 @@ class _TransactionListRow extends StatelessWidget {
             onCategoryTap: onCategoryTap,
           ),
         ),
-        if (!isLastInGroup) SpitoutDivider.short(context, indent: 56 + 16, endIndent: 16),
+        if (!isLastInGroup)
+          SpitoutDivider.short(context, indent: 56 + 16, endIndent: 16),
       ],
     );
   }

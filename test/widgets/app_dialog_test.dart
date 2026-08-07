@@ -1,6 +1,6 @@
-/// AppDialog 消息渲染回归测试。
+/// AppDialog 消息渲染测试。
 ///
-/// 修复点：消息按原文展示，不再 replaceAll('\\n', '\n')——
+/// 消息按原文展示，不做 replaceAll('\\n', '\n') 替换——
 /// 避免文案中字面量的反斜杠 n（如路径 / 用户数据）被误改成换行。
 library;
 
@@ -45,7 +45,10 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    expect(find.text(literalBackslashN), findsOneWidget,
-        reason: '字面量 \\n 必须原样展示，不能被替换成真实换行');
+    expect(
+      find.text(literalBackslashN),
+      findsOneWidget,
+      reason: '字面量 \\n 必须原样展示，不能被替换成真实换行',
+    );
   });
 }

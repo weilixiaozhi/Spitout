@@ -63,9 +63,14 @@ void main() {
     final dining = _category(id: 1, name: '餐饮', level: 1);
     final transport = _category(id: 2, name: '交通', level: 1, sortOrder: 1);
     final shopping = _category(id: 3, name: '购物', level: 1, sortOrder: 2);
-    final clothing =
-        _category(id: 4, name: '服装', level: 2, parentId: 3);
-    final shoes = _category(id: 5, name: '鞋帽', level: 2, parentId: 3, sortOrder: 1);
+    final clothing = _category(id: 4, name: '服装', level: 2, parentId: 3);
+    final shoes = _category(
+      id: 5,
+      name: '鞋帽',
+      level: 2,
+      parentId: 3,
+      sortOrder: 1,
+    );
 
     testCategories = [
       (category: dining, transactionCount: 5),
@@ -77,17 +82,20 @@ void main() {
     shoppingSubs = [clothing, shoes];
 
     // 弹窗加载子分类列表
-    when(() => repo.getSubCategories(3))
-        .thenAnswer((_) async => shoppingSubs);
+    when(() => repo.getSubCategories(3)).thenAnswer((_) async => shoppingSubs);
     // 删除/迁移相关方法 stub
-    when(() => repo.deleteTransactionsByCategoryIds(any()))
-        .thenAnswer((_) async => 0);
+    when(
+      () => repo.deleteTransactionsByCategoryIds(any()),
+    ).thenAnswer((_) async => 0);
     when(() => repo.deleteCategoriesByIds(any())).thenAnswer((_) async {});
-    when(() => repo.migrateCategoryTransactions(
-          fromCategoryId: any(named: 'fromCategoryId'),
-          toCategoryId: any(named: 'toCategoryId'),
-        )).thenAnswer(
-            (_) async => (migratedTransactions: 0, migratedSubCategories: 0));
+    when(
+      () => repo.migrateCategoryTransactions(
+        fromCategoryId: any(named: 'fromCategoryId'),
+        toCategoryId: any(named: 'toCategoryId'),
+      ),
+    ).thenAnswer(
+      (_) async => (migratedTransactions: 0, migratedSubCategories: 0),
+    );
   });
 
   /// 构建测试宿主，注入 mock repo 和预设分类数据
@@ -101,7 +109,8 @@ void main() {
         currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
         categoriesWithCountProvider.overrideWith(
           (ref) => Stream<List<_CategoryWithCount>>.value(
-              categories ?? testCategories),
+            categories ?? testCategories,
+          ),
         ),
       ],
       child: MaterialApp(
@@ -147,8 +156,7 @@ void main() {
       await prime(tester);
       await openDialog(tester);
 
-      expect(find.text('编辑父分类'), findsOneWidget,
-          reason: '父分类标题旁应有"编辑父分类"文字链');
+      expect(find.text('编辑父分类'), findsOneWidget, reason: '父分类标题旁应有"编辑父分类"文字链');
     });
 
     testWidgets('底部显示"添加子分类"和"删除子分类"文字链', (tester) async {
@@ -156,10 +164,8 @@ void main() {
       await prime(tester);
       await openDialog(tester);
 
-      expect(find.text('添加子分类'), findsOneWidget,
-          reason: '底部应有"添加子分类"文字链');
-      expect(find.text('删除子分类'), findsOneWidget,
-          reason: '底部应有"删除子分类"文字链');
+      expect(find.text('添加子分类'), findsOneWidget, reason: '底部应有"添加子分类"文字链');
+      expect(find.text('删除子分类'), findsOneWidget, reason: '底部应有"删除子分类"文字链');
     });
 
     testWidgets('网格展示子分类且不再有添加/编辑操作卡片', (tester) async {
@@ -169,7 +175,7 @@ void main() {
 
       expect(find.text('服装'), findsOneWidget, reason: '应显示子分类"服装"');
       expect(find.text('鞋帽'), findsOneWidget, reason: '应显示子分类"鞋帽"');
-      // 网格内不再有"添加"/"编辑"操作卡片（精确匹配不到独立文案）
+      // 网格内无"添加"/"编辑"操作卡片（精确匹配不到独立文案）
       expect(find.text('添加'), findsNothing, reason: '不应再有"添加"操作卡片');
       expect(find.text('编辑'), findsNothing, reason: '不应再有"编辑"操作卡片');
     });
@@ -185,13 +191,18 @@ void main() {
       await enterDeleteMode(tester);
 
       expect(find.text('确认删除'), findsOneWidget, reason: '应显示"确认删除"');
-      expect(find.text('删除子分类'), findsNothing,
-          reason: '删除模式不应再显示"删除子分类"');
+      expect(find.text('删除子分类'), findsNothing, reason: '删除模式不应再显示"删除子分类"');
       // 两个单选项
-      expect(find.text('删除分类和分类下的所有数据'), findsOneWidget,
-          reason: '应有"删除全部数据"选项');
-      expect(find.text('删除分类并迁移分类下的所有数据到其他分类'), findsOneWidget,
-          reason: '应有"迁移后删除"选项');
+      expect(
+        find.text('删除分类和分类下的所有数据'),
+        findsOneWidget,
+        reason: '应有"删除全部数据"选项',
+      );
+      expect(
+        find.text('删除分类并迁移分类下的所有数据到其他分类'),
+        findsOneWidget,
+        reason: '应有"迁移后删除"选项',
+      );
     });
 
     testWidgets('删除模式隐藏"编辑父分类"和"添加子分类"', (tester) async {
@@ -200,10 +211,8 @@ void main() {
       await openDialog(tester);
       await enterDeleteMode(tester);
 
-      expect(find.text('编辑父分类'), findsNothing,
-          reason: '删除模式应隐藏"编辑父分类"');
-      expect(find.text('添加子分类'), findsNothing,
-          reason: '删除模式应隐藏"添加子分类"');
+      expect(find.text('编辑父分类'), findsNothing, reason: '删除模式应隐藏"编辑父分类"');
+      expect(find.text('添加子分类'), findsNothing, reason: '删除模式应隐藏"添加子分类"');
     });
 
     testWidgets('0 选中时"确认删除"不可点击（不弹确认弹窗）', (tester) async {
@@ -215,8 +224,11 @@ void main() {
       await tester.tap(find.text('确认删除'));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('删除选中的分类'), findsNothing,
-          reason: '0 选中时点击"确认删除"不应弹出确认弹窗');
+      expect(
+        find.text('删除选中的分类'),
+        findsNothing,
+        reason: '0 选中时点击"确认删除"不应弹出确认弹窗',
+      );
     });
 
     testWidgets('选中一个子分类后显示勾选，再次点击取消选中', (tester) async {
@@ -231,14 +243,12 @@ void main() {
       // 选中
       await tester.tap(find.text('服装'));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byIcon(Icons.check), findsOneWidget,
-          reason: '选中后应显示勾选图标');
+      expect(find.byIcon(Icons.check), findsOneWidget, reason: '选中后应显示勾选图标');
 
       // 取消选中
       await tester.tap(find.text('服装'));
       await tester.pump(const Duration(milliseconds: 100));
-      expect(find.byIcon(Icons.check), findsNothing,
-          reason: '再次点击应取消选中');
+      expect(find.byIcon(Icons.check), findsNothing, reason: '再次点击应取消选中');
     });
   });
 
@@ -257,8 +267,7 @@ void main() {
       await tester.tap(find.text('确认删除'));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('删除选中的分类'), findsOneWidget,
-          reason: '确认弹窗标题应为"删除选中的分类"');
+      expect(find.text('删除选中的分类'), findsOneWidget, reason: '确认弹窗标题应为"删除选中的分类"');
       expect(
         find.text('确定要删除 1 个选中分类并且清空分类下的数据吗？此操作无法撤销。'),
         findsOneWidget,
@@ -288,13 +297,11 @@ void main() {
       ]);
 
       // 成功 toast（2 秒后自动消失，pump 推进定时器避免 pending timer）
-      expect(find.text('已删除 1 个分类'), findsOneWidget,
-          reason: '删除成功应 toast 提示');
+      expect(find.text('已删除 1 个分类'), findsOneWidget, reason: '删除成功应 toast 提示');
       await tester.pump(const Duration(seconds: 2));
 
       // 退出删除模式，回到正常模式
-      expect(find.text('删除子分类'), findsOneWidget,
-          reason: '删除完成后应回到正常模式');
+      expect(find.text('删除子分类'), findsOneWidget, reason: '删除完成后应回到正常模式');
     });
 
     testWidgets('取消确认弹窗不执行删除', (tester) async {
@@ -318,8 +325,7 @@ void main() {
   // ==================== 策略 1：迁移数据到其他分类后删除 ====================
 
   group('策略 1 迁移目标选择', () {
-    testWidgets('选择迁移策略后点"确认删除"弹出迁移目标 sheet，排除选中项',
-        (tester) async {
+    testWidgets('选择迁移策略后点"确认删除"弹出迁移目标 sheet，排除选中项', (tester) async {
       await tester.pumpWidget(buildApp());
       await prime(tester);
       await openDialog(tester);
@@ -334,18 +340,29 @@ void main() {
       await tester.tap(find.text('确认删除'));
       await tester.pump(const Duration(milliseconds: 300));
 
-      expect(find.text('选择数据迁移到的分类'), findsOneWidget,
-          reason: '应弹出迁移目标选择 sheet');
-      expect(find.text('确定（迁移分类数据并删除分类）'), findsOneWidget,
-          reason: 'sheet 应有迁移确定按钮');
+      expect(
+        find.text('选择数据迁移到的分类'),
+        findsOneWidget,
+        reason: '应弹出迁移目标选择 sheet',
+      );
+      expect(
+        find.text('确定（迁移分类数据并删除分类）'),
+        findsOneWidget,
+        reason: 'sheet 应有迁移确定按钮',
+      );
       // sheet 中的候选 chip：餐饮/交通/鞋帽 各出现 2 次（页面/弹窗 + sheet），
       // 服装仅 1 次（弹窗卡片），未出现在 sheet 候选中
-      expect(find.text('餐饮'), findsNWidgets(2),
-          reason: 'sheet 候选应包含"餐饮"（页面网格 + sheet chip）');
-      expect(find.text('服装'), findsOneWidget,
-          reason: '"服装"被排除，sheet 候选中不应出现（仅弹窗卡片 1 处）');
-      expect(find.text('鞋帽'), findsNWidgets(2),
-          reason: '未被选中的"鞋帽"可作为迁移目标');
+      expect(
+        find.text('餐饮'),
+        findsNWidgets(2),
+        reason: 'sheet 候选应包含"餐饮"（页面网格 + sheet chip）',
+      );
+      expect(
+        find.text('服装'),
+        findsOneWidget,
+        reason: '"服装"被排除，sheet 候选中不应出现（仅弹窗卡片 1 处）',
+      );
+      expect(find.text('鞋帽'), findsNWidgets(2), reason: '未被选中的"鞋帽"可作为迁移目标');
     });
 
     testWidgets('选定目标后先迁移数据再删除分类', (tester) async {
@@ -371,14 +388,19 @@ void main() {
       // 验证调用顺序：先迁移 → 再删除
       verifyInOrder([
         () => repo.migrateCategoryTransactions(
-            fromCategoryId: 4, toCategoryId: 1),
+          fromCategoryId: 4,
+          toCategoryId: 1,
+        ),
         () => repo.deleteCategoriesByIds([4]),
       ]);
       // 迁移策略不删除交易
       verifyNever(() => repo.deleteTransactionsByCategoryIds(any()));
 
-      expect(find.text('已删除 1 个分类'), findsOneWidget,
-          reason: '迁移删除成功应 toast 提示');
+      expect(
+        find.text('已删除 1 个分类'),
+        findsOneWidget,
+        reason: '迁移删除成功应 toast 提示',
+      );
       await tester.pump(const Duration(seconds: 2));
     });
   });
@@ -396,8 +418,11 @@ void main() {
 
       // 字号验证：≥ 13（过小看不清）
       final text = tester.widget<Text>(textFinder);
-      expect(text.style?.fontSize, greaterThanOrEqualTo(13),
-          reason: '"$label"字号应 ≥ 13（过小看不清）');
+      expect(
+        text.style?.fontSize,
+        greaterThanOrEqualTo(13),
+        reason: '"$label"字号应 ≥ 13（过小看不清）',
+      );
 
       // 点击热区验证：最近的 Padding 祖先应有垂直 padding ≥ 12 扩大点击热区
       final paddingFinder = find.ancestor(
@@ -406,8 +431,11 @@ void main() {
       );
       final padding = tester.widget<Padding>(paddingFinder.first);
       final resolved = padding.padding.resolve(TextDirection.ltr);
-      expect(resolved.vertical, greaterThanOrEqualTo(12),
-          reason: '"$label"应有垂直 padding ≥ 12 扩大点击热区');
+      expect(
+        resolved.vertical,
+        greaterThanOrEqualTo(12),
+        reason: '"$label"应有垂直 padding ≥ 12 扩大点击热区',
+      );
     }
 
     testWidgets('"编辑父分类"字号 ≥ 13 且有足够点击热区', (tester) async {
@@ -461,14 +489,19 @@ void main() {
 
       // 默认 2 个子分类（1 行），网格高度应远小于 maxHeight(300)
       final gridRect = tester.getRect(find.byType(ReorderableGridView));
-      expect(gridRect.height, lessThan(300),
-          reason: '子分类仅 2 个时网格应自适应收紧到 1 行高度，不撑满半屏');
+      expect(
+        gridRect.height,
+        lessThan(300),
+        reason: '子分类仅 2 个时网格应自适应收紧到 1 行高度，不撑满半屏',
+      );
 
       // 内容未超出限高，不应可滚动
-      final scrollable =
-          tester.state<ScrollableState>(gridScrollable(tester));
-      expect(scrollable.position.maxScrollExtent, equals(0.0),
-          reason: '子分类不超出限高时网格不应可滚动');
+      final scrollable = tester.state<ScrollableState>(gridScrollable(tester));
+      expect(
+        scrollable.position.maxScrollExtent,
+        equals(0.0),
+        reason: '子分类不超出限高时网格不应可滚动',
+      );
     });
 
     testWidgets('子分类多时网格受 maxHeight 限制并支持滚动', (tester) async {
@@ -492,8 +525,7 @@ void main() {
         manyCats.add((category: sub, transactionCount: 0));
       }
       // 覆盖 setUp 中的 stub，返回 16 个子分类
-      when(() => repo.getSubCategories(3))
-          .thenAnswer((_) async => manySubs);
+      when(() => repo.getSubCategories(3)).thenAnswer((_) async => manySubs);
 
       await tester.pumpWidget(buildApp(categories: manyCats));
       await prime(tester);
@@ -501,14 +533,19 @@ void main() {
 
       // 网格高度应被 maxHeight(300) 限制，不撑破弹窗
       final gridRect = tester.getRect(find.byType(ReorderableGridView));
-      expect(gridRect.height, lessThanOrEqualTo(300.0),
-          reason: '子分类超出 maxHeight 时网格应限高到 maxHeight，不撑破弹窗');
+      expect(
+        gridRect.height,
+        lessThanOrEqualTo(300.0),
+        reason: '子分类超出 maxHeight 时网格应限高到 maxHeight，不撑破弹窗',
+      );
 
       // 内容超出限高，应可滚动查看被截断的子分类
-      final scrollable =
-          tester.state<ScrollableState>(gridScrollable(tester));
-      expect(scrollable.position.maxScrollExtent, greaterThan(0.0),
-          reason: '子分类过多超出限高时，网格应可滚动查看');
+      final scrollable = tester.state<ScrollableState>(gridScrollable(tester));
+      expect(
+        scrollable.position.maxScrollExtent,
+        greaterThan(0.0),
+        reason: '子分类过多超出限高时，网格应可滚动查看',
+      );
     });
   });
 }

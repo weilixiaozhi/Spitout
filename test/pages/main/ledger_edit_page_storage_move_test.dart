@@ -7,8 +7,7 @@ import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart';
 
 import 'package:spitout/cloud/sync/change_tracker.dart';
-import 'package:spitout/cloud/sync/sync_service.dart'
-    show LocalOnlySyncService;
+import 'package:spitout/cloud/sync/sync_service.dart' show LocalOnlySyncService;
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
@@ -20,9 +19,9 @@ import '../../helpers/test_isolation.dart';
 
 /// [LedgerEditPage] 账本归属移动区(从列表页「更多」菜单下沉而来)的 widget 测试。
 ///
-/// 设计意图:本次迁移把「移动到 Spitout Cloud / 移动到本地 / 复制到本地」统一收口到
+/// 设计意图:「移动到 Spitout Cloud / 移动到本地 / 复制到本地」统一收口到
 /// 编辑页,显示逻辑 fail-closed(不满足条件就不给入口,避免点了才报错的死路);
-/// 同时本地账本不再展示成员管理(无 syncId 接不进协作端)。
+/// 本地账本不展示成员管理(无 syncId 接不进协作端)。
 void main() {
   late SpitoutDatabase db;
   late LocalRepository repo;
@@ -45,7 +44,9 @@ void main() {
     String myRole = 'owner',
   }) async {
     final extId = isCloud ? 'ext-1' : '';
-    final localId = await db.into(db.ledgers).insert(
+    final localId = await db
+        .into(db.ledgers)
+        .insert(
           LedgersCompanion.insert(
             name: 'L-$extId',
             syncId: isCloud ? Value(extId) : const Value.absent(),
@@ -95,8 +96,9 @@ void main() {
         home: ProviderScope(
           overrides: [
             repositoryProvider.overrideWith((ref) => repo),
-            currentLedgerProvider
-                .overrideWith((ref) => Stream<Ledger?>.value(null)),
+            currentLedgerProvider.overrideWith(
+              (ref) => Stream<Ledger?>.value(null),
+            ),
             // 隔离真实 SyncEngine:本文件是编辑页 UI 测试,只断言归属移动 tile 的
             // 显示/收纳,不需要云端实时同步。若走真实 SyncEngine,渲染云端账本成员区
             // 会触发 SyncCoordinator(drift stream query)与 SyncEngine 的 dispose 链,
@@ -104,17 +106,18 @@ void main() {
             // 用 LocalOnlySyncService 替换可完全避开该链路(与 home_page_test 同模式)。
             // 注意 ledgerMembersProvider 只 watch spitoutCloudProviderInstance,
             // 不依赖 syncServiceProvider,故成员区渲染不受此 override 影响。
-            syncServiceProvider.overrideWith(
-                (ref) => LocalOnlySyncService()),
-            activeCloudConfigProvider.overrideWith((ref) async => CloudServiceConfig(
-                  type: cloudType,
-                  name: cloudType == CloudBackendType.spitoutCloud
-                      ? 'Spitout Cloud'
-                      : 'Local',
-                  spitoutCloudBaseUrl: cloudType == CloudBackendType.spitoutCloud
-                      ? 'https://example.com'
-                      : null,
-                )),
+            syncServiceProvider.overrideWith((ref) => LocalOnlySyncService()),
+            activeCloudConfigProvider.overrideWith(
+              (ref) async => CloudServiceConfig(
+                type: cloudType,
+                name: cloudType == CloudBackendType.spitoutCloud
+                    ? 'Spitout Cloud'
+                    : 'Local',
+                spitoutCloudBaseUrl: cloudType == CloudBackendType.spitoutCloud
+                    ? 'https://example.com'
+                    : null,
+              ),
+            ),
           ],
           // 与生产 main.dart 一致：关闭 Riverpod 3 自动重试。
           // 否则未登录场景下成员区 provider 失败后会持续重试，pumpAndSettle 永不收敛。
@@ -133,11 +136,13 @@ void main() {
   }
 
   // 本地 + 已登录 Spitout Cloud → 仅「移动到 Spitout Cloud」
-  testWidgets('本地账本 + Spitout Cloud:显示移动到云端,隐藏移动到本地/复制与邀请新成员',
-      (tester) async {
+  testWidgets('本地账本 + Spitout Cloud:显示移动到云端,隐藏移动到本地/复制与邀请新成员', (tester) async {
     final ledger = await seed(isShared: false, isCloud: false);
-    final l10n = await pump(tester, ledger,
-        cloudType: CloudBackendType.spitoutCloud);
+    final l10n = await pump(
+      tester,
+      ledger,
+      cloudType: CloudBackendType.spitoutCloud,
+    );
     expect(find.text(l10n.ledgersActionMoveToCloud), findsOneWidget);
     expect(find.text(l10n.ledgersActionMoveToLocal), findsNothing);
     expect(find.text(l10n.ledgersActionCopyToLocal), findsNothing);
@@ -148,11 +153,13 @@ void main() {
   });
 
   // 云端 + 非共享 + Spitout Cloud → 「移动到本地」+「复制到本地」
-  testWidgets('云端非共享账本 + Spitout Cloud:显示移动到本地与复制,隐藏移动到云端',
-      (tester) async {
+  testWidgets('云端非共享账本 + Spitout Cloud:显示移动到本地与复制,隐藏移动到云端', (tester) async {
     final ledger = await seed(isShared: false, isCloud: true);
-    final l10n = await pump(tester, ledger,
-        cloudType: CloudBackendType.spitoutCloud);
+    final l10n = await pump(
+      tester,
+      ledger,
+      cloudType: CloudBackendType.spitoutCloud,
+    );
     expect(find.text(l10n.ledgersActionMoveToLocal), findsOneWidget);
     expect(find.text(l10n.ledgersActionCopyToLocal), findsOneWidget);
     expect(find.text(l10n.ledgersActionMoveToCloud), findsNothing);
@@ -161,11 +168,13 @@ void main() {
   });
 
   // 云端 + 共享 + Spitout Cloud → 仅「复制到本地」
-  testWidgets('云端共享账本 + Spitout Cloud:仅显示复制到本地,隐藏移动到本地',
-      (tester) async {
+  testWidgets('云端共享账本 + Spitout Cloud:仅显示复制到本地,隐藏移动到本地', (tester) async {
     final ledger = await seed(isShared: true, isCloud: true);
-    final l10n = await pump(tester, ledger,
-        cloudType: CloudBackendType.spitoutCloud);
+    final l10n = await pump(
+      tester,
+      ledger,
+      cloudType: CloudBackendType.spitoutCloud,
+    );
     expect(find.text(l10n.ledgersActionCopyToLocal), findsOneWidget);
     expect(find.text(l10n.ledgersActionMoveToLocal), findsNothing);
     expect(find.text(l10n.ledgersActionMoveToCloud), findsNothing);
@@ -175,8 +184,7 @@ void main() {
   // 任何账本 + 未登录(非 Spitout Cloud) → 无归属移动入口
   testWidgets('未登录 Spitout Cloud:归属移动区整体不显示', (tester) async {
     final ledger = await seed(isShared: false, isCloud: false);
-    final l10n =
-        await pump(tester, ledger, cloudType: CloudBackendType.local);
+    final l10n = await pump(tester, ledger, cloudType: CloudBackendType.local);
     expect(find.text(l10n.ledgersActionMoveToCloud), findsNothing);
     expect(find.text(l10n.ledgersActionMoveToLocal), findsNothing);
     expect(find.text(l10n.ledgersActionCopyToLocal), findsNothing);
@@ -185,15 +193,17 @@ void main() {
   // 点击归属移动项 → 弹出二次确认对话框(验证 _confirmStorageMove 已接通)
   testWidgets('点击移动到云端:弹出二次确认对话框', (tester) async {
     final ledger = await seed(isShared: false, isCloud: false);
-    final l10n = await pump(tester, ledger,
-        cloudType: CloudBackendType.spitoutCloud);
+    final l10n = await pump(
+      tester,
+      ledger,
+      cloudType: CloudBackendType.spitoutCloud,
+    );
 
     await tester.tap(find.text(l10n.ledgersActionMoveToCloud));
     await tester.pumpAndSettle();
 
     // 列表项与对话框标题各有一处,证明二次确认对话框已弹出。
-    expect(find.text(l10n.ledgersActionMoveToCloud),
-        findsAtLeastNWidgets(2));
+    expect(find.text(l10n.ledgersActionMoveToCloud), findsAtLeastNWidgets(2));
   });
 
   // ── 间距内化回归测试 ──
@@ -213,10 +223,8 @@ void main() {
     /// 注意:仅适用于「卡片内部」的文本 —— 区块标题在 Card 外,
     /// 需用 [titleTop] 以标题顶作为区块顶锚点。
     Rect cardRect(WidgetTester tester, String text) => tester.getRect(
-          find
-              .ancestor(of: find.text(text), matching: find.byType(Card))
-              .first,
-        );
+      find.ancestor(of: find.text(text), matching: find.byType(Card)).first,
+    );
 
     /// 取区块标题文本的顶边 y 坐标。
     ///
@@ -227,7 +235,7 @@ void main() {
 
     /// 断言危险操作(清空账本)已收纳进右上角"更多"菜单,页面常驻视图中不应出现。
     ///
-    /// 间距内化重构把"危险区"从常驻卡片移入弹出菜单,因此它不再是页面布局的一部分,
+    /// "危险区"收纳在右上角"更多"菜单中,不是页面常驻布局的一部分,
     /// 既不能作为间距锚点,也不应残留为可见区块 —— 这里显式校验这一收纳行为。
     void expectDangerMovedToMenu(WidgetTester tester, AppLocalizations l10n) {
       expect(
@@ -237,11 +245,13 @@ void main() {
       );
     }
 
-    testWidgets('非 Spitout Cloud:两区皆隐藏,月起始日卡片到保存按钮无孤儿间隙',
-        (tester) async {
+    testWidgets('非 Spitout Cloud:两区皆隐藏,月起始日卡片到保存按钮无孤儿间隙', (tester) async {
       final ledger = await seed(isShared: false, isCloud: false);
-      final l10n =
-          await pump(tester, ledger, cloudType: CloudBackendType.local);
+      final l10n = await pump(
+        tester,
+        ledger,
+        cloudType: CloudBackendType.local,
+      );
 
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
@@ -249,18 +259,25 @@ void main() {
       // 间距内化后,这两个隐藏区返回零高度 SizedBox.shrink 且不残留独立间隔,
       // 故月起始日卡片在 ListView 内成为最后一个可见区块 —— 此处通过结构断言确认
       // 它们确实整体消失,避免隐藏区留下空 Card 或孤儿间隙。
-      expect(tester.any(find.text(l10n.ledgersStorageLocation)), isFalse,
-          reason: '非 Spitout Cloud 场景存储归属区应整体隐藏');
+      expect(
+        tester.any(find.text(l10n.ledgersStorageLocation)),
+        isFalse,
+        reason: '非 Spitout Cloud 场景存储归属区应整体隐藏',
+      );
     });
 
-    testWidgets('Spitout Cloud + 本地账本:归属区自带 16px 上间距,危险操作已收纳',
-        (tester) async {
+    testWidgets('Spitout Cloud + 本地账本:归属区自带 16px 上间距,危险操作已收纳', (tester) async {
       final ledger = await seed(isShared: false, isCloud: false);
-      final l10n = await pump(tester, ledger,
-          cloudType: CloudBackendType.spitoutCloud);
+      final l10n = await pump(
+        tester,
+        ledger,
+        cloudType: CloudBackendType.spitoutCloud,
+      );
 
-      final monthBottom =
-          cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
+      final monthBottom = cardRect(
+        tester,
+        l10n.ledgersMonthStartDayNatural,
+      ).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
       // 成员管理标题行(含 AA 开关)采用内化间距:其标题顶到
@@ -276,14 +293,18 @@ void main() {
       expect(storageTitleTop, greaterThan(memberTitleTop));
     });
 
-    testWidgets('Spitout Cloud + 云端账本:两区皆展示,各自内化 16px',
-        (tester) async {
+    testWidgets('Spitout Cloud + 云端账本:两区皆展示,各自内化 16px', (tester) async {
       final ledger = await seed(isShared: false, isCloud: true);
-      final l10n = await pump(tester, ledger,
-          cloudType: CloudBackendType.spitoutCloud);
+      final l10n = await pump(
+        tester,
+        ledger,
+        cloudType: CloudBackendType.spitoutCloud,
+      );
 
-      final monthBottom =
-          cardRect(tester, l10n.ledgersMonthStartDayNatural).bottom;
+      final monthBottom = cardRect(
+        tester,
+        l10n.ledgersMonthStartDayNatural,
+      ).bottom;
       // 危险操作已收纳进菜单,页面常驻视图不应出现"清空账本"。
       expectDangerMovedToMenu(tester, l10n);
       // 成员管理标题行(含 AA 开关)采用内化间距:其标题顶到月起始日卡片底

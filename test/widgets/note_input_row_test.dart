@@ -1,6 +1,6 @@
 /// NoteInputRow 清空按钮显隐回归测试。
 ///
-/// 修复点：清空按钮改为 ValueListenableBuilder 监听 controller 自身，
+/// 清空按钮通过 ValueListenableBuilder 监听 controller 自身，
 /// 输入内容变化后按钮即时出现 / 消失，不依赖父层重建。
 library;
 
@@ -11,6 +11,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/keypad_constants.dart';
 import 'package:spitout/widgets/note_input_row.dart';
 
 void main() {
@@ -85,7 +86,28 @@ void main() {
     expect(
       height,
       closeTo(80, 0.5),
-      reason: '备注行应填满父级提供的行高（比其余 5 行矮 10px 由父级控制）',
+      reason: '备注行应填满父级提供的行高（比其余 5 行矮 5px 由父级控制）',
+    );
+
+    controller.dispose();
+  });
+
+  testWidgets('备注输入框圆角跟随全局 KeypadLayout.keyRadius', (tester) async {
+    final controller = TextEditingController();
+    await tester.pumpWidget(buildRow(controller, (_) {}, height: 80));
+
+    final clip = tester.widget<ClipRRect>(
+      find
+          .descendant(
+            of: find.byType(NoteInputRow),
+            matching: find.byType(ClipRRect),
+          )
+          .first,
+    );
+    expect(
+      clip.borderRadius,
+      BorderRadius.circular(KeypadLayout.keyRadius),
+      reason: '备注输入框圆角应与键盘按键统一为 5px',
     );
 
     controller.dispose();

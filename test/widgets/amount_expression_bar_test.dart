@@ -1,8 +1,8 @@
 /// AmountExpressionBar（记账编辑器金额栏）布局回归测试。
 ///
-/// 本次需求（键盘布局重构）：金额栏是键盘容器 6 行中的 1 行，行高由父级
-/// SizedBox 提供；币种框 / 金额区 / 删除键三个区块统一 stretch 填满整行；
-/// 币种框/删除键为深灰块、金额区为白色块、圆角 5px、水平键距 2px。
+/// 金额栏是键盘容器 6 行中的 1 行，行高由父级 SizedBox 提供；
+/// 币种框 / 金额区 / 删除键三个区块统一 stretch 填满整行；
+/// 币种框/金额区为白色块、删除键为深灰块、圆角 5px、水平键距 2px。
 library;
 
 import 'package:flutter/material.dart';
@@ -17,7 +17,20 @@ import 'package:spitout/widgets/keypad_constants.dart';
 import 'package:spitout/widgets/press_key.dart';
 
 void main() {
-  Widget buildHarness({double rowHeight = 80}) {
+  Widget buildHarness({
+    double rowHeight = 80,
+    String txCurrency = 'CNY',
+    String ledgerBase = 'CNY',
+    String amountStr = '0',
+    String calcState = 'waiting',
+    double acc = 0,
+    String? op,
+    double equalsTotal = 0,
+    String? conversionPreview,
+    bool rateFetching = false,
+    bool rateMissing = false,
+    String rateMissingHint = '',
+  }) {
     return ProviderScope(
       child: MaterialApp(
         localizationsDelegates: const [
@@ -35,18 +48,18 @@ void main() {
               width: 360,
               height: rowHeight,
               child: AmountExpressionBar(
-                txCurrency: 'CNY',
-                ledgerBase: 'CNY',
-                amountStr: '0',
-                acc: 0,
-                op: null,
+                txCurrency: txCurrency,
+                ledgerBase: ledgerBase,
+                amountStr: amountStr,
+                acc: acc,
+                op: op,
                 opGlyph: (o) => o,
-                equalsTotal: 0,
-                calcState: 'waiting',
-                conversionPreview: null,
-                rateFetching: false,
-                rateMissing: false,
-                rateMissingHint: '',
+                equalsTotal: equalsTotal,
+                calcState: calcState,
+                conversionPreview: conversionPreview,
+                rateFetching: rateFetching,
+                rateMissing: rateMissing,
+                rateMissingHint: rateMissingHint,
                 onPickCurrency: () {},
                 onEditRate: () {},
                 onClearAmount: () {},
@@ -84,7 +97,7 @@ void main() {
     );
   });
 
-  testWidgets('币种/删除深灰块、金额区白色块、圆角 5px、键距 2px', (tester) async {
+  testWidgets('币种/金额区/删除块配色：币种白、金额白、删除深灰、圆角 5px、键距 2px', (tester) async {
     await tester.pumpWidget(buildHarness(rowHeight: 80));
 
     // 币种框与金额区背景色
@@ -96,7 +109,7 @@ void main() {
     );
     final chipDeco = chip.decoration! as BoxDecoration;
     final areaDeco = area.decoration! as BoxDecoration;
-    expect(chipDeco.color, SpitoutColors.lightKeyOther);
+    expect(chipDeco.color, SpitoutColors.lightKeyDigit);
     expect(areaDeco.color, SpitoutColors.lightKeyDigit);
     expect(
       chipDeco.borderRadius,
@@ -126,6 +139,68 @@ void main() {
     );
   });
 
+  testWidgets('外币折算预览：金额区第二行，正常行高下可见', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(
+        rowHeight: 80,
+        txCurrency: 'USD',
+        ledgerBase: 'CNY',
+        conversionPreview: '≈ 86.40 CNY',
+      ),
+    );
+
+    final preview = find.descendant(
+      of: find.byKey(const ValueKey('amount_area')),
+      matching: find.text('≈ 86.40 CNY'),
+    );
+    expect(preview, findsOneWidget, reason: '折算预览应显示在金额区内第二行');
+  });
+
+  testWidgets('外币折算预览：短屏行高 25 也始终显示（不隐藏）', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(
+        rowHeight: 25,
+        txCurrency: 'USD',
+        ledgerBase: 'CNY',
+        conversionPreview: '≈ 86.40 CNY',
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('amount_area')),
+        matching: find.text('≈ 86.40 CNY'),
+      ),
+      findsOneWidget,
+      reason: '短屏行高变小时预览应保留（字号收缩，不隐藏）',
+    );
+  });
+
+  testWidgets('外币折算预览：计算中（operating）也显示', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(
+        rowHeight: 80,
+        txCurrency: 'USD',
+        ledgerBase: 'CNY',
+        amountStr: '20',
+        calcState: 'operating',
+        acc: 10,
+        op: '+',
+        equalsTotal: 30,
+        conversionPreview: '≈ 86.40 CNY',
+      ),
+    );
+
+    expect(
+      find.descendant(
+        of: find.byKey(const ValueKey('amount_area')),
+        matching: find.text('≈ 86.40 CNY'),
+      ),
+      findsOneWidget,
+      reason: '按运算符进入计算中后折算预览不应消失',
+    );
+  });
+
   testWidgets('币种触发器走全局展示格式：ISO + (符号)，如 CNY (¥)', (tester) async {
     await tester.pumpWidget(buildHarness(rowHeight: 80));
 
@@ -136,5 +211,17 @@ void main() {
       findsOneWidget,
       reason: '币种触发器应展示全局统一的「ISO + (符号)」格式',
     );
+  });
+
+  testWidgets('币种字体大小从行高 h 派生（与数字键统一）', (tester) async {
+    await tester.pumpWidget(buildHarness(rowHeight: 40));
+    final small = tester.widget<Text>(find.text('CNY (¥)')).style!.fontSize;
+
+    await tester.pumpWidget(buildHarness(rowHeight: 80));
+    final large = tester.widget<Text>(find.text('CNY (¥)')).style!.fontSize;
+
+    expect(small, closeTo((40 * 0.36).clamp(12.0, 20.0), 0.01));
+    expect(large, closeTo((80 * 0.36).clamp(12.0, 20.0), 0.01));
+    expect(large, greaterThan(small!), reason: '行高变大时币种字体应同步变大');
   });
 }

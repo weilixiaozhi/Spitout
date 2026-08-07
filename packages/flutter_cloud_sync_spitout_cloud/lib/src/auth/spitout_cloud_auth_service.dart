@@ -30,7 +30,7 @@ import 'session_store.dart';
 /// 返回 null = 验证通过(UI 应关闭对话框并让 handler 返回 true),
 /// 返回非 null 字符串 = 错误信息(UI 就地展示,让用户重试)。
 ///
-/// 这样 view 留在原地,失败可重试,不再"输错就跳走没提示"。
+/// 这样 view 留在原地,失败可重试,不会"输错就跳走没提示"。
 class TwoFactorChallengeRequest {
   final String challengeToken;
   final List<String> availableMethods; // ['totp', 'recovery_code']
@@ -136,7 +136,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
   Future<CloudUser>? _recoveryInFlight;
 
   /// 静默恢复失败后冷却到这个时间点,期间所有 currentUser / requireAccessToken
-  /// 调用都直接返 null,**不再发新的 /auth/login 请求**。
+  /// 调用都直接返 null,**不发新的 /auth/login 请求**。
   /// 防止 UI 频繁 rebuild 导致 silent recovery 狂打 login 撞上 server 30/min 限流,
   /// 后果是用户主动点「重新登录」时反而被 429 挡掉。
   /// 触发场景:
@@ -303,7 +303,8 @@ class SpitoutCloudAuthService implements CloudAuthService {
     }
     // 后台恢复用 silent 模式:遇到 2FA 不弹 dialog,直接当登录失败处理,
     // 让用户在 sync page 主动点「重新登录」时再触发。
-    final future = _signInWithAccountSilent(account: account, password: password);
+    final future =
+        _signInWithAccountSilent(account: account, password: password);
     _recoveryInFlight = future;
     try {
       return await future;
@@ -1005,8 +1006,7 @@ class _SpitoutCloudSession {
 
     return _SpitoutCloudSession(
       userId: userId,
-      account:
-          (user['account'] as String?) ?? user['email'] as String?,
+      account: (user['account'] as String?) ?? user['email'] as String?,
       accessToken: accessToken,
       refreshToken: refreshToken,
       accessTokenExpiresAt:

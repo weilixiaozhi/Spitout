@@ -10,7 +10,7 @@ import 'cloud_service_config.dart';
 /// 支持:
 /// - Spitout Cloud / Supabase / WebDAV / S3: 由各自 adapter 包经
 ///   [CloudProviderRegistry] 自注册（主工程在 main.dart 调用 adapter 包的
-///   `register*Backend()`）。核心包不再 import 任何 adapter，依赖方向
+///   `register*Backend()`）。核心包不 import 任何 adapter，依赖方向
 ///   单向化：adapter → 核心。
 ///
 /// 未注册的 adapter 后端会抛 [StateError]，提示在 Composition Root 完成注册。

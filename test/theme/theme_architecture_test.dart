@@ -7,20 +7,26 @@ import 'package:spitout/theme/icons/category_icons.dart';
 
 /// 主题/图标架构约束 + 图标完整性审计（统一校验流程）。
 ///
-/// 整合原 test/category_icon_audit_test.dart 的图标缺口审计逻辑，并补充与本次
-/// 重构直接相关的架构约束回归保护：
-/// - colors.dart 不得反向依赖 provider（阶段三：Token 层纯展示）；
-/// - 主题色板魔法数字仅允许存在于 SpitoutColors（阶段二：单一真相源）；
+/// 图标缺口审计逻辑与架构约束保护：
+/// - colors.dart 不得反向依赖 provider（Token 层纯展示）；
+/// - 主题色板魔法数字仅允许存在于 SpitoutColors（单一真相源）；
 /// - seed 分类默认图标 100% 命中 lucideIconLibrary（图标资源完整无遗漏）。
 void main() {
   group('架构约束: 主题 Token 层纯展示（阶段一/三）', () {
     test('colors.dart 不得反向依赖 provider', () {
       final content = File('lib/theme/colors.dart').readAsStringSync();
-      expect(content.contains('flutter_riverpod'), isFalse,
-          reason: 'colors.dart 不应 import flutter_riverpod：Token 层禁止反向依赖 '
-              'Provider（阶段三已删除 SpitoutTokens.expenseColor）');
-      expect(content.contains('theme_providers'), isFalse,
-          reason: 'colors.dart 不应 import providers/theme_providers');
+      expect(
+        content.contains('flutter_riverpod'),
+        isFalse,
+        reason:
+            'colors.dart 不应 import flutter_riverpod：Token 层禁止反向依赖 '
+            'Provider（阶段三已删除 SpitoutTokens.expenseColor）',
+      );
+      expect(
+        content.contains('theme_providers'),
+        isFalse,
+        reason: 'colors.dart 不应 import providers/theme_providers',
+      );
     });
 
     /// 守护阶段二「颜色单一真相源」：除集中色板文件外，主题目录下不应再散落
@@ -33,9 +39,13 @@ void main() {
         final c = entity.readAsStringSync();
         if (c.contains('Color(0x')) offenders.add(entity.path);
       }
-      expect(offenders, isEmpty,
-          reason: '除 colors.dart 外的主题文件不应再出现 Color(0xFF..) 魔法数字: '
-              '${offenders.join(', ')}');
+      expect(
+        offenders,
+        isEmpty,
+        reason:
+            '除 colors.dart 外的主题文件不应再出现 Color(0xFF..) 魔法数字: '
+            '${offenders.join(', ')}',
+      );
     });
   });
 
@@ -55,7 +65,9 @@ void main() {
 
       for (final key in allKeys) {
         final iconName = SeedService.getDefaultIcon(key); // seed 意图图标名
-        final icon = lucideIconLibrary[iconName] ?? lucideFallback; // 运行时真实解析（与 category_icon.dart 的 resolveCategoryIcon 口径一致）
+        final icon =
+            lucideIconLibrary[iconName] ??
+            lucideFallback; // 运行时真实解析（与 category_icon.dart 的 resolveCategoryIcon 口径一致）
         if (icon == lucideFallback) {
           // 命中注册表兜底即视为缺口。
           gaps.add('$key -> "$iconName" 未命中 lucideIconLibrary');
@@ -77,8 +89,11 @@ void main() {
       if (gaps.isNotEmpty) {
         final reportFile = File('.icon_audit_report.txt');
         reportFile.writeAsStringSync(sb.toString());
-        expect(gaps, isEmpty,
-            reason: 'seed 分类默认图标必须全部命中注册表: ${gaps.join('; ')}');
+        expect(
+          gaps,
+          isEmpty,
+          reason: 'seed 分类默认图标必须全部命中注册表: ${gaps.join('; ')}',
+        );
       }
     });
 
@@ -90,9 +105,13 @@ void main() {
           .where((e) => e.key != 'helpCircle' && e.value == lucideFallback)
           .map((e) => e.key)
           .toList();
-      expect(misuse, isEmpty,
-          reason: 'lucideIconLibrary 不应有任何 key 直接映射到兜底 helpCircle: '
-              '${misuse.join(', ')}');
+      expect(
+        misuse,
+        isEmpty,
+        reason:
+            'lucideIconLibrary 不应有任何 key 直接映射到兜底 helpCircle: '
+            '${misuse.join(', ')}',
+      );
     });
   });
 }

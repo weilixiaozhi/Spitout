@@ -26,8 +26,16 @@ import 'package:spitout/data/repositories/local/local_repository.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
-Future<(SpitoutDatabase, ChangeTracker, LocalRepository, FakeSpitoutCloudProvider,
-    SyncEngine)> _harness() async {
+Future<
+  (
+    SpitoutDatabase,
+    ChangeTracker,
+    LocalRepository,
+    FakeSpitoutCloudProvider,
+    SyncEngine,
+  )
+>
+_harness() async {
   final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
   final changeTracker = ChangeTracker(db);
   final repo = LocalRepository(db, changeTracker: changeTracker);
@@ -49,7 +57,9 @@ Future<int> _insertCloudLedger(
   bool isShared = false,
   String? myRole,
 }) {
-  return db.into(db.ledgers).insert(
+  return db
+      .into(db.ledgers)
+      .insert(
         LedgersCompanion.insert(
           name: name,
           syncId: Value(syncId),
@@ -74,7 +84,9 @@ void main() {
       final (db, _, _, _, engine) = await _harness();
       addTearDown(db.close);
 
-      await db.into(db.ledgers).insert(
+      await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
@@ -100,21 +112,27 @@ void main() {
 
       final result = await engine.syncAccount();
 
-      expect(result.skipped, 1,
-          reason: '无待推 + 已绑定应整账本跳过(不再发 push/pull)');
+      expect(result.skipped, 1, reason: '无待推 + 已绑定应整账本跳过(不再发 push/pull)');
       expect(result.pushed, 0);
       // fast-skip 整账本跳过:预置的远端 snapshot 必须保持存在,不得被删除/覆盖。
       // (download 断言这里不适用:预置的 snapshot 只进 ledgerSnapshots 列表,
       // 不代表本地 storage 有内容,所以用 exists 验证"远端仍存在"语义。)
-      expect(await provider.storage.exists(path: 'ledger-a'), isTrue,
-          reason: 'snapshot 由测试预置,fast-skip 不应改动它');
+      expect(
+        await provider.storage.exists(path: 'ledger-a'),
+        isTrue,
+        reason: 'snapshot 由测试预置,fast-skip 不应改动它',
+      );
     });
 
     test('增量 push:有 unpushed + 已绑定 → 推变更,不上传 snapshot', () async {
       final (db, changeTracker, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerId = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerId = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
       await changeTracker.recordLedgerChange(
         entityType: 'transaction',
@@ -128,8 +146,11 @@ void main() {
 
       expect(result.skipped, 0);
       expect(result.pushed, 1, reason: '1 条 unpushed change 应被推送');
-      expect(await provider.storage.download(path: 'ledger-a'), isNull,
-          reason: '已绑定账本走增量 push,不应触发 fullPush 上传 snapshot');
+      expect(
+        await provider.storage.download(path: 'ledger-a'),
+        isNull,
+        reason: '已绑定账本走增量 push,不应触发 fullPush 上传 snapshot',
+      );
     });
 
     test('push 后清缓存 + emit PushCompleted,getStatus 从 localNewer 刷新为 inSync'
@@ -138,7 +159,11 @@ void main() {
       addTearDown(db.close);
 
       // 远端已有此账本 → 走增量 push,避开 fullPush 复杂路径。
-      final ledgerId = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerId = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
       // 本地写一条 tx → 产生 unpushed local_change。
       await repo.insertTransactionsBatch([
@@ -152,8 +177,11 @@ void main() {
 
       // 同步前:有未推送变更 → getStatus = localNewer,并把结果写进 _statusCache。
       final before = await engine.getStatus(ledgerId: ledgerId);
-      expect(before.diff, SyncDiff.localNewer,
-          reason: '本地有未推送变更,同步前应为 localNewer(并落入缓存)');
+      expect(
+        before.diff,
+        SyncDiff.localNewer,
+        reason: '本地有未推送变更,同步前应为 localNewer(并落入缓存)',
+      );
 
       final received = <SyncEvent>[];
       final sub = engine.events.listen(received.add);
@@ -162,21 +190,30 @@ void main() {
       await sub.cancel();
 
       expect(result.pushed, greaterThan(0));
-      // 修复点 1:push 完成 emit PushCompleted,通知 UI 重新读同步状态。
-      expect(received.whereType<PushCompleted>(), isNotEmpty,
-          reason: 'syncAccount 上传本地变更后必须 emit PushCompleted');
-      // 修复点 2(真正根因):push 后清了 _statusCache,getStatus 不再吃旧缓存。
+      // push 完成 emit PushCompleted,通知 UI 重新读同步状态。
+      expect(
+        received.whereType<PushCompleted>(),
+        isNotEmpty,
+        reason: 'syncAccount 上传本地变更后必须 emit PushCompleted',
+      );
+      // push 后清 _statusCache,getStatus 不读旧缓存。
       final after = await engine.getStatus(ledgerId: ledgerId);
-      expect(after.diff, SyncDiff.inSync,
-          reason: 'syncAccount push 成功后 getStatus 必须刷新为 inSync;'
-              '命中旧缓存返回 localNewer 即是本 bug 复现');
+      expect(
+        after.diff,
+        SyncDiff.inSync,
+        reason:
+            'syncAccount push 成功后 getStatus 必须刷新为 inSync;'
+            '命中旧缓存返回 localNewer 即是本 bug 复现',
+      );
     });
 
     test('纯本地账本 getStatus 返回 localOnly,不误报"本地有更新"', () async {
       final (db, _, repo, _, engine) = await _harness();
       addTearDown(db.close);
 
-      final localId = await db.into(db.ledgers).insert(
+      final localId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
@@ -193,8 +230,11 @@ void main() {
 
       final status = await engine.getStatus(ledgerId: localId);
 
-      expect(status.diff, SyncDiff.localOnly,
-          reason: '纯本地账本不上云,不应因本地有数据而被判为待上传');
+      expect(
+        status.diff,
+        SyncDiff.localOnly,
+        reason: '纯本地账本不上云,不应因本地有数据而被判为待上传',
+      );
       expect(status.localCount, 1);
     });
 
@@ -213,9 +253,15 @@ void main() {
         categoryTotal: 0,
       );
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       for (final sid in ['tx-a1', 'tx-a2']) {
-        await db.into(db.transactions).insert(
+        await db
+            .into(db.transactions)
+            .insert(
               TransactionsCompanion.insert(
                 ledgerId: ledgerA,
                 type: 'expense',
@@ -225,7 +271,9 @@ void main() {
               ),
             );
       }
-      final ledgerB = await db.into(db.ledgers).insert(
+      final ledgerB = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'B',
               syncId: const Value('ledger-b'),
@@ -235,7 +283,9 @@ void main() {
             ),
           );
       for (final sid in ['tx-b1', 'tx-b2', 'tx-b3']) {
-        await db.into(db.transactions).insert(
+        await db
+            .into(db.transactions)
+            .insert(
               TransactionsCompanion.insert(
                 ledgerId: ledgerB,
                 type: 'expense',
@@ -248,17 +298,26 @@ void main() {
 
       final before = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
       expect(before, isNotNull);
-      expect(before!.hasDiff, isTrue,
-          reason: '本地残留共享账本交易计入 totalTx,云端没有 → 报差异');
+      expect(
+        before!.hasDiff,
+        isTrue,
+        reason: '本地残留共享账本交易计入 totalTx,云端没有 → 报差异',
+      );
 
       await engine.syncAccount();
 
       final after = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
       expect(after, isNotNull);
-      expect(after!.totalTx.local, 2,
-          reason: 'syncAccount 应先对账账本清单,清理 server 已不存在的残留共享账本');
-      expect(after.hasDiff, isFalse,
-          reason: '清理残留后账户级对账应恢复一致,不再显示"检测到差异,已自动同步"');
+      expect(
+        after!.totalTx.local,
+        2,
+        reason: 'syncAccount 应先对账账本清单,清理 server 已不存在的残留共享账本',
+      );
+      expect(
+        after.hasDiff,
+        isFalse,
+        reason: '清理残留后账户级对账应恢复一致,不再显示"检测到差异,已自动同步"',
+      );
     });
 
     test('fullPush:syncId 不在远端 → 上传 snapshot(fullPush 真实发生)', () async {
@@ -266,9 +325,14 @@ void main() {
       addTearDown(db.close);
 
       // 有 syncId 但 server 端没有对应 snapshot → inRemote=false → fullPush。
-      final ledgerId =
-          await _insertCloudLedger(db, name: 'A', syncId: 'ledger-fp');
-      await db.into(db.transactions).insert(
+      final ledgerId = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-fp',
+      );
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerId,
               type: 'expense',
@@ -281,8 +345,7 @@ void main() {
 
       expect(result.skipped, 0);
       final uploaded = await provider.storage.download(path: 'ledger-fp');
-      expect(uploaded, isNotNull,
-          reason: '远端无该账本时必须 fullPush 上传 snapshot');
+      expect(uploaded, isNotNull, reason: '远端无该账本时必须 fullPush 上传 snapshot');
     });
 
     test('共享 Editor:只增量 push,不 fullPush(不 upload snapshot)', () async {
@@ -316,15 +379,22 @@ void main() {
 
       expect(result.skipped, 0);
       expect(result.pushed, 1);
-      expect(await provider.storage.download(path: 'ledger-shared'), isNull,
-          reason: '共享账本 Editor 不得 fullPush(会覆盖 Owner 数据)');
+      expect(
+        await provider.storage.download(path: 'ledger-shared'),
+        isNull,
+        reason: '共享账本 Editor 不得 fullPush(会覆盖 Owner 数据)',
+      );
     });
 
     test('storage.list 失败 → 保守增量,不 fullPush', () async {
       final (db, changeTracker, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerId = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerId = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       provider.storageListError = Exception('list boom');
       await changeTracker.recordLedgerChange(
         entityType: 'transaction',
@@ -336,10 +406,16 @@ void main() {
 
       final result = await engine.syncAccount();
 
-      expect(result.pushed, 1,
-          reason: 'list 失败按"未绑定"保守走增量 push(fullPush 覆盖云端风险更大)');
-      expect(await provider.storage.download(path: 'ledger-a'), isNull,
-          reason: 'list 失败时不得 fullPush 上传 snapshot');
+      expect(
+        result.pushed,
+        1,
+        reason: 'list 失败按"未绑定"保守走增量 push(fullPush 覆盖云端风险更大)',
+      );
+      expect(
+        await provider.storage.download(path: 'ledger-a'),
+        isNull,
+        reason: 'list 失败时不得 fullPush 上传 snapshot',
+      );
     });
   });
 }

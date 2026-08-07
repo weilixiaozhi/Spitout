@@ -9,7 +9,7 @@ import 'package:spitout/utils/date/date_parser.dart';
 /// - 中文日期路径走 `DateTime(...)` 构造 → 本地时区;
 /// - 常见格式路径走 `DateFormat(fmt).parse(str)` → 本地时间(isUtc=false)。
 ///   这些格式都是无时区的裸墙钟,必须当本地;否则 CSV 导入会被当成 UTC 而 +8h
-///   (历史 bug:单数字月份 `2026-6-25` 等过不了 DateTime.parse,曾被强标 UTC)。
+///   (单数字月份 `2026-6-25` 等过不了 DateTime.parse,按本地墙钟解析)。
 void main() {
   group('DateParser.parse — 空与兜底', () {
     final fallback = DateTime(2020, 1, 2, 3, 4, 5);

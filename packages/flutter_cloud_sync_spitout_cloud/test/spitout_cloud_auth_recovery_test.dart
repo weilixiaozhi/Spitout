@@ -8,7 +8,7 @@
 /// 红测试路径:先显式登录建立 session → 注入恢复邮密(等价于云配置页保存)
 /// → signOut → 调 currentUser:
 ///   - 修复前:recovery 未清 → POST /auth/login 自动重登 → currentUser 非 null(断言失败=红);
-///   - 修复后:recovery 已清 → 直接返 null,不再发 /auth/login(断言通过=绿)。
+///   - recovery 已清 → 直接返 null,不发 /auth/login。
 ///
 /// 本测试随 Spitout Cloud provider 一并迁移至 adapter 包,
 /// import 从核心包改为本包入口。
@@ -25,7 +25,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// 构造拦截全部请求的 MockClient,并按 path 记录请求日志。
 ///
 /// 设计意图:用"请求日志计数"断言网络行为,而不是依赖内部私有字段,
-/// 这样测试与实现细节解耦——只要 signOut 后 currentUser 不再发
+/// 这样测试与实现细节解耦——只要 signOut 后 currentUser 不发
 /// /auth/login,就证明静默重登被切断。
 MockClient _mockAuthClient(List<String> log) {
   return MockClient((request) async {
@@ -152,7 +152,7 @@ void main() {
       }
       expect(_loginCount(log), 3);
 
-      // 达到阈值后恢复凭证被清空,第 4 次探测不再发网络请求。
+      // 达到阈值后恢复凭证被清空,第 4 次探测不发网络请求。
       final before = _loginCount(log);
       expect(await auth.currentUser, isNull);
       expect(_loginCount(log), before, reason: '连续被拒达到阈值后必须停用静默恢复');

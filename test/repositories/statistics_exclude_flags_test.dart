@@ -17,10 +17,11 @@ void main() {
   tearDown(() async => db.close());
 
   Future<int> seedLedger() {
-    return db.into(db.ledgers).insert(LedgersCompanion.insert(
-          name: '测试账本',
-          monthStartDay: const Value(1),
-        ));
+    return db
+        .into(db.ledgers)
+        .insert(
+          LedgersCompanion.insert(name: '测试账本', monthStartDay: const Value(1)),
+        );
   }
 
   /// 收支统计:excludeFromStats=true 的交易应被排除;余额口径不动。
@@ -43,7 +44,7 @@ void main() {
       excludeFromStats: true,
     );
 
-    // totalsInRange 现在只返回支出金额（double），不再返回 (income, expense) 元组
+    // totalsInRange 只返回支出金额（double），不返回 (income, expense) 元组
     final expense = await repo.totalsInRange(
       ledgerId: lid,
       start: DateTime(2026, 6, 1),

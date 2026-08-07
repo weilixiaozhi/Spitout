@@ -2,7 +2,7 @@
 ///
 /// 重点覆盖一个真实缺陷：第三方记账 App 导出的 CSV 表头列数（8 列）与
 /// 数据行列数（9 列，因行尾多一个逗号）不一致。当前实现依靠"可识别字段数"
-/// 定位表头，不再依赖列数严格相等，避免把第一条数据行误判为表头丢掉首条明细。
+/// 定位表头，不依赖列数严格相等，避免把第一条数据行误判为表头丢掉首条明细。
 library;
 
 import 'package:flutter_test/flutter_test.dart';
@@ -77,17 +77,7 @@ void main() {
 
   group('GenericBillParser.mapColumns', () {
     test('自定义表头正确映射到字段', () {
-      final header = [
-        '时间',
-        '分类',
-        '类型',
-        '金额',
-        '账户1',
-        '账户2',
-        '备注',
-        '账单图片',
-        '附件',
-      ];
+      final header = ['时间', '分类', '类型', '金额', '账户1', '账户2', '备注', '账单图片', '附件'];
       final parser = GenericBillParser();
       final mapping = parser.mapColumns(header);
 

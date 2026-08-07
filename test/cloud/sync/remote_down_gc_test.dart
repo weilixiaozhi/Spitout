@@ -13,7 +13,7 @@ import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
 /// Surface 1「远端下线 → 全量清本地共享账本」引擎级集成测试。
 ///
-/// 设计意图：`syncLedgersFromServer` 的 readLedgers 异常分类是本次改造核心——
+/// 设计意图：`syncLedgersFromServer` 的 readLedgers 异常分类是核心——
 ///   - CloudNotAuthenticated / CloudConfiguration：session 确认失效，
 ///     远端等价于空集 → 立即 `_gcAllLocalSharedLedgers()`、返回 0 不报错；
 ///   - CloudStorage 404/410：路由确死 → 同上立即清；
@@ -37,8 +37,12 @@ void main() {
     final tracker = ChangeTracker(db);
     repo = LocalRepository(db, changeTracker: tracker);
     fake = FakeSpitoutCloudProvider();
-    engine =
-        SyncEngine(db: db, provider: fake, changeTracker: tracker, repo: repo);
+    engine = SyncEngine(
+      db: db,
+      provider: fake,
+      changeTracker: tracker,
+      repo: repo,
+    );
     events = [];
     engine.events.listen(events.add);
   });
@@ -47,7 +51,9 @@ void main() {
 
   /// 本地写入一条共享账本（带交易），返回本地自增 id。
   Future<int> seedLocalSharedLedger(String extId) async {
-    final localId = await db.into(db.ledgers).insert(
+    final localId = await db
+        .into(db.ledgers)
+        .insert(
           LedgersCompanion.insert(
             name: 'Shared-$extId',
             syncId: Value(extId),
@@ -55,7 +61,9 @@ void main() {
             myRole: const Value('editor'),
           ),
         );
-    await db.into(db.transactions).insert(
+    await db
+        .into(db.transactions)
+        .insert(
           TransactionsCompanion.insert(
             ledgerId: localId,
             type: 'expense',
@@ -68,7 +76,9 @@ void main() {
 
   /// 本地写入一条个人账本（非共享、无 syncId），返回本地自增 id。
   Future<int> seedLocalPersonalLedger() async {
-    return db.into(db.ledgers).insert(
+    return db
+        .into(db.ledgers)
+        .insert(
           LedgersCompanion.insert(
             name: 'Personal',
             syncId: const Value.absent(),
@@ -77,22 +87,20 @@ void main() {
         );
   }
 
-  Future<int> sharedLedgerCount() async =>
-      (await (db.select(db.ledgers)..where((l) => l.isShared.equals(true)))
-              .get())
-          .length;
+  Future<int> sharedLedgerCount() async => (await (db.select(
+    db.ledgers,
+  )..where((l) => l.isShared.equals(true))).get()).length;
 
-  Future<bool> personalLedgerExists(int id) async =>
-      (await (db.select(db.ledgers)..where((l) => l.id.equals(id))).get())
-          .isNotEmpty;
+  Future<bool> personalLedgerExists(int id) async => (await (db.select(
+    db.ledgers,
+  )..where((l) => l.id.equals(id))).get()).isNotEmpty;
 
-  test('CloudNotAuthenticated：立即全量清共享账本 + 广播 LedgersPurged，个人账本不动',
-      () async {
+  test('CloudNotAuthenticated：立即全量清共享账本 + 广播 LedgersPurged，个人账本不动', () async {
     await seedLocalSharedLedger('ext-1');
     await seedLocalSharedLedger('ext-2');
     final personal = await seedLocalPersonalLedger();
-    fake.readLedgersErrorInjector =
-        () => CloudNotAuthenticatedException('session 失效');
+    fake.readLedgersErrorInjector = () =>
+        CloudNotAuthenticatedException('session 失效');
 
     // 非错误态：不抛出，返回 0
     final n = await engine.syncLedgersFromServer();
@@ -106,8 +114,8 @@ void main() {
   test('CloudConfiguration：配置失效同样立即清', () async {
     await seedLocalSharedLedger('ext-1');
     final personal = await seedLocalPersonalLedger();
-    fake.readLedgersErrorInjector =
-        () => CloudConfigurationException('storage 未就绪');
+    fake.readLedgersErrorInjector = () =>
+        CloudConfigurationException('storage 未就绪');
 
     final n = await engine.syncLedgersFromServer();
 
@@ -120,8 +128,8 @@ void main() {
   test('CloudStorage 404：路由确死 → 立即清，不抛错', () async {
     await seedLocalSharedLedger('ext-1');
     final personal = await seedLocalPersonalLedger();
-    fake.readLedgersErrorInjector =
-        () => CloudStorageException('Read ledgers failed: not found', null, 404);
+    fake.readLedgersErrorInjector = () =>
+        CloudStorageException('Read ledgers failed: not found', null, 404);
 
     final n = await engine.syncLedgersFromServer();
 
@@ -131,12 +139,11 @@ void main() {
     expect(events.whereType<LedgersPurged>(), hasLength(1));
   });
 
-  test('CloudStorage 5xx：走阈值——前两次失败不清且 rethrow，第三次命中阈值才清',
-      () async {
+  test('CloudStorage 5xx：走阈值——前两次失败不清且 rethrow，第三次命中阈值才清', () async {
     await seedLocalSharedLedger('ext-1');
     final personal = await seedLocalPersonalLedger();
-    fake.readLedgersErrorInjector =
-        () => CloudStorageException('Read ledgers failed: 503', null, 503);
+    fake.readLedgersErrorInjector = () =>
+        CloudStorageException('Read ledgers failed: 503', null, 503);
 
     // 第 1、2 次：错误逃逸（供 bootstrap 记 lastSyncError），但共享账本保留
     for (var i = 0; i < 2; i++) {
@@ -144,8 +151,7 @@ void main() {
         engine.syncLedgersFromServer(),
         throwsA(isA<CloudStorageException>()),
       );
-      expect(await sharedLedgerCount(), 1,
-          reason: '第 ${i + 1} 次失败未命中阈值,不应误清');
+      expect(await sharedLedgerCount(), 1, reason: '第 ${i + 1} 次失败未命中阈值,不应误清');
       expect(events.whereType<LedgersPurged>(), isEmpty);
     }
 
@@ -165,11 +171,15 @@ void main() {
 
     for (var i = 0; i < 2; i++) {
       await expectLater(
-          engine.syncLedgersFromServer(), throwsA(isA<Exception>()));
+        engine.syncLedgersFromServer(),
+        throwsA(isA<Exception>()),
+      );
       expect(await sharedLedgerCount(), 1);
     }
     await expectLater(
-        engine.syncLedgersFromServer(), throwsA(isA<Exception>()));
+      engine.syncLedgersFromServer(),
+      throwsA(isA<Exception>()),
+    );
     expect(await sharedLedgerCount(), 0);
   });
 

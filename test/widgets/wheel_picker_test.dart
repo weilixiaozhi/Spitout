@@ -1,7 +1,7 @@
 /// WheelPicker 初始值不在列表中的回归测试。
 ///
-/// 修复点：initial 不在 items 时，内部 selected 修正为列表首项，
-/// 「确定」不再返回列表外的值。
+/// initial 不在 items 时，内部 selected 修正为列表首项，
+/// 「确定」只返回列表内的值。
 library;
 
 import 'package:flutter/material.dart';
@@ -53,7 +53,6 @@ void main() {
     await tester.tap(find.text('确定'));
     await tester.pumpAndSettle();
 
-    expect(result, 1,
-        reason: 'initial=99 不在列表时，确定必须返回列表首项而非列表外的 99');
+    expect(result, 1, reason: 'initial=99 不在列表时，确定必须返回列表首项而非列表外的 99');
   });
 }

@@ -49,11 +49,13 @@ void main() {
   // ── 有头像场景 ──────────────────────────────────────────────
 
   testWidgets('有头像：背景黑色，居中显示头像图片', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      avatarPath: '/tmp/test_avatar.jpg',
-      uploadLabel: '上传新头像',
-      onUpload: () {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        avatarPath: '/tmp/test_avatar.jpg',
+        uploadLabel: '上传新头像',
+        onUpload: () {},
+      ),
+    );
 
     final scaffold = tester.widget<Scaffold>(find.byType(Scaffold));
     expect(scaffold.backgroundColor, Colors.black);
@@ -64,13 +66,15 @@ void main() {
   });
 
   testWidgets('有头像：底部显示上传 + 删除两个按钮', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      avatarPath: '/tmp/test_avatar.jpg',
-      uploadLabel: '上传新头像',
-      onUpload: () {},
-      deleteLabel: '删除头像',
-      onDelete: () {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        avatarPath: '/tmp/test_avatar.jpg',
+        uploadLabel: '上传新头像',
+        onUpload: () {},
+        deleteLabel: '删除头像',
+        onDelete: () {},
+      ),
+    );
 
     expect(find.text('上传新头像'), findsOneWidget);
     expect(find.text('删除头像'), findsOneWidget);
@@ -79,13 +83,15 @@ void main() {
   // ── 无头像场景 ──────────────────────────────────────────────
 
   testWidgets('无头像：居中显示 person 图标，无删除按钮', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      avatarPath: null,
-      uploadLabel: '上传新头像',
-      onUpload: () {},
-      deleteLabel: '删除头像',
-      onDelete: () {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        avatarPath: null,
+        uploadLabel: '上传新头像',
+        onUpload: () {},
+        deleteLabel: '删除头像',
+        onDelete: () {},
+      ),
+    );
 
     // 无头像 → 居中显示 person 图标（虚拟用户同等占位）
     expect(find.byIcon(AppIcons.person), findsOneWidget);
@@ -100,26 +106,30 @@ void main() {
   // ── 关闭按钮 ──────────────────────────────────────────────
 
   testWidgets('关闭按钮在左上角，点击关闭当前页面', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => AvatarPreviewPage(
-                    avatarPath: '/tmp/x.jpg',
-                    uploadLabel: '上传新头像',
-                    onUpload: () {},
-                  ),
-                ));
-              },
-              child: const Text('open'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AvatarPreviewPage(
+                        avatarPath: '/tmp/x.jpg',
+                        uploadLabel: '上传新头像',
+                        onUpload: () {},
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -130,15 +140,17 @@ void main() {
     // 左上角：x 坐标应明显小于屏幕中线，y 坐标应明显小于屏幕中线
     final screenSize = tester.view.physicalSize / tester.view.devicePixelRatio;
     final closeCenter = tester.getCenter(closeFinder);
-    expect(closeCenter.dx, lessThan(screenSize.width / 2),
-        reason: '关闭按钮应在左半屏');
-    expect(closeCenter.dy, lessThan(screenSize.height / 2),
-        reason: '关闭按钮应在上半屏');
+    expect(closeCenter.dx, lessThan(screenSize.width / 2), reason: '关闭按钮应在左半屏');
+    expect(
+      closeCenter.dy,
+      lessThan(screenSize.height / 2),
+      reason: '关闭按钮应在上半屏',
+    );
 
     // 点击关闭：pop 当前路由
     await tester.tap(closeFinder);
     await tester.pumpAndSettle();
-    // pop 后回到初始页（'open' 按钮可见），不再有 AvatarPreviewPage
+    // pop 后回到初始页（'open' 按钮可见），无 AvatarPreviewPage
     expect(find.text('open'), findsOneWidget);
     expect(find.byType(AvatarPreviewPage), findsNothing);
   });
@@ -147,13 +159,15 @@ void main() {
 
   testWidgets('点击上传按钮触发 onUpload 回调', (tester) async {
     int uploadTaps = 0;
-    await tester.pumpWidget(buildHarness(
-      avatarPath: '/tmp/test_avatar.jpg',
-      uploadLabel: '上传新头像',
-      onUpload: () => uploadTaps++,
-      deleteLabel: '删除头像',
-      onDelete: () {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        avatarPath: '/tmp/test_avatar.jpg',
+        uploadLabel: '上传新头像',
+        onUpload: () => uploadTaps++,
+        deleteLabel: '删除头像',
+        onDelete: () {},
+      ),
+    );
 
     // 点击上传按钮：定位包含文案的 InkWell
     final uploadFinder = find.ancestor(
@@ -169,13 +183,15 @@ void main() {
 
   testWidgets('点击删除按钮触发 onDelete 回调', (tester) async {
     int deleteTaps = 0;
-    await tester.pumpWidget(buildHarness(
-      avatarPath: '/tmp/test_avatar.jpg',
-      uploadLabel: '上传新头像',
-      onUpload: () {},
-      deleteLabel: '删除头像',
-      onDelete: () => deleteTaps++,
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        avatarPath: '/tmp/test_avatar.jpg',
+        uploadLabel: '上传新头像',
+        onUpload: () {},
+        deleteLabel: '删除头像',
+        onDelete: () => deleteTaps++,
+      ),
+    );
 
     final deleteFinder = find.ancestor(
       of: find.text('删除头像'),
@@ -191,26 +207,30 @@ void main() {
   // ── 单点屏幕收起 ──────────────────────────────────────────────
 
   testWidgets('单点屏幕空白处可收起预览页', (tester) async {
-    await tester.pumpWidget(MaterialApp(
-      home: Builder(
-        builder: (context) => Scaffold(
-          body: Center(
-            child: ElevatedButton(
-              onPressed: () {
-                Navigator.of(context).push(MaterialPageRoute(
-                  builder: (_) => AvatarPreviewPage(
-                    avatarPath: '/tmp/x.jpg',
-                    uploadLabel: '上传新头像',
-                    onUpload: () {},
-                  ),
-                ));
-              },
-              child: const Text('open'),
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Builder(
+          builder: (context) => Scaffold(
+            body: Center(
+              child: ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => AvatarPreviewPage(
+                        avatarPath: '/tmp/x.jpg',
+                        uploadLabel: '上传新头像',
+                        onUpload: () {},
+                      ),
+                    ),
+                  );
+                },
+                child: const Text('open'),
+              ),
             ),
           ),
         ),
       ),
-    ));
+    );
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
@@ -219,7 +239,9 @@ void main() {
 
     // 点击屏幕右上角空白处（远离左上关闭按钮和底部操作条）
     final screenSize = tester.view.physicalSize / tester.view.devicePixelRatio;
-    await tester.tapAt(Offset(screenSize.width * 0.85, screenSize.height * 0.15));
+    await tester.tapAt(
+      Offset(screenSize.width * 0.85, screenSize.height * 0.15),
+    );
     await tester.pumpAndSettle();
 
     // 单点空白处应 pop 预览页，回到初始页

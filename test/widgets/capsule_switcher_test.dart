@@ -1,6 +1,6 @@
-/// CapsuleSwitcher 空选项回归测试。
+/// CapsuleSwitcher 空选项测试。
 ///
-/// 修复点：options 为空时 `options.length * 2 - 1 = -1`，`Iterable.take(-1)`
+/// options 为空时 `options.length * 2 - 1 = -1`，`Iterable.take(-1)`
 /// 会抛 RangeError；空列表应降级为空容器而不是崩溃。
 library;
 
@@ -24,8 +24,11 @@ void main() {
     );
 
     expect(find.byType(CapsuleSwitcher<int>), findsOneWidget);
-    expect(tester.takeException(), isNull,
-        reason: '空选项不得触发 take(-1) RangeError');
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: '空选项不得触发 take(-1) RangeError',
+    );
   });
 
   testWidgets('正常选项仍可点击切换', (tester) async {

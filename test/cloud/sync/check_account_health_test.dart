@@ -26,8 +26,16 @@ import 'package:spitout/data/repositories/local/local_repository.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
-Future<(SpitoutDatabase, ChangeTracker, LocalRepository, FakeSpitoutCloudProvider,
-    SyncEngine)> _harness() async {
+Future<
+  (
+    SpitoutDatabase,
+    ChangeTracker,
+    LocalRepository,
+    FakeSpitoutCloudProvider,
+    SyncEngine,
+  )
+>
+_harness() async {
   final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
   final changeTracker = ChangeTracker(db);
   final repo = LocalRepository(db, changeTracker: changeTracker);
@@ -47,7 +55,9 @@ Future<int> _insertCloudLedger(
   required String name,
   required String syncId,
 }) {
-  return db.into(db.ledgers).insert(
+  return db
+      .into(db.ledgers)
+      .insert(
         LedgersCompanion.insert(
           name: name,
           syncId: Value(syncId),
@@ -73,15 +83,18 @@ void main() {
       final report = await engine.checkAccountHealth();
 
       expect(report, isNull);
-      expect(provider.readLedgerStatsCalls, 0,
-          reason: '无载体账本时不应发起任何远端请求');
+      expect(provider.readLedgerStatsCalls, 0, reason: '无载体账本时不应发起任何远端请求');
     });
 
     test('报告带 carrierLedgerId;checkLedgerHealth 不带(刀3 显隐依赖)', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
         transactionCount: 0,
         transactionTotal: 0,
@@ -90,22 +103,34 @@ void main() {
         categoryTotal: 0,
       );
 
-      final accountReport = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+      final accountReport = await engine.checkAccountHealth(
+        carrierLedgerId: ledgerA,
+      );
       final ledgerReport = await engine.checkLedgerHealth(ledgerId: ledgerA);
 
       expect(accountReport, isNotNull);
-      expect(accountReport!.carrierLedgerId, ledgerA,
-          reason: '账户级报告必须声明载体账本,UI 据此决定「当前账本」组显隐');
-      expect(ledgerReport.carrierLedgerId, isNull,
-          reason: '账本级报告(自愈闸门)不带载体标记');
+      expect(
+        accountReport!.carrierLedgerId,
+        ledgerA,
+        reason: '账户级报告必须声明载体账本,UI 据此决定「当前账本」组显隐',
+      );
+      expect(ledgerReport.carrierLedgerId, isNull, reason: '账本级报告(自愈闸门)不带载体标记');
     });
 
     test('unpushed 用全局口径(跨账本);checkLedgerHealth 用 per-ledger', () async {
       final (db, changeTracker, _, _, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      final ledgerB = await _insertCloudLedger(db, name: 'B', syncId: 'ledger-b');
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
+      final ledgerB = await _insertCloudLedger(
+        db,
+        name: 'B',
+        syncId: 'ledger-b',
+      );
 
       // 账本 A:1 条未推送变更;账本 B:2 条未推送变更。
       await changeTracker.recordLedgerChange(
@@ -130,20 +155,26 @@ void main() {
         action: 'create',
       );
 
-      final accountReport = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
+      final accountReport = await engine.checkAccountHealth(
+        carrierLedgerId: ledgerA,
+      );
       final ledgerReport = await engine.checkLedgerHealth(ledgerId: ledgerA);
 
-      expect(accountReport!.unpushedChanges, 3,
-          reason: '账户级面板展示全账户未推送变更(跨账本)');
-      expect(ledgerReport.unpushedChanges, 1,
-          reason: '账本级自愈闸门只认本账本未推送变更,排除其他账本的假阳性');
+      expect(accountReport!.unpushedChanges, 3, reason: '账户级面板展示全账户未推送变更(跨账本)');
+      expect(
+        ledgerReport.unpushedChanges,
+        1,
+        reason: '账本级自愈闸门只认本账本未推送变更,排除其他账本的假阳性',
+      );
     });
 
     test('本地无 syncId 账本 → 直接 error,不发起 stats 请求', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final localId = await db.into(db.ledgers).insert(
+      final localId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
@@ -153,19 +184,31 @@ void main() {
       final report = await engine.checkAccountHealth(carrierLedgerId: localId);
 
       expect(report, isNotNull);
-      expect(report!.error, isNotNull,
-          reason: '无 syncId 必须判定检测失败,不能拿本地 id 拼 server 路径');
-      expect(provider.readLedgerStatsCalls, 0,
-          reason: '删兜底后不应发起必然 404 的 stats 请求');
+      expect(
+        report!.error,
+        isNotNull,
+        reason: '无 syncId 必须判定检测失败,不能拿本地 id 拼 server 路径',
+      );
+      expect(
+        provider.readLedgerStatsCalls,
+        0,
+        reason: '删兜底后不应发起必然 404 的 stats 请求',
+      );
     });
 
     test('远端 stats 计数正确透传到账户级报告', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
       // 本地 2 条已同步交易(有 syncId),远端报 3 条 —— 模拟云端多 1。
-      await db.into(db.transactions).insert(
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
@@ -174,7 +217,9 @@ void main() {
               syncId: const Value('tx-1'),
             ),
           );
-      await db.into(db.transactions).insert(
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
@@ -196,8 +241,7 @@ void main() {
       expect(report, isNotNull);
       expect(report!.ledgerTx.local, 2);
       expect(report.ledgerTx.remote, 3);
-      expect(report.hasDiff, isTrue,
-          reason: '本地 2 条 vs 远端 3 条 → 面板应提示有差异');
+      expect(report.hasDiff, isTrue, reason: '本地 2 条 vs 远端 3 条 → 面板应提示有差异');
       expect(report.categories.remote, 1);
     });
 
@@ -205,15 +249,23 @@ void main() {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      final localId = await db.into(db.ledgers).insert(
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
+      final localId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
             ),
           );
       // 云端账本 1 条 + 本地账本 2 条;本地账本交易同样有本地 UUID syncId。
-      await db.into(db.transactions).insert(
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
@@ -223,7 +275,9 @@ void main() {
             ),
           );
       for (final sid in ['tx-local-1', 'tx-local-2']) {
-        await db.into(db.transactions).insert(
+        await db
+            .into(db.transactions)
+            .insert(
               TransactionsCompanion.insert(
                 ledgerId: localId,
                 type: 'expense',
@@ -243,19 +297,23 @@ void main() {
       final report = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
 
       expect(report, isNotNull);
-      expect(report!.totalTx.local, 1,
-          reason: '纯本地账本不上云,其交易不得计入账户级全量口径');
+      expect(report!.totalTx.local, 1, reason: '纯本地账本不上云,其交易不得计入账户级全量口径');
       expect(report.totalTx.remote, 1);
-      expect(report.hasDiff, isFalse,
-          reason: '本地账本交易计入后会永久显示"本地比云端多"的假差异');
+      expect(report.hasDiff, isFalse, reason: '本地账本交易计入后会永久显示"本地比云端多"的假差异');
     });
 
     test('本地账本遗留未推送变更不计入账户级 unpushed(不会造成永久差异)', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA = await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      await db.into(db.transactions).insert(
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerA,
               type: 'expense',
@@ -264,15 +322,19 @@ void main() {
               syncId: const Value('tx-cloud-1'),
             ),
           );
-      final localId = await db.into(db.ledgers).insert(
+      final localId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
             ),
           );
-      // 模拟历史遗留:直接写一条属于本地账本的未推送变更
+      // 模拟存量数据:直接写一条属于本地账本的未推送变更
       // (等价于「转本地」前的存量数据,ChangeTracker 闸门拦不住存量)。
-      await db.into(db.localChanges).insert(
+      await db
+          .into(db.localChanges)
+          .insert(
             LocalChangesCompanion.insert(
               entityType: 'transaction',
               entityId: 999,
@@ -291,10 +353,12 @@ void main() {
       final report = await engine.checkAccountHealth(carrierLedgerId: ledgerA);
 
       expect(report, isNotNull);
-      expect(report!.unpushedChanges, 0,
-          reason: '本地账本不上云,其遗留变更不应计入账户级未推送');
-      expect(report.hasDiff, isFalse,
-          reason: '否则云端账本已同步完,面板仍一直显示"检测到差异,已自动同步"');
+      expect(report!.unpushedChanges, 0, reason: '本地账本不上云,其遗留变更不应计入账户级未推送');
+      expect(
+        report.hasDiff,
+        isFalse,
+        reason: '否则云端账本已同步完,面板仍一直显示"检测到差异,已自动同步"',
+      );
     });
   });
 
@@ -305,79 +369,111 @@ void main() {
     /// totalTx / categories 的唯一数据源,不能省。但「自选」纯属工程锚点,
     /// 没有任何用户语义,绝不能外泄成 carrierLedgerId,否则 UI 会顶着
     /// 「当前账本」表头显示一本用户根本没选中的账本的数据。
-    test('不传参 → ledgerTx 剥离为 missing、carrierLedgerId 为 null,但账户级计数仍真实',
-        () async {
-      final (db, _, _, provider, engine) = await _harness();
-      addTearDown(db.close);
+    test(
+      '不传参 → ledgerTx 剥离为 missing、carrierLedgerId 为 null,但账户级计数仍真实',
+      () async {
+        final (db, _, _, provider, engine) = await _harness();
+        addTearDown(db.close);
 
-      final ledgerA =
-          await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      // 本地 2 条已同步交易挂在 A 上。
-      for (final sid in ['tx-1', 'tx-2']) {
-        await db.into(db.transactions).insert(
-              TransactionsCompanion.insert(
-                ledgerId: ledgerA,
-                type: 'expense',
-                amount: 1000,
-                categoryId: const Value(null),
-                syncId: Value(sid),
-              ),
+        final ledgerA = await _insertCloudLedger(
+          db,
+          name: 'A',
+          syncId: 'ledger-a',
+        );
+        // 本地 2 条已同步交易挂在 A 上。
+        for (final sid in ['tx-1', 'tx-2']) {
+          await db
+              .into(db.transactions)
+              .insert(
+                TransactionsCompanion.insert(
+                  ledgerId: ledgerA,
+                  type: 'expense',
+                  amount: 1000,
+                  categoryId: const Value(null),
+                  syncId: Value(sid),
+                ),
+              );
+        }
+        provider.ledgerStatsOverrides['ledger-a'] =
+            const SpitoutCloudLedgerStats(
+              transactionCount: 7,
+              transactionTotal: 9,
+
+              categoryCount: 4,
+              categoryTotal: 4,
             );
-      }
-      provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
-        transactionCount: 7,
-        transactionTotal: 9,
 
-        categoryCount: 4,
-        categoryTotal: 4,
-      );
+        final report = await engine.checkAccountHealth();
 
-      final report = await engine.checkAccountHealth();
+        expect(report, isNotNull);
+        // 剥离:当前账本组的数据源被抹掉,UI 据此隐藏「当前账本」组。
+        expect(
+          report!.carrierLedgerId,
+          isNull,
+          reason: '自选锚点是内部工程细节,绝不外泄为 carrierLedgerId',
+        );
+        expect(report.ledgerTx.local, 0);
+        expect(
+          report.ledgerTx.remote,
+          -1,
+          reason: 'ledgerTx 必须为 SyncCountPair.missing(),不得透传自选账本口径',
+        );
+        // 账户级面板不降级:内部锚点照常打 stats,totalTx / categories 保持真实。
+        expect(report.totalTx.remote, 9, reason: '账户级 totalTx 必须来自真实 stats');
+        expect(
+          report.categories.remote,
+          4,
+          reason: '账户级 categories 必须来自真实 stats',
+        );
+        expect(
+          provider.readLedgerStatsCalls,
+          1,
+          reason: '内部锚点仍要打一次 stats,否则账户级面板会降级为占位值',
+        );
+      },
+    );
 
-      expect(report, isNotNull);
-      // 剥离:当前账本组的数据源被抹掉,UI 据此隐藏「当前账本」组。
-      expect(report!.carrierLedgerId, isNull,
-          reason: '自选锚点是内部工程细节,绝不外泄为 carrierLedgerId');
-      expect(report.ledgerTx.local, 0);
-      expect(report.ledgerTx.remote, -1,
-          reason: 'ledgerTx 必须为 SyncCountPair.missing(),不得透传自选账本口径');
-      // 账户级面板不降级:内部锚点照常打 stats,totalTx / categories 保持真实。
-      expect(report.totalTx.remote, 9, reason: '账户级 totalTx 必须来自真实 stats');
-      expect(report.categories.remote, 4,
-          reason: '账户级 categories 必须来自真实 stats');
-      expect(provider.readLedgerStatsCalls, 1,
-          reason: '内部锚点仍要打一次 stats,否则账户级面板会降级为占位值');
-    });
+    test(
+      '不传参且 stats 抛错 → error 分支同样剥离(ledgerTx missing、carrier null)',
+      () async {
+        final (db, _, _, provider, engine) = await _harness();
+        addTearDown(db.close);
 
-    test('不传参且 stats 抛错 → error 分支同样剥离(ledgerTx missing、carrier null)',
-        () async {
-      final (db, _, _, provider, engine) = await _harness();
-      addTearDown(db.close);
+        await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
+        // 不注册 override → Fake 抛错,走 error 分支。
+        provider.failingReadLedgerStats = true;
 
-      await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      // 不注册 override → Fake 抛错,走 error 分支。
-      provider.failingReadLedgerStats = true;
+        final report = await engine.checkAccountHealth();
 
-      final report = await engine.checkAccountHealth();
-
-      expect(report, isNotNull);
-      expect(report!.error, isNotNull);
-      expect(report.carrierLedgerId, isNull,
-          reason: 'error 分支同样不得外泄自选锚点');
-      expect(report.ledgerTx.remote, -1);
-      expect(report.ledgerTx.local, 0,
-          reason: 'ledgerTx 走 missing(),local 恒 0');
-    });
+        expect(report, isNotNull);
+        expect(report!.error, isNotNull);
+        expect(report.carrierLedgerId, isNull, reason: 'error 分支同样不得外泄自选锚点');
+        expect(report.ledgerTx.remote, -1);
+        expect(
+          report.ledgerTx.local,
+          0,
+          reason: 'ledgerTx 走 missing(),local 恒 0',
+        );
+      },
+    );
 
     test('显式传参 → 维持原语义(ledgerTx 真实、carrierLedgerId 回填)', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final ledgerA =
-          await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      final ledgerB =
-          await _insertCloudLedger(db, name: 'B', syncId: 'ledger-b');
-      await db.into(db.transactions).insert(
+      final ledgerA = await _insertCloudLedger(
+        db,
+        name: 'A',
+        syncId: 'ledger-a',
+      );
+      final ledgerB = await _insertCloudLedger(
+        db,
+        name: 'B',
+        syncId: 'ledger-b',
+      );
+      await db
+          .into(db.transactions)
+          .insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerB,
               type: 'expense',
@@ -394,7 +490,7 @@ void main() {
         categoryTotal: 0,
       );
 
-      // 传 B(不是 id 升序第一本 A)→ 必须以 B 为锚点,证明不再绑死 A。
+      // 传 B(不是 id 升序第一本 A)→ 必须以 B 为锚点,不绑死 A。
       final report = await engine.checkAccountHealth(carrierLedgerId: ledgerB);
 
       expect(report, isNotNull);
@@ -419,19 +515,23 @@ void main() {
 
       engine.debugMarkSelfHealBroken('42');
 
-      expect(engine.anySelfHealBroken(), isTrue,
-          reason: 'S4:A 熔断、选中 B 或本地账本时,状态行同样要红字');
+      expect(
+        engine.anySelfHealBroken(),
+        isTrue,
+        reason: 'S4:A 熔断、选中 B 或本地账本时,状态行同样要红字',
+      );
       expect(engine.selfHealBroken('42'), isTrue);
-      expect(engine.selfHealBroken('7'), isFalse,
-          reason: 'per-ledger 口径不受影响');
+      expect(engine.selfHealBroken('7'), isFalse, reason: 'per-ledger 口径不受影响');
     });
 
     test('熔断已过期 → false', () async {
       final (db, _, _, _, engine) = await _harness();
       addTearDown(db.close);
 
-      engine.debugMarkSelfHealBroken('42',
-          duration: const Duration(milliseconds: -1));
+      engine.debugMarkSelfHealBroken(
+        '42',
+        duration: const Duration(milliseconds: -1),
+      );
 
       expect(engine.anySelfHealBroken(), isFalse);
     });

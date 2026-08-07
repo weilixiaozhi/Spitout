@@ -1,8 +1,8 @@
-/// AA 字段统一工具回归测试。
+/// AA 字段统一工具测试。
 ///
-/// 锁定三处修复：
+/// 锁定三处行为：
 /// 1. 编辑模式「部分参与人 / 指定分摊 → 全部成员 / 人均」必须显式写空串清空
-///    旧 aaParticipants / aaSplits（update 语义 null = 不更新）；
+///    已保存的 aaParticipants / aaSplits（update 语义 null = 不更新）；
 /// 2. 共享账本 synthetic override 存在时 category_id 必须留 null，
 ///    不得把 synthetic 负数 id 写进共享账本交易的 category_id；
 /// 3. JSON 解析失败 / 空值统一按 null 兜底（全部成员运行时展开）。
@@ -35,10 +35,10 @@ void main() {
     });
 
     test('合法 JSON 对象解析为金额映射', () {
-      expect(
-        parseAaSplits('{"u1":"4.00","u2":"4.00"}'),
-        {'u1': '4.00', 'u2': '4.00'},
-      );
+      expect(parseAaSplits('{"u1":"4.00","u2":"4.00"}'), {
+        'u1': '4.00',
+        'u2': '4.00',
+      });
     });
   });
 
@@ -76,10 +76,7 @@ void main() {
 
     test('无 override 时保留原 categoryId', () {
       expect(
-        aaEditCategoryIdForWrite(
-          categoryId: 5,
-          categorySyncIdOverride: null,
-        ),
+        aaEditCategoryIdForWrite(categoryId: 5, categorySyncIdOverride: null),
         5,
       );
     });

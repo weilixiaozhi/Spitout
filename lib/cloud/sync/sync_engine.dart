@@ -14,8 +14,10 @@ import '../../data/db.dart';
 // export 供 UI 层(spitout_cloud_sync_section)经 `import sync_engine.dart`
 // 取用这些类型。show 白名单避免与上方 flutter_cloud_sync 包的
 // SyncStatus 同名冲突。
-import '../../data/models.dart' show SyncAccountResult, SyncCountPair, SyncHealthReport;
-export '../../data/models.dart' show SyncAccountResult, SyncCountPair, SyncHealthReport;
+import '../../data/models.dart'
+    show SyncAccountResult, SyncCountPair, SyncHealthReport;
+export '../../data/models.dart'
+    show SyncAccountResult, SyncCountPair, SyncHealthReport;
 import '../../data/models/ledger_kind.dart';
 import '../../data/repositories/base_repository.dart';
 import '../../data/repositories/local/local_transaction_repository.dart'
@@ -100,7 +102,7 @@ class SyncEngine implements app.SyncService {
 
   @override
   Future<({app.SyncPreview? preview, app.ImportData importData, int version})?>
-      downloadAndPreview({required int ledgerId}) {
+  downloadAndPreview({required int ledgerId}) {
     throw UnsupportedError('SyncEngine 不支持下载前 diff 预览');
   }
 
@@ -291,7 +293,7 @@ class SyncEngine implements app.SyncService {
   /// 跟 fullPush 不同:**不会**真的把多账本并发拉成 N 倍 —— fullPull 只在用户
   /// 点"下载"时触发,正常单次调用;这个锁是给"快速连点"等边界场景兜底。
   final Map<int, Completer<({int inserted, int deletedDup})>>
-      _fullPullInFlight = {};
+  _fullPullInFlight = {};
 
   /// legacy 数据补 ChangeTracker 记录的一次性 flag。
   ///
@@ -366,8 +368,9 @@ class SyncEngine implements app.SyncService {
   }
 
   @override
-  Future<({int inserted, int deletedDup})> downloadAndRestoreToCurrentLedger(
-      {required int ledgerId}) async {
+  Future<({int inserted, int deletedDup})> downloadAndRestoreToCurrentLedger({
+    required int ledgerId,
+  }) async {
     logger.info('SyncEngine', '下载并恢复账本 ledger=$ledgerId');
 
     // 先尝试增量拉取
@@ -382,14 +385,14 @@ class SyncEngine implements app.SyncService {
     //   b) 新设备/空账本 —— 增量 cursor 拉不到历史数据,需要全量恢复。
     // 直接走全量恢复的话,已有数据的账本会拖慢同步并导致增量 cursor 无法推进。
     // 修复：只有本地该账本没有任何交易时才回退全量恢复,否则视为"已是最新"。
-    final localTxCount = await (db.selectOnly(db.transactions)
-          ..addColumns([db.transactions.id.count()])
-          ..where(db.transactions.ledgerId.equals(ledgerId)))
-        .map((row) => row.read(db.transactions.id.count()) ?? 0)
-        .getSingle();
+    final localTxCount =
+        await (db.selectOnly(db.transactions)
+              ..addColumns([db.transactions.id.count()])
+              ..where(db.transactions.ledgerId.equals(ledgerId)))
+            .map((row) => row.read(db.transactions.id.count()) ?? 0)
+            .getSingle();
     if (localTxCount > 0) {
-      logger.info('SyncEngine',
-          '增量无新数据且本地已有 $localTxCount 条交易,视为已是最新,跳过全量恢复');
+      logger.info('SyncEngine', '增量无新数据且本地已有 $localTxCount 条交易,视为已是最新,跳过全量恢复');
       return (inserted: 0, deletedDup: 0);
     }
 
@@ -419,8 +422,9 @@ class SyncEngine implements app.SyncService {
   }
 
   @override
-  Future<app.PullOutcome> pullIncrementalWithHeal(
-      {required int ledgerId}) async {
+  Future<app.PullOutcome> pullIncrementalWithHeal({
+    required int ledgerId,
+  }) async {
     if (await _isLocalOnlyLedger(ledgerId)) {
       logger.info('SyncEngine', '账本 $ledgerId 为本地账本,跳过自愈拉取');
       return const app.PullOutcome(incremental: 0);
@@ -463,17 +467,17 @@ class SyncEngine implements app.SyncService {
       // 账本行先读:纯本地账本(不上云)直接返回 localOnly,不发起任何远端
       // 探测,也不等待云端鉴权 —— 否则本地账本的状态查询在坏网络下会被
       // provider.auth.currentUser 的 token refresh 卡住。
-      final ledgerRowStatus = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
-          .getSingleOrNull();
+      final ledgerRowStatus = await (db.select(
+        db.ledgers,
+      )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
       // 纯本地账本(无 syncId、storage_mode=local)才判定为不上云:
       // 若本地行还带着 syncId,说明是异常中间态,仍按可同步账本处理。
       if (ledgerRowStatus != null &&
           ledgerRowStatus.isLocalLedger &&
           (ledgerRowStatus.syncId == null || ledgerRowStatus.syncId!.isEmpty)) {
-        final localTxs = await (db.select(db.transactions)
-              ..where((t) => t.ledgerId.equals(ledgerId)))
-            .get();
+        final localTxs = await (db.select(
+          db.transactions,
+        )..where((t) => t.ledgerId.equals(ledgerId))).get();
         final status = app.SyncStatus(
           diff: app.SyncDiff.localOnly,
           localCount: localTxs.length,
@@ -494,14 +498,15 @@ class SyncEngine implements app.SyncService {
       }
 
       // 本地交易数
-      final localTxs = await (db.select(db.transactions)
-            ..where((t) => t.ledgerId.equals(ledgerId)))
-          .get();
+      final localTxs = await (db.select(
+        db.transactions,
+      )..where((t) => t.ledgerId.equals(ledgerId))).get();
       final localCount = localTxs.length;
 
       // 检查是否有未推送的本地变更
-      final unpushedCount =
-          (await changeTracker.getUnpushedChangesForLedger(ledgerId)).length;
+      final unpushedCount = (await changeTracker.getUnpushedChangesForLedger(
+        ledgerId,
+      )).length;
 
       // 检查云端是否有数据。path 用 ledger.syncId 跟 push 侧保持一致。
       final hasRemote = await provider.storage.exists(
@@ -543,9 +548,9 @@ class SyncEngine implements app.SyncService {
   /// 与 [sync] 里的闸门同一语义;拉取入口也必须先过这道闸门,否则本地账本
   /// 的高频刷新/状态查询会先发起云端请求,坏网络时阻塞主流程。
   Future<bool> _isLocalOnlyLedger(int ledgerId) async {
-    final row = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final row = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     // 纯本地账本 = storage_mode='local' 且非共享、且未绑定 syncId。
     // 带 syncId 的 local 行是「云端账本但 storage_mode 未回填」的中间态,
     // 仍按可同步账本处理,否则 e2e/真实迁移路径会误跳过云端拉取。
@@ -563,9 +568,9 @@ class SyncEngine implements app.SyncService {
   @override
   Future<void> deleteRemoteBackup({required int ledgerId}) async {
     // path 用 ledger.syncId，跟 push/upload 对齐。
-    final ledgerRow = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledgerRow = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     final path = ledgerRow?.syncId ?? ledgerId.toString();
     try {
       await provider.storage.delete(path: path);
@@ -590,15 +595,16 @@ class SyncEngine implements app.SyncService {
       if (syncId != null && syncId.isNotEmpty) {
         try {
           await provider.deleteLedger(ledgerId: syncId);
-          logger.info('SyncEngine',
-              'deleteLedgerGlobally: 远端账本已删除 syncId=$syncId');
+          logger.info(
+            'SyncEngine',
+            'deleteLedgerGlobally: 远端账本已删除 syncId=$syncId',
+          );
         } catch (e) {
           // 404 说明远端已经不存在(可能其它设备已删),幂等放行;
           // 其它错误(网络/鉴权)必须中断 —— 若远端没删成而本地删了,
           // 下次 syncLedgersFromServer 会把账本 re-insert 回来造成幽灵账本。
           if (!e.toString().contains('404')) rethrow;
-          logger.warning(
-              'SyncEngine', 'deleteLedgerGlobally: 远端已不存在(404), 忽略');
+          logger.warning('SyncEngine', 'deleteLedgerGlobally: 远端已不存在(404), 忽略');
         }
       }
 
@@ -641,9 +647,9 @@ class SyncEngine implements app.SyncService {
   /// 共享账本不允许转云端(应使用 [copyToLocal])。
   @override
   Future<void> moveToCloud(int ledgerId) async {
-    final ledger = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledger = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     if (ledger == null) throw CloudSyncException('账本不存在: $ledgerId');
     if (ledger.storageMode == 'cloud') return; // 已是云端,幂等
     if (ledger.isShared) {
@@ -704,9 +710,9 @@ class SyncEngine implements app.SyncService {
   /// detach 失败 → 三级收敛保证账本留本地绝不被 purge。共享账本不允许(应用 copyToLocal)。
   @override
   Future<void> moveToLocal(int ledgerId) async {
-    final ledger = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledger = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     if (ledger == null) throw CloudSyncException('账本不存在: $ledgerId');
     if (ledger.storageMode == 'local') return; // 已是本地,幂等
     if (ledger.isShared) {
@@ -732,11 +738,14 @@ class SyncEngine implements app.SyncService {
       // 无法确认云端处于什么状态,保守 fail-closed:账本保持 cloud、抛异常
       // (finally 会撤销信号,不残留)。
       try {
-        await waitFullPushSettle(ledgerId)
-            .timeout(const Duration(seconds: 30));
+        await waitFullPushSettle(ledgerId).timeout(const Duration(seconds: 30));
       } on TimeoutException catch (e, st) {
         logger.error(
-            'SyncEngine', 'moveToLocal 等待 fullPush 收敛超时,账本保持 cloud', e, st);
+          'SyncEngine',
+          'moveToLocal 等待 fullPush 收敛超时,账本保持 cloud',
+          e,
+          st,
+        );
         throw CloudSyncException('等待云端推送收敛超时,请稍后重试');
       }
 
@@ -747,11 +756,13 @@ class SyncEngine implements app.SyncService {
       } catch (e, st) {
         final msg = e.toString();
         if (msg.contains('404') || msg.contains('410')) {
-          logger.warning('SyncEngine',
-              'moveToLocal 删云端副本命中 404/410(云端已无副本),幂等放行 syncId=$syncId', st);
+          logger.warning(
+            'SyncEngine',
+            'moveToLocal 删云端副本命中 404/410(云端已无副本),幂等放行 syncId=$syncId',
+            st,
+          );
         } else {
-          logger.error(
-              'SyncEngine', 'moveToLocal 删除云端副本失败,账本保持 cloud', e, st);
+          logger.error('SyncEngine', 'moveToLocal 删除云端副本失败,账本保持 cloud', e, st);
           throw CloudSyncException('删除云端副本失败:$e');
         }
       }
@@ -791,14 +802,21 @@ class SyncEngine implements app.SyncService {
         return; // 成功:终态 local + syncId=null
       } catch (e, st) {
         if (attempt < maxAttempts) {
-          logger.warning('SyncEngine',
-              'moveToLocal detachFromCloud 第 $attempt 次失败,重试: $e', st);
+          logger.warning(
+            'SyncEngine',
+            'moveToLocal detachFromCloud 第 $attempt 次失败,重试: $e',
+            st,
+          );
           // 短间隔退避,兜 SQLite busy/locked 瞬时锁。
           await Future<void>.delayed(Duration(milliseconds: 50 * attempt));
           continue;
         }
         logger.error(
-            'SyncEngine', 'moveToLocal detachFromCloud 重试耗尽,进入降级', e, st);
+          'SyncEngine',
+          'moveToLocal detachFromCloud 重试耗尽,进入降级',
+          e,
+          st,
+        );
       }
     }
 
@@ -825,8 +843,10 @@ class SyncEngine implements app.SyncService {
       //   - 仅清 syncId 未翻 local(B 态,cloud + syncId=null,云端已删的孤儿态)
       //     → 数据非阻塞,用户重试 moveToLocal 时 syncId 已空会直接置 local 自愈。
       if (!modeFlipped) {
-        logger.warning('SyncEngine',
-            'moveToLocal 降级:已清 syncId 但未翻 local(B 态),账本数据完好可重试自愈 ledgerId=$ledgerId');
+        logger.warning(
+          'SyncEngine',
+          'moveToLocal 降级:已清 syncId 但未翻 local(B 态),账本数据完好可重试自愈 ledgerId=$ledgerId',
+        );
       }
       return;
     }
@@ -835,10 +855,11 @@ class SyncEngine implements app.SyncService {
     // purge(含降级后新数据、不可自愈)。记危险日志留痕;但仍正常返回不抛异常:
     // 账本数据当前留在本地,抛异常会让 UI 引导重试,而重试删云端必 404 死循环。
     logger.error(
-        'SyncEngine',
-        'moveToLocal 降级全失败(A 态危险):syncId 未清,下次 pull 可能整本 purge,'
-            '请引导用户重试转本地 ledgerId=$ledgerId syncId=$syncId',
-        StateError('detach fallback all failed'));
+      'SyncEngine',
+      'moveToLocal 降级全失败(A 态危险):syncId 未清,下次 pull 可能整本 purge,'
+          '请引导用户重试转本地 ledgerId=$ledgerId syncId=$syncId',
+      StateError('detach fallback all failed'),
+    );
   }
 
   /// 复制云端/共享账本到本地。
@@ -848,9 +869,9 @@ class SyncEngine implements app.SyncService {
   /// 返回新建本地账本 id,供 UI 跳转。
   @override
   Future<int> copyToLocal(int sourceLedgerId) async {
-    final src = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(sourceLedgerId)))
-        .getSingleOrNull();
+    final src = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(sourceLedgerId))).getSingleOrNull();
     if (src == null) throw CloudSyncException('源账本不存在: $sourceLedgerId');
     if (src.storageMode == 'local') {
       throw CloudSyncException('本地账本已是本地,无需复制');
@@ -883,12 +904,12 @@ class SyncEngine implements app.SyncService {
 
   @override
   Future<({String? fingerprint, int? count, DateTime? exportedAt})>
-      refreshCloudFingerprint({required int ledgerId}) async {
+  refreshCloudFingerprint({required int ledgerId}) async {
     // 对于增量同步，fingerprint 概念不太适用
     // 返回基本信息即可
-    final ledgerRow = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledgerRow = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     final hasRemote = await provider.storage.exists(
       path: ledgerRow?.syncId ?? ledgerId.toString(),
     );
@@ -925,15 +946,14 @@ class SyncEngine implements app.SyncService {
   ///
   /// 返回按 id 升序,保证跨刷新顺序稳定(健康检测以第一个为准)。
   Future<List<Ledger>> _queryCloudLedgers() async {
-    final rows = await (db.select(db.ledgers)
-          // 归属判定统一走 ledger_kind.dart 的 SQL 工厂(与 isCloudLedgerOf 同源)。
-          ..where(cloudLedgerFilter)
-          ..where((l) => l.syncId.isNotNull()))
-        .get();
+    final rows =
+        await (db.select(db.ledgers)
+              // 归属判定统一走 ledger_kind.dart 的 SQL 工厂(与 isCloudLedgerOf 同源)。
+              ..where(cloudLedgerFilter)
+              ..where((l) => l.syncId.isNotNull()))
+            .get();
     // syncId 为空串(从未成功同步)的账本无法 push,同样不算云端账本
-    return rows
-        .where((l) => (l.syncId ?? '').isNotEmpty)
-        .toList()
+    return rows.where((l) => (l.syncId ?? '').isNotEmpty).toList()
       ..sort((a, b) => a.id.compareTo(b.id));
   }
 
@@ -956,9 +976,9 @@ class SyncEngine implements app.SyncService {
       // 边界:`ledger.syncId == null`(本地刚建账本还没 sync 过)→ 一定不在
       // 远端列表,触发 fullPush。fullPush 内部 `_ensureLedgerSyncId` 会先
       // 生成 UUID 写回,确保 `pathForSnapshot` 合法。
-      final ledgerRow = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerIdInt)))
-          .getSingleOrNull();
+      final ledgerRow = await (db.select(
+        db.ledgers,
+      )..where((l) => l.id.equals(ledgerIdInt))).getSingleOrNull();
 
       // 闸门:纯本地账本(storage_mode == 'local' 且非共享)不参与被动同步,
       // 既不上推也不下拉,从源头杜绝本地数据被误传到云端。只有"账本已被删除
@@ -967,8 +987,10 @@ class SyncEngine implements app.SyncService {
       // (显式 local + 非共享双条件),共享账本即使 storageMode 缺失也会被
       // isCloudLedger 命中,不会翻转成本地账本漏同步。
       if (ledgerRow != null && ledgerRow.isLocalLedger) {
-        logger.info('SyncEngine',
-            '账本 $ledgerId 为本地账本(storage_mode=${ledgerRow.storageMode}),跳过 sync');
+        logger.info(
+          'SyncEngine',
+          '账本 $ledgerId 为本地账本(storage_mode=${ledgerRow.storageMode}),跳过 sync',
+        );
         return SyncResult(pushed: 0, pulled: 0);
       }
 
@@ -983,7 +1005,9 @@ class SyncEngine implements app.SyncService {
       if (ledgerRow == null) {
         final pushed = await push(ledgerId);
         logger.info(
-            'SyncEngine', '账本 $ledgerId 已本地删除,push delete changes: $pushed 条');
+          'SyncEngine',
+          '账本 $ledgerId 已本地删除,push delete changes: $pushed 条',
+        );
         return SyncResult(pushed: pushed, pulled: 0);
       }
 
@@ -997,12 +1021,15 @@ class SyncEngine implements app.SyncService {
           final remoteLedgers = await provider.storage.list(path: '');
           // 用本账本的 syncId 跟远端列表比对(没 syncId 视为不在)。
           final mySyncId = ledgerRow.syncId;
-          final remoteHasThisLedger = mySyncId != null &&
+          final remoteHasThisLedger =
+              mySyncId != null &&
               mySyncId.isNotEmpty &&
               remoteLedgers.any((l) => l.path == mySyncId);
           shouldFullPush = !remoteHasThisLedger;
-          logger.info('SyncEngine',
-              '远端账本=${remoteLedgers.length}, 本账本(syncId=$mySyncId) 命中=$remoteHasThisLedger → fullPush=$shouldFullPush');
+          logger.info(
+            'SyncEngine',
+            '远端账本=${remoteLedgers.length}, 本账本(syncId=$mySyncId) 命中=$remoteHasThisLedger → fullPush=$shouldFullPush',
+          );
         } catch (e, st) {
           // list 失败保守走增量(fullPush 风险更大)。
           logger.warning('SyncEngine', '远端 ledger 列表查询失败,按已存在处理: $e', st);
@@ -1020,10 +1047,9 @@ class SyncEngine implements app.SyncService {
         // 设备 sync 必然分裂。
         await _ensureLedgerSyncId(ledgerRow);
 
-        final localTxCount = (await (db.select(db.transactions)
-                  ..where((t) => t.ledgerId.equals(ledgerIdInt)))
-                .get())
-            .length;
+        final localTxCount = (await (db.select(
+          db.transactions,
+        )..where((t) => t.ledgerId.equals(ledgerIdInt))).get()).length;
         logger.info('SyncEngine', '远端无数据,本地 $localTxCount 条交易,触发 fullPush');
 
         await fullPush(ledgerId: ledgerIdInt);
@@ -1132,8 +1158,7 @@ class SyncEngine implements app.SyncService {
     try {
       remoteLedgers = await provider.storage.list(path: '');
     } catch (e, st) {
-      logger.warning('SyncEngine',
-          'syncAccount: 拉远端账本列表失败,后续按"未绑定"保守增量处理', st);
+      logger.warning('SyncEngine', 'syncAccount: 拉远端账本列表失败,后续按"未绑定"保守增量处理', st);
     }
     final remoteSyncIds = remoteLedgers == null
         ? null
@@ -1152,7 +1177,10 @@ class SyncEngine implements app.SyncService {
       await syncLedgersFromServer();
     } catch (e, st) {
       logger.warning(
-          'SyncEngine', 'syncAccount: syncLedgersFromServer 失败(继续同步): $e', st);
+        'SyncEngine',
+        'syncAccount: syncLedgersFromServer 失败(继续同步): $e',
+        st,
+      );
     }
 
     // c) 用户级 sync_changes 流(只拉一次,所有账本共享 cursor)。
@@ -1168,7 +1196,12 @@ class SyncEngine implements app.SyncService {
     try {
       totalPushed += await pushUserGlobalEntities();
     } catch (e, st) {
-      logger.error('SyncEngine', 'syncAccount: pushUserGlobalEntities 失败', e, st);
+      logger.error(
+        'SyncEngine',
+        'syncAccount: pushUserGlobalEntities 失败',
+        e,
+        st,
+      );
     }
 
     // ---------- Phase 2: 每个云端账本 ----------
@@ -1176,8 +1209,9 @@ class SyncEngine implements app.SyncService {
     for (final ledger in ledgers) {
       final tag = '${ledger.name}(${ledger.id})';
       try {
-        final unpushed =
-            await changeTracker.getUnpushedChangesForLedger(ledger.id);
+        final unpushed = await changeTracker.getUnpushedChangesForLedger(
+          ledger.id,
+        );
         final mySyncId = ledger.syncId;
         final hasSyncId = mySyncId != null && mySyncId.isNotEmpty;
         final inRemote = hasSyncId && remoteSyncIds?.contains(mySyncId) == true;
@@ -1202,10 +1236,9 @@ class SyncEngine implements app.SyncService {
           // fullPush 前先确保 syncId 是 UUID(否则 server 校验 min_length=3
           // 失败,且跨设备 external_id 会分裂)。
           await _ensureLedgerSyncId(ledger);
-          final localTxCount = (await (db.select(db.transactions)
-                    ..where((t) => t.ledgerId.equals(ledger.id)))
-                  .get())
-              .length;
+          final localTxCount = (await (db.select(
+            db.transactions,
+          )..where((t) => t.ledgerId.equals(ledger.id))).get()).length;
           await fullPush(ledgerId: ledger.id);
           // fullPush 不处理 delete change,这里 _push 推剩余的 delete change,
           // 清掉 server canonical state。
@@ -1224,12 +1257,13 @@ class SyncEngine implements app.SyncService {
         // —— 数据已推送但图标一直红色。
         if (pushedForLedger > 0) {
           clearStatusCache(ledgerId: ledger.id);
-          _emit(PushCompleted(
-            ledgerId: ledger.id.toString(),
-            pushed: pushedForLedger,
-          ));
+          _emit(
+            PushCompleted(
+              ledgerId: ledger.id.toString(),
+              pushed: pushedForLedger,
+            ),
+          );
         }
-
       } catch (e, st) {
         logger.error('SyncEngine', 'syncAccount: $tag 同步异常', e, st);
       }
@@ -1263,8 +1297,10 @@ class SyncEngine implements app.SyncService {
     await _maybeCleanupPushedChanges();
 
     final elapsedMs = DateTime.now().difference(overallStart).inMilliseconds;
-    logger.info('SyncEngine',
-        'syncAccount 完成: pushed=$totalPushed pulled=$totalPulled skipped=$skipped 耗时 ${elapsedMs}ms');
+    logger.info(
+      'SyncEngine',
+      'syncAccount 完成: pushed=$totalPushed pulled=$totalPulled skipped=$skipped 耗时 ${elapsedMs}ms',
+    );
     return SyncAccountResult(
       pushed: totalPushed,
       pulled: totalPulled,
@@ -1285,10 +1321,13 @@ class SyncEngine implements app.SyncService {
   Future<void> _ensureLedgerSyncId(Ledger ledger) async {
     if (ledger.syncId != null && ledger.syncId!.length >= 3) return;
     final newSyncId = _uuid.v4();
-    await (db.update(db.ledgers)..where((l) => l.id.equals(ledger.id)))
-        .write(LedgersCompanion(syncId: d.Value(newSyncId)));
+    await (db.update(db.ledgers)..where((l) => l.id.equals(ledger.id))).write(
+      LedgersCompanion(syncId: d.Value(newSyncId)),
+    );
     logger.info(
-        'SyncEngine', 'fullPush 前补生成 ledger.syncId: ${ledger.id} → $newSyncId');
+      'SyncEngine',
+      'fullPush 前补生成 ledger.syncId: ${ledger.id} → $newSyncId',
+    );
   }
 
   /// 首次登录 / app 启动时从 server 拉全部账本写本地 Drift。
@@ -1326,8 +1365,8 @@ class SyncEngine implements app.SyncService {
       // completer.future 仅供并发去重的第二个调用方等待;单调用场景下无人
       // 监听,必须先 ignore() 标记已处理,否则 completeError 会让这个 future
       // 变成 zone 级 unhandled async error(rethrow 已把错误交给当前调用方)。
-      // _syncLedgersFromServerLocked 全捕获 return 0 永不抛,此路径
-      // 从未触发;本次为让网络错误逃逸到 bootstrap 而引入 rethrow,才需要补。
+      // _syncLedgersFromServerLocked 全捕获 return 0 永不抛;此路径
+      // 通过 rethrow 让网络错误逃逸到 bootstrap,故需补 ignore()。
       completer.future.ignore();
       completer.completeError(e, st);
       rethrow;
@@ -1360,8 +1399,7 @@ class SyncEngine implements app.SyncService {
     } on CloudStorageException catch (e) {
       // 404/410:路由确死(远端资源不存在) → 等价空集,立即清、不报错。
       if (e.statusCode == 404 || e.statusCode == 410) {
-        logger.info(
-            'SyncEngine', 'readLedgers ${e.statusCode} → 全量清本地共享账本');
+        logger.info('SyncEngine', 'readLedgers ${e.statusCode} → 全量清本地共享账本');
         if (!_suppressLedgerGc) await _gcAllLocalSharedLedgers();
         return 0;
       }
@@ -1395,7 +1433,11 @@ class SyncEngine implements app.SyncService {
       // storage_mode='cloud' + isShared 同类型,防止纯本地私密账本被同名云端账本收编(L1)。
       final allLedgers = await (db.select(db.ledgers)).get();
       final bySyncId = <String, List<Ledger>>{}; // syncId → 命中的本地账本列表(保留 dup)
-      final nameFallbackMap = <String, Ledger>{}; // 收编候选:仅 syncId 为 NULL 且 storage_mode='cloud' 的行,按 "name|isShared" 索引
+      final nameFallbackMap =
+          <
+            String,
+            Ledger
+          >{}; // 收编候选:仅 syncId 为 NULL 且 storage_mode='cloud' 的行,按 "name|isShared" 索引
       final takenNames = <String>{}; // 所有已占用名(含既有账本 + 本轮 insert 的新名),供重名改名
       for (final l in allLedgers) {
         final sid = l.syncId;
@@ -1425,36 +1467,41 @@ class SyncEngine implements app.SyncService {
         if (existingList.isNotEmpty) {
           final existing = existingList.first;
           // update meta（name / currency / 共享账本字段 server 可能改过）
-          await (db.update(db.ledgers)..where((l) => l.id.equals(existing.id)))
-              .write(LedgersCompanion(
-            name: d.Value(r.ledgerName),
-            // 有 syncId 且 server 认它 = 云端账本。storage_mode 缺省为 'local'
-            // 的数据在这里被就地修正,避免被本地闸门永久挡住同步。
-            storageMode: const d.Value('cloud'),
-            currency: d.Value(r.currency),
-            myRole: d.Value(r.role),
-            isShared: d.Value(r.isShared),
-            memberCount: d.Value(r.memberCount),
-            monthStartDay: r.monthStartDay != null
-                ? d.Value(r.monthStartDay!.clamp(1, 28))
-                : const d.Value.absent(),
-            // aaEnabled:仅当 server 显式返回该字段(hasAaEnabled)时覆盖本地值;
-            // 老 server 不返回 → absent,保留本地已开启的 AA 开关,避免静默关闭。
-            aaEnabled: r.hasAaEnabled
-                ? d.Value(r.aaEnabled)
-                : const d.Value.absent(),
-          ));
+          await (db.update(
+            db.ledgers,
+          )..where((l) => l.id.equals(existing.id))).write(
+            LedgersCompanion(
+              name: d.Value(r.ledgerName),
+              // 有 syncId 且 server 认它 = 云端账本。storage_mode 缺省为 'local'
+              // 的数据在这里被就地修正,避免被本地闸门永久挡住同步。
+              storageMode: const d.Value('cloud'),
+              currency: d.Value(r.currency),
+              myRole: d.Value(r.role),
+              isShared: d.Value(r.isShared),
+              memberCount: d.Value(r.memberCount),
+              monthStartDay: r.monthStartDay != null
+                  ? d.Value(r.monthStartDay!.clamp(1, 28))
+                  : const d.Value.absent(),
+              // aaEnabled:仅当 server 显式返回该字段(hasAaEnabled)时覆盖本地值;
+              // 老 server 不返回 → absent,保留本地已开启的 AA 开关,避免静默关闭。
+              aaEnabled: r.hasAaEnabled
+                  ? d.Value(r.aaEnabled)
+                  : const d.Value.absent(),
+            ),
+          );
           // 删 dup 行(及其关联 tx/local_changes,虽然 dup 行还没有这些)
           if (existingList.length > 1) {
             final dupIds = existingList.skip(1).map((l) => l.id).toList();
-            logger.warning('SyncEngine',
-                '检测到 ledger.syncId=$syncId 重复 ${existingList.length} 行,清除 dup id=$dupIds');
-            await (db.delete(db.transactions)
-                  ..where((t) => t.ledgerId.isIn(dupIds)))
-                .go();
-            await (db.delete(db.localChanges)
-                  ..where((c) => c.ledgerId.isIn(dupIds)))
-                .go();
+            logger.warning(
+              'SyncEngine',
+              '检测到 ledger.syncId=$syncId 重复 ${existingList.length} 行,清除 dup id=$dupIds',
+            );
+            await (db.delete(
+              db.transactions,
+            )..where((t) => t.ledgerId.isIn(dupIds))).go();
+            await (db.delete(
+              db.localChanges,
+            )..where((c) => c.ledgerId.isIn(dupIds))).go();
             await (db.delete(db.ledgers)..where((l) => l.id.isIn(dupIds))).go();
           }
           upserted++;
@@ -1465,23 +1512,26 @@ class SyncEngine implements app.SyncService {
         // (共享/个人)须与远端一致,避免纯本地私密账本被同名云端账本静默收编(L1)。
         final byName = nameFallbackMap.remove('${r.ledgerName}|${r.isShared}');
         if (byName != null) {
-          await (db.update(db.ledgers)..where((l) => l.id.equals(byName.id)))
-              .write(LedgersCompanion(
-            syncId: d.Value(syncId),
-            storageMode: const d.Value('cloud'),
-            currency: d.Value(r.currency),
-            myRole: d.Value(r.role),
-            isShared: d.Value(r.isShared),
-            memberCount: d.Value(r.memberCount),
-            monthStartDay: r.monthStartDay != null
-                ? d.Value(r.monthStartDay!.clamp(1, 28))
-                : const d.Value.absent(),
-            // 同 update 路径:hasAaEnabled=false 时 absent 保留本地值,
-            // 防止老 server 把本地已开启的 AA 分摊静默关闭。
-            aaEnabled: r.hasAaEnabled
-                ? d.Value(r.aaEnabled)
-                : const d.Value.absent(),
-          ));
+          await (db.update(
+            db.ledgers,
+          )..where((l) => l.id.equals(byName.id))).write(
+            LedgersCompanion(
+              syncId: d.Value(syncId),
+              storageMode: const d.Value('cloud'),
+              currency: d.Value(r.currency),
+              myRole: d.Value(r.role),
+              isShared: d.Value(r.isShared),
+              memberCount: d.Value(r.memberCount),
+              monthStartDay: r.monthStartDay != null
+                  ? d.Value(r.monthStartDay!.clamp(1, 28))
+                  : const d.Value.absent(),
+              // 同 update 路径:hasAaEnabled=false 时 absent 保留本地值,
+              // 防止老 server 把本地已开启的 AA 分摊静默关闭。
+              aaEnabled: r.hasAaEnabled
+                  ? d.Value(r.aaEnabled)
+                  : const d.Value.absent(),
+            ),
+          );
           upserted++;
           continue;
         }
@@ -1489,25 +1539,32 @@ class SyncEngine implements app.SyncService {
         //
         // 与既有账本(通常是同名的纯本地账本)重名时加「（云端）」后缀:两本同名
         // 账本一个上云一个不上云,列表里完全分不清,改名比让用户猜更安全。
-        final displayName = await _resolveCloudLedgerName(r.ledgerName, takenNames);
-        await db.into(db.ledgers).insert(LedgersCompanion.insert(
-              name: displayName,
-              currency: d.Value(r.currency),
-              syncId: d.Value(syncId),
-              // 从 server 拉下来的账本天然属于云端,必须显式标记 —— 否则会落到
-              // storage_mode 的默认值 'local',被三路闸门当成纯本地账本挡住,
-              // 表现为「账本在列表里但永远不同步」。
-              storageMode: const d.Value('cloud'),
-              myRole: d.Value(r.role),
-              isShared: d.Value(r.isShared),
-              memberCount: d.Value(r.memberCount),
-              monthStartDay: r.monthStartDay != null
-                  ? d.Value(r.monthStartDay!.clamp(1, 28))
-                  : const d.Value.absent(),
-              // insert 路径(新账本):server 显式返回就用 server 值,
-              // 老 server 不返回时用 false(新账本默认 AA 关闭,与既有客户端默认一致)。
-              aaEnabled: d.Value(r.aaEnabled),
-            ));
+        final displayName = await _resolveCloudLedgerName(
+          r.ledgerName,
+          takenNames,
+        );
+        await db
+            .into(db.ledgers)
+            .insert(
+              LedgersCompanion.insert(
+                name: displayName,
+                currency: d.Value(r.currency),
+                syncId: d.Value(syncId),
+                // 从 server 拉下来的账本天然属于云端,必须显式标记 —— 否则会落到
+                // storage_mode 的默认值 'local',被三路闸门当成纯本地账本挡住,
+                // 表现为「账本在列表里但永远不同步」。
+                storageMode: const d.Value('cloud'),
+                myRole: d.Value(r.role),
+                isShared: d.Value(r.isShared),
+                memberCount: d.Value(r.memberCount),
+                monthStartDay: r.monthStartDay != null
+                    ? d.Value(r.monthStartDay!.clamp(1, 28))
+                    : const d.Value.absent(),
+                // insert 路径(新账本):server 显式返回就用 server 值,
+                // 老 server 不返回时用 false(新账本默认 AA 关闭,与既有客户端默认一致)。
+                aaEnabled: d.Value(r.aaEnabled),
+              ),
+            );
         inserted++;
         // 新设备登录:Editor 的共享账本需要拉 /shared-resources 才能在
         // picker / 详情页 / 洞察 等显示 Owner 的资源。fallback 给 byName
@@ -1516,8 +1573,10 @@ class SyncEngine implements app.SyncService {
           newSharedLedgerSyncIds.add(syncId);
         }
       }
-      logger.info('SyncEngine',
-          'syncLedgersFromServer done: total=${remote.length} upserted=$upserted inserted=$inserted');
+      logger.info(
+        'SyncEngine',
+        'syncLedgersFromServer done: total=${remote.length} upserted=$upserted inserted=$inserted',
+      );
 
       // GC 1:清掉本地 isShared=true 但 server 没返回的 ledger — Owner 删了
       // 共享账本,Editor 应该自动清(WS member_change.removed 是主路径,这是
@@ -1533,9 +1592,9 @@ class SyncEngine implements app.SyncService {
       }
 
       final remoteSyncIdSet = remote.map((r) => r.ledgerId).toSet();
-      final localShared = await (db.select(db.ledgers)
-            ..where((l) => l.isShared.equals(true)))
-          .get();
+      final localShared = await (db.select(
+        db.ledgers,
+      )..where((l) => l.isShared.equals(true))).get();
       for (final localLedger in localShared) {
         final sid = localLedger.syncId;
         if (sid == null || sid.isEmpty) continue;
@@ -1559,14 +1618,19 @@ class SyncEngine implements app.SyncService {
       // 拉 /shared-resources 把 SharedLedger* 镜像表填上。每个独立 await
       // 单一错误不影响其它账本;成功后 bump tick 让 UI 立即生效。
       if (newSharedLedgerSyncIds.isNotEmpty) {
-        logger.info('SyncEngine',
-            '新 insert 的共享账本(Editor)$newSharedLedgerSyncIds — 拉 /shared-resources');
+        logger.info(
+          'SyncEngine',
+          '新 insert 的共享账本(Editor)$newSharedLedgerSyncIds — 拉 /shared-resources',
+        );
         for (final sid in newSharedLedgerSyncIds) {
           try {
             await fetchAndStoreSharedResources(sid);
           } catch (e, st) {
-            logger.warning('SyncEngine',
-                'fetchAndStoreSharedResources 失败 ledger=$sid: $e', st);
+            logger.warning(
+              'SyncEngine',
+              'fetchAndStoreSharedResources 失败 ledger=$sid: $e',
+              st,
+            );
           }
         }
         // 通知 UI 刷新(picker / 详情页 watch sharedResourceRefreshProvider)
@@ -1593,7 +1657,10 @@ class SyncEngine implements app.SyncService {
   ///
   /// [takenNames] 为调用方传入的可变集合,初始为本地全部账本名,本轮每 insert
   /// 一个新账本都会把 displayName 加进去,确保后续远端账本的重名检测基于「实时」占用情况。
-  Future<String> _resolveCloudLedgerName(String rawName, Set<String> takenNames) async {
+  Future<String> _resolveCloudLedgerName(
+    String rawName,
+    Set<String> takenNames,
+  ) async {
     // 无冲突直接用原名,并把该名登记进占用集合,避免后续重复 insert 撞名。
     if (!takenNames.contains(rawName)) {
       takenNames.add(rawName);
@@ -1667,8 +1734,9 @@ class SyncEngine implements app.SyncService {
     try {
       // 遍历恢复后 DB 中的云端形态账本,逐本重新认领到当前服务器/账号。
       // 归属判定统一走 ledger_kind.dart 的 SQL 工厂(与 isCloudLedgerOf 同源)。
-      final ledgers =
-          await (db.select(db.ledgers)..where(cloudLedgerFilter)).get();
+      final ledgers = await (db.select(
+        db.ledgers,
+      )..where(cloudLedgerFilter)).get();
       for (final l in ledgers) {
         try {
           await fullPush(ledgerId: l.id);
@@ -1678,8 +1746,11 @@ class SyncEngine implements app.SyncService {
         } catch (e, st) {
           // 单本失败不阻断其余账本;failed 账本 syncId 不在远端集合,
           // 后续 GC1 会补清(它确实无法在 server 上建立)。
-          logger.warning('SyncEngine',
-              'reregisterRestoredLedgers 失败 ledger=${l.id}: $e', st);
+          logger.warning(
+            'SyncEngine',
+            'reregisterRestoredLedgers 失败 ledger=${l.id}: $e',
+            st,
+          );
         }
       }
     } finally {
@@ -1733,7 +1804,9 @@ class SyncEngine implements app.SyncService {
     final globalChanges = await changeTracker.getUnpushedChangesForLedger(0);
     if (globalChanges.isEmpty) {
       logger.debug(
-          'SyncEngine', 'pushUserGlobalEntities: 无未推 user-global change');
+        'SyncEngine',
+        'pushUserGlobalEntities: 无未推 user-global change',
+      );
       return 0;
     }
 
@@ -1788,17 +1861,23 @@ class SyncEngine implements app.SyncService {
     if (overrideSyncChanges.isNotEmpty) {
       try {
         await provider.pushChanges(changes: overrideSyncChanges);
-        await changeTracker
-            .markPushed(overrideChanges.map((c) => c.id).toList());
+        await changeTracker.markPushed(
+          overrideChanges.map((c) => c.id).toList(),
+        );
         pushedCount += overrideChanges.length;
       } catch (e, st) {
         logger.warning(
-            'SyncEngine', 'override 批推送失败(server 可能未升级),跳过本轮不阻塞: $e', st);
+          'SyncEngine',
+          'override 批推送失败(server 可能未升级),跳过本轮不阻塞: $e',
+          st,
+        );
       }
     }
 
-    logger.info('SyncEngine',
-        'pushUserGlobalEntities: 推送 ${mainChanges.length} 条主批 + ${overrideChanges.length} 条 override 批 user-global change');
+    logger.info(
+      'SyncEngine',
+      'pushUserGlobalEntities: 推送 ${mainChanges.length} 条主批 + ${overrideChanges.length} 条 override 批 user-global change',
+    );
     // 只计成功批次：override 批失败时不计入，避免 SyncAccountResult.pushed 虚高。
     return pushedCount;
   }
@@ -1816,9 +1895,11 @@ class SyncEngine implements app.SyncService {
     // 避免逐 entity SELECT。注意 local_changes 没有唯一约束,
     // recordUserGlobalChange 是纯 insert —— 不能依赖数据库拦住重复,
     // 这个 in-memory Set 是唯一的防重手段。
-    final existingChanges = await (db.select(db.localChanges)
-          ..where((c) => c.entityType.isIn(['category', 'exchange_rate_override'])))
-        .get();
+    final existingChanges =
+        await (db.select(db.localChanges)..where(
+              (c) => c.entityType.isIn(['category', 'exchange_rate_override']),
+            ))
+            .get();
     final knownSyncIds = existingChanges.map((c) => c.entitySyncId).toSet();
 
     var backfilled = 0;
@@ -1868,8 +1949,10 @@ class SyncEngine implements app.SyncService {
     // tags 表已删除,跳过标签 backfill。
 
     if (backfilled > 0) {
-      logger.info('SyncEngine',
-          'legacy backfill: 补登记 $backfilled 条 user-global ChangeTracker entry');
+      logger.info(
+        'SyncEngine',
+        'legacy backfill: 补登记 $backfilled 条 user-global ChangeTracker entry',
+      );
     } else {
       logger.debug('SyncEngine', 'legacy backfill: 无需补登记');
     }
@@ -1916,9 +1999,9 @@ class SyncEngine implements app.SyncService {
     // 2) ledgerId="0" / "" 语义是"只推 user-global",上面一步已经做完。
     if (ledgerIdInt == 0) return userGlobalPushed;
 
-    final ledger = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerIdInt)))
-        .getSingleOrNull();
+    final ledger = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerIdInt))).getSingleOrNull();
 
     // 3) 再推这个 ledger 的 ledger-scope change(transaction / budget / ledger /
     //    ledger_snapshot)。ledger 删除路径:即使 ledger 行已没,ledger_snapshot:
@@ -1932,16 +2015,19 @@ class SyncEngine implements app.SyncService {
     //
     // 策略:先按这个 ledgerIdInt 查未推送变更,有变更就继续推,没
     // 变更才安全 return。
-    final ledgerChanges =
-        await changeTracker.getUnpushedChangesForLedger(ledgerIdInt);
+    final ledgerChanges = await changeTracker.getUnpushedChangesForLedger(
+      ledgerIdInt,
+    );
     // 仅这个 ledger 的 ledger-scope change。user-global 已在上面统一推走。
     final changes = ledgerChanges;
     if (changes.isEmpty) {
       if (ledger == null) {
         logger.warning('SyncEngine', 'push: 本地账本 $ledgerId 已删除且无待推送变更,跳过');
       } else {
-        logger.debug('SyncEngine',
-            'push: 无 ledger-scope 待推变更(user-global 已推 $userGlobalPushed 条)');
+        logger.debug(
+          'SyncEngine',
+          'push: 无 ledger-scope 待推变更(user-global 已推 $userGlobalPushed 条)',
+        );
       }
       return userGlobalPushed;
     }
@@ -1959,17 +2045,19 @@ class SyncEngine implements app.SyncService {
         }
       }
       logger.info(
-          'SyncEngine',
-          'push: 本地账本 $ledgerId 已删除,但还有 ${changes.length} 条未推送变更(应包含 ledger_snapshot:delete),'
-              '从 snapshot change 拿到 ledgerSyncId=$deletedLedgerSyncId,继续 push');
+        'SyncEngine',
+        'push: 本地账本 $ledgerId 已删除,但还有 ${changes.length} 条未推送变更(应包含 ledger_snapshot:delete),'
+            '从 snapshot change 拿到 ledgerSyncId=$deletedLedgerSyncId,继续 push',
+      );
     }
 
     // 构建服务端 push 格式：从 DB 读取最新数据序列化
     final syncChanges = <Map<String, dynamic>>[];
 
     for (final change in changes) {
-      final isUserGlobal =
-          ChangeTracker.userGlobalEntityTypes.contains(change.entityType);
+      final isUserGlobal = ChangeTracker.userGlobalEntityTypes.contains(
+        change.entityType,
+      );
 
       Map<String, dynamic> payload;
 
@@ -2020,8 +2108,10 @@ class SyncEngine implements app.SyncService {
     // detach 之间的窗口里,auto sync 恰好触发增量 push,把积压的 local_changes 重新
     // 写成 S1 孤儿。
     if (_moveToLocalAbortRequests.contains(ledgerIdInt)) {
-      logger.info('SyncEngine',
-          'push: 账本 $ledgerIdInt 处于 moveToLocal 中止窗口,静默跳过本轮增量 push');
+      logger.info(
+        'SyncEngine',
+        'push: 账本 $ledgerIdInt 处于 moveToLocal 中止窗口,静默跳过本轮增量 push',
+      );
       return userGlobalPushed;
     }
 
@@ -2030,8 +2120,10 @@ class SyncEngine implements app.SyncService {
 
     // 标记已推送
     await changeTracker.markPushed(changes.map((c) => c.id).toList());
-    logger.info('SyncEngine',
-        'push: 推送 ${changes.length} 条 ledger-scope 变更 + 本会话 user-global $userGlobalPushed 条');
+    logger.info(
+      'SyncEngine',
+      'push: 推送 ${changes.length} 条 ledger-scope 变更 + 本会话 user-global $userGlobalPushed 条',
+    );
     return changes.length + userGlobalPushed;
   }
 
@@ -2065,11 +2157,15 @@ class SyncEngine implements app.SyncService {
         return inFlight.future;
       }
       // 分支 B:replay / 不同 since → 等当前 pull 完成再独立跑(语义不可复用)。
-      logger.info('SyncEngine',
-          'pull(sinceOverride=$sinceOverride) 等待 in-flight pull 完成');
+      logger.info(
+        'SyncEngine',
+        'pull(sinceOverride=$sinceOverride) 等待 in-flight pull 完成',
+      );
       try {
         await inFlight.future;
-      } catch (_) {/* 忽略 in-flight 的错,自己单独跑 */}
+      } catch (_) {
+        /* 忽略 in-flight 的错,自己单独跑 */
+      }
     }
 
     final completer = Completer<int>();
@@ -2117,7 +2213,9 @@ class SyncEngine implements app.SyncService {
     );
     if (probe.changes.isEmpty) {
       logger.info(
-          'SyncEngine', 'pull: since=$nextSince 无新变更,跳过 LookupCache prime');
+        'SyncEngine',
+        'pull: since=$nextSince 无新变更,跳过 LookupCache prime',
+      );
       return 0;
     }
 
@@ -2151,8 +2249,10 @@ class SyncEngine implements app.SyncService {
         // 第一轮:复用 _doPull 的探针结果,不发一次 HTTP
         result = reuseResult;
         reuseResult = null;
-        logger.info('SyncEngine',
-            'pull #$pageIndex: since=$nextSince got ${result.changes.length} hasMore=${result.hasMore} (reused probe)');
+        logger.info(
+          'SyncEngine',
+          'pull #$pageIndex: since=$nextSince got ${result.changes.length} hasMore=${result.hasMore} (reused probe)',
+        );
       } else {
         result = await provider.pullChanges(
           since: nextSince,
@@ -2160,20 +2260,26 @@ class SyncEngine implements app.SyncService {
           persistCursor: false, // cursor 由 appCursor 接管
         );
         final httpMs = DateTime.now().difference(pageStart).inMilliseconds;
-        logger.info('SyncEngine',
-            'pull #$pageIndex: since=$nextSince got ${result.changes.length} hasMore=${result.hasMore} (HTTP ${httpMs}ms)');
+        logger.info(
+          'SyncEngine',
+          'pull #$pageIndex: since=$nextSince got ${result.changes.length} hasMore=${result.hasMore} (HTTP ${httpMs}ms)',
+        );
       }
       if (result.changes.isEmpty) break;
 
       final applyStart = DateTime.now();
       final outcome = await _applyPullPage(result.changes);
       final applyMs = DateTime.now().difference(applyStart).inMilliseconds;
-      logger.info('SyncEngine',
-          'pull #$pageIndex: applied ${outcome.applied}/${result.changes.length} (apply ${applyMs}ms, page total ${DateTime.now().difference(pageStart).inMilliseconds}ms)');
+      logger.info(
+        'SyncEngine',
+        'pull #$pageIndex: applied ${outcome.applied}/${result.changes.length} (apply ${applyMs}ms, page total ${DateTime.now().difference(pageStart).inMilliseconds}ms)',
+      );
       totalApplied += outcome.applied;
       if (outcome.blocked) {
         logger.warning(
-            'SyncEngine', 'pull 被错误阻塞 cursor 停在 $nextSince — UI 应显示同步异常');
+          'SyncEngine',
+          'pull 被错误阻塞 cursor 停在 $nextSince — UI 应显示同步异常',
+        );
         break;
       }
 
@@ -2192,8 +2298,10 @@ class SyncEngine implements app.SyncService {
 
     final totalMs = DateTime.now().difference(loopStart).inMilliseconds;
     if (totalApplied > 0 || pageIndex > 0) {
-      logger.info('SyncEngine',
-          'pull: 累计 apply $totalApplied 条 / $pageIndex 页 / 总耗时 ${totalMs}ms');
+      logger.info(
+        'SyncEngine',
+        'pull: 累计 apply $totalApplied 条 / $pageIndex 页 / 总耗时 ${totalMs}ms',
+      );
     }
     return totalApplied;
   }
@@ -2202,7 +2310,8 @@ class SyncEngine implements app.SyncService {
   /// - 不可恢复异常 → rollback + 错误入 [pullErrors] + return blocked
   /// - SQLite busy/locked → 单条 retry 2 次
   Future<_PullPageOutcome> _applyPullPage(
-      List<SpitoutCloudSyncChange> changes) async {
+    List<SpitoutCloudSyncChange> changes,
+  ) async {
     int applied = 0;
     int skipped = 0;
     SpitoutCloudSyncChange? failingChange;
@@ -2226,11 +2335,12 @@ class SyncEngine implements app.SyncService {
     } catch (e, st) {
       // 整页 rollback 已自动完成(Drift transaction 抛错回滚)
       logger.error(
-          'SyncEngine',
-          '本页 apply 抛错 change_id=${failingChange?.changeId} '
-              'type=${failingChange?.entityType}',
-          e,
-          st);
+        'SyncEngine',
+        '本页 apply 抛错 change_id=${failingChange?.changeId} '
+            'type=${failingChange?.entityType}',
+        e,
+        st,
+      );
       final ch = failingChange;
       if (ch != null) {
         await pullErrors.record(change: ch, error: e, stackTrace: st);
@@ -2252,7 +2362,7 @@ class SyncEngine implements app.SyncService {
         final msg = e.toString().toLowerCase();
         final transient =
             (msg.contains('sqlite') || msg.contains('database')) &&
-                (msg.contains('busy') || msg.contains('locked'));
+            (msg.contains('busy') || msg.contains('locked'));
         if (transient && attempts < 2) {
           attempts++;
           await Future.delayed(Duration(milliseconds: 50 * (1 << attempts)));
@@ -2283,8 +2393,8 @@ class SyncEngine implements app.SyncService {
   /// [runFullPull] 快照兜底(stats 的 remote 计数本就来自最新快照,
   /// 所以它报出的差异快照里必然有)。
   ///
-  /// 四重防护 —— 与旧"翻倍 bug"(pulled==0 && 本地空就无条件盲插快照、
-  /// 导入无 syncId 去重)有本质区别:
+  /// 四重防护 —— 防翻倍(pulled==0 && 本地空时不盲插快照、
+  /// 导入按 syncId 去重):
   /// 1. **闸门**:仅 unpushed==0 && remoteOnly>0 才触发。unpushed>0 时
   ///    未推送的 delete 会造成"云端多"的假象(误触发会把用户刚删的数据
   ///    导回来),必须等 push 完成后才能判定。本方法自身不 push。
@@ -2300,7 +2410,8 @@ class SyncEngine implements app.SyncService {
   /// + 快照 inserted);gapRemaining 表示执行自愈后差异仍未消除。
   /// 未触发(节流/熔断/闸门不过/验证失败)时两者皆为 0/false。
   Future<({int healed, bool gapRemaining})> _selfHealIfMissing(
-      String ledgerId) async {
+    String ledgerId,
+  ) async {
     final ledgerIdInt = int.tryParse(ledgerId) ?? -1;
     if (ledgerIdInt <= 0) return (healed: 0, gapRemaining: false);
 
@@ -2313,8 +2424,7 @@ class SyncEngine implements app.SyncService {
     // 节流:验证本身也受节流保护 —— pulled==0 是常态,若只在"确认缺数据"
     // 后才记时间戳,健康设备每次高频入口空拉都打一次 /stats。
     final last = _selfHealLastRun[ledgerId];
-    if (last != null &&
-        DateTime.now().difference(last) < _selfHealThrottle) {
+    if (last != null && DateTime.now().difference(last) < _selfHealThrottle) {
       return (healed: 0, gapRemaining: false);
     }
     // 时间戳前移到 checkLedgerHealth 之前:无论验证结果健康/缺数据/抛错,
@@ -2332,8 +2442,10 @@ class SyncEngine implements app.SyncService {
         return (healed: 0, gapRemaining: false); // 本地并不缺云端数据
       }
 
-      logger.warning('SyncEngine',
-          '检测到本地缺失云端数据(remoteOnly=${health.ledgerTx.remoteOnly}),触发自愈重放');
+      logger.warning(
+        'SyncEngine',
+        '检测到本地缺失云端数据(remoteOnly=${health.ledgerTx.remoteOnly}),触发自愈重放',
+      );
 
       // 第一段:整段重放增量日志(全用户全账本,顺带补齐其他账本同类空洞)。
       // apply 按 entity_sync_id upsert,幂等;重放后 cursor 推进到
@@ -2350,8 +2462,10 @@ class SyncEngine implements app.SyncService {
       // 第二段:快照兜底。重放拉不回的场景:缺失 change 由本设备 push,
       // server 按 device_id 排除本设备变更,重放多少遍都拿不到,只有
       // 快照能救。导入按 syncId 幂等去重。
-      logger.warning('SyncEngine',
-          '重放后差异仍在(remoteOnly=${recheck.ledgerTx.remoteOnly}),快照兜底');
+      logger.warning(
+        'SyncEngine',
+        '重放后差异仍在(remoteOnly=${recheck.ledgerTx.remoteOnly}),快照兜底',
+      );
       final r = await runFullPull(ledgerId: ledgerIdInt);
       healed += r.inserted;
 
@@ -2365,10 +2479,13 @@ class SyncEngine implements app.SyncService {
       final failures = (_selfHealFailures[ledgerId] ?? 0) + 1;
       _selfHealFailures[ledgerId] = failures;
       if (failures >= _selfHealMaxFailures) {
-        _selfHealBrokenUntil[ledgerId] =
-            DateTime.now().add(_selfHealBrokenDuration);
-        logger.warning('SyncEngine',
-            '自愈连续 $failures 次未能消除差异,熔断 ${_selfHealBrokenDuration.inMinutes} 分钟,请手动从云端恢复');
+        _selfHealBrokenUntil[ledgerId] = DateTime.now().add(
+          _selfHealBrokenDuration,
+        );
+        logger.warning(
+          'SyncEngine',
+          '自愈连续 $failures 次未能消除差异,熔断 ${_selfHealBrokenDuration.inMinutes} 分钟,请手动从云端恢复',
+        );
       }
       return (healed: healed, gapRemaining: true);
     } catch (e, st) {
@@ -2406,8 +2523,10 @@ class SyncEngine implements app.SyncService {
   }
 
   /// 测试专用:直接把某账本标记为熔断,免去"构造连续自愈失败"的重型编排。
-  void debugMarkSelfHealBroken(String ledgerId,
-      {Duration duration = _selfHealBrokenDuration}) {
+  void debugMarkSelfHealBroken(
+    String ledgerId, {
+    Duration duration = _selfHealBrokenDuration,
+  }) {
     _selfHealBrokenUntil[ledgerId] = DateTime.now().add(duration);
   }
 
@@ -2428,12 +2547,15 @@ class SyncEngine implements app.SyncService {
   /// 新设备全量拉取。
   ///
   /// **in-flight 单飞**:防御性,挡用户连点"下载"按钮时两次并发拉取。
-  Future<({int inserted, int deletedDup})> runFullPull(
-      {required int ledgerId}) async {
+  Future<({int inserted, int deletedDup})> runFullPull({
+    required int ledgerId,
+  }) async {
     final inFlight = _fullPullInFlight[ledgerId];
     if (inFlight != null) {
       logger.info(
-          'SyncEngine', 'runFullPull(ledger=$ledgerId) 已在执行,复用 in-flight');
+        'SyncEngine',
+        'runFullPull(ledger=$ledgerId) 已在执行,复用 in-flight',
+      );
       return inFlight.future;
     }
     final completer = Completer<({int inserted, int deletedDup})>();
@@ -2453,14 +2575,15 @@ class SyncEngine implements app.SyncService {
     }
   }
 
-  Future<({int inserted, int deletedDup})> _doRunFullPull(
-      {required int ledgerId}) async {
+  Future<({int inserted, int deletedDup})> _doRunFullPull({
+    required int ledgerId,
+  }) async {
     logger.info('SyncEngine', '开始全量拉取 ledger=$ledgerId');
 
     // path 对齐 fullPush 上传时用的 ledger.syncId。
-    final ledgerRow = await (db.select(db.ledgers)
-          ..where((l) => l.id.equals(ledgerId)))
-        .getSingleOrNull();
+    final ledgerRow = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
     final path = ledgerRow?.syncId ?? ledgerId.toString();
     final data = await provider.storage.download(path: path);
     if (data == null) {

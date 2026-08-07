@@ -24,7 +24,8 @@ import 'me_suffix.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show spitoutCloudProviderInstance, syncEventStreamProvider;
-import 'package:spitout/providers/ui/theme_providers.dart' show displayNameProvider;
+import 'package:spitout/providers/ui/theme_providers.dart'
+    show displayNameProvider;
 import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
     show
@@ -129,6 +130,7 @@ class _MemberManagementSectionState
   SpitoutCloudInvite? _generated;
   bool _busy = false;
   String? _error;
+
   /// 邀请模块是否展开:用于切换收起/展开箭头(收起朝右、展开朝下)。
   bool _inviteExpanded = false;
 
@@ -161,8 +163,9 @@ class _MemberManagementSectionState
         // CloudUser 仅有 id/account,显示名以本地 displayNameProvider 为准;
         // 兜底回退到 account,account 也没有时由渲染层兜底"我"。
         final localName = ref.read(displayNameProvider);
-        _ownerDisplayName =
-            localName.trim().isNotEmpty ? localName : me?.account;
+        _ownerDisplayName = localName.trim().isNotEmpty
+            ? localName
+            : me?.account;
         _ownerAccount = me?.account;
       });
     } catch (e) {
@@ -198,9 +201,11 @@ class _MemberManagementSectionState
       if (!mounted) return;
       // 防线 A(发邀请前分类上云)失败:展示本地化友好提示;
       // 其余错误(云端未配置、createInvite 失败等)保留原始文本便于定位。
-      setState(() => _error = e is CategorySyncBeforeInviteException
-          ? AppLocalizations.of(context).categorySyncFailedBeforeInvite
-          : e.toString());
+      setState(
+        () => _error = e is CategorySyncBeforeInviteException
+            ? AppLocalizations.of(context).categorySyncFailedBeforeInvite
+            : e.toString(),
+      );
     } finally {
       if (mounted) setState(() => _busy = false);
     }
@@ -291,15 +296,17 @@ class _MemberManagementSectionState
     // 默认名编号:取现有虚拟用户数 + 1,避免重名。
     final existingCount = _isCreatingMode
         ? widget.pendingVirtualUsers.length
-        : (ref.read(ledgerVirtualUsersProvider(widget.ledgerId!))
-                .value ??
-            const <LedgerVirtualUser>[])
-            .length;
+        : (ref.read(ledgerVirtualUsersProvider(widget.ledgerId!)).value ??
+                  const <LedgerVirtualUser>[])
+              .length;
     final defaultName = l10n.aaVirtualUserDefaultName(existingCount + 1);
 
     if (_isCreatingMode) {
       // 新建态:内存暂存,保存时批量落库。
-      final updated = [...widget.pendingVirtualUsers, PendingVirtualUser(name: defaultName)];
+      final updated = [
+        ...widget.pendingVirtualUsers,
+        PendingVirtualUser(name: defaultName),
+      ];
       widget.onPendingVirtualUsersChanged(updated);
     } else {
       // 编辑态:直接写库。
@@ -398,9 +405,9 @@ class _MemberManagementSectionState
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
-          color: primary,
-        );
+      fontWeight: FontWeight.w700,
+      color: primary,
+    );
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 4),
       child: SizedBox(
@@ -438,8 +445,10 @@ class _MemberManagementSectionState
               TextButton.icon(
                 onPressed: _addVirtualUser,
                 icon: const Icon(AppIcons.personAdd, size: 14),
-                label: Text(l10n.aaAddVirtualUser,
-                    style: Theme.of(context).textTheme.labelSmall),
+                label: Text(
+                  l10n.aaAddVirtualUser,
+                  style: Theme.of(context).textTheme.labelSmall,
+                ),
                 style: TextButton.styleFrom(
                   foregroundColor: primary,
                   visualDensity: VisualDensity.compact,
@@ -461,8 +470,9 @@ class _MemberManagementSectionState
     }
 
     // 有 syncId 模式:从云端拉取成员列表,监听同步事件自动重拉。
-    final membersAsync =
-        ref.watch(ledgerMembersProvider(widget.ledgerExternalId!));
+    final membersAsync = ref.watch(
+      ledgerMembersProvider(widget.ledgerExternalId!),
+    );
 
     // 云端账本刚创建时本地已生成 syncId,但账本数据要等首次 push 完成后
     // 才真正存在于 server。在此期间 listMembers 会抛 "Ledger not found",
@@ -470,8 +480,7 @@ class _MemberManagementSectionState
     // 加载态自动恢复到正常列表,无需用户手动刷新。
     ref.listen(syncEventStreamProvider, (previous, next) {
       final event = next.value;
-      if (event is PushCompleted &&
-          event.ledgerId == widget.ledgerExternalId) {
+      if (event is PushCompleted && event.ledgerId == widget.ledgerExternalId) {
         ref.invalidate(ledgerMembersProvider(widget.ledgerExternalId!));
       }
     });
@@ -508,8 +517,7 @@ class _MemberManagementSectionState
         children: [
           // 云端账本尚未就绪提示(404 场景下让用户知道在等云端创建)
           Padding(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               children: [
                 const SizedBox(
@@ -536,7 +544,10 @@ class _MemberManagementSectionState
               backgroundColor: placeholderColor,
             ),
             title: _SkeletonBar(
-                width: 120, height: 12, color: placeholderColor),
+              width: 120,
+              height: 12,
+              color: placeholderColor,
+            ),
           ),
         ],
       ),
@@ -560,19 +571,20 @@ class _MemberManagementSectionState
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         child: Row(
           children: [
-            Icon(AppIcons.error,
-                size: 18, color: theme.colorScheme.error),
+            Icon(AppIcons.error, size: 18, color: theme.colorScheme.error),
             const SizedBox(width: 10),
             Expanded(
               child: Text(
                 l10n.sharedMembersLoadFailed,
-                style: theme.textTheme.bodySmall
-                    ?.copyWith(color: theme.colorScheme.error),
+                style: theme.textTheme.bodySmall?.copyWith(
+                  color: theme.colorScheme.error,
+                ),
               ),
             ),
             TextButton(
               onPressed: () => ref.invalidate(
-                  ledgerMembersProvider(widget.ledgerExternalId!)),
+                ledgerMembersProvider(widget.ledgerExternalId!),
+              ),
               child: Text(l10n.sharedMembersRetry),
             ),
           ],
@@ -628,7 +640,8 @@ class _MemberManagementSectionState
           ],
 
           // —— 虚拟用户行(AA 开启时显示) ——
-          if (widget.aaEnabled) ..._buildVirtualUserRows(context, l10n, effectiveMembers),
+          if (widget.aaEnabled)
+            ..._buildVirtualUserRows(context, l10n, effectiveMembers),
 
           // —— 邀请新成员模块(仅 Owner 且允许展示时显示) ——
           // 本地账本(已存在、storageMode=local)不支持协作邀请,
@@ -650,8 +663,8 @@ class _MemberManagementSectionState
   /// 从 [_ownerDisplayName]/[_ownerAccount] 推导;仅在确有显示名时设置
   /// displayName,否则留空交给 _MemberTile 统一处理占位:
   /// - 有 account:标题回退到 account,保证可读性;
-/// - 无 account:标题展示「未设置昵称」占位,头像位展示 person 图标,
-///   不回退为「你」,避免头像/昵称/括号三处重复展示。
+  /// - 无 account:标题展示「未设置昵称」占位,头像位展示 person 图标,
+  ///   不回退为「你」,避免头像/昵称/括号三处重复展示。
   List<SpitoutCloudLedgerMember> _buildOwnerAsMember() {
     final hasName = _ownerDisplayName?.isNotEmpty == true;
     final account = _ownerAccount ?? '';
@@ -681,7 +694,7 @@ class _MemberManagementSectionState
     // 编辑态:从 Stream 拉取已落库虚拟用户。
     final List<LedgerVirtualUser> existingUsers = !_isCreatingMode
         ? (ref.watch(ledgerVirtualUsersProvider(widget.ledgerId!)).value ??
-            const <LedgerVirtualUser>[])
+              const <LedgerVirtualUser>[])
         : const <LedgerVirtualUser>[];
 
     // 首个虚拟用户行前加分隔线(与真实成员行分隔)。
@@ -693,19 +706,21 @@ class _MemberManagementSectionState
         rows.add(const Divider(height: 1));
       }
       needsLeadingDivider = false;
-      rows.add(_VirtualUserTile(
-        name: existingUsers[i].name,
-        isReadOnly: widget.isReadOnly,
-        onRename: (newName) => _renameVirtualUser(
-          existingId: existingUsers[i].id,
-          pendingIndex: -1,
-          newName: newName,
+      rows.add(
+        _VirtualUserTile(
+          name: existingUsers[i].name,
+          isReadOnly: widget.isReadOnly,
+          onRename: (newName) => _renameVirtualUser(
+            existingId: existingUsers[i].id,
+            pendingIndex: -1,
+            newName: newName,
+          ),
+          onDelete: () => _deleteVirtualUser(
+            existingId: existingUsers[i].id,
+            pendingIndex: -1,
+          ),
         ),
-        onDelete: () => _deleteVirtualUser(
-          existingId: existingUsers[i].id,
-          pendingIndex: -1,
-        ),
-      ));
+      );
     }
 
     // —— 内存暂存虚拟用户行(新建态) ——
@@ -715,19 +730,18 @@ class _MemberManagementSectionState
         rows.add(const Divider(height: 1));
       }
       needsLeadingDivider = false;
-      rows.add(_VirtualUserTile(
-        name: pending[i].name,
-        isReadOnly: widget.isReadOnly,
-        onRename: (newName) => _renameVirtualUser(
-          existingId: null,
-          pendingIndex: i,
-          newName: newName,
+      rows.add(
+        _VirtualUserTile(
+          name: pending[i].name,
+          isReadOnly: widget.isReadOnly,
+          onRename: (newName) => _renameVirtualUser(
+            existingId: null,
+            pendingIndex: i,
+            newName: newName,
+          ),
+          onDelete: () => _deleteVirtualUser(existingId: null, pendingIndex: i),
         ),
-        onDelete: () => _deleteVirtualUser(
-          existingId: null,
-          pendingIndex: i,
-        ),
-      ));
+      );
     }
 
     return rows;
@@ -738,7 +752,10 @@ class _MemberManagementSectionState
   /// 邀请码生成依赖云端账本 ID,无 syncId 时无法直接生成,因此点击不拦截:
   /// 由父组件自动保存账本 + 触发同步上云,等待云端账本创建完成拿到 syncId
   /// 后本模块自动切换为正式邀请表单;等待期间展示 loading。
-  Widget _buildSaveFirstInviteTile(BuildContext context, AppLocalizations l10n) {
+  Widget _buildSaveFirstInviteTile(
+    BuildContext context,
+    AppLocalizations l10n,
+  ) {
     final primary = Theme.of(context).colorScheme.primary;
     final busy = _inviteBusy;
     return ListTile(
@@ -795,14 +812,18 @@ class _MemberManagementSectionState
   Widget _buildInviteSection(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     return Theme(
-      // 去掉 ExpansionTile 默认的上下分割线,贴合 SectionCard 风格
+      // 不显示 ExpansionTile 默认的上下分割线，贴合 SectionCard 风格
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         initiallyExpanded: _inviteExpanded,
         onExpansionChanged: (v) => setState(() => _inviteExpanded = v),
         tilePadding: EdgeInsets.zero,
-        childrenPadding:
-            const EdgeInsets.only(top: 16, bottom: 4, left: 16, right: 16),
+        childrenPadding: const EdgeInsets.only(
+          top: 16,
+          bottom: 4,
+          left: 16,
+          right: 16,
+        ),
         leading: Icon(AppIcons.personAdd, size: 18, color: primary),
         title: Text(
           l10n.sharedMembersInviteCta,
@@ -829,8 +850,10 @@ class _MemberManagementSectionState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(l10n.sharedInviteFormRole,
-            style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          l10n.sharedInviteFormRole,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -843,8 +866,10 @@ class _MemberManagementSectionState
           ],
         ),
         const SizedBox(height: 16),
-        Text(l10n.sharedInviteFormExpiry,
-            style: Theme.of(context).textTheme.titleSmall),
+        Text(
+          l10n.sharedInviteFormExpiry,
+          style: Theme.of(context).textTheme.titleSmall,
+        ),
         const SizedBox(height: 8),
         Wrap(
           spacing: 8,
@@ -875,8 +900,10 @@ class _MemberManagementSectionState
         ),
         if (_error != null) ...[
           const SizedBox(height: 12),
-          Text(_error!,
-              style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
+          Text(
+            _error!,
+            style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+          ),
         ],
         const SizedBox(height: 16),
         Text(
@@ -917,7 +944,9 @@ class _MemberManagementSectionState
                 invite.expiresAt!.toLocal().toString().split('.').first,
               ),
               style: TextStyle(
-                  color: SpitoutTokens.textTertiary(context), fontSize: 12),
+                color: SpitoutTokens.textTertiary(context),
+                fontSize: 12,
+              ),
             ),
           ),
         ],
@@ -976,8 +1005,9 @@ class _MemberManagementSectionState
       context: context,
       builder: (_) => AlertDialog(
         title: Text(l10n.sharedMembersRemoveTitle),
-        content: Text(l10n.sharedMembersRemoveConfirm(
-            target.displayName ?? target.account)),
+        content: Text(
+          l10n.sharedMembersRemoveConfirm(target.displayName ?? target.account),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context, false),
@@ -1031,20 +1061,15 @@ class _MemberTile extends ConsumerWidget {
     final displayName = hasDisplayName
         ? member.displayName!
         : hasAccount
-            ? member.account
-            : l10n.mineSlogan;
+        ? member.account
+        : l10n.mineSlogan;
     final isOwner = member.role == 'owner';
     return ListTile(
       dense: true,
       leading: _MemberAvatar(member: member),
       title: Row(
         children: [
-          Flexible(
-            child: Text(
-              displayName,
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
+          Flexible(child: Text(displayName, overflow: TextOverflow.ellipsis)),
           // 本人「(我)」后缀统一走共享 MeSuffix,保证各模块样式一致。
           if (member.isSelf) const MeSuffix(),
         ],
@@ -1145,10 +1170,12 @@ class _MemberAvatar extends ConsumerWidget {
     if (base == null || base.isEmpty) {
       return const PersonAvatar(size: 40, iconSize: 18);
     }
-    final trimmedBase =
-        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    final absoluteUrl =
-        relativeUrl.startsWith('http') ? relativeUrl : '$trimmedBase$relativeUrl';
+    final trimmedBase = base.endsWith('/')
+        ? base.substring(0, base.length - 1)
+        : base;
+    final absoluteUrl = relativeUrl.startsWith('http')
+        ? relativeUrl
+        : '$trimmedBase$relativeUrl';
     // 用 Image.network + 圆形裁切：加载中/失败才显示 person 图标，
     // 避免 CircleAvatar 的 child 常驻叠加在头像图片上方。
     return ClipOval(
@@ -1160,8 +1187,7 @@ class _MemberAvatar extends ConsumerWidget {
         loadingBuilder: (ctx, child, progress) => progress == null
             ? child
             : const PersonAvatar(size: 40, iconSize: 18),
-        errorBuilder: (_, _, _) =>
-            const PersonAvatar(size: 40, iconSize: 18),
+        errorBuilder: (_, _, _) => const PersonAvatar(size: 40, iconSize: 18),
       ),
     );
   }
@@ -1265,8 +1291,10 @@ class _VirtualUserTileState extends State<_VirtualUserTile> {
                 hintStyle: TextStyle(
                   color: SpitoutTokens.textTertiary(context),
                 ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 // 与全局编辑框一致的色块样式(filled 背景 + 无描边圆角)
                 filled: true,
                 fillColor: SpitoutTokens.surfaceInput(context),

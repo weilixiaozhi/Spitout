@@ -39,7 +39,7 @@ class PressKey extends StatefulWidget {
   /// 常态背景色；null = 透明。
   final Color? backgroundColor;
 
-  /// 按压态背景色；null 时按明暗模式在常态色上叠 10% 黑/白。
+  /// 按压态背景色；null 时按明暗模式在常态色上叠 18% 黑/白。
   final Color? pressedColor;
 
   final BorderRadius? borderRadius;
@@ -90,8 +90,9 @@ class _PressKeyState extends State<PressKey> {
     if (explicit != null) return explicit;
     final base = widget.backgroundColor ?? Colors.transparent;
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    // 统一加强到 18%：纯白数字键（亮色）与深色键（暗色）都能看到明显按压反馈
     return Color.alphaBlend(
-      (isDark ? Colors.white : Colors.black).withValues(alpha: 0.10),
+      (isDark ? Colors.white : Colors.black).withValues(alpha: 0.18),
       base,
     );
   }
@@ -106,12 +107,12 @@ class _PressKeyState extends State<PressKey> {
       onTapDown: widget.enabled ? _handleDown : null,
       onTapUp: widget.enabled ? _handleUp : null,
       onTapCancel: widget.enabled ? _handleCancel : null,
-      onLongPressStart:
-          widget.enabled && widget.onLongPressStart != null
-              ? _handleLongPressStart
-              : null,
-      onLongPress:
-          widget.enabled && widget.onLongPress != null ? _handleLongPress : null,
+      onLongPressStart: widget.enabled && widget.onLongPressStart != null
+          ? _handleLongPressStart
+          : null,
+      onLongPress: widget.enabled && widget.onLongPress != null
+          ? _handleLongPress
+          : null,
       child: AnimatedScale(
         scale: _pressed ? widget.scale : 1.0,
         duration: const Duration(milliseconds: 70),

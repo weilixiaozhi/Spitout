@@ -21,10 +21,10 @@ import '../../core/logging/logger_service.dart';
 /// 由 CloudServicePage 嵌入在当前选中的备份同步类服务卡片正下方
 /// （仅 active.type ∈ {webdav, s3, supabase} 时显示，其余后端隐藏）。
 ///
-/// 与原独立页面相比仅去掉 Scaffold / PrimaryHeader / RefreshIndicator 外壳：
+/// 无 Scaffold / PrimaryHeader / RefreshIndicator 外壳，由宿主页面嵌入：
 /// - 下拉刷新动作（清状态缓存 + bump tick + 等待状态）上移为宿主
-///   `_onHostRefresh` 的对应分支，代码逐行一致；
-/// - 上传/下载/登录登出/自动同步开关等全部业务逻辑原样保留。
+///   `_onHostRefresh` 的对应分支；
+/// - 上传/下载/登录登出/自动同步开关等全部业务逻辑均在此实现。
 class CloudSyncSection extends ConsumerStatefulWidget {
   const CloudSyncSection({super.key});
 
@@ -49,8 +49,8 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
         child: Text(
           AppLocalizations.of(context).aiOcrNoLedger,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                color: SpitoutTokens.textSecondary(context),
-              ),
+            color: SpitoutTokens.textSecondary(context),
+          ),
         ),
       );
     }
@@ -72,11 +72,13 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
 
           final user = snap.data;
           final cloudConfig = ref.watch(activeCloudConfigProvider);
-          final isLocalMode = cloudConfig.hasValue &&
+          final isLocalMode =
+              cloudConfig.hasValue &&
               cloudConfig.value!.type == CloudBackendType.local;
           // 宿主已按显隐规则保证本区块仅在 WebDAV/S3/Supabase 激活时挂载；
           // 此处判断保留作防御。
-          final needsLogin = cloudConfig.hasValue &&
+          final needsLogin =
+              cloudConfig.hasValue &&
               cloudConfig.value!.type == CloudBackendType.supabase;
           // Supabase 需要登录，其他云服务（S3/WebDAV）使用配置文件认证
           final canUseCloud = !isLocalMode && (!needsLogin || user != null);
@@ -114,12 +116,16 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                 icon = AppIcons.cloudQueue;
                 break;
               case SyncDiff.inSync:
-                subtitle = AppLocalizations.of(context).mineSyncInSync(st.localCount);
+                subtitle = AppLocalizations.of(
+                  context,
+                ).mineSyncInSync(st.localCount);
                 icon = AppIcons.verified;
                 inSync = true;
                 break;
               case SyncDiff.localNewer:
-                subtitle = AppLocalizations.of(context).mineSyncLocalNewer(st.localCount);
+                subtitle = AppLocalizations.of(
+                  context,
+                ).mineSyncLocalNewer(st.localCount);
                 icon = AppIcons.upload;
                 break;
               case SyncDiff.cloudNewer:
@@ -135,25 +141,37 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                 if (st.message != null) {
                   switch (st.message!) {
                     case '__SYNC_NOT_CONFIGURED__':
-                      localizedMessage = AppLocalizations.of(context).syncNotConfiguredMessage;
+                      localizedMessage = AppLocalizations.of(
+                        context,
+                      ).syncNotConfiguredMessage;
                       break;
                     case '__SYNC_NOT_LOGGED_IN__':
-                      localizedMessage = AppLocalizations.of(context).syncNotLoggedInMessage;
+                      localizedMessage = AppLocalizations.of(
+                        context,
+                      ).syncNotLoggedInMessage;
                       break;
                     case '__SYNC_CLOUD_BACKUP_CORRUPTED__':
-                      localizedMessage = AppLocalizations.of(context).syncCloudBackupCorruptedMessage;
+                      localizedMessage = AppLocalizations.of(
+                        context,
+                      ).syncCloudBackupCorruptedMessage;
                       break;
                     case '__SYNC_NO_CLOUD_BACKUP__':
-                      localizedMessage = AppLocalizations.of(context).syncNoCloudBackupMessage;
+                      localizedMessage = AppLocalizations.of(
+                        context,
+                      ).syncNoCloudBackupMessage;
                       break;
                     case '__SYNC_ACCESS_DENIED__':
-                      localizedMessage = AppLocalizations.of(context).syncAccessDeniedMessage;
+                      localizedMessage = AppLocalizations.of(
+                        context,
+                      ).syncAccessDeniedMessage;
                       break;
                     default:
                       localizedMessage = st.message;
                   }
                 }
-                subtitle = localizedMessage ?? AppLocalizations.of(context).mineSyncError;
+                subtitle =
+                    localizedMessage ??
+                    AppLocalizations.of(context).mineSyncError;
                 icon = AppIcons.error;
                 break;
             }
@@ -183,19 +201,26 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                       leading: icon,
                       title: AppLocalizations.of(context).mineSyncTitle,
                       subtitle: isFirstLoad ? null : subtitle,
-                      enabled: canUseCloud &&
+                      enabled:
+                          canUseCloud &&
                           !isFirstLoad &&
                           !refreshing &&
                           !uploadBusy &&
                           !downloadBusy,
-                      trailing: (canUseCloud &&
-                              (isFirstLoad || refreshing || uploadBusy || downloadBusy))
+                      trailing:
+                          (canUseCloud &&
+                              (isFirstLoad ||
+                                  refreshing ||
+                                  uploadBusy ||
+                                  downloadBusy))
                           ? const SizedBox(
                               width: 20,
                               height: 20,
-                              child: CircularProgressIndicator(strokeWidth: 2))
+                              child: CircularProgressIndicator(strokeWidth: 2),
+                            )
                           : null,
-                      onTap: (isFirstLoad ||
+                      onTap:
+                          (isFirstLoad ||
                               !canUseCloud ||
                               refreshing ||
                               uploadBusy ||
@@ -204,52 +229,72 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                           : () async {
                               if (!context.mounted) return;
                               final lines = <String>[
-                                AppLocalizations.of(context)
-                                    .mineSyncLocalRecords(st.localCount),
+                                AppLocalizations.of(
+                                  context,
+                                ).mineSyncLocalRecords(st.localCount),
                                 if (st.cloudCount != null)
-                                  AppLocalizations.of(context)
-                                      .mineSyncCloudRecords(st.cloudCount!),
+                                  AppLocalizations.of(
+                                    context,
+                                  ).mineSyncCloudRecords(st.cloudCount!),
                                 if (st.cloudExportedAt != null)
-                                  AppLocalizations.of(context).mineSyncCloudLatest(
-                                      DateFormat('yyyy-MM-dd HH:mm:ss')
-                                          .format(st.cloudExportedAt!.toLocal())),
-                                AppLocalizations.of(context)
-                                    .mineSyncLocalFingerprint(st.localFingerprint),
+                                  AppLocalizations.of(
+                                    context,
+                                  ).mineSyncCloudLatest(
+                                    DateFormat(
+                                      'yyyy-MM-dd HH:mm:ss',
+                                    ).format(st.cloudExportedAt!.toLocal()),
+                                  ),
+                                AppLocalizations.of(
+                                  context,
+                                ).mineSyncLocalFingerprint(st.localFingerprint),
                                 if (st.cloudFingerprint != null)
-                                  AppLocalizations.of(context)
-                                      .mineSyncCloudFingerprint(st.cloudFingerprint!),
+                                  AppLocalizations.of(
+                                    context,
+                                  ).mineSyncCloudFingerprint(
+                                    st.cloudFingerprint!,
+                                  ),
                                 if (st.message != null)
                                   () {
                                     String localizedMessage = st.message!;
                                     switch (st.message!) {
                                       case '__SYNC_NOT_CONFIGURED__':
-                                        localizedMessage = AppLocalizations.of(context)
-                                            .syncNotConfiguredMessage;
+                                        localizedMessage = AppLocalizations.of(
+                                          context,
+                                        ).syncNotConfiguredMessage;
                                         break;
                                       case '__SYNC_NOT_LOGGED_IN__':
-                                        localizedMessage = AppLocalizations.of(context)
-                                            .syncNotLoggedInMessage;
+                                        localizedMessage = AppLocalizations.of(
+                                          context,
+                                        ).syncNotLoggedInMessage;
                                         break;
                                       case '__SYNC_CLOUD_BACKUP_CORRUPTED__':
-                                        localizedMessage = AppLocalizations.of(context)
-                                            .syncCloudBackupCorruptedMessage;
+                                        localizedMessage = AppLocalizations.of(
+                                          context,
+                                        ).syncCloudBackupCorruptedMessage;
                                         break;
                                       case '__SYNC_NO_CLOUD_BACKUP__':
-                                        localizedMessage = AppLocalizations.of(context)
-                                            .syncNoCloudBackupMessage;
+                                        localizedMessage = AppLocalizations.of(
+                                          context,
+                                        ).syncNoCloudBackupMessage;
                                         break;
                                       case '__SYNC_ACCESS_DENIED__':
-                                        localizedMessage = AppLocalizations.of(context)
-                                            .syncAccessDeniedMessage;
+                                        localizedMessage = AppLocalizations.of(
+                                          context,
+                                        ).syncAccessDeniedMessage;
                                         break;
                                     }
-                                    return AppLocalizations.of(context)
-                                        .mineSyncMessage(localizedMessage);
+                                    return AppLocalizations.of(
+                                      context,
+                                    ).mineSyncMessage(localizedMessage);
                                   }(),
                               ];
-                              await AppDialog.info(context,
-                                  title: AppLocalizations.of(context).mineSyncDetailTitle,
-                                  message: lines.join('\n'));
+                              await AppDialog.info(
+                                context,
+                                title: AppLocalizations.of(
+                                  context,
+                                ).mineSyncDetailTitle,
+                                message: lines.join('\n'),
+                              );
                             },
                     ),
                     // ===== 上传/下载 =====
@@ -258,77 +303,93 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                       // 上传
                       AppListTile(
                         leading: AppIcons.cloudUpload,
-                        title:
-                            AppLocalizations.of(context).mineUploadTitle,
+                        title: AppLocalizations.of(context).mineUploadTitle,
                         subtitle: isFirstLoad
                             ? null
                             : !canUseCloud
-                                ? AppLocalizations.of(context)
-                                    .mineUploadNeedCloudService
-                                : notLoggedIn
-                                    ? AppLocalizations.of(context)
-                                        .mineUploadNeedLogin
-                                    : uploadBusy
-                                        ? AppLocalizations.of(context)
-                                            .mineUploadInProgress
-                                        : (refreshing
-                                            ? AppLocalizations.of(context)
-                                                .mineUploadRefreshing
-                                            : (inSync
-                                                ? AppLocalizations.of(
-                                                        context)
-                                                    .mineUploadSynced
-                                                : null)),
-                        enabled: canUseCloud &&
+                            ? AppLocalizations.of(
+                                context,
+                              ).mineUploadNeedCloudService
+                            : notLoggedIn
+                            ? AppLocalizations.of(context).mineUploadNeedLogin
+                            : uploadBusy
+                            ? AppLocalizations.of(context).mineUploadInProgress
+                            : (refreshing
+                                  ? AppLocalizations.of(
+                                      context,
+                                    ).mineUploadRefreshing
+                                  : (inSync
+                                        ? AppLocalizations.of(
+                                            context,
+                                          ).mineUploadSynced
+                                        : null)),
+                        enabled:
+                            canUseCloud &&
                             !inSync &&
                             !notLoggedIn &&
                             !uploadBusy &&
                             !downloadBusy &&
                             !isFirstLoad &&
                             !refreshing,
-                        trailing: (uploadBusy ||
+                        trailing:
+                            (uploadBusy ||
                                 refreshing ||
                                 (isFirstLoad && canUseCloud))
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : null,
                         onTap: () async {
                           setState(() => uploadBusy = true);
                           // 标记为上传中
-                          final uploadingIds = ref.read(uploadingLedgerIdsProvider);
-                          ref.read(uploadingLedgerIdsProvider.notifier).set({...uploadingIds, ledgerId});
+                          final uploadingIds = ref.read(
+                            uploadingLedgerIdsProvider,
+                          );
+                          ref.read(uploadingLedgerIdsProvider.notifier).set({
+                            ...uploadingIds,
+                            ledgerId,
+                          });
 
                           try {
-                            await sync.uploadCurrentLedger(
-                                ledgerId: ledgerId);
+                            await sync.uploadCurrentLedger(ledgerId: ledgerId);
                             if (!context.mounted) return;
 
                             // 刷新账本列表
                             ref.read(ledgerListRefreshProvider.notifier).tick();
 
-                            await AppDialog.info(context,
-                                title: AppLocalizations.of(context)
-                                    .mineUploadSuccess,
-                                message: AppLocalizations.of(context)
-                                    .mineUploadSuccessMessage);
+                            await AppDialog.info(
+                              context,
+                              title: AppLocalizations.of(
+                                context,
+                              ).mineUploadSuccess,
+                              message: AppLocalizations.of(
+                                context,
+                              ).mineUploadSuccessMessage,
+                            );
                             Future(() async {
                               try {
                                 await sync.refreshCloudFingerprint(
-                                    ledgerId: ledgerId);
+                                  ledgerId: ledgerId,
+                                );
                               } catch (_) {}
                               try {
                                 const maxAttempts = 6;
                                 var delay = const Duration(milliseconds: 500);
                                 for (var i = 0; i < maxAttempts; i++) {
-                                  final stNow =
-                                      await sync.getStatus(ledgerId: ledgerId);
+                                  final stNow = await sync.getStatus(
+                                    ledgerId: ledgerId,
+                                  );
                                   if (stNow.diff == SyncDiff.inSync) {
                                     ref
-                                        .read(lastSyncStatusProvider(ledgerId)
-                                            .notifier)
+                                        .read(
+                                          lastSyncStatusProvider(
+                                            ledgerId,
+                                          ).notifier,
+                                        )
                                         .set(stNow);
                                     break;
                                   }
@@ -337,25 +398,38 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     delay *= 2;
                                   }
                                 }
-                                ref.read(syncStatusRefreshProvider.notifier).tick();
+                                ref
+                                    .read(syncStatusRefreshProvider.notifier)
+                                    .tick();
                                 // 再次刷新账本列表确保状态更新
-                                ref.read(ledgerListRefreshProvider.notifier).tick();
+                                ref
+                                    .read(ledgerListRefreshProvider.notifier)
+                                    .tick();
                               } catch (_) {}
                             });
                           } catch (e, st) {
                             logger.error('CloudSyncSection', '上传失败', e, st);
                             if (!context.mounted) return;
-                            await AppDialog.info(context,
-                                title:
-                                    AppLocalizations.of(context).commonFailed,
-                                message: AppLocalizations.of(
-                                    context,
-                                ).commonOperationFailed);
+                            await AppDialog.info(
+                              context,
+                              title: AppLocalizations.of(context).commonFailed,
+                              message: AppLocalizations.of(
+                                context,
+                              ).commonOperationFailed,
+                            );
                           } finally {
                             if (mounted) setState(() => uploadBusy = false);
                             // 移除上传中标记
-                            final uploadingIds = ref.read(uploadingLedgerIdsProvider);
-                            ref.read(uploadingLedgerIdsProvider.notifier).set(uploadingIds.where((id) => id != ledgerId).toSet());
+                            final uploadingIds = ref.read(
+                              uploadingLedgerIdsProvider,
+                            );
+                            ref
+                                .read(uploadingLedgerIdsProvider.notifier)
+                                .set(
+                                  uploadingIds
+                                      .where((id) => id != ledgerId)
+                                      .toSet(),
+                                );
                           }
                         },
                       ),
@@ -367,33 +441,39 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                         subtitle: isFirstLoad
                             ? null
                             : !canUseCloud
-                                ? AppLocalizations.of(context)
-                                    .mineDownloadNeedCloudService
-                                : notLoggedIn
-                                    ? AppLocalizations.of(context)
-                                        .mineUploadNeedLogin
-                                    : (refreshing
-                                        ? AppLocalizations.of(context)
-                                            .mineUploadRefreshing
-                                        : (inSync
-                                            ? AppLocalizations.of(context)
-                                                .mineUploadSynced
-                                            : null)),
-                        enabled: canUseCloud &&
+                            ? AppLocalizations.of(
+                                context,
+                              ).mineDownloadNeedCloudService
+                            : notLoggedIn
+                            ? AppLocalizations.of(context).mineUploadNeedLogin
+                            : (refreshing
+                                  ? AppLocalizations.of(
+                                      context,
+                                    ).mineUploadRefreshing
+                                  : (inSync
+                                        ? AppLocalizations.of(
+                                            context,
+                                          ).mineUploadSynced
+                                        : null)),
+                        enabled:
+                            canUseCloud &&
                             !inSync &&
                             !notLoggedIn &&
                             !downloadBusy &&
                             !isFirstLoad &&
                             !refreshing &&
                             !uploadBusy,
-                        trailing: (downloadBusy ||
+                        trailing:
+                            (downloadBusy ||
                                 refreshing ||
                                 (isFirstLoad && canUseCloud))
                             ? const SizedBox(
                                 width: 20,
                                 height: 20,
-                                child:
-                                    CircularProgressIndicator(strokeWidth: 2))
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                ),
+                              )
                             : null,
                         onTap: () async {
                           setState(() => downloadBusy = true);
@@ -401,92 +481,137 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                             // 按接口能力分支:只有支持 diff 预览的后端才走预览流程,
                             // 不依赖具体同步实现类(后续新增后端无需改本页)。
                             if (sync.supportsDiffPreview) {
-                              final previewResult = await sync.downloadAndPreview(
-                                ledgerId: ledgerId,
-                              );
+                              final previewResult = await sync
+                                  .downloadAndPreview(ledgerId: ledgerId);
 
                               if (!context.mounted) return;
 
                               if (previewResult == null) {
                                 // 云端无数据
-                                await AppDialog.info(context,
-                                    title: AppLocalizations.of(context).mineDownloadComplete,
-                                    message: AppLocalizations.of(context).mineDownloadResult(0));
+                                await AppDialog.info(
+                                  context,
+                                  title: AppLocalizations.of(
+                                    context,
+                                  ).mineDownloadComplete,
+                                  message: AppLocalizations.of(
+                                    context,
+                                  ).mineDownloadResult(0),
+                                );
                               } else if (previewResult.preview != null) {
                                 // v6+ 格式，有 diff 预览
                                 final preview = previewResult.preview!;
                                 if (preview.isEmpty) {
-                                  await AppDialog.info(context,
-                                      title: AppLocalizations.of(context).mineDownloadComplete,
-                                      message: AppLocalizations.of(context).syncPreviewEmpty);
+                                  await AppDialog.info(
+                                    context,
+                                    title: AppLocalizations.of(
+                                      context,
+                                    ).mineDownloadComplete,
+                                    message: AppLocalizations.of(
+                                      context,
+                                    ).syncPreviewEmpty,
+                                  );
                                 } else {
-                                  final primaryColor = Theme.of(context).colorScheme.primary;
+                                  final primaryColor = Theme.of(
+                                    context,
+                                  ).colorScheme.primary;
                                   final selected = await showSyncPreviewDialog(
                                     context,
                                     preview: preview,
                                     primaryColor: primaryColor,
                                   );
 
-                                  if (selected != null && selected.isNotEmpty && context.mounted) {
-                                    final result = await sync.applyPreviewChanges(
-                                      ledgerId: ledgerId,
-                                      selectedChanges: selected,
-                                      importData: previewResult.importData,
-                                    );
+                                  if (selected != null &&
+                                      selected.isNotEmpty &&
+                                      context.mounted) {
+                                    final result = await sync
+                                        .applyPreviewChanges(
+                                          ledgerId: ledgerId,
+                                          selectedChanges: selected,
+                                          importData: previewResult.importData,
+                                        );
 
                                     if (!context.mounted) return;
-                                    await AppDialog.info(context,
-                                        title: AppLocalizations.of(context).mineDownloadComplete,
-                                        message: AppLocalizations.of(context)
-                                            .syncPreviewApplied(result.totalCount));
+                                    await AppDialog.info(
+                                      context,
+                                      title: AppLocalizations.of(
+                                        context,
+                                      ).mineDownloadComplete,
+                                      message: AppLocalizations.of(
+                                        context,
+                                      ).syncPreviewApplied(result.totalCount),
+                                    );
 
                                     PostProcessor.runAfterDownload(ref);
                                   }
                                 }
                               } else {
                                 // 旧格式（无可选变更预览），全量替换
-                                final confirmed = await AppDialog.confirm<bool>(
-                                  context,
-                                  title: AppLocalizations.of(context).syncPreviewOldFormat,
-                                  message: AppLocalizations.of(context).syncPreviewOldFormatMessage,
-                                ) ?? false;
+                                final confirmed =
+                                    await AppDialog.confirm<bool>(
+                                      context,
+                                      title: AppLocalizations.of(
+                                        context,
+                                      ).syncPreviewOldFormat,
+                                      message: AppLocalizations.of(
+                                        context,
+                                      ).syncPreviewOldFormatMessage,
+                                    ) ??
+                                    false;
 
                                 if (confirmed && context.mounted) {
-                                  final res = await sync.downloadAndRestoreToCurrentLedger(
-                                      ledgerId: ledgerId);
+                                  final res = await sync
+                                      .downloadAndRestoreToCurrentLedger(
+                                        ledgerId: ledgerId,
+                                      );
                                   if (!context.mounted) return;
-                                  await AppDialog.info(context,
-                                      title: AppLocalizations.of(context).mineDownloadComplete,
-                                      message: AppLocalizations.of(context).mineDownloadResult(res.inserted));
+                                  await AppDialog.info(
+                                    context,
+                                    title: AppLocalizations.of(
+                                      context,
+                                    ).mineDownloadComplete,
+                                    message: AppLocalizations.of(
+                                      context,
+                                    ).mineDownloadResult(res.inserted),
+                                  );
                                   PostProcessor.runAfterDownload(ref);
                                 }
                               }
                             } else {
                               // 无 diff 预览能力的后端,走常规全量下载路径。
-                              final res = await sync.downloadAndRestoreToCurrentLedger(
-                                  ledgerId: ledgerId);
+                              final res = await sync
+                                  .downloadAndRestoreToCurrentLedger(
+                                    ledgerId: ledgerId,
+                                  );
                               if (!context.mounted) return;
-                              await AppDialog.info(context,
-                                  title: AppLocalizations.of(context).mineDownloadComplete,
-                                  message: AppLocalizations.of(context).mineDownloadResult(res.inserted));
+                              await AppDialog.info(
+                                context,
+                                title: AppLocalizations.of(
+                                  context,
+                                ).mineDownloadComplete,
+                                message: AppLocalizations.of(
+                                  context,
+                                ).mineDownloadResult(res.inserted),
+                              );
                               PostProcessor.runAfterDownload(ref);
                             }
                           } catch (e, st) {
                             logger.error('CloudSyncSection', '下载失败', e, st);
                             if (!context.mounted) return;
-                            await AppDialog.error(context,
-                                title:
-                                    AppLocalizations.of(context).commonFailed,
-                                message: AppLocalizations.of(
-                                    context,
-                                ).commonOperationFailed);
+                            await AppDialog.error(
+                              context,
+                              title: AppLocalizations.of(context).commonFailed,
+                              message: AppLocalizations.of(
+                                context,
+                              ).commonOperationFailed,
+                            );
                           } finally {
                             if (mounted) setState(() => downloadBusy = false);
                           }
                         },
                       ),
                       // 登录/登出 (仅 Supabase 需要，其他云服务使用配置文件认证)
-                      if (!isLocalMode && cloudConfig.value!.type == CloudBackendType.supabase)
+                      if (!isLocalMode &&
+                          cloudConfig.value!.type == CloudBackendType.supabase)
                         Column(
                           children: [
                             SpitoutTokens.cardDivider(context),
@@ -499,55 +624,58 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                               title: user == null
                                   ? AppLocalizations.of(context).mineLoginTitle
                                   : user.account ??
-                                      AppLocalizations.of(context)
-                                          .mineLoggedInAccount,
+                                        AppLocalizations.of(
+                                          context,
+                                        ).mineLoggedInAccount,
                               subtitle: user == null
-                                  ? AppLocalizations.of(context)
-                                      .mineLoginSubtitle
-                                  : AppLocalizations.of(context)
-                                      .mineLogoutSubtitle,
+                                  ? AppLocalizations.of(
+                                      context,
+                                    ).mineLoginSubtitle
+                                  : AppLocalizations.of(
+                                      context,
+                                    ).mineLogoutSubtitle,
                               onTap: () async {
                                 // 捕获 app 级 container：页面销毁后仍可完成清理。
                                 // 须在首个 await 前捕获,此时 context 仍安全可用。
                                 final container = ProviderScope.containerOf(
-                                    context,
-                                    listen: false);
+                                  context,
+                                  listen: false,
+                                );
                                 if (user == null) {
                                   await Navigator.of(context).push(
-                                      appPageRoute(
-                                          builder: (_) =>
-                                              const LoginPage()));
+                                    appPageRoute(
+                                      builder: (_) => const LoginPage(),
+                                    ),
+                                  );
                                   ref
-                                      .read(syncStatusRefreshProvider
-                                          .notifier)
+                                      .read(syncStatusRefreshProvider.notifier)
                                       .tick();
                                   ref
-                                      .read(
-                                          statsRefreshProvider.notifier)
+                                      .read(statsRefreshProvider.notifier)
                                       .tick();
                                 } else {
                                   final confirmed =
                                       await AppDialog.confirm<bool>(
-                                            context,
-                                            title: AppLocalizations.of(
-                                                    context)
-                                                .mineLogoutConfirmTitle,
-                                            message: AppLocalizations.of(
-                                                    context)
-                                                .mineLogoutConfirmMessage,
-                                            okLabel: AppLocalizations.of(
-                                                    context)
-                                                .mineLogoutButton,
-                                            cancelLabel:
-                                                AppLocalizations.of(
-                                                        context)
-                                                    .commonCancel,
-                                          ) ??
-                                          false;
+                                        context,
+                                        title: AppLocalizations.of(
+                                          context,
+                                        ).mineLogoutConfirmTitle,
+                                        message: AppLocalizations.of(
+                                          context,
+                                        ).mineLogoutConfirmMessage,
+                                        okLabel: AppLocalizations.of(
+                                          context,
+                                        ).mineLogoutButton,
+                                        cancelLabel: AppLocalizations.of(
+                                          context,
+                                        ).commonCancel,
+                                      ) ??
+                                      false;
 
                                   if (confirmed) {
-                                    final authService = await ref
-                                        .read(authServiceProvider.future);
+                                    final authService = await ref.read(
+                                      authServiceProvider.future,
+                                    );
                                     await authService.signOut();
 
                                     // 刷新认证服务和同步服务以触发状态更新
@@ -555,12 +683,12 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     ref.invalidate(syncServiceProvider);
 
                                     ref
-                                        .read(syncStatusRefreshProvider
-                                            .notifier)
+                                        .read(
+                                          syncStatusRefreshProvider.notifier,
+                                        )
                                         .tick();
                                     ref
-                                        .read(statsRefreshProvider
-                                            .notifier)
+                                        .read(statsRefreshProvider.notifier)
                                         .tick();
 
                                     // Surface 2：登出即云失活，全量清本地
@@ -570,17 +698,21 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                                     // 的 GC1/WS 竞态重拉。container 已在 if 块开头
                                     // 捕获，用户登出后快速退出页面也能完成清理，
                                     // 不残留僵尸云端账本。
-                                    WidgetsBinding.instance
-                                        .addPostFrameCallback((_) async {
+                                    WidgetsBinding.instance.addPostFrameCallback((
+                                      _,
+                                    ) async {
                                       final ok =
                                           await purgeLocalCloudLedgersWithContainer(
-                                              container);
+                                            container,
+                                          );
                                       // purge 失败不静默,提示用户云端账本残留需手动处理。
                                       if (!ok && context.mounted) {
                                         showToast(
+                                          context,
+                                          AppLocalizations.of(
                                             context,
-                                            AppLocalizations.of(context)
-                                                .cloudPurgeFailed);
+                                          ).cloudPurgeFailed,
+                                        );
                                       }
                                     });
                                   }
@@ -591,33 +723,44 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                         ),
                       // 自动同步
                       if (!isLocalMode)
-                        Consumer(builder: (ctx, r, _) {
-                          final autoSync = r.watch(autoSyncValueProvider);
-                          final setter = r.read(autoSyncSetterProvider);
-                          final value = autoSync.asData?.value ?? false;
-                          final can = canUseCloud;
+                        Consumer(
+                          builder: (ctx, r, _) {
+                            final autoSync = r.watch(autoSyncValueProvider);
+                            final setter = r.read(autoSyncSetterProvider);
+                            final value = autoSync.asData?.value ?? false;
+                            final can = canUseCloud;
 
-                          return Column(
-                            children: [
-                              SpitoutTokens.cardDivider(context),
-                              SwitchListTile(
-                                title: Text(AppLocalizations.of(context)
-                                    .mineAutoSyncTitle),
-                                subtitle: can
-                                    ? Text(AppLocalizations.of(context)
-                                        .mineAutoSyncSubtitle)
-                                    : Text(AppLocalizations.of(context)
-                                        .mineAutoSyncNeedLogin),
-                                value: can ? value : false,
-                                onChanged: can
-                                    ? (v) async {
-                                        await setter.set(v);
-                                      }
-                                    : null,
-                              ),
-                            ],
-                          );
-                        }),
+                            return Column(
+                              children: [
+                                SpitoutTokens.cardDivider(context),
+                                SwitchListTile(
+                                  title: Text(
+                                    AppLocalizations.of(
+                                      context,
+                                    ).mineAutoSyncTitle,
+                                  ),
+                                  subtitle: can
+                                      ? Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          ).mineAutoSyncSubtitle,
+                                        )
+                                      : Text(
+                                          AppLocalizations.of(
+                                            context,
+                                          ).mineAutoSyncNeedLogin,
+                                        ),
+                                  value: can ? value : false,
+                                  onChanged: can
+                                      ? (v) async {
+                                          await setter.set(v);
+                                        }
+                                      : null,
+                                ),
+                              ],
+                            );
+                          },
+                        ),
                     ],
                   ],
                 ),

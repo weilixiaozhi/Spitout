@@ -35,27 +35,24 @@ void main() {
   setUp(() {
     repo = _MockRepo();
     // stub 常用查询方法返回安全默认值
-    when(() => repo.isCategoryNameDuplicate(
-          name: any(named: 'name'),
-          kind: any(named: 'kind'),
-          excludeId: any(named: 'excludeId'),
-          parentId: any(named: 'parentId'),
-        )).thenAnswer((_) async => false);
-    when(() => repo.hasSubCategories(any()))
-        .thenAnswer((_) async => false);
-    when(() => repo.getTransactionCountByCategory(any()))
-        .thenAnswer((_) async => 0);
-    when(() => repo.getCategoryById(any()))
-        .thenAnswer((_) async => null);
-    when(() => repo.getSubCategories(any()))
-        .thenAnswer((_) async => const []);
+    when(
+      () => repo.isCategoryNameDuplicate(
+        name: any(named: 'name'),
+        kind: any(named: 'kind'),
+        excludeId: any(named: 'excludeId'),
+        parentId: any(named: 'parentId'),
+      ),
+    ).thenAnswer((_) async => false);
+    when(() => repo.hasSubCategories(any())).thenAnswer((_) async => false);
+    when(
+      () => repo.getTransactionCountByCategory(any()),
+    ).thenAnswer((_) async => 0);
+    when(() => repo.getCategoryById(any())).thenAnswer((_) async => null);
+    when(() => repo.getSubCategories(any())).thenAnswer((_) async => const []);
   });
 
   /// 构建分类编辑页测试宿主
-  Widget buildApp({
-    db.Category? category,
-    db.Category? parentCategory,
-  }) {
+  Widget buildApp({db.Category? category, db.Category? parentCategory}) {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
@@ -94,8 +91,7 @@ void main() {
       await tester.pumpWidget(buildApp());
       await prime(tester);
 
-      expect(find.byType(TextFormField), findsOneWidget,
-          reason: '应有分类名称输入框');
+      expect(find.byType(TextFormField), findsOneWidget, reason: '应有分类名称输入框');
     });
 
     testWidgets('页面包含"所属分类"卡片', (tester) async {
@@ -127,8 +123,7 @@ void main() {
       // 通过 y 坐标验证顺序：名称在上，所属分类在下
       final nameRect = tester.getCenter(nameField);
       final parentRect = tester.getCenter(parentText);
-      expect(nameRect.dy, lessThan(parentRect.dy),
-          reason: '分类名称应在所属分类之上');
+      expect(nameRect.dy, lessThan(parentRect.dy), reason: '分类名称应在所属分类之上');
     });
   });
 
@@ -142,8 +137,11 @@ void main() {
       // categoryExpenseType 对应的 Card 已移除
       // 新建模式应有 3 个 Card：名称、所属分类、图标
       final cardCount = tester.widgetList<Card>(find.byType(Card)).length;
-      expect(cardCount, lessThanOrEqualTo(3),
-          reason: '不应有支出分类头部模块 Card，最多 3 个 Card');
+      expect(
+        cardCount,
+        lessThanOrEqualTo(3),
+        reason: '不应有支出分类头部模块 Card，最多 3 个 Card',
+      );
     });
 
     testWidgets('不包含自定义图标上传功能', (tester) async {
@@ -152,8 +150,11 @@ void main() {
 
       // image_picker / image_cropper 相关的 UI 已移除
       expect(find.text('自定义图标'), findsNothing, reason: '不应有自定义图标标题');
-      expect(find.byIcon(Icons.photo_camera), findsNothing,
-          reason: '不应有拍照/上传图标');
+      expect(
+        find.byIcon(Icons.photo_camera),
+        findsNothing,
+        reason: '不应有拍照/上传图标',
+      );
     });
 
     testWidgets('不包含二级分类开关', (tester) async {
@@ -161,8 +162,7 @@ void main() {
       await prime(tester);
 
       // SwitchListTile（二级分类开关）已移除，改为"所属分类"行
-      expect(find.byType(SwitchListTile), findsNothing,
-          reason: '不应有二级分类开关');
+      expect(find.byType(SwitchListTile), findsNothing, reason: '不应有二级分类开关');
     });
   });
 
@@ -176,8 +176,7 @@ void main() {
       // 独立分类状态：副标题为空，有右侧箭头
       expect(find.text('所属分类'), findsOneWidget);
       // 不应有"此分类包含二级分类，无法修改"提示
-      expect(find.text('此分类包含二级分类，无法修改'), findsNothing,
-          reason: '独立分类不应有置灰提示');
+      expect(find.text('此分类包含二级分类，无法修改'), findsNothing, reason: '独立分类不应有置灰提示');
     });
 
     testWidgets('从添加子分类入口进入：有父分类预设', (tester) async {
@@ -217,8 +216,11 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       // 应显示"此分类包含二级分类，无法修改"
-      expect(find.text('此分类包含二级分类，无法修改'), findsOneWidget,
-          reason: '有子分类时应显示置灰提示');
+      expect(
+        find.text('此分类包含二级分类，无法修改'),
+        findsOneWidget,
+        reason: '有子分类时应显示置灰提示',
+      );
     });
 
     testWidgets('编辑模式无子分类时不置灰（可点击修改父分类）', (tester) async {
@@ -238,8 +240,7 @@ void main() {
       await tester.pump(const Duration(milliseconds: 200));
 
       // 不应显示置灰提示
-      expect(find.text('此分类包含二级分类，无法修改'), findsNothing,
-          reason: '无子分类时不应置灰');
+      expect(find.text('此分类包含二级分类，无法修改'), findsNothing, reason: '无子分类时不应置灰');
     });
   });
 
@@ -261,8 +262,11 @@ void main() {
       final titleCenter = tester.getCenter(find.text('所属分类'));
 
       // 无副标题（独立/新增分类）时标题应垂直居中，与卡片中心 y 几乎重合。
-      expect((titleCenter.dy - cardCenter.dy).abs(), lessThan(3.0),
-          reason: '无副标题时标题应垂直居中，与卡片中心对齐');
+      expect(
+        (titleCenter.dy - cardCenter.dy).abs(),
+        lessThan(3.0),
+        reason: '无副标题时标题应垂直居中，与卡片中心对齐',
+      );
     });
 
     testWidgets('新建/独立分类：不渲染空副标题占位', (tester) async {
@@ -270,8 +274,11 @@ void main() {
       await prime(tester);
 
       // 独立分类无父分类、无子分类，不应出现置灰提示文案（即无副标题内容）
-      expect(find.text('此分类包含二级分类，无法修改'), findsNothing,
-          reason: '独立分类不应渲染任何副标题内容');
+      expect(
+        find.text('此分类包含二级分类，无法修改'),
+        findsNothing,
+        reason: '独立分类不应渲染任何副标题内容',
+      );
     });
   });
 
@@ -282,15 +289,14 @@ void main() {
   group('分类汇总入口', () {
     /// 定位分类汇总入口：HeaderIconAction 且图标为 categoryDetail
     Finder summaryEntryFinder() => find.byWidgetPredicate(
-          (w) => w is HeaderIconAction && w.icon == AppIcons.categoryDetail,
-        );
+      (w) => w is HeaderIconAction && w.icon == AppIcons.categoryDetail,
+    );
 
     testWidgets('新建模式不显示分类汇总入口', (tester) async {
       await tester.pumpWidget(buildApp());
       await prime(tester);
 
-      expect(summaryEntryFinder(), findsNothing,
-          reason: '新建模式不应显示分类汇总入口');
+      expect(summaryEntryFinder(), findsNothing, reason: '新建模式不应显示分类汇总入口');
     });
 
     testWidgets('编辑模式恒显示分类汇总入口', (tester) async {
@@ -304,19 +310,26 @@ void main() {
         level: 1,
       );
 
-      // 编辑模式不再依赖外部注入回调：编辑对象恒存在，
+      // 编辑模式不依赖外部注入回调：编辑对象恒存在，
       // 入口恒展示（detail 页内「编辑分类」直接按路由名跳分类管理页）
       await tester.pumpWidget(buildApp(category: category));
       await prime(tester);
 
-      expect(summaryEntryFinder(), findsOneWidget,
-          reason: '编辑模式应显示分类汇总入口（统一图标键）');
+      expect(
+        summaryEntryFinder(),
+        findsOneWidget,
+        reason: '编辑模式应显示分类汇总入口（统一图标键）',
+      );
       // 原可见文案「分类汇总」收敛至 tooltip（l10n.categoryDetailTooltip）
       final action = tester.widget<HeaderIconAction>(summaryEntryFinder());
-      final l10n =
-          AppLocalizations.of(tester.element(find.byType(CategoryEditPage)));
-      expect(action.tooltip, l10n.categoryDetailTooltip,
-          reason: '入口文案应由 tooltip 承载');
+      final l10n = AppLocalizations.of(
+        tester.element(find.byType(CategoryEditPage)),
+      );
+      expect(
+        action.tooltip,
+        l10n.categoryDetailTooltip,
+        reason: '入口文案应由 tooltip 承载',
+      );
     });
   });
 
@@ -332,8 +345,7 @@ void main() {
           .widgetList<SizedBox>(find.byType(SizedBox))
           .where((s) => s.height == 360)
           .toList();
-      expect(sizedBoxes, isNotEmpty,
-          reason: '图标网格应有 360px 固定高度容器');
+      expect(sizedBoxes, isNotEmpty, reason: '图标网格应有 360px 固定高度容器');
     });
 
     testWidgets('图标网格内显示图标名（Lucide 原名，不翻译）', (tester) async {
@@ -358,10 +370,8 @@ void main() {
       await prime(tester);
 
       // 初始视口：第一组是"餐饮美食"，"基础"分组尚未滚入视口
-      expect(find.text('餐饮美食'), findsOneWidget,
-          reason: '首个分组应为"餐饮美食"');
-      expect(find.text('基础'), findsNothing,
-          reason: '"基础"已移至倒数第二，初始不应可见');
+      expect(find.text('餐饮美食'), findsOneWidget, reason: '首个分组应为"餐饮美食"');
+      expect(find.text('基础'), findsNothing, reason: '"基础"已移至倒数第二，初始不应可见');
 
       // 图标网格的固定锚点：限高 360 的 SizedBox 容器始终挂在树上，
       // 不受网格内部滚动导致的懒加载回收影响（分组标题 Text 会被回收）
@@ -378,8 +388,18 @@ void main() {
       // 渐进滚动扫描：逐段 jumpTo 并按树顺序收集分组标题
       // （ScrollableState 引用跨重建稳定，可直接驱动滚动位置）
       const expenseGroupTitles = {
-        '餐饮美食', '交通出行', '购物消费', '居住生活', '通讯设备', '娱乐休闲',
-        '健康医疗', '教育学习', '宠物动物', '服装美容', '基础', '其他杂项',
+        '餐饮美食',
+        '交通出行',
+        '购物消费',
+        '居住生活',
+        '通讯设备',
+        '娱乐休闲',
+        '健康医疗',
+        '教育学习',
+        '宠物动物',
+        '服装美容',
+        '基础',
+        '其他杂项',
       };
       final scannedTitles = <String>[];
       while (true) {
@@ -402,12 +422,18 @@ void main() {
       }
 
       // 全部分组都被扫到
-      expect(scannedTitles.length, expenseGroupTitles.length,
-          reason: '应扫到全部 ${expenseGroupTitles.length} 个分组标题');
+      expect(
+        scannedTitles.length,
+        expenseGroupTitles.length,
+        reason: '应扫到全部 ${expenseGroupTitles.length} 个分组标题',
+      );
       // 最后一组为"其他杂项"，倒数第二组为"基础"
       expect(scannedTitles.last, '其他杂项', reason: '最后一组应为"其他杂项"');
-      expect(scannedTitles[scannedTitles.length - 2], '基础',
-          reason: '"基础"分组应位于倒数第二（"其他杂项"之上）');
+      expect(
+        scannedTitles[scannedTitles.length - 2],
+        '基础',
+        reason: '"基础"分组应位于倒数第二（"其他杂项"之上）',
+      );
     });
   });
 
@@ -418,8 +444,7 @@ void main() {
       await tester.pumpWidget(buildApp());
       await prime(tester);
 
-      expect(find.text('当前图标'), findsOneWidget,
-          reason: '应有"当前图标"文案');
+      expect(find.text('当前图标'), findsOneWidget, reason: '应有"当前图标"文案');
     });
   });
 
@@ -453,8 +478,7 @@ void main() {
       await prime(tester);
 
       // 危险操作模块已从编辑页移除，编辑模式也不应出现
-      expect(find.text('危险操作'), findsNothing,
-          reason: '危险操作区已移除，编辑模式也不应显示');
+      expect(find.text('危险操作'), findsNothing, reason: '危险操作区已移除，编辑模式也不应显示');
     });
   });
 }

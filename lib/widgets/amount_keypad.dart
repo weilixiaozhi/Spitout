@@ -11,9 +11,9 @@ import 'press_key.dart';
 /// - 数字、小数点、运算符在按下瞬间提交（PressKey.onDown），滑出取消时通过
 ///   [onRollback] 回滚最近一次提交，做到与系统键盘一样的"按下即反馈"；
 /// - 完成键（提交/等号）：等号按下即算，提交松手触发，避免误触直接关页；
-/// - 触觉反馈由父级金额面板统一触发，本组件不再重复触发；
+/// - 触觉反馈由父级金额面板统一触发，本组件不重复触发；
 /// - 水平键距 2px、行距 2px、按键圆角 5px（统一来自 KeypadLayout）；
-/// - 数字/运算符为白色色块（keyDigit），日期/完成等为深灰块（keyOther）。
+/// - 数字/运算符/日期为白色色块（keyDigit），完成键为主题主色。
 ///
 /// 布局：
 /// ```
@@ -90,7 +90,7 @@ class AmountKeypad extends StatelessWidget {
     required VoidCallback onDown,
   }) {
     return PressKey(
-      scale: 0.96,
+      scale: 0.94,
       onDown: onDown,
       onCancel: onRollback,
       backgroundColor: SpitoutTokens.keyDigit(context),
@@ -180,9 +180,9 @@ class AmountKeypad extends StatelessWidget {
   /// 日期键：按下即打开日期滚轮（弹层，无需回滚）。
   Widget _dateKey(BuildContext context, TextTheme text, {required double h}) {
     return PressKey(
-      scale: 0.96,
+      scale: 0.94,
       onDown: onPickDate,
-      backgroundColor: SpitoutTokens.keyOther(context),
+      backgroundColor: SpitoutTokens.keyDigit(context),
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         alignment: Alignment.center,
@@ -226,15 +226,16 @@ class AmountKeypad extends StatelessWidget {
   /// - waiting / calculated：显示 Enter（回车）图标，松手提交（防误触）。
   /// - operating：显示 `=`，按下瞬间计算并进入 calculated，滑出取消回滚。
   Widget _doneKey(BuildContext context, TextTheme text, {required double h}) {
+    final primary = Theme.of(context).colorScheme.primary;
     final isInCalcMode = calcState == 'operating';
     // operating 状态下始终可用；其他状态受 isDoneEnabled 控制
     final enabled = isInCalcMode || isDoneEnabled;
     final l10n = AppLocalizations.of(context);
-    // 深灰块（keyOther）上不用白色图标，亮色用主文字色保证对比度，
-    // 暗色用白/浅色文字。
-    final iconColor = SpitoutTokens.isDark(context)
+    // 完成键是主操作：可用时用主题主色（buttonPrimary）+ 白色内容；
+    // 禁用时用规范 buttonDisabled 背景 + textSecondary 图标，保证可辨识。
+    final iconColor = enabled
         ? Colors.white
-        : SpitoutTokens.textPrimary(context);
+        : SpitoutTokens.textSecondary(context);
 
     return PressKey(
       enabled: enabled,
@@ -243,8 +244,8 @@ class AmountKeypad extends StatelessWidget {
       onCancel: isInCalcMode ? onRollback : null,
       onUp: isInCalcMode ? null : onSubmit,
       backgroundColor: enabled
-          ? SpitoutTokens.keyOther(context)
-          : SpitoutTokens.surfaceDisabled(context),
+          ? primary
+          : SpitoutTokens.buttonDisabled(context),
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         alignment: Alignment.center,
@@ -269,9 +270,7 @@ class AmountKeypad extends StatelessWidget {
             : Icon(
                 AppIcons.keyboardReturn,
                 size: h * 0.43,
-                color: enabled
-                    ? iconColor
-                    : SpitoutTokens.textTertiary(context),
+                color: iconColor,
                 semanticLabel: l10n.commonFinish,
               ),
       ),

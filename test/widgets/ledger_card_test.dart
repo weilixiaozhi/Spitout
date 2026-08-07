@@ -1,7 +1,7 @@
 /// LedgerCard 共享账本角标图标测试。
 ///
 /// 锁定:共享账本角标使用 AppIcons.people(与成员管理入口一致),
-/// 不再使用握手图标(LucideIcons.heartHandshake),并带成员数文本。
+/// 使用 people 图标 + 成员数文本。
 library;
 
 import 'package:flutter/material.dart';
@@ -34,14 +34,14 @@ LedgerDisplayItem _ledger({required bool isShared, int memberCount = 1}) =>
 
 /// 构造指定 storageMode 的账本展示项(供状态图标三态测试使用)。
 LedgerDisplayItem _display({required String storageMode}) => LedgerDisplayItem(
-      id: 99,
-      name: '图标测试账本',
-      currency: 'CNY',
-      transactionCount: 0,
-      expenseTotal: 0,
-      lastUpdated: DateTime(2026, 1, 1),
-      storageMode: storageMode,
-    );
+  id: 99,
+  name: '图标测试账本',
+  currency: 'CNY',
+  transactionCount: 0,
+  expenseTotal: 0,
+  lastUpdated: DateTime(2026, 1, 1),
+  storageMode: storageMode,
+);
 
 Future<void> _pump(
   WidgetTester tester,
@@ -73,8 +73,7 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('共享账本角标使用 people 图标 + 成员数,不再用握手图标',
-      (tester) async {
+  testWidgets('共享账本角标使用 people 图标 + 成员数,不再用握手图标', (tester) async {
     await _pump(tester, _ledger(isShared: true, memberCount: 2));
 
     expect(find.byIcon(AppIcons.people), findsOneWidget);
@@ -92,13 +91,15 @@ void main() {
   testWidgets('不向用户展示本地自增 ID', (tester) async {
     await _pump(tester, _ledger(isShared: false));
 
-    expect(find.textContaining('ID:'), findsNothing,
-        reason: '内部自增 ID 对用户无意义且跨设备不一致，不应展示');
+    expect(
+      find.textContaining('ID:'),
+      findsNothing,
+      reason: '内部自增 ID 对用户无意义且跨设备不一致，不应展示',
+    );
   });
 
   group('状态图标(方案B重构)', () {
-    testWidgets('云端账本恒为云形:即便激活 webdav 也不显示 storage 备份图标',
-        (tester) async {
+    testWidgets('云端账本恒为云形:即便激活 webdav 也不显示 storage 备份图标', (tester) async {
       final ledger = _display(storageMode: 'cloud');
       await _pump(
         tester,
@@ -115,14 +116,13 @@ void main() {
           ),
         ],
       );
-      // 核心断言:云端账本不再按后端形态显示 database 图标
+      // 核心断言:云端账本不按后端形态显示 database 图标
       expect(find.byIcon(AppIcons.storage), findsNothing);
       // 云形图标必然存在(头部头像 + 状态图标各一个)
       expect(find.byIcon(AppIcons.cloudQueue), findsWidgets);
     });
 
-    testWidgets('本地账本+快照型后端(webdav)激活:显示 database 备份图标',
-        (tester) async {
+    testWidgets('本地账本+快照型后端(webdav)激活:显示 database 备份图标', (tester) async {
       final ledger = _display(storageMode: 'local');
       await _pump(
         tester,

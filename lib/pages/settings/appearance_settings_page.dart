@@ -74,8 +74,8 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       AppListTile(
                         leading: AppIcons.theme,
                         title: l10n.appearanceExpenseColorScheme,
-                        subtitle: ref.watch(expenseColorSchemeProvider) ==
-                                'green'
+                        subtitle:
+                            ref.watch(expenseColorSchemeProvider) == 'green'
                             ? l10n.appearanceExpenseColorGreen
                             : l10n.appearanceExpenseColorRed,
                         // 圆点放进与默认右箭头相同的 24×24 图标槽位,
@@ -91,15 +91,15 @@ class AppearanceSettingsPage extends ConsumerWidget {
                                 shape: BoxShape.circle,
                                 color:
                                     ref.watch(expenseColorSchemeProvider) ==
-                                            'green'
-                                        ? SpitoutTokens.success(context)
-                                        : SpitoutTokens.error(context),
+                                        'green'
+                                    ? SpitoutTokens.success(context)
+                                    : SpitoutTokens.error(context),
                               ),
                             ),
                           ),
                         ),
-                        onTap: () => _showExpenseColorSchemeDialog(
-                            context, ref, l10n),
+                        onTap: () =>
+                            _showExpenseColorSchemeDialog(context, ref, l10n),
                       ),
                       SpitoutTokens.cardDivider(context),
                       // 应用语言
@@ -110,8 +110,8 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const LanguageSettingsPage()),
+                              builder: (_) => const LanguageSettingsPage(),
+                            ),
                           );
                         },
                       ),
@@ -121,8 +121,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         leading: AppIcons.themeAuto,
                         title: l10n.appearanceThemeMode,
                         subtitle: themeModeDisplay,
-                        onTap: () =>
-                            _showThemeModeDialog(context, ref, l10n),
+                        onTap: () => _showThemeModeDialog(context, ref, l10n),
                       ),
                       SpitoutTokens.cardDivider(context),
                       // 应用上锁
@@ -133,8 +132,8 @@ class AppearanceSettingsPage extends ConsumerWidget {
                         onTap: () async {
                           await Navigator.of(context).push(
                             appPageRoute(
-                                builder: (_) =>
-                                    const AppLockSettingsPage()),
+                              builder: (_) => const AppLockSettingsPage(),
+                            ),
                           );
                         },
                       ),
@@ -150,7 +149,11 @@ class AppearanceSettingsPage extends ConsumerWidget {
   }
 
   /// 显示主题模式选择对话框
-  void _showThemeModeDialog(BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+  void _showThemeModeDialog(
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
     final currentMode = ref.read(themeModeProvider);
 
     showDialog(
@@ -165,21 +168,24 @@ class AppearanceSettingsPage extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             _buildModeOption(
-              context, ref,
+              context,
+              ref,
               title: l10n.appearanceThemeModeSystem,
               value: ThemeMode.system,
               currentValue: currentMode,
               icon: AppIcons.settingsSuggest,
             ),
             _buildModeOption(
-              context, ref,
+              context,
+              ref,
               title: l10n.appearanceThemeModeLight,
               value: ThemeMode.light,
               currentValue: currentMode,
               icon: AppIcons.lightMode,
             ),
             _buildModeOption(
-              context, ref,
+              context,
+              ref,
               title: l10n.appearanceThemeModeDark,
               value: ThemeMode.dark,
               currentValue: currentMode,
@@ -214,9 +220,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
           fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
         ),
       ),
-      trailing: isSelected
-          ? Icon(AppIcons.check, color: primaryColor)
-          : null,
+      trailing: isSelected ? Icon(AppIcons.check, color: primaryColor) : null,
       onTap: () {
         ref.read(themeModeProvider.notifier).set(value);
         Navigator.pop(context);
@@ -232,7 +236,10 @@ class AppearanceSettingsPage extends ConsumerWidget {
   /// 保存后：颜色已在本地即时换好，关闭本弹窗后，居中展示 1s 弱化
   /// loading（无遮罩、细线条、浅颜色），结束弹 toast「已更换」。不跳转首页。
   void _showExpenseColorSchemeDialog(
-      BuildContext context, WidgetRef ref, AppLocalizations l10n) {
+    BuildContext context,
+    WidgetRef ref,
+    AppLocalizations l10n,
+  ) {
     final pageContext = context; // 外观设置页 context,用于在其上展示 loading 与 toast
     // 本地副本记录对话框内当前选择,与 provider 分离;只有点"保存"才提交。
     var selected = ref.read(expenseColorSchemeProvider);
@@ -299,15 +306,16 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       if (!pageContext.mounted) return;
                       // 仅关闭颜色选择弹窗,停留在外观设置页(不跳转首页)。
                       Navigator.of(dialogCtx).pop();
-                      // 弱化 loading：去掉了遮罩，仅居中展示细线条、浅颜色的
+                      // 弱化 loading：无遮罩，仅居中展示细线条、浅颜色的
                       // CircularProgressIndicator，1s 过渡反馈后弹 toast「已更换」。
                       final overlayEntry = OverlayEntry(
                         builder: (_) => const Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2.0,
                             strokeCap: StrokeCap.round,
-                            valueColor:
-                                AlwaysStoppedAnimation<Color>(Colors.grey),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                              Colors.grey,
+                            ),
                           ),
                         ),
                       );
@@ -329,7 +337,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
                           overlayEntry.remove();
                         }
                       }
-              },
+                    },
               child: saving
                   ? const SizedBox(
                       width: 18,

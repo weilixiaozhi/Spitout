@@ -1,8 +1,6 @@
 /// AmountKeypad 数字键盘组件测试。
 ///
-/// 本次改动（键盘布局重构：去掉 U 算法、行高由键盘容器剩余空间均分）：
-///
-///   A. 逻辑行为（防回归）：
+///   A. 逻辑行为：
 ///     1. 渲染所有数字键 0-9、小数点、4 个运算符、日期、完成键；
 ///     2. 点击数字键 → onAppend；点击运算符 → onApplyOp；点击日期 → onPickDate；
 ///     3. operating 态显示 `=` 并点击 → onApplyEquals；
@@ -10,11 +8,11 @@
 ///     5. isDoneEnabled=false 完成键禁用，不触发回调；
 ///     6. isSubmitting=true 显示 loading 指示器。
 ///
-///   B. 布局重构（本次改动核心）：
+///   B. 布局：
 ///     7. 单行高 h = (键盘高 - 3×2px 行距) / 4，数字网格区 = 3h + 2×2px，
 ///        底部行 = h，随容器高度伸缩（无绝对像素行高）；
 ///     8. 运算符顺序自上而下 + - × ÷；
-///     9. 数字/运算符键为白色色块，日期/完成键为深灰块；
+///     9. 数字/运算符/日期为白色色块，完成为主题主色；
 ///     10. 键距/行距全局 2px、按键圆角统一 5px；
 ///     11. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
@@ -351,7 +349,7 @@ void main() {
       expect(dy['×']!, lessThan(dy['÷']!), reason: '乘号应在除号上方');
     });
 
-    testWidgets('数字/运算符白色色块，日期/完成深灰色块', (tester) async {
+    testWidgets('数字/运算符/日期白色色块，完成主题主色', (tester) async {
       await tester.pumpWidget(
         buildHarness(
           keypadHeight: 400,
@@ -377,19 +375,19 @@ void main() {
       );
       expect(opBar.color, SpitoutColors.lightKeyDigit);
 
-      // 日期键与完成键 = 深灰色块
+      // 日期键 = 白色色块；完成键 = 主题主色（主操作按钮）
       expect(
         pressKeyOf(tester, '2026/7/27').backgroundColor,
-        SpitoutColors.lightKeyOther,
+        SpitoutColors.lightKeyDigit,
       );
       final doneKey = find.ancestor(
         of: find.byIcon(AppIcons.keyboardReturn),
         matching: find.byType(PressKey),
       );
-      expect(
-        tester.widget<PressKey>(doneKey).backgroundColor,
-        SpitoutColors.lightKeyOther,
-      );
+      final primary = Theme.of(
+        tester.element(find.byType(AmountKeypad)),
+      ).colorScheme.primary;
+      expect(tester.widget<PressKey>(doneKey).backgroundColor, primary);
     });
 
     testWidgets('键距/行距全局 2px、按键圆角统一 5px', (tester) async {

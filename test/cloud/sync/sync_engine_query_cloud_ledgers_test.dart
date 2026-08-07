@@ -1,4 +1,4 @@
-/// DEEP 方案红测试:云同步页 refresh 不再依赖 currentLedgerIdProvider。
+/// 云同步页 refresh 不依赖 currentLedgerIdProvider。
 ///
 /// 覆盖两项根因修复:
 /// 1. 云端账本枚举降为私有 `_queryCloudLedgers`,外部统一走账户级入口 ——
@@ -27,8 +27,16 @@ import 'package:spitout/data/repositories/local/local_repository.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
-Future<(SpitoutDatabase, ChangeTracker, LocalRepository, FakeSpitoutCloudProvider,
-    SyncEngine)> _harness() async {
+Future<
+  (
+    SpitoutDatabase,
+    ChangeTracker,
+    LocalRepository,
+    FakeSpitoutCloudProvider,
+    SyncEngine,
+  )
+>
+_harness() async {
   final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
   final changeTracker = ChangeTracker(db);
   final repo = LocalRepository(db, changeTracker: changeTracker);
@@ -54,7 +62,9 @@ void main() {
       addTearDown(db.close);
 
       // cloud + syncId → 应被选为内部锚点
-      await db.into(db.ledgers).insert(
+      await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Cloud 1',
               syncId: const Value('ledger-1'),
@@ -62,7 +72,9 @@ void main() {
             ),
           );
       // 本地账本 → 排除
-      await db.into(db.ledgers).insert(
+      await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local 1',
               syncId: const Value(null),
@@ -70,7 +82,9 @@ void main() {
             ),
           );
       // cloud 但 syncId 为空 → 排除(从未同步过,无法 push/stats)
-      await db.into(db.ledgers).insert(
+      await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Cloud NoSync',
               syncId: const Value(null),
@@ -94,15 +108,20 @@ void main() {
       expect(report!.error, isNull);
       // 但锚点是内部工程细节,不外泄:carrierLedgerId 只在调用方显式指定
       // 当前选中的云账本时才回填。
-      expect(report.carrierLedgerId, isNull,
-          reason: 'id 升序自选无用户语义,绝不外泄为 carrierLedgerId');
+      expect(
+        report.carrierLedgerId,
+        isNull,
+        reason: 'id 升序自选无用户语义,绝不外泄为 carrierLedgerId',
+      );
     });
 
     test('无云端账本 → checkAccountHealth 返回 null(供 UI「暂无云端账本」)', () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      await db.into(db.ledgers).insert(
+      await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
@@ -110,10 +129,8 @@ void main() {
           );
 
       final report = await engine.checkAccountHealth();
-      expect(report, isNull,
-          reason: '没有任何云端账本时,账户级检查返回 null,UI 展示「暂无云端账本」');
-      expect(provider.readLedgerStatsCalls, 0,
-          reason: '无载体账本不发起任何 stats 请求');
+      expect(report, isNull, reason: '没有任何云端账本时,账户级检查返回 null,UI 展示「暂无云端账本」');
+      expect(provider.readLedgerStatsCalls, 0, reason: '无载体账本不发起任何 stats 请求');
     });
   });
 
@@ -122,7 +139,9 @@ void main() {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      final localId = await db.into(db.ledgers).insert(
+      final localId = await db
+          .into(db.ledgers)
+          .insert(
             LedgersCompanion.insert(
               name: 'Local',
               storageMode: const Value('local'),
@@ -130,10 +149,16 @@ void main() {
           );
 
       final report = await engine.checkLedgerHealth(ledgerId: localId);
-      expect(report.error, isNotNull,
-          reason: '无 syncId 的账本应判定健康检测失败(本地账本未同步到云端)');
-      expect(provider.readLedgerStatsCalls, 0,
-          reason: '无 syncId 时不得用本地 id 拼 server 路径发起 stats 请求(删兜底)');
+      expect(
+        report.error,
+        isNotNull,
+        reason: '无 syncId 的账本应判定健康检测失败(本地账本未同步到云端)',
+      );
+      expect(
+        provider.readLedgerStatsCalls,
+        0,
+        reason: '无 syncId 时不得用本地 id 拼 server 路径发起 stats 请求(删兜底)',
+      );
     });
   });
 }

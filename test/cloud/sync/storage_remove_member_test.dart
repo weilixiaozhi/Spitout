@@ -6,7 +6,7 @@ import 'package:http/testing.dart';
 
 /// [SpitoutCloudStorageService.removeMember] / [deleteLedger] 的 REST 层单元测试。
 ///
-/// 设计意图：本次修复在 REST 层做了两处关键改动：
+/// 设计意图：REST 层两处关键行为：
 ///   1) [removeMember] 在 server 返回 404 时「幂等吞掉」——覆盖「list 完到
 ///      remove 之间成员已被踢出」的竞态，避免退出共享账本时报错；
 ///   2) [deleteLedger]（Owner 全局删除）走 `/write/ledgers/{id}`。
@@ -43,8 +43,7 @@ void main() {
 
     test('server 返回 500 → 抛出 CloudStorageException', () async {
       final storage = buildStorage(
-        MockClient((_) async =>
-            http.Response('{"detail":"boom"}', 500)),
+        MockClient((_) async => http.Response('{"detail":"boom"}', 500)),
       );
       expect(
         () => storage.removeMember(ledgerId: 'L1', userId: 'M1'),
@@ -64,8 +63,7 @@ void main() {
 
     test('server 返回 500 → 抛出 CloudStorageException', () async {
       final storage = buildStorage(
-        MockClient((_) async =>
-            http.Response('{"detail":"boom"}', 500)),
+        MockClient((_) async => http.Response('{"detail":"boom"}', 500)),
       );
       expect(
         () => storage.deleteLedger(ledgerId: 'L1'),
@@ -78,7 +76,7 @@ void main() {
 /// 返回固定 token 的本地 fake auth —— 仅用于绕过真实登录网络调用。
 class _TestAuthService extends SpitoutCloudAuthService {
   _TestAuthService()
-      : super(baseUrl: 'https://fake.test', apiPrefix: '/api/v1');
+    : super(baseUrl: 'https://fake.test', apiPrefix: '/api/v1');
 
   @override
   Future<String> requireAccessToken() async => 'test-token';

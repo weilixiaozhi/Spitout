@@ -98,7 +98,7 @@ class SpitoutCloudReadLedger {
   final String currency;
   final int transactionCount;
 
-  /// 支出总额(incomeTotal 已从协议移除,不再区分收支)。
+  /// 支出总额(协议不含 incomeTotal,不区分收支)。
   final double expenseTotal;
   final double balance;
   final String role;
@@ -490,7 +490,7 @@ class SpitoutCloudInvite {
   /// 邀请唯一 id:创建与列表响应都有,撤销时传这个值。
   final String id;
 
-  /// 6 位明文邀请码(`ABC123`),仅创建响应返回;列表接口出于安全不再返回完整码,为 null。
+  /// 6 位明文邀请码(`ABC123`),仅创建响应返回;列表接口出于安全不返回完整码,为 null。
   final String? code;
 
   /// 列表掩码前缀(`ABC1`),仅列表响应返回;创建响应为 null。
@@ -621,7 +621,8 @@ class SpitoutCloudLedgerMember {
     return SpitoutCloudLedgerMember(
       userId:
           requireNonEmptyString(json, 'user_id', 'SpitoutCloudLedgerMember'),
-      account: requireNonEmptyString(json, 'account', 'SpitoutCloudLedgerMember'),
+      account:
+          requireNonEmptyString(json, 'account', 'SpitoutCloudLedgerMember'),
       displayName: json['display_name'] as String?,
       role: (json['role'] as String?)?.trim() ?? 'editor',
       joinedAt: DateTime.tryParse(json['joined_at'] as String? ?? '')?.toUtc(),

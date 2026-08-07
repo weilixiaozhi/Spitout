@@ -687,7 +687,7 @@ class SpitoutCloudStorageService implements CloudStorageService {
 
   /// 撤销邀请:优先用邀请 id,未传时回退到完整明文码(兼容旧调用)。
   ///
-  /// 新列表接口不再返回完整码,UI 撤销必须用列表里的 id;创建响应里拿到的
+  /// 列表接口不返回完整码,UI 撤销必须用列表里的 id;创建响应里拿到的
   /// 完整码仍可撤销,故保留 [code] 分支,server 对两种 key 都接受。
   Future<void> revokeInvite({
     required String ledgerId,

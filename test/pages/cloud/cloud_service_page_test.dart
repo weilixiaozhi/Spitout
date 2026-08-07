@@ -162,7 +162,7 @@ Future<void> _pumpPage(
   // 抬高视口以确保所有分组均进入构建树，便于断言。
   // 仅本文件两个测试使用，互不影响，无需复位。
   // 高度设足（4000）以确保 ListView 懒构建出底部「云端协同」分组；
-  // 宽度设 1000 以规避主 Header 在窄屏下的 2.6px 横向溢出（与本次改造无关）。
+  // 宽度设 1000 以规避主 Header 在窄屏下的 2.6px 横向溢出。
   tester.view.physicalSize = const Size(1000, 4000);
 
   await tester.pumpWidget(
@@ -314,7 +314,7 @@ void main() {
     // 「配置」按钮;按布局顺序(离线模式分组在前)本地存储为第 0 个,WebDAV 为第 1 个。
     await tester.tap(find.text('配置').at(1));
     await tester.pumpAndSettle();
-    // 配置弹窗已改为顶部贴边弹层 AppSheet,不再使用 AlertDialog
+    // 配置弹窗是顶部贴边弹层 AppSheet,非 AlertDialog
     expect(find.byType(AppSheet), findsOneWidget);
     expect(find.byIcon(AppIcons.delete), findsOneWidget);
     // 关闭对话框
@@ -404,8 +404,8 @@ void main() {
     await tester.tap(find.text('保存'));
     await tester.pumpAndSettle();
 
-    // 关键回归:校验失败不应切换到另一个弹窗(不再出现独立错误弹窗),
-    // 也不会因弹窗关闭而丢失已填内容。若改回「先 pop 再 AppDialog.error」,
+    // 校验失败不切换到另一个弹窗(不出现独立错误弹窗),
+    // 也不会因弹窗关闭而丢失已填内容。
     // 此处将出现 AlertDialog 且 AppSheet 消失,测试转红。
     expect(find.byType(AlertDialog), findsNothing, reason: '校验失败不应弹出独立错误弹窗');
     expect(find.byType(AppSheet), findsOneWidget, reason: '校验失败时配置弹窗应保持打开');
@@ -648,7 +648,7 @@ void main() {
       await tester.tap(find.text('保存'));
       await tester.pumpAndSettle();
 
-      // 编辑场景同样弹出引导弹窗（标题即「配置已保存」承接反馈,不再 toast）
+      // 编辑场景同样弹出引导弹窗（标题即「配置已保存」承接反馈,不用 toast）
       expect(find.text('暂不切换'), findsOneWidget);
       expect(find.text('立即切换'), findsOneWidget);
 
@@ -754,7 +754,7 @@ void main() {
 
       await openSpitoutDialogAndFill(tester);
 
-      // 引导弹窗选择"暂不切换"（本次关键修复：不再假切换登录）
+      // 引导弹窗选择"暂不切换"（不假切换登录）
       expect(find.text('暂不切换'), findsOneWidget);
       await tester.tap(find.text('暂不切换'));
       await tester.pumpAndSettle();
@@ -920,7 +920,7 @@ void main() {
       await tester.tap(find.text('立即切换'));
       await tester.pumpAndSettle();
 
-      // 激活由 _activateService 接管（不再手写 invalidate active），行为等价：
+      // 激活由 _activateService 接管（不手写 invalidate active），行为：
       // 活跃类型切到 supabase，且通用同步区块（含登录行）出现。
       expect((await _testStore().loadActive()).type, CloudBackendType.supabase);
       expect(find.byType(CloudSyncSection), findsOneWidget);

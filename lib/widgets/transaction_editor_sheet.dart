@@ -362,7 +362,7 @@ class _TransactionEditorSheetState
         final operatorUserId =
             (await cloudUserIdFuture) ?? (await localSelfIdFuture);
         // 共享账本：本地 lastEditedByUserId 立即回填。身份已在上方解析,
-        // 这里只写库,不再等待云端。
+        // 这里只写库，不等待云端。
         try {
           await repo.markTxAuthor(
             txId: transactionId,
@@ -482,6 +482,15 @@ class _TransactionEditorSheetState
     // sheet 背景高度上限 = available（全屏 − 键盘），铺满屏顶且不被键盘遮挡；
     // 真实高度由内容决定，仅作为 Container 上限封顶。
     final sheetMaxH = available;
+    // —— 键盘区占比 ——
+    // 固定占可用高度 40%（参考安卓虚拟键盘常见屏占比），
+    // 以 200px 下限 / 360px 上限兜底。分类区（Expanded）自动吃剩余空间；
+    // 极端紧凑时键盘让位，避免溢出。
+    final usableH = available - mq.padding.top - bottomInset;
+    final keypadAreaH = math.min(
+      (usableH * 0.40).clamp(200.0, 360.0),
+      math.max(0.0, usableH - 50),
+    );
 
     // AA 区块仅账本开启 AA 时展示(功能隔离)
     final aaEnabled =
@@ -541,10 +550,9 @@ class _TransactionEditorSheetState
                   thickness: 0.5,
                   color: SpitoutTokens.cardInnerDividerColor(context),
                 ),
-                // 分类区保底 100px（独立滚动、无可见滚动条）；剩余垂直空间
-                // 全部由下方键盘容器 Expanded 撑满，不再用 U 算法反推行高。
-                SizedBox(
-                  height: 100,
+                // 分类区（独立滚动、无可见滚动条）：Expanded 吃键盘区之外的
+                // 剩余空间，剩余空间不足时自动压缩（可滚动）。
+                Expanded(
                   child: CategoryGridSection(
                     kind: widget.initialKind,
                     initialSelectedId: widget.initialCategoryId,
@@ -556,12 +564,13 @@ class _TransactionEditorSheetState
                   thickness: 0.5,
                   color: SpitoutTokens.cardInnerDividerColor(context),
                 ),
-                // —— 键盘容器：备注行 + 金额栏行 + 键盘，Expanded 撑满剩余空间 ——
+                // —— 键盘容器：备注行 + 金额栏行 + 键盘，高度按屏占比自适应 ——
                 // 备注行必须始终在树中，否则键盘拉起→NoteInputRow 移除→
                 // TextField 销毁→焦点丢失→键盘收起，形成死循环导致备注无法输入。
-                // 键盘容器背景为浅灰（亮色 #DEE0E7），去掉向上阴影；
+                // 键盘容器背景为浅灰（亮色 #DEE0E7），无阴影；
                 // 内边距上 10 / 左 10 / 右 10 / 下 40（底部留白 40）。
-                Expanded(
+                SizedBox(
+                  height: keypadAreaH,
                   child: Container(
                     color: SpitoutTokens.keypadBackground(context),
                     child: Padding(
@@ -589,7 +598,7 @@ class _TransactionEditorSheetState
                               ),
                               const SizedBox(height: KeypadLayout.rowGap),
                               // 金额输入面板（金额/运算/币种/汇率状态全部在内部，
-                              // 按键只重建本面板，不再带动 Header/分类网格/备注行）
+                              // 按键只重建本面板，不带动 Header/分类网格/备注行）
                               SizedBox(
                                 height: 5 * h + 4 * KeypadLayout.rowGap,
                                 child: AmountInputPanel(

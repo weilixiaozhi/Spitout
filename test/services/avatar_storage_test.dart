@@ -6,7 +6,7 @@
 /// 验证点：
 /// 1. 相对路径读取的正常链路（拼接 Documents 目录、验证文件存在）。
 /// 2. 文件丢失时的自愈行为（清除失效记录并返回 null）。
-/// 3. 绝对路径不再被特殊提取迁移，而是按普通相对路径处理，找不到即清除。
+/// 3. 绝对路径按普通相对路径处理，找不到即清除。
 /// 4. saveAvatarFromBytes / deleteAvatar / 远端版本号读写的完整行为。
 ///
 /// 测试手段：method channel mock 掉 path_provider 的
@@ -39,11 +39,11 @@ void main() {
     tempDir = await Directory.systemTemp.createTemp('avatar_storage_test_');
     TestDefaultBinaryMessengerBinding.instance.defaultBinaryMessenger
         .setMockMethodCallHandler(channel, (MethodCall call) async {
-      if (call.method == 'getApplicationDocumentsDirectory') {
-        return tempDir.path;
-      }
-      return null;
-    });
+          if (call.method == 'getApplicationDocumentsDirectory') {
+            return tempDir.path;
+          }
+          return null;
+        });
     resetGlobalTestState();
   });
 
@@ -78,8 +78,9 @@ void main() {
     });
 
     test('相对路径但文件不存在时清除记录并返回 null', () async {
-      SharedPreferences.setMockInitialValues(
-          {avatarPathKey: 'avatars/not_exist.jpg'});
+      SharedPreferences.setMockInitialValues({
+        avatarPathKey: 'avatars/not_exist.jpg',
+      });
 
       final result = await avatarStorage.getAvatarPath();
       expect(result, isNull);
@@ -93,17 +94,17 @@ void main() {
     test('绝对路径不再被提取迁移，按相对路径处理后清除', () async {
       // 场景：prefs 里存的是绝对路径（以 / 开头）。
       // 不会用 RegExp 提取 'avatars/avatar_9.jpg' 并迁移；
-      // 即使该提取位置文件存在也不再迁移——拼接路径找不到即清除。
+      // 即使该提取位置文件存在也不迁移——拼接路径找不到即清除。
       await createFile('avatars/avatar_9.jpg', [9]);
-      SharedPreferences.setMockInitialValues(
-          {avatarPathKey: '/data/old/avatars/avatar_9.jpg'});
+      SharedPreferences.setMockInitialValues({
+        avatarPathKey: '/data/old/avatars/avatar_9.jpg',
+      });
 
       final result = await avatarStorage.getAvatarPath();
       expect(result, isNull, reason: '绝对路径不应被迁移复用');
 
       final prefs = await SharedPreferences.getInstance();
-      expect(prefs.getString(avatarPathKey), isNull,
-          reason: '旧绝对路径记录应被清除而非迁移');
+      expect(prefs.getString(avatarPathKey), isNull, reason: '旧绝对路径记录应被清除而非迁移');
     });
   });
 
@@ -128,7 +129,9 @@ void main() {
 
     test('扩展名规范化：无点号自动补点', () async {
       final path = await avatarStorage.saveAvatarFromBytes(
-          Uint8List.fromList([1]), extension: 'png');
+        Uint8List.fromList([1]),
+        extension: 'png',
+      );
       expect(path, isNotNull);
       expect(path, endsWith('.png'));
     });

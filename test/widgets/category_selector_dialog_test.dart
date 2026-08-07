@@ -1,7 +1,7 @@
 /// CategorySelectorDialog 分类加载 future 缓存回归测试。
 ///
-/// 修复点：分类列表 future 由 State 缓存，搜索 / 父级重建只做内存过滤，
-/// 不再每次按键都全量重查「一级分类 + 逐父查子分类」。
+/// 分类列表 future 由 State 缓存，搜索 / 父级重建只做内存过滤，
+/// 不重查「一级分类 + 逐父查子分类」。
 library;
 
 import 'package:flutter/material.dart';
@@ -24,34 +24,36 @@ void main() {
   late _MockRepo repo;
 
   db.Category category(int id, String name) => db.Category(
-        id: id,
-        name: name,
-        kind: 'expense',
-        icon: 'category',
-        sortOrder: id,
-        parentId: null,
-        level: 1,
-      );
+    id: id,
+    name: name,
+    kind: 'expense',
+    icon: 'category',
+    sortOrder: id,
+    parentId: null,
+    level: 1,
+  );
 
   setUp(() {
     repo = _MockRepo();
-    when(() => repo.getTopLevelCategories('expense')).thenAnswer(
-      (_) async => [category(1, '餐饮'), category(2, '交通')],
-    );
+    when(
+      () => repo.getTopLevelCategories('expense'),
+    ).thenAnswer((_) async => [category(1, '餐饮'), category(2, '交通')]);
     when(() => repo.getSubCategories(any())).thenAnswer((_) async => const []);
-    when(() => repo.filterCategoriesForLedgerPicker(
-          any(),
-          ledgerId: any(named: 'ledgerId'),
-          topLevelOnly: any(named: 'topLevelOnly'),
-        )).thenAnswer((invocation) async =>
-        invocation.positionalArguments.first as List<db.Category>);
+    when(
+      () => repo.filterCategoriesForLedgerPicker(
+        any(),
+        ledgerId: any(named: 'ledgerId'),
+        topLevelOnly: any(named: 'topLevelOnly'),
+      ),
+    ).thenAnswer(
+      (invocation) async =>
+          invocation.positionalArguments.first as List<db.Category>,
+    );
   });
 
   Widget buildApp() {
     return ProviderScope(
-      overrides: [
-        repositoryProvider.overrideWithValue(repo),
-      ],
+      overrides: [repositoryProvider.overrideWithValue(repo)],
       child: MaterialApp(
         localizationsDelegates: const [
           AppLocalizations.delegate,
@@ -65,10 +67,7 @@ void main() {
           builder: (context) => Scaffold(
             body: Center(
               child: ElevatedButton(
-                onPressed: () => showCategorySelector(
-                  context,
-                  type: 'expense',
-                ),
+                onPressed: () => showCategorySelector(context, type: 'expense'),
                 child: const Text('open'),
               ),
             ),

@@ -74,7 +74,7 @@ void main() {
         happenedAt: DateTime(2026, 5, 1),
       );
 
-      // 新方案:moveToCloud 不再阻塞推送,翻 mode 后立即返回。
+      // moveToCloud 不阻塞推送,翻 mode 后立即返回。
       await engine.moveToCloud(id);
 
       final ledger = await readLedger(id);
@@ -87,7 +87,7 @@ void main() {
     });
 
     test('复用已有 syncId 不重发(避免破坏已建立的云端关联)', () async {
-      // 本地账本但已带 syncId(如曾上云后又搬回本地保留了 id 的历史数据)。
+      // 本地账本但已带 syncId(如上云后又搬回本地保留了 id 的数据)。
       final id = await repo.createLedger(name: '本地本', storageMode: 'local');
       const reusedSyncId = 'reused-sync-id-123';
       await repo.updateLedgerSyncId(id: id, syncId: reusedSyncId);

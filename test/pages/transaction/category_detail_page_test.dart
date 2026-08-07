@@ -3,7 +3,7 @@
 ///   1. 汇总卡片「总金额 / 平均金额」带当前账本本位币符号（CNY → ¥）；
 ///   2. 分类分组标题的支出小计带币种符号；
 ///   3. 日期分组标题的支出小计带币种符号（与主页 transaction_list 口径一致）；
-///   4. 跨账本模式已下线：仅统计当前账本，交易行不再渲染账本标签。
+///   4. 仅统计当前账本，交易行不渲染账本标签。
 ///
 /// 测试基建与 home_page_test 一致：mocktail 仿 BaseRepository + ProviderScope
 /// override；数据流均为立即发射的 Stream.value，分步 pump 替代 pumpAndSettle。
@@ -93,14 +93,18 @@ void main() {
     );
 
     // 每次调用返回全新 stream，避免单订阅流被二次 listen 抛异常。
-    when(() => repo.watchTransactionsByCategory(
-          any(),
-          ledgerId: any(named: 'ledgerId'),
-          includeSubCategories: any(named: 'includeSubCategories'),
-        )).thenAnswer(
-        (_) => Stream<List<db.Transaction>>.value([txFood, txTakeout]));
-    when(() => repo.watchCategoryWithSubs(any())).thenAnswer(
-        (_) => Stream<List<db.Category>>.value([catFood, catTakeout]));
+    when(
+      () => repo.watchTransactionsByCategory(
+        any(),
+        ledgerId: any(named: 'ledgerId'),
+        includeSubCategories: any(named: 'includeSubCategories'),
+      ),
+    ).thenAnswer(
+      (_) => Stream<List<db.Transaction>>.value([txFood, txTakeout]),
+    );
+    when(
+      () => repo.watchCategoryWithSubs(any()),
+    ).thenAnswer((_) => Stream<List<db.Category>>.value([catFood, catTakeout]));
   });
 
   /// 构建带 overrides 的测试宿主：固定当前账本（CNY）与 mock 仓库。
@@ -109,8 +113,9 @@ void main() {
       overrides: [
         repositoryProvider.overrideWithValue(repo),
         currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
-        currentLedgerProvider
-            .overrideWith((ref) => Stream<db.Ledger?>.value(testLedger)),
+        currentLedgerProvider.overrideWith(
+          (ref) => Stream<db.Ledger?>.value(testLedger),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -121,10 +126,7 @@ void main() {
         ],
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('zh'),
-        home: CategoryDetailPage(
-          categoryId: 10,
-          categoryName: '餐饮',
-        ),
+        home: CategoryDetailPage(categoryId: 10, categoryName: '餐饮'),
       ),
     );
   }
@@ -150,11 +152,17 @@ void main() {
     await prime(tester);
 
     // 一级分类组：组标题「支出 ¥ 10」+ 组内日期标题「支出 ¥ 10」。
-    expect(find.text('支出 ¥ 10'), findsNWidgets(2),
-        reason: '一级分类组标题与日期标题的支出小计都应带币种符号');
+    expect(
+      find.text('支出 ¥ 10'),
+      findsNWidgets(2),
+      reason: '一级分类组标题与日期标题的支出小计都应带币种符号',
+    );
     // 二级分类组：组标题「支出 ¥ 20」+ 组内日期标题「支出 ¥ 20」。
-    expect(find.text('支出 ¥ 20'), findsNWidgets(2),
-        reason: '二级分类组标题与日期标题的支出小计都应带币种符号');
+    expect(
+      find.text('支出 ¥ 20'),
+      findsNWidgets(2),
+      reason: '二级分类组标题与日期标题的支出小计都应带币种符号',
+    );
   });
 
   testWidgets('仅统计当前账本：交易行不渲染账本标签，二级分类显示全名', (tester) async {
@@ -162,12 +170,14 @@ void main() {
     await prime(tester);
 
     // 跨账本模式已下线：页面任何位置都不应出现账本名标签。
-    expect(find.text('测试账本'), findsNothing,
-        reason: '仅统计当前账本，交易行不应渲染账本标签');
+    expect(find.text('测试账本'), findsNothing, reason: '仅统计当前账本，交易行不应渲染账本标签');
 
     // 二级分类组标题与交易行均显示「父 / 子」全名。
-    expect(find.text('餐饮 / 外卖'), findsNWidgets(2),
-        reason: '二级分类应在组标题与交易行显示「父 / 子」全名');
+    expect(
+      find.text('餐饮 / 外卖'),
+      findsNWidgets(2),
+      reason: '二级分类应在组标题与交易行显示「父 / 子」全名',
+    );
 
     // 交易行金额带原币种符号（支出为负号 + 符号后带空格）。
     expect(find.text('- ¥ 10'), findsOneWidget, reason: '一级分类交易行金额渲染');

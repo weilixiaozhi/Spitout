@@ -16,12 +16,11 @@ import '../../helpers/test_isolation.dart';
 
 /// [LedgerEditPage] 协作者只读的 widget 测试。
 ///
-/// 设计意图：本次改动让「共享账本 + 非拥有者」进入只读模式——
-///   ① 名称标题显示为「账本名称」并保持高亮加粗，下方仅展示账本名称文本（不再渲染输入框）；
+/// 设计意图：「共享账本 + 非拥有者」进入只读模式——
+///   ① 名称标题显示为「账本名称」并保持高亮加粗，下方仅展示账本名称文本（不渲染输入框）；
 ///   ② 币种 / 月起始日两个 ListTile 置灰且不可点击（enabled=false 灰化文字与图标），且不显示右箭头；
 ///   ③ 底部保存按钮不渲染，从源头杜绝推送账本元信息变更。
-/// 本测试同时验证 Owner 与本地账本不受该只读逻辑影响（仍可编辑、显示保存按钮），
-/// 避免「一刀切」误伤合法用户。
+/// 本测试同时验证 Owner 与本地账本不受该只读逻辑影响（仍可编辑、显示保存按钮）。
 void main() {
   late SpitoutDatabase db;
   late LocalRepository repo;
@@ -36,7 +35,9 @@ void main() {
   tearDown(() => db.close());
 
   Future<LedgerDisplayItem> seed(bool isShared, String myRole) async {
-    final localId = await db.into(db.ledgers).insert(
+    final localId = await db
+        .into(db.ledgers)
+        .insert(
           LedgersCompanion.insert(
             name: 'L',
             currency: const Value('CNY'),
@@ -58,7 +59,10 @@ void main() {
     );
   }
 
-  Future<AppLocalizations> pump(WidgetTester tester, LedgerDisplayItem ledger) async {
+  Future<AppLocalizations> pump(
+    WidgetTester tester,
+    LedgerDisplayItem ledger,
+  ) async {
     final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
     await tester.pumpWidget(
       MaterialApp(
@@ -68,13 +72,15 @@ void main() {
         home: ProviderScope(
           overrides: [
             repositoryProvider.overrideWith((ref) => repo),
-            currentLedgerProvider
-                .overrideWith((ref) => Stream<Ledger?>.value(null)),
-            activeCloudConfigProvider.overrideWith((ref) async =>
-                const CloudServiceConfig(
-                  type: CloudBackendType.local,
-                  name: 'Local',
-                )),
+            currentLedgerProvider.overrideWith(
+              (ref) => Stream<Ledger?>.value(null),
+            ),
+            activeCloudConfigProvider.overrideWith(
+              (ref) async => const CloudServiceConfig(
+                type: CloudBackendType.local,
+                name: 'Local',
+              ),
+            ),
           ],
           child: LedgerEditPage(ledger: ledger),
         ),
@@ -87,14 +93,13 @@ void main() {
     return l10n;
   }
 
-  testWidgets('协作者只读:名称仅展示文本 + 币种/起始日置灰无箭头 + 隐藏保存按钮',
-      (tester) async {
+  testWidgets('协作者只读:名称仅展示文本 + 币种/起始日置灰无箭头 + 隐藏保存按钮', (tester) async {
     final ledger = await seed(true, 'editor');
     final l10n = await pump(tester, ledger);
 
     // ① 名称标题为「账本名称」并高亮（titleMedium 默认高亮加粗）
     expect(find.text(l10n.ledgerNameLabel), findsOneWidget);
-    // ① 协作者只读：不再渲染输入框，仅以纯文本展示账本名称
+    // ① 协作者只读：不渲染输入框，仅以纯文本展示账本名称
     // 注意：AppBar 标题同样展示账本名，故限定在 Card 内的 Text 来断言正文文本
     expect(
       find.ancestor(of: find.text('L'), matching: find.byType(Card)),
@@ -105,7 +110,7 @@ void main() {
     expect(find.text(l10n.commonSave), findsNothing);
     // ② 币种 ListTile 置灰且不可点击、无右箭头
     // 注意:「主币种」标签(l10n.ledgerBaseCurrencyLabel)已上移为区块标题(在 Card 外),
-    // 不再位于 ListTile 内部;ListTile 内实际渲染的是币种值(由 currencyFlagLabel 输出
+    // 不位于 ListTile 内部;ListTile 内实际渲染的是币种值(由 currencyFlagLabel 输出
     // 形如「CNY (¥)」),故用包含币种代码的文本定位 ListTile。
     final currencyTile = tester.widget<ListTile>(
       find.ancestor(

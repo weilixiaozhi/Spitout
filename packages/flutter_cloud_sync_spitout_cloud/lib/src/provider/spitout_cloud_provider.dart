@@ -759,7 +759,7 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
   /// 退出共享账本(协作者主动退出)。
   ///
   /// 走 `DELETE /members/self` 语义:先 listMembers 找到自己(isSelf 标记),
-  /// 再 removeMember(self)。云端移除成员后 server 不再返回该账本,
+  /// 再 removeMember(self)。云端移除成员后 server 不返回该账本,
   /// 因此下次 sync 不会再把它重新插回本地。
   @override
   Future<void> leaveLedger({required String ledgerId}) async {
@@ -779,7 +779,7 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
     }
     // 自己已不在成员列表(被踢 / 已退出)→ 幂等快路径,无需再 remove。
     if (selfId == null) return;
-    // 走 DELETE /members/self:云端移除成员 + 不再返回该账本。
+    // 走 DELETE /members/self:云端移除成员 + 不返回该账本。
     return storage.removeMember(ledgerId: ledgerId, userId: selfId);
   }
 

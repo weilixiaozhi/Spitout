@@ -109,7 +109,7 @@ LocalBackupFile stubBackupFile(
 /// 挂载页面并 override 备份服务为桩服务。
 ///
 /// 桩不碰磁盘，FutureBuilder 的 future 在 fake async zone 中立即完成，
-/// pumpAndSettle 可正常收敛，不再需要 runAsync 绕行。
+/// pumpAndSettle 可正常收敛。
 Future<void> _pumpPage(
   WidgetTester tester, {
   required LocalBackupService service,
@@ -258,7 +258,7 @@ void main() {
     await tester.tap(find.text('看不到旧版本备份？'));
     await tester.pumpAndSettle();
 
-    // 已开启：主按钮变为「已开启」，不再出现「去开启」
+    // 已开启：主按钮为「已开启」，不出现「去开启」
     expect(find.text('已开启'), findsOneWidget);
     expect(find.text('去开启'), findsNothing);
 

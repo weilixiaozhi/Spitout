@@ -28,10 +28,11 @@ abstract final class SpitoutColors {
   static const Color lightDisabledControl = Color(0xFFE5E7EB);
   static const Color lightLink = Color(0xFF3B82F6);
 
-  // ── 记账键盘（亮色）──
-  static const Color lightKeypadBackground = Color(0xFFDEE0E7); // 键盘容器浅灰
-  static const Color lightKeyDigit = Color(0xFFFFFFFF); // 数字/运算符白色色块
-  static const Color lightKeyOther = Color(0xFFC0C3CC); // 日期/删除/完成等深灰
+  // ── 记账键盘（亮色，取自设计规范）──
+  static const Color lightKeypadBackground =
+      lightSurfaceSecondary; // 键盘容器 = 次级背景
+  static const Color lightKeyDigit = lightSurface; // 数字/运算符白色色块 = 卡片背景
+  static const Color lightKeyOther = lightDisabledBg; // 删除/完成等深灰 = 禁用按钮背景
 
   // ── 暗色（shadcn/ui dark）──
   static const Color darkScaffold = Color(0xFF111827);
@@ -46,10 +47,10 @@ abstract final class SpitoutColors {
   static const Color darkDisabledControl = Color(0xFF3C3C3E);
   static const Color darkLink = Color(0xFF60A5FA);
 
-  // ── 记账键盘（暗色，与亮色亮度层级一致）──
-  static const Color darkKeypadBackground = Color(0xFF151E2B); // 比 sheet 更深的灰
-  static const Color darkKeyDigit = Color(0xFF374151); // 数字/运算符浅灰块
-  static const Color darkKeyOther = Color(0xFF0D1522); // 日期/删除/完成等深色块
+  // ── 记账键盘（暗色，取自设计规范，与亮色亮度层级一致）──
+  static const Color darkKeypadBackground = darkSurface; // 键盘容器 = 卡片背景
+  static const Color darkKeyDigit = darkSurfaceSecondary; // 数字/运算符浅灰块 = 次级背景
+  static const Color darkKeyOther = darkScaffold; // 删除/完成等深色块 = 页面背景
 
   // ── 语义色 ──
   static const Color successLight = Color(0xFF22C55E);
@@ -150,23 +151,23 @@ class SpitoutTokens {
   static Color surfaceKey(BuildContext context) =>
       isDark(context) ? SpitoutColors.darkSurface : SpitoutColors.lightSurface;
 
-  /// 记账键盘容器背景色
-  /// - 亮色模式：lightKeypadBackground（浅灰 #DEE0E7）
-  /// - 暗黑模式：darkKeypadBackground（比 sheet 更深的灰）
+  /// 记账键盘容器背景色（取自设计规范）
+  /// - 亮色模式：surfaceSecondary（#EDF2F7）
+  /// - 暗黑模式：darkSurface（#1F2937）
   static Color keypadBackground(BuildContext context) => isDark(context)
       ? SpitoutColors.darkKeypadBackground
       : SpitoutColors.lightKeypadBackground;
 
-  /// 记账键盘数字（0-9）/运算符（+-×÷）按键背景色
-  /// - 亮色模式：白色色块
-  /// - 暗黑模式：浅灰块
+  /// 记账键盘数字（0-9）/运算符（+-×÷）按键背景色（取自设计规范 surfaceKey）
+  /// - 亮色模式：白色色块（lightSurface）
+  /// - 暗黑模式：浅灰块（darkSurfaceSecondary）
   static Color keyDigit(BuildContext context) => isDark(context)
       ? SpitoutColors.darkKeyDigit
       : SpitoutColors.lightKeyDigit;
 
-  /// 记账键盘其他按键背景色（日期 / 删除 / 完成等）
-  /// - 亮色模式：lightKeyOther（#C0C3CC）
-  /// - 暗黑模式：darkKeyOther（深色块）
+  /// 记账键盘其他按键背景色（删除等，取自设计规范）
+  /// - 亮色模式：lightDisabledBg（#E0E0E0）
+  /// - 暗黑模式：darkScaffold（#111827）
   static Color keyOther(BuildContext context) => isDark(context)
       ? SpitoutColors.darkKeyOther
       : SpitoutColors.lightKeyOther;
@@ -369,7 +370,7 @@ class SpitoutTokens {
 
   /// 卡片外边框颜色
   /// - 亮色模式：transparent（使用阴影）
-  /// - 暗黑模式：transparent（去掉边框）
+  /// - 暗黑模式：transparent（无边框）
   static Color cardOuterBorderColor(BuildContext context) => Colors.transparent;
 
   /// 卡片外边框宽度
@@ -379,14 +380,14 @@ class SpitoutTokens {
 
   /// 卡片内部分割线颜色
   /// - 亮色模式：rgba(0,0,0,0.06)
-  /// - 暗黑模式：transparent（去掉分割线）
+  /// - 暗黑模式：transparent（无分割线）
   static Color cardInnerDividerColor(BuildContext context) => isDark(context)
       ? Colors.transparent
       : Colors.black.withValues(alpha: 0.06);
 
   /// 卡片内部分割线高度
   /// - 亮色模式：1
-  /// - 暗黑模式：0（去掉分割线）
+  /// - 暗黑模式：0（无分割线）
   static double cardInnerDividerHeight(BuildContext context) =>
       isDark(context) ? 0 : 1;
 

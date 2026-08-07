@@ -19,7 +19,8 @@ import 'package:spitout/data/db.dart' show LedgerVirtualUser;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/shared_ledger_providers.dart';
-import 'package:spitout/providers/providers.dart' show ledgerVirtualUsersProvider;
+import 'package:spitout/providers/providers.dart'
+    show ledgerVirtualUsersProvider;
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/member_management_section.dart';
 import 'package:spitout/widgets/text_state_switch.dart';
@@ -32,14 +33,13 @@ SpitoutCloudLedgerMember _member({
   required String userId,
   required String role,
   required bool isSelf,
-}) =>
-    SpitoutCloudLedgerMember(
-      userId: userId,
-      account: '$userId@example.com',
-      role: role,
-      joinedAt: DateTime.utc(2026, 1, 1),
-      isSelf: isSelf,
-    );
+}) => SpitoutCloudLedgerMember(
+  userId: userId,
+  account: '$userId@example.com',
+  role: role,
+  joinedAt: DateTime.utc(2026, 1, 1),
+  isSelf: isSelf,
+);
 
 /// 挂载 MemberManagementSection:
 /// - ledgerMembersProvider 直接注入桩成员列表,避免触网;
@@ -82,12 +82,14 @@ Future<void> _pump(
 }
 
 void main() {
-  testWidgets('Owner 可见内嵌邀请模块:默认收起 + 点击展开后显示表单 + 无跳转箭头',
-      (tester) async {
-    await _pump(tester, members: [
-      _member(userId: 'u1', role: 'owner', isSelf: true),
-      _member(userId: 'u2', role: 'editor', isSelf: false),
-    ]);
+  testWidgets('Owner 可见内嵌邀请模块:默认收起 + 点击展开后显示表单 + 无跳转箭头', (tester) async {
+    await _pump(
+      tester,
+      members: [
+        _member(userId: 'u1', role: 'owner', isSelf: true),
+        _member(userId: 'u2', role: 'editor', isSelf: false),
+      ],
+    );
 
     // 默认收起:模块标题沿用「邀请新成员」文案,表单不可见
     expect(find.text('邀请新成员'), findsOneWidget);
@@ -106,16 +108,19 @@ void main() {
     expect(find.text('生成邀请码'), findsOneWidget);
     // 1 个角色 chip + 3 个有效期 chip
     expect(find.byType(ChoiceChip), findsNWidgets(4));
-    // 展开态箭头朝下(chevronDown),不再有朝右箭头
+    // 展开态箭头朝下(chevronDown),无朝右箭头
     expect(find.byIcon(AppIcons.chevronDown), findsOneWidget);
     expect(find.byIcon(AppIcons.chevronRight), findsNothing);
   });
 
   testWidgets('协作者不可见邀请模块', (tester) async {
-    await _pump(tester, members: [
-      _member(userId: 'u1', role: 'owner', isSelf: false),
-      _member(userId: 'u2', role: 'editor', isSelf: true),
-    ]);
+    await _pump(
+      tester,
+      members: [
+        _member(userId: 'u1', role: 'owner', isSelf: false),
+        _member(userId: 'u2', role: 'editor', isSelf: true),
+      ],
+    );
 
     expect(find.text('邀请新成员'), findsNothing);
     expect(find.text('生成邀请码'), findsNothing);
@@ -123,9 +128,10 @@ void main() {
   });
 
   testWidgets('云端未配置时点「生成邀请码」内联显示错误', (tester) async {
-    await _pump(tester, members: [
-      _member(userId: 'u1', role: 'owner', isSelf: true),
-    ]);
+    await _pump(
+      tester,
+      members: [_member(userId: 'u1', role: 'owner', isSelf: true)],
+    );
 
     // 默认收起,先点击标题展开表单
     await tester.tap(find.text('邀请新成员'));
@@ -136,26 +142,28 @@ void main() {
 
     // createInviteAndRefresh 在 cloud == null 时抛 StateError,
     // 错误必须内联展示在模块内,而不是静默或崩溃
-    expect(
-      find.textContaining('Spitout Cloud not configured'),
-      findsOneWidget,
-    );
+    expect(find.textContaining('Spitout Cloud not configured'), findsOneWidget);
   });
 
   testWidgets('发邀请前分类上云重试仍失败：内联显示本地化友好提示', (tester) async {
     // 防线 A：pushUserGlobalEntities 连续失败（含重试一次）→ 阻断邀请,
     // 错误对用户必须可读（本地化文案），而不是原始异常堆栈。
     final engine = _MockSyncEngine();
-    when(() => engine.pushUserGlobalEntities())
-        .thenAnswer((_) async => throw Exception('push boom'));
+    when(
+      () => engine.pushUserGlobalEntities(),
+    ).thenAnswer((_) async => throw Exception('push boom'));
 
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
-          ledgerMembersProvider.overrideWith((ref, ledgerId) async =>
-              [_member(userId: 'u1', role: 'owner', isSelf: true)]),
-          spitoutCloudProviderInstance
-              .overrideWith((ref) async => FakeSpitoutCloudProvider()),
+          ledgerMembersProvider.overrideWith(
+            (ref, ledgerId) async => [
+              _member(userId: 'u1', role: 'owner', isSelf: true),
+            ],
+          ),
+          spitoutCloudProviderInstance.overrideWith(
+            (ref) async => FakeSpitoutCloudProvider(),
+          ),
           syncEngineProvider.overrideWith((ref, arg) => engine),
         ],
         child: MaterialApp(
@@ -252,12 +260,12 @@ void main() {
       ProviderScope(
         overrides: [
           ledgerVirtualUsersProvider.overrideWith(
-            (ref, ledgerId) =>
-                Stream<List<LedgerVirtualUser>>.value([vu]),
+            (ref, ledgerId) => Stream<List<LedgerVirtualUser>>.value([vu]),
           ),
           ledgerMembersProvider.overrideWith(
-            (ref, ledgerId) async =>
-                [_member(userId: 'u1', role: 'owner', isSelf: true)],
+            (ref, ledgerId) async => [
+              _member(userId: 'u1', role: 'owner', isSelf: true),
+            ],
           ),
           spitoutCloudProviderInstance.overrideWith((ref) async => null),
         ],
@@ -295,12 +303,11 @@ void main() {
     await tester.pumpAndSettle();
 
     final field = tester.widget<TextField>(find.byType(TextField));
-    expect(field.controller!.text, '新名字',
-        reason: '父级重建后行内编辑输入不应丢失');
+    expect(field.controller!.text, '新名字', reason: '父级重建后行内编辑输入不应丢失');
   });
 
   testWidgets('AA 分摊开关位于成员管理标题行(文字+开关)', (tester) async {
-    // AA 开关不再作为卡片内 SwitchListTile,而是并入标题行(文字+紧凑 Switch)。
+    // AA 开关并入标题行(文字+紧凑 Switch),不在卡片内单独成行。
     await tester.pumpWidget(
       ProviderScope(
         overrides: [
@@ -334,9 +341,9 @@ void main() {
     // (aaEnabled=false 显示「关闭AA分摊」),无独立的"AA 分摊"标题文本。
     expect(find.text('成员管理'), findsOneWidget);
     expect(find.text('关闭AA分摊'), findsOneWidget);
-    // 开关已是轨道内带状态文案的 TextStateSwitch,不再是系统 Switch
+    // 开关是轨道内带状态文案的 TextStateSwitch,非系统 Switch
     expect(find.byType(TextStateSwitch), findsOneWidget);
-    // 不再使用 SwitchListTile(卡片内独立一行)
+    // 不使用 SwitchListTile(卡片内独立一行)
     expect(find.byType(SwitchListTile), findsNothing);
   });
 }

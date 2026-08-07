@@ -1,8 +1,7 @@
 // 记账 sheet 内「编辑分类」入口的导航栈行为组件测试
 //
-// 背景：导航环重构后，sheet 内「编辑分类」改为 pushNamed(Routes.categoryManage)，
-// 不再做任何栈复用 / popUntil。本测试是本轮重构唯一真正防回归的用例，
-// 核心验证 D1/D2 已冻结决策：
+// sheet 内「编辑分类」通过 pushNamed(Routes.categoryManage) 打开新页，
+// 不做任何栈复用 / popUntil，核心验证：
 //   1. 点「编辑分类」→ 新 manage 页 push，sheet 仍留在栈上（不被连带 pop）；
 //   2. 已输入的金额在返回后完整保留（记账现场不丢）。
 //
@@ -24,6 +23,7 @@ import 'package:spitout/providers/category/category_picker_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/currency/currency_providers.dart';
 import 'package:spitout/router.dart';
+import 'package:spitout/theme/colors.dart';
 import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/widgets/amount_expression_bar.dart';
 import 'package:spitout/widgets/amount_keypad.dart';
@@ -158,7 +158,7 @@ void main() {
     expect(amountText('12'), findsOneWidget, reason: '返回后已输入的金额应保留');
   });
 
-  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 10、间距 2、内边距 10/40、无阴影', (tester) async {
+  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 5、间距 2、内边距 10/40、无阴影', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('open-sheet'));
     await tester.pumpAndSettle();
@@ -174,7 +174,7 @@ void main() {
     expect(
       tester.getSize(find.byType(NoteInputRow)).height,
       closeTo(h - KeypadLayout.noteRowDelta, 0.5),
-      reason: '备注行永远比其余 5 行矮 10px',
+      reason: '备注行永远比其余 5 行矮 5px',
     );
 
     // 相邻两行纵向间距全局 2px：备注 ↔ 金额栏、金额栏 ↔ 键盘
@@ -186,14 +186,22 @@ void main() {
     final keypadTop = tester.getTopLeft(find.byType(AmountKeypad)).dy;
     expect(keypadTop - barBottom, KeypadLayout.rowGap, reason: '金额栏与键盘间距应为 2');
 
-    // 分类区固定保底 100
+    // 键盘区高度按可用高度占比计算：测试面 600 高 → 固定 40% = 240px
+    final keyboardContainer = find.byWidgetPredicate(
+      (w) => w is Container && w.color == SpitoutColors.lightKeypadBackground,
+    );
     expect(
-      tester.getSize(find.byType(CategoryGridSection)).height,
-      closeTo(100, 0.5),
-      reason: '分类区保底 100px',
+      tester.getSize(keyboardContainer).height,
+      240,
+      reason: '键盘区高度应为可用高度 40%',
     );
 
-    // 底部固定区容器内边距：上 10 / 左 10 / 右 10 / 下 40
+    // 分类区吃键盘区之外的剩余空间（保底 100px）
+    final categoryH = tester.getSize(find.byType(CategoryGridSection)).height;
+    expect(categoryH, greaterThan(200), reason: '分类区应吃掉剩余空间，而非停在保底 100px');
+    expect(categoryH, lessThan(400), reason: '分类区不应再被键盘区挤到只剩一行');
+
+    // 底部键盘容器内边距：上 10 / 左 10 / 右 10 / 下 40
     final bottomPadding = find.byWidgetPredicate(
       (w) =>
           w is Padding &&
@@ -201,7 +209,7 @@ void main() {
     );
     expect(bottomPadding, findsWidgets, reason: '底部键盘容器内边距应为上 10 / 下 40');
 
-    // 去掉向上阴影
+    // 无向上阴影
     final shadowed = find.byWidgetPredicate(
       (w) =>
           w is Container &&

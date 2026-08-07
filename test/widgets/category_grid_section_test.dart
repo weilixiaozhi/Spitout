@@ -2,7 +2,7 @@
 ///
 /// 缓存化改造后的核心行为：
 ///   1. 分类树来自 categoryPickerTreeProvider，数据就绪即同步渲染
-///      （不再有"空白 → 出现"的多帧跳变）；
+///      （无"空白 → 出现"的多帧跳变）；
 ///   2. 新建模式：首个数据帧后默认选中第一个一级分类并自动展开其子分类；
 ///   3. 点击一级分类：上报选中，含子分类的展开、无子分类的收起；
 ///   4. 编辑模式（initialSelectedId 为二级分类）：首帧即展开其父分类；
@@ -54,18 +54,18 @@ void main() {
 
   /// 构造测试账本（只填角色/共享标记关心字段，其余给固定值）。
   Ledger ledger({required bool isShared, required String myRole}) => Ledger(
-        id: 1,
-        name: '测试账本',
-        currency: 'CNY',
-        type: 'normal',
-        createdAt: DateTime.utc(2026, 1, 1),
-        myRole: myRole,
-        memberCount: 2,
-        isShared: isShared,
-        monthStartDay: 1,
-        storageMode: 'cloud',
-        aaEnabled: false,
-      );
+    id: 1,
+    name: '测试账本',
+    currency: 'CNY',
+    type: 'normal',
+    createdAt: DateTime.utc(2026, 1, 1),
+    myRole: myRole,
+    memberCount: 2,
+    isShared: isShared,
+    monthStartDay: 1,
+    storageMode: 'cloud',
+    aaEnabled: false,
+  );
 
   /// 分类管理页路由标记：跳转成功即渲染该文本。
   Widget manageMarker(BuildContext context) =>
@@ -84,10 +84,12 @@ void main() {
   }) {
     return ProviderScope(
       overrides: [
-        categoryPickerTreeProvider('expense')
-            .overrideWith((ref) => Stream.value(injected)),
-        currentLedgerProvider
-            .overrideWith((ref) => Stream<Ledger?>.value(ledger)),
+        categoryPickerTreeProvider(
+          'expense',
+        ).overrideWith((ref) => Stream.value(injected)),
+        currentLedgerProvider.overrideWith(
+          (ref) => Stream<Ledger?>.value(ledger),
+        ),
       ],
       child: MaterialApp(
         localizationsDelegates: const [
@@ -110,13 +112,11 @@ void main() {
     );
   }
 
-  testWidgets('数据就绪即渲染网格；新建模式默认选中第一个分类并展开其子分类',
-      (tester) async {
+  testWidgets('数据就绪即渲染网格；新建模式默认选中第一个分类并展开其子分类', (tester) async {
     final selected = <Category>[];
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      onCategorySelected: selected.add,
-    ));
+    await tester.pumpWidget(
+      buildHarness(injected: tree, onCategorySelected: selected.add),
+    );
     // Stream.value 首个事件 + postFrame 默认选中，各需一帧
     await tester.pump();
     await tester.pump();
@@ -130,10 +130,9 @@ void main() {
 
   testWidgets('点击无子分类的一级分类：上报选中并收起子分类卡片', (tester) async {
     final selected = <Category>[];
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      onCategorySelected: selected.add,
-    ));
+    await tester.pumpWidget(
+      buildHarness(injected: tree, onCategorySelected: selected.add),
+    );
     await tester.pump();
     await tester.pump();
 
@@ -146,11 +145,13 @@ void main() {
   });
 
   testWidgets('编辑模式：初始二级分类首帧即展开其父分类', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      initialSelectedId: 11,
-      onCategorySelected: (_) {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        injected: tree,
+        initialSelectedId: 11,
+        onCategorySelected: (_) {},
+      ),
+    );
     await tester.pump();
 
     // 父分类子卡片展开，二级分类可见（无需再点父分类）
@@ -158,29 +159,32 @@ void main() {
   });
 
   testWidgets('空树：显示空态与编辑分类入口', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      injected: CategoryPickerTree.empty,
-      onCategorySelected: (_) {},
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        injected: CategoryPickerTree.empty,
+        onCategorySelected: (_) {},
+      ),
+    );
     await tester.pump();
 
-    final l10n =
-        await AppLocalizations.delegate.load(const Locale('zh'));
+    final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
     expect(find.text(l10n.categoryEmpty), findsOneWidget);
     expect(find.text(l10n.txEditCategory), findsOneWidget);
   });
 
   testWidgets('共享账本 Editor：编辑入口置灰，文案只读提示，点击不跳转', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      onCategorySelected: (_) {},
-      ledger: ledger(isShared: true, myRole: 'editor'),
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        injected: tree,
+        onCategorySelected: (_) {},
+        ledger: ledger(isShared: true, myRole: 'editor'),
+      ),
+    );
     await tester.pump();
     await tester.pump();
 
     final l10n = await AppLocalizations.delegate.load(const Locale('zh'));
-    // 文案切换为只读提示（原「编辑分类」不再出现）
+    // 文案切换为只读提示（「编辑分类」入口不出现）
     expect(find.text(l10n.txEditCategoryReadOnly), findsOneWidget);
     expect(find.text(l10n.txEditCategory), findsNothing);
 
@@ -191,11 +195,13 @@ void main() {
   });
 
   testWidgets('共享账本 Owner：编辑入口保持可点，点击跳转分类管理页', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      onCategorySelected: (_) {},
-      ledger: ledger(isShared: true, myRole: 'owner'),
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        injected: tree,
+        onCategorySelected: (_) {},
+        ledger: ledger(isShared: true, myRole: 'owner'),
+      ),
+    );
     await tester.pump();
     await tester.pump();
 
@@ -208,11 +214,13 @@ void main() {
   });
 
   testWidgets('个人账本：编辑入口保持可点，文案为编辑分类', (tester) async {
-    await tester.pumpWidget(buildHarness(
-      injected: tree,
-      onCategorySelected: (_) {},
-      ledger: ledger(isShared: false, myRole: 'owner'),
-    ));
+    await tester.pumpWidget(
+      buildHarness(
+        injected: tree,
+        onCategorySelected: (_) {},
+        ledger: ledger(isShared: false, myRole: 'owner'),
+      ),
+    );
     await tester.pump();
     await tester.pump();
 

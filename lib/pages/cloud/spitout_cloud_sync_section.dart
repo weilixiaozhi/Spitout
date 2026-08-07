@@ -242,7 +242,10 @@ class SpitoutCloudSyncSectionState
         } catch (e, st) {
           logger.error('CloudSyncSection', 'refresh: syncAccount 失败', e, st);
           if (mounted) {
-            showToast(context, AppLocalizations.of(context).commonOperationFailed);
+            showToast(
+              context,
+              AppLocalizations.of(context).commonOperationFailed,
+            );
           }
         } finally {
           if (mounted) setState(() => _autoSyncing = false);
@@ -397,7 +400,7 @@ class SpitoutCloudSyncSectionState
   Widget _buildSyncHelpSection(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     return Theme(
-      // 去掉 ExpansionTile 默认的上下分割线,贴合 SectionCard 风格
+      // 不显示 ExpansionTile 默认的上下分割线,贴合 SectionCard 风格
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
@@ -607,7 +610,7 @@ class SpitoutCloudSyncSectionState
         // 全部账本分组:交易数 + 分类数。
         _groupHeader(context, l10n.syncHealthGroupAll),
         _pairRow(context, l10n.syncHealthRowTx, effective.totalTx),
-        // 分类行不带 icon(用户要求去掉同步状态分类图标),保持纯文本逐项计数。
+        // 分类行不带 icon（同步状态分类仅纯文本逐项计数）。
         _pairRow(context, l10n.syncHealthRowCategory, effective.categories),
         // 未推送变更。
         _unpushedRow(context, effective.unpushedChanges),
