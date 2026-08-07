@@ -31,8 +31,7 @@ abstract final class SpitoutColors {
   // ── 记账键盘（亮色，取自设计规范）──
   static const Color lightKeypadBackground =
       lightSurfaceSecondary; // 键盘容器 = 次级背景
-  static const Color lightKeyDigit = lightSurface; // 数字/运算符白色色块 = 卡片背景
-  static const Color lightKeyOther = lightDisabledBg; // 删除/完成等深灰 = 禁用按钮背景
+  static const Color lightKeyDigit = lightSurface; // 数字/运算符/删除等基础键 = 卡片背景
 
   // ── 暗色（shadcn/ui dark）──
   static const Color darkScaffold = Color(0xFF111827);
@@ -49,8 +48,7 @@ abstract final class SpitoutColors {
 
   // ── 记账键盘（暗色，取自设计规范，与亮色亮度层级一致）──
   static const Color darkKeypadBackground = darkSurface; // 键盘容器 = 卡片背景
-  static const Color darkKeyDigit = darkSurfaceSecondary; // 数字/运算符浅灰块 = 次级背景
-  static const Color darkKeyOther = darkScaffold; // 删除/完成等深色块 = 页面背景
+  static const Color darkKeyDigit = darkSurfaceSecondary; // 数字/运算符/删除等基础键 = 次级背景
 
   // ── 语义色 ──
   static const Color successLight = Color(0xFF22C55E);
@@ -164,13 +162,6 @@ class SpitoutTokens {
   static Color keyDigit(BuildContext context) => isDark(context)
       ? SpitoutColors.darkKeyDigit
       : SpitoutColors.lightKeyDigit;
-
-  /// 记账键盘其他按键背景色（删除等，取自设计规范）
-  /// - 亮色模式：lightDisabledBg（#E0E0E0）
-  /// - 暗黑模式：darkScaffold（#111827）
-  static Color keyOther(BuildContext context) => isDark(context)
-      ? SpitoutColors.darkKeyOther
-      : SpitoutColors.lightKeyOther;
 
   /// 键盘次级按钮背景色（日期、+/-等）
   /// - 亮色模式：lightSurfaceSecondary

@@ -320,7 +320,8 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       onCancel: widget.onRollback,
       // 长按 560ms：清空（触觉由面板统一触发）
       onLongPress: widget.onClearAmount,
-      backgroundColor: SpitoutTokens.keyOther(context),
+      // 与数字键同底色:全局键盘仅确认键异色
+      backgroundColor: SpitoutTokens.keyDigit(context),
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         key: const ValueKey('amount_delete_key'),

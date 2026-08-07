@@ -120,13 +120,13 @@ void main() {
       BorderRadius.circular(KeypadLayout.keyRadius),
     );
 
-    // 删除键背景与圆角
+    // 删除键背景与圆角：与数字键同底色（全局仅确认按钮异色）
     final deleteKey = find.ancestor(
       of: find.byKey(const ValueKey('amount_delete_key')),
       matching: find.byType(PressKey),
     );
     final delete = tester.widget<PressKey>(deleteKey);
-    expect(delete.backgroundColor, SpitoutColors.lightKeyOther);
+    expect(delete.backgroundColor, SpitoutColors.lightKeyDigit);
     expect(delete.borderRadius, BorderRadius.circular(KeypadLayout.keyRadius));
 
     // 币种框 ↔ 金额区水平键距 4px
