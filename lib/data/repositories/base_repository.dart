@@ -67,4 +67,15 @@ abstract class BaseRepository
     required RecurringTransaction recurring,
     required DateTime happenedAt,
   });
+
+  /// 回填交易作者字段(createdByUserId / lastEditedByUserId / paidByUserId)。
+  ///
+  /// 本地写入路径(addTransaction / updateTransaction)无法感知当前操作者,
+  /// 由 UI 层写完交易后调用本方法补齐作者字段。详见
+  /// [LocalTransactionRepository.markTxAuthor] 的兜底规则。
+  Future<void> markTxAuthor({
+    required int txId,
+    required String userId,
+    required bool isCreate,
+  });
 }

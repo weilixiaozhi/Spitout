@@ -101,6 +101,21 @@ void main() {
       expect(result.pulled, 0);
     });
 
+    test('pullIncremental 对本地账本直接返回 0 不发起云端拉取', () async {
+      final id = await repo.createLedger(name: 'local', storageMode: 'local');
+      final pulled = await engine.pullIncremental(ledgerId: id);
+      expect(pulled, 0,
+          reason: '本地账本下拉刷新不得触发云端增量拉取');
+    });
+
+    test('pullIncrementalWithHeal 对本地账本直接返回空 outcome', () async {
+      final id = await repo.createLedger(name: 'local', storageMode: 'local');
+      final outcome = await engine.pullIncrementalWithHeal(ledgerId: id);
+      expect(outcome.incremental, 0);
+      expect(outcome.didHeal, isFalse);
+      expect(outcome.gapRemaining, isFalse);
+    });
+
     test('fullPush 对本地账本是 no-op(不抛异常)', () async {
       final id = await repo.createLedger(name: 'local', storageMode: 'local');
       // 本地账本不应触发任何推送;这里只验证不抛异常、安全跳过。

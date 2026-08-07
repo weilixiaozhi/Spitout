@@ -798,6 +798,8 @@ void main() {
     });
 
     testWidgets('云端账本：同步成功 → 指示器显示"已同步云端账本数据"且无 toast', (tester) async {
+      // 明确模拟云端账本：storage_mode=cloud + syncId，确保首页走云端刷新分支。
+      testLedger = testLedger.copyWith(storageMode: 'cloud');
       final mock = _MockSyncService();
       when(
         () => mock.pullIncrementalWithHeal(ledgerId: any(named: 'ledgerId')),
@@ -826,6 +828,7 @@ void main() {
     });
 
     testWidgets('云端账本：同步失败但本地已刷新 → 指示器显示降级文案且无 toast', (tester) async {
+      testLedger = testLedger.copyWith(storageMode: 'cloud');
       final mock = _MockSyncService();
       when(
         () => mock.pullIncrementalWithHeal(ledgerId: any(named: 'ledgerId')),
@@ -916,6 +919,7 @@ void main() {
     });
 
     testWidgets('收起完成后结果文案归零：下次下拉即从"正在同步"开始，不残留上次结果', (tester) async {
+      testLedger = testLedger.copyWith(storageMode: 'cloud');
       final mock = _MockSyncService();
       when(
         () => mock.pullIncrementalWithHeal(ledgerId: any(named: 'ledgerId')),

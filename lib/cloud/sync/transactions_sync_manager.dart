@@ -116,6 +116,19 @@ class TransactionsSyncManager implements SyncService {
     );
   }
 
+  /// 纯本地账本(storage_mode='local' 且非共享)不参与任何云端拉取。
+  ///
+  /// 快照型后端同样要遵守归属闸门:本地账本刷新/状态查询不能发起远端下载,
+  /// 否则坏网络时会把首页下拉刷新等主流程卡在 loading。
+  Future<bool> _isLocalOnlyLedger(int ledgerId) async {
+    final row = await (db.select(db.ledgers)
+          ..where((l) => l.id.equals(ledgerId)))
+        .getSingleOrNull();
+    // 与 SyncEngine.sync() 的闸门一致:storage_mode='local' 且非共享的账本
+    // 不上云,即使异常中间态残留了 syncId 也不应发起快照下载。
+    return row != null && row.isLocalLedger;
+  }
+
   String _pathForLedger(int ledgerId) {
     return 'ledger_$ledgerId.json';
   }
@@ -257,6 +270,10 @@ class TransactionsSyncManager implements SyncService {
 
   @override
   Future<int> pullIncremental({required int ledgerId}) async {
+    if (await _isLocalOnlyLedger(ledgerId)) {
+      logger.info('CloudSync', '账本 $ledgerId 为本地账本,跳过增量拉取');
+      return 0;
+    }
     // 快照型后端(WebDAV/S3 等)没有增量通道,退化为快照下载。
     // 导入侧(importTransactions)已按 syncId 幂等去重,重复下载只会跳过
     // 已存在的记录,不会产生重复行。
@@ -266,6 +283,10 @@ class TransactionsSyncManager implements SyncService {
 
   @override
   Future<PullOutcome> pullIncrementalWithHeal({required int ledgerId}) async {
+    if (await _isLocalOnlyLedger(ledgerId)) {
+      logger.info('CloudSync', '账本 $ledgerId 为本地账本,跳过自愈拉取');
+      return const PullOutcome(incremental: 0);
+    }
     // 快照型后端的 pullIncremental 本身已退化为幂等快照下载(导入侧按
     // syncId 去重),天然具备"自愈"能力 —— 直接委托,不重复造逻辑。
     // didHeal 标记 true 表示该后端每次都做全量对账;不存在增量游标越过
@@ -352,8 +373,6 @@ class TransactionsSyncManager implements SyncService {
 
   @override
   Future<SyncStatus> getStatus({required int ledgerId}) async {
-    await _ensureInitialized();
-
     // 纯本地账本(不上云)直接返回 localOnly:快照型后端只备份云端账本,
     // 本地账本若走云侧对比会永远显示"本地有数据、云端没有"的假差异。
     final ledgerRow = await (db.select(db.ledgers)
@@ -370,6 +389,8 @@ class TransactionsSyncManager implements SyncService {
       _statusCache[ledgerId] = status;
       return status;
     }
+
+    await _ensureInitialized();
 
     // 如果 provider 不可用，返回未登录状态
     if (_syncManager == null || _provider == null) {

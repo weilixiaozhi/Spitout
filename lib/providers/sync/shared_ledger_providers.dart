@@ -335,18 +335,25 @@ Future<bool> purgeLocalCloudLedgersWithContainer(ProviderContainer container) =>
 
 /// 本地新建 tx 后回填「创建人 + 编辑人」（动作函数）。
 ///
-/// 设计意图：`TxAuthorService.markCreated` 的云实例读取 + 仓储解析
-/// + localSelfId 读取在 providers 层完成，widget 侧只传 txId，不直接
-/// import tx_author_service.dart（保持 `pages/widgets → providers → services` 单向）。
-/// 失败静默（service 内部 swallow），本函数不抛错。
+/// 设计意图：云身份解析 + localSelfId 读取在 providers 层完成，widget 侧
+/// 只传 txId，不直接 import tx_author_service.dart（保持
+/// `pages/widgets → providers → services` 单向）。失败静默，本函数不抛错。
 ///
 /// 身份解析:已登录写云 userId,未登录写 localSelfId(设备身份 UUID)。
 /// paidByUserId 回填规则:为空时取操作者,编辑器已显式写入的值(指定分摊)不覆盖。
 Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
-  final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
   final localSelfId = await ref.read(localSelfIdProvider.future);
-  await TxAuthorService.markCreated(cloud?.auth, repo, txId, localSelfId: localSelfId);
+  final cloudUserId = await _cloudUserIdWithinTimeout(ref);
+  try {
+    await repo.markTxAuthor(
+      txId: txId,
+      userId: cloudUserId ?? localSelfId,
+      isCreate: true,
+    );
+  } catch (e, st) {
+    logger.warning('SharedLedger', 'markTxCreated 失败(不阻塞主流程): $e', st);
+  }
 }
 
 /// 本地编辑 tx 后回填「编辑人」（动作函数）。
@@ -355,10 +362,18 @@ Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
 /// first-write-wins 不变);paidByUserId 为空时回填操作者,非空视为
 /// 用户手改值保留。身份解析同 [markTxCreatedFromUi]。
 Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
-  final cloud = await ref.read(spitoutCloudProviderInstance.future);
   final repo = ref.read(repositoryProvider);
   final localSelfId = await ref.read(localSelfIdProvider.future);
-  await TxAuthorService.markEdited(cloud?.auth, repo, txId, localSelfId: localSelfId);
+  final cloudUserId = await _cloudUserIdWithinTimeout(ref);
+  try {
+    await repo.markTxAuthor(
+      txId: txId,
+      userId: cloudUserId ?? localSelfId,
+      isCreate: false,
+    );
+  } catch (e, st) {
+    logger.warning('SharedLedger', 'markTxEdited 失败(不阻塞主流程): $e', st);
+  }
 }
 
 /// 读取当前登录用户 id（动作函数，供写编辑历史时作 operatorUserId）。
@@ -366,6 +381,25 @@ Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
 /// 单人账本 / 未登录 / 异常一律返回 null（service 内部已 swallow），
 /// 调用方据此决定历史记录是否写操作者。
 Future<String?> currentOperatorUserIdFromUi(WidgetRef ref) async {
-  final cloud = await ref.read(spitoutCloudProviderInstance.future);
-  return TxAuthorService.currentUserId(cloud?.auth);
+  return _cloudUserIdWithinTimeout(ref);
+}
+
+/// 云端身份解析的短超时封装。
+///
+/// 主流程(记账保存 / AA 保存 / 编辑历史)不应等待云端初始化或 token refresh;
+/// 网络差时最多等 [kCloudIdentityTimeout],拿不到云 userId 就返回 null,
+/// 由调用方降级到 localSelfId / 不写操作者,云端同步后续自行补。
+const kCloudIdentityTimeout = Duration(milliseconds: 250);
+
+Future<String?> _cloudUserIdWithinTimeout(WidgetRef ref) async {
+  try {
+    final cloud = await ref
+        .read(spitoutCloudProviderInstance.future)
+        .timeout(kCloudIdentityTimeout);
+    if (cloud == null) return null;
+    return await TxAuthorService.currentUserId(cloud.auth)
+        .timeout(kCloudIdentityTimeout);
+  } catch (_) {
+    return null;
+  }
 }

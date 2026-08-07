@@ -331,8 +331,14 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
 
   /// 等待指定账本的同步状态就绪；加载失败时降级为「无冲突」并记日志。
   Future<SyncStatus?> _awaitSyncStatus(int ledgerId) async {
+    // 有最近一次成功状态时直接复用,不再等云端探测;
+    // 没有缓存时也只给 2 秒,避免坏网络下切账本/进编辑被同步状态卡住。
+    final cached = ref.read(lastSyncStatusProvider(ledgerId));
+    if (cached != null) return cached;
     try {
-      return await ref.read(syncStatusProvider(ledgerId).future);
+      return await ref
+          .read(syncStatusProvider(ledgerId).future)
+          .timeout(const Duration(seconds: 2));
     } catch (e, st) {
       logger.warning('LedgersPage', '获取账本同步状态失败(按无冲突处理): $e', st);
       return null;

@@ -64,6 +64,36 @@ void main() {
           reason: '纯本地账本不上云,状态应独立于云服务可用性');
     });
 
+    test('纯本地账本 pullIncremental 返回 0,不触发云端快照下载', () async {
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+
+      final pulled = await manager.pullIncremental(ledgerId: localId);
+
+      expect(pulled, 0,
+          reason: '本地账本刷新不得因云服务不可用抛错,也不得发起快照下载');
+    });
+
+    test('纯本地账本 pullIncrementalWithHeal 返回空 outcome', () async {
+      final localId = await db.into(db.ledgers).insert(
+            LedgersCompanion.insert(
+              name: 'Local',
+              storageMode: const Value('local'),
+            ),
+          );
+
+      final outcome =
+          await manager.pullIncrementalWithHeal(ledgerId: localId);
+
+      expect(outcome.incremental, 0);
+      expect(outcome.didHeal, isFalse);
+      expect(outcome.gapRemaining, isFalse);
+    });
+
     test('uploadCurrentLedger 抛 CloudSyncException', () async {
       await expectLater(
         manager.uploadCurrentLedger(ledgerId: 1),

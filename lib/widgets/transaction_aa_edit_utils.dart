@@ -75,6 +75,10 @@ class TransactionAaEditUtils {
     // 支出人(paidByUserId)属全局交易语义(非 AA 专属):未手选回传 null 不更新
     // 保持原值,手选后恒写手选值,不受分摊方式切换影响。
     final repo = ref.read(repositoryProvider);
+    // 身份解析与落库并行发起:云端不可用时降级本地设备身份,
+    // 编辑分摊保存不会被云端初始化/token refresh 卡住。
+    final localSelfIdFuture = ref.read(localSelfIdProvider.future);
+    final cloudUserIdFuture = currentOperatorUserIdFromUi(ref);
     final newVersion = await repo.updateTransaction(
       id: transaction.id,
       type: transaction.type,
@@ -99,12 +103,22 @@ class TransactionAaEditUtils {
       ),
       aaSplits: aaSplitsJsonForWrite(result.aaSplits, isEditing: true),
     );
+    final operatorUserId =
+        (await cloudUserIdFuture) ?? (await localSelfIdFuture);
 
     // 共享账本:本地 lastEditedByUserId 立即回填。
-    await markTxEditedFromUi(ref, transaction.id);
+    try {
+      await repo.markTxAuthor(
+        txId: transaction.id,
+        userId: operatorUserId,
+        isCreate: false,
+      );
+    } catch (e, st) {
+      logger.warning(
+          'TransactionAaEditUtils', '回填编辑人失败(不阻断保存): $e', st);
+    }
 
     // 编辑历史闭环:追加一条同版本号快照,详情页编辑记录区块可见。
-    final operatorUserId = await currentOperatorUserIdFromUi(ref);
     // 跨异步间隙后使用 l10n,需取 context.mounted 兜底;这里已通过前面校验,
     // 但严格满足 lint:在 await 后用 l10n 提取前重新读 mounted。
     final l10n = context.mounted ? AppLocalizations.of(context) : null;

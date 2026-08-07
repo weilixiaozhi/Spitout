@@ -17,6 +17,9 @@ import 'package:spitout/providers/statistics/statistics_providers.dart';
 // sync_providers.dart，避免「域 → 编排」反向边成环。
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 
+typedef _RateData =
+    ({String rateDate, String source, Map<String, String> baseToQuote});
+
 /// 多币种 provider 层。
 ///
 /// 折算基准 = 账本本位币(`ledger.currency`),[currentLedgerCurrencyProvider]
@@ -250,14 +253,14 @@ Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
         {bool force = false, Set<String>? extraQuotes}) =>
     refreshExchangeRatesImpl(
       read: ref.read,
-      readFuture: <T>(p) => ref.read(p.future),
       force: force,
       extraQuotes: extraQuotes,
     );
 
-/// 真正的实现:只依赖 read / readFuture 两个能力,与 Ref / WidgetRef 解耦。
+/// 真正的实现:只依赖 read 能力,与 Ref / WidgetRef 解耦。
 ///
-/// 拉取协调:server 源(云模式)→ 公网链;倒数后只落「使用中币种」;成功 bump tick。
+/// 拉取协调:server 源(云模式)与公网链并行竞争;倒数后只落「使用中币种」;
+/// 成功 bump tick。
 /// force=false 时 24h 节流 + 多币种总闸。失败返回 false(资产页静默、汇率页 Toast)。
 ///
 /// base 集合 = {各账本本位币}——折算基准 = 账本本位币,每个不同本位币的账本
@@ -266,7 +269,6 @@ Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
 /// 已落库的 quote 集合里,不带上它拉回来的组里永远没有它。
 Future<bool> refreshExchangeRatesImpl({
   required T Function<T>(ProviderListenable<T>) read,
-  required Future<T> Function<T>(FutureProvider<T>) readFuture,
   required bool force,
   Set<String>? extraQuotes,
 }) async {
@@ -305,7 +307,6 @@ Future<bool> refreshExchangeRatesImpl({
       }
       if (await _fetchAndStoreRatesForBase(
           read: read,
-          readFuture: readFuture,
           repo: repo,
           base: base)) {
         anySuccess = true;
@@ -324,47 +325,23 @@ Future<bool> refreshExchangeRatesImpl({
 /// 不按 "quotes" 集合过滤——一次 API 调用已返回所有币种数据,过滤掉纯属浪费。
 Future<bool> _fetchAndStoreRatesForBase({
   required T Function<T>(ProviderListenable<T>) read,
-  required Future<T> Function<T>(FutureProvider<T>) readFuture,
   required BaseRepository repo,
   required String base,
 }) async {
   try {
-    String rateDate, source;
-    Map<String, String> baseToQuote;
-    Map<String, dynamic>? serverBody;
-    try {
-      final cloudProvider = await readFuture(spitoutCloudProviderInstance);
-      serverBody = cloudProvider == null
-          ? null
-          : await cloudProvider.fetchExchangeRates(base: base);
-    } catch (e) {
-      logger.warning('currency_providers', 'server 汇率源失败,下滑公网: $e');
-      serverBody = null;
-    }
-    // serverBody['stale'] 有意不消费:rateDate 如实落库(UI 日期不撒谎),代价是
-    // stale 数据会被 24h 节流当新鲜缓存一天;有 force 刷新兜底,MVP 接受。
-    final rawRateDate = serverBody?['rate_date']?.toString() ?? '';
-    if (serverBody != null &&
-        serverBody['rates'] is Map &&
-        rawRateDate.isNotEmpty) {
-      rateDate = rawRateDate;
-      source = 'server';
-      baseToQuote = {
-        for (final e in (serverBody['rates'] as Map).entries)
-          e.key.toString().toUpperCase(): e.value.toString(),
-      };
-    } else {
-      final result = await read(exchangeRateServiceProvider).fetch(base);
-      rateDate = result.rateDate;
-      source = result.source;
-      baseToQuote = result.ratesBaseToQuote;
-    }
+    // 云端汇率源与公网源并行竞争,谁先拿到有效数据用谁。
+    // 云端只读"已经初始化完成"的 provider,且单次请求 2s 超时;
+    // 即使云端网络黑洞,公网链成功时也能立刻返回,不会把刷新卡在云端。
+    final rateData = await _firstRateData(
+      server: _fetchServerRateData(read, base),
+      public: read(exchangeRateServiceProvider).fetch(base),
+    );
 
     // 倒数成「1 quote = x base」,存储 API 返回的全部币种汇率
     // 需求:汇率页展示除基准币种外的全部币种——一次网络调用已拿回全部数据,
     // 二次过滤纯属浪费;此处存储全量,UI 侧按需展示即可。
     final inverted = <String, String>{};
-    for (final e in baseToQuote.entries) {
+    for (final e in rateData.baseToQuote.entries) {
       final raw = double.tryParse(e.value);
       if (raw != null && raw > 0) {
         inverted[e.key.toUpperCase()] = invertRate(raw);
@@ -373,9 +350,9 @@ Future<bool> _fetchAndStoreRatesForBase({
     if (inverted.isEmpty) return false;
     await repo.upsertAutoRates(
       base: base,
-      rateDate: rateDate,
+      rateDate: rateData.rateDate,
       rates: inverted,
-      source: source,
+      source: rateData.source,
       fetchedAt: DateTime.now().toUtc(),
     );
     return true;
@@ -383,4 +360,83 @@ Future<bool> _fetchAndStoreRatesForBase({
     logger.warning('currency_providers', 'base=$base 汇率拉取失败: $e', st);
     return false;
   }
+}
+
+/// 云端汇率源的短超时读取。
+///
+/// 只使用已经解析完成的 [spitoutCloudProviderInstance],绝不等待 provider
+/// 初始化;单次请求 2s 超时,失败统一返回 null,由公网源兜底。
+Future<_RateData?> _fetchServerRateData(
+  T Function<T>(ProviderListenable<T>) read,
+  String base,
+) async {
+  final cloud = read(spitoutCloudProviderInstance).value;
+  if (cloud == null) return null;
+  try {
+    final body = await cloud
+        .fetchExchangeRates(base: base)
+        .timeout(const Duration(seconds: 2));
+    final rawRateDate = body?['rate_date']?.toString() ?? '';
+    final rawRates = body?['rates'];
+    if (body == null || rawRateDate.isEmpty || rawRates is! Map) return null;
+    return (
+      rateDate: rawRateDate,
+      source: 'server',
+      baseToQuote: {
+        for (final e in rawRates.entries)
+          e.key.toString().toUpperCase(): e.value.toString(),
+      },
+    );
+  } catch (_) {
+    return null;
+  }
+}
+
+/// 云端源与公网源竞争,返回第一个成功的数据。
+///
+/// - 云端已就绪且快 → 用云端;
+/// - 公网先成功 → 立即用公网,不等云端;
+/// - 两路都失败 → 等两路都结束后抛错,由调用方返回 false。
+Future<_RateData> _firstRateData({
+  required Future<_RateData?> server,
+  required Future<RateFetchResult> public,
+}) {
+  final completer = Completer<_RateData>();
+  var pending = 2;
+  var settled = false;
+
+  void fail(Object error) {
+    if (settled) return;
+    pending--;
+    if (pending == 0) {
+      settled = true;
+      completer.completeError(error);
+    }
+  }
+
+  server.then((data) {
+    if (settled) return;
+    if (data != null) {
+      settled = true;
+      completer.complete(data);
+      return;
+    }
+    pending--;
+    if (pending == 0) {
+      settled = true;
+      completer.completeError(StateError('server rate unavailable'));
+    }
+  }, onError: (Object e, StackTrace st) => fail(e));
+
+  public.then((result) {
+    if (settled) return;
+    settled = true;
+    completer.complete((
+      rateDate: result.rateDate,
+      source: result.source,
+      baseToQuote: result.ratesBaseToQuote,
+    ));
+  }, onError: (Object e, StackTrace st) => fail(e));
+
+  return completer.future;
 }

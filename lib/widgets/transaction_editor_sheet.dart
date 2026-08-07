@@ -615,6 +615,10 @@ class _TransactionEditorSheetState
       SystemSound.play(SystemSoundType.click);
 
       final repo = ref.read(repositoryProvider);
+      // 身份解析与落库并行发起:本地身份很快,云端身份带短超时,
+      // 云端不可用时降级到本地设备身份,保存动作不会被云端卡住。
+      final localSelfIdFuture = ref.read(localSelfIdProvider.future);
+      final cloudUserIdFuture = currentOperatorUserIdFromUi(ref);
       // Category 是 synthetic（id<0）时，categoryId 留 null，override 走 syncId
       final isSyntheticCategory = c.id < 0;
       final categoryIdForWrite = isSyntheticCategory ? null : c.id;
@@ -641,8 +645,20 @@ class _TransactionEditorSheetState
           aaSplits: aa.aaSplits,
         );
         transactionId = widget.editingTransactionId!;
-        // 共享账本：本地 lastEditedByUserId 立即回填（云实例读取收敛到 providers 动作函数）
-        await markTxEditedFromUi(ref, transactionId);
+        final operatorUserId =
+            (await cloudUserIdFuture) ?? (await localSelfIdFuture);
+        // 共享账本：本地 lastEditedByUserId 立即回填。身份已在上方解析,
+        // 这里只写库,不再等待云端。
+        try {
+          await repo.markTxAuthor(
+            txId: transactionId,
+            userId: operatorUserId,
+            isCreate: false,
+          );
+        } catch (e, st) {
+          logger.warning(
+              'TransactionEditorSheet', '回填编辑人失败(不阻断保存): $e', st);
+        }
 
         // 闭环：在编辑历史表追加一条同版本号快照，让详情页"编辑记录"区块
         // 有内容可展示。updateTransaction 已将 transactions.version +1，
@@ -652,7 +668,6 @@ class _TransactionEditorSheetState
         // summary 作为不本地化的快照文本（与 note 字段同理），直接用
         // 分类名 + 金额 + 交易发生日期拼接；operatorUserId 在单人账本下为 null，
         // 详情页对应行将不显示操作者，符合预期。
-        final operatorUserId = await currentOperatorUserIdFromUi(ref);
         final summary =
             '${c.name} · ${total.toStringAsFixed(2)} · '
             '${_date.year}-${_date.month.toString().padLeft(2, '0')}-'
@@ -685,9 +700,20 @@ class _TransactionEditorSheetState
           aaParticipants: aa.aaParticipants,
           aaSplits: aa.aaSplits,
         );
+        final operatorUserId =
+            (await cloudUserIdFuture) ?? (await localSelfIdFuture);
         // 共享账本：新建本地 tx 回填创建人 + 编辑人（同一个 user）;
         // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖。
-        await markTxCreatedFromUi(ref, transactionId);
+        try {
+          await repo.markTxAuthor(
+            txId: transactionId,
+            userId: operatorUserId,
+            isCreate: true,
+          );
+        } catch (e, st) {
+          logger.warning(
+              'TransactionEditorSheet', '回填创建人失败(不阻断保存): $e', st);
+        }
       }
 
       // 统一处理：自动/手动同步与状态刷新（后台静默）

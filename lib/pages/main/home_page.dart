@@ -262,6 +262,12 @@ class _HomePageState extends ConsumerState<HomePage>
     final l10n = AppLocalizations.of(context);
     final ledgerId = ref.read(currentLedgerIdProvider);
     final sync = ref.read(syncServiceProvider);
+    // 纯本地账本(storage_mode='local' 且未绑定 syncId)不走云端,下拉刷新
+    // 只做本地刷新,避免任何云端鉴权/拉取把指示器卡在"正在同步账本数据"。
+    final ledger = ref.read(currentLedgerProvider).value;
+    final isLocalOnlyLedger = ledger != null &&
+        ledger.storageMode == 'local' &&
+        !ledger.isShared;
 
     // 云同步结果分类：
     // - isCloud=true 且 cloudOk=true  → 云端成功
@@ -275,28 +281,30 @@ class _HomePageState extends ConsumerState<HomePage>
     // 刷新结果文案在指示器内展示，避免弹窗打扰。
     String? resultText;
     try {
-      // 1) 先尝试云同步下载（已配置云同步时才会真正走网络）。
-      // 走 pullIncrementalWithHeal —— 只做增量 pull + 受闸门/节流/熔断保护的
-      // 缺失自愈，不做无条件全量恢复；无条件全量恢复只用于云同步页明确的
-      // "从云端恢复"操作。自愈的幂等性由 syncId upsert/去重保证。
-      try {
-        outcome = await sync.pullIncrementalWithHeal(ledgerId: ledgerId);
-        isCloud = true;
-        cloudOk = true;
-        logger.info(
-          'HomePage',
-          '下拉刷新云端成功: ledgerId=$ledgerId pulled=${outcome.incremental} healed=${outcome.healed} gap=${outcome.gapRemaining} circuit=${outcome.circuitBroken}',
-        );
-      } on UnsupportedError {
-        // 未配置云同步（LocalOnlySyncService 抛此异常）：按纯本地刷新处理。
-        isCloud = false;
-      } catch (e, st) {
-        // 兜底：云同步已配置但连接/下载失败（网络异常、鉴权失败、超时等），
-        // 单独 catch 降级为本地刷新，不阻断整个下拉刷新；
-        // 云同步会在 WS 重连 / 网络恢复后由后台自动静默重试。
-        logger.warning('HomePage', '云同步下载失败，降级为本地刷新: $e', st);
-        isCloud = true;
-        cloudOk = false;
+      if (!isLocalOnlyLedger) {
+        // 1) 先尝试云同步下载（已配置云同步时才会真正走网络）。
+        // 走 pullIncrementalWithHeal —— 只做增量 pull + 受闸门/节流/熔断保护的
+        // 缺失自愈，不做无条件全量恢复；无条件全量恢复只用于云同步页明确的
+        // "从云端恢复"操作。自愈的幂等性由 syncId upsert/去重保证。
+        try {
+          outcome = await sync.pullIncrementalWithHeal(ledgerId: ledgerId);
+          isCloud = true;
+          cloudOk = true;
+          logger.info(
+            'HomePage',
+            '下拉刷新云端成功: ledgerId=$ledgerId pulled=${outcome.incremental} healed=${outcome.healed} gap=${outcome.gapRemaining} circuit=${outcome.circuitBroken}',
+          );
+        } on UnsupportedError {
+          // 未配置云同步（LocalOnlySyncService 抛此异常）：按纯本地刷新处理。
+          isCloud = false;
+        } catch (e, st) {
+          // 兜底：云同步已配置但连接/下载失败（网络异常、鉴权失败、超时等），
+          // 单独 catch 降级为本地刷新，不阻断整个下拉刷新；
+          // 云同步会在 WS 重连 / 网络恢复后由后台自动静默重试。
+          logger.warning('HomePage', '云同步下载失败，降级为本地刷新: $e', st);
+          isCloud = true;
+          cloudOk = false;
+        }
       }
 
       // 2) 本地刷新：只要触发了下拉刷新，无论云同步成功/失败/未配置，必定执行。

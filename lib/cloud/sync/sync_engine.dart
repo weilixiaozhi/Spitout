@@ -401,6 +401,13 @@ class SyncEngine implements app.SyncService {
 
   @override
   Future<int> pullIncremental({required int ledgerId}) async {
+    // 纯本地账本(storage_mode='local' 且非共享)不参与任何云端拉取。
+    // 首页下拉刷新等高频入口直接走本方法,不能像 sync() 那样先被本地闸门
+    // 挡住;否则本地账本刷新也会发 HTTP,坏网络时把 UI 卡在 loading。
+    if (await _isLocalOnlyLedger(ledgerId)) {
+      logger.info('SyncEngine', '账本 $ledgerId 为本地账本,跳过增量拉取');
+      return 0;
+    }
     // 下拉刷新等高频入口专用：只做增量 pull(幂等),绝不回退全量恢复。
     // 全量恢复(runFullPull)保留给云同步页明确的"从云端恢复"操作,
     // 避免高频入口误触发整份快照重新导入。
@@ -414,6 +421,10 @@ class SyncEngine implements app.SyncService {
   @override
   Future<app.PullOutcome> pullIncrementalWithHeal(
       {required int ledgerId}) async {
+    if (await _isLocalOnlyLedger(ledgerId)) {
+      logger.info('SyncEngine', '账本 $ledgerId 为本地账本,跳过自愈拉取');
+      return const app.PullOutcome(incremental: 0);
+    }
     // 保持"只 pull 不 push"的轻量语义 —— 与 pullIncremental 的区别仅在于
     // pulled==0 时多做一次受闸门/节流/熔断保护的自愈检查。
     final incremental = await pullIncremental(ledgerId: ledgerId);
@@ -449,18 +460,9 @@ class SyncEngine implements app.SyncService {
     }
 
     try {
-      final user = await provider.auth.currentUser;
-      if (user == null) {
-        return const app.SyncStatus(
-          diff: app.SyncDiff.notLoggedIn,
-          localCount: 0,
-          localFingerprint: '',
-        );
-      }
-
       // 账本行先读:纯本地账本(不上云)直接返回 localOnly,不发起任何远端
-      // 探测 —— 否则本地账本的交易会被误判为"本地有数据、云端没有",
-      // 在「我的」页与云同步配置里制造永远无法消除的同步差异。
+      // 探测,也不等待云端鉴权 —— 否则本地账本的状态查询在坏网络下会被
+      // provider.auth.currentUser 的 token refresh 卡住。
       final ledgerRowStatus = await (db.select(db.ledgers)
             ..where((l) => l.id.equals(ledgerId)))
           .getSingleOrNull();
@@ -480,6 +482,15 @@ class SyncEngine implements app.SyncService {
         _statusCache[ledgerId] = status;
         _localChanged = false;
         return status;
+      }
+
+      final user = await provider.auth.currentUser;
+      if (user == null) {
+        return const app.SyncStatus(
+          diff: app.SyncDiff.notLoggedIn,
+          localCount: 0,
+          localFingerprint: '',
+        );
       }
 
       // 本地交易数
@@ -525,6 +536,19 @@ class SyncEngine implements app.SyncService {
         message: e.toString(),
       );
     }
+  }
+
+  /// 纯本地账本(storage_mode='local' 且非共享)不参与任何云端拉取。
+  ///
+  /// 与 [sync] 里的闸门同一语义;拉取入口也必须先过这道闸门,否则本地账本
+  /// 的高频刷新/状态查询会先发起云端请求,坏网络时阻塞主流程。
+  Future<bool> _isLocalOnlyLedger(int ledgerId) async {
+    final row = await (db.select(db.ledgers)
+          ..where((l) => l.id.equals(ledgerId)))
+        .getSingleOrNull();
+    // 与 sync() 的闸门一致:storage_mode='local' 且非共享的账本一律不上云,
+    // 即使异常中间态残留了 syncId 也不应发起拉取。
+    return row != null && row.isLocalLedger;
   }
 
   @override

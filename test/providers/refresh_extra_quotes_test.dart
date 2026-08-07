@@ -64,7 +64,6 @@ void main() {
 
     final ok = await refreshExchangeRatesImpl(
       read: <T>(p) => container.read(p),
-      readFuture: <T>(p) => container.read(p.future),
       force: true,
       extraQuotes: {'JPY'},
     );
@@ -77,4 +76,3 @@ void main() {
         reason: 'extraQuotes 的币种必须进入拉取并落库');
   });
 }
-
