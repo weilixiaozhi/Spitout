@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_route.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
+import 'sheet_grab_handle.dart';
 import '../utils/date/week_math.dart'
     show mondayOf, mondayOfWeek, weekNumber, weeksInYear;
 
@@ -425,26 +426,6 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
     }
   }
 
-  /// 顶部拖拽条(36x4),与 AppSheet 视觉一致。
-  Widget _grabHandle(BuildContext context) {
-    final color = SpitoutTokens.isDark(context)
-        ? Colors.white.withValues(alpha: 0.20)
-        : Colors.black.withValues(alpha: 0.15);
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 4),
-      child: Center(
-        child: Container(
-          width: 36,
-          height: 4,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ),
-    );
-  }
-
   /// 无列标签的单滚轮（统一 itemExtent 40 + 选中高亮带 primary/0.08 + primary/0.3）。
   Widget _buildPicker({
     required List<int> items,
@@ -581,70 +562,83 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
     }
 
     return Container(
+      key: const ValueKey('wheel_date_picker_sheet'),
       decoration: BoxDecoration(
         color: SpitoutTokens.surfaceSheet(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        // 与币种/汇率选择 sheet 一致：整圈描边在圆角 + 贴屏布局下
+        // 最终只呈现为顶部一条 2px 分隔线
+        border: Border.all(
+          color: SpitoutTokens.borderStrong(context),
+          width: 2,
+        ),
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            _grabHandle(context),
-            if (widget.title.isNotEmpty || widget.subtitle != null)
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: _textPrimary(context),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (widget.subtitle != null) ...[
-                      const SizedBox(height: 4),
+        child: Padding(
+          // 顶部留白与币种/汇率选择 sheet 一致（外层 12px）
+          padding: const EdgeInsets.only(top: 12),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // 头部与汇率选择 sheet 同源：统一拖拽条 + 居中标题
+              const SheetGrabHandle(),
+              if (widget.title.isNotEmpty || widget.subtitle != null)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                       Text(
-                        widget.subtitle!,
+                        widget.title,
                         style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textSecondary(context),
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                          color: _textPrimary(context),
                         ),
                         textAlign: TextAlign.center,
                       ),
+                      if (widget.subtitle != null) ...[
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.subtitle!,
+                          style: TextStyle(
+                            fontSize: 13,
+                            color: SpitoutTokens.textSecondary(context),
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                      ],
                     ],
-                  ],
-                ),
-              ),
-            body,
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
                   ),
-                  onPressed: () => Navigator.of(context).pop(_buildResult()),
-                  child: Text(
-                    widget.confirmLabel,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onPrimary,
+                ),
+              const SizedBox(height: 12),
+              body,
+              Padding(
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+                child: SizedBox(
+                  width: double.infinity,
+                  height: 48,
+                  child: FilledButton(
+                    style: FilledButton.styleFrom(
+                      backgroundColor: primary,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(10)),
+                    ),
+                    onPressed: () => Navigator.of(context).pop(_buildResult()),
+                    child: Text(
+                      widget.confirmLabel,
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: Theme.of(context).colorScheme.onPrimary,
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

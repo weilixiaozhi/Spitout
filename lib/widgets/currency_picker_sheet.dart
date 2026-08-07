@@ -8,6 +8,7 @@ import '../theme/colors.dart';
 import '../utils/currency/currencies.dart';
 import '../theme/icons/app_icons.dart';
 import 'currency_flag.dart';
+import 'sheet_grab_handle.dart';
 
 /// 币种选择 bottom sheet(搜索 + 币种符号 + 汇率 + 选中勾)。返回选中的 code,取消返回 null。
 ///
@@ -100,15 +101,7 @@ Future<String?> showCurrencyPickerSheet(
             height: 440,
             child: Column(
               children: [
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(bottom: 8),
-                  decoration: BoxDecoration(
-                    color: SpitoutTokens.textTertiary(bctx).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const SheetGrabHandle(),
                 Text(
                   sheetTitle,
                   style: TextStyle(
