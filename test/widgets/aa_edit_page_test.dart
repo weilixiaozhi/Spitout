@@ -553,4 +553,82 @@ void main() {
     expect(find.byIcon(AppIcons.cancel), findsNWidgets(2));
     expect(find.text('¥ 70 / ¥ 100'), findsOneWidget);
   });
+
+  testWidgets('分摊页右对齐:账单详情值/分摊方式按钮/合计/人均金额右侧在同一条直线', (tester) async {
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.perPerson,
+      ),
+      onResult: (_) {},
+    );
+
+    // 四个「右侧内容」：
+    // - 账单详情模块的金额值（¥ 100）
+    // - 分摊方式模块的三态切换按钮
+    // - 分摊配置卡的合计行（¥ 100 / ¥ 100）
+    // - 参与人行的只读人均金额（¥ 33.33）
+    final subjectAmount = find.text('¥ 100');
+    final toggle = find.byKey(const ValueKey('aa_mode_toggle'));
+    final total = find.text('¥ 100 / ¥ 100');
+    final perPerson = find.text('¥ 33.33').first;
+
+    expect(subjectAmount, findsOneWidget);
+    expect(toggle, findsOneWidget);
+    expect(total, findsOneWidget);
+    expect(perPerson, findsOneWidget);
+
+    final subjectRight = tester.getTopRight(subjectAmount).dx;
+    final toggleRight = tester.getTopRight(toggle).dx;
+    final totalRight = tester.getTopRight(total).dx;
+    final perPersonRight = tester.getTopRight(perPerson).dx;
+
+    expect(
+      subjectRight,
+      closeTo(toggleRight, 0.5),
+      reason: '账单详情值应与分摊方式按钮右对齐在同一条直线',
+    );
+    expect(
+      totalRight,
+      closeTo(toggleRight, 0.5),
+      reason: '合计行应与分摊方式按钮右对齐在同一条直线',
+    );
+    expect(
+      perPersonRight,
+      closeTo(toggleRight, 0.5),
+      reason: '参与人金额应与分摊方式按钮右对齐在同一条直线',
+    );
+  });
+
+  testWidgets('分摊方式按钮与记账编辑器一致:80x24、圆角 5', (tester) async {
+    await _openAaEdit(
+      tester,
+      args: AaEditPageArgs(
+        ledgerId: 1,
+        amount: 100,
+        currencyCode: 'CNY',
+        categoryName: '餐饮',
+        date: DateTime(2026, 8, 3),
+        mode: AaMode.perPerson,
+      ),
+      onResult: (_) {},
+    );
+
+    final toggle = find.byKey(const ValueKey('aa_mode_toggle'));
+    expect(toggle, findsOneWidget);
+    expect(tester.getSize(toggle), const Size(80, 24));
+
+    final box = tester.widget<Container>(toggle);
+    final deco = box.decoration! as BoxDecoration;
+    expect(
+      deco.borderRadius,
+      BorderRadius.circular(5),
+      reason: '按钮缩小后圆角应同步减少（6 → 5）',
+    );
+  });
 }

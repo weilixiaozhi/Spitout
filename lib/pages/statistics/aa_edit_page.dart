@@ -13,6 +13,7 @@ import '../../theme/colors.dart';
 import '../../theme/icons/app_icons.dart';
 import '../../utils/category_utils.dart';
 import '../../utils/currency/currencies.dart';
+import '../../widgets/aa_mode_toggle.dart';
 import '../../widgets/me_suffix.dart';
 import '../../widgets/widgets.dart';
 
@@ -472,63 +473,28 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           ),
           const Spacer(),
           // 三态切换按钮:标题已表达语义,不重复左侧文案
-          _buildAaModeToggle(context, l10n),
+          // 右缩 26px = 页面 16px 内边距 + 金额文本右边界 10px 基准,
+          // 使按钮右边界与账单详情值/合计/参与人金额同一条直线
+          Padding(
+            padding: const EdgeInsets.only(right: 26),
+            child: AaModeToggle(
+              modeText: _aaModeToggleText(l10n),
+              onTap: _cycleAaMode,
+              toggleKey: const ValueKey('aa_mode_toggle'),
+            ),
+          ),
         ],
       ),
     );
   }
 
-  /// 分摊方式切换按钮:固定宽度,左右箭头 + 中间方式文本,单点循环切换。
-  ///
-  /// 尺寸与记账编辑器 [TransactionEditorSheet._buildAaModeToggle] 一致,
-  /// 保证两处切换体验统一。原尺寸(80x22 / 字号 11)偏小导致文案显示不全,
-  /// 已加大到 88x28 / 字号 12,完整容纳「人均分摊/指定分摊」等 4 字文案。
-  Widget _buildAaModeToggle(BuildContext context, AppLocalizations l10n) {
-    final modeText = switch (_mode) {
+  /// 当前分摊方式文案（与记账编辑器头部共用的 [AaModeToggle] 展示）。
+  String _aaModeToggleText(AppLocalizations l10n) {
+    return switch (_mode) {
       AaMode.perPerson => l10n.aaModePerPerson,
       AaMode.noSplit => l10n.aaModeNoSplit,
       AaMode.custom => l10n.aaModeCustom,
     };
-    final borderColor = SpitoutTokens.textTertiary(
-      context,
-    ).withValues(alpha: 0.35);
-    final arrowColor = SpitoutTokens.iconTertiary(context);
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: _cycleAaMode,
-        borderRadius: BorderRadius.circular(6),
-        child: Container(
-          // 与记账编辑器一致:宽 88 / 高 28,容纳完整文案
-          width: 88,
-          height: 28,
-          padding: const EdgeInsets.symmetric(horizontal: 6),
-          decoration: BoxDecoration(
-            border: Border.all(color: borderColor),
-            borderRadius: BorderRadius.circular(6),
-          ),
-          child: Row(
-            children: [
-              Icon(AppIcons.chevronLeft, size: 12, color: arrowColor),
-              Expanded(
-                child: Text(
-                  modeText,
-                  textAlign: TextAlign.center,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
-                ),
-              ),
-              Icon(AppIcons.chevronRight, size: 12, color: arrowColor),
-            ],
-          ),
-        ),
-      ),
-    );
   }
 
   /// 分摊配置卡:支出人 + 合计 + 参与人列表(页内直接勾选 + 金额输入框)。
@@ -996,19 +962,24 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             ),
           ),
           Flexible(
-            child:
-                valueWidget ??
-                Text(
-                  value,
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w500,
-                    color: SpitoutTokens.textPrimary(context),
+            // 右缩 10px:与分摊配置卡金额文本右边界(输入框 contentPadding
+            // 右侧 10px)对齐,使全页右侧内容落在同一条直线上
+            child: Padding(
+              padding: const EdgeInsets.only(right: 10),
+              child:
+                  valueWidget ??
+                  Text(
+                    value,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: SpitoutTokens.textPrimary(context),
+                    ),
+                    textAlign: TextAlign.right,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
                   ),
-                  textAlign: TextAlign.right,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
+            ),
           ),
         ],
       ),
