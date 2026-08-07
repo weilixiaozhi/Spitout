@@ -601,7 +601,6 @@ class AaMemberDetailPage extends ConsumerWidget {
                     value: bill.totalAmount,
                     signed: false,
                     showCurrency: true,
-                    decimals: 2,
                     currencyCode: currencyCode,
                     scaleDown: true,
                     style: TextStyle(

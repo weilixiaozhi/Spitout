@@ -148,7 +148,6 @@ class AaStatisticsPage extends ConsumerWidget {
             value: totalAmount,
             signed: false,
             showCurrency: true,
-            decimals: 2,
             // 汇总金额必须完整可见：金额超大时等比缩小字号而非省略。
             scaleDown: true,
             style: TextStyle(
@@ -504,7 +503,6 @@ class AaStatisticsPage extends ConsumerWidget {
                           value: transfers[i].amount,
                           signed: false,
                           showCurrency: true,
-                          decimals: 2,
                           // 转账金额必须完整可见：金额超大时等比缩小字号而非省略。
                           scaleDown: true,
                           style: TextStyle(

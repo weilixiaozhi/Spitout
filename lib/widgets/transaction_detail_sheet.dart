@@ -427,7 +427,6 @@ class _TransactionDetailBody extends ConsumerWidget {
                 signed: true,
                 showCurrency: true,
                 currencyCode: t.currencyCode,
-                decimals: 2,
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w500,

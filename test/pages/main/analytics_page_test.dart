@@ -32,6 +32,7 @@ import 'package:spitout/providers/ui/ui_state_providers.dart';
 import 'package:spitout/providers/currency/currency_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/utils/date/analytics_sub_tabs.dart';
+import 'package:spitout/widgets/amount_text.dart';
 import 'package:spitout/widgets/capsule_switcher.dart';
 
 /// Mock 整个 BaseRepository：未 stub 的方法返回默认值（null/0/false），不抛异常。
@@ -907,5 +908,79 @@ void main() {
           '数据范围扩张后当前月应被滚动到可视区，横向滚动 offset 须 > 0'
           '（修复前此处为 0：内容是最新月、但 tab 停在开头）',
     );
+  });
+
+  testWidgets('金额与首页一致：总支出保留两位小数，且金额组件统一默认 decimals=2', (tester) async {
+    when(
+      () => repo.hasAnyExpenseTx(ledgerId: any(named: 'ledgerId')),
+    ).thenAnswer((_) async => true);
+    when(
+      () => repo.earliestExpenseDate(ledgerId: any(named: 'ledgerId')),
+    ).thenAnswer((_) async => DateTime(2026, 7, 1));
+    when(
+      () => repo.latestExpenseDate(ledgerId: any(named: 'ledgerId')),
+    ).thenAnswer((_) async => DateTime(2026, 7, 10));
+    when(
+      () => repo.countByTypeInRange(
+            ledgerId: any(named: 'ledgerId'),
+            type: any(named: 'type'),
+            start: any(named: 'start'),
+            end: any(named: 'end'),
+          ),
+    ).thenAnswer((_) async => 1);
+    when(
+      () => repo.totalsByDay(
+            ledgerId: any(named: 'ledgerId'),
+            type: any(named: 'type'),
+            start: any(named: 'start'),
+            end: any(named: 'end'),
+          ),
+    ).thenAnswer(
+      (_) async => [(day: DateTime(2026, 7, 1), total: 72.56)],
+    );
+    when(
+      () => repo.totalsByCategoryWithHierarchy(
+            ledgerId: any(named: 'ledgerId'),
+            type: any(named: 'type'),
+            start: any(named: 'start'),
+            end: any(named: 'end'),
+          ),
+    ).thenAnswer(
+      (_) async => <_HierarchyRow>[
+        (id: 1, name: '餐饮', icon: null, parentId: null, level: 1, total: 72.56),
+      ],
+    );
+    when(
+      () => repo.getCategoriesByIds(any()),
+    ).thenAnswer((_) async => const {});
+
+    await tester.pumpWidget(
+      buildApp(
+        hasAnyData: true,
+        earliest: DateTime(2026, 7, 1),
+        latest: DateTime(2026, 7, 10),
+      ),
+    );
+    await prime(tester);
+    await tester.pump(const Duration(milliseconds: 100));
+
+    // 修复前总支出/日均支出硬编码 decimals:0，72.56 会被四舍五入为 ¥ 73
+    expect(
+      find.text('¥ 72.56'),
+      findsWidgets,
+      reason: '统计页总支出应保留两位小数，与首页汇总口径一致',
+    );
+
+    // 页面上所有 AmountText 一律沿用默认 2 位小数，不得局部硬编码 decimals
+    final amountTexts =
+        tester.widgetList<AmountText>(find.byType(AmountText)).toList();
+    expect(amountTexts, isNotEmpty, reason: '统计页应渲染至少一个金额组件');
+    for (final at in amountTexts) {
+      expect(
+        at.decimals,
+        2,
+        reason: '统计页金额组件不得硬编码 decimals，应沿用全局默认 2 位小数',
+      );
+    }
   });
 }

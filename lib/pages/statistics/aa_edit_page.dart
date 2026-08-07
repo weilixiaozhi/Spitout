@@ -430,7 +430,6 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
               // 主体卡金额带币种符号:与合计行/只读金额统一口径。
               showCurrency: true,
               currencyCode: currencyCode,
-              decimals: 2,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.w500,

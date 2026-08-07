@@ -196,4 +196,39 @@ void main() {
       reason: '子分类金额均为0时不应渲染箭头（与展开判定保持一致）',
     );
   });
+
+  testWidgets('金额统一默认2位小数：72.56 显示 ¥ 72.56，72.00 显示 ¥ 72（与首页口径一致）',
+      (tester) async {
+    // 有分的金额必须保留两位小数（修复前 decimals:0 会四舍五入为 ¥ 73）
+    await tester.pumpWidget(_buildHost(
+      CategoryRankRow(
+        categoryId: 10,
+        name: '餐饮',
+        value: 72.56,
+        percent: 0.5,
+        color: Colors.orange,
+      ),
+      ledger,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¥ 72.56'), findsOneWidget,
+        reason: '分类金额应保留两位小数，与首页汇总口径一致');
+
+    // 整数金额仍沿用去尾零逻辑：72.00 显示为 72 而非 72.00
+    await tester.pumpWidget(_buildHost(
+      CategoryRankRow(
+        categoryId: 10,
+        name: '餐饮',
+        value: 72.0,
+        percent: 0.5,
+        color: Colors.orange,
+      ),
+      ledger,
+    ));
+    await tester.pumpAndSettle();
+
+    expect(find.text('¥ 72'), findsOneWidget,
+        reason: '整数金额应沿用 formatMoneyCompact 去尾零，显示 72 而非 72.00');
+  });
 }

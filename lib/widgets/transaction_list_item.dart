@@ -217,7 +217,6 @@ class TransactionListItem extends ConsumerWidget {
                       signed: true,
                       showCurrency: true,
                       currencyCode: currencyCode,
-                      decimals: 2,
                       style: SpitoutTextTokens.title(context).copyWith(
                         color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),
                       )),

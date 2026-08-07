@@ -332,7 +332,6 @@ class _RecurringTransactionCardState
                           ? -recurring.amount / 100
                           : recurring.amount / 100,
                       signed: true,
-                      decimals: 2,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w700,

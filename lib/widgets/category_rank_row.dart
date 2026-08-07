@@ -183,7 +183,6 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
               AmountText(
                 value: value,
                 signed: false,
-                decimals: 0,
                 showCurrency: true,
                 style: TextStyle(fontSize: isTopLevel ? 14 : 13),
               ),

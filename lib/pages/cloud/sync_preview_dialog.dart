@@ -358,7 +358,6 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                 signed: true,
                 showCurrency: true,
                 currencyCode: currencyCode,
-                decimals: 2,
                 style: TextStyle(
                   color: SpitoutTokens.textPrimary(context),
                   fontSize: 13,
