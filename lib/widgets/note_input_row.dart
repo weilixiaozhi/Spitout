@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../l10n/app_localizations.dart';
 import '../theme/colors.dart';
 import '../theme/icons/app_icons.dart';
+import 'keypad_constants.dart';
 
 /// 备注输入行：输入框 + CircleX 清空（后缀）。
 ///
@@ -33,52 +34,54 @@ class NoteInputRow extends ConsumerWidget {
     return Padding(
       padding: EdgeInsets.zero,
       child: Row(
+        // 行高由父级键盘容器按剩余空间算好并锁定，stretch 让输入框填满整行
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // 备注输入框
           // max 20 字、单行省略
           Expanded(
-            // 备注行高度固定 35（需求 30-35 取上限）：用 SizedBox 锁定行高，
-            // 内容由 InputDecorator 竖直居中，避免输入框撑高底部固定区。
-            child: SizedBox(
-              height: 35,
-              child: TextField(
-                focusNode: noteFocusNode,
-                controller: noteController,
-                maxLength: 20,
-                maxLines: 1,
-                minLines: 1,
-                style: TextStyle(color: SpitoutTokens.textPrimary(context)),
-                decoration: InputDecoration(
-                  counterText: '', // 隐藏 maxLength 计数器
-                  hintText: AppLocalizations.of(context).commonNoteHint,
-                  hintStyle:
-                      TextStyle(color: SpitoutTokens.textTertiary(context)),
-                  isDense: true,
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(12),
-                    borderSide: BorderSide.none,
-                  ),
-                  filled: true,
-                  fillColor: SpitoutTokens.surfaceInput(context),
-                  contentPadding:
-                      const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
-                  // 清空按钮（后缀）：CircleX 图标，仅备注非空时显示。
-                  // 用 ValueListenableBuilder 监听 controller 自身，输入变化时
-                  // 按钮即时出现/消失，不依赖父层是否重建本组件。
-                  suffixIcon: ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: noteController,
-                    builder: (context, value, _) {
-                      if (value.text.isEmpty) return const SizedBox.shrink();
-                      return GestureDetector(
-                        onTap: () => onNotePicked(''),
-                        child: Icon(
-                          AppIcons.cancel,
-                          size: 18,
-                          color: SpitoutTokens.iconSecondary(context),
-                        ),
-                      );
-                    },
-                  ),
+            child: TextField(
+              focusNode: noteFocusNode,
+              controller: noteController,
+              maxLength: 20,
+              maxLines: 1,
+              minLines: 1,
+              // 行高随键盘容器伸缩时，输入内容保持垂直居中
+              textAlignVertical: TextAlignVertical.center,
+              style: TextStyle(color: SpitoutTokens.textPrimary(context)),
+              decoration: InputDecoration(
+                counterText: '', // 隐藏 maxLength 计数器
+                hintText: AppLocalizations.of(context).commonNoteHint,
+                hintStyle: TextStyle(
+                  color: SpitoutTokens.textTertiary(context),
+                ),
+                isDense: true,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
+                  borderSide: BorderSide.none,
+                ),
+                filled: true,
+                fillColor: SpitoutTokens.keyDigit(context),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 14,
+                  vertical: 5,
+                ),
+                // 清空按钮（后缀）：CircleX 图标，仅备注非空时显示。
+                // 用 ValueListenableBuilder 监听 controller 自身，输入变化时
+                // 按钮即时出现/消失，不依赖父层是否重建本组件。
+                suffixIcon: ValueListenableBuilder<TextEditingValue>(
+                  valueListenable: noteController,
+                  builder: (context, value, _) {
+                    if (value.text.isEmpty) return const SizedBox.shrink();
+                    return GestureDetector(
+                      onTap: () => onNotePicked(''),
+                      child: Icon(
+                        AppIcons.cancel,
+                        size: 18,
+                        color: SpitoutTokens.iconSecondary(context),
+                      ),
+                    );
+                  },
                 ),
               ),
             ),

@@ -30,7 +30,7 @@ export 'format_money.dart';
 export 'amount_input_panel.dart';
 export 'amount_expression_bar.dart';
 export 'amount_keypad.dart';
-export 'keypad_layout.dart';
+export 'keypad_constants.dart';
 export 'pin_entry_pad.dart';
 export 'press_key.dart';
 

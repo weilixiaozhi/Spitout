@@ -15,7 +15,11 @@ import 'package:spitout/widgets/note_input_row.dart';
 
 void main() {
   /// 构建备注输入行测试宿主。
-  Widget buildRow(TextEditingController controller, ValueChanged<String> onPicked) {
+  Widget buildRow(
+    TextEditingController controller,
+    ValueChanged<String> onPicked, {
+    double? height,
+  }) {
     return ProviderScope(
       child: MaterialApp(
         localizationsDelegates: const [
@@ -27,11 +31,20 @@ void main() {
         supportedLocales: AppLocalizations.supportedLocales,
         locale: const Locale('zh'),
         home: Scaffold(
-          body: NoteInputRow(
-            noteController: controller,
-            noteFocusNode: FocusNode(),
-            onNotePicked: onPicked,
-          ),
+          body: height == null
+              ? NoteInputRow(
+                  noteController: controller,
+                  noteFocusNode: FocusNode(),
+                  onNotePicked: onPicked,
+                )
+              : SizedBox(
+                  height: height,
+                  child: NoteInputRow(
+                    noteController: controller,
+                    noteFocusNode: FocusNode(),
+                    onNotePicked: onPicked,
+                  ),
+                ),
         ),
       ),
     );
@@ -48,27 +61,32 @@ void main() {
     // 直接改 controller（模拟外部回填 / 输入法写入），父组件不重建
     controller.text = '午餐';
     await tester.pump();
-    expect(find.byIcon(AppIcons.cancel), findsOneWidget,
-        reason: '输入非空后清空按钮应立即出现');
+    expect(
+      find.byIcon(AppIcons.cancel),
+      findsOneWidget,
+      reason: '输入非空后清空按钮应立即出现',
+    );
 
     await tester.tap(find.byIcon(AppIcons.cancel));
     expect(picked, ['']);
 
     controller.clear();
     await tester.pump();
-    expect(find.byIcon(AppIcons.cancel), findsNothing,
-        reason: '清空后按钮应立即消失');
+    expect(find.byIcon(AppIcons.cancel), findsNothing, reason: '清空后按钮应立即消失');
 
     controller.dispose();
   });
 
-  testWidgets('备注输入行高度固定 35（需求 30-35 取上限）', (tester) async {
+  testWidgets('备注输入行填满父级行高（由键盘容器均分）', (tester) async {
     final controller = TextEditingController();
-    await tester.pumpWidget(buildRow(controller, (_) {}));
+    await tester.pumpWidget(buildRow(controller, (_) {}, height: 80));
 
     final height = tester.getSize(find.byType(NoteInputRow)).height;
-    expect(height, closeTo(35, 0.5),
-        reason: '备注行应压缩到 35px，避免挤占下方金额栏与键盘');
+    expect(
+      height,
+      closeTo(80, 0.5),
+      reason: '备注行应填满父级提供的行高（比其余 5 行矮 10px 由父级控制）',
+    );
 
     controller.dispose();
   });

@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +19,7 @@ import 'wheel_date_picker.dart';
 import 'overlay_keyboard_guard.dart';
 import 'amount_input_panel.dart';
 import 'category_grid_section.dart';
-import 'keypad_layout.dart';
+import 'keypad_constants.dart';
 import 'note_input_row.dart';
 import 'collaborator_avatar.dart';
 import 'aa_fields_utils.dart';
@@ -28,8 +30,8 @@ import '../theme/icons/app_icons.dart';
 /// 布局（自上而下）：
 /// 1. 拖拽条
 /// 2. Header：返回按钮 + 「记一笔」标题 + 作者头像
-/// 3. 分类网格区（独立滚动、无可见滚动条）
-/// 4. 底部固定区：备注行 + 金额栏行 + 4×4 键盘
+/// 3. 分类网格区（独立滚动、无可见滚动条；固定 100px 保底）
+/// 4. 键盘容器（Expanded 撑满剩余空间）：备注行 + 金额栏行 + 4×4 键盘
 ///
 /// 计算器状态机：waiting / operating / calculated
 /// - waiting：初始或清空后，金额区显示实际金额（空值显示 0），主按钮显示 Enter
@@ -268,10 +270,7 @@ class _TransactionEditorSheetState
           result.aaParticipants,
           isEditing: isEditing,
         ),
-        aaSplits: aaSplitsJsonForWrite(
-          result.aaSplits,
-          isEditing: isEditing,
-        ),
+        aaSplits: aaSplitsJsonForWrite(result.aaSplits, isEditing: isEditing),
         // 支出人透传分摊编辑页结果:未手选回传 null,新建由落库层回填
         // 操作者(默认支出人 = 创建人),编辑不更新保持原值。
         paidByUserId: result.paidByUserId,
@@ -371,8 +370,7 @@ class _TransactionEditorSheetState
             isCreate: false,
           );
         } catch (e, st) {
-          logger.warning(
-              'TransactionEditorSheet', '回填编辑人失败(不阻断保存): $e', st);
+          logger.warning('TransactionEditorSheet', '回填编辑人失败(不阻断保存): $e', st);
         }
 
         // 闭环：在编辑历史表追加一条同版本号快照，让详情页"编辑记录"区块
@@ -426,8 +424,7 @@ class _TransactionEditorSheetState
             isCreate: true,
           );
         } catch (e, st) {
-          logger.warning(
-              'TransactionEditorSheet', '回填创建人失败(不阻断保存): $e', st);
+          logger.warning('TransactionEditorSheet', '回填创建人失败(不阻断保存): $e', st);
         }
       }
 
@@ -450,10 +447,7 @@ class _TransactionEditorSheetState
       // 避免 updateTransaction 成功但 appendEditHistory 失败时界面永久卡死。
       logger.error('TransactionEditorSheet', '提交交易失败', e, st);
       if (mounted) {
-        showToast(
-          context,
-          '${AppLocalizations.of(context).commonError}: $e',
-        );
+        showToast(context, '${AppLocalizations.of(context).commonError}: $e');
       }
     } finally {
       // 无论成功 / 失败 / 取消都必须复位，防止提交按钮永久转圈。
@@ -480,23 +474,14 @@ class _TransactionEditorSheetState
     final l10n = AppLocalizations.of(context);
     final keyboardOpen = mq.viewInsets.bottom > 0;
     // —— 高度自适应 ——
-    // 键盘行高 u 由 computeKeypadU 按可用高度算定：默认 45，
-    // 空间不足时（系统键盘拉起、极小屏）压到 35 保底防溢出。
-    // useSafeArea:true 时 route 不 removePadding，内部 padding.top 即真实
-    // 状态栏高度（SafeArea 已自动把 sheet 顶到状态栏下面，这里仅用于可用
-    // 高度预算，不做任何头部空白补偿）。
-    final topInset = mq.padding.top; // 状态栏（useSafeArea:true 下 route 内真实值）
     final bottomInset = mq.viewPadding.bottom; // 底部安全区（刘海/Home Indicator）
     final keyboardH = mq.viewInsets.bottom; // 系统键盘
     // 背景高度上限 = 全屏 − 系统键盘；实际受 route 约束（SafeArea 已扣顶部
     // 状态栏）限制，顶部正好顶到状态栏下面、底部铺到屏幕底。
     final available = mq.size.height - keyboardH;
-    // 内容真实可用高度：全屏高度扣除状态栏、底部 Home Indicator 与键盘。
-    final contentH = available - topInset - bottomInset;
     // sheet 背景高度上限 = available（全屏 − 键盘），铺满屏顶且不被键盘遮挡；
     // 真实高度由内容决定，仅作为 Container 上限封顶。
     final sheetMaxH = available;
-    final keypadU = computeKeypadU(availableHeight: contentH);
 
     // AA 区块仅账本开启 AA 时展示(功能隔离)
     final aaEnabled =
@@ -556,10 +541,10 @@ class _TransactionEditorSheetState
                   thickness: 0.5,
                   color: SpitoutTokens.cardInnerDividerColor(context),
                 ),
-                // 分类区（独立滚动、无可见滚动条）
-                // Expanded 占据剩余空间：空间充足时多展示几行分类，
-                // 不足时（如系统键盘拉起）分类区被压缩、超出部分滚动查看。
-                Expanded(
+                // 分类区保底 100px（独立滚动、无可见滚动条）；剩余垂直空间
+                // 全部由下方键盘容器 Expanded 撑满，不再用 U 算法反推行高。
+                SizedBox(
+                  height: 100,
                   child: CategoryGridSection(
                     kind: widget.initialKind,
                     initialSelectedId: widget.initialCategoryId,
@@ -571,51 +556,59 @@ class _TransactionEditorSheetState
                   thickness: 0.5,
                   color: SpitoutTokens.cardInnerDividerColor(context),
                 ),
-                // —— 底部固定区：备注行 + 金额栏行（始终显示） + 键盘（仅键盘关闭时） ——
+                // —— 键盘容器：备注行 + 金额栏行 + 键盘，Expanded 撑满剩余空间 ——
                 // 备注行必须始终在树中，否则键盘拉起→NoteInputRow 移除→
                 // TextField 销毁→焦点丢失→键盘收起，形成死循环导致备注无法输入。
-                // 输入区整体包一层带向上阴影的容器：分类区可独立滚动，阴影让
-                // 底部固定输入区产生「悬浮于分类内容之上」的层次分隔感。
-                // 注意必须带与 sheet 一致的实色背景，否则阴影会透过透明区域渗出来。
-                Container(
-                  decoration: BoxDecoration(
-                    color: SpitoutTokens.surfaceSheet(context),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.06),
-                        blurRadius: 8,
-                        // 负 Y 偏移：阴影只向上（分类区方向）投射
-                        offset: const Offset(0, -2),
+                // 键盘容器背景为浅灰（亮色 #DEE0E7），去掉向上阴影；
+                // 内边距上 10 / 左 10 / 右 10 / 下 40（底部留白 40）。
+                Expanded(
+                  child: Container(
+                    color: SpitoutTokens.keypadBackground(context),
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 40),
+                      child: LayoutBuilder(
+                        builder: (ctx, c) {
+                          // 6 行均分：备注行永远比其余 5 行矮 10px，
+                          // 其余 5 行（金额栏 + 3 行数字 + 底部行）等高，
+                          // 相邻行纵向间距全局 2px。
+                          final h = KeypadLayout.rowHeight(c.maxHeight);
+                          final noteH = math.max(
+                            0.0,
+                            h - KeypadLayout.noteRowDelta,
+                          );
+                          return Column(
+                            children: [
+                              // 备注输入行（备注行在金额栏行上方）
+                              SizedBox(
+                                height: noteH,
+                                child: NoteInputRow(
+                                  noteController: _noteCtrl,
+                                  noteFocusNode: _noteFocusNode,
+                                  onNotePicked: _onNotePicked,
+                                ),
+                              ),
+                              const SizedBox(height: KeypadLayout.rowGap),
+                              // 金额输入面板（金额/运算/币种/汇率状态全部在内部，
+                              // 按键只重建本面板，不再带动 Header/分类网格/备注行）
+                              SizedBox(
+                                height: 5 * h + 4 * KeypadLayout.rowGap,
+                                child: AmountInputPanel(
+                                  initialAmount: widget.initialAmount,
+                                  initialCurrencyCode:
+                                      widget.initialCurrencyCode,
+                                  initialNativeAmount:
+                                      widget.initialNativeAmount,
+                                  date: _date,
+                                  categorySelected: _selectedCategory != null,
+                                  isSubmitting: _isSubmitting,
+                                  onPickDate: _pickDate,
+                                  onSubmit: _onSubmit,
+                                ),
+                              ),
+                            ],
+                          );
+                        },
                       ),
-                    ],
-                  ),
-                  child: Padding(
-                    // 底部留白 20：最底排按键距屏幕下沿过近，留出呼吸空间
-                    padding: const EdgeInsets.fromLTRB(10, 10, 10, 20),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // 备注输入行（备注行在金额栏行上方）
-                        NoteInputRow(
-                          noteController: _noteCtrl,
-                          noteFocusNode: _noteFocusNode,
-                          onNotePicked: _onNotePicked,
-                        ),
-                        const SizedBox(height: 5),
-                        // 金额输入面板（金额/运算/币种/汇率状态全部在内部，
-                        // 按键只重建本面板，不再带动 Header/分类网格/备注行）
-                        AmountInputPanel(
-                          initialAmount: widget.initialAmount,
-                          initialCurrencyCode: widget.initialCurrencyCode,
-                          initialNativeAmount: widget.initialNativeAmount,
-                          date: _date,
-                          keypadU: keypadU,
-                          categorySelected: _selectedCategory != null,
-                          isSubmitting: _isSubmitting,
-                          onPickDate: _pickDate,
-                          onSubmit: _onSubmit,
-                        ),
-                      ],
                     ),
                   ),
                 ),

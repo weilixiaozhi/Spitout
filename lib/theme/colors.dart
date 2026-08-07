@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 
-
 /// 全局色板唯一真相源。
 ///
 /// 设计意图：[SpitoutTheme]（app_theme.dart）构造 [ThemeData] 与
@@ -21,11 +20,18 @@ abstract final class SpitoutColors {
   static const Color lightTextTertiary = Color(0xFF9CA3AF);
   static const Color lightInputBg = Color(0xFFF3F4F6);
   static const Color lightChip = Color(0xFFEEEEEE); // 对应 Colors.grey.shade200
-  static const Color lightCategoryIconLight = Color(0xFFF5F5F5); // grey.shade100
+  static const Color lightCategoryIconLight = Color(
+    0xFFF5F5F5,
+  ); // grey.shade100
   static const Color lightCategoryIcon = Color(0xFF616161); // grey.shade700
   static const Color lightDisabledBg = Color(0xFFE0E0E0); // grey.shade300
   static const Color lightDisabledControl = Color(0xFFE5E7EB);
   static const Color lightLink = Color(0xFF3B82F6);
+
+  // ── 记账键盘（亮色）──
+  static const Color lightKeypadBackground = Color(0xFFDEE0E7); // 键盘容器浅灰
+  static const Color lightKeyDigit = Color(0xFFFFFFFF); // 数字/运算符白色色块
+  static const Color lightKeyOther = Color(0xFFC0C3CC); // 日期/删除/完成等深灰
 
   // ── 暗色（shadcn/ui dark）──
   static const Color darkScaffold = Color(0xFF111827);
@@ -39,6 +45,11 @@ abstract final class SpitoutColors {
   static const Color darkBorder = Color(0xFFF3F4F6); // 配 withValues(alpha) 使用
   static const Color darkDisabledControl = Color(0xFF3C3C3E);
   static const Color darkLink = Color(0xFF60A5FA);
+
+  // ── 记账键盘（暗色，与亮色亮度层级一致）──
+  static const Color darkKeypadBackground = Color(0xFF151E2B); // 比 sheet 更深的灰
+  static const Color darkKeyDigit = Color(0xFF374151); // 数字/运算符浅灰块
+  static const Color darkKeyOther = Color(0xFF0D1522); // 日期/删除/完成等深色块
 
   // ── 语义色 ──
   static const Color successLight = Color(0xFF22C55E);
@@ -59,7 +70,6 @@ abstract final class SpitoutColors {
   static const Color cardHeroLight = Color(0xFF112D4E);
   static const Color cardHeroDark = Color(0xFF1E3A5F);
 }
-
 
 /// Spitout Design Token 系统
 ///
@@ -91,8 +101,9 @@ class SpitoutTokens {
   /// 页面背景色（Scaffold 背景）
   /// - 亮色模式：lightScaffold
   /// - 暗黑模式：darkScaffold
-  static Color scaffoldBackground(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkScaffold : SpitoutColors.lightScaffold;
+  static Color scaffoldBackground(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkScaffold
+      : SpitoutColors.lightScaffold;
 
   /// 卡片背景色（贴在页面上的卡片）
   /// - 亮色模式：lightSurface
@@ -103,8 +114,9 @@ class SpitoutTokens {
   /// 次级背景色（嵌套卡片、输入框背景）
   /// - 亮色模式：lightSurfaceSecondary
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceSecondary(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightSurfaceSecondary;
+  static Color surfaceSecondary(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightSurfaceSecondary;
 
   /// 悬浮卡片背景色（Dialog、BottomSheet、Dropdown 等）
   /// - 亮色模式：lightSurface
@@ -115,16 +127,16 @@ class SpitoutTokens {
   /// PrimaryHeader 背景色
   /// - 亮色模式：页面底色（扁平化后 header 与页面融为一体）
   /// - 暗黑模式：darkScaffold
-  static Color surfaceHeader(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkScaffold : scaffoldBackground(context);
+  static Color surfaceHeader(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkScaffold
+      : scaffoldBackground(context);
 
   /// 英雄卡背景色（仅首页 + 账本页两张特殊卡片）
   /// - 亮色模式：cardHeroLight（深蓝，突出显示）
   /// - 暗黑模式：cardHeroDark（更亮的变体，确保在深色背景上有足够对比度）
-  static Color cardHero(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.cardHeroDark
-          : SpitoutColors.cardHeroLight;
+  static Color cardHero(BuildContext context) => isDark(context)
+      ? SpitoutColors.cardHeroDark
+      : SpitoutColors.cardHeroLight;
 
   /// BottomSheet 背景色（金额输入等弹窗）
   /// - 亮色模式：lightSurface
@@ -138,76 +150,104 @@ class SpitoutTokens {
   static Color surfaceKey(BuildContext context) =>
       isDark(context) ? SpitoutColors.darkSurface : SpitoutColors.lightSurface;
 
+  /// 记账键盘容器背景色
+  /// - 亮色模式：lightKeypadBackground（浅灰 #DEE0E7）
+  /// - 暗黑模式：darkKeypadBackground（比 sheet 更深的灰）
+  static Color keypadBackground(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkKeypadBackground
+      : SpitoutColors.lightKeypadBackground;
+
+  /// 记账键盘数字（0-9）/运算符（+-×÷）按键背景色
+  /// - 亮色模式：白色色块
+  /// - 暗黑模式：浅灰块
+  static Color keyDigit(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkKeyDigit
+      : SpitoutColors.lightKeyDigit;
+
+  /// 记账键盘其他按键背景色（日期 / 删除 / 完成等）
+  /// - 亮色模式：lightKeyOther（#C0C3CC）
+  /// - 暗黑模式：darkKeyOther（深色块）
+  static Color keyOther(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkKeyOther
+      : SpitoutColors.lightKeyOther;
+
   /// 键盘次级按钮背景色（日期、+/-等）
   /// - 亮色模式：lightSurfaceSecondary
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceKeySecondary(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightSurfaceSecondary;
+  static Color surfaceKeySecondary(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightSurfaceSecondary;
 
   /// 禁用按钮背景色
   /// - 亮色模式：lightDisabledBg
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceDisabled(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightDisabledBg;
+  static Color surfaceDisabled(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightDisabledBg;
 
   /// 输入框背景色
   /// - 亮色模式：lightInputBg
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceInput(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightInputBg;
+  static Color surfaceInput(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightInputBg;
 
   /// 标签/Chip 背景色（未选中状态）
   /// - 亮色模式：lightChip
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceChip(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightChip;
+  static Color surfaceChip(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightChip;
 
   /// 胶囊切换器背景色（不透明）
   /// - 亮色模式：lightChip（与 6% 黑叠白底视觉一致但不透明，
   ///   避免悬浮胶囊透出下层内容——统计页周/月/年父级 Tab 即悬浮场景)
   /// - 暗黑模式：darkSurfaceSecondary
-  static Color surfaceCapsule(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceSecondary : SpitoutColors.lightChip;
+  static Color surfaceCapsule(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceSecondary
+      : SpitoutColors.lightChip;
 
   /// 弹出层/浮层内卡片背景色（如二级分类选择）
   /// - 亮色模式：lightSurface
   /// - 暗黑模式：darkSurfaceMid
-  static Color surfacePopoverCard(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceMid : SpitoutColors.lightSurface;
+  static Color surfacePopoverCard(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceMid
+      : SpitoutColors.lightSurface;
 
   /// 分类图标背景色（未选中状态）
   /// - 亮色模式：lightChip
   /// - 暗黑模式：darkCategoryIcon
-  static Color surfaceCategoryIcon(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkCategoryIcon : SpitoutColors.lightChip;
+  static Color surfaceCategoryIcon(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkCategoryIcon
+      : SpitoutColors.lightChip;
 
   /// 分类图标背景色 - 浅色版（二级分类用）
   /// - 亮色模式：lightCategoryIconLight
   /// - 暗黑模式：darkSurfaceMid
-  static Color surfaceCategoryIconLight(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkSurfaceMid : SpitoutColors.lightCategoryIconLight;
+  static Color surfaceCategoryIconLight(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurfaceMid
+      : SpitoutColors.lightCategoryIconLight;
 
   /// 分类图标颜色（未选中状态）
   /// - 亮色模式：lightCategoryIcon
   /// - 暗黑模式：darkIconCategory
-  static Color iconCategory(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkIconCategory : SpitoutColors.lightCategoryIcon;
+  static Color iconCategory(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkIconCategory
+      : SpitoutColors.lightCategoryIcon;
 
   /// 选中状态背景色（列表项选中、高亮）
   /// - 亮色模式：主题色 8% 透明度
   /// - 暗黑模式：主题色 15% 透明度
-  static Color surfaceSelected(BuildContext context) =>
-      isDark(context)
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
-          : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08);
+  static Color surfaceSelected(BuildContext context) => isDark(context)
+      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.15)
+      : Theme.of(context).colorScheme.primary.withValues(alpha: 0.08);
 
   /// 悬停/按压状态背景色
   /// - 亮色模式：rgba(0,0,0,0.04)
   /// - 暗黑模式：rgba(255,255,255,0.08)
-  static Color surfaceHover(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.08)
-          : Colors.black.withValues(alpha: 0.04);
+  static Color surfaceHover(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.08)
+      : Colors.black.withValues(alpha: 0.04);
 
   /// 反转背景色（FAB、浮动按钮等需要"反色"的组件背景）
   /// - 亮色模式：#000000 (纯黑)
@@ -220,32 +260,30 @@ class SpitoutTokens {
   /// 主要文字颜色（标题、正文）
   /// - 亮色模式：lightTextPrimary
   /// - 暗黑模式：darkTextPrimary
-  static Color textPrimary(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkTextPrimary : SpitoutColors.lightTextPrimary;
+  static Color textPrimary(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkTextPrimary
+      : SpitoutColors.lightTextPrimary;
 
   /// 次要文字颜色（副标题、说明文字）
   /// - 亮色模式：lightTextSecondary
   /// - 暗黑模式：darkTextSecondary
-  static Color textSecondary(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.darkTextSecondary
-          : SpitoutColors.lightTextSecondary;
+  static Color textSecondary(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkTextSecondary
+      : SpitoutColors.lightTextSecondary;
 
   /// 提示文字颜色（placeholder、hint、辅助说明）
   /// - 亮色模式：lightTextTertiary
   /// - 暗黑模式：rgba(255,255,255,0.54)
-  static Color textTertiary(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.54)
-          : SpitoutColors.lightTextTertiary;
+  static Color textTertiary(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.54)
+      : SpitoutColors.lightTextTertiary;
 
   /// 禁用文字颜色
   /// - 亮色模式：rgba(0,0,0,0.26)
   /// - 暗黑模式：rgba(255,255,255,0.38)
-  static Color textDisabled(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.38)
-          : Colors.black.withValues(alpha: 0.26);
+  static Color textDisabled(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.38)
+      : Colors.black.withValues(alpha: 0.26);
 
   /// 反色文字（用于深色背景上的白色文字）
   /// - 亮色模式：#FFFFFF
@@ -286,60 +324,53 @@ class SpitoutTokens {
   /// 次要图标颜色
   /// - 亮色模式：rgba(0,0,0,0.54)
   /// - 暗黑模式：rgba(255,255,255,0.7)
-  static Color iconSecondary(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.7)
-          : Colors.black.withValues(alpha: 0.54);
+  static Color iconSecondary(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.7)
+      : Colors.black.withValues(alpha: 0.54);
 
   /// 提示图标颜色
   /// - 亮色模式：rgba(0,0,0,0.38)
   /// - 暗黑模式：rgba(255,255,255,0.54)
-  static Color iconTertiary(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.54)
-          : Colors.black.withValues(alpha: 0.38);
+  static Color iconTertiary(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.54)
+      : Colors.black.withValues(alpha: 0.38);
 
   // ========== 边框/分割线 Token (Border) ==========
 
   /// 分割线颜色
   /// - 亮色模式：rgba(0,0,0,0.06)
   /// - 暗黑模式：rgba(243,244,246,0.10) (shadcn border dark)
-  static Color divider(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
-          : Colors.black.withValues(alpha: 0.06);
+  static Color divider(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
+      : Colors.black.withValues(alpha: 0.06);
 
   /// 边框颜色（卡片边框）
   /// - 亮色模式：transparent（使用阴影）
   /// - 暗黑模式：rgba(243,244,246,0.10) (shadcn border dark)
-  static Color border(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
-          : Colors.transparent;
+  static Color border(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
+      : Colors.transparent;
 
   /// 强调边框颜色
   /// - 亮色模式：rgba(0,0,0,0.12)
   /// - 暗黑模式：rgba(243,244,246,0.10) (shadcn border dark)
-  static Color borderStrong(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
-          : Colors.black.withValues(alpha: 0.12);
+  static Color borderStrong(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
+      : Colors.black.withValues(alpha: 0.12);
 
   /// 主题色边框（用于卡片等）
   /// - 亮色模式：transparent
   /// - 暗黑模式：主题色 30% 透明度
-  static Color borderThemed(BuildContext context) =>
-      isDark(context)
-          ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-          : Colors.transparent;
+  static Color borderThemed(BuildContext context) => isDark(context)
+      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
+      : Colors.transparent;
 
   // ========== 卡片边框 Token (Card Border) ==========
 
   /// 卡片外边框颜色
   /// - 亮色模式：transparent（使用阴影）
   /// - 暗黑模式：transparent（去掉边框）
-  static Color cardOuterBorderColor(BuildContext context) =>
-      Colors.transparent;
+  static Color cardOuterBorderColor(BuildContext context) => Colors.transparent;
 
   /// 卡片外边框宽度
   /// - 亮色模式：0
@@ -349,10 +380,9 @@ class SpitoutTokens {
   /// 卡片内部分割线颜色
   /// - 亮色模式：rgba(0,0,0,0.06)
   /// - 暗黑模式：transparent（去掉分割线）
-  static Color cardInnerDividerColor(BuildContext context) =>
-      isDark(context)
-          ? Colors.transparent
-          : Colors.black.withValues(alpha: 0.06);
+  static Color cardInnerDividerColor(BuildContext context) => isDark(context)
+      ? Colors.transparent
+      : Colors.black.withValues(alpha: 0.06);
 
   /// 卡片内部分割线高度
   /// - 亮色模式：1
@@ -444,8 +474,9 @@ class SpitoutTokens {
   /// 禁用按钮背景色
   /// - 亮色模式：lightDisabledControl
   /// - 暗黑模式：darkDisabledControl
-  static Color buttonDisabled(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkDisabledControl : SpitoutColors.lightDisabledControl;
+  static Color buttonDisabled(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkDisabledControl
+      : SpitoutColors.lightDisabledControl;
 
   /// Switch 开启状态轨道颜色
   /// - 亮色模式：主题色
@@ -456,8 +487,9 @@ class SpitoutTokens {
   /// Switch 关闭状态轨道颜色
   /// - 亮色模式：lightDisabledControl
   /// - 暗黑模式：darkDisabledControl
-  static Color switchInactiveTrack(BuildContext context) =>
-      isDark(context) ? SpitoutColors.darkDisabledControl : SpitoutColors.lightDisabledControl;
+  static Color switchInactiveTrack(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkDisabledControl
+      : SpitoutColors.lightDisabledControl;
 
   // ========== 品牌图标色 Token (Brand Icons) ==========
   // 这些颜色是各服务的品牌色，在亮暗模式下保持一致
@@ -487,8 +519,9 @@ class SpitoutTokens {
   /// 离线/断开连接指示色
   /// - 亮色模式：lightTextTertiary
   /// - 暗黑模式：rgba(255,255,255,0.38)
-  static Color statusOffline(BuildContext context) =>
-      isDark(context) ? Colors.white.withValues(alpha: 0.38) : SpitoutColors.lightTextTertiary;
+  static Color statusOffline(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.38)
+      : SpitoutColors.lightTextTertiary;
 
   /// 待处理/等待中指示色
   /// - 亮色模式：warningLight
@@ -507,37 +540,34 @@ class SpitoutTokens {
   /// 模态遮罩层颜色
   /// - 亮色模式：rgba(0,0,0,0.5)
   /// - 暗黑模式：rgba(0,0,0,0.7)
-  static Color overlay(BuildContext context) =>
-      isDark(context)
-          ? Colors.black.withValues(alpha: 0.7)
-          : Colors.black.withValues(alpha: 0.5);
+  static Color overlay(BuildContext context) => isDark(context)
+      ? Colors.black.withValues(alpha: 0.7)
+      : Colors.black.withValues(alpha: 0.5);
 
   /// 轻量遮罩层颜色（用于下拉刷新等）
   /// - 亮色模式：rgba(0,0,0,0.05)
   /// - 暗黑模式：rgba(255,255,255,0.05)
-  static Color overlayLight(BuildContext context) =>
-      isDark(context)
-          ? Colors.white.withValues(alpha: 0.05)
-          : Colors.black.withValues(alpha: 0.05);
+  static Color overlayLight(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.05)
+      : Colors.black.withValues(alpha: 0.05);
 
   // ========== 悬浮 Tab 栏 Token (Floating Tab Bar) ==========
 
   /// 悬浮 Tab 栏背景色
   /// - 亮色模式：白色 95% 不透明
   /// - 暗黑模式：darkSurface 95% 不透明
-  static Color tabBarBackground(BuildContext context) =>
-      isDark(context)
-          ? SpitoutColors.darkSurface.withValues(alpha: 0.95)
-          : Colors.white.withValues(alpha: 0.95);
+  static Color tabBarBackground(BuildContext context) => isDark(context)
+      ? SpitoutColors.darkSurface.withValues(alpha: 0.95)
+      : Colors.white.withValues(alpha: 0.95);
 
   /// 悬浮 Tab 栏阴影
   static List<BoxShadow> get tabBarShadow => [
-        BoxShadow(
-          color: Colors.black.withValues(alpha: 0.08),
-          blurRadius: 20,
-          offset: const Offset(0, 4),
-        ),
-      ];
+    BoxShadow(
+      color: Colors.black.withValues(alpha: 0.08),
+      blurRadius: 20,
+      offset: const Offset(0, 4),
+    ),
+  ];
 
   // ========== 辅助方法 ==========
 
@@ -560,5 +590,4 @@ class SpitoutTokens {
         return textPrimary(context);
     }
   }
-
 }

@@ -15,14 +15,17 @@ import 'press_key.dart';
 /// - 金额区：横向滚动 + 自动显示末尾输入（whitespace-nowrap + scroll-smooth）。
 ///   - waiting/calculated：仅显示最终结果；空值显示 `0`。
 ///   - operating：表达式 + 灰色预览结果（`算式 = 预览`）。
+///   - 折算预览（仅外币 + waiting/calculated）：作为金额区行内后缀显示，
+///     保证金额栏始终是一行等高键位。
 /// - 删除键：Delete 图标 + 「长按清空」文本；轻触删最后一位，长按 560ms 清空。
-/// - 折算预览（仅外币 + waiting/calculated 状态）：`≈ ¥xx.xx CNY`。
-///   计算中（operating）不显示外币换算。
 ///
-/// 宽度对齐规则（与下方 4×4 键盘列宽一致，键盘 colWidth = (总宽 - 3×8) / 4）：
+/// 宽度对齐规则（与下方 4×4 键盘列宽一致，键盘 colWidth = (总宽 - 3×2) / 4）：
 /// - 币种框宽度 = 1 列（对齐数字 1 键）；
-/// - 金额区宽度 = 2 列 + 中间 8px 间距（对齐数字 2+3 键）；
-/// - 删除键宽度 = 1 列（对齐乘号键）。
+/// - 金额区宽度 = 2 列 + 中间 2px 间距（对齐数字 2+3 键）；
+/// - 删除键宽度 = 1 列（对齐运算符键）。
+///
+/// 行高：由父级键盘容器按剩余空间算好后以 SizedBox 提供，本组件行内
+/// 三个区块横向 stretch 填满整行，不写死绝对像素。
 class AmountExpressionBar extends ConsumerStatefulWidget {
   /// 交易币种（大写 ISO）
   final String txCurrency;
@@ -134,20 +137,18 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
   /// 币种触发器：展示全局统一的「ISO + (符号)」（如 CNY (¥)）。
   ///
   /// 设计意图：与首页卡片账本徽章、记账详情等所有币种展示点共用
-  /// currencyFlagLabel 全局口径，避免同一币种在不同页面出现
-  /// 「人民币 / ¥ / CNY」三种写法；窄框内由 FittedBox 等比缩小兜底。
+  /// currencyFlagLabel 全局口径；窄框内由 FittedBox 等比缩小兜底。
   Widget _buildCurrencyChip(BuildContext context) {
     final text = Theme.of(context).textTheme;
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       onTap: widget.onPickCurrency,
       child: Container(
         key: const ValueKey('amount_currency_chip'),
-        height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 4),
         decoration: BoxDecoration(
-          color: SpitoutTokens.surfaceKeySecondary(context),
-          borderRadius: BorderRadius.circular(12),
+          color: SpitoutTokens.keyOther(context),
+          borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
         ),
         // 符号与 ISO 拼装后宽度可能超过 1 列：FittedBox 等比缩小兜底，保证不溢出
         child: Center(
@@ -167,6 +168,36 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     );
   }
 
+  /// 折算预览后缀（仅外币 + waiting/calculated 状态，作为金额区行内后缀）。
+  /// 计算中（operating）不显示外币换算。
+  List<Widget> _buildConversionSuffix(BuildContext context) {
+    final isForeign = widget.txCurrency != widget.ledgerBase;
+    if (!isForeign || widget.calcState == 'operating') return const [];
+
+    final text = Theme.of(context).textTheme;
+    final display =
+        widget.conversionPreview ??
+        (widget.rateFetching
+            ? '≈ … ${widget.ledgerBase}'
+            : widget.rateMissingHint);
+    return [
+      const SizedBox(width: 8),
+      GestureDetector(
+        onTap: widget.rateMissing ? widget.onEditRate : null,
+        child: Text(
+          display,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: text.bodySmall?.copyWith(
+            color: widget.rateMissing
+                ? Theme.of(context).colorScheme.error
+                : SpitoutTokens.textTertiary(context),
+          ),
+        ),
+      ),
+    ];
+  }
+
   /// 金额显示区：横向滚动 + 自动滚动到末尾。
   /// overflow-x-auto + whitespace-nowrap + scroll-smooth
   Widget _buildAmountArea(BuildContext context) {
@@ -177,11 +208,10 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
 
     return Container(
       key: const ValueKey('amount_area'),
-      height: 35,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
-        color: SpitoutTokens.surfaceKeySecondary(context),
-        borderRadius: BorderRadius.circular(12),
+        color: SpitoutTokens.keyDigit(context),
+        borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       ),
       child: SingleChildScrollView(
         controller: _amountScrollCtrl,
@@ -239,6 +269,8 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
                   color: SpitoutTokens.textPrimary(context),
                 ),
               ),
+            // 外币折算预览（行内后缀，保持金额栏单行等高）
+            ..._buildConversionSuffix(context),
           ],
         ),
       ),
@@ -256,17 +288,19 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       onCancel: widget.onRollback,
       // 长按 560ms：清空（触觉由面板统一触发）
       onLongPress: widget.onClearAmount,
-      backgroundColor: SpitoutTokens.surfaceKeySecondary(context),
-      borderRadius: BorderRadius.circular(12),
+      backgroundColor: SpitoutTokens.keyOther(context),
+      borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         key: const ValueKey('amount_delete_key'),
-        height: 35,
         padding: const EdgeInsets.symmetric(horizontal: 8),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(AppIcons.backspace,
-                size: 16, color: SpitoutTokens.textSecondary(context)),
+            Icon(
+              AppIcons.backspace,
+              size: 16,
+              color: SpitoutTokens.textSecondary(context),
+            ),
             const SizedBox(height: 2),
             Text(
               l10n.txDeleteLongPress,
@@ -282,38 +316,6 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
     );
   }
 
-  /// 折算预览行（仅外币 + waiting/calculated 状态）。
-  /// 计算中（operating）不显示外币换算。
-  Widget? _buildConversionRow(BuildContext context) {
-    final isForeign = widget.txCurrency != widget.ledgerBase;
-    if (!isForeign) return null;
-    // operating 状态不显示折算预览
-    if (widget.calcState == 'operating') return null;
-
-    final text = Theme.of(context).textTheme;
-    final display = widget.conversionPreview ??
-        (widget.rateFetching ? '≈ … ${widget.ledgerBase}' : widget.rateMissingHint);
-    return Padding(
-      padding: const EdgeInsets.only(top: 2),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.end,
-        children: [
-          InkWell(
-            onTap: widget.rateMissing ? widget.onEditRate : null,
-            child: Text(
-              display,
-              style: text.bodySmall?.copyWith(
-                color: widget.rateMissing
-                    ? Theme.of(context).colorScheme.error
-                    : SpitoutTokens.textTertiary(context),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     // 水平方向不设 padding，由外层 Padding 统一控制左右对齐
@@ -321,35 +323,21 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       builder: (ctx, c) {
         // 与 AmountKeypad 的列宽公式保持一致：(总宽 - 3 个键间距) / 4，
         // 键间距统一来自 KeypadLayout.gap。
-        // 三区块按 1 / 2+8 / 1 列分配，宽度恰好铺满整行并与键盘键位一一对齐：
-        //   币种框 ↔ 数字 1；金额区 ↔ 数字 2+3（含中间间距）；删除键 ↔ 乘号。
+        // 三区块按 1 / 2+2px / 1 列分配，宽度恰好铺满整行并与键盘键位一一对齐：
+        //   币种框 ↔ 数字 1；金额区 ↔ 数字 2+3（含中间间距）；删除键 ↔ 运算符键。
         final colWidth = (c.maxWidth - 3 * KeypadLayout.gap) / 4;
-        // 折算预览行同一帧只构建一次，避免先判空再取用导致重复建树。
-        final conversionRow = _buildConversionRow(context);
-        return Column(
-          crossAxisAlignment: CrossAxisAlignment.end,
+        return Row(
+          // 行高由父级 SizedBox 提供，横向 stretch 让三个区块统一填满整行
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // [币种] [金额] [删除] 三列布局
-            Row(
-              children: [
-                SizedBox(
-                  width: colWidth,
-                  child: _buildCurrencyChip(context),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: colWidth * 2 + 8,
-                  child: _buildAmountArea(context),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  width: colWidth,
-                  child: _buildDeleteKey(context),
-                ),
-              ],
+            SizedBox(width: colWidth, child: _buildCurrencyChip(context)),
+            const SizedBox(width: KeypadLayout.gap),
+            SizedBox(
+              width: colWidth * 2 + KeypadLayout.gap,
+              child: _buildAmountArea(context),
             ),
-            // 折算预览（仅外币 + 非计算中）
-            ?conversionRow,
+            const SizedBox(width: KeypadLayout.gap),
+            SizedBox(width: colWidth, child: _buildDeleteKey(context)),
           ],
         );
       },

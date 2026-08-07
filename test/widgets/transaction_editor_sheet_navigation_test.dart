@@ -27,6 +27,8 @@ import 'package:spitout/router.dart';
 import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/widgets/amount_expression_bar.dart';
 import 'package:spitout/widgets/amount_keypad.dart';
+import 'package:spitout/widgets/category_grid_section.dart';
+import 'package:spitout/widgets/keypad_constants.dart';
 import 'package:spitout/widgets/note_input_row.dart';
 import 'package:spitout/widgets/transaction_editor_sheet.dart';
 import 'package:spitout/widgets/transaction_editor_sheet_entry.dart';
@@ -66,9 +68,10 @@ void main() {
         ),
         // manage 页依赖：空分类列表即可正常渲染
         categoriesWithCountProvider.overrideWith(
-          (ref) => Stream<List<({db.Category category, int transactionCount})>>.value(
-            const [],
-          ),
+          (ref) =>
+              Stream<
+                List<({db.Category category, int transactionCount})>
+              >.value(const []),
         ),
       ],
       child: MaterialApp(
@@ -97,9 +100,9 @@ void main() {
 
   /// 金额显示区中定位指定金额文本（避免与键盘上的数字键混淆）
   Finder amountText(String amount) => find.descendant(
-        of: find.byType(AmountExpressionBar),
-        matching: find.text(amount),
-      );
+    of: find.byType(AmountExpressionBar),
+    matching: find.text(amount),
+  );
 
   testWidgets('记账 sheet 点「编辑分类」→ 新 manage 页 push、sheet 保留现场', (tester) async {
     await tester.pumpWidget(buildApp());
@@ -108,19 +111,20 @@ void main() {
     await tester.tap(find.text('open-sheet'));
     await tester.pumpAndSettle();
 
-    expect(find.byType(TransactionEditorSheet), findsOneWidget,
-        reason: '记账 sheet 应打开');
+    expect(
+      find.byType(TransactionEditorSheet),
+      findsOneWidget,
+      reason: '记账 sheet 应打开',
+    );
 
     // 2. 输入金额 12（点数字键 1、2）
-    await tester.tap(find.descendant(
-      of: find.byType(AmountKeypad),
-      matching: find.text('1'),
-    ));
+    await tester.tap(
+      find.descendant(of: find.byType(AmountKeypad), matching: find.text('1')),
+    );
     await tester.pump();
-    await tester.tap(find.descendant(
-      of: find.byType(AmountKeypad),
-      matching: find.text('2'),
-    ));
+    await tester.tap(
+      find.descendant(of: find.byType(AmountKeypad), matching: find.text('2')),
+    );
     await tester.pump();
     expect(amountText('12'), findsOneWidget, reason: '金额 12 应已输入');
 
@@ -130,52 +134,80 @@ void main() {
 
     // 4. 新 manage 页 push 成功，且 sheet 仍在栈上（未被连带 pop）
     // 注：被全屏路由覆盖后 sheet 转为 offstage，需 skipOffstage: false 断言其仍挂载
-    expect(find.byType(CategoryManagePage), findsOneWidget,
-        reason: '应 push 出分类管理页');
-    expect(find.byType(TransactionEditorSheet, skipOffstage: false), findsOneWidget,
-        reason: 'sheet 应保留在导航栈上（offstage 但未销毁）');
+    expect(
+      find.byType(CategoryManagePage),
+      findsOneWidget,
+      reason: '应 push 出分类管理页',
+    );
+    expect(
+      find.byType(TransactionEditorSheet, skipOffstage: false),
+      findsOneWidget,
+      reason: 'sheet 应保留在导航栈上（offstage 但未销毁）',
+    );
 
     // 5. 系统返回键：pop manage 页回到 sheet
     await tester.binding.handlePopRoute();
     await tester.pumpAndSettle();
 
     // 6. sheet 内容未丢：金额 12 仍在
-    expect(find.byType(TransactionEditorSheet), findsOneWidget,
-        reason: '返回后 sheet 应重新可见');
-    expect(amountText('12'), findsOneWidget,
-        reason: '返回后已输入的金额应保留');
+    expect(
+      find.byType(TransactionEditorSheet),
+      findsOneWidget,
+      reason: '返回后 sheet 应重新可见',
+    );
+    expect(amountText('12'), findsOneWidget, reason: '返回后已输入的金额应保留');
   });
 
-  testWidgets('记账 sheet 输入区尺寸：备注/金额栏 35、间距 5 与 10、键盘 u 随可用高度', (tester) async {
+  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 10、间距 2、内边距 10/40、无阴影', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('open-sheet'));
     await tester.pumpAndSettle();
 
-    // 备注行与金额栏整行高度均固定 35
-    expect(tester.getSize(find.byType(NoteInputRow)).height, closeTo(35, 0.5),
-        reason: '备注输入行高度应为 35');
-    expect(tester.getSize(find.byType(AmountExpressionBar)).height, 35,
-        reason: '金额栏整行高度应为 35');
+    // 单行高 h：金额栏 = h、键盘 4 行均分（(键盘高-3×2)/4）、备注 = h-10
+    final keypadSize = tester.getSize(find.byType(AmountKeypad));
+    final h = (keypadSize.height - 3 * KeypadLayout.rowGap) / 4;
+    expect(
+      tester.getSize(find.byType(AmountExpressionBar)).height,
+      closeTo(h, 0.5),
+      reason: '金额栏高度应等于单行高',
+    );
+    expect(
+      tester.getSize(find.byType(NoteInputRow)).height,
+      closeTo(h - KeypadLayout.noteRowDelta, 0.5),
+      reason: '备注行永远比其余 5 行矮 10px',
+    );
 
-    // 备注行 ↔ 金额栏间距 5px
+    // 相邻两行纵向间距全局 2px：备注 ↔ 金额栏、金额栏 ↔ 键盘
     final noteBottom = tester.getBottomLeft(find.byType(NoteInputRow)).dy;
     final barTop = tester.getTopLeft(find.byType(AmountExpressionBar)).dy;
-    expect(barTop - noteBottom, 5, reason: '备注行与金额栏间距应为 5');
+    expect(barTop - noteBottom, KeypadLayout.rowGap, reason: '备注行与金额栏间距应为 2');
 
-    // 金额栏 ↔ 键盘间距 10px
     final barBottom = tester.getBottomLeft(find.byType(AmountExpressionBar)).dy;
     final keypadTop = tester.getTopLeft(find.byType(AmountKeypad)).dy;
-    expect(keypadTop - barBottom, 10, reason: '金额栏与键盘间距应为 10');
+    expect(keypadTop - barBottom, KeypadLayout.rowGap, reason: '金额栏与键盘间距应为 2');
 
-    // 键盘 u 由 computeKeypadU 按可用高度算定，落在 [35,45]
-    final keypad = tester.widget<AmountKeypad>(find.byType(AmountKeypad));
-    expect(keypad.u, inInclusiveRange(35, 45),
-        reason: '键盘行高应随可用高度在 [35,45] 内浮动');
-
-    // 容器上下内边距 10 / 20
-    final bottomPadding = find.byWidgetPredicate(
-      (w) => w is Padding && w.padding == const EdgeInsets.fromLTRB(10, 10, 10, 20),
+    // 分类区固定保底 100
+    expect(
+      tester.getSize(find.byType(CategoryGridSection)).height,
+      closeTo(100, 0.5),
+      reason: '分类区保底 100px',
     );
-    expect(bottomPadding, findsWidgets, reason: '底部输入区容器内边距应为上 10 / 下 20');
+
+    // 底部固定区容器内边距：上 10 / 左 10 / 右 10 / 下 40
+    final bottomPadding = find.byWidgetPredicate(
+      (w) =>
+          w is Padding &&
+          w.padding == const EdgeInsets.fromLTRB(10, 10, 10, 40),
+    );
+    expect(bottomPadding, findsWidgets, reason: '底部键盘容器内边距应为上 10 / 下 40');
+
+    // 去掉向上阴影
+    final shadowed = find.byWidgetPredicate(
+      (w) =>
+          w is Container &&
+          w.decoration is BoxDecoration &&
+          (w.decoration! as BoxDecoration).boxShadow != null,
+    );
+    expect(shadowed, findsNothing, reason: '底部键盘容器不应有向上阴影');
   });
 }

@@ -9,6 +9,7 @@ import '../l10n/app_localizations.dart';
 import 'amount_expression_bar.dart';
 import 'amount_keypad.dart';
 import 'currency_picker_sheet.dart';
+import 'keypad_constants.dart';
 
 /// 记账编辑器的金额输入面板：金额/运算状态 + 币种/汇率 + 金额栏 + 键盘。
 ///
@@ -25,7 +26,6 @@ class AmountInputPanel extends ConsumerStatefulWidget {
     required this.initialCurrencyCode,
     required this.initialNativeAmount,
     required this.date,
-    required this.keypadU,
     required this.categorySelected,
     required this.isSubmitting,
     required this.onPickDate,
@@ -39,9 +39,6 @@ class AmountInputPanel extends ConsumerStatefulWidget {
 
   /// 当前交易日期（日期键显示；变更由父 sheet 驱动）。
   final DateTime date;
-
-  /// 键盘单元行高（父 sheet 按可用高度算好）。
-  final double keypadU;
 
   /// 是否已选分类（完成键可用性的一部分）。
   final bool categorySelected;
@@ -107,12 +104,8 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
   // —— 状态快照与撤销 ——
 
   ({String amountStr, double acc, String? op, _CalcState calcState})
-  _snapshot() => (
-        amountStr: _amountStr,
-        acc: _acc,
-        op: _op,
-        calcState: _calcState,
-      );
+  _snapshot() =>
+      (amountStr: _amountStr, acc: _acc, op: _op, calcState: _calcState);
 
   bool _sameSnap(
     ({String amountStr, double acc, String? op, _CalcState calcState}) a,
@@ -366,8 +359,9 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
     if (picked == null || !mounted) return;
     _lastUndo = null;
     setState(() {
-      _pickedCurrency =
-          picked.toUpperCase() == base ? null : picked.toUpperCase();
+      _pickedCurrency = picked.toUpperCase() == base
+          ? null
+          : picked.toUpperCase();
       // 换币种后隐含/手改汇率作废，重新带有效汇率
       _rateStr = null;
       _rateManuallySet = false;
@@ -451,46 +445,58 @@ class _AmountInputPanelState extends ConsumerState<AmountInputPanel> {
         widget.categorySelected &&
         !widget.isSubmitting;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        AmountExpressionBar(
-          txCurrency: txCurrency,
-          ledgerBase: base,
-          amountStr: _amountStr,
-          acc: _acc,
-          op: _op,
-          opGlyph: _opGlyph,
-          equalsTotal: _currentTotal,
-          calcState: _calcStateStr,
-          conversionPreview: _conversionPreview(),
-          rateFetching: _fetchingRate,
-          rateMissing: rate == null && !_fetchingRate && isForeign,
-          rateMissingHint: l10n.txRateMissingHint,
-          onPickCurrency: _pickCurrency,
-          onEditRate: _editRate,
-          onClearAmount: _clearAmount,
-          onDeleteOne: _backspace,
-          onRollback: _rollbackLast,
-        ),
-        const SizedBox(height: 10),
-        AmountKeypad(
-          u: widget.keypadU,
-          date: widget.date,
-          showTime: true, // 5 列滚轮始终含时分
-          calcState: _calcStateStr,
-          op: _op,
-          isDoneEnabled: doneEnabled,
-          isSubmitting: widget.isSubmitting,
-          opGlyph: _opGlyph,
-          onAppend: _append,
-          onApplyOp: _applyOp,
-          onApplyEquals: _applyEquals,
-          onPickDate: widget.onPickDate,
-          onSubmit: _handleSubmit,
-          onRollback: _rollbackLast,
-        ),
-      ],
+    // 行高由父 sheet 的键盘容器按剩余空间均分后以 SizedBox 提供，
+    // 本面板内部：金额栏 = 单行高 h，键盘 = 4h + 3 个行距。
+    return LayoutBuilder(
+      builder: (ctx, c) {
+        // 面板 = 金额栏(1 行) + 键盘(4 行)，含 4 个 2px 行距
+        // （金额栏↔键盘 1 个 + 键盘内部 3 个）
+        final h = (c.maxHeight - 4 * KeypadLayout.rowGap) / 5;
+        return Column(
+          children: [
+            SizedBox(
+              height: h,
+              child: AmountExpressionBar(
+                txCurrency: txCurrency,
+                ledgerBase: base,
+                amountStr: _amountStr,
+                acc: _acc,
+                op: _op,
+                opGlyph: _opGlyph,
+                equalsTotal: _currentTotal,
+                calcState: _calcStateStr,
+                conversionPreview: _conversionPreview(),
+                rateFetching: _fetchingRate,
+                rateMissing: rate == null && !_fetchingRate && isForeign,
+                rateMissingHint: l10n.txRateMissingHint,
+                onPickCurrency: _pickCurrency,
+                onEditRate: _editRate,
+                onClearAmount: _clearAmount,
+                onDeleteOne: _backspace,
+                onRollback: _rollbackLast,
+              ),
+            ),
+            const SizedBox(height: KeypadLayout.rowGap),
+            Expanded(
+              child: AmountKeypad(
+                date: widget.date,
+                showTime: true, // 5 列滚轮始终含时分
+                calcState: _calcStateStr,
+                op: _op,
+                isDoneEnabled: doneEnabled,
+                isSubmitting: widget.isSubmitting,
+                opGlyph: _opGlyph,
+                onAppend: _append,
+                onApplyOp: _applyOp,
+                onApplyEquals: _applyEquals,
+                onPickDate: widget.onPickDate,
+                onSubmit: _handleSubmit,
+                onRollback: _rollbackLast,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }

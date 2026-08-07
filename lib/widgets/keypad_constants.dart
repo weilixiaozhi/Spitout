@@ -1,20 +1,24 @@
-/// 记账键盘统一布局常量：行高 / 水平键距 / 行距的单一来源，
+/// 记账键盘统一布局常量：键距 / 行距 / 圆角 / 行高关系的单一来源，
 /// 避免各处维护导致改一处漏一处的静默失配。
 class KeypadLayout {
   const KeypadLayout._();
 
   /// 相邻键位水平间距（px）。
-  static const double gap = 8;
+  static const double gap = 2;
 
   /// 键盘相邻两行之间的纵向行距（px）。
-  static const double rowGap = 10;
+  static const double rowGap = 2;
 
-  /// 键盘单元行高下限（px）：保证按键可点按。
-  static const double minU = 35;
+  /// 按键圆角（px）。
+  static const double keyRadius = 5;
 
-  /// 键盘单元行高上限（px）：保持整体紧凑。
-  static const double maxU = 45;
+  /// 备注行比其余 5 行（金额栏 + 3 行数字 + 底部行）矮的高度（px）。
+  static const double noteRowDelta = 10;
 
-  /// 4 行键盘之间 3 个纵向行距合计（px）。
-  static const double keypadGap = rowGap * 3;
+  /// 6 行键盘容器（备注 + 金额栏 + 数字网格 + 底部行）的单行高度。
+  ///
+  /// 容器高度 = 备注行(单行-10) + 5 个 2px 行距 + 其余 5 行(每行单行高)，
+  /// 反推单行高：其余 5 行均分、备注行永远矮 [noteRowDelta]。
+  static double rowHeight(double containerHeight) =>
+      (containerHeight - 5 * rowGap + noteRowDelta) / 6;
 }
