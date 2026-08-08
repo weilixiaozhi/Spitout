@@ -152,6 +152,42 @@ void main() {
     );
   });
 
+  testWidgets('新建：点击取消关闭对话框，不落库', (tester) async {
+    await openSheet(tester);
+
+    await tester.tap(find.byTooltip('新建虚拟用户'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await tester.tap(find.widgetWithText(TextButton, '取消'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.byType(AlertDialog), findsNothing);
+    verifyNever(
+      () => repo.create(
+        ledgerId: any(named: 'ledgerId'),
+        name: any(named: 'name'),
+      ),
+    );
+  });
+
+  testWidgets('新建：落库失败 toast 通用失败文案', (tester) async {
+    when(() => repo.create(ledgerId: 1, name: '新室友')).thenThrow(
+      Exception('db down'),
+    );
+    await openSheet(tester);
+
+    await tester.tap(find.byTooltip('新建虚拟用户'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+    await submitName(tester, '新室友');
+
+    expect(find.textContaining('失败'), findsOneWidget);
+    // toast 自动消失，避免残留定时器。
+    await tester.pump(const Duration(seconds: 2));
+    await tester.pump(const Duration(seconds: 1));
+  });
+
   testWidgets('重命名：回填旧名，确认后调用 rename', (tester) async {
     when(() => repo.rename(id: 1, name: '新名')).thenAnswer((_) async {});
     await openSheet(tester);

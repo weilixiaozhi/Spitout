@@ -246,6 +246,52 @@ class TransactionListState extends ConsumerState<TransactionList> {
     }
   }
 
+  /// 构建单个日期头部。
+  ///
+  /// 抽出为独立方法并标注 [visibleForTesting]：可见性回调依赖
+  /// visibility_detector 的运行时 paint 通知，widget test 环境不会触发，
+  /// 测试直接构造本方法产物以验证「可见比例 > 50% 才算可见」的判定接线。
+  @visibleForTesting
+  Widget buildDayHeader({
+    required String dateKey,
+    required List<({Transaction t, Category? category})> dayItems,
+    required String? ledgerCurrency,
+  }) {
+    // 整数分累加,避免 double 尾差;展示时再转"元"。
+    int dayExpense = 0;
+    for (final it in dayItems) {
+      // 全局仅支出模式，type 固定为 'expense'
+      if (it.t.type == 'expense') {
+        dayExpense += it.t.nativeAmount ?? it.t.amount;
+      }
+    }
+    // 日支出汇总统一以账本本位币符号展示（nativeAmount 已折算为本位币），
+    // currencyCode 为 null 时 DaySectionHeader 回退为无符号纯数字。
+    Widget header = DaySectionHeader(
+      dateText: dateKey,
+      expense: dayExpense / 100,
+      currencyCode: ledgerCurrency,
+    );
+
+    // 如果启用可见性跟踪，则包装VisibilityDetector
+    if (widget.enableVisibilityTracking &&
+        widget.onDateVisibilityChanged != null) {
+      header = VisibilityDetector(
+        key: Key('header-$dateKey'),
+        onVisibilityChanged: (VisibilityInfo info) {
+          // 当可见比例大于50%时认为可见
+          widget.onDateVisibilityChanged!(
+            dateKey,
+            info.visibleFraction > 0.5,
+          );
+        },
+        child: header,
+      );
+    }
+
+    return header;
+  }
+
   @override
   Widget build(BuildContext context) {
     // 无数据时展示空状态。
@@ -304,48 +350,16 @@ class TransactionListState extends ConsumerState<TransactionList> {
           // 渲染日期头部
           final dateKey = item.$2 as String;
           final list = item.$3 as List<({Transaction t, Category? category})>;
-          // 整数分累加,避免 double 尾差;展示时再转"元"。
-          int dayExpense = 0;
-          for (final it in list) {
-            // 全局仅支出模式，type 固定为 'expense'
-            if (it.t.type == 'expense') {
-              dayExpense += it.t.nativeAmount ?? it.t.amount;
-            }
-          }
-          // 日支出汇总统一以账本本位币符号展示（nativeAmount 已折算为本位币），
-          // currencyCode 为 null 时 DaySectionHeader 回退为无符号纯数字。
           final ledgerCurrency = ref
               .watch(currentLedgerProvider)
               .asData
               ?.value
               ?.currency;
-          // 不在每个 DaySectionHeader 上方画分割线。
-          // 视觉上"天"靠日期标题 + 行间分割线区分,避免每天顶部都出现一条
-          // 横线导致列表显得零碎;数据行之间的分割线由 _TransactionListRow
-          // 内部的 SpitoutDivider.short 保持(每个交易项之间仍有分割线)。
-          Widget header = DaySectionHeader(
-            dateText: dateKey,
-            expense: dayExpense / 100,
-            currencyCode: ledgerCurrency,
+          return buildDayHeader(
+            dateKey: dateKey,
+            dayItems: list,
+            ledgerCurrency: ledgerCurrency,
           );
-
-          // 如果启用可见性跟踪，则包装VisibilityDetector
-          if (widget.enableVisibilityTracking &&
-              widget.onDateVisibilityChanged != null) {
-            header = VisibilityDetector(
-              key: Key('header-$dateKey'),
-              onVisibilityChanged: (VisibilityInfo info) {
-                // 当可见比例大于50%时认为可见
-                widget.onDateVisibilityChanged!(
-                  dateKey,
-                  info.visibleFraction > 0.5,
-                );
-              },
-              child: header,
-            );
-          }
-
-          return header;
         } else {
           // 渲染交易项
           final it = item.$2 as ({Transaction t, Category? category});
