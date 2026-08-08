@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
@@ -46,6 +47,17 @@ class LocalSelfId {
 
   static void _cacheValue(String value) {
     _cached = Future<String>.value(value);
+  }
+
+  /// 仅测试用：清空进程内静态缓存，使下一次调用重新走 prefs 路径。
+  ///
+  /// `_cached` 与 `_operationTail` 是进程级状态，随机顺序批量跑测试时，
+  /// 前一个用例（如 restoreIfAbsent）会写入缓存，污染后续 getOrCreate 的断言；
+  /// 测试 setUp 调用本方法即可保证每个用例从干净基线起步。生产代码不调用。
+  @visibleForTesting
+  static void resetForTest() {
+    _cached = null;
+    _operationTail = Future<void>.value();
   }
 
   /// 读取或生成 localSelfId。

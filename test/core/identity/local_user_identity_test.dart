@@ -7,6 +7,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   setUp(() {
+    LocalSelfId.resetForTest();
     SharedPreferences.setMockInitialValues({});
   });
 
