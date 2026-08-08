@@ -5,8 +5,9 @@
 // 并覆盖三种状态在与 AppListTile / l10n / SectionCard 组合下的真实渲染，
 // 确保「检查更新」整条链路无破坏。
 //
-// 说明：设备级 integration_test 包因与本项目 Dart 3.6.0 版本冲突未引入，
-// 改为本 flutter_test 集成用例，同样覆盖端到端行为且可被 CI 稳定运行。
+// 说明：设备级 integration_test 已随 Flutter SDK 引入（见 pubspec dev_dependencies），
+// 设备用例放 test/integration/device/ 下通过 `flutter test integration_test/` 运行；
+// 本文件保留为 flutter_test 集成用例，可在无设备 CI 中稳定运行。
 import 'dart:async';
 
 import 'package:flutter/material.dart';

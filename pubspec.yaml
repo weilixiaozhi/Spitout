@@ -78,6 +78,11 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
+  # 设备级集成测试：属于 Flutter SDK 内置包，与当前 SDK(3.44.6) 版本随 SDK 对齐，
+  # 不再存在旧注释中所述的 Dart 3.6.0 版本冲突；本机/CI 无设备时仍可被 flutter test
+  # 正常解析，设备测试通过 `flutter test integration_test/` 在模拟器/真机上运行。
+  integration_test:
+    sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
   # 与 drift 2.34.0 配套；勿单独升级到 ≥2.34.1（见上方 drift 注释）。
