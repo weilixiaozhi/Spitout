@@ -10,16 +10,21 @@ import 'package:flutter_local_notifications/flutter_local_notifications.dart'
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:drift/native.dart';
 
 import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/auth/pin_setup_page.dart';
 import 'package:spitout/pages/settings/app_lock_settings_page.dart';
 import 'package:spitout/pages/settings/appearance_settings_page.dart';
+import 'package:spitout/pages/settings/config_import_export_page.dart';
 import 'package:spitout/pages/settings/language_settings_page.dart';
 import 'package:spitout/pages/settings/log_center_page.dart';
 import 'package:spitout/pages/settings/reminder_settings_page.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/services/notification/notification_factory.dart';
 import 'package:spitout/services/notification/notification_util.dart';
 import 'package:spitout/widgets/wheel_time_picker.dart';
@@ -87,12 +92,23 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   late ProviderContainer container;
+  late SpitoutDatabase db;
+  late LocalRepository repo;
 
   setUp(() {
     resetGlobalTestState();
-    container = ProviderContainer();
+    db = SpitoutDatabase.forTesting(NativeDatabase.memory());
+    repo = LocalRepository(db);
+    container = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        repositoryProvider.overrideWithValue(repo),
+      ],
+    );
     addTearDown(container.dispose);
   });
+
+  tearDown(() async => db.close());
 
   Future<void> pumpPage(WidgetTester tester, Widget page) async {
     await tester.pumpWidget(
@@ -238,6 +254,38 @@ void main() {
 
       // flush LoggerService 加载日志时调度的 2s 保存定时器
       await tester.pump(const Duration(seconds: 3));
+    });
+  });
+
+  group('ConfigImportExportPage', () {
+    testWidgets('导出配置：选项对话框 → 预览 → 取消（不落盘）', (tester) async {
+      await pumpPage(tester, const ConfigImportExportPage());
+
+      expect(find.text('导出配置'), findsOneWidget);
+      expect(find.text('导入配置'), findsOneWidget);
+
+      // 打开导出选项对话框
+      await tester.tap(find.text('导出配置'));
+      await tester.pumpAndSettle();
+      expect(find.byType(Dialog), findsOneWidget);
+      expect(find.text('账本'), findsWidgets);
+
+      // 默认全选，直接下一步 → 生成 YAML 预览
+      await tester.tap(find.text('下一步'));
+      // 导出中 tile 会显示旋转指示器，pumpAndSettle 永不落定，用显式 pump
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('导出预览'), findsOneWidget);
+      // 预览区是可选中 YAML 文本
+      expect(find.byType(SelectableText), findsOneWidget);
+
+      // 取消导出：不写文件、回到页面
+      await tester.tap(find.text('取消'));
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(Dialog), findsNothing);
+      expect(find.text('导出配置'), findsOneWidget);
     });
   });
 }
