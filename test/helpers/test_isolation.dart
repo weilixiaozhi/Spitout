@@ -1,7 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/services/notification/notification_factory.dart';
 
 /// 重置跨用例残留的全局状态，让每个测试用例都在干净的初始环境下运行。
@@ -23,8 +22,6 @@ void resetGlobalTestState({Map<String, Object> initialPrefs = const {}}) {
 
   // 2) 重置通知工厂单例（其 _instance 是进程级全局，跨用例不会自动回收）。
   NotificationFactory.reset();
-  LocalSelfId.resetForTest();
-
   // 3) 重置平台级 TestValue（locale / 亮度 / 语义）。
   //    仅当 Widget binding 已初始化时才有意义；纯逻辑测试无 binding，跳过即可。
   try {
