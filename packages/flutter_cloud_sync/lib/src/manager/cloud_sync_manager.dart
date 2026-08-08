@@ -396,7 +396,7 @@ class CloudSyncManager<T> {
       // 基础设施 / 编程异常统一转为 error 状态；
       // message 只保留友好文案，原始异常走日志，避免异常文本直接上 UI。
       logger?.error('获取同步状态失败: $e\n$st');
-      final status = SyncStatus(
+      const status = SyncStatus(
         state: SyncState.error,
         message: 'Failed to get sync status',
       );

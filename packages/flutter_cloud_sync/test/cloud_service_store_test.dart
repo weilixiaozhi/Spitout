@@ -156,7 +156,7 @@ void main() {
       );
       await store.saveOnly(_webdavCfg()); // 本机密码 'p'
 
-      final masked = CloudServiceConfig(
+      const masked = CloudServiceConfig(
         type: CloudBackendType.webdav,
         name: 'WebDAV',
         webdavUrl: 'https://dav.example.com',
@@ -175,7 +175,7 @@ void main() {
       );
       await store.saveOnly(_webdavCfg());
 
-      final incoming = CloudServiceConfig(
+      const incoming = CloudServiceConfig(
         type: CloudBackendType.webdav,
         name: 'WebDAV',
         webdavUrl: 'https://dav.example.com',
@@ -191,7 +191,7 @@ void main() {
       final store = CloudServiceStore(
         credentialStorage: SharedPreferencesCredentialStorage(),
       );
-      final incoming = CloudServiceConfig(
+      const incoming = CloudServiceConfig(
         type: CloudBackendType.supabase,
         name: 'Supabase',
         supabaseUrl: 'https://xxx.supabase.co',
