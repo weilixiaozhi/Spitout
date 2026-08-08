@@ -91,6 +91,8 @@ dev_dependencies:
 
   # Testing framework enhancements
   mocktail: ^1.0.4
+  # 测试 connectivity_plus 断网/重连场景所需的平台接口桩（仅测试用）。
+  connectivity_plus_platform_interface: ^2.1.0
 
 flutter:
   uses-material-design: true
