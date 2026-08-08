@@ -1,4 +1,5 @@
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/data/latest.dart' as tz;
 import 'package:timezone/timezone.dart' as tz;
@@ -23,6 +24,13 @@ class NotificationFactory {
     }
 
     return _instance!;
+  }
+
+  /// 测试注入点：非 Android 测试宿主（如 Windows/CI）无法创建平台通知实现，
+  /// 允许测试注入内存假实现来验证业务编排，不影响生产路径。
+  @visibleForTesting
+  static void setInstanceForTesting(NotificationUtil? instance) {
+    _instance = instance;
   }
 
   /// 初始化时区（必须在使用通知服务之前调用）

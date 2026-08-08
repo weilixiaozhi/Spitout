@@ -42,27 +42,32 @@ class ReminderSettingsPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               border: isDark ? Border.all(color: SpitoutTokens.border(context)) : null,
             ),
-            child: SwitchListTile(
-              title: Text(
-                AppLocalizations.of(context).reminderDailyTitle,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: SpitoutTokens.textPrimary(context),
+            // Material 透明层：ListTile 的墨迹/背景绘制在最近 Material 祖先上，
+            // 若直接被带背景的 DecoratedBox 包裹会被遮挡（Flutter debug 断言）。
+            child: Material(
+              type: MaterialType.transparency,
+              child: SwitchListTile(
+                title: Text(
+                  AppLocalizations.of(context).reminderDailyTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: SpitoutTokens.textPrimary(context),
+                  ),
                 ),
-              ),
-              subtitle: Text(
-                AppLocalizations.of(context).reminderDailySubtitle,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: SpitoutTokens.textSecondary(context),
+                subtitle: Text(
+                  AppLocalizations.of(context).reminderDailySubtitle,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: SpitoutTokens.textSecondary(context),
+                  ),
                 ),
+                value: reminderSettings.isEnabled,
+                onChanged: (value) {
+                  ref.read(reminderSettingsProvider.notifier).updateEnabled(value);
+                },
+                activeThumbColor: Theme.of(context).primaryColor,
               ),
-              value: reminderSettings.isEnabled,
-              onChanged: (value) {
-                ref.read(reminderSettingsProvider.notifier).updateEnabled(value);
-              },
-              activeThumbColor: Theme.of(context).primaryColor,
             ),
           ),
 
@@ -76,42 +81,45 @@ class ReminderSettingsPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(12),
               border: isDark ? Border.all(color: SpitoutTokens.border(context)) : null,
             ),
-            child: ListTile(
-              title: Text(
-                AppLocalizations.of(context).reminderTimeTitle,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
-              ),
-              subtitle: Text(
-                reminderSettings.timeString,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: SpitoutTokens.textSecondary(context),
-                ),
-              ),
-              trailing: Icon(
-                AppIcons.chevronRight,
-                color: SpitoutTokens.iconTertiary(context),
-              ),
-              onTap: () async {
-                final selectedTime = await showWheelTimePicker(
-                  context,
-                  initial: TimeOfDay(
-                    hour: reminderSettings.hour,
-                    minute: reminderSettings.minute,
+            child: Material(
+              type: MaterialType.transparency,
+              child: ListTile(
+                title: Text(
+                  AppLocalizations.of(context).reminderTimeTitle,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.w500,
+                    color: SpitoutTokens.textPrimary(context),
                   ),
-                );
-                
-                if (selectedTime != null) {
-                  ref.read(reminderSettingsProvider.notifier).updateTime(
-                    selectedTime.hour,
-                    selectedTime.minute,
+                ),
+                subtitle: Text(
+                  reminderSettings.timeString,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: SpitoutTokens.textSecondary(context),
+                  ),
+                ),
+                trailing: Icon(
+                  AppIcons.chevronRight,
+                  color: SpitoutTokens.iconTertiary(context),
+                ),
+                onTap: () async {
+                  final selectedTime = await showWheelTimePicker(
+                    context,
+                    initial: TimeOfDay(
+                      hour: reminderSettings.hour,
+                      minute: reminderSettings.minute,
+                    ),
                   );
-                }
-              },
+
+                  if (selectedTime != null) {
+                    ref.read(reminderSettingsProvider.notifier).updateTime(
+                      selectedTime.hour,
+                      selectedTime.minute,
+                    );
+                  }
+                },
+              ),
             ),
           ),
 
