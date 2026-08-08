@@ -345,7 +345,7 @@ String _trimRate(String rate, int precision) {
   final s = d.toStringAsPrecision(precision);
   if (!s.contains('.')) return s;
   // 先去尾随 0,再去掉因去 0 残留的小数点
-  return s.replaceAll(RegExp(r'0+\$'), '').replaceAll(RegExp(r'\.\$'), '');
+  return s.replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '');
 }
 
 /// l10n 本地化名称覆盖映射(仅主流币种;长尾币种用英文名兜底,无需在此登记)。
