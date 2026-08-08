@@ -611,6 +611,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
                       ),
                       // 登录/登出 (仅 Supabase 需要，其他云服务使用配置文件认证)
                       if (!isLocalMode &&
+                          cloudConfig.hasValue &&
                           cloudConfig.value!.type == CloudBackendType.supabase)
                         Column(
                           children: [

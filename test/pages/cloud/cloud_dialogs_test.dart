@@ -140,5 +140,67 @@ void main() {
       expect(result, hasLength(2));
       expect(result!.every((c) => c.selected), isTrue);
     });
+
+    testWidgets('删除变更分区 + 备注摘要 + 单项勾选 + 取消返回 null', (tester) async {
+      final completer = Completer<List<SyncChange>?>();
+      final deletedTx = Transaction(
+        id: 1,
+        ledgerId: 1,
+        type: 'expense',
+        amount: 1234,
+        currencyCode: 'CNY',
+        happenedAt: DateTime(2026, 6, 12),
+        categoryId: 5,
+        note: '打车',
+        excludeFromStats: false,
+        version: 1,
+      );
+      final preview = SyncPreview(changes: [
+        SyncChange(
+          type: SyncChangeType.added,
+          cloudTransaction: ImportTransaction(
+            type: 'expense',
+            amount: Decimal.parse('12.50'),
+            categoryName: '餐饮',
+            happenedAt: DateTime(2026, 6, 10),
+            currencyCode: 'CNY',
+            note: '午饭',
+          ),
+        ),
+        SyncChange(
+          type: SyncChangeType.deleted,
+          localTransaction: deletedTx,
+          diffDetails: const ['删除'],
+        ),
+      ]);
+
+      final ctx = await pumpHost(tester);
+      await tester.tap(find.text('打开'));
+      await tester.pumpAndSettle();
+      showSyncPreviewDialog(
+        ctx,
+        preview: preview,
+        primaryColor: Colors.blue,
+      ).then(completer.complete);
+      await tester.pumpAndSettle();
+
+      // 删除分区标题与计数徽章
+      expect(find.text('删除'), findsOneWidget);
+      expect(find.text('删除 1 条'), findsOneWidget);
+      // 备注进入摘要
+      expect(find.textContaining('午饭'), findsOneWidget);
+      expect(find.textContaining('打车'), findsOneWidget);
+
+      // 单项勾选：点删除项复选框取消选中 → 应用按钮显示 1 项
+      final deletedCheckbox = find.byType(Checkbox).last;
+      await tester.tap(deletedCheckbox);
+      await tester.pump();
+      expect(find.text('应用 1 项'), findsOneWidget);
+
+      // 点弹窗取消按钮 → 返回 null
+      await tester.tap(find.text('取消'));
+      await tester.pumpAndSettle();
+      expect(await completer.future, isNull);
+    });
   });
 }
