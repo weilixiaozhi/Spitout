@@ -11,7 +11,6 @@
 
 import 'dart:async';
 
-import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:connectivity_plus_platform_interface/connectivity_plus_platform_interface.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
@@ -25,7 +24,6 @@ import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/providers.dart';
 
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
@@ -71,7 +69,6 @@ void main() {
   late LocalRepository repo;
   late ChangeTracker changeTracker;
   late FakeSpitoutCloudProvider provider;
-  late SyncEngine engine;
 
   setUp(() {
     resetGlobalTestState();
@@ -81,12 +78,6 @@ void main() {
     changeTracker = ChangeTracker(db);
     repo = LocalRepository(db, changeTracker: changeTracker);
     provider = FakeSpitoutCloudProvider();
-    engine = SyncEngine(
-      db: db,
-      provider: provider,
-      changeTracker: changeTracker,
-      repo: repo,
-    );
   });
 
   tearDown(() async {
@@ -198,7 +189,7 @@ void main() {
 
   group('同步事件分发', () {
     test('PullCompleted(applied>0) → 刷新各域 tick 并清交易缓存', () async {
-      final ledgerId = await seedCloudLedger('ledger-1');
+      await seedCloudLedger('ledger-1');
       // 预置分类，让远程交易 apply 能解析
       await db.into(db.categories).insert(
             CategoriesCompanion.insert(

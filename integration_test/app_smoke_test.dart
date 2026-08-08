@@ -6,7 +6,6 @@
 // （本机 CI 无设备时该目录不参与 `flutter test` 主流程，互不影响。）
 
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:integration_test/integration_test.dart';

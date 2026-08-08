@@ -18,7 +18,6 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
-import 'package:spitout/cloud/sync/sync_events.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 

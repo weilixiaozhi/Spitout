@@ -24,7 +24,6 @@ import 'package:spitout/pages/settings/language_settings_page.dart';
 import 'package:spitout/pages/settings/log_center_page.dart';
 import 'package:spitout/pages/settings/reminder_settings_page.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/services/notification/notification_factory.dart';
 import 'package:spitout/services/notification/notification_util.dart';
 import 'package:spitout/widgets/wheel_time_picker.dart';

@@ -20,9 +20,7 @@ import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/app_startup_sync.dart';
 
 import '../../helpers/test_isolation.dart';
 

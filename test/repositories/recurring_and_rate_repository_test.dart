@@ -3,8 +3,6 @@
 // 覆盖周期账单的增删改查/启停/已生成日期/批量插入/响应式 watch，
 // 以及汇率覆盖的手动设置/移除/watch 流语义。
 
-import 'dart:async';
-
 import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';

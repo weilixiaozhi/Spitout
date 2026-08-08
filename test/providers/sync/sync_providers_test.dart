@@ -13,12 +13,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
-import 'package:spitout/cloud/sync/sync_events.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/models.dart' show SyncDiff;
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/providers.dart';
 
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';

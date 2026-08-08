@@ -22,10 +22,7 @@ import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/providers/core/local_self_id_providers.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/providers/sync/ledger_storage_providers.dart';
 
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import '../../helpers/test_isolation.dart';

@@ -36,7 +36,7 @@ void main() {
         ),
       ),
     );
-    l10n = AppLocalizations.of(ctx)!;
+    l10n = AppLocalizations.of(ctx);
   }
 
   group('friendlyAuthError', () {

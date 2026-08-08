@@ -8,7 +8,6 @@
 //   3. A、B 未互相同步即各自修改同一交易并推送（并发冲突）；
 //   4. 双方各自 pull 后收敛到 server 上最后写入者的值。
 
-import 'package:drift/drift.dart' show Value;
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
