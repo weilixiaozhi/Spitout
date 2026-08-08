@@ -7,11 +7,48 @@
 
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 import '../../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/services/data/recurring_transaction_service.dart';
+
+class _MockRepo extends Mock implements BaseRepository {}
+
+/// 构造一个便于注入 now 的周期模板（lastGeneratedDate 非空，绕开 #135 今天钳制）。
+RecurringTransaction recurringRow({
+  int id = 1,
+  int ledgerId = 1,
+  int amount = 1000,
+  String frequency = 'daily',
+  int interval = 1,
+  int? dayOfMonth,
+  int? monthOfYear,
+  DateTime? startDate,
+  DateTime? endDate,
+  DateTime? lastGeneratedDate,
+  bool enabled = true,
+}) {
+  return RecurringTransaction(
+    id: id,
+    ledgerId: ledgerId,
+    type: 'expense',
+    amount: amount,
+    categoryId: null,
+    frequency: frequency,
+    interval: interval,
+    dayOfMonth: dayOfMonth,
+    monthOfYear: monthOfYear,
+    startDate: startDate ?? DateTime(2025, 1, 1),
+    endDate: endDate,
+    lastGeneratedDate: lastGeneratedDate,
+    enabled: enabled,
+    createdAt: DateTime(2025, 1, 1),
+    updatedAt: DateTime(2025, 1, 1),
+  );
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -31,6 +68,218 @@ void main() {
 
   tearDown(() async {
     await db.close();
+  });
+
+  group('calculateNextDate 频率与边界', () {
+    final service = RecurringTransactionService(_MockRepo());
+
+    test('weekly：上次生成 + 7*interval 天，未到期返回 null', () {
+      final due = service.calculateNextDate(
+        recurringRow(
+          frequency: 'weekly',
+          lastGeneratedDate: DateTime(2026, 1, 1),
+        ),
+        now: DateTime(2026, 1, 9),
+      );
+      expect(due, DateTime(2026, 1, 8), reason: '上周三后应在周三生成');
+
+      final notDue = service.calculateNextDate(
+        recurringRow(
+          frequency: 'weekly',
+          lastGeneratedDate: DateTime(2026, 1, 1),
+        ),
+        now: DateTime(2026, 1, 7),
+      );
+      expect(notDue, isNull, reason: '尚未到下个周期日不生成');
+    });
+
+    test('weekly：interval=2 推 14 天', () {
+      final due = service.calculateNextDate(
+        recurringRow(
+          frequency: 'weekly',
+          interval: 2,
+          lastGeneratedDate: DateTime(2026, 1, 1),
+        ),
+        now: DateTime(2026, 1, 20),
+      );
+      expect(due, DateTime(2026, 1, 15));
+    });
+
+    test('monthly：上次生成后按目标日推进；interval=2 推两个月', () {
+      final due = service.calculateNextDate(
+        recurringRow(
+          frequency: 'monthly',
+          interval: 2,
+          dayOfMonth: 20,
+          lastGeneratedDate: DateTime(2026, 1, 20),
+        ),
+        now: DateTime(2026, 3, 20),
+      );
+      expect(due, DateTime(2026, 3, 20), reason: '每 2 个月 → 1/20 后为 3/20');
+    });
+
+    test('monthly：目标日不存在时夹到月末（2月无 31 日 → 2/28）', () {
+      final due = service.calculateNextDate(
+        recurringRow(
+          frequency: 'monthly',
+          dayOfMonth: 31,
+          lastGeneratedDate: DateTime(2026, 1, 31),
+        ),
+        now: DateTime(2026, 3, 1),
+      );
+      expect(due, DateTime(2026, 2, 28), reason: '2026 非闰年，2 月夹到 28 日');
+    });
+
+    test('yearly：按年推进；闰年 2/29 夹到平年 2/28', () {
+      final due = service.calculateNextDate(
+        recurringRow(
+          frequency: 'yearly',
+          dayOfMonth: 5,
+          monthOfYear: 5,
+          lastGeneratedDate: DateTime(2025, 5, 5),
+        ),
+        now: DateTime(2026, 5, 5),
+      );
+      expect(due, DateTime(2026, 5, 5));
+
+      final leapClamped = service.calculateNextDate(
+        recurringRow(
+          frequency: 'yearly',
+          dayOfMonth: 29,
+          monthOfYear: 2,
+          lastGeneratedDate: DateTime(2024, 2, 29),
+        ),
+        now: DateTime(2025, 3, 1),
+      );
+      expect(leapClamped, DateTime(2025, 2, 28),
+          reason: '平年无 2/29，夹到 2/28');
+    });
+
+    test('已过结束日期直接跳过；下个周期日超过结束日期也跳过', () {
+      final expired = service.calculateNextDate(
+        recurringRow(
+          endDate: DateTime(2026, 1, 1),
+          lastGeneratedDate: DateTime(2025, 12, 1),
+        ),
+        now: DateTime(2026, 1, 2),
+      );
+      expect(expired, isNull);
+
+      final overEnd = service.calculateNextDate(
+        recurringRow(
+          endDate: DateTime(2026, 1, 1, 23),
+          lastGeneratedDate: DateTime(2026, 1, 1),
+        ),
+        now: DateTime(2026, 1, 1, 22),
+      );
+      expect(overEnd, isNull,
+          reason: '结束日期未过期但下一个周期日 1/2 已晚于 1/1 23:00');
+    });
+  });
+
+  group('generatePendingTransactionsStatic 静态入口', () {
+    test('无待生成时返回空集合', () async {
+      final result = await RecurringTransactionService
+          .generatePendingTransactionsStatic(repository: repo);
+      expect(result, isEmpty);
+    });
+
+    test('有生成时返回涉及账本 ID 集合', () async {
+      await repo.addRecurringTransaction(
+        ledgerId: ledgerId,
+        type: 'expense',
+        amount: 1000,
+        frequency: 'daily',
+        interval: 1,
+        startDate: DateTime.now(),
+      );
+      final result = await RecurringTransactionService
+          .generatePendingTransactionsStatic(repository: repo);
+      expect(result, {ledgerId});
+    });
+
+    test('repository 抛错时吞掉异常并返回空集合', () async {
+      final broken = _MockRepo();
+      when(() => broken.getAllLedgers()).thenThrow(Exception('db down'));
+      final result = await RecurringTransactionService
+          .generatePendingTransactionsStatic(repository: broken);
+      expect(result, isEmpty, reason: '启动扫描不允许把异常抛到上层');
+    });
+  });
+
+  group('generatePendingTransactions 扫描行为', () {
+    test('禁用模板不生成', () async {
+      await repo.addRecurringTransaction(
+        ledgerId: ledgerId,
+        type: 'expense',
+        amount: 1000,
+        frequency: 'daily',
+        interval: 1,
+        startDate: DateTime.now(),
+        enabled: false,
+      );
+      final generated =
+          await RecurringTransactionService(repo).generatePendingTransactions();
+      expect(generated, isEmpty);
+    });
+
+    test('多账本分别生成', () async {
+      final secondLedgerId = await repo.createLedger(name: 'test2', currency: 'CNY');
+      await repo.addRecurringTransaction(
+        ledgerId: ledgerId,
+        type: 'expense',
+        amount: 1000,
+        frequency: 'daily',
+        interval: 1,
+        startDate: DateTime.now(),
+      );
+      await repo.addRecurringTransaction(
+        ledgerId: secondLedgerId,
+        type: 'expense',
+        amount: 2000,
+        frequency: 'daily',
+        interval: 1,
+        startDate: DateTime.now(),
+      );
+      final generated =
+          await RecurringTransactionService(repo).generatePendingTransactions();
+      expect(generated, hasLength(2));
+      expect(generated.map((t) => t.ledgerId).toSet(),
+          {ledgerId, secondLedgerId});
+    });
+  });
+
+  group('描述工具方法', () {
+    final service = RecurringTransactionService(_MockRepo());
+
+    test('getFrequencyDescription 透传翻译器', () {
+      final text = service.getFrequencyDescription(
+        recurringRow(frequency: 'weekly', interval: 2),
+        (freq, interval) => '${freq.value}/$interval',
+      );
+      expect(text, 'weekly/2');
+    });
+
+    test('getNextGenerationDescription：到期格式化，未到期返回 null', () {
+      final due = service.getNextGenerationDescription(
+        recurringRow(
+          frequency: 'daily',
+          lastGeneratedDate: DateTime.now().subtract(const Duration(days: 2)),
+        ),
+        (date) => date.toIso8601String(),
+      );
+      expect(due, isNotNull);
+
+      final notDue = service.getNextGenerationDescription(
+        recurringRow(
+          frequency: 'daily',
+          lastGeneratedDate: DateTime.now().subtract(const Duration(days: 2)),
+          endDate: DateTime.now().subtract(const Duration(days: 1)),
+        ),
+        (date) => date.toIso8601String(),
+      );
+      expect(notDue, isNull);
+    });
   });
 
   // 断言某 DateTime 是"今天"(本地零点)。
