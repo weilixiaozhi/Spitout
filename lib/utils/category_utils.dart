@@ -67,7 +67,7 @@ class CategoryUtils {
       }
     } else {
       // 一级分类
-      return l10n.categoryExpense;
+      return l10n.categoryExpenseList;
     }
 
     return '';
@@ -123,8 +123,10 @@ class CategoryUtils {
 
         // 找到当前key在列表中的索引
         final index = childKeys.indexOf(childKey);
-        if (index >= 0 && index < names.length) {
-          return names[index].trim();
+        // NOTE: translation string item 0 is the parent's own name;
+        // children start at index 1, so shift by +1.
+        if (index >= 0 && index + 1 < names.length) {
+          return names[index + 1].trim();
         }
       }
     } else {
@@ -144,7 +146,7 @@ class CategoryUtils {
   /// 获取所有一级分类的显示名称列表（全局仅支出模式）
   static List<String> getAllCategoryDisplayNames(String kind, AppLocalizations l10n) {
     // 全局仅支出模式，kind 固定为 'expense'，实际始终使用支出分类
-    final translationString = l10n.categoryExpense;
+    final translationString = l10n.categoryExpenseList;
 
     return translationString.split(separator).map((e) => e.trim()).toList();
   }

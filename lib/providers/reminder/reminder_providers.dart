@@ -60,6 +60,13 @@ class ReminderSettings {
 
 /// 记账提醒设置的 Notifier
 class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
+  /// 用户是否已在本轮 build 之后显式修改过设置。
+  ///
+  /// build 里异步加载 prefs 的 `_loadSettings` 可能晚于用户操作完成，
+  /// 若不加保护会把刚写入的设置覆盖回旧值（启动即操作的竞态）；
+  /// 一旦用户显式修改，迟到的加载结果必须丢弃。
+  bool _userTouched = false;
+
   @override
   ReminderSettings build() {
     // 先同步返回默认设置，再异步加载保存的配置，避免首次渲染等待 IO。
@@ -83,11 +90,15 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
   /// 加载设置
   Future<void> _loadSettings() async {
     try {
+      if (_userTouched) return;
       final prefs = await SharedPreferences.getInstance();
       final isEnabled = prefs.getBool(_keyEnabled) ?? false;
       final hour = prefs.getInt(_keyHour) ?? 21;
       final minute = prefs.getInt(_keyMinute) ?? 0;
 
+      // await 期间用户可能已显式修改（updateEnabled/updateTime/updateSettings），
+      // 迟到的加载结果必须丢弃，否则会覆盖刚写入的设置。
+      if (_userTouched) return;
       state = ReminderSettings(
         isEnabled: isEnabled,
         hour: hour,
@@ -112,6 +123,7 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
 
   /// 更新启用状态
   Future<void> updateEnabled(bool enabled) async {
+    _userTouched = true;
     state = state.copyWith(isEnabled: enabled);
     await _saveSettings();
 
@@ -133,6 +145,7 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
 
   /// 更新提醒时间
   Future<void> updateTime(int hour, int minute) async {
+    _userTouched = true;
     state = state.copyWith(hour: hour, minute: minute);
     await _saveSettings();
 
@@ -154,6 +167,7 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
 
   /// 更新完整设置
   Future<void> updateSettings(ReminderSettings settings) async {
+    _userTouched = true;
     state = settings;
     await _saveSettings();
 

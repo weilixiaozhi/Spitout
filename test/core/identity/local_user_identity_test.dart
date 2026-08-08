@@ -39,4 +39,31 @@ void main() {
     final prefs = await SharedPreferences.getInstance();
     expect(prefs.getString(LocalSelfId.prefsKey), id);
   });
+
+  test('read 未设置返回 null', () async {
+    expect(await LocalSelfId.read(), isNull);
+  });
+
+  test('read 已设置返回原值', () async {
+    const id = '123e4567-e89b-42d3-a456-426614174000';
+    SharedPreferences.setMockInitialValues({LocalSelfId.prefsKey: id});
+    expect(await LocalSelfId.read(), id);
+  });
+
+  test('read 非法 UUID 返回 null', () async {
+    SharedPreferences.setMockInitialValues({LocalSelfId.prefsKey: 'bad'});
+    expect(await LocalSelfId.read(), isNull);
+  });
+
+  test('restoreIfAbsent 已有合法值保持原值', () async {
+    const existing = '123e4567-e89b-42d3-a456-426614174000';
+    const incoming = '223e4567-e89b-42d3-a456-426614174000';
+    SharedPreferences.setMockInitialValues({LocalSelfId.prefsKey: existing});
+
+    await LocalSelfId.restoreIfAbsent(incoming);
+
+    final prefs = await SharedPreferences.getInstance();
+    expect(prefs.getString(LocalSelfId.prefsKey), existing);
+    expect(await LocalSelfId.read(), existing);
+  });
 }

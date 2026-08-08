@@ -70,6 +70,12 @@ class CloudConnectionTestResult {
 class CloudConnectionTester {
   static const _timeout = Duration(seconds: 10);
 
+  /// 可注入的 http 客户端：默认使用全局客户端，测试中可替换为 MockClient，
+  /// 使各后端探测分支无需真实网络即可覆盖。
+  final http.Client _client;
+
+  CloudConnectionTester({http.Client? client}) : _client = client ?? http.Client();
+
   /// 测试指定配置的连通性。
   ///
   /// 返回结构化结果,不抛业务异常;网络/服务端错误统一收敛为
@@ -119,7 +125,7 @@ class CloudConnectionTester {
     final testUrl = Uri.parse(
       '${config.supabaseUrl}/rest/v1/_spitout_health_check?select=id&limit=1',
     );
-    final response = await http
+    final response = await _client
         .get(
           testUrl,
           headers: {
@@ -158,7 +164,7 @@ class CloudConnectionTester {
 
     final request = http.Request('OPTIONS', testUrl);
     request.headers['Authorization'] = 'Basic $credentials';
-    final streamedResponse = await request.send().timeout(_timeout);
+    final streamedResponse = await _client.send(request).timeout(_timeout);
     final response = await http.Response.fromStream(streamedResponse);
 
     if (response.statusCode == 200 || response.statusCode == 204) {
