@@ -48,8 +48,14 @@ class SyncCoordinator {
   }
 
   void _onUnpushedChanged(List<LocalChange> rows) {
-    // 没有未推送变更:大概率是 markPushed 之后的 echo,跳过即可。
-    if (rows.isEmpty) return;
+    // 没有未推送变更:大概率是 markPushed 之后的 echo。
+    // 除了跳过之外,还要取消仍在防抖窗口内挂起的定时器——否则"写入后立刻被
+    // 其它同步路径推送完毕"的场景会对已全部推送的变更再做一次冗余自动同步。
+    if (rows.isEmpty) {
+      _debounce?.cancel();
+      _debounce = null;
+      return;
+    }
 
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 250), () {
