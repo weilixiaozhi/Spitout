@@ -301,6 +301,13 @@ void main() {
     expect(anyText('打车'), findsOneWidget);
   });
 
+  testWidgets('同一天多条交易：条目之间不渲染分割线', (tester) async {
+    // 需求：首页列表每条数据之间不再显示分割线。
+    // twoDays 中 2026-08-08 同日有两笔，若未去掉分割线，第一笔下方会有 SpitoutDivider.short。
+    await pumpList(tester, transactions: twoDays());
+    expect(find.byType(Divider, skipOffstage: false), findsNothing);
+  });
+
   testWidgets('日期可见性跟踪：启用后头部包 VisibilityDetector 并回调',
       (tester) async {
     await pumpList(

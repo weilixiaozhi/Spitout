@@ -17,7 +17,6 @@ import '../core/logging/logger_service.dart';
 import 'app_empty.dart';
 import 'day_section_header.dart';
 import 'transaction_list_item.dart';
-import '../theme/divider.dart';
 import '../utils/category_utils.dart';
 import 'category_icon.dart';
 import '../l10n/app_localizations.dart';
@@ -363,8 +362,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
         } else {
           // 渲染交易项
           final it = item.$2 as ({Transaction t, Category? category});
-          final allItemsInDay =
-              item.$3 as List<({Transaction t, Category? category})>;
           final isExpense = it.t.type == 'expense';
 
           // 获取分类显示名称
@@ -379,7 +376,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
             it: it,
             categoryName: categoryName,
             isExpense: isExpense,
-            allItemsInDay: allItemsInDay,
             memberDisplayMap: widget.memberDisplayMap,
             isShared: widget.isShared,
             onTap: widget.onEdit == null
@@ -423,7 +419,6 @@ class _TransactionListRow extends StatelessWidget {
   final ({Transaction t, Category? category}) it;
   final String categoryName;
   final bool isExpense;
-  final List<({Transaction t, Category? category})> allItemsInDay;
   final Map<String, SpitoutCloudLedgerMember>? memberDisplayMap;
   final bool isShared;
   final VoidCallback? onTap;
@@ -435,7 +430,6 @@ class _TransactionListRow extends StatelessWidget {
     required this.it,
     required this.categoryName,
     required this.isExpense,
-    required this.allItemsInDay,
     required this.memberDisplayMap,
     required this.isShared,
     required this.onTap,
@@ -445,36 +439,29 @@ class _TransactionListRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isLastInGroup = allItemsInDay.last.t.id == it.t.id;
     // 把整张成员表 + 交易的创建人/编辑人 userId 透传给列表项,
     // 由 TransactionListItem 自行解析真实头像并做重叠展示。
-    return Column(
-      children: [
-        GestureDetector(
-          onLongPress: onLongPress,
-          child: TransactionListItem(
-            icon: getCategoryIconData(category: it.category),
-            category: it.category,
-            title: it.t.note ?? '',
-            categoryName: categoryName,
-            amount: it.t.amount,
-            currencyCode: it.t.currencyCode,
-            nativeAmount: it.t.nativeAmount,
-            isExpense: isExpense,
-            happenedAt: it.t.happenedAt,
-            lastEditedAt: it.t.lastEditedAt,
-            collaboratorMap: memberDisplayMap,
-            creatorUserId: it.t.createdByUserId,
-            editorUserId: it.t.lastEditedByUserId,
-            isShared: isShared,
-            excludeFromStats: it.t.excludeFromStats,
-            onTap: onTap,
-            onCategoryTap: onCategoryTap,
-          ),
-        ),
-        if (!isLastInGroup)
-          SpitoutDivider.short(context, indent: 56 + 16, endIndent: 16),
-      ],
+    return GestureDetector(
+      onLongPress: onLongPress,
+      child: TransactionListItem(
+        icon: getCategoryIconData(category: it.category),
+        category: it.category,
+        title: it.t.note ?? '',
+        categoryName: categoryName,
+        amount: it.t.amount,
+        currencyCode: it.t.currencyCode,
+        nativeAmount: it.t.nativeAmount,
+        isExpense: isExpense,
+        happenedAt: it.t.happenedAt,
+        lastEditedAt: it.t.lastEditedAt,
+        collaboratorMap: memberDisplayMap,
+        creatorUserId: it.t.createdByUserId,
+        editorUserId: it.t.lastEditedByUserId,
+        isShared: isShared,
+        excludeFromStats: it.t.excludeFromStats,
+        onTap: onTap,
+        onCategoryTap: onCategoryTap,
+      ),
     );
   }
 }
