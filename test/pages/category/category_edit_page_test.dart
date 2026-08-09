@@ -481,4 +481,257 @@ void main() {
       expect(find.text('危险操作'), findsNothing, reason: '危险操作区已移除，编辑模式也不应显示');
     });
   });
+
+  // ==================== 保存流程 ====================
+
+  group('保存流程', () {
+    Widget buildHosted({db.Category? category, db.Category? parentCategory}) {
+      return ProviderScope(
+        overrides: [
+          repositoryProvider.overrideWithValue(repo),
+          currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 0),
+        ],
+        child: MaterialApp(
+          localizationsDelegates: const [
+            AppLocalizations.delegate,
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          supportedLocales: AppLocalizations.supportedLocales,
+          locale: const Locale('zh'),
+          home: Builder(
+            builder: (context) => Scaffold(
+              body: Center(
+                child: TextButton(
+                  onPressed: () => Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (_) => CategoryEditPage(
+                        category: category,
+                        kind: 'expense',
+                        parentCategory: parentCategory,
+                      ),
+                    ),
+                  ),
+                  child: const Text('open-edit'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    Future<void> openEdit(
+      WidgetTester tester, {
+      db.Category? category,
+      db.Category? parentCategory,
+    }) async {
+      await tester.pumpWidget(
+          buildHosted(category: category, parentCategory: parentCategory));
+      await tester.tap(find.text('open-edit'));
+      await tester.pumpAndSettle();
+    }
+
+    Future<void> tapSave(WidgetTester tester) async {
+      await tester.ensureVisible(find.text('保存'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('保存'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+    }
+
+    testWidgets('新建一级分类：保存调用 createCategory 并返回', (tester) async {
+      when(() => repo.createCategory(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            icon: any(named: 'icon'),
+          ))
+          .thenAnswer((_) async => 1);
+
+      await openEdit(tester);
+      await tester.enterText(find.byType(TextFormField), '新分类');
+      // 防抖 500ms 触发判重
+      await tester.pump(const Duration(milliseconds: 600));
+      await tapSave(tester);
+
+      verify(() => repo.createCategory(
+            name: '新分类',
+            kind: 'expense',
+            icon: 'category',
+          ))
+          .called(1);
+      expect(find.text('分类"新分类"已创建'), findsOneWidget);
+      expect(find.text('open-edit'), findsOneWidget, reason: '保存后 pop 回宿主');
+      await tester.pump(const Duration(seconds: 2)); // toast 定时器
+    });
+
+    testWidgets('新建二级分类：预设父分类时调用 createSubCategory', (tester) async {
+      when(() => repo.createSubCategory(
+            parentId: any(named: 'parentId'),
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            icon: any(named: 'icon'),
+          ))
+          .thenAnswer((_) async => 2);
+      final parent = db.Category(
+        id: 10,
+        name: '餐饮',
+        kind: 'expense',
+        icon: 'utensils',
+        sortOrder: 0,
+        parentId: null,
+        level: 1,
+      );
+
+      await openEdit(tester, parentCategory: parent);
+      await tester.enterText(find.byType(TextFormField), '早餐');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tapSave(tester);
+
+      verify(() => repo.createSubCategory(
+            parentId: 10,
+            name: '早餐',
+            kind: 'expense',
+            icon: 'category',
+          ))
+          .called(1);
+      expect(find.text('已添加二级分类：早餐'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('编辑模式：保存调用 updateCategory 并提示', (tester) async {
+      when(() => repo.updateCategory(
+            any(),
+            name: any(named: 'name'),
+            icon: any(named: 'icon'),
+            parentId: any(named: 'parentId'),
+            level: any(named: 'level'),
+          ))
+          .thenAnswer((_) async {});
+      final category = db.Category(
+        id: 5,
+        name: '旧名',
+        kind: 'expense',
+        icon: 'category',
+        sortOrder: 0,
+        parentId: null,
+        level: 1,
+      );
+
+      await openEdit(tester, category: category);
+      await tester.enterText(find.byType(TextFormField), '新名字');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tapSave(tester);
+
+      verify(() => repo.updateCategory(
+            5,
+            name: '新名字',
+            icon: 'category',
+            parentId: null,
+            level: 1,
+          ))
+          .called(1);
+      expect(find.text('分类"新名字"已更新'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('名称重复：内联错误并禁用保存', (tester) async {
+      when(() => repo.isCategoryNameDuplicate(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            excludeId: any(named: 'excludeId'),
+            parentId: any(named: 'parentId'),
+          ))
+          .thenAnswer((_) async => true);
+
+      await openEdit(tester);
+      await tester.enterText(find.byType(TextFormField), '重名分类');
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('分类名称已存在'), findsOneWidget);
+      // 保存按钮禁用：点击不触发仓库写入
+      await tester.ensureVisible(find.text('保存'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('保存'), warnIfMissed: false);
+      await tester.pump(const Duration(milliseconds: 300));
+      verifyNever(() => repo.createCategory(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            icon: any(named: 'icon'),
+          ));
+    });
+
+    testWidgets('判重查询失败：禁用保存并提示操作失败', (tester) async {
+      when(() => repo.isCategoryNameDuplicate(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            excludeId: any(named: 'excludeId'),
+            parentId: any(named: 'parentId'),
+          ))
+          .thenThrow(Exception('db down'));
+
+      await openEdit(tester);
+      await tester.enterText(find.byType(TextFormField), '任意名称');
+      await tester.pump(const Duration(milliseconds: 600));
+
+      expect(find.text('操作失败，请稍后重试'), findsOneWidget);
+      final saveButton = tester.widget<FilledButton>(
+        find.ancestor(
+          of: find.text('保存'),
+          matching: find.byType(FilledButton),
+        ),
+      );
+      expect(saveButton.onPressed, isNull, reason: '判重失败时保存应禁用');
+    });
+
+    testWidgets('选择图标后保存：透传所选图标', (tester) async {
+      when(() => repo.createCategory(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            icon: any(named: 'icon'),
+          ))
+          .thenAnswer((_) async => 1);
+
+      await openEdit(tester);
+      // 图标网格中选「utensils」
+      await tester.ensureVisible(find.text('utensils'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('utensils'));
+      await tester.pump(const Duration(milliseconds: 100));
+
+      await tester.enterText(find.byType(TextFormField), '带图标分类');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tapSave(tester);
+
+      verify(() => repo.createCategory(
+            name: '带图标分类',
+            kind: 'expense',
+            icon: 'utensils',
+          ))
+          .called(1);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('保存失败：弹出保存失败对话框', (tester) async {
+      when(() => repo.createCategory(
+            name: any(named: 'name'),
+            kind: any(named: 'kind'),
+            icon: any(named: 'icon'),
+          ))
+          .thenThrow(Exception('db down'));
+
+      await openEdit(tester);
+      await tester.enterText(find.byType(TextFormField), '失败分类');
+      await tester.pump(const Duration(milliseconds: 600));
+      await tapSave(tester);
+
+      expect(find.text('保存失败'), findsOneWidget);
+      expect(find.text('操作失败，请稍后重试'), findsOneWidget);
+      // 关闭对话框
+      await tester.tap(find.text('确定'));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 2));
+    });
+  });
 }
