@@ -694,14 +694,15 @@ void main() {
           .thenAnswer((_) async => 1);
 
       await openEdit(tester);
+      // 先输入名称（避免后续滚动图标区把输入框挤出视口）
+      await tester.enterText(find.byType(TextFormField), '带图标分类');
+      await tester.pump(const Duration(milliseconds: 600));
       // 图标网格中选「utensils」
       await tester.ensureVisible(find.text('utensils'));
       await tester.pump(const Duration(milliseconds: 100));
       await tester.tap(find.text('utensils'));
       await tester.pump(const Duration(milliseconds: 100));
 
-      await tester.enterText(find.byType(TextFormField), '带图标分类');
-      await tester.pump(const Duration(milliseconds: 600));
       await tapSave(tester);
 
       verify(() => repo.createCategory(
