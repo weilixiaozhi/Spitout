@@ -4,7 +4,10 @@
 // 页面应正确渲染迁移提示的标题与说明文案，且原有功能说明文本保持不变。
 // 另覆盖：点击「导出明细」跳转 `DetailExportPage` 二级页面。
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -17,6 +20,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/data/detail_export_page.dart';
 import 'package:spitout/pages/data/detail_import_export_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/app_list_tile.dart';
 
 // Mock 整个 BaseRepository，未 stub 的方法返回默认值不抛异常。
@@ -143,6 +147,94 @@ void main() {
           reason: '点击后应跳转导出明细二级页面');
       // 二级页面默认选中当前账本
       expect(find.text('默认账本'), findsOneWidget);
+    });
+  });
+
+  group('导入明细流程', () {
+    testWidgets('选择文件 → 流式读取 → 进入字段映射页', (tester) async {
+      final tempDir = Directory.systemTemp.createTempSync('detail_import');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+      final csvFile = File('${tempDir.path}/trans.csv');
+      csvFile.writeAsStringSync(
+        '日期,类型,金额,分类\n2026-01-01,支出,12.50,餐饮\n',
+      );
+
+      const pickerChannel =
+          MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        (call) async {
+          if (call.method == 'clear') return true;
+          return [
+            {
+              'path': csvFile.path,
+              'name': 'trans.csv',
+              'size': 60,
+              'identifier': 'f1',
+              'type': 'file',
+            },
+          ];
+        },
+      );
+      addTearDown(() => binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(pickerChannel, null));
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      // ImportConfirmPage 加载分类列表所需的仓库调用
+      when(() => repo.getAllCategories())
+          .thenAnswer((_) async => <Category>[]);
+      when(() => repo.getLedgerById(1)).thenAnswer((_) async => null);
+
+      // 文件读取与后台解析均为真实 IO / isolate，须在 runAsync 中推进
+      await tester.runAsync(() async {
+        await tester.tap(find.text('导入明细').last);
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.runAsync(() async {
+        await Future<void>.delayed(const Duration(milliseconds: 600));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 100));
+
+      // 已进入 ImportConfirmPage 字段映射步骤
+      expect(find.text('确认映射'), findsOneWidget);
+
+      // 返回入口页
+      await tester.tap(find.byIcon(AppIcons.back));
+      await tester.pumpAndSettle();
+      expect(find.text('明细导入导出'), findsOneWidget);
+    });
+
+    testWidgets('取消选择文件：停留在入口页', (tester) async {
+      const pickerChannel =
+          MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        (call) async => null,
+      );
+      addTearDown(() => binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(pickerChannel, null));
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await tester.runAsync(() async {
+        await tester.tap(find.text('导入明细').last);
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 200));
+
+      expect(find.text('确认映射'), findsNothing);
+      expect(find.text('明细导入导出'), findsOneWidget);
     });
   });
 }
