@@ -372,7 +372,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
 
           // 删除入口为长按 → 外部 onDelete 回调。
           return _TransactionListRow(
-            index: index,
             it: it,
             categoryName: categoryName,
             isExpense: isExpense,
@@ -415,7 +414,6 @@ class TransactionListState extends ConsumerState<TransactionList> {
 
 /// 单条交易行：长按删除 + 点击编辑。封装后便于在 _buildListDelegate 中复用。
 class _TransactionListRow extends StatelessWidget {
-  final int index;
   final ({Transaction t, Category? category}) it;
   final String categoryName;
   final bool isExpense;
@@ -426,7 +424,6 @@ class _TransactionListRow extends StatelessWidget {
   final VoidCallback? onLongPress;
 
   const _TransactionListRow({
-    required this.index,
     required this.it,
     required this.categoryName,
     required this.isExpense,

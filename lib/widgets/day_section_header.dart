@@ -55,8 +55,8 @@ class DaySectionHeader extends StatelessWidget {
     final grey = SpitoutTokens.textSecondary(context);
     final week = getWeekday(dateText);
     final l10n = AppLocalizations.of(context);
-    // 在日期 header 之前画一条弱分割线,把"天"之间的明细视觉隔开。
-    // 用 outlineVariant 颜色而非固定透明度,深浅色模式下对比度都稳定。
+    // 天与天之间的视觉区隔由 header 自身的上下留白 + 次要文字颜色完成,
+    // 不再绘制分割线,与列表条目间无分隔线的简洁样式保持一致。
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
