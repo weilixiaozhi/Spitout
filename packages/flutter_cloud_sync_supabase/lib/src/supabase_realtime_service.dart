@@ -5,37 +5,6 @@ import 'dart:async';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:supabase_flutter/supabase_flutter.dart' as supabase;
 
-/// Postgres 变更过滤器（带取反标记）。
-///
-/// realtime_client 2.10+ 的 [supabase.PostgresChangeFilter] 移除了 `negate`
-/// 参数与属性，但服务端过滤串仍支持 `not.` 取反前缀；用子类扩展 `toString`
-/// 保留取反能力，避免上游 API 收紧导致语义丢失。
-class SupabasePostgresChangeFilter extends supabase.PostgresChangeFilter {
-  final bool negate;
-
-  const SupabasePostgresChangeFilter({
-    required super.type,
-    required super.column,
-    required super.value,
-    required this.negate,
-  });
-
-  @override
-  String toString() {
-    if (!negate) return super.toString();
-    // in 过滤器需保持与基类一致的引号转义格式，仅补上 not. 前缀。
-    if (type == supabase.PostgresChangeFilterType.inFilter) {
-      final escaped = (value as Iterable).map((s) {
-        final str = '$s';
-        final e = str.replaceAll(r'\', r'\\').replaceAll('"', r'\"');
-        return '"$e"';
-      }).join(',');
-      return '$column=not.in.($escaped)';
-    }
-    return '$column=not.${type.name}.$value';
-  }
-}
-
 /// Supabase implementation of [RealtimeChannel].
 class SupabaseRealtimeChannel implements RealtimeChannel {
   final supabase.RealtimeChannel _channel;
@@ -167,10 +136,10 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
 
   /// 解析 Postgres 变更过滤器（`column=op.value` 三段格式）。
   ///
-  /// 支持 `eq` / `neq` / `gt` / `gte` / `lt` / `lte` / `in` 等当前
-  /// realtime_client 版本提供的操作符，以及 `not.` 取反前缀。
+  /// 支持 `eq` / `neq` / `gt` / `gte` / `lt` / `lte` / `in` / `is` /
+  /// `like` / `ilike` 等操作符，以及 `not.` 取反前缀。
   /// 旧实现用 `split('=')` 会把 `eq.123` 整体当作 value，导致过滤恒不匹配。
-  static SupabasePostgresChangeFilter? parsePostgresFilter(String? filter) {
+  static supabase.PostgresChangeFilter? parsePostgresFilter(String? filter) {
     if (filter == null || filter.isEmpty) return null;
 
     final eqIndex = filter.indexOf('=');
@@ -194,7 +163,7 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
     final op = rest.substring(0, dotIndex);
     final value = rest.substring(dotIndex + 1);
 
-    // 操作符白名单：优先精确匹配，其次匹配 inFilter 这类带后缀枚举。
+    // 操作符白名单：优先精确匹配，其次匹配 inFilter / isFilter 这类带后缀枚举。
     supabase.PostgresChangeFilterType? type;
     for (final candidate in supabase.PostgresChangeFilterType.values) {
       if (candidate.name == op || candidate.name == '${op}Filter') {
@@ -206,7 +175,7 @@ class SupabaseRealtimeChannel implements RealtimeChannel {
       throw ArgumentError('不支持的 Realtime 过滤操作符: $op');
     }
 
-    return SupabasePostgresChangeFilter(
+    return supabase.PostgresChangeFilter(
       type: type,
       column: column,
       value: value,
