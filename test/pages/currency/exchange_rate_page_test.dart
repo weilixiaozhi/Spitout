@@ -462,4 +462,52 @@ void main() {
 
     expect(find.byType(CurrencyManagePage), findsOneWidget);
   });
+
+  testWidgets('编辑保存失败：toast 操作失败且弹窗不关', (tester) async {
+    when(
+      () => repo.setOverride(
+        base: any(named: 'base'),
+        quote: any(named: 'quote'),
+        rate: any(named: 'rate'),
+      ),
+    ).thenThrow(Exception('db down'));
+
+    await tester.pumpWidget(buildApp(ledger: testLedger));
+    await tester.pumpAndSettle();
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(ExchangeRatePage)),
+    );
+
+    await tester.tap(find.text('编辑').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await tester.enterText(find.byType(TextField), '7.5');
+    await tester.pump();
+    await tester.tap(find.text(l10n.commonSave));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('操作失败，请稍后重试'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('行内恢复自动失败：toast 操作失败', (tester) async {
+    when(
+      () => repo.removeOverride(
+        base: any(named: 'base'),
+        quote: any(named: 'quote'),
+      ),
+    ).thenThrow(Exception('db down'));
+
+    await tester.pumpWidget(buildApp(ledger: testLedger));
+    await tester.pumpAndSettle();
+
+    await tester.tap(find.text('恢复自动').first);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('操作失败，请稍后重试'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
 }

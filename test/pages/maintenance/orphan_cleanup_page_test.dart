@@ -5,14 +5,19 @@ import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/maintenance/orphan_cleanup_page.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/maintenance/orphan_cleaner.dart';
+import 'package:spitout/services/maintenance/orphan_record.dart';
 
 import '../../helpers/test_isolation.dart';
+
+class _MockCleaner extends Mock implements OrphanCleaner {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -231,5 +236,90 @@ void main() {
     // 冲刷 Riverpod 重试(400ms)与 LoggerService 保存定时器(2s)
     await tester.pump(const Duration(seconds: 3));
     expect(calls, greaterThan(1));
+  });
+
+  testWidgets('清理部分失败：展示成功/失败计数', (tester) async {
+    final cleaner = _MockCleaner();
+    final fakeRecord = OrphanRecord(
+      type: OrphanType.categoryMissingParent,
+      title: '坏记录',
+      subtitle: 'sub',
+      localId: 99,
+    );
+    when(() => cleaner.clean(any())).thenAnswer(
+      (_) async => OrphanCleanResult(
+        successCount: 1,
+        failures: [(record: fakeRecord, error: 'boom')],
+      ),
+    );
+    final container = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        repositoryProvider.overrideWithValue(repo),
+        orphanCleanerProvider.overrideWithValue(cleaner),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const OrphanCleanupPage(),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await seedOrphans(tester);
+
+    await tester.tap(find.text('全选').last);
+    await tester.pump();
+    await tester.tap(find.text('清理已选'));
+    await tester.pump();
+    await tester.tap(find.text('确定'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('成功 1 项,失败 1 项'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('清理异常：提示操作失败', (tester) async {
+    final cleaner = _MockCleaner();
+    when(() => cleaner.clean(any())).thenThrow(Exception('db down'));
+    final container = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        repositoryProvider.overrideWithValue(repo),
+        orphanCleanerProvider.overrideWithValue(cleaner),
+      ],
+    );
+    addTearDown(container.dispose);
+
+    await tester.pumpWidget(UncontrolledProviderScope(
+      container: container,
+      child: MaterialApp(
+        locale: const Locale('zh'),
+        localizationsDelegates: AppLocalizations.localizationsDelegates,
+        supportedLocales: AppLocalizations.supportedLocales,
+        home: const OrphanCleanupPage(),
+      ),
+    ));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    await seedOrphans(tester);
+
+    await tester.tap(find.text('全选').last);
+    await tester.pump();
+    await tester.tap(find.text('清理已选'));
+    await tester.pump();
+    await tester.tap(find.text('确定'));
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+
+    expect(find.text('操作失败，请稍后重试'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
   });
 }
