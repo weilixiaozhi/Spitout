@@ -51,6 +51,37 @@ void main() {
     await tester.tap(find.text('周'));
     expect(changed, [2]);
   });
+
+  testWidgets('英文长标签在 maxWidth 214 内自适应，不触发 RenderFlex overflow', (tester) async {
+    // 统计页底部悬浮周期胶囊固定 maxWidth 214：Week/Month/Year 英文文案在
+    // 三段均分后每段仅剩约 42.7px，放不下时会溢出（RenderFlex overflow）。
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 214),
+              child: CapsuleSwitcher<String>(
+                selectedValue: 'month',
+                options: const [
+                  CapsuleOption(value: 'week', label: 'Week'),
+                  CapsuleOption(value: 'month', label: 'Month'),
+                  CapsuleOption(value: 'year', label: 'Year'),
+                ],
+                onChanged: (_) {},
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+
+    expect(
+      tester.takeException(),
+      isNull,
+      reason: '英文 Week/Month/Year 不得在 214 宽度内触发 RenderFlex overflow',
+    );
+  });
 }
 
 void _noop(int _) {}

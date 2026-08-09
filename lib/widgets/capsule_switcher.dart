@@ -75,12 +75,21 @@ class CapsuleSwitcher<T> extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
               children: [
-                Text(
-                  option.label,
-                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                        color: selected ? selectedFg : unselectedFg,
-                        fontWeight: FontWeight.w600,
-                      ),
+                // 段内宽度由 Expanded 均分后可能小于英文长标签（如 Week/Month/Year）
+                // 的自然宽度，直接放 Text 会触发 RenderFlex overflow；
+                // 用 FittedBox(scaleDown) 让标签在放不下时等比缩小、放得下时保持原样。
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: Alignment.center,
+                    child: Text(
+                      option.label,
+                      style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                            color: selected ? selectedFg : unselectedFg,
+                            fontWeight: FontWeight.w600,
+                          ),
+                    ),
+                  ),
                 ),
                 if (option.showArrow && option.onTap != null) ...[
                   const SizedBox(width: 4),
