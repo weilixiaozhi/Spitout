@@ -23,10 +23,19 @@ class OrphanSeeder {
   Future<String> seedAll() async {
     final lines = <String>[];
     try {
-      lines.add('A6: ${await _seedTxMissingCategory()} 个');
-      lines.add('A7: ${await _seedCategoryMissingParent()} 个');
-      lines.add('A_new(无账本): ${await _seedTxMissingLedger()} 个');
-      lines.add('C1: ${await _seedLocalChangeMissing()} 个');
+      // 设计意图：外键级联会在删除主表行时立刻清掉刚插入的孤儿数据
+      // （删账本连带删交易、删分类把 category_id 置 NULL），导致 debug
+      // 种子永远造不出 A6/A_new 两类孤儿，清理页对应功能无法联调。
+      // 播种期间临时关闭外键，让悬空引用能真实落库；结束后立即恢复。
+      await db.customStatement('PRAGMA foreign_keys = OFF');
+      try {
+        lines.add('A6: ${await _seedTxMissingCategory()} 个');
+        lines.add('A7: ${await _seedCategoryMissingParent()} 个');
+        lines.add('A_new(无账本): ${await _seedTxMissingLedger()} 个');
+        lines.add('C1: ${await _seedLocalChangeMissing()} 个');
+      } finally {
+        await db.customStatement('PRAGMA foreign_keys = ON');
+      }
     } catch (e, st) {
       logger.error('OrphanSeeder', '种孤儿数据失败', e, st);
       return '失败: $e';

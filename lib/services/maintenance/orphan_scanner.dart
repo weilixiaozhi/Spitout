@@ -53,7 +53,9 @@ class OrphanScanner {
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
       // 数据库金额为整数分,展示转"元"。
-      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
+      // 注意 amount 列类型是 INTEGER,drift 按 int 返回,
+      // 用 num 读取会报 "Could not find a matching SQL type"。
+      final amount = (row.readNullable<int>('amount') ?? 0) / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final catId = row.read<int>('category_id');
       return OrphanRecord(
@@ -138,7 +140,7 @@ class OrphanScanner {
     ).get();
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
-      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
+      final amount = (row.readNullable<int>('amount') ?? 0) / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final ledgerId = row.read<int>('ledger_id');
       return OrphanRecord(
@@ -176,7 +178,7 @@ class OrphanScanner {
     ).get();
     return rows.map((row) {
       final txId = row.read<int>('tx_id');
-      final amount = (row.readNullable<num>('amount') ?? 0).toDouble() / 100;
+      final amount = (row.readNullable<int>('amount') ?? 0) / 100;
       final txType = row.readNullable<String>('type') ?? '';
       final syncId = row.read<String>('sync_id');
       final ledgerId = row.read<int>('ledger_id');

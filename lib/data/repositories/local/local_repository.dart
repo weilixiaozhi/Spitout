@@ -1068,7 +1068,15 @@ class LocalRepository extends BaseRepository {
     }
     if (na != tx.nativeAmount) {
       await (db.update(db.transactions)..where((x) => x.id.equals(id))).write(
-        TransactionsCompanion(nativeAmount: d.Value(na)),
+        TransactionsCompanion(
+          nativeAmount: d.Value(na),
+          // 无币种的孤儿交易(如迁移前的悬空账本交易)按新账本位币补齐
+          // currencyCode,否则违反
+          // (currency_code IS NULL AND native_amount IS NULL) OR (...)
+          // 成对 CHECK 约束,更新直接被拒绝。
+          currencyCode:
+              tx.currencyCode == null ? d.Value(base) : d.Value.absent(),
+        ),
       );
     }
     if (changeTracker != null && tx.syncId != null) {
