@@ -156,6 +156,9 @@ void main() {
     await tester.runAsync(() => tester.pumpAndSettle());
     expect(find.text(l10n.categoryDetailLoadFailed), findsNothing);
     expect(find.text(l10n.commonSave), findsOneWidget);
+    // 消化页面异步链（localSelfId 持久化 2s 节流 timer 等），避免随机顺序下
+    // 结束时有 pending timer 触发 !timersPending 断言（与其他用例一致）。
+    await tester.pump(const Duration(seconds: 3));
   });
 
   testWidgets('新建模式：空名称保存 → validator 提示且不创建', (tester) async {
