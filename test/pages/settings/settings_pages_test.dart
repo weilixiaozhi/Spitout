@@ -4,6 +4,8 @@
 // 用 ProviderContainer + 真实 SharedPreferences mock，验证页面渲染、交互后
 // provider 状态与持久化落盘，以及页面间导航。
 
+import 'dart:io';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart'
@@ -533,6 +535,183 @@ void main() {
       await tester.pump(const Duration(seconds: 1));
       expect(find.byType(Dialog), findsNothing);
       expect(find.text('导出配置'), findsOneWidget);
+    });
+
+    testWidgets('导入配置：选择文件 → 预览 → 确认 → 成功提示与重启对话框', (tester) async {
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      final tempDir = Directory.systemTemp.createTempSync('cfg_import');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+      final yamlFile = File('${tempDir.path}/config.yaml');
+      yamlFile.writeAsStringSync(
+        'ledgers:\n  items: []\n'
+        'categories:\n  items: []\n'
+        'recurring_transactions:\n  items: []\n',
+      );
+
+      const pickerChannel =
+          MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        // 通道方法名是文件类型（如 custom/any），统一返回所选文件列表
+        (call) async => [
+          {
+            'path': yamlFile.path,
+            'name': 'config.yaml',
+            'size': 100,
+            'identifier': 'f1',
+            'type': 'file',
+          },
+        ],
+      );
+      addTearDown(() => binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(pickerChannel, null));
+
+      await pumpPage(tester, const ConfigImportExportPage());
+      await tester.ensureVisible(find.text('导入配置'));
+      await tester.pump(const Duration(milliseconds: 100));
+      // 文件读取是真实 IO，必须在 runAsync 中推进事件循环
+      await tester.runAsync(() async {
+        await tester.tap(find.text('导入配置'));
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      // 导入预览对话框 → 确认导入
+      expect(find.text('导入预览'), findsOneWidget);
+      await tester.runAsync(() async {
+        await tester.tap(find.text('确认导入'));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('配置导入成功'), findsOneWidget);
+      expect(find.text('需要重启'), findsOneWidget);
+      await tester.tap(find.text('确定'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 3)); // toast + 保存定时器
+    });
+
+    testWidgets('导入配置：取消选择文件时不弹预览', (tester) async {
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      const pickerChannel =
+          MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        (call) async => null,
+      );
+      addTearDown(() => binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(pickerChannel, null));
+
+      await pumpPage(tester, const ConfigImportExportPage());
+      await tester.ensureVisible(find.text('导入配置'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('导入配置'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('导入预览'), findsNothing);
+      expect(find.text('配置导入失败'), findsNothing);
+      await tester.pump(const Duration(seconds: 3));
+    });
+
+    testWidgets('导入配置：文件无路径时展示导入失败对话框', (tester) async {
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      const pickerChannel =
+          MethodChannel('miguelruivo.flutter.plugins.filepicker');
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        pickerChannel,
+        // 通道方法名是文件类型（如 custom/any），返回一个无路径文件
+        (call) async => [
+          {'path': null, 'name': 'config.yaml'},
+        ],
+      );
+      addTearDown(() => binding.defaultBinaryMessenger
+          .setMockMethodCallHandler(pickerChannel, null));
+
+      await pumpPage(tester, const ConfigImportExportPage());
+      await tester.ensureVisible(find.text('导入配置'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.runAsync(() async {
+        await tester.tap(find.text('导入配置'));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('配置导入失败'), findsOneWidget);
+      await tester.tap(find.text('确定'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 3));
+    });
+
+    testWidgets('导出配置：确认后走分享通道并提示成功', (tester) async {
+      final binding = TestWidgetsFlutterBinding.ensureInitialized();
+      final tempDir = Directory.systemTemp.createTempSync('cfg_export');
+      addTearDown(() {
+        try {
+          tempDir.deleteSync(recursive: true);
+        } catch (_) {}
+      });
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        const MethodChannel('plugins.flutter.io/path_provider'),
+        (call) async {
+          if (call.method == 'getTemporaryDirectory') return tempDir.path;
+          return null;
+        },
+      );
+      const shareChannel = MethodChannel('dev.fluttercommunity.plus/share');
+      binding.defaultBinaryMessenger.setMockMethodCallHandler(
+        shareChannel,
+        (call) async => 'dev.fluttercommunity.plus/share/success',
+      );
+      addTearDown(() {
+        binding.defaultBinaryMessenger.setMockMethodCallHandler(
+            const MethodChannel('plugins.flutter.io/path_provider'), null);
+        binding.defaultBinaryMessenger
+            .setMockMethodCallHandler(shareChannel, null);
+      });
+
+      await pumpPage(tester, const ConfigImportExportPage());
+      await tester.ensureVisible(find.text('导出配置'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.runAsync(() async {
+        await tester.tap(find.text('导出配置'));
+        await Future<void>.delayed(const Duration(milliseconds: 300));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      expect(find.byType(Dialog), findsOneWidget);
+
+      // 默认全选 → 下一步 → 导出预览
+      await tester.runAsync(() async {
+        await tester.tap(find.text('下一步'));
+        await Future<void>.delayed(const Duration(milliseconds: 400));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump(const Duration(seconds: 2));
+      expect(find.text('导出预览'), findsOneWidget);
+
+      // 确认导出 → 写临时文件 + 分享成功 → toast
+      await tester.runAsync(() async {
+        await tester.tap(find.text('确认导出'));
+        await Future<void>.delayed(const Duration(milliseconds: 500));
+      });
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 500));
+      await tester.pump(const Duration(seconds: 1));
+
+      expect(find.text('配置导出成功'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 3));
     });
   });
 }
