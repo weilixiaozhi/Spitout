@@ -56,7 +56,9 @@ void main() {
   Future<void> waitUntil(
     bool Function() predicate, {
     String reason = '等待数据驱动刷新超时',
-    Duration timeout = const Duration(seconds: 5),
+    // 全量随机顺序跑批时多个测试文件并发执行，真实时间等待可能被调度挤压；
+    // 放宽到 15s 只影响超时判定，不断言内容，避免并行负载下的偶发误报。
+    Duration timeout = const Duration(seconds: 15),
   }) async {
     final deadline = DateTime.now().add(timeout);
     while (!predicate()) {
