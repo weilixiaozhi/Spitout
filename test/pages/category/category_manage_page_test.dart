@@ -17,6 +17,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:spitout/data/db.dart' as db;
 import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/pages/category/category_edit_page.dart';
 import 'package:spitout/pages/category/category_manage_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -643,6 +644,190 @@ void main() {
       await tester.pumpWidget(buildApp());
       await prime(tester);
       expectTemplateEntryButton(tester, '二级模板');
+    });
+  });
+
+  // ==================== 删除/迁移执行路径 ====================
+
+  group('删除/迁移执行', () {
+    Future<void> enterDeleteMode(WidgetTester tester) async {
+      await tester.tap(find.text('删除分类'));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    Future<void> selectCategory(WidgetTester tester, String name) async {
+      await tester.tap(find.text(name));
+      await tester.pump(const Duration(milliseconds: 50));
+    }
+
+    Future<void> confirmDelete(WidgetTester tester) async {
+      await tester.ensureVisible(find.text('确认删除'));
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(find.text('确认删除'));
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    testWidgets('策略 0：确认后删除一级分类及其子分类数据', (tester) async {
+      when(() => repo.deleteTransactionsByCategoryIds(any()))
+          .thenAnswer((_) async => 3);
+      when(() => repo.deleteCategoriesByIds(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await enterDeleteMode(tester);
+      // 选中「购物」(id=3)：其子分类「服装」(id=4) 应一并收集删除
+      await selectCategory(tester, '购物');
+      await confirmDelete(tester);
+
+      expect(find.text('删除选中的分类'), findsOneWidget);
+      expect(find.textContaining('包含二级分类和数据'), findsOneWidget);
+      await tester.tap(find.text('删除'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('已删除 1 个分类'), findsOneWidget);
+      verify(() => repo.deleteTransactionsByCategoryIds([3, 4])).called(1);
+      verify(() => repo.deleteCategoriesByIds([3])).called(1);
+      // 已退出删除模式
+      expect(find.text('删除分类'), findsOneWidget);
+      await tester.pump(const Duration(seconds: 2)); // toast 定时器
+    });
+
+    testWidgets('策略 2：删除一级分类并将二级提升为一级', (tester) async {
+      when(() => repo.deleteTransactionsByCategoryIds(any()))
+          .thenAnswer((_) async => 1);
+      when(() => repo.promoteSubCategoriesToTopLevel(any()))
+          .thenAnswer((_) async => 1);
+      when(() => repo.deleteCategoriesByIds(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await enterDeleteMode(tester);
+
+      // 切换策略 2（不含二级）
+      final option = find.text(
+          '删除分类和分类下的所有数据（不含二级分类，二级分类将变为一级分类）');
+      await tester.ensureVisible(option);
+      await tester.tap(option);
+      await tester.pump(const Duration(milliseconds: 50));
+
+      await selectCategory(tester, '购物');
+      await confirmDelete(tester);
+      expect(find.textContaining('不含二级分类和数据'), findsOneWidget);
+
+      await tester.tap(find.text('删除'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      verify(() => repo.deleteTransactionsByCategoryIds([3])).called(1);
+      verify(() => repo.promoteSubCategoriesToTopLevel(3)).called(1);
+      verify(() => repo.deleteCategoriesByIds([3])).called(1);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('策略 1：迁移数据到目标分类后删除源分类', (tester) async {
+      // 迁移 sheet 内容较高，使用更高视口避免按钮落在屏幕外
+      tester.view.physicalSize = const Size(800, 1400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+
+      when(() => repo.migrateCategoryTransactions(
+            fromCategoryId: any(named: 'fromCategoryId'),
+            toCategoryId: any(named: 'toCategoryId'),
+          ))
+          .thenAnswer((_) async =>
+              (migratedSubCategories: 0, migratedTransactions: 2));
+      when(() => repo.deleteCategoriesByIds(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await enterDeleteMode(tester);
+
+      // 切换策略 1（迁移）
+      final migrateOption =
+          find.text('删除分类并迁移分类下的所有数据到其他分类（含二级）');
+      await tester.ensureVisible(migrateOption);
+      await tester.tap(migrateOption);
+      await tester.pump(const Duration(milliseconds: 50));
+
+      await selectCategory(tester, '餐饮');
+      await confirmDelete(tester);
+
+      // 迁移目标 BottomSheet：选择「购物」→ 确认
+      expect(find.text('选择数据迁移到的分类'), findsOneWidget);
+      // 用搜索过滤到唯一目标（背后网格也有同名分类，取 sheet 中的最后一个）
+      await tester.enterText(find.byType(TextField).last, '购物');
+      await tester.pump(const Duration(milliseconds: 100));
+      final shoppingChip = find.text('购物').last;
+      await tester.ensureVisible(shoppingChip);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(shoppingChip);
+      await tester.pump(const Duration(milliseconds: 100));
+      final confirmButton = find.text('确定（迁移分类数据并删除分类）');
+      await tester.ensureVisible(confirmButton);
+      await tester.pump(const Duration(milliseconds: 100));
+      await tester.tap(confirmButton);
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      verify(() => repo.migrateCategoryTransactions(
+            fromCategoryId: 1,
+            toCategoryId: 3,
+          ))
+          .called(1);
+      verify(() => repo.deleteCategoriesByIds([1])).called(1);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('清空未使用分类：确认后删除 0 交易分类', (tester) async {
+      when(() => repo.deleteCategoriesByIds(any())).thenAnswer((_) async {});
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await enterDeleteMode(tester);
+
+      await tester.tap(find.text('清空未使用分类'));
+      await tester.pump(const Duration(milliseconds: 100));
+      expect(find.text('清空未使用分类'), findsWidgets);
+      expect(find.textContaining('确定要删除 1 个未使用的分类吗'), findsOneWidget);
+
+      await tester.tap(find.text('删除'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('已删除 1 个分类'), findsOneWidget);
+      // 购物(id=3) 交易数为 0，是唯一未使用分类
+      verify(() => repo.deleteCategoriesByIds([3])).called(1);
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('删除失败：展示删除失败提示且保持删除模式', (tester) async {
+      when(() => repo.deleteTransactionsByCategoryIds(any()))
+          .thenThrow(Exception('db down'));
+
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+      await enterDeleteMode(tester);
+      await selectCategory(tester, '餐饮');
+      await confirmDelete(tester);
+
+      await tester.tap(find.text('删除'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+
+      expect(find.text('删除失败'), findsOneWidget);
+      expect(find.text('确认删除'), findsOneWidget, reason: '仍停留在删除模式');
+      await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('添加分类：跳转分类编辑页', (tester) async {
+      await tester.pumpWidget(buildApp());
+      await prime(tester);
+
+      await tester.tap(find.byTooltip('添加分类'));
+      await tester.pumpAndSettle();
+
+      expect(find.byType(CategoryEditPage), findsOneWidget);
     });
   });
 }
