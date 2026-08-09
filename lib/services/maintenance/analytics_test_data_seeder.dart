@@ -23,7 +23,7 @@ enum TestDataScope {
 /// 验证统计页各周期（年/月/周/日）的图表、环图、列表渲染。
 ///
 /// 设计要点：
-/// - 随机币种（含本位币与外币）与随机金额，覆盖多币种统计路径；
+/// - 币种按固定序列轮换（含本位币与外币），保证任何一次填充都同时出现本币和外币、覆盖多币种统计路径；
 /// - 随机分配到账本可用支出分类，保证分类排行有数据；
 /// - 直接走 BaseRepository.addTransaction，复用既有写入/变更追踪逻辑；
 /// - [paidByUserId] 由调用方传入当前操作者标识，模拟真实创建行为，
@@ -34,6 +34,9 @@ class AnalyticsTestDataSeeder {
   AnalyticsTestDataSeeder(this.repo);
 
   final Random _rand = Random();
+  // 币种轮换指针：每次 _gen 都按顺序取下一种币种，替代纯随机取币种——
+  // 随机可能恰好 12 笔全外币（(5/6)^12 ≈ 11%）而缺失本币，轮换让多币种覆盖成为稳定保证而非概率事件。
+  int _currencyIndex = 0;
 
   // 覆盖本位币 CNY 与若干常见外币，确保统计聚合进入多币种分支
   static const List<String> _currencies = [
@@ -173,7 +176,7 @@ class AnalyticsTestDataSeeder {
 
   /// 生成一条随机金额 / 随机币种的计划项
   _Plan _gen(DateTime when, String base) {
-    final currency = _currencies[_rand.nextInt(_currencies.length)];
+    final currency = _currencies[_currencyIndex++ % _currencies.length];
     // 金额量级相近即可,统计聚合按 amount 求和;直接生成整数分。
     final amount = (10 + _rand.nextInt(990)) * 100 + _rand.nextInt(100);
     return _Plan(when: when, amount: amount, currency: currency);
