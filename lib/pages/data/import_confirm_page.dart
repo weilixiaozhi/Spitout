@@ -227,7 +227,10 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                         final dataStart =
                             widget.hasHeader ? (headerRow + 1) : 0;
                         // 保证包含表头行 + 最多 maxPreview-1 行数据
-                        final header = widget.hasHeader
+                        // 空 CSV 时 headerRow 无实际含义，必须跳过取数，
+                        // 否则 rows[headerRow] 越界崩溃（空文件也应友好提示）。
+                        final header =
+                            (widget.hasHeader && rows.isNotEmpty)
                             ? [rows[headerRow]]
                             : <List<String>>[];
                         final body = totalRows > dataStart
@@ -929,8 +932,14 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
     // 初始化分类映射为 null,自动匹配由 _autoMatchCategories 在数据到达后执行。
     categoryMapping = {for (final n in distinctCategories) n: null};
-    // 自动匹配移到数据回调中执行,不在 build 内改写状态。
-    _autoMatchCategories();
+    // 自动匹配推迟到本帧构建完成后再执行:分类下拉的 items 由
+    // FutureBuilder 在首帧订阅后经微任务交付,若在订阅前就把 value 设为
+    // 非 null,首帧会出现"items 为空但 value 已选中"的瞬态,触发
+    // DropdownButton 断言崩溃。post-frame 回调晚于该微任务,保证映射
+    // 落盘时 items 已就绪。
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _autoMatchCategories();
+    });
   }
 
   /// 分类数据就绪后为源分类预设同名匹配。

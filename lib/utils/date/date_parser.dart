@@ -116,12 +116,21 @@ class DateParser {
 
   /// 尝试解析日期字符串，失败时返回 null
   ///
-  /// 与 [parse] 方法的区别是：解析失败时返回 null 而不是当前时间
+  /// 与 [parse] 方法的区别是：解析失败时返回 null 而不是当前时间。
+  /// 注意不能复用 [parse] 的 fallback 语义——[parse] 内部
+  /// `fallback ?? DateTime.now()` 会把 null 兜回当前时间，
+  /// 导致"失败返回 null"的契约失效，坏数据被静默当作今天导入。
   static DateTime? tryParse(String? dateStr) {
     if (dateStr == null || dateStr.trim().isEmpty) {
       return null;
     }
 
-    return parse(dateStr, fallback: null);
+    final iso = _tryParseIso(dateStr);
+    if (iso != null) return iso.toLocal();
+    final chinese = _tryParseChineseDate(dateStr);
+    if (chinese != null) return chinese;
+    final common = _tryParseCommonFormats(dateStr);
+    if (common != null) return common;
+    return null;
   }
 }

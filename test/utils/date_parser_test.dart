@@ -34,12 +34,10 @@ void main() {
       expect(DateParser.tryParse('   '), isNull);
     });
 
-    test('非空但无法解析的串:当前实现回落到 now()(非 null)', () {
-      // 已知遗留:tryParse 文档称"失败返回 null",但它委托给
-      // parse(fallback: null),而 parse 解析失败时 `return fallback ?? DateTime.now()`
-      // → 返回 now()。只有 null/空白在 tryParse 入口被拦下返回 null。
-      // 此用例锁定**当前真实行为**;若日后修正为"失败即 null",改这里。
-      expect(DateParser.tryParse('not a date'), isNotNull);
+    test('非空但无法解析的串:返回 null(契约:失败不回落当前时间)', () {
+      // 契约锚点:tryParse 文档承诺"失败返回 null"。CSV 导入依赖该语义
+      // 把坏日期行按失败跳过,若回落 now() 会把坏行静默写成今天。
+      expect(DateParser.tryParse('not a date'), isNull);
     });
   });
 
