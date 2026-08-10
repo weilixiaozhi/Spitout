@@ -19,13 +19,6 @@ abstract class DataImportPort {
     bool recordChanges = true,
   });
 
-  /// 导入虚拟用户，按 syncId 幂等 upsert。
-  Future<void> importVirtualUsers(
-    BaseRepository repo,
-    int ledgerId,
-    List<ImportVirtualUser> virtualUsers,
-  );
-
   /// 导入分类（先一级后二级），返回分类缓存供交易导入复用。
   Future<Map<String, int>> importCategories(
     BaseRepository repo,

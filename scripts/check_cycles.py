@@ -8,7 +8,6 @@
 - 存在任何非平凡强连通分量（SCC）即失败，并列出环内文件。
 """
 
-import os
 import re
 import posixpath
 import sys

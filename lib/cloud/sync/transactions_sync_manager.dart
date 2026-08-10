@@ -21,7 +21,6 @@ class TransactionsSyncManager implements SyncService {
   final fcs.CloudServiceConfig config;
   final SpitoutDatabase db;
   final BaseRepository repo;
-  final DataImportPort _dataImportPort;
   final SyncDiffService _diffService;
 
   fcs.CloudSyncManager<int>? _syncManager;
@@ -38,8 +37,7 @@ class TransactionsSyncManager implements SyncService {
     required this.db,
     required this.repo,
     required DataImportPort dataImportPort,
-  })  : _dataImportPort = dataImportPort,
-        _diffService = SyncDiffService(dataImportPort: dataImportPort);
+  }) : _diffService = SyncDiffService(dataImportPort: dataImportPort);
 
   @override
   void clearStatusCache({int? ledgerId}) {
@@ -252,7 +250,7 @@ class TransactionsSyncManager implements SyncService {
         repo,
         ledgerId,
         jsonStr,
-        dataImportPort: _dataImportPort,
+        dataImportPort: _diffService.dataImportPort,
       );
 
       logger.info('CloudSync',

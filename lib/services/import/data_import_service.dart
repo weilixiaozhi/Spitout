@@ -186,7 +186,6 @@ class DataImportService implements DataImportPort {
   /// public — 供 transactions_json 导入路径与 importData 复用。
   /// recordChanges 由调用方(repo 层)决定是否登记 change log,
   /// 本方法只管数据层写入。
-  @override
   Future<void> importVirtualUsers(
     BaseRepository repo,
     int ledgerId,

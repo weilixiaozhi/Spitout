@@ -12,23 +12,6 @@ import 'package:spitout/data/db.dart';
 abstract class LocalChangePort {
   /// 监听未推送变更。
   Stream<List<LocalChange>> watchUnpushed();
-
-  /// 读取全部未推送变更。
-  Future<List<LocalChange>> getUnpushedChanges();
-
-  /// 读取指定账本的未推送变更。
-  Future<List<LocalChange>> getUnpushedChangesForLedger(int ledgerId);
-
-  /// 标记指定变更已推送。
-  Future<void> markPushed(List<int> changeIds);
-
-  /// 清理已推送的旧变更。
-  Future<int> cleanupPushedChanges({
-    Duration retention = const Duration(days: 7),
-  });
-
-  /// 统计未推送变更数量。
-  Future<int> getUnpushedCount();
 }
 
 /// 快照脏信号端口（data 层抽象）。

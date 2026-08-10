@@ -295,7 +295,6 @@ class ChangeTracker implements ChangeRecorder, LocalChangePort {
   }
 
   /// 获取所有未推送的变更
-  @override
   Future<List<LocalChange>> getUnpushedChanges() async {
     return await (db.select(db.localChanges)
           ..where((c) => c.pushedAt.isNull())
@@ -304,7 +303,6 @@ class ChangeTracker implements ChangeRecorder, LocalChangePort {
   }
 
   /// 获取指定账本的未推送变更
-  @override
   Future<List<LocalChange>> getUnpushedChangesForLedger(int ledgerId) async {
     return await (db.select(db.localChanges)
           ..where((c) => c.pushedAt.isNull() & c.ledgerId.equals(ledgerId))
@@ -313,7 +311,6 @@ class ChangeTracker implements ChangeRecorder, LocalChangePort {
   }
 
   /// 标记变更已推送
-  @override
   Future<void> markPushed(List<int> changeIds) async {
     if (changeIds.isEmpty) return;
     final now = DateTime.now();
@@ -323,7 +320,6 @@ class ChangeTracker implements ChangeRecorder, LocalChangePort {
   }
 
   /// 清理已推送的旧变更（保留最近 7 天）
-  @override
   Future<int> cleanupPushedChanges({
     Duration retention = const Duration(days: 7),
   }) async {
@@ -342,7 +338,6 @@ class ChangeTracker implements ChangeRecorder, LocalChangePort {
   }
 
   /// 获取未推送变更数量
-  @override
   Future<int> getUnpushedCount() async {
     // 全表查进内存再数长度在表膨胀后会很慢；用 COUNT(*) 只回传一个数字。
     final row = await db.customSelect(

@@ -73,7 +73,7 @@ final repositoryProvider = Provider<BaseRepository>((ref) {
   // Spitout Cloud 走实体级增量，快照型后端走账本级脏信号，两者互斥。
   final trackers = config != null && config.valid
       ? backendCapabilityFactory.createTrackers(db, config)
-      : const BackendTrackers();
+      : (changeTracker: null, snapshotDirtyTracker: null);
 
   logger.info('RepositoryProvider',
       '✅ LocalRepository (changeTracker=${trackers.changeTracker != null}, snapshotDirtyTracker=${trackers.snapshotDirtyTracker != null})');

@@ -16,6 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 
+import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
