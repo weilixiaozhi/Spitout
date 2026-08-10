@@ -13,7 +13,7 @@
 | 应用 | Spitout 个人记账（含多账本、共享账本、AA 分摊、多币种、提醒、本地备份、云同步） |
 | 技术栈 | Flutter 3.44.6 / Dart 3.12，Riverpod 3.4.2，Drift 2.34.0（SQLite），`flutter_cloud_sync` 插件化云同步框架 |
 | 代码规模 | `lib/` 262 个 Dart 源文件；`packages/` 5 个本地包共 59 个源文件（合计 307，已剔除 `*.g.dart` 与生成文件）；`test/` 259 个测试文件，`integration_test/` 1 个 |
-| 数据库 | Drift 14 张表（业务表 + `local_changes` / `sync_state` / `sync_pull_errors` / `snapshot_dirty_ledgers` 同步信号表），schema 快照 v1~v5 位于 `drift_schemas/` |
+| 数据库 | Drift 14 张表（业务表 + `local_changes` / `sync_state` / `sync_pull_errors` / `snapshot_dirty_ledgers` 同步信号表），`schemaVersion=5`，schema 快照 v1~v5 位于 `drift_schemas/`（详见 §9） |
 | 分层骨架 | `lib_root(pages/widgets) → providers → services → data`；`cloud` 作为横向同步能力；`core/l10n/theme/utils` 为叶子支撑 |
 | 同步架构 | **双栈并存**：Spitout Cloud 走「实体级增量」（ChangeTracker + SyncEngine + SyncCoordinator）；WebDAV/S3/Supabase 走「整本快照」（SnapshotDirtyTracker + TransactionsSyncManager + SnapshotSyncCoordinator）。两者因后端协议能力不同而不可合并 |
 | 静态检查 | `flutter analyze --no-pub`：**0 error / 0 warning / 0 info**（159.7s）；CI 另有架构门禁（`rg` 扫描 `lib/` 禁直连 adapter 包，仅豁免门面与 Composition Root） |
@@ -31,7 +31,7 @@ lib/
 ├─ cloud/                                             # 云同步横向能力
 │  ├─ spitout_cloud.dart                               # Spitout Cloud 白名单门面（唯一 adapter 感知点）
 │  ├─ auth_error_localizer.dart                        # 认证异常 → 本地化文案
-│  └─ sync/                                            # 同步引擎（20 文件，8 个 part 拆分的 SyncEngine）
+│  └─ sync/                                            # 同步引擎（20 文件，7 个 part 拆分的 SyncEngine）
 ├─ core/                                              # 横切叶子：identity / logging
 ├─ data/                                              # 数据层
 │  ├─ db.dart + db.g.dart                              # Drift schema（生成文件不计入分析）
@@ -122,6 +122,28 @@ graph TD
 ```
 
 该子图是 DAG：叶子模块只允许被依赖，不反向 import 编排模块；环通过「叶子 + re-export 保可见性」消除，消费方（`providers.dart` barrel）符号面不变。（分析期间远端合入的 8e1ee41 已把原 `all_providers.dart` 并入 `providers.dart`，图示为修正后形态。）
+
+### 1.5 AA 分摊功能设计意图
+
+AA 分摊是跨越 UI / 状态 / 服务 / 数据 / 云同步五层的完整功能域（旧版报告有专节，本次补写并更新行号）：
+
+| 层 | 文件 | 职责 |
+|---|---|---|
+| services | `services/statistics/aa_statistics_service.dart`（`computeLedger` :304）、`aa_edit_models.dart`、`aa_decimal_util.dart` | 纯计算与页面契约，不写库 |
+| providers | `providers/statistics/aa_statistics_providers.dart`（`ledgerVirtualUsersProvider` :82、`aaParticipantOptionsProvider` :162、`aaStatisticsProvider` :396、数据组装 :414、`computeLedger` 调用 :479） | 状态入口 |
+| pages | `pages/statistics/aa_edit_page.dart`（纯选择器，不写库）、`aa_statistics_page.dart`、`aa_member_detail_page.dart` | UI |
+| widgets | `aa_payer_picker_sheet.dart`、`aa_mode_toggle.dart`、`aa_participant_avatar.dart`、`transaction_aa_edit_utils.dart`、`virtual_user_manage_sheet.dart` | 复用组件与编辑入口 |
+| data | `repositories/ledger_virtual_user_repository.dart` + `local/local_ledger_virtual_user_repository.dart` | 虚拟用户数据层 |
+| cloud/sync | `sync_engine_serialization.dart`（`virtual_user` 推送 :112-119）、`sync_engine_apply.dart`（`virtual_user` 应用 :36；AA 字段逐键 `containsKey` 缺键保护 :174-185）、`transactions_json.dart`（快照含 AA 字段 + `virtualUsers` 数组） | 增量/快照同步序列化与反序列化 |
+| 路由 | `routes.dart`（`Routes.aaStatistics` / `aaEdit` / `aaMemberDetail`）→ `router.dart` 三个 case | 命名路由解耦，页面间零直接 import |
+
+同步契约要点（与旧报告一致，已按当前代码复核）：
+- 推送侧「非空才发」：`paidByUserId` / `aaMode` / `aaParticipants` / `aaSplits` 均非空守卫后才写入 payload；
+- 应用侧「缺键保护」：`sync_engine_apply.dart` 逐键 `payload.containsKey` 判断，缺键时 `Value.absent()` 保留本地值，兼容旧 server payload；
+- 虚拟用户随账本快照导出（`transactions_json.dart`），避免 `aaParticipants` / `aaSplits` 引用悬空；
+- 虚拟用户 `sync_id` 是跨设备稳定 key，无 SQL 外键，由应用层保证一致性（详见 §9.4）。
+
+该功能域全部落在既有分层内，未引入新的跨层或反向依赖边。
 
 ---
 
@@ -272,17 +294,20 @@ graph LR
 | ⑤ | `lib/main.dart:104-107` `runApp(UncontrolledProviderScope(container, MainApp))`；`MainApp._getHomePage` 按 `welcomeCheck / appInitState / isAppLocked` 分发（`main.dart:140-175`） |
 | ⑥ | `lib/app.dart:59` `ref.read(appStartupSyncProvider).start()` → `lib/providers/sync/app_startup_sync.dart:57` eager-await `spitoutCloudProviderInstance`（恢复 session）→ `lib/providers/sync/sync_providers.dart:113` `syncServiceProvider` 装配 `SyncEngine`（含 `engine.startListeningRealtime()`、`SyncCoordinator.start()`、connectivity 监听）→ `app_startup_sync.dart:74-98` `engine.syncAccount()` 首轮账户级同步 |
 | ⑦ | `lib/app.dart:70` `autoBackupOnLaunch(ref.read)`（每日首次打开本地备份） |
+| ⑧ | 首次启动：`pages/auth/welcome_page.dart:327` `_finishWelcome()` → `:349` `ref.read(ensureSeedProvider)(...)`（创建默认账本 + 分类模板）→ `:360` `selectFirstLedger(ref.read)` → `:370` `ref.invalidate(appSplashInitProvider)` 重跑预加载（导入配置分支 `:452-470` 同款收尾） |
 
 ### 3.2 核心业务写入（记一笔）
 
 | 步骤 | 调用序列 |
 |---|---|
-| ① | `lib/widgets/transaction_editor_sheet.dart:401` `repo.addTransaction(...)`（`repositoryProvider` 解析为 `LocalRepository`） |
-| ② | `lib/data/repositories/local/local_repository.dart:394` `addTransaction` → `:441` `db.transaction(...)` → `:461` `changeTracker.recordLedgerChange(entityType:'transaction', action:'create', ...)`（与写库同事务，保证回滚一致） |
-| ③ | `lib/cloud/sync/change_tracker.dart:224` `_insert` → 写 `local_changes` 表（`pushedAt=null`）→ Drift `tableUpdates` 广播 |
-| ④ | `lib/providers/core/database_providers.dart:14` `dataChangeSignalProvider` 命中 → 统计/列表/分类 provider 自动重算（不再依赖手动 bump） |
-| ⑤ | `lib/widgets/transaction_editor_sheet.dart:447` 保存后 `PostProcessor.run(ref, ledgerId:)` → `lib/providers/core/post_processor.dart:132` `_doSync`：仅 `sync.markLocalChanged` + 状态 tick，**不直接调 sync()** |
-| ⑥ | `lib/cloud/sync/sync_coordinator.dart:39` `start()` 的 `local_changes` watch 命中 → `:61` 250ms 防抖 → `:64` `engine.triggerAutoSync(reason:'local_change_detected')` |
+| ① | `lib/app.dart` 底部 FAB → `widgets/transaction_editor_sheet_entry.dart` `showTransactionEditorSheet(...)` → `showModalBottomSheet` → `TransactionEditorSheet` |
+| ② | `lib/widgets/transaction_editor_sheet.dart:401` `repo.addTransaction(...)`（`repositoryProvider` 解析为 `LocalRepository`） |
+| ③ | `lib/data/repositories/local/local_repository.dart:394` `addTransaction` → `:441` `db.transaction(...)` → `:461` `changeTracker.recordLedgerChange(entityType:'transaction', action:'create', ...)`（与写库同事务，保证回滚一致） |
+| ④ | 共享账本作者回填：保存后 `shared_ledger_providers.dart:341` `markTxCreatedFromUi` / `:361` `markTxEditedFromUi` → `services/data/tx_author_service.dart` 回填 `createdByUserId` / `lastEditedByUserId` / `paidByUserId`（AA「默认支出人 = 创建人」由此落地） |
+| ⑤ | `lib/cloud/sync/change_tracker.dart:224` `_insert` → 写 `local_changes` 表（`pushedAt=null`）→ Drift `tableUpdates` 广播 |
+| ⑥ | `lib/providers/core/database_providers.dart:14` `dataChangeSignalProvider` 命中 → 统计/列表/分类 provider 自动重算（不再依赖手动 bump） |
+| ⑦ | `lib/widgets/transaction_editor_sheet.dart:447` 保存后 `PostProcessor.run(ref, ledgerId:)` → `lib/providers/core/post_processor.dart:132` `_doSync`：仅 `sync.markLocalChanged` + 状态 tick，**不直接调 sync()** |
+| ⑧ | `lib/cloud/sync/sync_coordinator.dart:39` `start()` 的 `local_changes` watch 命中 → `:61` 250ms 防抖 → `:64` `engine.triggerAutoSync(reason:'local_change_detected')` |
 
 ### 3.3 反应式自动同步（Spitout Cloud 增量）
 
@@ -325,6 +350,7 @@ graph LR
 | ③ | 统计卡片：`home_page.dart:882-887` `watch(monthlyTotalsProvider / todayExpenseProvider / weekExpenseProvider)` → `statistics_providers.dart:25/52/75` 均 `watch(dataChangeSignalProvider)` + `repositoryProvider` 聚合 SQL |
 | ④ | 账本列表：`ledger_list_providers.dart:33` `localLedgersProvider` → `watch(ledgerListRefreshProvider)` + `watch(dataChangeSignalProvider)` + `repo.getAllLedgers() + getAllLedgerStats()`（单条聚合 SQL，避免 N+1） |
 | ⑤ | 下拉刷新：`home_page.dart:262-266` `sync.pullIncrementalWithHeal(ledgerId)`（纯本地账本只做本地刷新，不走云端）→ 完成后 tick 刷新 + 结果文案 |
+| ⑥ | AA 统计读取：`ref.watch(aaStatisticsProvider(ledgerId))`（`aa_statistics_providers.dart:396`）→ `repo.getAaTransactionsByLedger`（:414）+ `ledgerVirtualUsersProvider`（:82）+ 真实成员 provider → `AaStatisticsService.computeLedger`（`aa_statistics_service.dart:304`，纯计算不写库） |
 
 ### 3.7 跨端同步：上行 / 下行 / Profile 双向
 
@@ -347,6 +373,8 @@ graph LR
 | ④ | UI 强力刷新：`shared_ledger_providers.dart:174-175` `invalidate(localLedgersProvider)` + `ledgerListRefreshProvider.tick()` |
 | ⑤ | 成员实时刷新：`sync_engine_realtime.dart:133` `_handleMemberChange`（`member_change` WS 事件）：自己被踢 → `_purgeLocalLedgerByExternalId`；自己 joined（web 端 accept 场景）→ `syncLedgersFromServer + replayAllChanges`；他人 joined/角色变化 → `syncLedgersFromServer` 重拉成员数 |
 | ⑥ | Owner 分类变更 fan-out：`sync_engine_realtime.dart:190` `_handleSharedResourceChange` → `_emit(SharedResourceChanged)` → `sharedResourceRefreshProvider.tick()` → 编辑器分类选择器/反查 widget 重建 |
+| ⑦ | 发邀请：`shared_ledger_providers.dart:89` `createInviteAndRefresh()` → 先 `engine.pushUserGlobalEntities()`（防「云端空快照」，失败重试一次后抛 `CategorySyncBeforeInviteException`）→ `cloud.createInvite()` → invalidate `ledgerInvitesProvider` |
+| ⑧ | 踢人/退出/删除：`shared_ledger_providers.dart:198` `removeMemberAndRefresh` / `:229` `leaveAndDeleteSharedLedgerProvider` / `:256` `deleteSharedLedgerAsOwnerProvider` → `cloud.removeMember/leaveLedger/deleteLedger` → `engine.syncLedgersFromServer()` 同步成员数 → invalidate `ledgerMembersProvider / localLedgersProvider / currentLedgerProvider` |
 
 ---
 
@@ -360,6 +388,8 @@ graph LR
 | 2 | 文件 | `widgets/ledger_currency_change.dart:9` ↔ `widgets/widgets.dart:54`（export 回边） | 组件反向 import barrel | 需修复（低） |
 | 3 | 目录 | `cloud ↔ services`（6 条跨目录边） | 真实业务耦合 | 需修复（高） |
 | 4 | 目录 | `lib_root ↔ pages ↔ widgets`（10 条边，其中 pages/widgets→root 各 3 条是 `routes.dart`） | 常量叶子放错位置 | 建议修复（低） |
+
+说明：`SyncEngine` 与 7 个 `sync_engine_*.dart` 之间的「互连」是 `part` 单库多文件组织（`sync_engine.dart:43-49` 的 7 条 `part` 指令），**不是循环依赖**；扫描器按「part 并入主库」处理，故未将其计入 SCC。`part of` 回边仅用于库归属识别。
 
 ### 4.2 l10n SCC（良性）
 
@@ -507,6 +537,7 @@ graph LR
 | M1 | 主工程直连后端 SDK（supabase_flutter） | `lib/cloud/auth_error_localizer.dart:6`；根 `pubspec.yaml` 显式声明 `supabase_flutter` | 适配器内归一化异常类型；根 pubspec 移除 supabase_flutter；auth_error_localizer 只依赖核心包 `CloudAuthException` |
 | M2 | widgets 组件反向 import 自身 barrel | `lib/widgets/ledger_currency_change.dart:9` ↔ `widgets.dart:54` | 该组件改直接 import 兄弟文件；同步把「子文件禁 import 自身 barrel」写入文件头注释 |
 | M3 | 部分 UI 文件绕过 barrel 直连 provider 内部文件 | `lib/widgets/transaction_list_item.dart:10`、`lib/pages/category/category_template_flat_page.dart:8` 等直接 import `providers/core/database_providers.dart` | 属 Provider 叶子拆分后的**有意豁免**（代码注释已说明，避免环）；建议统一为「只允许叶子模块被直接 import，非叶子仍走 barrel」，并在 CI 门禁中显式放行叶子名单 |
+| M4 | Provider 装配点内嵌后端类型 switch | `lib/providers/core/database_providers.dart:84-93` `repositoryProvider` 按 `CloudBackendType` 直接 new `ChangeTracker` / `SnapshotDirtyTracker` | 抽 `BackendCapabilityFactory`（cloud 层提供 `createTrackers(config)`），装配点只做注入，后端策略集中一处 |
 
 ### 低
 
@@ -517,6 +548,22 @@ graph LR
 | L3 | provider barrel 多层 re-export 放大耦合面 | `providers.dart → sync_providers.dart → 4 个叶子`（原 `all_providers.dart` 已并入 `providers.dart`） | 无环，可接受；建议在 `providers.dart` 标注「叶子已按域拆分，新增 provider 优先放叶子」，避免 barrel 无限膨胀 |
 | L4 | `flutter_cloud_sync_webdav` 声明未用 `http` | `packages/flutter_cloud_sync_webdav/pubspec.yaml` | 删除声明，或加注释说明预留 |
 | L5 | 数据层直连暴露 2 处 UI 细节 | `widgets/category_grid_section.dart:5 → data/repositories/category_repository.dart`（接口引用）、`widgets/transaction_edit_utils.dart:4 → data/repositories/support/shared_ledger_picker_filter.dart` | 若仅为类型/工具引用可保留；若涉及实现细节，收敛到 providers 接口或 `models.dart` |
+| L6 | cloud 层直连 `data/db.dart`（绕过仓储接口） | `lib/cloud/sync/sync_coordinator.dart:3`、`lib/cloud/sync/snapshot_sync_coordinator.dart:4`、`lib/cloud/sync/change_tracker.dart:3` 等直接 import Drift schema | 抽 `LocalChangePort` / `SnapshotDirtyPort` 由 data 层仓储提供 watch/写入接口；与 ChangeRecorder 端口化同一套路 |
+| L7 | providers 层直连 SyncEngine 实现类 | `lib/providers/sync/shared_ledger_providers.dart:24` import `cloud/sync/sync_engine.dart` | 统一经 `cloud_client_providers.dart` 的 `syncEngineProvider` family 获取引擎，减少实现类引用面 |
+| L8 | `../../` 相对导入写法泛滥 | `lib/widgets/user_display_name_resolver.dart:5-7` 等 import `../../l10n/...`、`../../providers/...` | 依赖包根 URI 钳制虽合法，但写法误导；改 `package:spitout/...` 或保持单层相对路径 |
+| L9 | widgets barrel 存在无外部消费者的冗余 export（候选） | `widgets.dart` 中 `update_dialog` / `login_2fa_challenge_view` / `searchable_dropdown` / `amount_expression_bar` / `amount_keypad` / `category_grid_item` / `note_input_row` / `virtual_user_manage_sheet` / `avatar_preview_page` / `collaborator_avatar` / `overlay_keyboard_guard` / `check_update_tile` 等：符号均由**直接 import** 消费，barrel export 无新增可见性 | 逐个删除候选 export 后跑 `flutter analyze` 验证；组件本身仍被直接 import，不受影响 |
+| L10 | 疑似死代码 | `lib/widgets/virtual_user_manage_sheet.dart:21` `showVirtualUserManageSheet` 全库无调用点（符号级 `rg` 仅 1 处定义） | 确认后删除导出与函数，或接入 AA 编辑入口 |
+
+### 双保险机制登记（当前形态，非偏差）
+
+08-05 报告登记的「PostProcessor 显式调 sync() + Coordinator 响应式」双触发在**当前代码已收编**：`post_processor.dart` 只做 `markLocalChanged` + tick，不再直接调 `sync()` / `uploadCurrentLedger()`，避免与两个 Coordinator 形成双重网络请求。当前合法触发源：
+
+- 响应式：`SyncCoordinator`（250ms，监听 `local_changes`）与 `SnapshotSyncCoordinator`（500ms，监听 `snapshot_dirty_ledgers`）；
+- 网络/WS 旁路：`connectivity_plus` 恢复（500ms 防抖）与 WS `connected`（2s 防抖）各触发一次；
+- 用户主动手势豁免：首页下拉刷新 `pullIncrementalWithHeal`、云同步页 refresh/syncAccount（产品需求，保留）；
+- 防抖/单飞：`SyncEngine` 2s 防抖 + push/pull in-flight 复用 + `_autoSyncInProgress` 全局锁吸收重复触发。
+
+任一触发源删除都会漏掉对应边界（如 auto_sync 关闭期间产生的脏信号），**不应删减**。
 
 ### 已合规项（核对结论）
 
@@ -540,19 +587,120 @@ graph LR
 
 3. **修复 widgets barrel 自环（M2）**：`ledger_currency_change.dart` 改直接 import 兄弟文件；`flutter analyze` 回归验证。
 4. **Provider 叶子直连白名单化（M3）**：把叶子名单写入 CI 门禁注释/脚本，防止叶子无限扩散。
-5. **webdav 包清理 `http` 声明（L4）**。
+5. **`repositoryProvider` 后端 switch 抽取为 `BackendCapabilityFactory`（M4）**。
+6. **webdav 包清理 `http` 声明（L4）**。
 
 ### 低
 
-6. **移动 `routes.dart` 到 `core/router/`（L1）**：消除 lib_root 回边，目录级 SCC 归零（l10n 良性环除外）。
-7. **修正 `router.dart` 相对导入写法（L2）**。
-8. **barrel 新增符号纪律（L3）**：为 `providers.dart` / `widgets.dart` 增加「新增导出需符号级使用审计」的注释约束。
-9. **测试代码死引用巡检（可选）**：`flutter analyze` 已覆盖 lib + test（0 告警），暂无需人工清理。
+7. **移动 `routes.dart` 到 `core/router/`（L1）**：消除 lib_root 回边，目录级 SCC 归零（l10n 良性环除外）。
+8. **修正 `router.dart` 相对导入写法（L2）**。
+9. **barrel 新增符号纪律（L3）**：为 `providers.dart` / `widgets.dart` 增加「新增导出需符号级使用审计」的注释约束。
+10. **同步信号访问端口化（L6）**：`sync_coordinator.dart` 等直连 `db.dart` 的 watch/写入收敛到 data 层端口。
+11. **`shared_ledger_providers.dart` 改经 `syncEngineProvider` family 获取引擎（L7）**。
+12. **`../../` 相对导入规范化（L8）**。
+13. **修剪 widgets.dart 冗余 export（L9）**：候选清单见 §7-L9，逐个删除后 `flutter analyze` 验证。
+14. **确认并移除死代码 `showVirtualUserManageSheet`（L10）**。
+15. **CI 环检测集成建议**：若把静态依赖扫描纳入 CI，须显式排除 `lib/l10n/` 的 gen-l10n 固有环与 `part` 库合并，只断言业务代码 `fileCycles == []`。
+16. **测试代码死引用巡检（可选）**：`flutter analyze` 已覆盖 lib + test（0 告警），暂无需人工清理。
 
 ### 待废弃/保留说明
 
 - `sqlite3_flutter_libs`（0 import）：**保留**（原生打包依赖）。
 - `flutter_cloud_sync` 的 `CloudSyncManager` 与 `sync_service.dart` 的 `TransactionsSyncManager`：快照栈核心，**保留**；与增量栈（SyncEngine）的并存原因已双栈注释登记，不得删减。
+
+---
+
+## 9. 数据库结构分析
+
+> 数据基于当前 `lib/data/db.dart` 复核（08-05 报告为 v3，现为 v5）。
+
+### 9.1 概览与版本迁移结构
+
+| 项 | 当前值 |
+|---|---|
+| 引擎 | SQLite（Drift），WAL 模式，物理文件 `spitout.sqlite`（`getApplicationDocumentsDirectory`） |
+| schemaVersion | **5**（`db.dart:450`；v1 → v2 → v3 → v4 → v5） |
+| 表数量 | **14**（`db.dart:16-414`） |
+| schema 快照 | `drift_schemas/` v1 ~ v5 共 5 份 |
+| 迁移纪律 | `onUpgrade` 内 DDL 必须经 `migration_helpers.dart` 的幂等 helper（`addColumnIfMissing` / `createTableIfMissing` / `rebuildTableIfNeeded` / `renameColumnIfExists`），禁止裸 `customStatement` ALTER |
+
+### 9.2 迁移链结构（schemaVersion=5）
+
+- **v1 → v2（AA 分摊）**：`Transactions` +4 列（`paid_by_user_id` / `aa_mode` / `aa_participants` / `aaSplits`）、`Ledgers` +1 列（`aa_enabled NOT NULL DEFAULT 0`）、新增 `LedgerVirtualUsers` 表；随后回填 `paid_by_user_id`（COALESCE + WHERE 守卫）。
+- **v2 → v3（支出人兜底）**：对存量 NULL/空串 `paid_by_user_id` 按「创建人 → 编辑人 → 空串」顺序一次性回填，无 DDL。
+- **v3 → v4（金额改整数分 + 完整性加固）**：先做数据归一化（`currency_code`/`native_amount` 成对约束、孤儿编辑历史删除、分类/周期模板/账本悬空引用处理、按 `sync_id` 去重 LWW），再重建 `ledgers` / `categories` / `recurring_transactions` / `transactions` / `record_edit_histories` 五张表（金额 `REAL → INTEGER 分`，补 CHECK 与 FK），最后建唯一/二级索引（`idx_*_sync_id`、`idx_transactions_ledger_happened`、`idx_local_changes_pushed_at` 等）。
+- **v4 → v5（账号语义统一）**：`ledger_members.email` 改名为 `account`（只做列名迁移，不碰数据）。
+
+### 9.3 关键表字段
+
+| 表 | 字段 | 语义 |
+|---|---|---|
+| `Transactions` | `paid_by_user_id`（TEXT, nullable） | 交易级支出人（非 AA 专属），AA 默认支出人 = 创建人 |
+| `Transactions` | `aa_mode`（INTEGER, nullable, CHECK IN (0,1,2)） | 0/人均；1/不分摊；2/指定金额 |
+| `Transactions` | `aa_participants`（TEXT, JSON 数组） | 参与人 userId 或虚拟用户 syncId；空数组展开为账本全部成员 |
+| `Transactions` | `aa_splits`（TEXT, JSON 对象） | 各参与人分摊金额；仅 `aa_mode=2` 有意义 |
+| `Ledgers` | `aa_enabled`（INTEGER NOT NULL DEFAULT 0） | AA 总开关；关闭后入口隐藏、编辑只读 |
+| `LedgerVirtualUsers` | `id / ledger_id / sync_id / name / created_at / updated_at` | 虚拟用户；`sync_id` 跨设备稳定 key，**无 SQL 外键**（与既有外键约定一致，应用层保证） |
+| 同步信号表 | `local_changes`（`pushed_at` 可空）、`snapshot_dirty_ledgers`、`sync_state`、`sync_pull_errors` | 增量/快照同步的数据变更驱动信号（见 §3.3 / §3.4） |
+
+### 9.4 表间关系
+
+- `Ledgers 1 ─ N Transactions`：账本开启 `aa_enabled` 后交易可按 `aa_mode` 分摊。
+- `Transactions N ─ N LedgerVirtualUsers`：经 `aa_participants`（虚拟用户 `sync_id`）逻辑关联，无中间表。
+- `Ledgers 1 ─ N LedgerVirtualUsers`：虚拟用户归属账本，账本删除的级联清理由应用层保证。
+- `Ledgers 1 ─ N LedgerMembers / SharedLedgerCategories`：以云端 `sync_id` 为关联键（外部引用），由 `SyncEngine.fetchAndStoreSharedResources` 维护镜像。
+- 生命周期：虚拟用户为**硬删 + change log delete 投影**；名下已有分摊记录时禁止删除，避免历史数据悬空。
+
+### 9.5 迁移机制与评估
+
+- 迁移范式为「可空列新增 + 新表新增 + 幂等回填/重建」，v4 为迄今唯一一次破坏性重建（表结构变更 + 数据归一化），通过 `rebuildTableIfNeeded` + `migratedCheckSql` 幂等化，兼容所有升级路径；
+- `onCreate`（`db.dart:784`）执行 `createAll()` + 全套索引，与 v4 迁移保持同一套命名/定义；
+- 风险点：v4 的重建依赖大量 `customStatement`（虽然包在事务内），若未来再次需要列类型变更，建议优先「新表 + 视图/迁移服务」模式；
+- 版本纪律：`db.dart:433-450` 注释明确「bump 版本号 → onUpgrade 追加块 → schema dump 快照 + 补升级端到端测试」，当前已执行到位。
+
+---
+
+## 10. 与 2026-08-05 架构分析报告的差异核对
+
+> 旧报告路径：`D:/wangjiawei/_工作知识库/Spitout项目文件/2026-08-05-feature-architecture-analysis.md`。本报告在旧版基础上补写缺失模块，并核对旧版结论在当前快照的存废。
+
+### 10.1 旧报告已修复 / 已演进的发现（本次无需再列偏差）
+
+| 旧发现 | 旧证据 | 当前状态 |
+|---|---|---|
+| H1：`data → cloud`（`data/models.dart:62` re-export `cloud/spitout_cloud.dart`） | models.dart 反向导出云类型 | **已修复**：当前 `models.dart` 仅 re-export `db.dart show` + 领域模型，无 cloud 出边（扫描目录边 data → core/utils 仅 8 条） |
+| H2：`services → providers`（`me_placeholder_migration_service.dart:8`） | 服务层 import database_providers | **已移除**：该文件已删除，`rg` 全 lib 无 `migrateMePlaceholder` 引用，services 无 providers 出边 |
+| M1：`PostProcessor._doSync` 内 `if (sync is SyncEngine)` 显式调 sync | post_processor 直接触发同步 | **已收编**：当前 `_doSync` 只 `markLocalChanged` + tick，触发统一下沉 Coordinator（本报告 §7 双保险登记） |
+| L4：`providers.dart → all_providers.dart` 链式 barrel | all_providers 0 直接 importers | **已合并**：8e1ee41 把 all_providers 并入 providers.dart |
+| SCC-3：spitout_cloud 根 barrel ↔ `src/testing` | 根 barrel 导出测试桩，fake import 根 barrel | **已解除**：根 barrel 不再导出 testing（仅导出 `src/spitout_cloud_provider.dart`）；fake 仍 import 根 barrel 但无环，仅余风格问题 |
+| schemaVersion=3 / drift_schemas 3 份 | 旧快照 | **已演进**：v4（金额整数分 + 完整性加固）、v5（ledger_members.email → account），现为 v5 / 5 份快照（§9） |
+| 规模：lib 241 / packages 37 / 共 278 文件 | 旧快照 | **已演进**：lib 262 / packages 45 / 共 307（含新增功能文件） |
+
+### 10.2 旧报告仍成立、本次保留或细化的发现
+
+| 旧发现 | 本次对应 | 说明 |
+|---|---|---|
+| H4：`cloud → services`（3 条） | §4.4 H1 | 边仍存在（`sync_diff_service.dart:5`、`transactions_json.dart:7`、`sync_engine.dart:26`），行号随代码漂移 |
+| H3：widgets barrel 自环 | §4.3 M2 | 仍存在（`ledger_currency_change.dart:9` ↔ `widgets.dart:54`） |
+| M3：`auth_error_localizer` 直连 supabase_flutter | §7 M1 | 仍存在（`auth_error_localizer.dart:6`） |
+| M4：routes.dart 归属导致目录假环 | §4.5 / §7 L1 | 仍存在（pages/widgets → `lib/routes.dart` 6 条） |
+| M2：`repositoryProvider` 内嵌后端 switch | §7 M4（新增） | 仍存在（`database_providers.dart:84-93`） |
+| M5：models barrel 耦合面 | §7（已合规项） | 已收敛为 show 白名单门面（6 组 export），规模可控，不再列为偏差 |
+| L1：`../../` 相对导入 | §7 L8（新增） | 仍存在（`user_display_name_resolver.dart:5-7` 等） |
+| L2：widgets barrel 冗余 export | §7 L9（新增） | 候选清单仍在（符号均由直接 import 消费），已按当前代码复核 |
+| L3：`showVirtualUserManageSheet` 死代码 | §7 L10（新增） | 仍无调用点（`rg` 仅定义处 1 条） |
+| L6：`sync_coordinator.dart` 直连 `data/db.dart` | §7 L6（新增） | 仍存在，且快照协调器同样直连 |
+| L7：`shared_ledger_providers.dart` import sync_engine | §7 L7（新增） | 仍存在（`shared_ledger_providers.dart:24`） |
+| 双保险机制登记 | §7 双保险登记（更新） | 显式触发腿已移除，登记为当前形态 |
+
+### 10.3 本次报告相对旧报告的增量
+
+1. **新增 §1.5 AA 分摊功能设计意图**（旧版有、本次初稿缺失，已补写并按当前行号更新）；
+2. **新增 §9 数据库结构分析**（旧版有、本次初稿缺失，已按 schemaVersion=5 重写）；
+3. **调用链补全**：首次启动 seed 流程（3.1-⑧）、记一笔入口与共享账本作者回填（3.2-①④）、AA 统计读取（3.6-⑥）、发邀请/踢人/退出（3.8-⑦⑧）；
+4. **偏差清单扩充**：M4（后端 switch 装配点）、L6-L10（db 直连、引擎实现类直连、相对导入、barrel 冗余、死代码）；
+5. **双栈快照链路独立成节**（3.4），旧版把快照栈混在增量链中；
+6. **明确 part 处理**：`SyncEngine` 7 个 part 文件为单库组织，不计环（§4.1）。
 
 ---
 
@@ -568,10 +716,11 @@ graph LR
 ### 工具方法
 
 1. **静态扫描**：自研 Python 脚本（`Temp/arch_scan.py`，分析完成后清理）递归解析 `import / export / part` 指令，映射 `package:` 与相对 URI 到仓库内文件；针对 Dart 对 `lib/` 顶层文件 `../x` 的特殊解析做了实验校准（实测 `lib/router.dart` 的 `../widgets/app_route.dart` 解析为 `lib/widgets/app_route.dart`）；
-2. **环检测**：文件级与目录级有向图分别执行 Tarjan SCC；
+2. **环检测**：文件级与目录级有向图分别执行 Tarjan SCC；`part` 文件按「并入主库」处理（part 回边仅用于库归属识别，不构成环）；
 3. **符号级搜索**：`rg` 追踪 Provider 读写、Repository 方法、Navigator、Stream/EventBus 事件，人工复核关键链路并标注文件:行号；
 4. **静态检查**：`flutter analyze --no-pub`（0 告警），并交叉核对 pubspec 声明与 import 广度；
 5. **CI 对照**：读取 `.github/workflows/test.yml` 与 `scripts/run_tests.ps1`，确认架构门禁、随机顺序测试要求与报告结论的一致性。
+6. **数据库复核**：精读 `db.dart` 的 `schemaVersion`、`MigrationStrategy` 各迁移块与 `migration_helpers.dart`，结合 `drift_schemas/` v1~v5 快照与 14 张表定义整理 §9。
 
 ### 注意事项
 
@@ -579,5 +728,6 @@ graph LR
 - 分析期间远端 `main` 合入 `8e1ee41`（清理单实现抽象与冗余格式化），报告已按 HEAD 修正 `providers.dart` barrel 形态与 avatar 端口描述；其余行号仍以 `f0647f9` 快照为准；
 - 运行时依赖（Riverpod 动态重建、WS 事件时序、Drift watch 触发）基于代码语义人工还原，未做运行时插桩；
 - 生成代码（`db.g.dart`、l10n）按惯例排除，但 l10n 的 4 文件 SCC 已单独说明；
+- 数据库章节基于当前 HEAD（`152bf9f`）复核，`schemaVersion=5`；旧报告（08-05）为 v3，属正常演进而非矛盾；
 - `flutter analyze` 结果与 CI 一致（0 error / 0 warning / 0 info），本报告未对代码做任何修改；
 - 本报告不替代 CI 门禁：新增「叶子白名单」或「cloud→services 禁边」建议落地为脚本门禁前，仍需人工评审。
