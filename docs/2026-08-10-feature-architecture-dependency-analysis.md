@@ -32,7 +32,7 @@ lib/
 │  ├─ spitout_cloud.dart                               # Spitout Cloud 白名单门面（唯一 adapter 感知点）
 │  ├─ auth_error_localizer.dart                        # 认证异常 → 本地化文案
 │  └─ sync/                                            # 同步引擎（20 文件，8 个 part 拆分的 SyncEngine）
-├─ core/                                              # 横切叶子：identity / logging / storage 端口
+├─ core/                                              # 横切叶子：identity / logging
 ├─ data/                                              # 数据层
 │  ├─ db.dart + db.g.dart                              # Drift schema（生成文件不计入分析）
 │  ├─ models.dart                                      # 数据模型门面（UI 唯一数据模型入口）
@@ -44,7 +44,7 @@ lib/
 ├─ l10n/                                              # 本地化（gen-l10n 生成 + arb）
 ├─ pages/                                             # 页面层（43 文件，auth/calendar/category/cloud/currency/data/main/…）
 ├─ providers/                                         # 状态层（Riverpod，34 文件）
-│  ├─ all_providers.dart / providers.dart              # barrel 门面
+│  ├─ providers.dart                                    # barrel 门面（all_providers 已并入）
 │  ├─ core/                                            # database_providers / seed / security / refresh_ticks…
 │  ├─ sync/                                            # sync_providers（编排）+ 叶子模块
 │  ├─ ui/ statistics/ category/ currency/ …            # 领域 provider
@@ -101,10 +101,9 @@ core / l10n / theme / utils：纯叶子，只被上层依赖，不反向依赖�
 
 ```mermaid
 graph TD
-    B["providers.dart"] --> A["all_providers.dart"]
-    A --> S["sync_providers.dart（编排）"]
-    A --> D["database_providers.dart（仓库装配）"]
-    A --> SH["shared_ledger_providers.dart"]
+    B["providers.dart"] --> S["sync_providers.dart（编排）"]
+    B --> D["database_providers.dart（仓库装配）"]
+    B --> SH["shared_ledger_providers.dart"]
     S --> SS["sync_state_providers.dart（叶子）"]
     S --> RT["refresh_ticks.dart（叶子）"]
     S --> CC["cloud_client_providers.dart（叶子）"]
@@ -122,7 +121,7 @@ graph TD
     class SS,RT,CC,LL leaf
 ```
 
-该子图是 DAG：叶子模块只允许被依赖，不反向 import 编排模块；环通过「叶子 + re-export 保可见性」消除，消费方（`providers.dart` barrel）符号面不变。
+该子图是 DAG：叶子模块只允许被依赖，不反向 import 编排模块；环通过「叶子 + re-export 保可见性」消除，消费方（`providers.dart` barrel）符号面不变。（分析期间远端合入的 8e1ee41 已把原 `all_providers.dart` 并入 `providers.dart`，图示为修正后形态。）
 
 ---
 
@@ -395,7 +394,7 @@ graph LR
 
 解耦方案（技术方向）：
 1. `transactions_json.dart` / `sync_diff_service.dart` 需要的 JSON 导入逻辑下沉到 `data/`（或拆成纯函数叶子 `lib/core/sync_json/`），由 `data_import_service` 与 sync 侧共同调用，依赖方向变 `cloud → data`、`services → data`；
-2. `avatar_storage` 改为「端口 + 注入」：在 `lib/core/storage/avatar_ports.dart` 已有端口雏形的基础上，`SyncEngine` 只依赖抽象，由 providers 层注入 `AvatarStorage` 实现（与 ChangeRecorder 同一套路）；
+2. `avatar_storage` 改为「端口 + 注入」：在 `data/` 或 `core/` 层定义存储抽象端口（与 ChangeRecorder 同一套路；原 `core/storage/avatar_ports.dart` 已在 8e1ee41 被清理，需按当前 `AvatarStorage` 实现重新提炼），`SyncEngine` 只依赖抽象，由 providers 层注入实现；
 3. 保留 `services → cloud` 三条边（单向、无环），作为横向能力消费。
 
 ### 4.5 lib_root ↔ pages ↔ widgets 目录环（低）
@@ -515,7 +514,7 @@ graph LR
 |---|---|---|---|
 | L1 | 纯常量 `routes.dart` 位于 `lib/` 根，制造 6 条「页面/组件 → 根」回边 | `pages/main/home_page.dart:17`、`widgets/transaction_editor_sheet.dart:12` 等 → `lib/routes.dart` | 移入 `core/router/` 叶子目录 |
 | L2 | `router.dart` 使用 `../widgets/app_route.dart` 歧义写法 | `lib/router.dart:3`（依赖 Dart 对 lib 顶层文件的特殊解析） | 改为 `widgets/app_route.dart`，消除工具链/阅读歧义 |
-| L3 | provider barrel 多层 re-export 放大耦合面 | `providers.dart → all_providers.dart → sync_providers.dart → 4 个叶子` | 无环，可接受；建议在 `all_providers.dart` 标注「叶子已按域拆分，新增 provider 优先放叶子」，避免 barrel 无限膨胀 |
+| L3 | provider barrel 多层 re-export 放大耦合面 | `providers.dart → sync_providers.dart → 4 个叶子`（原 `all_providers.dart` 已并入 `providers.dart`） | 无环，可接受；建议在 `providers.dart` 标注「叶子已按域拆分，新增 provider 优先放叶子」，避免 barrel 无限膨胀 |
 | L4 | `flutter_cloud_sync_webdav` 声明未用 `http` | `packages/flutter_cloud_sync_webdav/pubspec.yaml` | 删除声明，或加注释说明预留 |
 | L5 | 数据层直连暴露 2 处 UI 细节 | `widgets/category_grid_section.dart:5 → data/repositories/category_repository.dart`（接口引用）、`widgets/transaction_edit_utils.dart:4 → data/repositories/support/shared_ledger_picker_filter.dart` | 若仅为类型/工具引用可保留；若涉及实现细节，收敛到 providers 接口或 `models.dart` |
 
@@ -547,7 +546,7 @@ graph LR
 
 6. **移动 `routes.dart` 到 `core/router/`（L1）**：消除 lib_root 回边，目录级 SCC 归零（l10n 良性环除外）。
 7. **修正 `router.dart` 相对导入写法（L2）**。
-8. **barrel 新增符号纪律（L3）**：为 `all_providers.dart` / `widgets.dart` 增加「新增导出需符号级使用审计」的注释约束。
+8. **barrel 新增符号纪律（L3）**：为 `providers.dart` / `widgets.dart` 增加「新增导出需符号级使用审计」的注释约束。
 9. **测试代码死引用巡检（可选）**：`flutter analyze` 已覆盖 lib + test（0 告警），暂无需人工清理。
 
 ### 待废弃/保留说明
@@ -577,6 +576,7 @@ graph LR
 ### 注意事项
 
 - 行号基于 2026-08-10 快照（`f0647f9`），后续改动可能使行号漂移；
+- 分析期间远端 `main` 合入 `8e1ee41`（清理单实现抽象与冗余格式化），报告已按 HEAD 修正 `providers.dart` barrel 形态与 avatar 端口描述；其余行号仍以 `f0647f9` 快照为准；
 - 运行时依赖（Riverpod 动态重建、WS 事件时序、Drift watch 触发）基于代码语义人工还原，未做运行时插桩；
 - 生成代码（`db.g.dart`、l10n）按惯例排除，但 l10n 的 4 文件 SCC 已单独说明；
 - `flutter analyze` 结果与 CI 一致（0 error / 0 warning / 0 info），本报告未对代码做任何修改；
