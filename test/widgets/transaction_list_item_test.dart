@@ -14,6 +14,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart'
     show currentLedgerProvider, spitoutCloudProviderInstance;
 import 'package:spitout/widgets/collaborator_avatar.dart';
+import 'package:spitout/widgets/person_avatar.dart';
 import 'package:spitout/widgets/transaction_list_item.dart';
 
 import '../helpers/test_isolation.dart';
@@ -130,6 +131,39 @@ void main() {
 
     expect(find.text('08:30'), findsOneWidget);
     expect(find.byType(CollaboratorAvatarGroup), findsOneWidget);
+  });
+
+  testWidgets('共享账本成员表未加载时协作头像用 PersonAvatar 占位而非纯色圆',
+      (tester) async {
+    await _pump(
+      tester,
+      TransactionListItem(
+        icon: Icons.circle,
+        title: '早餐',
+        amount: 12,
+        isExpense: true,
+        happenedAt: DateTime(2026, 1, 1, 8, 30),
+        creatorUserId: 'u1',
+        editorUserId: 'u1',
+        // collaboratorMap 为 null 即成员表尚未加载，驱动 membersLoading 分支
+        collaboratorMap: null,
+        isShared: true,
+      ),
+      overrides: [
+        spitoutCloudProviderInstance.overrideWith((ref) async => null),
+      ],
+    );
+
+    final group = find.byType(CollaboratorAvatarGroup);
+    expect(group, findsOneWidget);
+    expect(
+      find.descendant(of: group, matching: find.byType(PersonAvatar)),
+      findsOneWidget,
+    );
+    expect(
+      find.descendant(of: group, matching: find.byType(CircleAvatar)),
+      findsNothing,
+    );
   });
 
   testWidgets('lastEditedAt 优先于 happenedAt 展示', (tester) async {

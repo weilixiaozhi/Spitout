@@ -317,7 +317,7 @@ class TransactionListItem extends ConsumerWidget {
         );
         if (isShared) {
           // 仅共享账本渲染协作头像:collaboratorMap == null 表示成员表尚未加载,
-          // 传 membersLoading 让组件显示空占位圆,避免先闪错误首字母再切正确头像。
+          // 传 membersLoading 让组件先显示 PersonAvatar 占位，数据到位后再切真实头像。
           final isMembersLoading = collaboratorMap == null;
           final creator = (!isMembersLoading && creatorUserId != null)
               ? collaboratorMap![creatorUserId]
