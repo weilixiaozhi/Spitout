@@ -1,7 +1,7 @@
 import 'package:flutter/services.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:timezone/timezone.dart' as tz;
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'notification_util.dart' as util;
 
 /// Android 特定的通知实现

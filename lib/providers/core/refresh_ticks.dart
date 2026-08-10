@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 
-import '../../data/db.dart';
+import 'package:spitout/data/db.dart';
 
 // providers 层「叶子」模块：跨域共享的刷新 tick + 首屏缓存。
 //

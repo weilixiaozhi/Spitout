@@ -6,13 +6,13 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../utils/file_picker_helper.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/utils/file_picker_helper.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 配置导入导出页面
 class ConfigImportExportPage extends ConsumerStatefulWidget {

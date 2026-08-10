@@ -24,7 +24,7 @@ import 'package:spitout/data/repositories/category_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/category/category_picker_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/routes.dart';
+import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/widgets/category_grid_section.dart';
 
 void main() {

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 胶囊选项配置
 class CapsuleOption<T> {

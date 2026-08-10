@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 记账页分类树：一级分类列表 + 父分类ID → 二级分类列表的映射。
 ///

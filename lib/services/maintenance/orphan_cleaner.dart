@@ -15,11 +15,11 @@ library;
 
 import 'package:drift/drift.dart' as d;
 
-import '../../data/db.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../data/repositories/local/local_transaction_repository.dart'
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
     show deleteTransactionsWithEditHistories;
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'orphan_record.dart';
 
 class OrphanCleaner {

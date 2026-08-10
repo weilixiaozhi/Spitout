@@ -4,9 +4,9 @@ import 'package:spitout/cloud/spitout_cloud.dart'
     show SpitoutCloudProvider, TwoFactorChallengeRequest;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 2FA 输码对话框 — 当 SpitoutCloudAuthService.signInWithAccount 收到 server 的
 /// requires_2fa=true 响应时,通过 [SpitoutCloudProvider.globalTwoFactorHandler]

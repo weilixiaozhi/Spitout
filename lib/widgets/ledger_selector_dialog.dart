@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/models.dart';
+import 'package:spitout/data/models.dart';
 import 'package:spitout/providers/providers.dart';
-import '../l10n/app_localizations.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 显示账本选择器
 ///

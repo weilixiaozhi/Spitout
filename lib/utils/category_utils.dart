@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'default_category_keys.dart';
 
 /// 分类工具类

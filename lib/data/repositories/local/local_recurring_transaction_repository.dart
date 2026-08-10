@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart' as d;
 
-import '../../db.dart';
-import '../recurring_transaction_repository.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/recurring_transaction_repository.dart';
 
 /// 本地周期记账Repository实现
 /// 基于 Drift 数据库实现

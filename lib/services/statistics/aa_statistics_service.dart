@@ -2,8 +2,8 @@ import 'dart:convert';
 
 import 'package:decimal/decimal.dart';
 
-import '../../data/db.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'aa_decimal_util.dart';
 
 /// AA 分摊模式枚举。

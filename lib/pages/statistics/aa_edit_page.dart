@@ -3,19 +3,19 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/logging/logger_service.dart';
-import '../../l10n/app_localizations.dart';
-import '../../providers/providers.dart';
-import '../../services/statistics/aa_decimal_util.dart';
-import '../../services/statistics/aa_edit_models.dart';
-import '../../services/statistics/aa_statistics_service.dart';
-import '../../theme/colors.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../utils/category_utils.dart';
-import '../../utils/currency/currencies.dart';
-import '../../widgets/aa_mode_toggle.dart';
-import '../../widgets/me_suffix.dart';
-import '../../widgets/widgets.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/statistics/aa_decimal_util.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/utils/currency/currencies.dart';
+import 'package:spitout/widgets/aa_mode_toggle.dart';
+import 'package:spitout/widgets/me_suffix.dart';
+import 'package:spitout/widgets/widgets.dart';
 
 /// AA 分摊编辑页(纯选择器,不写库)。
 ///

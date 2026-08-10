@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 
 // 语言设置提供者
 final languageProvider = NotifierProvider<LanguageNotifier, Locale?>(

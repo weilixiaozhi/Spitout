@@ -6,7 +6,7 @@
 /// 路由参数解耦、不互相 import。
 library;
 
-import '../../data/models.dart';
+import 'package:spitout/data/models.dart';
 import 'aa_statistics_service.dart';
 
 /// 打开成员账单详情页的入参。

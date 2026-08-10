@@ -3,6 +3,8 @@
 // 被下方 export 的子文件「禁止」import 本文件，
 // 否则形成循环依赖（barrel → export 子文件 → 子文件 import barrel → 死环）。
 // 子文件如需引用同 barrel 下其他符号，请直接 import 对应同级子文件。
+// 新增 export 前先做符号级使用审计：只导出确实经 barrel 被消费的符号，
+// 直接 import 消费的组件不应进入 barrel。
 // ────────────────────────────────────────────────────────────────
 
 // ===== 基础通用组件 =====
@@ -19,7 +21,6 @@ export 'skeleton.dart';
 export 'swipe_hint.dart';
 export 'capsule_switcher.dart';
 export 'toast.dart';
-export 'overlay_keyboard_guard.dart';
 export 'spitout_icon.dart';
 export 'spitout_popup_menu.dart';
 export 'storage_permission_helper.dart';
@@ -28,8 +29,6 @@ export 'storage_permission_helper.dart';
 export 'amount_text.dart';
 export 'format_money.dart';
 export 'amount_input_panel.dart';
-export 'amount_expression_bar.dart';
-export 'amount_keypad.dart';
 export 'keypad_constants.dart';
 export 'pin_entry_pad.dart';
 export 'press_key.dart';
@@ -40,12 +39,10 @@ export 'wheel_date_picker.dart';
 export 'wheel_time_picker.dart';
 
 // ===== 通用下拉 / 选择 =====
-export 'searchable_dropdown.dart';
 
 // ===== 分类相关 =====
 export 'category_icon.dart';
 export 'category_selector_dialog.dart';
-export 'category_grid_item.dart';
 export 'category_grid_section.dart';
 
 // ===== 账本相关 =====
@@ -77,19 +74,12 @@ export 'transaction_editor_sheet.dart';
 export 'transaction_editor_sheet_entry.dart';
 export 'transaction_edit_utils.dart';
 export 'transaction_aa_edit_utils.dart';
-export 'note_input_row.dart';
 
 // ===== AA 分摊 =====
 export 'aa_participant_avatar.dart';
 export 'aa_payer_picker_sheet.dart';
-export 'virtual_user_manage_sheet.dart';
 
 // ===== 账号 / 登录 / 安全 =====
-export 'login_2fa_challenge_view.dart';
-export 'avatar_preview_page.dart';
 export 'mine_page_header.dart';
-export 'collaborator_avatar.dart';
 
 // ===== 更新 =====
-export 'update_dialog.dart';
-export 'check_update_tile.dart';

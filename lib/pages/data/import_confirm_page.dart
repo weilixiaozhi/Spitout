@@ -3,17 +3,17 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decimal/decimal.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../../data/models.dart' as schema;
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import '../../services/import/csv_parser.dart';
-import '../../utils/category_utils.dart';
-import '../../services/import/parsers/generic_parser.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/data/models.dart' as schema;
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/services/import/csv_parser.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/services/import/parsers/generic_parser.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../services/import/data_import_service.dart';
-import '../../utils/date/date_parser.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/services/import/data_import_service.dart';
+import 'package:spitout/utils/date/date_parser.dart';
+import 'package:spitout/theme/colors.dart';
 
 class ImportConfirmPage extends ConsumerStatefulWidget {
   final String csvText;

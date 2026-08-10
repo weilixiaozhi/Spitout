@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../widgets/widgets.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/widgets.dart';
 
 class SpitoutCloudConfigDialog extends StatefulWidget {
   final String initialUrl;

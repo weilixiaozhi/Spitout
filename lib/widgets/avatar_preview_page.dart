@@ -14,7 +14,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 头像全屏预览页。
 ///

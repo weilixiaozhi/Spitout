@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 底部弹层统一头部拖拽条（36x4 圆角条、muted 色调）。
 ///

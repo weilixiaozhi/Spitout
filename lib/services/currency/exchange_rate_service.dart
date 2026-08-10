@@ -4,7 +4,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 公网汇率源链(server 源由 currency_providers 的协调层在链前尝试,本服务只管公网):
 /// fastly → gcore → testingcf → cdn.jsdelivr → pages.dev → frankfurter v1。

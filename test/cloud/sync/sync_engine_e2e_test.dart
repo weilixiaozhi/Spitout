@@ -16,6 +16,7 @@ import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/cloud/sync/sync_service.dart' show SyncDiff;
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/services/import/data_import_service.dart';
 
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
@@ -39,6 +40,7 @@ void main() {
       provider: provider,
       changeTracker: changeTracker,
       repo: repo,
+      dataImportPort: dataImportService,
     );
   });
 
@@ -601,6 +603,7 @@ void main() {
         provider: provider,
         changeTracker: changeTracker,
         repo: repo,
+        dataImportPort: dataImportService,
       );
       final cursor2 = await engine2.appCursor.read();
       expect(

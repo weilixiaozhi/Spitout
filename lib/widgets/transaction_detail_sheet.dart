@@ -1,22 +1,22 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models.dart';
-import '../l10n/app_localizations.dart';
-import 'package:spitout/providers/statistics/record_history_providers.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart'
     show
         SpitoutCloudLedgerMember,
         currentLedgerProvider,
         expenseColorSchemeProvider,
         ledgerVirtualUsersProvider,
-        localSelfIdProvider;
+        localSelfIdProvider,
+        recordEditHistoryProvider;
 import 'package:spitout/providers/sync/cloud_client_providers.dart'
     show cloudCurrentUserProvider;
 import 'package:spitout/providers/ui/theme_providers.dart'
     show displayNameProvider;
-import '../services/statistics/aa_statistics_service.dart' show AaMode;
-import '../theme/colors.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart' show AaMode;
+import 'package:spitout/theme/colors.dart';
 import 'category_icon.dart';
 import 'currency_flag.dart';
 import 'app_sheet.dart';
@@ -25,7 +25,7 @@ import 'amount_text.dart';
 import 'me_suffix.dart';
 import 'user_display_name_resolver.dart';
 import 'aa_fields_utils.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 记录详情 Bottom Sheet。
 ///

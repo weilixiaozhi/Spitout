@@ -1,4 +1,4 @@
-import '../db.dart' show Category;
+import 'package:spitout/data/db.dart' show Category;
 
 /// 统计Repository接口
 /// 定义统计相关的所有数据操作

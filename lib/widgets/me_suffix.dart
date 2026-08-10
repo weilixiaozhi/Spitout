@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 「(我)」后缀的共享渲染单元,统一成员管理/成员支出/AA 记账页支出人/
 /// 交易详情等所有展示本人位置的「(我)」字号、字重、颜色与间距。

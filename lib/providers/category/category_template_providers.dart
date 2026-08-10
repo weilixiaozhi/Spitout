@@ -1,12 +1,12 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models.dart' as db;
-import '../../services/data/category_template_logic.dart';
-import '../core/database_providers.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/services/data/category_template_logic.dart';
+import 'package:spitout/providers/core/database_providers.dart';
 
 // 分类模板 UI 统一经本门面引用服务层:类型与写库入口都从 providers 拿,
 // 页面/组件不直接 import services 文件,也不触碰 repository。
-export '../../services/data/category_template_logic.dart';
+export 'package:spitout/services/data/category_template_logic.dart';
 
 /// 执行模板写入计划:UI 只传计划与现有分类,repository 由 providers 层注入。
 ///

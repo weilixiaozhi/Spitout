@@ -28,7 +28,7 @@ import 'package:spitout/providers/currency/currency_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show syncServiceProvider;
-import 'package:spitout/routes.dart';
+import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/router.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart' show AaEditResult;
 import 'package:spitout/theme/icons/app_icons.dart';

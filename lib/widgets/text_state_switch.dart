@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 轨道内带状态文案的开关
 ///

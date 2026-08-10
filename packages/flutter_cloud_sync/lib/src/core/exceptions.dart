@@ -48,5 +48,9 @@ class CloudSerializationException extends CloudSyncException {
 
 /// 认证操作失败时抛出。
 class CloudAuthException extends CloudSyncException {
-  CloudAuthException(super.message, [super.originalError]);
+  /// 服务端结构化错误码（如 Supabase 的 `invalid_credentials`），
+  /// 供上层按语义映射文案；非结构化来源为 null。
+  final String? code;
+
+  CloudAuthException(super.message, [super.originalError, this.code]);
 }

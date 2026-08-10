@@ -5,10 +5,11 @@ import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 
-import '../../data/db.dart';
-import '../../data/models/ledger_kind.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/models/ledger_kind.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/support/data_import_port.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'sync_diff_service.dart';
 import 'sync_service.dart';
 import 'transactions_json.dart';
@@ -20,6 +21,8 @@ class TransactionsSyncManager implements SyncService {
   final fcs.CloudServiceConfig config;
   final SpitoutDatabase db;
   final BaseRepository repo;
+  final DataImportPort _dataImportPort;
+  final SyncDiffService _diffService;
 
   fcs.CloudSyncManager<int>? _syncManager;
   fcs.CloudProvider? _provider;
@@ -34,7 +37,9 @@ class TransactionsSyncManager implements SyncService {
     required this.config,
     required this.db,
     required this.repo,
-  });
+    required DataImportPort dataImportPort,
+  })  : _dataImportPort = dataImportPort,
+        _diffService = SyncDiffService(dataImportPort: dataImportPort);
 
   @override
   void clearStatusCache({int? ledgerId}) {
@@ -243,7 +248,12 @@ class TransactionsSyncManager implements SyncService {
       }
 
       // 导入数据
-      final result = await importTransactionsJson(repo, ledgerId, jsonStr);
+      final result = await importTransactionsJson(
+        repo,
+        ledgerId,
+        jsonStr,
+        dataImportPort: _dataImportPort,
+      );
 
       logger.info('CloudSync',
           '下载完成: inserted=${result.inserted}');
@@ -333,7 +343,7 @@ class TransactionsSyncManager implements SyncService {
 
     // 检查是否含 syncId
     if (version >= 6) {
-      final preview = await syncDiffService.computeDiff(
+      final preview = await _diffService.computeDiff(
         repo: repo,
         ledgerId: ledgerId,
         cloudTransactions: importData.transactions,
@@ -355,7 +365,7 @@ class TransactionsSyncManager implements SyncService {
     required List<SyncChange> selectedChanges,
     required ImportData importData,
   }) async {
-    final result = await syncDiffService.applySyncChanges(
+    final result = await _diffService.applySyncChanges(
       repo: repo,
       ledgerId: ledgerId,
       selectedChanges: selectedChanges,

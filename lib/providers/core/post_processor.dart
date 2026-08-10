@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/sync/sync_providers.dart';
 
 /// 统一的 provider 读取函数签名。
@@ -95,7 +95,7 @@ class PostProcessor {
 
   /// 同步触发核心：标记本地变更 → bump 刷新信号。
   ///
-  /// 规则 4（同步触发下沉）：自动同步由数据变更驱动，[SyncCoordinator] /
+  /// 自动同步由数据变更驱动，[SyncCoordinator] /
   /// [SnapshotSyncCoordinator] 已在 syncServiceProvider 装配，分别监听
   /// local_changes / snapshot_dirty_ledgers 信号表（250/500ms 防抖后触发）。
   /// 这里只负责清空同步状态缓存并刷新 UI 信号，绝不直接调 sync.sync() /

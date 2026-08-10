@@ -4,7 +4,7 @@
 library;
 
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 
 /// 翻译账本名称
 ///

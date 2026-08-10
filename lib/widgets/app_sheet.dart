@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'app_route.dart';
 import 'sheet_grab_handle.dart';
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// shadcn/ui 风格 Bottom Sheet wrapper（AppSheet 语义组件）。
 ///

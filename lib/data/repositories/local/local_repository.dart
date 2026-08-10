@@ -1,14 +1,14 @@
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 
-import '../../db.dart';
-import '../support/change_recorder.dart';
-import '../support/snapshot_dirty_marker.dart';
-import '../../../utils/currency/rate_math.dart';
-import '../../../core/logging/logger_service.dart';
-import '../base_repository.dart';
-import '../category_repository.dart';
-import '../transaction_repository.dart' show TransactionUpdateBySyncIdData;
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/support/change_recorder.dart';
+import 'package:spitout/data/repositories/support/snapshot_dirty_marker.dart';
+import 'package:spitout/utils/currency/rate_math.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/repositories/transaction_repository.dart' show TransactionUpdateBySyncIdData;
 import 'local_ledger_repository.dart';
 import 'local_transaction_repository.dart';
 import 'local_category_repository.dart';

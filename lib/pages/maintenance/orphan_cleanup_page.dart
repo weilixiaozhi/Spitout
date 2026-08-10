@@ -2,12 +2,12 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import 'package:spitout/providers/maintenance/maintenance_providers.dart';
-import '../../theme/colors.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 数据清理页面 — 展示扫到的孤儿数据,用户勾选后批量或单条删。
 class OrphanCleanupPage extends ConsumerStatefulWidget {

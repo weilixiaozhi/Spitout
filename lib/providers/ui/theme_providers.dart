@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 // 只依赖叶子模块拿云客户端实例。
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 

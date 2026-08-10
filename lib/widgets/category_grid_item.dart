@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../data/models.dart';
-import '../theme/colors.dart';
-import '../utils/category_utils.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 单个分类项（图标 + 名称）。
 ///

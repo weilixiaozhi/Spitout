@@ -4,17 +4,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 
-import '../../cloud/sync/change_tracker.dart';
-import '../../cloud/sync/sync_engine.dart';
-import '../../core/logging/logger_service.dart';
-import '../../services/cloud/cloud_connection_tester.dart';
+import 'package:spitout/cloud/sync/change_tracker.dart';
+import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/services/cloud/cloud_connection_tester.dart';
+import 'package:spitout/services/import/data_import_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
+
+// 引擎实时扩展（如 onInviteAccepted）随叶子模块可见，消费方无需直连实现类。
+export '../../cloud/sync/sync_engine.dart' show SyncEngineRealtime;
 
 // 云用户 DTO 经 providers 层 barrel 转发给 UI，data 层不反向依赖 cloud 层。
 export 'package:spitout/cloud/spitout_cloud.dart' show CloudUser;
 // 连接测试服务经本文件暴露,页面只 import providers,不直接触碰 services/http。
-export '../../services/cloud/cloud_connection_tester.dart'
+export 'package:spitout/services/cloud/cloud_connection_tester.dart'
     show
         CloudConnectionTester,
         CloudConnectionTestResult,
@@ -67,6 +71,7 @@ final syncEngineProvider = Provider.autoDispose
         provider: provider,
         changeTracker: tracker,
         repo: repo,
+        dataImportPort: dataImportService,
       );
       ref.onDispose(() => engine.dispose());
       return engine;

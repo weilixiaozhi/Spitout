@@ -42,7 +42,8 @@ void main() {
       changeTracker: changeTracker,
       repo: repo,
     );
-    coordinator = SyncCoordinator(db: db, engine: engine)..start();
+    coordinator = SyncCoordinator(localChanges: changeTracker, engine: engine)
+      ..start();
   });
 
   tearDown(() async {

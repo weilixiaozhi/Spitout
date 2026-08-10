@@ -4,10 +4,10 @@ import 'package:yaml/yaml.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
-import '../../data/db.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../core/logging/logger_service.dart';
-import '../notification/reminder_constants.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/services/notification/reminder_constants.dart';
 
 // 导入 OrderingTerm
 typedef OrderingTerm = d.OrderingTerm;

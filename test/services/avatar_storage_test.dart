@@ -1,4 +1,4 @@
-/// avatarStorage（lib/services/storage/avatar_storage.dart）单元测试。
+/// avatarStorage（lib/core/storage/avatar_storage.dart）单元测试。
 ///
 /// 覆盖改动：AvatarService 拆分为 AvatarStorage(纯存储) + AvatarPicker(选取)
 /// 后，存储行为测试迁移至 avatarStorage 单例。
@@ -22,7 +22,7 @@ import '../helpers/test_isolation.dart';
 import 'package:path/path.dart' as p;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:spitout/services/storage/avatar_storage.dart';
+import 'package:spitout/core/storage/avatar_storage.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

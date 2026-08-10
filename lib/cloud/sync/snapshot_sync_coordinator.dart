@@ -2,8 +2,9 @@ import 'dart:async';
 
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../data/db.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart' show SnapshotDirtyLedger;
+import 'package:spitout/data/repositories/support/sync_signal_ports.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'sync_service.dart';
 
 /// 快照型后端(webdav/s3/supabase)的反应式同步触发器。
@@ -25,7 +26,7 @@ import 'sync_service.dart';
 /// 两者不可合并或删除——后续维护者若误判为冗余而删除其中之一,将导致
 /// 对应后端的同步能力整体失效。
 ///
-/// 触发链(规则4:同步由数据变更驱动,UI 不显式调 sync):
+/// 触发链(同步由数据变更驱动,UI 不显式调 sync):
 ///   createLedger 写 snapshot_dirty_ledgers → 本类 watch 命中 →
 ///   debounce → auto_sync 闸门 → uploadCurrentLedger → 成功 DELETE。
 ///
@@ -33,7 +34,7 @@ import 'sync_service.dart';
 /// 开启时由 syncServiceProvider 监听 autoSyncValueProvider 调 [scanNow]
 /// 主动补扫残留信号。
 class SnapshotSyncCoordinator {
-  final SpitoutDatabase db;
+  final SnapshotDirtyPort dirtyLedgers;
   final SyncService syncService;
 
   /// auto_sync 开关读取函数。
@@ -50,10 +51,11 @@ class SnapshotSyncCoordinator {
   bool _uploading = false;
 
   SnapshotSyncCoordinator({
-    required this.db,
+    required SnapshotDirtyPort snapshotDirtyPort,
     required this.syncService,
     Future<bool> Function()? autoSyncEnabled,
-  }) : _autoSyncEnabled = autoSyncEnabled ?? _readAutoSyncFromPrefs;
+  })  : dirtyLedgers = snapshotDirtyPort,
+        _autoSyncEnabled = autoSyncEnabled ?? _readAutoSyncFromPrefs;
 
   /// 默认 auto_sync 读取:从 SharedPreferences 读 'auto_sync' 键。
   static Future<bool> _readAutoSyncFromPrefs() async {
@@ -67,7 +69,7 @@ class SnapshotSyncCoordinator {
   /// 或上传未完成留下的信号),确保不会"建了账本但因 app 重启漏传首快照"。
   void start() {
     _subscription?.cancel();
-    _subscription = db.select(db.snapshotDirtyLedgers).watch().listen(
+    _subscription = dirtyLedgers.watchDirty().listen(
           _onDirtyChanged,
           onError: (Object e, StackTrace st) {
             logger.warning(
@@ -100,7 +102,7 @@ class SnapshotSyncCoordinator {
   Future<void> scanNow() => _scanNow();
 
   Future<void> _scanNow() async {
-    final rows = await db.select(db.snapshotDirtyLedgers).get();
+    final rows = await dirtyLedgers.getDirtyLedgers();
     if (rows.isNotEmpty) _scheduleUpload();
   }
 
@@ -119,16 +121,14 @@ class SnapshotSyncCoordinator {
         return;
       }
 
-      final rows = await db.select(db.snapshotDirtyLedgers).get();
+      final rows = await dirtyLedgers.getDirtyLedgers();
       if (rows.isEmpty) return;
 
       for (final row in rows) {
         try {
           await syncService.uploadCurrentLedger(ledgerId: row.ledgerId);
           // 上传成功 → DELETE 信号行(消费完成)。
-          await (db.delete(db.snapshotDirtyLedgers)
-                ..where((t) => t.ledgerId.equals(row.ledgerId)))
-              .go();
+          await dirtyLedgers.deleteDirtyLedger(row.ledgerId);
           logger.info('SnapshotSyncCoordinator',
               '账本 ${row.ledgerId} 首快照上传完成, 已清除脏信号');
         } catch (e, st) {

@@ -9,11 +9,11 @@ import 'package:spitout/providers/maintenance/maintenance_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 import 'package:spitout/providers/currency/currency_providers.dart';
 import 'package:spitout/providers/statistics/statistics_providers.dart';
-import '../../data/db.dart';
-import '../../utils/date/month_range.dart';
-import '../../services/data/recurring_transaction_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/utils/date/month_range.dart';
+import 'package:spitout/services/data/recurring_transaction_service.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/security/security_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
 

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 弹窗底部按钮之间的最小水平间距（全局统一）。设为 60，避免确定/取消挨太近。
 /// 实际间距会随弹窗宽度自适应：剩余空间由下方的 Expanded 均分到按钮之间，

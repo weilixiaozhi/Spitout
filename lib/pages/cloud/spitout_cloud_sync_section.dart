@@ -6,15 +6,15 @@ import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudUser, TwoFactorStatus;
 
 import 'package:spitout/providers/providers.dart';
-import '../../data/models.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../theme/typography.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import '../auth/login_page.dart';
-import '../settings/log_center_page.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/pages/auth/login_page.dart';
+import 'package:spitout/pages/settings/log_center_page.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// Spitout Cloud 专属同步区块（原 SpitoutCloudSyncPage 改造为可嵌入组件）。
 ///

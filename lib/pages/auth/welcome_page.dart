@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
-import '../../l10n/app_localizations.dart';
-import '../../utils/file_picker_helper.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/file_picker_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/currency/currencies.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/currency/currencies.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 首次启动欢迎页面
 ///

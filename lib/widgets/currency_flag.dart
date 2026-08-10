@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../utils/currency/currencies.dart';
+import 'package:spitout/utils/currency/currencies.dart';
 
 /// 全局统一的币种展示行，例：CNY (¥)。
 ///

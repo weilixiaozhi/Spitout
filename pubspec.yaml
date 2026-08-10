@@ -33,7 +33,6 @@ dependencies:
   connectivity_plus: ^7.3.1
   csv: ^8.0.0
   file_picker: ^11.0.3
-  supabase_flutter: ^2.5.6
   crypto: ^3.0.5
   uuid: ^4.5.1
   flutter_svg: ^2.0.10+1

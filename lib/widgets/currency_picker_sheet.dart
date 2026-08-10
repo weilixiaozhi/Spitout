@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'app_route.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import '../theme/colors.dart';
-import '../utils/currency/currencies.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/utils/currency/currencies.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'currency_flag.dart';
 import 'sheet_grab_handle.dart';
 

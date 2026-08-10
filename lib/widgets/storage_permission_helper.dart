@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
 
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'app_dialog.dart';
 
 /// 公共 Download 写入前的权限引导（导出配置 / 导出明细 CSV / 手动备份共用）。

@@ -1,5 +1,5 @@
-import '../db.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 分类树节点
 /// 用于在 UI 层组织和展示分类的层级结构

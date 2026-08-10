@@ -3,21 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudBackendType, CloudServiceConfig;
-import 'package:spitout/providers/sync/sync_providers.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart'
-    show purgeLocalCloudLedgersWithContainer;
-import 'package:spitout/providers/core/database_providers.dart';
-import '../../core/logging/logger_service.dart';
-import '../settings/local_backup_page.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/pages/settings/local_backup_page.dart';
 import 'cloud_sync_section.dart';
 import 'spitout_cloud_sync_section.dart';
 import 'cloud_help_dialogs.dart';
 import 'cloud_service_widgets.dart';
 import 'cloud_service_config_actions.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class CloudServicePage extends ConsumerStatefulWidget {
   const CloudServicePage({super.key});

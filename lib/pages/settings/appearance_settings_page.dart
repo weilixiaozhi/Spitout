@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
 import './language_settings_page.dart';
 import './app_lock_settings_page.dart';
-import '../../l10n/app_localizations.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 外观设置二级页面
 class AppearanceSettingsPage extends ConsumerWidget {

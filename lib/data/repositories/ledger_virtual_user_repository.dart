@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// AA 分摊:虚拟用户 Repository 接口。
 ///

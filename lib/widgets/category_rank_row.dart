@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'category_icon.dart';
 import 'amount_text.dart';
-import '../utils/category_utils.dart';
-import '../data/models.dart' as db;
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/data/models.dart' as db;
 
 class CategoryRankRow extends ConsumerStatefulWidget {
   final int? categoryId; // 分类ID

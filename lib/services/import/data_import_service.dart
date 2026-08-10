@@ -1,12 +1,13 @@
 import 'package:drift/drift.dart' as d;
 import 'package:decimal/decimal.dart';
-import '../../data/db.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../data/models/import_models.dart';
-import '../currency/exchange_rate_service.dart';
-import '../../utils/currency/rate_math.dart';
-import '../../utils/currency/money_cents.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/models/import_models.dart';
+import 'package:spitout/data/repositories/support/data_import_port.dart';
+import 'package:spitout/services/currency/exchange_rate_service.dart';
+import 'package:spitout/utils/currency/rate_math.dart';
+import 'package:spitout/utils/currency/money_cents.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 统一的数据导入服务（落库编排引擎）
 ///
@@ -69,7 +70,7 @@ List<String> validateImportTransaction(ImportTransaction t) {
 /// - 标签创建
 /// - 交易插入（批量写入）
 /// - 标签关联
-class DataImportService {
+class DataImportService implements DataImportPort {
   /// 导入数据到指定账本
   ///
   /// [repo] - 数据仓库
@@ -80,6 +81,7 @@ class DataImportService {
   /// [recordChanges] - 默认 true,会调 repo.insertTransactionsBatch 时登记
   ///   changeTracker。FullPull 路径传 false,避免"从云端拉下来的数据又反向推
   ///   回去"。
+  @override
   Future<ImportResult> importData(
     BaseRepository repo,
     int ledgerId,
@@ -184,6 +186,7 @@ class DataImportService {
   /// public — 供 transactions_json 导入路径与 importData 复用。
   /// recordChanges 由调用方(repo 层)决定是否登记 change log,
   /// 本方法只管数据层写入。
+  @override
   Future<void> importVirtualUsers(
     BaseRepository repo,
     int ledgerId,
@@ -227,6 +230,7 @@ class DataImportService {
   /// categoryName（不带 parentName）将走 `kind|name` 退化 lookup，命中第一个
   /// 匹配的二级同名行（多个同名时无法精确区分）；新 CSV 应携带 categoryId
   /// 或在解析侧补 parentName，否则跨父同名叶子无法正确归类。
+  @override
   Future<Map<String, int>> importCategories(
     BaseRepository repo,
     List<ImportCategory> categories,
@@ -348,6 +352,7 @@ class DataImportService {
   /// 把 N 次 BEGIN/COMMIT/fsync 折叠成 1 次。
   ///
   /// public — sync_diff_service 复用。
+  @override
   Future<ImportResult> importTransactions(
     BaseRepository repo,
     int ledgerId,

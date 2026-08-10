@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart' as fl;
 import 'package:flutter/material.dart';
 
-import '../theme/colors.dart';
-import '../theme/chart_tokens.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/chart_tokens.dart';
 
 /// 数值标注格式化（单位=元）：>=10000 用 w，>=1000 用 k，否则取整。
 ///

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/models.dart';
-import '../data/repositories/support/shared_ledger_picker_filter.dart'
+import 'package:spitout/data/models.dart';
+import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart'
     show syntheticIdForSyncId;
 import 'aa_fields_utils.dart';
 import 'transaction_editor_sheet_entry.dart';

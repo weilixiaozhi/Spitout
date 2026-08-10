@@ -3,10 +3,9 @@ import 'dart:io';
 
 import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart' as s;
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 
 /// 认证异常 → 用户友好文案的共享 helper。
 ///
@@ -15,10 +14,9 @@ import '../l10n/app_localizations.dart';
 /// 异常字符串片段解析带来的脆弱性与重复。
 ///
 /// 分类顺序（命中即返回，短路）：
-/// 1. Supabase 账号鉴权异常（[s.AuthApiException]，携带干净的结构化 `.code`）；
-/// 2. 纯网络层异常（Socket / Timeout / http.ClientException，跨平台可用）；
-/// 3. 包内 [CloudAuthException]（含已清理的 `.message`，按语义细分账号/网络/其它）；
-/// 4. 兜底：对异常字符串做关键词匹配，尽量区分类型，最终回落到通用登录失败文案。
+/// 1. 纯网络层异常（Socket / Timeout / http.ClientException，跨平台可用）；
+/// 2. 包内 [CloudAuthException]（结构化 `.code` 优先，其次按语义细分）；
+/// 3. 兜底：对异常字符串做关键词匹配，最终回落到通用登录失败文案。
 ///
 /// 之所以把「账号鉴权失败」与「网络异常」分开，是因为调用方（详见
 /// spitout_cloud_sync_section 的重新登录分支）对这两类失败的处理策略不同：
@@ -27,9 +25,17 @@ import '../l10n/app_localizations.dart';
 String friendlyAuthError(Object? e, BuildContext context) {
   final l10n = AppLocalizations.of(context);
 
-  // 1. Supabase 账号鉴权：优先用干净的结构化 code，避免字符串解析。
-  //    这是最可靠的类型判断路径，命中后直接映射文案，无需后续模糊匹配。
-  if (e is s.AuthApiException) {
+  // 1. 纯网络层异常：与账号无关，单独归类。
+  //    http.ClientException 跨平台（含 Web），SocketException / TimeoutException
+  //    兜底移动端原生异常，确保「网络」分支在所有平台都能命中。
+  if (e is SocketException ||
+      e is TimeoutException ||
+      e is http.ClientException) {
+    return l10n.authErrorNetworkIssue;
+  }
+
+  // 2. 包内 CloudAuthException：结构化 code 优先，其次按 message 语义细分。
+  if (e is CloudAuthException) {
     switch (e.code) {
       case 'invalid_credentials':
         return l10n.authErrorInvalidCredentials;
@@ -39,19 +45,6 @@ String friendlyAuthError(Object? e, BuildContext context) {
       case 'over_account_send_rate_limit':
         return l10n.authErrorRateLimit;
     }
-  }
-
-  // 2. 纯网络层异常：与账号无关，单独归类。
-  //    http.ClientException 跨平台（含 Web），SocketException / TimeoutException
-  //    兜底移动端原生异常，确保「网络」分支在所有平台都能命中。
-  if (e is SocketException ||
-      e is TimeoutException ||
-      e is http.ClientException) {
-    return l10n.authErrorNetworkIssue;
-  }
-
-  // 3. 包内 CloudAuthException：message 已是清晰的英文/中文描述，按语义细分。
-  if (e is CloudAuthException) {
     final lower = e.message.toLowerCase();
     // 账号相关：含 invalid + (account/password/credential)，或 not found。
     if ((lower.contains('invalid') &&
@@ -75,8 +68,7 @@ String friendlyAuthError(Object? e, BuildContext context) {
     return l10n.authErrorLoginFailed;
   }
 
-  // 4. 兜底：对异常字符串做关键词匹配，尽量区分类型后回落到通用文案。
-  //    仅当上述类型判断都未命中时才走到这里（例如非 Supabase 的其它异常源）。
+  // 3. 兜底：对异常字符串做关键词匹配，尽量区分类型后回落到通用文案。
   final msg = (e?.toString() ?? '').toLowerCase();
   if (msg.contains('account') && msg.contains('not') && msg.contains('confirm')) {
     return l10n.authErrorAccountNotConfirmed;

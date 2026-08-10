@@ -16,15 +16,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
 import 'package:spitout/providers/providers.dart';
-import '../../data/models.dart';
-import '../../widgets/widgets.dart';
-import '../cloud/join_shared_ledger_page.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/pages/cloud/join_shared_ledger_page.dart';
 import 'ledger_edit_page.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/format_utils.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/format_utils.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../l10n/app_localizations.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class LedgersPage extends ConsumerStatefulWidget {
   const LedgersPage({super.key});

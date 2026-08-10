@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/models.dart' as db;
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
-import '../theme/dimens.dart';
-import '../theme/typography.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'category_icon.dart';
-import '../utils/currency/currencies.dart';
+import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart' show expenseColorSchemeProvider;
 import 'package:spitout/providers/providers.dart'

@@ -47,6 +47,28 @@ jobs:
           fi
           echo "✅ 架构门禁通过：全 lib/ 无直连 adapter 包（门面收敛）"
 
+      - name: Provider 叶子白名单门禁（非叶子直连一律走 providers.dart）
+        run: |
+          # 只允许以下叶子/豁免模块被 lib/providers 之外直接 import；
+          # 其余 provider 文件必须经 providers.dart 门面消费，防止叶子无限扩散。
+          allowed='^(providers\.dart|core/database_providers\.dart|core/post_processor\.dart|core/simple_state_notifier\.dart|sync/cloud_client_providers\.dart|ui/avatar_providers\.dart|ui/theme_providers\.dart)$'
+          fail=0
+          for f in $(rg -l --glob '!lib/providers/**' 'package:spitout/providers/' lib); do
+            while read -r target; do
+              if ! echo "$target" | grep -Eq "$allowed"; then
+                echo "❌ $f 直连非叶子 provider: $target，请改走 providers.dart"
+                fail=1
+              fi
+            done < <(rg -o 'package:spitout/providers/[A-Za-z0-9_/]+\.dart' "$f" | sed 's#package:spitout/providers/##')
+          done
+          if [ "$fail" -ne 0 ]; then
+            exit 1
+          fi
+          echo "✅ Provider 叶子白名单门禁通过"
+
+      - name: 静态依赖环检测（业务代码无环）
+        run: python3 scripts/check_cycles.py
+
       - name: 运行测试（随机顺序，持续暴露顺序依赖）
         run: flutter test --test-randomize-ordering-seed=random
 

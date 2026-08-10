@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
-import '../services/statistics/aa_edit_models.dart';
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'app_sheet.dart';
 import 'me_suffix.dart';
 import 'person_avatar.dart';

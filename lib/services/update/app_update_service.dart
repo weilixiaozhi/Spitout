@@ -3,7 +3,7 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:package_info_plus/package_info_plus.dart';
 
-import '../../data/models/app_update_info.dart';
+import 'package:spitout/data/models/app_update_info.dart';
 
 /// 应用内「检查更新」服务。
 ///

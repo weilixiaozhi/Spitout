@@ -3,13 +3,13 @@ import 'package:flutter/material.dart' show DateTimeRange;
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
-import '../../services/export/config_export_service.dart';
-import '../../services/export/detail_export_service.dart';
+import 'package:spitout/services/export/config_export_service.dart';
+import 'package:spitout/services/export/detail_export_service.dart';
 
 // 页面统一经 providers 门面引用服务层模型类型,不直接 import services 文件。
-export '../../services/export/config_export_service.dart'
+export 'package:spitout/services/export/config_export_service.dart'
     show ExportOptions, ConfigContentInfo;
-export '../../services/export/detail_export_service.dart' show DetailExportResult;
+export 'package:spitout/services/export/detail_export_service.dart' show DetailExportResult;
 
 // 导入任务进度：用于显示"后台导入中"状态与进度
 class ImportProgress {

@@ -1,15 +1,15 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 
-import '../../core/logging/logger_service.dart';
-import '../../l10n/app_localizations.dart';
-import '../../services/import/file_reader.dart';
-import '../../services/import/xlsx_reader.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/services/import/file_reader.dart';
+import 'package:spitout/services/import/xlsx_reader.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
 import 'detail_export_page.dart';
 import 'import_confirm_page.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 明细导入导出页
 ///

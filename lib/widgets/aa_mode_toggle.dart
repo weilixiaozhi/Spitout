@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 分摊方式三态切换按钮（人均 / 不分摊 / 指定分摊）。
 ///

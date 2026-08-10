@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// AA 分摊字段统一工具。
 ///

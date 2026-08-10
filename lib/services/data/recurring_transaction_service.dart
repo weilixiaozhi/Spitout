@@ -1,6 +1,6 @@
-import '../../data/models.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 重复交易服务
 ///

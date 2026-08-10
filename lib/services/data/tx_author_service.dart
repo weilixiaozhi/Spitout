@@ -1,8 +1,8 @@
 import 'package:spitout/cloud/spitout_cloud.dart';
 
-import '../../data/repositories/base_repository.dart';
-import '../../data/repositories/local/local_repository.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 交易作者标记工具。
 ///

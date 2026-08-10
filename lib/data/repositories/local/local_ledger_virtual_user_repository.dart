@@ -3,8 +3,8 @@ import 'dart:async';
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 
-import '../../db.dart';
-import '../ledger_virtual_user_repository.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/ledger_virtual_user_repository.dart';
 
 /// AA 分摊:虚拟用户本地 Repository 实现。
 ///

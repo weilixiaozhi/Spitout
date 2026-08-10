@@ -21,8 +21,7 @@ import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/ledger_list_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
-import 'package:spitout/cloud/sync/sync_engine.dart';
-import '../core/local_self_id_providers.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
 import 'package:spitout/services/data/tx_author_service.dart';
 
 // sharedResourceRefreshProvider 由叶子模块 refresh_ticks.dart 定义，
@@ -74,14 +73,14 @@ class CategorySyncBeforeInviteException implements Exception {
 
 /// 一次性触发函数:创建邀请 → 自动失效列表 cache。
 ///
-/// 防线 A:发邀请前先 [SyncEngine.pushUserGlobalEntities] 把本地 user-global
+/// 发邀请前先经 [syncEngineProvider] 把本地 user-global
 /// 实体(分类等)推上云,避免「云端空快照」流到 Editor 端导致协作者看不到
 /// Owner 的分类。pushUserGlobalEntities 是 public、全局单飞(详见
 /// sync_engine.dart L1549),失败时重试一次——单飞锁在 finally 已复位,重试
 /// 安全;重试仍失败则抛 [CategorySyncBeforeInviteException] 阻断邀请,
 /// 调用方(member_list_page.dart)catch 兜底显示友好错误,不让残缺邀请发出。
 ///
-/// 规则 4 豁免说明（请勿误删）：这里的直接推送是「发邀请」业务前置——必须
+/// 主动推送说明（请勿误删）：这里的直接推送是「发邀请」业务前置——必须
 /// 在邀请生效前让云端分类就绪，且邀请是用户显式动作、需要同步等待结果来
 /// 决定是否放行，无法改由数据变更驱动的 250ms 后台同步兜底。它与
 /// PostProcessor 的写后自动同步是两条职责不同的路径：后者负责常规数据变更，

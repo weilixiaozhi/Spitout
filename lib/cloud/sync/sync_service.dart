@@ -1,8 +1,8 @@
 /// 云同步服务接口（状态模型定义于 data/models/sync_models.dart）
 library;
 
-import '../../core/logging/logger_service.dart';
-import '../../data/repositories/ledger_repository.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/ledger_repository.dart';
 import 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 
 // 状态模型定义于 data/models/sync_models.dart。
@@ -10,9 +10,9 @@ import 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 // export 用于对外 re-export —— sync_engine.dart 以 `app.SyncStatus` 前缀
 // 方式引用本库符号,Dart 的 `as app` 只能看到本库定义或 re-export 的名字,
 // import 进来的符号对 `app.` 前缀不可见,所以二者缺一不可。
-import '../../data/models.dart'
+import 'package:spitout/data/models.dart'
     show PullOutcome, SyncDiff, SyncStatus, ImportData;
-export '../../data/models.dart'
+export 'package:spitout/data/models.dart'
     show PullOutcome, SyncDiff, SyncStatus, ImportData;
 export 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 

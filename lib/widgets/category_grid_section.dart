@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../data/models.dart';
-import '../data/repositories/category_repository.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import '../routes.dart';
-import '../theme/colors.dart';
+import 'package:spitout/core/router/routes.dart';
+import 'package:spitout/theme/colors.dart';
 import 'category_grid_item.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 分类网格区：一级分类 5 列网格 + 二级分类原地展开卡片 + 底部「编辑分类」入口。
 ///

@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../../data/models.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/category_utils.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
 
 class RecurringTransactionEditPage extends ConsumerStatefulWidget {
   final RecurringTransaction? recurring;

@@ -4,7 +4,7 @@ import 'package:http/http.dart' as http;
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudBackendType, CloudServiceConfig, createCloudServices;
 
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 连接测试失败原因类型。
 ///

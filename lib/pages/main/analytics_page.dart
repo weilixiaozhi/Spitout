@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../theme/colors.dart';
-import '../../theme/typography.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../transaction/category_detail_page.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/pages/transaction/category_detail_page.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../../data/models.dart' as db;
-import '../../core/logging/logger_service.dart';
-import '../../utils/category_utils.dart';
-import '../../utils/date/month_range.dart';
-import '../../utils/date/week_math.dart';
-import '../../utils/date/analytics_sub_tabs.dart';
-import '../../utils/format_utils.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/utils/date/month_range.dart';
+import 'package:spitout/utils/date/week_math.dart';
+import 'package:spitout/utils/date/analytics_sub_tabs.dart';
+import 'package:spitout/utils/format_utils.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 统计页（账单统计）
 /// - 顶部记账周期选择器：以 `07月 · 2026年` 形式展示账期（与首页头部共用同一标签构造）。

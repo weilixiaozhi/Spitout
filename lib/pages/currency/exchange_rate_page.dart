@@ -4,16 +4,16 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/currency/rate_math.dart';
-import '../../theme/colors.dart';
-import '../../utils/currency/currencies.dart';
-import '../../widgets/widgets.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/currency/rate_math.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/utils/currency/currencies.dart';
+import 'package:spitout/widgets/widgets.dart';
 import 'currency_manage_page.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 汇率管理页(账本维度化后):
 /// - 基准 = 当前账本本位币(ledger.currency),切账本自动换组

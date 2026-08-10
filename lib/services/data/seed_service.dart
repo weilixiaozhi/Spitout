@@ -1,9 +1,9 @@
 import 'dart:ui' show Locale;
 
-import '../../data/db.dart';
-import '../../l10n/app_localizations.dart';
-import '../../utils/default_category_keys.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/default_category_keys.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:drift/drift.dart';
 import 'package:uuid/uuid.dart';
 

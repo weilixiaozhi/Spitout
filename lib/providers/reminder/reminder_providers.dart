@@ -2,10 +2,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart';
-import '../../services/notification/reminder_constants.dart';
-import '../../services/notification/notification_factory.dart';
-import '../ui/language_provider.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/services/notification/reminder_constants.dart';
+import 'package:spitout/services/notification/notification_factory.dart';
+import 'package:spitout/providers/ui/language_provider.dart';
 
 /// 记账提醒设置
 class ReminderSettings {

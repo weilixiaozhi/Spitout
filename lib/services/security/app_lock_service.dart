@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:crypto/crypto.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 class AppLockService {
   /// 应用锁开关 prefs 键（providers 层与测试统一引用，避免改名静默失联）。

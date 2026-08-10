@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../core/identity/local_user_identity.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
 
 /// 全局 localSelfId Provider。
 ///

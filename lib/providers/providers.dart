@@ -4,6 +4,8 @@
 // 被下方 export 的子文件「禁止」import 本文件，
 // 否则形成循环依赖（barrel → export 子文件 → 子文件 import barrel → 死环）。
 // 子文件如需引用同 barrel 下其他符号，请直接 import 对应同级子文件。
+// 新增 export 前先做符号级使用审计：新 provider 优先放入已拆分的叶子模块，
+// 避免 barrel 无限膨胀。
 
 // 主题相关（叶子模块，可安全 export）
 export 'package:spitout/providers/ui/theme_providers.dart';
@@ -19,6 +21,9 @@ export 'package:spitout/providers/core/local_self_id_providers.dart';
 
 // 记账页分类树缓存
 export 'package:spitout/providers/category/category_picker_providers.dart';
+
+// 分类模板页（模板库写入动作与类型）
+export 'package:spitout/providers/category/category_template_providers.dart';
 
 // 统计相关
 export 'package:spitout/providers/statistics/statistics_providers.dart';

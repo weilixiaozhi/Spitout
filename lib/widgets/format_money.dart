@@ -1,6 +1,6 @@
 import 'package:intl/intl.dart';
 
-import '../utils/currency/currencies.dart';
+import 'package:spitout/utils/currency/currencies.dart';
 
 // 金额格式：最多保留 N 位小数，移除多余 0 和末尾小数点，添加千分位
 String formatMoneyCompact(double v,

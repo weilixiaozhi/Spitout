@@ -5,11 +5,11 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../../core/logging/logger_service.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 日志中心页面
 class LogCenterPage extends ConsumerStatefulWidget {

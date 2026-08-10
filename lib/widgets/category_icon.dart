@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../data/models.dart';
-import '../theme/icons/category_icons.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/theme/icons/category_icons.dart';
 
 /// 获取分类的图标数据。**只读 `category.icon` 字段**,不按名字推导。
 ///

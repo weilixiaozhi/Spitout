@@ -14,7 +14,7 @@ import 'dart:io' show Platform;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../services/system/public_export_dir_service.dart';
+import 'package:spitout/services/system/public_export_dir_service.dart';
 
 // 类型经 providers 门面 re-export：UI 层从 providers.dart 获取 PublicExportDir，
 // 无需（也不允许）直接 import service（共识④：service 不留第二出口给 UI）。

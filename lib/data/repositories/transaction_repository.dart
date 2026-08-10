@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 批量按 syncId 更新交易时的单条 update payload。
 class TransactionUpdateBySyncIdData {

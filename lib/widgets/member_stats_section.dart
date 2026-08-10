@@ -8,16 +8,9 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/app_localizations.dart';
-import 'package:spitout/providers/sync/sync_providers.dart'
-    show spitoutCloudProviderInstance;
-import 'package:spitout/providers/currency/currency_providers.dart'
-    show currentLedgerCurrencyProvider;
-import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
-    show memberExpenseStatsProvider, MemberExpenseStatItem;
-import 'package:spitout/providers/ui/theme_providers.dart'
-    show expenseColorSchemeProvider;
-import '../theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/colors.dart';
 import 'format_money.dart';
 import 'me_suffix.dart';
 import 'person_avatar.dart';

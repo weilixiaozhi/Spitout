@@ -9,7 +9,7 @@
 ///   纯读不会污染状态。
 library;
 
-import '../../data/db.dart';
+import 'package:spitout/data/db.dart';
 import 'orphan_record.dart';
 
 class OrphanScanner {

@@ -1,14 +1,14 @@
 import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../l10n/app_localizations.dart';
-import 'package:spitout/providers/reminder/reminder_providers.dart';
-import '../../services/notification/notification_factory.dart';
-import '../../services/notification/notification_android.dart';
-import '../../core/logging/logger_service.dart';
-import '../../theme/colors.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/notification/notification_factory.dart';
+import 'package:spitout/services/notification/notification_android.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class ReminderSettingsPage extends ConsumerWidget {
   const ReminderSettingsPage({super.key});

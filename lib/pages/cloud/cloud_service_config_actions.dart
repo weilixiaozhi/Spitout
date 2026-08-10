@@ -3,11 +3,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudAuthException, CloudBackendType, CloudServiceConfig;
 import 'package:spitout/l10n/app_localizations.dart';
-import 'package:spitout/providers/sync/sync_providers.dart';
+import 'package:spitout/providers/providers.dart';
 import 'package:spitout/widgets/widgets.dart';
 
-import '../../cloud/auth_error_localizer.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/cloud/auth_error_localizer.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'cloud_config_dialogs.dart';
 
 /// 云服务配置对话框流程（Spitout Cloud / Supabase / WebDAV / S3）。

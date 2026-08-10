@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'keypad_constants.dart';
 import 'press_key.dart';
 

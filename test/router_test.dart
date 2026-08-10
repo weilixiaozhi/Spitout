@@ -13,7 +13,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/router.dart';
-import 'package:spitout/routes.dart';
+import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart';
 

@@ -2,20 +2,21 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
 
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../theme/dimens.dart';
-import '../../l10n/app_localizations.dart';
-import '../../routes.dart';
-import '../cloud/cloud_service_page.dart';
-import '../maintenance/orphan_cleanup_page.dart';
-import '../transaction/recurring_transaction_page.dart';
-import '../settings/reminder_settings_page.dart';
-import '../settings/appearance_settings_page.dart';
-import '../settings/config_import_export_page.dart';
-import '../currency/exchange_rate_page.dart';
-import '../data/detail_import_export_page.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/router/routes.dart';
+import 'package:spitout/widgets/check_update_tile.dart';
+import 'package:spitout/pages/cloud/cloud_service_page.dart';
+import 'package:spitout/pages/maintenance/orphan_cleanup_page.dart';
+import 'package:spitout/pages/transaction/recurring_transaction_page.dart';
+import 'package:spitout/pages/settings/reminder_settings_page.dart';
+import 'package:spitout/pages/settings/appearance_settings_page.dart';
+import 'package:spitout/pages/settings/config_import_export_page.dart';
+import 'package:spitout/pages/currency/exchange_rate_page.dart';
+import 'package:spitout/pages/data/detail_import_export_page.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class MinePage extends ConsumerWidget {
   const MinePage({super.key});

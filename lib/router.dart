@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 
-import '../widgets/app_route.dart';
+import 'widgets/app_route.dart';
 import 'pages/category/category_manage_page.dart';
 import 'pages/statistics/aa_edit_page.dart';
 import 'pages/statistics/aa_member_detail_page.dart';
 import 'pages/statistics/aa_statistics_page.dart';
-import 'routes.dart';
+import 'core/router/routes.dart';
 import 'services/statistics/aa_edit_models.dart';
 import 'services/statistics/aa_member_detail_models.dart';
 

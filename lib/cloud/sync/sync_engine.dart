@@ -3,27 +3,28 @@ import 'dart:convert';
 
 import 'package:crypto/crypto.dart';
 import 'package:drift/drift.dart' as d;
-// 经门面获取 Spitout Cloud 与核心云同步类型（全 app 唯一入口，见 docs 架构决策）
+// 经门面获取 Spitout Cloud 与核心云同步类型（全 app 唯一入口）。
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../../data/db.dart';
+import 'package:spitout/data/db.dart';
 // 健康报告/计数对/账户结果类型定义于 data 层。
 // import 供本库(含 part 文件 sync_engine_status.dart)使用;
 // export 供 UI 层(spitout_cloud_sync_section)经 `import sync_engine.dart`
 // 取用这些类型。show 白名单避免与上方 flutter_cloud_sync 包的
 // SyncStatus 同名冲突。
-import '../../data/models.dart'
+import 'package:spitout/data/models.dart'
     show SyncAccountResult, SyncCountPair, SyncHealthReport;
-export '../../data/models.dart'
+export 'package:spitout/data/models.dart'
     show SyncAccountResult, SyncCountPair, SyncHealthReport;
-import '../../data/models/ledger_kind.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../data/repositories/local/local_transaction_repository.dart'
+import 'package:spitout/data/models/ledger_kind.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
     show deleteTransactionsWithEditHistories;
-import '../../core/logging/logger_service.dart';
-import '../../services/storage/avatar_storage.dart';
+import 'package:spitout/data/repositories/support/data_import_port.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/core/storage/avatar_storage.dart';
 import 'sync_service.dart' as app;
 import 'transactions_json.dart';
 import 'change_tracker.dart';
@@ -94,6 +95,9 @@ class SyncEngine implements app.SyncService {
   final SpitoutCloudSyncBackend provider;
   final ChangeTracker changeTracker;
   final BaseRepository repo;
+
+  /// 全量恢复时使用的数据导入端口；由装配点注入 services 层实现。
+  final DataImportPort? dataImportPort;
 
   /// 增量型引擎不走「下载后 diff 预览」:同步由 SyncCoordinator 自动驱动,
   /// 快照型后端的预览能力不适用于本实现。
@@ -335,6 +339,7 @@ class SyncEngine implements app.SyncService {
     required this.provider,
     required this.changeTracker,
     required this.repo,
+    this.dataImportPort,
   }) {
     appCursor = AppCursorStore(provider);
     pullErrors = SyncErrorStore(db);
@@ -2594,10 +2599,15 @@ class SyncEngine implements app.SyncService {
     // 复用 importTransactionsJson;recordChanges:false 阻止反向回流:
     // 从云端拉下来的数据**不应该**再以 local_changes 形式推回去,否则 10k
     // 条 fullPull 会触发 SyncCoordinator 反向 sync,白白多一轮 10k push。
+    final importPort = dataImportPort;
+    if (importPort == null) {
+      throw StateError('SyncEngine 未注入 DataImportPort，无法执行全量恢复');
+    }
     final result = await importTransactionsJson(
       repo,
       ledgerId,
       data,
+      dataImportPort: importPort,
       recordChanges: false,
     );
     logger.info('SyncEngine', '全量拉取完成: inserted=${result.inserted}');

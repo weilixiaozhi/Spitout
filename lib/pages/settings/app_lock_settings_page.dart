@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../theme/colors.dart';
-import '../../theme/typography.dart';
-import 'package:spitout/providers/security/security_providers.dart';
-import '../../services/security/app_lock_service.dart';
-import '../../core/logging/logger_service.dart';
-import '../../widgets/widgets.dart';
-import '../../l10n/app_localizations.dart';
-import '../auth/pin_setup_page.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/security/app_lock_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/pages/auth/pin_setup_page.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class AppLockSettingsPage extends ConsumerStatefulWidget {
   const AppLockSettingsPage({super.key});

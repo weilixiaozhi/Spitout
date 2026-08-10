@@ -7,6 +7,7 @@ import 'package:spitout/cloud/sync/sync_diff_service.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models/import_models.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/services/import/data_import_service.dart';
 
 import '../../helpers/test_isolation.dart';
 
@@ -27,7 +28,7 @@ void main() {
     resetGlobalTestState();
     db = SpitoutDatabase.forTesting(NativeDatabase.memory());
     repo = LocalRepository(db);
-    service = SyncDiffService();
+    service = SyncDiffService(dataImportPort: dataImportService);
   });
 
   tearDown(() async {

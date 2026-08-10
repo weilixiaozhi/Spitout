@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
-import '../../cloud/sync/sync_diff_service.dart';
-import '../../theme/colors.dart';
-import '../../l10n/app_localizations.dart';
-import '../../widgets/amount_text.dart';
+import 'package:spitout/cloud/sync/sync_diff_service.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/widgets/amount_text.dart';
 
 /// 同步预览弹窗
 ///

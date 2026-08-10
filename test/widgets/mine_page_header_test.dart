@@ -28,7 +28,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
-import 'package:spitout/services/storage/avatar_storage.dart';
+import 'package:spitout/core/storage/avatar_storage.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/avatar_preview_page.dart';
 import 'package:spitout/widgets/mine_page_header.dart';

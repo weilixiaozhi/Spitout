@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import '../theme/typography.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class AppListTile extends StatelessWidget {
   final IconData leading;

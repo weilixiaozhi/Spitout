@@ -5,12 +5,12 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../data/db.dart' show Ledger;
-import '../../data/repositories/base_repository.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/currency/rate_math.dart';
-import '../../services/currency/exchange_rate_service.dart';
-import '../../utils/currency/currencies.dart';
+import 'package:spitout/data/db.dart' show Ledger;
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/currency/rate_math.dart';
+import 'package:spitout/services/currency/exchange_rate_service.dart';
+import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 // 只依赖叶子模块拿云客户端实例（server 汇率源），不 import 编排器
 // sync_providers.dart，避免「域 → 编排」反向边成环。

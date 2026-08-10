@@ -2,13 +2,11 @@ import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../cloud/spitout_cloud.dart';
-import '../../data/db.dart';
-import '../../data/repositories/local/local_repository.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../cloud/sync/change_tracker.dart';
-import '../../cloud/sync/snapshot_dirty_tracker.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/cloud/sync/backend_capability_factory.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
 // 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
@@ -21,7 +19,7 @@ import 'package:spitout/providers/core/refresh_ticks.dart';
 ///
 /// 设计意图：所有汇总/统计 provider 只依赖这一个信号，即可保证「无论从哪条路径
 /// 写库（UI 记账、导入、云端同步、后台任务、维护工具等）都会自动刷新」，
-/// 不再要求每个调用方手动 bump 分散的 tick，从根上消除「漏刷一处」与多份
+/// 每个调用方无需手动 bump 分散的 tick，从根上消除「漏刷一处」与多份
 /// 刷新状态不一致的问题。
 ///
 /// 只订阅业务表，排除同步簿记表（local_changes / sync_state / sync_pull_errors /
@@ -71,40 +69,18 @@ final repositoryProvider = Provider<BaseRepository>((ref) {
 
   final config = ref.watch(activeCloudConfigProvider).value;
 
-  // 后端类型决定注入哪种变更信号(两者互斥,由后端同步范式决定):
-  //   - Spitout Cloud → ChangeTracker:实体级增量,写 local_changes 供
-  //     SyncEngine 推送;
-  //   - 快照型后端(webdav/s3/supabase) → SnapshotDirtyTracker:账本级脏信号,
-  //     写 snapshot_dirty_ledgers 供 SnapshotSyncCoordinator 触发整本重传;
-  //   - 无后端 / 配置未就绪 → 两者均不注入,本地写操作照常执行仅跳过信号登记。
-  // 用 data 层抽象端口注入,LocalRepository 不感知 cloud 层具体实现(依赖倒置)。
-  final ChangeTracker? tracker;
-  final SnapshotDirtyTracker? snapshotDirtyTracker;
-  if (config != null && config.valid) {
-    switch (config.type) {
-      case CloudBackendType.spitoutCloud:
-        tracker = ChangeTracker(db);
-        snapshotDirtyTracker = null;
-      case CloudBackendType.webdav:
-      case CloudBackendType.s3:
-      case CloudBackendType.supabase:
-        tracker = null;
-        snapshotDirtyTracker = SnapshotDirtyTracker(db);
-      case CloudBackendType.local:
-        tracker = null;
-        snapshotDirtyTracker = null;
-    }
-  } else {
-    tracker = null;
-    snapshotDirtyTracker = null;
-  }
+  // 后端能力由 cloud 层工厂集中决策，装配点只把结果注入仓库：
+  // Spitout Cloud 走实体级增量，快照型后端走账本级脏信号，两者互斥。
+  final trackers = config != null && config.valid
+      ? backendCapabilityFactory.createTrackers(db, config)
+      : const BackendTrackers();
 
   logger.info('RepositoryProvider',
-      '✅ LocalRepository (changeTracker=${tracker != null}, snapshotDirtyTracker=${snapshotDirtyTracker != null})');
+      '✅ LocalRepository (changeTracker=${trackers.changeTracker != null}, snapshotDirtyTracker=${trackers.snapshotDirtyTracker != null})');
   return LocalRepository(
     db,
-    changeTracker: tracker,
-    snapshotDirtyMarker: snapshotDirtyTracker,
+    changeTracker: trackers.changeTracker,
+    snapshotDirtyMarker: trackers.snapshotDirtyTracker,
   );
 });
 

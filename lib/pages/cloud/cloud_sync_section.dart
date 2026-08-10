@@ -5,15 +5,15 @@ import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudUser, CloudBackendType;
 
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../l10n/app_localizations.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../data/models.dart';
-import '../auth/login_page.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/pages/auth/login_page.dart';
 import 'sync_preview_dialog.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 备份同步操作区块（原 CloudSyncPage 改造为可嵌入组件）。
 ///

@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 周期记账 Repository 接口
 abstract class RecurringTransactionRepository {

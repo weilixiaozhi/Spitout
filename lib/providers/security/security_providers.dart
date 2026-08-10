@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
-import '../../services/security/app_lock_service.dart';
+import 'package:spitout/services/security/app_lock_service.dart';
 
 /// AppLockService 的 provider 门面：页面只依赖 providers 层，便于测试替换。
 final appLockServiceProvider = Provider<AppLockServiceFacade>(

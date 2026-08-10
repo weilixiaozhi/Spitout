@@ -1,8 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'app_route.dart';
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
 
 class WheelTimePicker extends StatefulWidget {
   final TimeOfDay initial;

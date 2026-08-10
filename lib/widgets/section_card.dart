@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import '../theme/dimens.dart';
-import '../theme/shadows.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/shadows.dart';
 
 class SectionCard extends StatelessWidget {
   final Widget child;

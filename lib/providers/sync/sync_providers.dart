@@ -7,16 +7,18 @@ import 'package:flutter_riverpod/misc.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
-import '../../cloud/sync/sync_service.dart';
-import '../../cloud/sync/sync_coordinator.dart';
-import '../../cloud/sync/sync_engine.dart';
-import '../../cloud/sync/transactions_sync_manager.dart';
-import '../../cloud/sync/snapshot_sync_coordinator.dart';
-import '../../core/logging/logger_service.dart';
-import '../core/local_self_id_providers.dart';
-import '../../services/data/local_identity_migration_service.dart';
-import '../../services/storage/avatar_storage.dart';
-import '../../services/backup/local_backup_service.dart';
+import 'package:spitout/cloud/sync/sync_service.dart';
+import 'package:spitout/cloud/sync/sync_coordinator.dart';
+import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/cloud/sync/backend_capability_factory.dart';
+import 'package:spitout/cloud/sync/transactions_sync_manager.dart';
+import 'package:spitout/cloud/sync/snapshot_sync_coordinator.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
+import 'package:spitout/services/data/local_identity_migration_service.dart';
+import 'package:spitout/core/storage/avatar_storage.dart';
+import 'package:spitout/services/import/data_import_service.dart';
+import 'package:spitout/services/backup/local_backup_service.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
@@ -139,7 +141,6 @@ final syncServiceProvider = Provider<SyncService>((ref) {
       return buildLocalOnly();
     }
     final cloudProvider = providerAsync.value!;
-    final db = ref.watch(databaseProvider);
     // SyncEngine 改走 family 缓存唯一实例 — 跟 shared_ledger_providers.dart
     // / join_shared_ledger_page.dart 共享同一 engine。否则两个独立 engine
     // 各跑各的 sync(同一 ledger 1 秒内 2-3 次)。disposal 归 family,这里
@@ -253,7 +254,10 @@ final syncServiceProvider = Provider<SyncService>((ref) {
     // 反应式同步触发器:监听 local_changes 表,任何 mutation 写进未推送
     // 行都会自动调度 sync。把"是否触发同步"的责任完全转移到"是否记录
     // 变更"——后者是数据层的天然职责。详见 sync_coordinator.dart 的注释。
-    final coordinator = SyncCoordinator(db: db, engine: engine);
+    final coordinator = SyncCoordinator(
+      localChanges: ref.watch(changeTrackerProvider),
+      engine: engine,
+    );
     coordinator.start();
 
     // 监听网络连接状态：从"无网"恢复时触发一次 sync 把离线累积的
@@ -380,13 +384,21 @@ final syncServiceProvider = Provider<SyncService>((ref) {
   // 其他 provider → TransactionsSyncManager（快照同步）
   final db = ref.watch(databaseProvider);
   final repo = ref.watch(repositoryProvider);
-  final sync = TransactionsSyncManager(config: config, db: db, repo: repo);
+  final sync = TransactionsSyncManager(
+    config: config,
+    db: db,
+    repo: repo,
+    dataImportPort: dataImportService,
+  );
 
   // 快照型后端响应式触发:监听 snapshot_dirty_ledgers,新建账本时自动触发
-  // 首快照上传(规则4)。与 Spitout Cloud 分支的 SyncCoordinator 对称,
+  // 首快照上传。与 Spitout Cloud 分支的 SyncCoordinator 对称,
   // 但面向整本快照重传范式。
-  final snapshotCoordinator =
-      SnapshotSyncCoordinator(db: db, syncService: sync);
+  final trackers = backendCapabilityFactory.createTrackers(db, config);
+  final snapshotCoordinator = SnapshotSyncCoordinator(
+    snapshotDirtyPort: trackers.snapshotDirtyTracker!,
+    syncService: sync,
+  );
   snapshotCoordinator.start();
 
   // auto_sync 开关从关闭→开启时主动补扫:开关关闭期间建的账本脏信号已写入

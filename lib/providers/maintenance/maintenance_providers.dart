@@ -11,19 +11,19 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../services/maintenance/orphan_cleaner.dart';
-import '../../services/maintenance/orphan_record.dart';
-import '../../services/maintenance/orphan_scanner.dart';
-import '../../services/maintenance/orphan_seeder.dart';
-import '../../services/maintenance/shared_ledger_category_repair.dart';
-import '../../core/logging/logger_service.dart';
-import '../../services/maintenance/analytics_test_data_seeder.dart';
+import 'package:spitout/services/maintenance/orphan_cleaner.dart';
+import 'package:spitout/services/maintenance/orphan_record.dart';
+import 'package:spitout/services/maintenance/orphan_scanner.dart';
+import 'package:spitout/services/maintenance/orphan_seeder.dart';
+import 'package:spitout/services/maintenance/shared_ledger_category_repair.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
 // UI 侧通过 providers 门面使用测试数据填充，不直接触碰服务层。
-export '../../services/maintenance/analytics_test_data_seeder.dart'
+export 'package:spitout/services/maintenance/analytics_test_data_seeder.dart'
     show TestDataScope;
-export '../../services/maintenance/orphan_record.dart'
+export 'package:spitout/services/maintenance/orphan_record.dart'
     show OrphanRecord, OrphanScanReport, OrphanType;
 
 /// 统计页测试数据填充器（仅 debug 包使用）。

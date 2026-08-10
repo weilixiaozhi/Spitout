@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 import 'package:spitout/providers/providers.dart';
 import 'format_money.dart';
 

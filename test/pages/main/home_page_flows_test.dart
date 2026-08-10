@@ -29,7 +29,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/home_page.dart';
 import 'package:spitout/pages/main/ledgers_page.dart';
 import 'package:spitout/providers/providers.dart';
-import 'package:spitout/routes.dart';
+import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/app_empty.dart';

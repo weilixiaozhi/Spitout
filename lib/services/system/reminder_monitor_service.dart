@@ -2,10 +2,10 @@ import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
-import '../../services/notification/reminder_constants.dart';
-import '../../services/notification/notification_factory.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/services/notification/reminder_constants.dart';
+import 'package:spitout/services/notification/notification_factory.dart';
 
 /// 记账提醒监控服务
 ///

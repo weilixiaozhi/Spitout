@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import '../../data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
 
 /// 测试数据填充范围：按年 / 月 / 周 / 日生成支出交易（debug 包专用）。
 enum TestDataScope {

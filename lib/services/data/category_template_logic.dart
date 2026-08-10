@@ -1,6 +1,6 @@
-import '../../l10n/app_localizations.dart';
-import '../../data/models.dart' as db;
-import '../../data/repositories/category_repository.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/data/repositories/category_repository.dart';
 import 'seed_service.dart';
 
 /// 分类模板条目（模板库页面展示用）

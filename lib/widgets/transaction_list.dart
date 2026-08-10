@@ -3,24 +3,25 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:flutter_list_view/flutter_list_view.dart';
 import 'package:visibility_detector/visibility_detector.dart';
-import '../data/models.dart';
+import 'package:spitout/data/models.dart';
 // 列表项的删除/编辑动作由调用方注入，组件内不直接依赖
 // repositoryProvider / currentLedgerIdProvider / countsForLedgerProvider，
 // 故不 import 对应 providers。
-// 仍用 TransactionDisplayItem 类型别名，故保留对 ui_state_providers 的引入。
-import 'package:spitout/providers/ui/ui_state_providers.dart'
-    show TransactionDisplayItem;
+// 仍用 TransactionDisplayItem 类型别名，经 providers.dart 门面获取。
 import 'package:spitout/providers/providers.dart'
-    show SpitoutCloudLedgerMember, currentLedgerProvider;
-import '../core/logging/logger_service.dart';
+    show
+        SpitoutCloudLedgerMember,
+        TransactionDisplayItem,
+        currentLedgerProvider;
+import 'package:spitout/core/logging/logger_service.dart';
 // 精确导入而非 barrel 自引用，避免 biz.dart export 本文件时形成循环依赖
 import 'app_empty.dart';
 import 'day_section_header.dart';
 import 'transaction_list_item.dart';
-import '../utils/category_utils.dart';
+import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
-import '../l10n/app_localizations.dart';
-import '../utils/date/month_range.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/date/month_range.dart';
 
 /// 可复用的交易列表组件
 /// 支持显示分组的交易列表，包含日期头部和交易项

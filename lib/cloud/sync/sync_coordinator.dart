@@ -1,7 +1,8 @@
 import 'dart:async';
 
-import '../../data/db.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart' show LocalChange;
+import 'package:spitout/data/repositories/support/sync_signal_ports.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'sync_engine.dart';
 
 /// 反应式同步触发器:监听 `local_changes` 表的未推送行,debounce 后调
@@ -27,23 +28,23 @@ import 'sync_engine.dart';
 /// 两者不可合并或删除——后续维护者若误判为冗余而删除其中之一,将导致
 /// 对应后端的同步能力整体失效。
 class SyncCoordinator {
-  final SpitoutDatabase db;
+  final LocalChangePort localChanges;
   final SyncEngine engine;
 
   StreamSubscription<List<LocalChange>>? _subscription;
   Timer? _debounce;
 
-  SyncCoordinator({required this.db, required this.engine});
+  SyncCoordinator({required this.localChanges, required this.engine});
 
   /// 启动监听。重复调用安全:重新建立订阅前会取消旧的。
   void start() {
     _subscription?.cancel();
-    _subscription = (db.select(db.localChanges)
-          ..where((c) => c.pushedAt.isNull()))
-        .watch()
-        .listen(_onUnpushedChanged, onError: (Object e, StackTrace st) {
-      logger.warning('SyncCoordinator', 'local_changes watch 失败: $e', st);
-    });
+    _subscription = localChanges.watchUnpushed().listen(
+          _onUnpushedChanged,
+          onError: (Object e, StackTrace st) {
+            logger.warning('SyncCoordinator', 'local_changes watch 失败: $e', st);
+          },
+        );
     logger.info('SyncCoordinator', '已启动: 监听 local_changes 未推送变更');
   }
 

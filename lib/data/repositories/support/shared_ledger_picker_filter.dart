@@ -15,9 +15,9 @@ library;
 
 import 'package:drift/drift.dart' show OrderingTerm;
 
-import '../../db.dart';
-import '../../../core/logging/logger_service.dart';
-import '../category_repository.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/category_repository.dart';
 
 /// 由 syncId 字符串稳定地派生一个负数 int,用作 synthetic Category
 /// 的本地 id。负数避开 Drift autoIncrement(始终正数),所以"id < 0"是 picker

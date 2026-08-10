@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/providers/providers.dart' show SpitoutCloudLedgerMember;
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'person_avatar.dart';
 
 /// 协作头像「单个槽位」：紧凑圆形 + 首字母兜底。

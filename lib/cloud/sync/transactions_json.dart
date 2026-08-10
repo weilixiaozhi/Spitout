@@ -1,11 +1,11 @@
 import 'dart:convert';
 import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:decimal/decimal.dart';
-import '../../data/db.dart';
-import '../../data/models.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../services/import/data_import_service.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/support/data_import_port.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 账本交易数据的 JSON 导入导出工具
 ///
@@ -314,6 +314,7 @@ Future<({int inserted})> importTransactionsJson(
   BaseRepository repo,
   int ledgerId,
   String jsonStr, {
+  required DataImportPort dataImportPort,
   void Function(int done, int total)? onProgress,
   bool recordChanges = true,
 }) async {
@@ -324,7 +325,7 @@ Future<({int inserted})> importTransactionsJson(
   // [recordChanges] 默认 true 兼容 CSV 导入路径(`data_import_service` 会
   // 通过 LocalRepository 写 local_changes 让本地变更能推到云端)。
   // SyncEngine.runFullPull 走"从云端拉数据"路径,显式传 false 避免反向回流。
-  final result = await dataImportService.importData(
+  final result = await dataImportPort.importData(
     repo,
     ledgerId,
     importData,

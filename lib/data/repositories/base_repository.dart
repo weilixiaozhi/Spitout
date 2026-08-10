@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 import 'ledger_repository.dart';
 import 'transaction_repository.dart';
 import 'category_repository.dart';

@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 延迟显示骨架屏:< [DelayedSkeleton.defaultDelay] 期间显示等高占位,
 /// >= 才出真正的骨架。快速查询(<300ms)用户根本看不到骨架,

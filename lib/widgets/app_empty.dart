@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 
 class AppEmpty extends StatelessWidget {
   final String? text;

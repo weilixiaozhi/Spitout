@@ -13,7 +13,6 @@ dependencies:
   flutter_cloud_sync:
     path: ../flutter_cloud_sync
   webdav_client: ^1.2.2
-  http: ^1.1.0
 
 dev_dependencies:
   flutter_test:

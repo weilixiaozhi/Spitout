@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import '../theme/icons/app_icons.dart';
-import '../theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/colors.dart';
 
 typedef SearchableDropdownItemBuilder<T> = Widget Function(T item);
 typedef SearchableDropdownFilter<T> = bool Function(T item, String query);

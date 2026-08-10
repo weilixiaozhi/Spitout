@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../core/logging/logger_service.dart';
-import '../../data/models.dart' as db;
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../l10n/app_localizations.dart';
-import '../../utils/category_utils.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 enum SortType { timeAsc, timeDesc, amountAsc, amountDesc }
 

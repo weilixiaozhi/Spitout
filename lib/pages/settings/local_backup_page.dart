@@ -4,14 +4,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../services/backup/local_backup_service.dart';
-import '../../core/logging/logger_service.dart';
-import '../../theme/colors.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../utils/file_picker_helper.dart';
-import '../../widgets/widgets.dart';
+import 'package:spitout/services/backup/local_backup_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/utils/file_picker_helper.dart';
+import 'package:spitout/widgets/widgets.dart';
 
 /// 本地存储页：自动本地备份开关 + 手动备份 + 备份快照列表恢复。
 ///

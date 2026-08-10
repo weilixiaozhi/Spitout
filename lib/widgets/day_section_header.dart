@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
-import '../theme/dimens.dart';
-import '../l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'format_money.dart';
 
 /// 日期分组标题组件

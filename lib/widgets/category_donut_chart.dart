@@ -3,8 +3,8 @@ import 'dart:math' as math;
 import 'package:fl_chart/fl_chart.dart';
 import 'package:flutter/material.dart';
 
-import '../l10n/app_localizations.dart';
-import '../theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 分类占比环图（带四周引导标注）。
 ///

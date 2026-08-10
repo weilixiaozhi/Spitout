@@ -16,20 +16,20 @@ import 'dart:ui' as ui;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/local_self_id_providers.dart';
-import '../../core/logging/logger_service.dart';
-import '../../data/db.dart';
-import '../../l10n/app_localizations.dart';
-import '../../providers/core/database_providers.dart';
-import '../../providers/sync/cloud_client_providers.dart';
-import '../../providers/sync/shared_ledger_providers.dart';
-import '../ui/avatar_providers.dart';
-import '../../providers/ui/language_provider.dart';
-import '../../providers/ui/theme_providers.dart';
-import '../../services/data/tx_author_service.dart';
-import '../../services/statistics/aa_edit_models.dart';
-import '../../services/statistics/aa_member_detail_models.dart';
-import '../../services/statistics/aa_statistics_service.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/sync/cloud_client_providers.dart';
+import 'package:spitout/providers/sync/shared_ledger_providers.dart';
+import 'package:spitout/providers/ui/avatar_providers.dart';
+import 'package:spitout/providers/ui/language_provider.dart';
+import 'package:spitout/providers/ui/theme_providers.dart';
+import 'package:spitout/services/data/tx_author_service.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/services/statistics/aa_member_detail_models.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart';
 
 /// 本地账本自我参与人的展示名:优先本地昵称(displayNameProvider),
 /// 昵称为空时统一回退「未设置昵称」,与「我的页」昵称占位文案保持一致。

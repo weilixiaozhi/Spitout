@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show visibleForTesting;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 
-import '../logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 本地设备身份（localSelfId）持久化服务。
 ///

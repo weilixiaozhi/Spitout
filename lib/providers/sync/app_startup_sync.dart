@@ -2,11 +2,11 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../cloud/sync/sync_engine.dart';
-import '../../cloud/sync/sync_service.dart';
-import '../../cloud/sync/transactions_sync_manager.dart';
-import '../../core/logging/logger_service.dart';
-import '../core/database_providers.dart';
+import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/cloud/sync/sync_service.dart';
+import 'package:spitout/cloud/sync/transactions_sync_manager.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/providers/core/database_providers.dart';
 import 'sync_providers.dart';
 
 /// App 启动同步收敛器：App 侧统一通过

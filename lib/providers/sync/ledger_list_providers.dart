@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';

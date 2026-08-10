@@ -1,6 +1,6 @@
 import 'dart:convert';
 
-import '../../data/db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 实体序列化工具
 /// 将本地 Drift 实体转为 JSON payload（用于 sync push）

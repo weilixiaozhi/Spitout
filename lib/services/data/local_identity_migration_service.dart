@@ -3,9 +3,9 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as d;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import '../../core/identity/local_user_identity.dart';
-import '../../core/logging/logger_service.dart';
-import '../../data/db.dart';
+import 'package:spitout/core/identity/local_user_identity.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
 
 /// 本地身份 → 云身份迁移服务（方案 B）。
 ///

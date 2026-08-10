@@ -11,7 +11,7 @@ library;
 
 import 'package:drift/drift.dart' as d;
 
-import '../db.dart' show Ledger, Ledgers;
+import 'package:spitout/data/db.dart' show Ledger, Ledgers;
 
 /// 判定账本是否属于「云端账本」(参与被动同步、退出登录时会被清理)。
 ///

@@ -3,15 +3,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
-import '../../widgets/widgets.dart';
-import '../../theme/colors.dart';
-import '../../core/logging/logger_service.dart';
-import '../../utils/currency/currencies.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../l10n/app_localizations.dart';
-import '../../data/models.dart' show Category, Transaction;
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/data/models.dart' show Category, Transaction;
 
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 class CalendarPage extends ConsumerStatefulWidget {
   const CalendarPage({super.key});

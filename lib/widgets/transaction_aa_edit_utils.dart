@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../core/logging/logger_service.dart';
-import '../data/models.dart';
-import '../l10n/app_localizations.dart';
-import '../routes.dart';
-import '../services/statistics/aa_edit_models.dart';
-import '../services/statistics/aa_statistics_service.dart' show AaMode;
-import '../utils/category_utils.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/router/routes.dart';
+import 'package:spitout/services/statistics/aa_edit_models.dart';
+import 'package:spitout/services/statistics/aa_statistics_service.dart' show AaMode;
+import 'package:spitout/utils/category_utils.dart';
 import 'aa_fields_utils.dart';
 import 'toast.dart';
 import 'package:spitout/providers/providers.dart';

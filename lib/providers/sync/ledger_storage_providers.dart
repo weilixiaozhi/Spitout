@@ -15,7 +15,7 @@ library;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 
-import '../core/local_self_id_providers.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';

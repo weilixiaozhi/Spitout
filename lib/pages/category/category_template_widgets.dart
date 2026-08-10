@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
-import '../../l10n/app_localizations.dart';
-import '../../widgets/category_icon.dart';
-import '../../theme/colors.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../providers/category/category_template_providers.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/widgets/category_icon.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/providers/providers.dart';
 
 /// 模板条目卡片（flat / hierarchical 两个模板页共用）
 ///

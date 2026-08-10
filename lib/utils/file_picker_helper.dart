@@ -1,7 +1,7 @@
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/services.dart';
 
-import '../core/logging/logger_service.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 文件选择器辅助工具类
 ///

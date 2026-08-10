@@ -3,12 +3,12 @@ import 'dart:convert';
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 
-import '../../../core/logging/logger_service.dart';
-import '../../db.dart';
-import '../../models/ledger_kind.dart';
-import '../ledger_repository.dart';
-import '../support/change_recorder.dart';
-import '../support/snapshot_dirty_marker.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/models/ledger_kind.dart';
+import 'package:spitout/data/repositories/ledger_repository.dart';
+import 'package:spitout/data/repositories/support/change_recorder.dart';
+import 'package:spitout/data/repositories/support/snapshot_dirty_marker.dart';
 import 'local_transaction_repository.dart';
 
 const _uuid = Uuid();

@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/db.dart';
+import 'package:spitout/data/db.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
 /// 记录编辑历史:某条交易的编辑历史列表,按版本号倒序。

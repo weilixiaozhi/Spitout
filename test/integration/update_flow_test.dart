@@ -17,8 +17,9 @@ import 'package:package_info_plus/package_info_plus.dart';
 import '../helpers/test_isolation.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
-// SectionCard 由 widgets/widgets.dart 导出，CheckUpdateTile 由 widgets/widgets.dart 导出。
+// SectionCard 由 widgets/widgets.dart 导出；CheckUpdateTile 单独直连。
 import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/widgets/check_update_tile.dart';
 
 /// 用真实页面骨架包裹入口：SectionCard + CheckUpdateTile（与 MinePage 一致）。
 Future<void> _pumpFlow(

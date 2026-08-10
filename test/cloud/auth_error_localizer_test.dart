@@ -1,7 +1,7 @@
 // friendlyAuthError 分类测试：认证异常 → 用户友好文案的纯函数映射。
 //
-// 设计意图：集中式「类型判断式」分类（Supabase 结构化 code → 网络层异常 →
-// CloudAuthException 语义细分 → 字符串关键词兜底），调用方只做一行映射。
+// 设计意图：集中式「类型判断式」分类（CloudAuthException 结构化 code →
+// 网络层异常 → CloudAuthException 语义细分 → 字符串关键词兜底）。
 // 本测试逐分支断言，防止未来调整顺序/关键词时静默改变 UI 文案。
 
 import 'dart:async';
@@ -10,7 +10,6 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:http/http.dart' as http;
-import 'package:supabase_flutter/supabase_flutter.dart' as s;
 
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 import 'package:spitout/cloud/auth_error_localizer.dart';
@@ -40,26 +39,34 @@ void main() {
   }
 
   group('friendlyAuthError', () {
-    testWidgets('Supabase 结构化 code 分支', (tester) async {
+    testWidgets('CloudAuthException 结构化 code 分支', (tester) async {
       await pumpContext(tester);
 
       expect(
         friendlyAuthError(
-          s.AuthApiException('bad credentials', code: 'invalid_credentials'),
+          CloudAuthException(
+            'bad credentials',
+            null,
+            'invalid_credentials',
+          ),
           ctx,
         ),
         l10n.authErrorInvalidCredentials,
       );
       expect(
         friendlyAuthError(
-          s.AuthApiException('unconfirmed', code: 'account_not_confirmed'),
+          CloudAuthException('unconfirmed', null, 'account_not_confirmed'),
           ctx,
         ),
         l10n.authErrorAccountNotConfirmed,
       );
       expect(
         friendlyAuthError(
-          s.AuthApiException('too fast', code: 'over_account_send_rate_limit'),
+          CloudAuthException(
+            'too fast',
+            null,
+            'over_account_send_rate_limit',
+          ),
           ctx,
         ),
         l10n.authErrorRateLimit,
@@ -67,7 +74,7 @@ void main() {
       // 未命中已知 code → 落到后续类型/关键词分支
       expect(
         friendlyAuthError(
-          s.AuthApiException('unknown code', code: 'some_new_code'),
+          CloudAuthException('unknown code', null, 'some_new_code'),
           ctx,
         ),
         l10n.authErrorLoginFailed,

@@ -1,13 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'app_route.dart';
-import '../data/models.dart';
+import 'package:spitout/data/models.dart';
 import 'package:spitout/providers/providers.dart';
-import '../theme/colors.dart';
-import '../l10n/app_localizations.dart';
-import '../utils/category_utils.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 分类过滤器回调类型
 /// 返回 true 表示该分类可选，返回 false 表示不可选（置灰）

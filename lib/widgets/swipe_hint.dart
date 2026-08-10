@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 左右滑动切换提示横幅（首页明细 / 统计页共用）。
 ///

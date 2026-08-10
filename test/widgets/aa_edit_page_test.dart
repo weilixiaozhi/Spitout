@@ -16,7 +16,7 @@ import 'package:spitout/providers/providers.dart';
 import 'package:spitout/pages/statistics/aa_edit_page.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart';
-import 'package:spitout/routes.dart';
+import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 两个真实成员 + 一个虚拟用户参与人桩。

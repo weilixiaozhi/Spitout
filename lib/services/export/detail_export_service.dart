@@ -6,11 +6,11 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import '../../data/db.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../l10n/app_localizations.dart';
-import '../system/public_export_dir_service.dart';
-import '../../utils/category_utils.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/services/system/public_export_dir_service.dart';
+import 'package:spitout/utils/category_utils.dart';
 
 /// 导出结果：实际文件路径 + 展示用路径。
 typedef DetailExportResult = ({String path, String displayPath});

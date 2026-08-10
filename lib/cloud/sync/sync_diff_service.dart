@@ -1,10 +1,10 @@
-import '../../data/models.dart';
-import '../../data/repositories/base_repository.dart';
-import '../../data/repositories/transaction_repository.dart'
+import 'package:spitout/data/models.dart';
+import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/transaction_repository.dart'
     show TransactionUpdateBySyncIdData;
-import '../../services/import/data_import_service.dart';
-import '../../utils/currency/money_cents.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/support/data_import_port.dart';
+import 'package:spitout/utils/currency/money_cents.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 同步变更类型
 enum SyncChangeType { added, modified, deleted }
@@ -71,6 +71,10 @@ class SyncApplyResult {
 
 /// Diff 计算服务
 class SyncDiffService {
+  final DataImportPort dataImportPort;
+
+  SyncDiffService({required this.dataImportPort});
+
   /// 计算本地与云端的差异
   ///
   /// [repo] - 数据仓库
@@ -301,7 +305,7 @@ class SyncDiffService {
 
     // 分类:复用 DataImportService(同一份 batch 优化只在一处维护)
     final categoryCache =
-        await dataImportService.importCategories(repo, importData.categories);
+        await dataImportPort.importCategories(repo, importData.categories);
 
     int addedCount = 0;
     int modifiedCount = 0;
@@ -336,7 +340,7 @@ class SyncDiffService {
       final addedTxs = addedChanges
           .map((c) => c.cloudTransaction!)
           .toList(growable: false);
-      final result = await dataImportService.importTransactions(
+      final result = await dataImportPort.importTransactions(
         repo,
         ledgerId,
         addedTxs,
@@ -441,6 +445,3 @@ class SyncDiffService {
   // 分类的导入逻辑统一委托给 DataImportService.importCategories,
   // 避免在本文件维护第二份实现。
 }
-
-/// 全局单例
-final syncDiffService = SyncDiffService();

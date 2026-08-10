@@ -1,7 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import '../theme/colors.dart';
+import 'package:spitout/theme/colors.dart';
 
 /// 单个 Overlay 上当前活跃的 toast（entry + 自动消失定时器）。
 class _ActiveToast {

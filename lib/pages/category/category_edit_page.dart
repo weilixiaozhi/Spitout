@@ -3,16 +3,17 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
-import '../../widgets/widgets.dart';
-import '../../data/models.dart' as db;
-import '../../l10n/app_localizations.dart';
-import '../../utils/category_utils.dart';
-import '../../theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/theme/colors.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../theme/icons/app_icons.dart';
-import '../../theme/icons/category_icons.dart';
-import '../transaction/category_detail_page.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/widgets/overlay_keyboard_guard.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/icons/category_icons.dart';
+import 'package:spitout/pages/transaction/category_detail_page.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 class CategoryEditPage extends ConsumerStatefulWidget {
   final db.Category? category; // null表示新建

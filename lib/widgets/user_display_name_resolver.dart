@@ -2,9 +2,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/providers/providers.dart'
     show CloudUser, SpitoutCloudLedgerMember, localSelfIdProvider;
-import '../../l10n/app_localizations.dart';
-import '../../providers/sync/cloud_client_providers.dart';
-import '../../providers/ui/theme_providers.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/sync/cloud_client_providers.dart';
+import 'package:spitout/providers/ui/theme_providers.dart';
 
 /// 用户展示名统一解析器。
 ///

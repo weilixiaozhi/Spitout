@@ -18,24 +18,14 @@ import 'package:spitout/cloud/spitout_cloud.dart' show CloudStorageException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'text_state_switch.dart';
 import 'me_suffix.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart';
-import 'package:spitout/providers/sync/sync_providers.dart'
-    show spitoutCloudProviderInstance, syncEventStreamProvider;
-import 'package:spitout/providers/ui/theme_providers.dart'
-    show displayNameProvider;
+import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
-import 'package:spitout/providers/statistics/aa_statistics_providers.dart'
-    show
-        ledgerVirtualUsersProvider,
-        createVirtualUser,
-        renameVirtualUser,
-        deleteVirtualUser;
-import '../data/models.dart' show LedgerVirtualUser;
-import '../theme/colors.dart';
-import '../theme/icons/app_icons.dart';
+import 'package:spitout/data/models.dart' show LedgerVirtualUser;
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 import 'app_dialog.dart';
 import 'person_avatar.dart';
 import 'section_card.dart';

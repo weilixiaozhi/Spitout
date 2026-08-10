@@ -11,8 +11,8 @@ import 'dart:math';
 
 import 'package:drift/drift.dart' as d;
 
-import '../../data/db.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 class OrphanSeeder {
   OrphanSeeder({required this.db});

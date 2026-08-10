@@ -5,17 +5,17 @@ import 'package:flutter_list_view/flutter_list_view.dart';
 import 'dart:async';
 
 import 'package:spitout/providers/providers.dart';
-import '../../data/models.dart';
-import '../../widgets/widgets.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../../utils/format_utils.dart';
-import '../../utils/category_utils.dart';
-import '../transaction/category_detail_page.dart';
+import 'package:spitout/utils/format_utils.dart';
+import 'package:spitout/utils/category_utils.dart';
+import 'package:spitout/pages/transaction/category_detail_page.dart';
 import 'ledgers_page.dart';
-import '../../routes.dart';
-import '../../theme/icons/app_icons.dart';
+import 'package:spitout/core/router/routes.dart';
+import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 首页内容区统一水平内边距（8）：头部汇总卡与下方交易列表共用，保证两者左右边缘对齐。
 

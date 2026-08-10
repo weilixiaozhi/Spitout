@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../l10n/app_localizations.dart';
+import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
-import '../core/logging/logger_service.dart';
-import '../utils/currency/currencies.dart';
-import 'widgets.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/utils/currency/currencies.dart';
+// 直接 import 兄弟文件而非 widgets.dart，避免组件反向依赖自身 barrel 成环。
+import 'toast.dart';
 
 /// 统一切换账本本位币(两入口共用:账本编辑弹窗保存、汇率页基准行)。
 ///

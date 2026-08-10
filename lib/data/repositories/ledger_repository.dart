@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 账本Repository接口
 /// 定义账本相关的所有数据操作

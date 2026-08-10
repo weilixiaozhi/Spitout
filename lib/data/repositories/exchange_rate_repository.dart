@@ -1,4 +1,4 @@
-import '../db.dart';
+import 'package:spitout/data/db.dart';
 
 /// 汇率数据访问(多币种 MVP)。
 /// 方向约定全链统一:rate 字符串 = 「1 quote = rate base」。

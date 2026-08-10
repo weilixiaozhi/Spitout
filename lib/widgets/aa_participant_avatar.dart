@@ -3,9 +3,9 @@ import 'dart:io' show File;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../providers/statistics/aa_statistics_providers.dart'
+import 'package:spitout/providers/providers.dart'
     show aaParticipantAvatarContextProvider;
-import '../providers/ui/avatar_providers.dart' show avatarPathProvider;
+import 'package:spitout/providers/ui/avatar_providers.dart' show avatarPathProvider;
 import 'person_avatar.dart';
 
 /// AA 参与人头像（本人本地头像 → 云端成员头像 → person 占位图标）。

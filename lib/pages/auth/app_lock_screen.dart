@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../theme/colors.dart';
-import 'package:spitout/providers/security/security_providers.dart';
-import '../../widgets/widgets.dart';
-import '../../l10n/app_localizations.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 class AppLockScreen extends ConsumerStatefulWidget {
   const AppLockScreen({super.key});

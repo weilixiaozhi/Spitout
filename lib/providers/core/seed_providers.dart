@@ -1,7 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 
-import '../../services/data/seed_service.dart';
+import 'package:spitout/services/data/seed_service.dart';
 import 'database_providers.dart';
 
 /// 首次初始化种子服务的 provider 门面。

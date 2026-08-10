@@ -17,6 +17,7 @@ import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:spitout/cloud/sync/snapshot_dirty_tracker.dart';
 import 'package:spitout/cloud/sync/snapshot_sync_coordinator.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/db.dart';
@@ -67,7 +68,7 @@ void main() {
   /// 构造 coordinator 并启动(auto_sync 读取注入受控开关)。
   SnapshotSyncCoordinator buildCoordinator() {
     final c = SnapshotSyncCoordinator(
-      db: db,
+      snapshotDirtyPort: SnapshotDirtyTracker(db),
       syncService: sync,
       autoSyncEnabled: () async => autoSyncOn,
     );

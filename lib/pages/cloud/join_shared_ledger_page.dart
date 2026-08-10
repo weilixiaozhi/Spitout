@@ -7,11 +7,11 @@ import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudInvitePreview
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
-import '../../l10n/app_localizations.dart';
-import 'package:spitout/providers/sync/shared_ledger_providers.dart';
-import '../../theme/colors.dart';
-import '../../widgets/widgets.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/colors.dart';
+import 'package:spitout/widgets/widgets.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 class JoinSharedLedgerPage extends ConsumerStatefulWidget {
   const JoinSharedLedgerPage({super.key, this.prefilledCode});

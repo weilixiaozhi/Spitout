@@ -21,11 +21,11 @@ import 'dart:collection';
 import 'package:drift/drift.dart' as d;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../cloud/sync/sync_engine.dart';
-import '../../core/logging/logger_service.dart';
-import '../../data/repositories/category_repository.dart';
-import '../../data/repositories/local/local_repository.dart';
-import '../../data/repositories/support/shared_ledger_picker_filter.dart';
+import 'package:spitout/cloud/sync/sync_engine.dart';
+import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 

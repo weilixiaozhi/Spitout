@@ -12,8 +12,8 @@ library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import '../../data/models.dart';
-import '../../services/update/app_update_service.dart';
+import 'package:spitout/data/models.dart';
+import 'package:spitout/services/update/app_update_service.dart';
 
 /// 检查应用更新（动作函数，WidgetRef 为参）。
 ///

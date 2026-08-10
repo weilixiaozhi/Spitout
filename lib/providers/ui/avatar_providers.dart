@@ -1,8 +1,8 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
 
-import '../../services/storage/avatar_picker.dart';
-import '../../services/storage/avatar_storage.dart';
+import 'package:spitout/services/storage/avatar_picker.dart';
+import 'package:spitout/core/storage/avatar_storage.dart';
 
 /// 头像刷新触发器
 final avatarRefreshProvider =

@@ -1,9 +1,10 @@
 import 'package:drift/drift.dart' as d;
 
-import '../../data/db.dart';
-import '../../data/models/ledger_kind.dart';
-import '../../data/repositories/support/change_recorder.dart';
-import '../../core/logging/logger_service.dart';
+import 'package:spitout/data/db.dart';
+import 'package:spitout/data/models/ledger_kind.dart';
+import 'package:spitout/data/repositories/support/change_recorder.dart';
+import 'package:spitout/data/repositories/support/sync_signal_ports.dart';
+import 'package:spitout/core/logging/logger_service.dart';
 
 /// 本地变更追踪器。在 Repository 层捕获写操作,记录到 local_changes 表,
 /// 同步引擎读取未推送的变更并上传到服务端。
@@ -27,7 +28,7 @@ import '../../core/logging/logger_service.dart';
 ///
 /// 实现 data 层 [ChangeRecorder] 端口：local Repository 只依赖抽象,
 /// 本类在注入点(database_providers.dart)组装,cloud → data 方向保持不变。
-class ChangeTracker implements ChangeRecorder {
+class ChangeTracker implements ChangeRecorder, LocalChangePort {
   final SpitoutDatabase db;
 
   ChangeTracker(this.db);
@@ -294,6 +295,7 @@ class ChangeTracker implements ChangeRecorder {
   }
 
   /// 获取所有未推送的变更
+  @override
   Future<List<LocalChange>> getUnpushedChanges() async {
     return await (db.select(db.localChanges)
           ..where((c) => c.pushedAt.isNull())
@@ -302,6 +304,7 @@ class ChangeTracker implements ChangeRecorder {
   }
 
   /// 获取指定账本的未推送变更
+  @override
   Future<List<LocalChange>> getUnpushedChangesForLedger(int ledgerId) async {
     return await (db.select(db.localChanges)
           ..where((c) => c.pushedAt.isNull() & c.ledgerId.equals(ledgerId))
@@ -310,6 +313,7 @@ class ChangeTracker implements ChangeRecorder {
   }
 
   /// 标记变更已推送
+  @override
   Future<void> markPushed(List<int> changeIds) async {
     if (changeIds.isEmpty) return;
     final now = DateTime.now();
@@ -319,6 +323,7 @@ class ChangeTracker implements ChangeRecorder {
   }
 
   /// 清理已推送的旧变更（保留最近 7 天）
+  @override
   Future<int> cleanupPushedChanges({
     Duration retention = const Duration(days: 7),
   }) async {
@@ -337,6 +342,7 @@ class ChangeTracker implements ChangeRecorder {
   }
 
   /// 获取未推送变更数量
+  @override
   Future<int> getUnpushedCount() async {
     // 全表查进内存再数长度在表膨胀后会很慢；用 COUNT(*) 只回传一个数字。
     final row = await db.customSelect(
@@ -344,5 +350,12 @@ class ChangeTracker implements ChangeRecorder {
       readsFrom: {db.localChanges},
     ).getSingle();
     return row.read<int>('c');
+  }
+
+  @override
+  Stream<List<LocalChange>> watchUnpushed() {
+    return (db.select(db.localChanges)
+          ..where((c) => c.pushedAt.isNull()))
+        .watch();
   }
 }
