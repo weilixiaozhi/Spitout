@@ -1,5 +1,3 @@
-import '../bill_parser.dart';
-
 /// 通用 CSV 账单解析器
 ///
 /// 合并入口后为唯一解析器。表头定位分三层递进：
@@ -8,8 +6,7 @@ import '../bill_parser.dart';
 ///   3. 列数一致性兜底（含 ±1 列容差，吸收行尾多逗号等脏数据）。
 /// 第 2 层不依赖"表头与数据行列数一致"，因此对各类第三方记账 App 的
 /// 导出格式（含列数不对称的脏数据）更鲁棒。
-class GenericBillParser implements BillParser {
-  @override
+class GenericBillParser {
   int findHeaderRow(List<List<String>> rows) {
     if (rows.isEmpty) return -1;
 
@@ -154,7 +151,6 @@ class GenericBillParser implements BillParser {
     return -1; // 未找到
   }
 
-  @override
   Map<String, int> mapColumns(List<String> headerRow) {
     final mapping = <String, int>{};
 

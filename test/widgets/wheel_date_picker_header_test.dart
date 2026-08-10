@@ -70,7 +70,7 @@ void main() {
     );
   });
 
-  testWidgets('日期选择 sheet 拖拽条与汇率选择 sheet 一致：36x4、下边距 8、三级色 30%', (tester) async {
+  testWidgets('日期选择 sheet 拖拽条与汇率选择 sheet 一致：36x4、上 12 下 4、muted 自适应色', (tester) async {
     await pumpDateSheet(tester);
     final ctx = tester.element(find.byType(WheelDatePicker));
 
@@ -82,17 +82,29 @@ void main() {
       ),
     );
     expect(handle, isNotNull, reason: '头部应渲染 36x4 拖拽条');
+
+    // 拖拽条外层统一间距（上 12 / 下 4），由共享组件 SheetGrabHandle 提供。
+    final wrapper = tester.widget<Padding>(
+      find
+          .ancestor(
+            of: find.byWidget(handle),
+            matching: find.byType(Padding),
+          )
+          .first,
+    );
     expect(
-      handle.margin,
-      const EdgeInsets.only(bottom: 8),
-      reason: '拖拽条下边距应与汇率选择 sheet 一致',
+      wrapper.padding,
+      const EdgeInsets.only(top: 12, bottom: 4),
+      reason: '拖拽条间距应与汇率选择 sheet 一致',
     );
 
     final deco = handle.decoration! as BoxDecoration;
     expect(
       deco.color,
-      SpitoutTokens.textTertiary(ctx).withValues(alpha: 0.3),
-      reason: '拖拽条颜色应与汇率选择 sheet 一致（三级色 30% 透明）',
+      SpitoutTokens.isDark(ctx)
+          ? Colors.white.withValues(alpha: 0.20)
+          : Colors.black.withValues(alpha: 0.15),
+      reason: '拖拽条颜色应与汇率选择 sheet 一致（muted 自适应色）',
     );
     expect(
       deco.borderRadius,

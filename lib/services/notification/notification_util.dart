@@ -59,25 +59,6 @@ abstract class NotificationUtil {
   Future<bool> checkPermissionStatus();
 }
 
-/// 通知详情配置
-class NotificationDetails {
-  final String channelId;
-  final String channelName;
-  final String channelDescription;
-  final bool enableVibration;
-  final bool playSound;
-  final bool showBadge;
-
-  const NotificationDetails({
-    required this.channelId,
-    required this.channelName,
-    required this.channelDescription,
-    this.enableVibration = true,
-    this.playSound = true,
-    this.showBadge = true,
-  });
-}
-
 /// 计算下一次提醒时间
 ///
 /// 如果指定时间已过，返回明天的该时间

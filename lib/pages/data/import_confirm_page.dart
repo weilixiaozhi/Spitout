@@ -9,7 +9,6 @@ import '../../l10n/app_localizations.dart';
 import '../../core/logging/logger_service.dart';
 import '../../services/import/csv_parser.dart';
 import '../../utils/category_utils.dart';
-import '../../services/import/bill_parser.dart';
 import '../../services/import/parsers/generic_parser.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import '../../services/import/data_import_service.dart';
@@ -53,7 +52,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
   List<String> distinctCategories = [];
   Map<String, int?> categoryMapping = {}; // 源分类名 -> 目标分类ID（null表示保持原名）
   Future<List<schema.Category>>? allCategoriesFuture;
-  late final BillParser _billParser;
+  late final GenericBillParser _billParser;
   final Map<String, int> _badRows = {}; // 解析失败原因 -> 行数
 
   @override

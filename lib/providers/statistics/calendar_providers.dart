@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../data/db.dart';
-// 精确导入而非 barrel 自引用，避免 all_providers.dart export 本文件时形成循环依赖
+// 精确导入而非 barrel 自引用，避免 providers.dart export 本文件时形成循环依赖
 import 'package:spitout/providers/core/database_providers.dart';
 
 /// 获取指定月份的每日统计

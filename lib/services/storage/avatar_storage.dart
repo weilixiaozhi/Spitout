@@ -6,7 +6,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/logging/logger_service.dart';
-import '../../core/storage/avatar_ports.dart';
 
 /// 头像本地存储实现（纯存储，不感知 UI 选取）。
 ///
@@ -15,11 +14,17 @@ import '../../core/storage/avatar_ports.dart';
 ///   UUID 变化）、远端版本号管理、字节/文件落盘到 Documents/avatars/ 目录。
 /// - 不 import image_picker —— 选取职责归 avatar_picker.dart，
 ///   本类只做「拿到内容后怎么放」的纯存储编排。
-/// - 实现 `core/storage/avatar_ports.dart` 的 [AvatarStoragePort]，
-///   供 providers / cloud 层面向契约调用（测试可注入 mock）。
+/// - 供 providers / cloud 层直接调用（测试可 mock 本类）。
 /// - 错误处理：文件 IO 全程 try-catch；`getAvatarPath` 读取失败返回 null
 ///   （UI 语义「无头像」），写入/删除失败记录日志后 rethrow 交由上层处理。
-class LocalAvatarStorage implements AvatarStoragePort {
+class LocalAvatarStorage {
+  /// 扩展名白名单：仅允许字母/数字，长度 1-10，可带或不带前导点。
+  static final RegExp safeExtensionPattern =
+      RegExp(r'^\.?[A-Za-z0-9]{1,10}$');
+
+  static bool isValidExtension(String extension) =>
+      safeExtensionPattern.hasMatch(extension);
+
   static const String _avatarPathKey = 'user_avatar_path';
   // 服务端的 avatar_version —— sync 时拿来和新拉到的 version 对比，
   // 相同就跳过下载。
@@ -27,7 +32,6 @@ class LocalAvatarStorage implements AvatarStoragePort {
   /// 文档目录下的头像子目录名。
   static const String _avatarDirName = 'avatars';
 
-  @override
   Future<String?> getAvatarPath() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -52,7 +56,6 @@ class LocalAvatarStorage implements AvatarStoragePort {
     }
   }
 
-  @override
   Future<String?> saveAvatarFromBytes(
     Uint8List bytes, {
     String extension = '.jpg',
@@ -60,7 +63,7 @@ class LocalAvatarStorage implements AvatarStoragePort {
     if (bytes.isEmpty) {
       throw ArgumentError.value(bytes, 'bytes', '头像字节流不能为空');
     }
-    if (!AvatarStoragePort.isValidExtension(extension)) {
+    if (!isValidExtension(extension)) {
       throw ArgumentError.value(extension, 'extension', '非法头像扩展名');
     }
 
@@ -80,10 +83,9 @@ class LocalAvatarStorage implements AvatarStoragePort {
     }
   }
 
-  @override
   Future<String?> saveAvatarFromFile(String sourcePath) async {
     final ext = p.extension(sourcePath);
-    if (!AvatarStoragePort.isValidExtension(ext)) {
+    if (!isValidExtension(ext)) {
       throw ArgumentError.value(ext, 'sourcePath', '源文件扩展名非法');
     }
 
@@ -102,25 +104,21 @@ class LocalAvatarStorage implements AvatarStoragePort {
     }
   }
 
-  @override
   Future<int> getStoredRemoteVersion() async {
     final prefs = await SharedPreferences.getInstance();
     return prefs.getInt(_avatarRemoteVersionKey) ?? 0;
   }
 
-  @override
   Future<void> setStoredRemoteVersion(int version) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_avatarRemoteVersionKey, version);
   }
 
-  @override
   Future<void> clearStoredRemoteVersion() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove(_avatarRemoteVersionKey);
   }
 
-  @override
   Future<void> deleteAvatar() async {
     await _deleteOldAvatar();
     final prefs = await SharedPreferences.getInstance();

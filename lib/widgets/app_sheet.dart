@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'app_route.dart';
+import 'sheet_grab_handle.dart';
 import '../theme/colors.dart';
 
 /// shadcn/ui 风格 Bottom Sheet wrapper（AppSheet 语义组件）。
@@ -116,7 +117,7 @@ class AppSheet extends StatelessWidget {
           )
         : const SizedBox.shrink();
 
-    final grab = showGrabHandle ? const _GrabHandle() : const SizedBox.shrink();
+    final grab = showGrabHandle ? const SheetGrabHandle() : const SizedBox.shrink();
 
     // 标题吸顶:用 Column 包裹(grab + header 固定),内容区 Flexible 自适应滚动。
     // 标题不吸顶(pinnedHeader=false):整体交给外层滚动,本组件不做滚动容器。
@@ -154,33 +155,6 @@ class AppSheet extends StatelessWidget {
   }
 }
 
-/// 顶部拖拽条:36x4 圆角条,muted 色。
-/// 不用 Material 自带 showDragHandle,以统一 shadcn/ui 视觉。
-class _GrabHandle extends StatelessWidget {
-  const _GrabHandle();
-
-  @override
-  Widget build(BuildContext context) {
-    // 暗色用前景色 20% 透明,亮色用黑色 15% 透明,对应 shadcn muted 调。
-    final color = SpitoutTokens.isDark(context)
-        ? Colors.white.withValues(alpha: 0.20)
-        : Colors.black.withValues(alpha: 0.15);
-    return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 4),
-      child: Center(
-        child: Container(
-          width: 36,
-          height: 4,
-          decoration: BoxDecoration(
-            color: color,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 /// 弹出 shadcn/ui 风格 Bottom Sheet。
 ///
 /// 封装 showModalBottomSheet 的统一样式:顶部 16px 圆角、surfaceSheet 背景、
@@ -209,7 +183,7 @@ Future<T?> showAppSheet<T>({
     ),
     clipBehavior: Clip.antiAlias,
     enableDrag: true,
-    // 用自定义 _GrabHandle,关闭 Material 自带拖拽条
+    // 用自定义 SheetGrabHandle,关闭 Material 自带拖拽条
     showDragHandle: false,
     // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
     sheetAnimationStyle: kSheetAnimationStyle,
