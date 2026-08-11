@@ -1446,6 +1446,9 @@ void main() {
                 storageMode: const Value('cloud'),
               ),
             );
+        // 云端优先规范下，cloud 账本必须已存在于服务器清单，
+        // 否则统一列表 GC 会在 pull 前把它当残留清掉。
+        provider.pushFakeLedger(ledgerId: 'L1', ledgerName: 'L');
         await db
             .into(db.categories)
             .insert(

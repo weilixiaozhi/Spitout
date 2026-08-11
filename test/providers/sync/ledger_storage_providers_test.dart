@@ -151,7 +151,10 @@ void main() {
       await flushTimers(tester);
     });
 
-    testWidgets('登录后：身份迁移 + 秒级翻 cloud + 登记增量推送', (tester) async {
+    testWidgets('登录后：身份迁移 + 云端优先推送 + 翻 cloud', (tester) async {
+      // 模拟真实 server：建本成功即出现在清单里，统一 GC 才不会把
+      // 刚翻 cloud 的账本当残留清掉。
+      provider.autoRegisterWrittenLedgers = true;
       final id = await createLedger('本地账本', 'local');
       await addTx(id);
       await markLocalSelfAuthors(id);
@@ -170,13 +173,21 @@ void main() {
       expect(tx.paidByUserId, 'test-user-id');
       expect(tx.createdByUserId, 'test-user-id');
       expect(ledger.ownerUserId, 'test-user-id');
-      // 已登记 ledger:upsert 到 local_changes，供后续增量推送
+      expect(
+        provider.writeCreateLedgerCalls.single.ledgerId,
+        ledger.syncId,
+        reason: '云端优先转云端必须用同一个 syncId 建云端账本',
+      );
+      // 云端优先：fullPush 已推全量数据，本地不再登记 create/upsert 变更。
       final unpushed = await changeTracker.getUnpushedChangesForLedger(id);
-      expect(unpushed, isNotEmpty);
+      expect(unpushed, isEmpty,
+          reason: '云端已建，本地不得再登记未推送变更');
 
-      // moveToCloud 调度的 2s auto sync 定时器：推进时间让其触发；
-      // 再推进一轮，让同步日志触发的 LoggerService 2s 保存定时器也落定，避免 pending timer。
+      // 推进时间让 LoggerService 的日志保存定时器落定，避免 pending timer；
+      // 同时确认统一 GC 不会把已上云的账本误删。
       await flushTimers(tester);
+      expect(await repo.getLedgerById(id), isNotNull,
+          reason: '云端已确认存在，列表 GC 不得删除该账本');
     });
   });
 
@@ -222,6 +233,80 @@ void main() {
             ..where((t) => t.ledgerId.equals(newId)))
           .get();
       expect(copyTxs, hasLength(1));
+      await flushTimers(tester);
+    });
+  });
+
+  group('createCloudLedgerFromUi（云端优先新建）', () {
+    testWidgets('成功：先建云端再落本地绑定行，不登记未推送变更', (tester) async {
+      provider.autoRegisterWrittenLedgers = true;
+      final container = buildContainer();
+
+      final id = await createCloudLedgerFromUi(
+        container,
+        name: '云端账本',
+        currency: 'CNY',
+        ownerUserId: 'local-self-id',
+        aaEnabled: false,
+      );
+
+      expect(provider.writeCreateLedgerCalls, hasLength(1));
+      final ledger = await repo.getLedgerById(id);
+      expect(ledger!.storageMode, 'cloud');
+      expect(
+        ledger.syncId,
+        provider.writeCreateLedgerCalls.single.ledgerId,
+        reason: '本地行必须绑定云端创建使用的同一个 syncId',
+      );
+      final unpushed = await changeTracker.getUnpushedChangesForLedger(id);
+      expect(unpushed, isEmpty, reason: '云端已建，本地不得再登记 create 变更');
+      await flushTimers(tester);
+    });
+
+    testWidgets('云端创建失败 → 抛错且本地不落账本', (tester) async {
+      provider.writeCreateLedgerErrorInjector = () => Exception('cloud boom');
+      final container = buildContainer();
+
+      await expectLater(
+        createCloudLedgerFromUi(
+          container,
+          name: '失败账本',
+          ownerUserId: 'local-self-id',
+        ),
+        throwsA(isA<Exception>()),
+      );
+
+      expect(
+        await repo.getAllLedgers(),
+        isEmpty,
+        reason: '云端失败时不得在本地留下孤儿云端账本',
+      );
+      await flushTimers(tester);
+    });
+
+    testWidgets('云端创建超时 → 抛超时且本地不落账本', (tester) async {
+      final gate = Completer<void>();
+      provider.writeCreateLedgerGate = gate;
+      final container = buildContainer();
+
+      // 不能直接 await：fake async 下超时计时器需要 pump 推进才会触发。
+      final future = createCloudLedgerFromUi(
+        container,
+        name: '超时账本',
+        ownerUserId: 'local-self-id',
+        timeout: const Duration(milliseconds: 50),
+      );
+      // 先挂上断言再推进计时器，避免 future 提前以 error 完成变成未捕获异常。
+      final expectation = expectLater(
+        future,
+        throwsA(isA<TimeoutException>()),
+      );
+      await tester.pump(const Duration(milliseconds: 100));
+      await expectation;
+      expect(await repo.getAllLedgers(), isEmpty);
+
+      // 放行闸门，避免未完成的 future 影响测试退出。
+      gate.complete();
       await flushTimers(tester);
     });
   });

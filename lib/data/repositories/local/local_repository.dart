@@ -136,6 +136,23 @@ class LocalRepository extends BaseRepository {
   );
 
   @override
+  Future<int> createBoundLedger({
+    required String syncId,
+    required String name,
+    String currency = 'CNY',
+    String? ownerUserId,
+    bool aaEnabled = false,
+    int monthStartDay = 1,
+  }) => _ledgerRepo.createBoundLedger(
+    syncId: syncId,
+    name: name,
+    currency: currency,
+    ownerUserId: ownerUserId,
+    aaEnabled: aaEnabled,
+    monthStartDay: monthStartDay,
+  );
+
+  @override
   Future<void> updateLedgerStorageMode({
     required int id,
     required String storageMode,

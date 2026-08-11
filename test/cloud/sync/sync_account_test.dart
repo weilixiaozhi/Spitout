@@ -5,7 +5,7 @@
 /// 2. fast-skip:无待推 + 已绑定 → skipped=1,不发 push / 不上传 snapshot;
 /// 3. 增量 push:有 unpushed + 已绑定 → 推变更,pushed>=1,不 upload snapshot
 ///    (可据 download(snapshot) 是否为 null 区分 fullPush 是否发生);
-/// 4. fullPush:syncId 不在远端 → 上传 snapshot(fullPush 真实发生);
+/// 4. fullPush:账本行在远端但无 snapshot → 上传 snapshot(fullPush 真实发生);
 /// 5. 共享 Editor:只增量 push,不 fullPush(不 upload snapshot);
 /// 6. storage.list 失败 → 保守增量,不 fullPush(不 upload snapshot)。
 library;
@@ -107,7 +107,8 @@ void main() {
 
       // 本地已绑定云账本(syncId 对齐远端 ledger-a),返回值无需使用。
       await _insertCloudLedger(db, name: 'A', syncId: 'ledger-a');
-      // server 端已有该账本 snapshot → 已绑定。
+      // server 端已有该账本(清单 + snapshot) → 已绑定。
+      provider.pushFakeLedger(ledgerId: 'ledger-a', ledgerName: 'A');
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
 
       final result = await engine.syncAccount();
@@ -133,6 +134,7 @@ void main() {
         name: 'A',
         syncId: 'ledger-a',
       );
+      provider.pushFakeLedger(ledgerId: 'ledger-a', ledgerName: 'A');
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
       await changeTracker.recordLedgerChange(
         entityType: 'transaction',
@@ -164,6 +166,7 @@ void main() {
         name: 'A',
         syncId: 'ledger-a',
       );
+      provider.pushFakeLedger(ledgerId: 'ledger-a', ledgerName: 'A');
       provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
       // 本地写一条 tx → 产生 unpushed local_change。
       await repo.insertTransactionsBatch([
@@ -320,16 +323,18 @@ void main() {
       );
     });
 
-    test('fullPush:syncId 不在远端 → 上传 snapshot(fullPush 真实发生)', () async {
+    test('fullPush:账本行在远端但无 snapshot → 上传 snapshot(fullPush 真实发生)',
+        () async {
       final (db, _, _, provider, engine) = await _harness();
       addTearDown(db.close);
 
-      // 有 syncId 但 server 端没有对应 snapshot → inRemote=false → fullPush。
+      // server 清单有该账本(GC 保留),但没有 S1 snapshot → fullPush 上传。
       final ledgerId = await _insertCloudLedger(
         db,
         name: 'A',
         syncId: 'ledger-fp',
       );
+      provider.pushFakeLedger(ledgerId: 'ledger-fp', ledgerName: 'A');
       await db
           .into(db.transactions)
           .insert(
@@ -345,7 +350,8 @@ void main() {
 
       expect(result.skipped, 0);
       final uploaded = await provider.storage.download(path: 'ledger-fp');
-      expect(uploaded, isNotNull, reason: '远端无该账本时必须 fullPush 上传 snapshot');
+      expect(uploaded, isNotNull,
+          reason: '远端有账本行但无 snapshot 时必须 fullPush 上传');
     });
 
     test('共享 Editor:只增量 push,不 fullPush(不 upload snapshot)', () async {
@@ -395,6 +401,7 @@ void main() {
         name: 'A',
         syncId: 'ledger-a',
       );
+      provider.pushFakeLedger(ledgerId: 'ledger-a', ledgerName: 'A');
       provider.storageListError = Exception('list boom');
       await changeTracker.recordLedgerChange(
         entityType: 'transaction',

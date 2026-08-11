@@ -600,23 +600,14 @@ class SyncEngine implements app.SyncService {
 
   /// 把本地账本搬到云端。
   ///
-  /// 秒级可见:先翻 storage_mode='cloud'(UI 立即生效),推送下沉到后台。
-  ///   1. 复用旧 syncId(有则不重发,避免换 id 破坏已有云端关联);本地账本首次
-  ///      上云则补发一个;
-  ///   2. 翻 mode='cloud'(此刻用户即看到「云端」态);
-  ///   3. [triggerAutoSync] 显式调度后台推送(2s 防抖 + 单飞合并)。
-  ///
-  /// **为什么用 triggerAutoSync 而非直接 sync()**:翻 mode 走 updateLedgerStorageMode
-  /// 不写 local_changes,SyncCoordinator 不会自动触发,必须显式调度;且经防抖合并、
-  /// 由统一调度链进入 syncAccount,符合「同步触发下沉」约束——UI 不直接触碰 sync()。
-  ///
-  /// 失败语义:补 syncId / 翻 mode 任一步失败 → 抛 [CloudSyncException](UI 报错,
-  /// 账本保持 local);翻 cloud 成功后的后台推送失败 → 由 syncAccount Phase 2
-  /// (!inRemote && !isSharedAsEditor 账本自动 fullPush)自愈,不阻塞用户。
-  ///
-  /// 中间态无害:即便「翻 cloud 成功但推送尚未完成」,本地 cloud + syncId 非 null
-  /// 不会被 pull 收编(收编只认 sid==null && cloud),不产生数据丢失。
-  /// 孤儿由 moveToLocal 端的 abort 信号 + waitFullPushSettle 闭环兜底。
+  /// 云端优先:用户点「转云端」即显式意图上云,必须先完整推送并确认云端已存在,
+  /// 成功后才翻 storage_mode='cloud';失败保持 local 并抛 [CloudSyncException]。
+  ///   1. 复用旧 syncId(有则不重发);首次上云则本地补发 UUID;
+  ///   2. [fullPush](force) 推账本 + 快照 + 全部实体;
+  ///   3. readLedgers 确认云端已返回该账本后,才翻 mode='cloud'。
+  /// 不登记 ledger:upsert 变更:fullPush 已把当前数据全部推上云,登记只会制造
+  /// 重复推送与「本地已建、云端未建」的 GC 误删窗口(列表 GC 以服务器列表为权威)。
+  /// 失败时若 syncId 是本轮补发的,回滚为 null,保持本地账本无云端关联。
   /// 共享账本不允许转云端(应使用 [copyToLocal])。
   @override
   Future<void> moveToCloud(int ledgerId) async {
@@ -628,33 +619,35 @@ class SyncEngine implements app.SyncService {
     if (ledger.isShared) {
       throw CloudSyncException('共享账本不可转为云端,请改用"复制到本地"');
     }
+
+    final generatedNewSyncId =
+        ledger.syncId == null || ledger.syncId!.isEmpty;
+    final syncId = generatedNewSyncId ? _uuid.v4() : ledger.syncId!;
     try {
-      // 1) 复用旧 syncId;本地账本原本为 null 则补发一个。
-      final syncId = ledger.syncId ?? _uuid.v4();
-      if (ledger.syncId == null) {
+      // 1) 先让 fullPush 有 UUID 可推(否则 fallback 到 int id 会触发
+      //    server 端 min_length=3 校验失败,且跨设备 external_id 分裂)。
+      if (generatedNewSyncId) {
         await repo.updateLedgerSyncId(id: ledgerId, syncId: syncId);
       }
-      // 2) 翻 mode='cloud'——秒级可见,UI 立即生效。
+      // 2) 云端优先:完整推送本地数据(force 绕过 local 闸门)。
+      await fullPush(ledgerId: ledgerId, force: true);
+      // 3) 以服务器列表为权威确认云端已存在,成功才翻 mode。
+      final remote = await provider.readLedgers();
+      final confirmed = remote.any((r) => r.ledgerId == syncId);
+      if (!confirmed) {
+        throw CloudSyncException('云端未确认账本存在,转云端失败');
+      }
       await repo.updateLedgerStorageMode(id: ledgerId, storageMode: 'cloud');
-      // 3) 登记 ledger:upsert 到 local_changes。
-      // 必须在翻 mode 之后:changeTracker 第二层闸门只放行 storage_mode='cloud'
-      // 的账本,本地账本(isLocalLedger)会被闸门挡住不写 local_changes。
-      // 登记后即使 Phase 2 走了 fullPush(已推一遍),增量 push 会再推一次——
-      // upsert 幂等,无副作用;但若 fullPush 因故未触发(如单飞被占),
-      // 这条登记保证账本变更仍会被增量 push 推上去,不依赖 fullPush 兜底。
-      await changeTracker.recordLedgerChange(
-        entityType: 'ledger',
-        entityId: ledgerId,
-        entitySyncId: syncId,
-        ledgerId: ledgerId,
-        action: 'upsert',
-      );
     } catch (e, st) {
-      logger.error('SyncEngine', 'moveToCloud 翻 mode 失败,账本保持 local', e, st);
+      // 失败保持 local;本轮补发的 syncId 一并回滚,不留半截云端关联。
+      if (generatedNewSyncId) {
+        try {
+          await repo.updateLedgerSyncId(id: ledgerId, syncId: null);
+        } catch (_) {}
+      }
+      logger.error('SyncEngine', 'moveToCloud 推送失败,账本保持 local', e, st);
       throw CloudSyncException('转为云端失败:$e');
     }
-    // 3) 后台推送:显式调度 auto sync(防抖 + 单飞),经统一链进入 syncAccount。
-    triggerAutoSync(reason: 'move_to_cloud');
   }
 
   /// 把云端账本搬到本地。
@@ -1515,29 +1508,32 @@ class SyncEngine implements app.SyncService {
         'syncLedgersFromServer done: total=${remote.length} upserted=$upserted inserted=$inserted',
       );
 
-      // GC 1:清掉本地 isShared=true 但 server 没返回的 ledger — Owner 删了
-      // 共享账本,Editor 应该自动清(WS member_change.removed 是主路径,这是
-      // 兜底,处理 WS 离线时没推到的情况)。
+      // GC 1:清掉本地「云端归属」(storage_mode='cloud' 或 isShared=true)但
+      // server 没返回的 ledger — 个人云账本与共享账本同规则,以服务器列表为
+      // 唯一权威(WS member_change.removed 是共享主路径,这里是列表兜底)。
+      // ponytail: 本地新建还没推上去的个人云账本(syncId 本地生成、服务器尚无)
+      // 也会被本轮 GC 清掉,因为对账先于 fullPush;若后续出现「建账即消失」,
+      // 升级路径是「存在未推送变更的账本跳过 GC」这一行守卫。
 
       // 恢复认领窗口:reregisterRestoredLedgers 把本地账本重新认领到当前
       // 服务器/账号期间,跳过本次 GC1 硬删(被踢/删账本的清理由 WS 事件主路径
       // 负责)。否则认领还没完成、远端集合里还没这些账本,会被误当"server 不
       // 返回"清掉。开关在 reregisterRestoredLedgers 内同步置位、finally 复位。
       if (_suppressLedgerGc) {
-        logger.info('SyncEngine', 'GC1 被 _suppressLedgerGc 抑制,跳过共享账本硬删');
+        logger.info('SyncEngine', 'GC1 被 _suppressLedgerGc 抑制,跳过云端账本硬删');
         return inserted;
       }
 
       final remoteSyncIdSet = remote.map((r) => r.ledgerId).toSet();
-      final localShared = await (db.select(
+      final localCloudLedgers = await (db.select(
         db.ledgers,
-      )..where((l) => l.isShared.equals(true))).get();
-      for (final localLedger in localShared) {
+      )..where(cloudLedgerFilter)).get();
+      for (final localLedger in localCloudLedgers) {
         final sid = localLedger.syncId;
         if (sid == null || sid.isEmpty) continue;
         if (remoteSyncIdSet.contains(sid)) continue;
-        // server 不返这个共享账本 = Owner 删了 / Editor 被踢 → 清本地
-        logger.info('SyncEngine', 'GC: server 不返共享账本 syncId=$sid,清本地数据');
+        // server 不返这个云端账本 = 已删除 / 被踢 / 换账号残留 → 清本地
+        logger.info('SyncEngine', 'GC: server 不返云端账本 syncId=$sid,清本地数据');
         // 单本 purge 失败不影响其余账本清理(1c:循环内隔离)
         try {
           await _purgeLocalLedgerByExternalId(sid);

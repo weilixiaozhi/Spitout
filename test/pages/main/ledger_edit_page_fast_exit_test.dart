@@ -17,6 +17,7 @@ import 'package:spitout/pages/main/ledger_edit_page.dart';
 import 'package:spitout/providers/providers.dart';
 
 import '../../helpers/test_isolation.dart';
+import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 
 /// 可人为卡住写库时机的仓库：用 Completer 门闩制造「用户在保存落库期间
 /// 极快退出页面」的确定性竞态，避免依赖真实时序的偶发性。
@@ -47,6 +48,25 @@ class _GatedRepo extends LocalRepository {
       storageMode: storageMode,
       ownerUserId: ownerUserId,
       aaEnabled: aaEnabled,
+    );
+  }
+
+  @override
+  Future<int> createBoundLedger({
+    required String syncId,
+    required String name,
+    String currency = 'CNY',
+    String? ownerUserId,
+    bool aaEnabled = false,
+    int monthStartDay = 1,
+  }) async {
+    return lastCreatedId = await super.createBoundLedger(
+      syncId: syncId,
+      name: name,
+      currency: currency,
+      ownerUserId: ownerUserId,
+      aaEnabled: aaEnabled,
+      monthStartDay: monthStartDay,
     );
   }
 
@@ -83,6 +103,7 @@ void main() {
   late SpitoutDatabase db;
   late _GatedRepo repo;
   late _RecordingSyncService syncService;
+  late FakeSpitoutCloudProvider provider;
   late ProviderContainer container;
 
   /// 按指定后端配置(重)建 container：默认组 setUp 建 Spitout Cloud 版，
@@ -93,6 +114,7 @@ void main() {
       syncServiceProvider.overrideWithValue(syncService),
       currentLedgerProvider.overrideWith((ref) => Stream<Ledger?>.value(null)),
       activeCloudConfigProvider.overrideWith((ref) async => config),
+      spitoutCloudProviderInstance.overrideWith((ref) async => provider),
     ]);
   }
 
@@ -104,6 +126,7 @@ void main() {
     // 模拟 Spitout Cloud 登录态的生产接线：注入 ChangeTracker 后,
     // createLedger 会在数据层登记 ledger:upsert 变更（规则4 的驱动源）。
     repo.changeTracker = ChangeTracker(db);
+    provider = FakeSpitoutCloudProvider();
     syncService = _RecordingSyncService();
     buildContainer(CloudServiceConfig(
       type: CloudBackendType.spitoutCloud,
@@ -153,38 +176,42 @@ void main() {
   }
 
   group('新建账本 + 极快退出：状态副作用不得依赖页面挂载', () {
-    testWidgets('退出后仍应完成 首快照触发 + 首本账本选中 + 列表刷新', (tester) async {
+    testWidgets('退出后仍应完成 云端建本 + 首本账本选中 + 列表刷新', (tester) async {
       await pump(tester);
 
       await tester.enterText(find.byType(TextFormField).first, '竞态账本');
       final baseRefresh = container.read(ledgerListRefreshProvider);
 
-      // 卡住落库 → 点保存 → 此时 _saveNewLedger 停在 createLedger 门闩上
-      repo.createGate = Completer<void>();
+      // 卡住云端建本 → 点保存 → 此时 _saveNewLedger 停在 writeCreateLedger 上
+      provider.writeCreateLedgerGate = Completer<void>();
       await tester.tap(find.byType(FilledButton));
 
-      // 落库完成前页面已被销毁（用户极快退出）
+      // 云端建本完成前页面已被销毁（用户极快退出）
       await disposePage(tester);
 
-      // 放行落库并让剩余异步链（首快照 / 当前账本切换 / 刷新信号）跑完
+      // 放行云端建本并让剩余异步链（本地落库 / 当前账本切换 / 刷新信号）跑完
       await tester.runAsync(() async {
-        repo.createGate!.complete();
+        provider.writeCreateLedgerGate!.complete();
         await Future<void>.delayed(const Duration(milliseconds: 300));
       });
 
+      await tester.pump();
       final newId = repo.lastCreatedId;
       expect(newId, isNotNull, reason: '账本应已成功落库');
-      // 规则4：Spitout Cloud 的同步由数据层写入 local_changes 驱动
-      // （SyncCoordinator 监听），与页面生命周期彻底无关。
-      final changes = await db.select(db.localChanges).get();
+      final ledger = await repo.getLedgerById(newId!);
+      expect(ledger!.storageMode, 'cloud');
       expect(
-        changes.where((c) => c.entityType == 'ledger' && c.action == 'upsert'),
-        hasLength(1),
-        reason: '新建云端账本必须在 local_changes 登记 ledger:upsert',
+        ledger.syncId,
+        provider.writeCreateLedgerCalls.single.ledgerId,
+        reason: '本地行必须绑定云端建本使用的同一个 syncId',
       );
-      // 页面链路不得再手动触发同步（规则4：UI 点击不直调 sync 链路）
+      // 云端已建本成功：本地不得再登记 create 变更（避免重复推送 +
+      // 「本地已建、云端未建」的 GC 误删窗口）。
+      final changes = await db.select(db.localChanges).get();
+      expect(changes, isEmpty,
+          reason: '云端优先新建不登记 local_changes');
       expect(syncService.marked, isEmpty,
-          reason: 'Spitout Cloud 下页面不应再手动 markLocalChanged');
+          reason: '页面不应再手动 markLocalChanged');
       // 空账本场景：首本账本必须被选中，否则 app 停留在"无当前账本"状态
       expect(container.read(currentLedgerIdProvider), newId,
           reason: '页面退出后仍应切换到新建的首本账本');

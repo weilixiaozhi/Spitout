@@ -132,13 +132,17 @@ void main() {
   }
 
   Future<int> seedCloudLedger(String syncId) async {
-    return db.into(db.ledgers).insert(
+    final id = await db.into(db.ledgers).insert(
           LedgersCompanion.insert(
             name: 'L',
             syncId: Value(syncId),
             storageMode: const Value('cloud'),
           ),
         );
+    // 云端优先规范下，cloud 账本必须已存在于服务器清单，
+    // 否则统一列表 GC 会在推送/拉取前把它当残留清掉。
+    provider.pushFakeLedger(ledgerId: syncId, ledgerName: 'L');
+    return id;
   }
 
   group('syncServiceProvider 装配', () {

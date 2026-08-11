@@ -179,6 +179,9 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
   /// 云端删除失败时账本必须保持 cloud、syncId 不清空,不能"本地已断联、云端还在"。
   Exception Function()? deleteLedgerErrorInjector;
 
+  /// 控制 writeCreateLedger 是否抛错（云端优先新建失败路径测试用）。
+  Exception Function()? writeCreateLedgerErrorInjector;
+
   /// writeCreateLedger 是否自动把新建账本登记进 [_serverLedgers]。
   ///
   /// 默认 false 保持既有 e2e 测试语义(server 账本列表完全由 [pushFakeLedger]
@@ -430,6 +433,7 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
     deleteLedgerCalls.clear();
     writeCreateLedgerCalls.clear();
     writeCreateLedgerGate = null;
+    writeCreateLedgerErrorInjector = null;
     readLedgerStatsCalls = 0;
     ledgerStatsOverrides.clear();
     failingReadLedgerStats = false;
@@ -457,6 +461,8 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
     String currency = 'CNY',
     String? idempotencyKey,
   }) async {
+    final injector = writeCreateLedgerErrorInjector;
+    if (injector != null) throw injector();
     // 阻塞闸门:模拟 fullPush 卡在建本网络调用,给测试制造 in-flight 窗口。
     final gate = writeCreateLedgerGate;
     if (gate != null) await gate.future;

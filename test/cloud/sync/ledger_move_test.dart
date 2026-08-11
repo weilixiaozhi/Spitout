@@ -65,7 +65,9 @@ void main() {
   }
 
   group('moveToCloud', () {
-    test('秒级翻为 cloud 并补发 syncId(推送下沉后台)', () async {
+    test('云端优先:fullPush 成功并确认后翻 cloud,补发 syncId', () async {
+      // 模拟真实 server:建本成功即出现在清单里,readLedgers 确认才能通过。
+      provider.autoRegisterWrittenLedgers = true;
       final id = await repo.createLedger(name: '本地本', storageMode: 'local');
       await repo.addTransaction(
         ledgerId: id,
@@ -74,19 +76,29 @@ void main() {
         happenedAt: DateTime(2026, 5, 1),
       );
 
-      // moveToCloud 不阻塞推送,翻 mode 后立即返回。
       await engine.moveToCloud(id);
 
       final ledger = await readLedger(id);
-      expect(ledger.storageMode, 'cloud', reason: '翻 mode 必须同步生效,UI 才能秒级显示云端态');
+      expect(ledger.storageMode, 'cloud', reason: '云端确认存在后才翻 mode');
       expect(
         ledger.syncId,
         isNotNull,
         reason: '转云端必须补发 syncId 作为 server external_id',
       );
+      expect(
+        provider.writeCreateLedgerCalls.single.ledgerId,
+        ledger.syncId,
+        reason: 'fullPush 必须用同一个 syncId 建云端账本',
+      );
+      expect(
+        await provider.storage.exists(path: ledger.syncId!),
+        isTrue,
+        reason: '云端优先转云端必须已上传快照',
+      );
     });
 
     test('复用已有 syncId 不重发(避免破坏已建立的云端关联)', () async {
+      provider.autoRegisterWrittenLedgers = true;
       // 本地账本但已带 syncId(如上云后又搬回本地保留了 id 的数据)。
       final id = await repo.createLedger(name: '本地本', storageMode: 'local');
       const reusedSyncId = 'reused-sync-id-123';
@@ -101,10 +113,17 @@ void main() {
         reusedSyncId,
         reason: '已有 syncId 必须复用,换 id 会破坏云端关联',
       );
+      expect(
+        provider.writeCreateLedgerCalls.single.ledgerId,
+        reusedSyncId,
+        reason: 'fullPush 必须复用已有 syncId,不得重新生成',
+      );
     });
 
-    // 场景 8:翻 mode 失败 → 抛 CloudSyncException,账本保持 local。
-    test('翻 mode 失败时抛异常且账本保持 local(fail-closed)', () async {
+    // 场景 8:云端确认成功但翻 mode 失败 → 抛 CloudSyncException,账本保持 local。
+    test('翻 mode 失败时抛异常且账本保持 local、回滚补发 syncId(fail-closed)',
+        () async {
+      provider.autoRegisterWrittenLedgers = true;
       final id = await repo.createLedger(name: '本地本', storageMode: 'local');
       final failRepo = _FailStorageModeRepo(repo);
       final failEngine = SyncEngine(
@@ -124,6 +143,11 @@ void main() {
         ledger.storageMode,
         'local',
         reason: '翻 mode 失败绝不能留下"标了 cloud 却没上云"的孤岛',
+      );
+      expect(
+        ledger.syncId,
+        isNull,
+        reason: '本轮补发的 syncId 必须回滚,不留半截云端关联',
       );
     });
 
@@ -150,6 +174,7 @@ void main() {
     // AA 保留:moveToCloud 只翻 mode + 补 syncId + 登记 upsert,不得触碰
     // AA 元数据(开关 / 交易 AA 字段 / 虚拟用户)。
     test('AA 账本转云端后 AA 开关/交易字段/虚拟用户全部保留', () async {
+      provider.autoRegisterWrittenLedgers = true;
       final id = await repo.createLedger(
         name: 'AA本地本',
         storageMode: 'local',
@@ -443,8 +468,9 @@ void main() {
     // 场景 1:快速往返——moveToCloud 后立即 moveToLocal。无 in-flight fullPush,
     // waitFullPushSettle 立即返回,删云端命中「无副本」→ 成功断联无孤儿。
     test('快速往返 moveToCloud→moveToLocal,无孤儿、成功断联', () async {
+      provider.autoRegisterWrittenLedgers = true;
       final id = await repo.createLedger(name: '往返本', storageMode: 'local');
-      await engine.moveToCloud(id); // 秒级翻 cloud,推送下沉后台(尚未真正建 S1)
+      await engine.moveToCloud(id); // 云端优先:已完整推送并确认后翻 cloud
       final syncId = (await readLedger(id)).syncId;
       expect(syncId, isNotNull);
 

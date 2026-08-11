@@ -284,6 +284,33 @@ class LocalLedgerRepository implements LedgerRepository {
   }
 
   @override
+  Future<int> createBoundLedger({
+    required String syncId,
+    required String name,
+    String currency = 'CNY',
+    String? ownerUserId,
+    bool aaEnabled = false,
+    int monthStartDay = 1,
+  }) async {
+    // 云端建本已成功：本地直接落「已绑定」行。刻意不写 local_changes ——
+    // 服务器已有该账本，登记 create 会重复推送，并制造「本地已建、云端未建」
+    // 的被列表 GC 误删窗口。后续对这本账的任何编辑仍会正常登记变更。
+    return db.into(db.ledgers).insert(
+      LedgersCompanion.insert(
+        name: name,
+        currency: d.Value(currency),
+        syncId: d.Value(syncId),
+        storageMode: const d.Value('cloud'),
+        ownerUserId: ownerUserId != null && ownerUserId.isNotEmpty
+            ? d.Value(ownerUserId)
+            : const d.Value.absent(),
+        aaEnabled: d.Value(aaEnabled),
+        monthStartDay: d.Value(monthStartDay.clamp(1, 28)),
+      ),
+    );
+  }
+
+  @override
   Future<void> updateLedgerStorageMode({
     required int id,
     required String storageMode,

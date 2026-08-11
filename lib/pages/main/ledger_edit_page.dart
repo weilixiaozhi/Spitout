@@ -706,7 +706,20 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
         final saved = await _saveExistingLedger(name);
         if (!saved || !mounted) return;
       }
-      await action();
+      // 转云端/转本地/复制都是网络操作：执行期间显示不可关闭的 loading，
+      // 避免用户重复点击或误以为卡死；完成/失败后统一关闭。
+      showDialog<void>(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+      try {
+        await action();
+      } finally {
+        if (mounted) {
+          Navigator.of(context, rootNavigator: true).pop();
+        }
+      }
       if (!mounted) return;
       showToast(context, successText);
       if (popAfter) Navigator.of(context).pop();
@@ -869,18 +882,35 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       // (LocalIdentityMigrationService)改写为云 userId,此处不读取
       // spitoutCloudProviderInstance,避免未初始化时报错阻断建账本。
       final localSelfId = await ref.read(localSelfIdProvider.future);
-      // AA 开关必须随 createLedger 一同落库:数据层会在同一事务内以
-      // aaEnabled 的最终值登记同步信号(快照型后端写 snapshot_dirty_ledgers、
-      // Spitout Cloud 写 local_changes)。若先建后改(先 false 再补写 true),
-      // 首快照/首次推送拿到的是 false,而补写的 updateLedger 不登记任何
-      // 同步信号 → 云端永远是 false,下次拉取就把本地覆盖回关闭状态。
-      newLedgerId = await repo.createLedger(
-        name: name,
-        currency: _currency,
-        storageMode: storageMode,
-        ownerUserId: localSelfId,
-        aaEnabled: _aaEnabled,
-      );
+      if (storageMode == 'cloud') {
+        // 云端账本 = 云端优先：必须先确保云端建本成功才算保存成功。
+        // 失败/超时抛错由 _handleSave 提示，本地不落账本，页面保留现场，
+        // 用户可改选「本地账本」重试；保存期间按钮 loading 由 _saving 控制。
+        newLedgerId = await createCloudLedgerFromUi(
+          container,
+          name: name,
+          currency: _currency,
+          ownerUserId: localSelfId,
+          aaEnabled: _aaEnabled,
+          monthStartDay: _monthStartDay,
+        );
+        // 云端已建且本地已绑定：同步 syncId 供成员/邀请模块直接使用。
+        _syncId = (await repo.getLedgerById(newLedgerId))?.syncId;
+      } else {
+        // 本地账本：本地直接落库，不依赖网络。
+        // AA 开关必须随 createLedger 一同落库:数据层会在同一事务内以
+        // aaEnabled 的最终值登记同步信号(快照型后端写 snapshot_dirty_ledgers、
+        // Spitout Cloud 写 local_changes)。若先建后改(先 false 再补写 true),
+        // 首快照/首次推送拿到的是 false,而补写的 updateLedger 不登记任何
+        // 同步信号 → 云端永远是 false,下次拉取就把本地覆盖回关闭状态。
+        newLedgerId = await repo.createLedger(
+          name: name,
+          currency: _currency,
+          storageMode: storageMode,
+          ownerUserId: localSelfId,
+          aaEnabled: _aaEnabled,
+        );
+      }
       _inviteCreatedLedgerId = newLedgerId;
     }
 
@@ -899,10 +929,13 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 落库完成后清空内存暂存,避免「邀请自动保存后再点保存」重复创建虚拟用户。
     _pendingVirtualUsers.clear();
 
-    // 同步触发已完全响应式化(规则4):createLedger 在数据层同事务登记变更信号
-    // —— Spitout Cloud 写 local_changes(SyncCoordinator 监听)、快照型后端写
-    // snapshot_dirty_ledgers(SnapshotSyncCoordinator 监听),页面零后端知识,
-    // 不显式调用任何 sync 方法,消除页面 mounted 竞态与双触发窗口。
+    // 同步触发说明:
+    // - 本地账本走完全响应式(规则4):createLedger 在数据层同事务登记变更信号
+    //   —— Spitout Cloud 写 local_changes(SyncCoordinator 监听)、快照型后端写
+    //   snapshot_dirty_ledgers(SnapshotSyncCoordinator 监听),页面不显式调 sync;
+    // - 云端账本新建是用户主动的「建云端账本」动作(需 loading + 失败反馈),
+    //   走云端优先的 createCloudLedgerFromUi,成功后本地已是绑定行,
+    //   不再登记 create 变更,也不存在"未上云"窗口。
 
     // 空账本场景切换到新账本：同样走 container，避免快速退出后「建了第一本
     // 账本却仍处于无当前账本」的状态。

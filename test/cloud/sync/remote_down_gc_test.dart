@@ -2,7 +2,7 @@
 ///
 /// 需求锚点（大众 app 行为）：
 /// - 只有**成功**读到服务器列表后，才能按列表做 GC（服务器明确不返回的
-///   共享账本 → 清本地副本；个人云账本不受 GC 影响，仍只在登出/切换时清）；
+///   共享账本与个人云账本 → 清本地副本，两端同规则）；
 /// - 任何读列表失败（未认证 / 配置损坏 / 404 / 5xx / Socket / 超时）
 ///   一律**不清**本地数据，只把错误抛给上层展示同步失败。
 library;
@@ -74,13 +74,13 @@ void main() {
   }
 
   /// 本地写入一条个人云账本（storage_mode='cloud'，非共享）。
-  Future<int> seedLocalPersonalCloudLedger() async {
+  Future<int> seedLocalPersonalCloudLedger(String extId) async {
     return db
         .into(db.ledgers)
         .insert(
           LedgersCompanion.insert(
-            name: 'PersonalCloud',
-            syncId: const Value('personal-1'),
+            name: 'PersonalCloud-$extId',
+            syncId: Value(extId),
             isShared: const Value(false),
             storageMode: const Value('cloud'),
           ),
@@ -97,7 +97,7 @@ void main() {
 
   test('CloudNotAuthenticated：抛未认证错误，共享账本保留', () async {
     await seedLocalSharedLedger('ext-1');
-    final personal = await seedLocalPersonalCloudLedger();
+    final personal = await seedLocalPersonalCloudLedger('personal-1');
     fake.readLedgersErrorInjector = () =>
         CloudNotAuthenticatedException('session 失效');
 
@@ -164,18 +164,26 @@ void main() {
     }
   });
 
-  test('成功读取后按服务器列表 GC：返回则保留，缺失则逐本清共享账本', () async {
+  test('成功读取后按服务器列表 GC：返回则保留，缺失则逐本清云端账本（个人+共享同规则）',
+      () async {
     final ext1 = 'ext-1';
     await seedLocalSharedLedger(ext1);
     await seedLocalSharedLedger('ext-2');
-    final personal = await seedLocalPersonalCloudLedger();
+    final personalMissing = await seedLocalPersonalCloudLedger('personal-1');
+    final personalKept = await seedLocalPersonalCloudLedger('personal-2');
 
-    // 服务器只返回 ext-1：ext-2 被逐本清，ext-1 与个人云账本保留。
+    // 服务器只返回 ext-1 与 personal-2：ext-2、personal-1 被逐本清。
     fake.pushFakeLedger(
       ledgerId: ext1,
       ledgerName: 'Shared-$ext1',
       role: 'editor',
       isShared: true,
+    );
+    fake.pushFakeLedger(
+      ledgerId: 'personal-2',
+      ledgerName: 'PersonalCloud-personal-2',
+      role: 'owner',
+      isShared: false,
     );
 
     final n = await engine.syncLedgersFromServer();
@@ -184,7 +192,11 @@ void main() {
     final rows = await (db.select(db.ledgers)).get();
     final syncIds = rows.map((r) => r.syncId).toSet();
     expect(syncIds, contains(ext1), reason: '服务器返回的账本应保留');
+    expect(syncIds, contains('personal-2'), reason: '服务器返回的个人云账本应保留');
     expect(syncIds, isNot(contains('ext-2')), reason: '服务器缺失的共享账本应清除');
-    expect(await ledgerExists(personal), isTrue, reason: '个人云账本不受 GC 影响');
+    expect(syncIds, isNot(contains('personal-1')),
+        reason: '服务器缺失的个人云账本应同样清除');
+    expect(await ledgerExists(personalMissing), isFalse);
+    expect(await ledgerExists(personalKept), isTrue);
   });
 }

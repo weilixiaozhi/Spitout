@@ -560,6 +560,9 @@ void main() {
   group('存储归属移动执行', () {
     testWidgets('移动到云端：确认后执行并成功关闭页面', (tester) async {
       final fake = FakeSpitoutCloudProvider();
+      // 云端优先转云端：fullPush 建本成功后需要 readLedgers 能确认该账本，
+      // 模拟真实 server 的自动登记行为。
+      fake.autoRegisterWrittenLedgers = true;
       final ledger = await seed(name: '本地账本');
       final l10n = await pump(
         tester,

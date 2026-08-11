@@ -13,6 +13,7 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:uuid/uuid.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 
 import 'package:spitout/providers/core/local_self_id_providers.dart';
@@ -31,7 +32,7 @@ import 'package:spitout/services/data/tx_author_service.dart';
 Future<SpitoutCloudSyncBackend> _requireCloud(WidgetRef ref) async {
   final cloud = await ref.read(spitoutCloudProviderInstance.future);
   if (cloud == null) {
-    throw CloudSyncException('请先登录 Spitout Cloud 再移动账本');
+    throw CloudSyncException('请先登录 Spitout Cloud');
   }
   return cloud;
 }
@@ -144,4 +145,45 @@ Future<int> copyLedgerToLocalProvider(
   final newId = await ref.read(syncEngineProvider(cloud)).copyToLocal(ledgerId);
   _refreshAfterMove(ref);
   return newId;
+}
+
+/// 云端优先新建 Spitout Cloud 账本（UI 保存路径）。
+///
+/// 用户明确选择「云端账本」时，保存必须先确保云端建本成功，再落本地绑定行：
+/// - 成功：返回本地账本 id，本地行直接绑定云端使用的同一个 syncId，
+///   不登记 create 变更（避免重复推送与「本地已建、云端未建」的 GC 误删窗口）；
+/// - 失败/超时：抛出异常，本地不落任何账本，页面保留现场让用户改选本地账本。
+/// [timeout] 默认 10 秒，弱网下不让保存按钮无限转圈。
+/// 用 [ProviderContainer] 而非 WidgetRef：保存期间用户可能极快退出页面，
+/// 云端建本完成后仍需安全落库与收尾（与 purge/migrate 同模式）。
+Future<int> createCloudLedgerFromUi(
+  ProviderContainer container, {
+  required String name,
+  String currency = 'CNY',
+  required String ownerUserId,
+  bool aaEnabled = false,
+  int monthStartDay = 1,
+  Duration timeout = const Duration(seconds: 10),
+}) async {
+  final cloud = await container.read(spitoutCloudProviderInstance.future);
+  if (cloud == null) {
+    throw CloudSyncException('请先登录 Spitout Cloud');
+  }
+  // 本地先生成 syncId，云端用同一个 id 建本，成功后本地行直接绑定它。
+  final syncId = const Uuid().v4();
+  await cloud
+      .writeCreateLedger(
+        ledgerId: syncId,
+        ledgerName: name,
+        currency: currency,
+      )
+      .timeout(timeout);
+  return container.read(repositoryProvider).createBoundLedger(
+    syncId: syncId,
+    name: name,
+    currency: currency,
+    ownerUserId: ownerUserId,
+    aaEnabled: aaEnabled,
+    monthStartDay: monthStartDay,
+  );
 }

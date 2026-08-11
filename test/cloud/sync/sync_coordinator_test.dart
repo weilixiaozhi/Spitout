@@ -53,13 +53,18 @@ void main() {
 
   /// 建一本已绑定云端的账本。
   Future<int> createCloudLedger() async {
-    return db.into(db.ledgers).insert(
+    final id = await db.into(db.ledgers).insert(
           LedgersCompanion.insert(
             name: 'L',
             syncId: const Value('ledger-1'),
             storageMode: const Value('cloud'),
           ),
         );
+    // 云端优先规范下，cloud 账本必须已存在于服务器；否则统一列表 GC
+    // 会在推送前把它当残留清掉（旧夹具只建本地、不建云端）。
+    provider.pushFakeLedger(ledgerId: 'ledger-1', ledgerName: 'L');
+    provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-1');
+    return id;
   }
 
   /// 往账本里写入一条交易（经 repo 登记 local_changes）。

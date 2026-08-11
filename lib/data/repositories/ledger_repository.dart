@@ -46,6 +46,20 @@ abstract class LedgerRepository {
     bool aaEnabled = false,
   });
 
+  /// 云端已创建成功后落本地「已绑定」行。
+  ///
+  /// 与 [createLedger] 的区别：syncId 由调用方传入（必须等于云端建本使用的
+  /// 同一个 id），且**不登记** local_changes —— 云端已有该账本，登记 create
+  /// 会造成重复推送，也会在推送前制造「本地已建、云端未建」的被 GC 误删窗口。
+  Future<int> createBoundLedger({
+    required String syncId,
+    required String name,
+    String currency = 'CNY',
+    String? ownerUserId,
+    bool aaEnabled = false,
+    int monthStartDay = 1,
+  });
+
   /// 更新账本归属模式(local / cloud),移动操作完成后调用。
   Future<void> updateLedgerStorageMode({
     required int id,
