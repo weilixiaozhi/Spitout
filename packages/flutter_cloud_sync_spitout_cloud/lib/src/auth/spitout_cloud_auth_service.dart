@@ -238,7 +238,12 @@ class SpitoutCloudAuthService implements CloudAuthService {
     if (_isAccessTokenExpired(session)) {
       final refreshed = await tryRefreshSession();
       if (!refreshed) {
-        // refresh 失败 → 凭证兜底。
+        // 瞬时失败(网络抖动 / 5xx)时本地 session 仍保留:登录态以「是否持有
+        // 本地 session」为准,不因 token 过期/断网对外显示未登录;只有凭证
+        // 确认失效(401/403)时 session 才在 _doRefreshSession 内被清,此时
+        // 才走恢复/未登录分支。
+        final latest = _session;
+        if (latest != null) return _toCloudUser(latest);
         return _tryRecoveryLogin();
       }
     }
@@ -263,6 +268,14 @@ class SpitoutCloudAuthService implements CloudAuthService {
     if (_isAccessTokenExpired(session)) {
       final refreshed = await tryRefreshSession();
       if (!refreshed || _session == null) {
+        final latest = _session;
+        if (latest != null) {
+          // 瞬时失败但 session 保留:这不是「未认证」,抛可重试错误,让调用方
+          // (同步引擎等)走「稍后重试」,而不是误判登出进而清本地数据。
+          _logger.warning(
+              '[SpitoutCloud-Auth] requireAccessToken: refresh 瞬时失败,保留 session 待重试');
+          throw CloudStorageException('Cloud unavailable, session preserved.');
+        }
         final recovered = await _tryRecoveryLogin();
         if (recovered == null || _session == null) {
           _logger.warning(

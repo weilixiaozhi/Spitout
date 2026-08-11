@@ -262,13 +262,6 @@ class LocalRepository extends BaseRepository {
   }
 
   @override
-  Future<void> purgeAllSharedLedgers() async {
-    // 云端失活批量清共享账本:不写 local_changes(云端状态已变更,本地只需抹掉
-    // 残留数据,避免 sync 又被云端重新 upsert 回来)。直接委托账本子仓执行。
-    await _ledgerRepo.purgeAllSharedLedgers();
-  }
-
-  @override
   Future<void> purgeAllCloudLedgers() async {
     // 退出登录清理:云端账本数据在服务端,重登会重新拉回,本地无需保留。
     // 同样不写 local_changes —— 这不是用户的删除操作,只是本地副本失效。

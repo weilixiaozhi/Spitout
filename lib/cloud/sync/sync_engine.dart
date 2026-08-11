@@ -207,38 +207,6 @@ class SyncEngine implements app.SyncService {
   /// 任何 GC1 异步执行)。覆盖 ws_connected 抢跑等所有 syncLedgersFromServer 入口。
   bool _suppressLedgerGc = false;
 
-  /// 「远端真宕机」阈值状态机 —— 服务于 syncLedgersFromServer 的兜底 GC。
-  ///
-  /// 设计意图:5xx / 网络错误可能只是瞬时抖动(部署重启 / 弱网),不能一次失败
-  /// 就把本地共享账本全清掉(集体闪退再重拉体验极差)。只有在滑动窗口
-  /// [_kRemoteDownWindow] 内连续失败 [_kRemoteDownThreshold] 次,才判定远端
-  /// 真的下线,执行全量清。404/410(路由确死)与 401(登录态失效)不走此状态机,
-  /// 由异常分类直接立即清。
-  static const _kRemoteDownThreshold = 3;
-  static const _kRemoteDownWindow = Duration(minutes: 10);
-  int _remoteFetchFailCount = 0;
-  DateTime? _remoteFetchFailStart;
-
-  /// 记一次 readLedgers 网络类失败。窗口过期则重开窗口从 1 计。
-  void _onRemoteFetchNetworkFailure() {
-    final now = DateTime.now();
-    if (_remoteFetchFailStart == null ||
-        now.difference(_remoteFetchFailStart!) > _kRemoteDownWindow) {
-      _remoteFetchFailStart = now;
-      _remoteFetchFailCount = 0;
-    }
-    _remoteFetchFailCount++;
-  }
-
-  /// 是否已确认远端宕机(窗口内失败次数达到阈值)。
-  bool _remoteDownConfirmed() => _remoteFetchFailCount >= _kRemoteDownThreshold;
-
-  /// readLedgers 成功一次即重置计数,避免陈旧失败累积误判。
-  void _resetRemoteFetchFailures() {
-    _remoteFetchFailCount = 0;
-    _remoteFetchFailStart = null;
-  }
-
   /// reregisterRestoredLedgers 防重入:恢复页单次调用,但 WS 重连等可能并发触发
   /// 第二次;用本开关保证整个认领流程只跑一次。
   bool _reregistering = false;
@@ -1382,46 +1350,10 @@ class SyncEngine implements app.SyncService {
 
   Future<int> _syncLedgersFromServerLocked() async {
     logger.info('SyncEngine', 'syncLedgersFromServer start');
-    // readLedgers 的异常分类必须放在下面的外层 try 之【前】:
-    // 网络分支的 rethrow 需要逃出本方法到 syncLedgersFromServer 的 rethrow,
-    // 让 bootstrap 记 lastSyncError / UI 展示。若放在外层 try 内,
-    // 会先被外层 catch(return 0)吞掉,错误永远到不了 bootstrap。
-    late final List<SpitoutCloudReadLedger> remote;
-    try {
-      remote = await provider.readLedgers();
-      _resetRemoteFetchFailures(); // 成功一次即重置阈值计数
-    } on CloudNotAuthenticatedException {
-      // 登录态失效:远端等价于空集,本地 isShared 全是孤儿 → 全量清。
-      // 非错误态(session 确认失效的正常状态变更),不 rethrow、UI 不报同步错误。
-      logger.info('SyncEngine', 'readLedgers 未认证 → 全量清本地共享账本');
-      if (!_suppressLedgerGc) await _gcAllLocalSharedLedgers();
-      return 0;
-    } on CloudConfigurationException {
-      // 配置损坏 / storage 未就绪:云已失活 → 全量清,同上非错误态。
-      logger.info('SyncEngine', 'readLedgers 配置失效 → 全量清本地共享账本');
-      if (!_suppressLedgerGc) await _gcAllLocalSharedLedgers();
-      return 0;
-    } on CloudStorageException catch (e) {
-      // 404/410:路由确死(远端资源不存在) → 等价空集,立即清、不报错。
-      if (e.statusCode == 404 || e.statusCode == 410) {
-        logger.info('SyncEngine', 'readLedgers ${e.statusCode} → 全量清本地共享账本');
-        if (!_suppressLedgerGc) await _gcAllLocalSharedLedgers();
-        return 0;
-      }
-      // 5xx / 未知状态码:可能瞬时抖动,计入阈值;命中阈值才清;错误上抛。
-      _onRemoteFetchNetworkFailure();
-      if (_remoteDownConfirmed() && !_suppressLedgerGc) {
-        await _gcAllLocalSharedLedgers();
-      }
-      rethrow;
-    } catch (e) {
-      // Socket / Timeout 等网络错误:同 5xx 走阈值判定,错误上抛给 bootstrap。
-      _onRemoteFetchNetworkFailure();
-      if (_remoteDownConfirmed() && !_suppressLedgerGc) {
-        await _gcAllLocalSharedLedgers();
-      }
-      rethrow;
-    }
+    // 只有成功读到服务器列表后,才能按列表确认哪些共享账本真的不存在;
+    // 任何读列表失败(网络 / 认证 / 配置 / 路由)都只是「暂时无法对账」,
+    // 必须原样抛给上层展示同步失败,绝不据此清本地数据。
+    final remote = await provider.readLedgers();
     try {
       int upserted = 0;
       int inserted = 0;
@@ -1683,23 +1615,6 @@ class SyncEngine implements app.SyncService {
     final fallback = '$rawName（云端${DateTime.now().millisecondsSinceEpoch}）';
     takenNames.add(fallback);
     return fallback;
-  }
-
-  /// Surface 1 兜底:把「远端废」(登录态失效 / 配置损坏 / 404 / 阈值确认宕机)
-  /// 当成远端空集,全量清本地 isShared=true 账本。
-  ///
-  /// 调用统一原语 repo.purgeAllSharedLedgers()(WHERE isShared=true 批量闸门,
-  /// 不做逐本 syncId 匹配,空 syncId 行不构成风险);随后 emit [LedgersPurged]
-  /// 让 UI 层重指当前账本并刷新列表。失败不上抛——GC 是兜底动作,不应打断
-  /// 主流程,下次触发会幂等重试。
-  Future<void> _gcAllLocalSharedLedgers() async {
-    try {
-      await repo.purgeAllSharedLedgers();
-      _emit(const LedgersPurged());
-      logger.info('SyncEngine', '云端下线 → 已全量清本地共享账本并广播 LedgersPurged');
-    } catch (e, st) {
-      logger.warning('SyncEngine', '_gcAllLocalSharedLedgers 失败(忽略): $e', st);
-    }
   }
 
   /// 备份恢复后重新认领本地账本到当前服务器/账号(Design Y)。

@@ -462,6 +462,12 @@ class SpitoutCloudStorageService implements CloudStorageService {
     if (response.statusCode == 401) {
       final refreshed = await auth.tryRefreshSession();
       if (!refreshed) {
+        // 刷新失败分两种:session 仍在 = 瞬时故障(网络/5xx),抛可重试错误;
+        // session 已被清 = 凭证确认失效(401/403),才抛未认证。
+        if (auth.currentUserId != null) {
+          throw CloudStorageException(
+              'Cloud unavailable, session preserved.');
+        }
         throw CloudNotAuthenticatedException(
             'Session expired, please login again.');
       }
@@ -1198,6 +1204,12 @@ class SpitoutCloudStorageService implements CloudStorageService {
     if (response.statusCode == 401) {
       final refreshed = await auth.tryRefreshSession();
       if (!refreshed) {
+        // 刷新失败分两种:session 仍在 = 瞬时故障(网络/5xx),抛可重试错误;
+        // session 已被清 = 凭证确认失效(401/403),才抛未认证。
+        if (auth.currentUserId != null) {
+          throw CloudStorageException(
+              'Cloud unavailable, session preserved.');
+        }
         throw CloudNotAuthenticatedException(
             'Session expired, please login again.');
       }

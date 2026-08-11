@@ -54,13 +54,6 @@ class SharedResourceChanged extends SyncEvent {
   final String ledgerId;
 }
 
-/// 云端下线(登录态失效 / 配置损坏 / 远端确认宕机)导致本地所有共享账本被
-/// 批量清除(repo.purgeAllSharedLedgers)。订阅者需重指当前账本到第一个
-/// 可用账本,并刷新账本列表 / 当前账本 / 交易缓存。
-class LedgersPurged extends SyncEvent {
-  const LedgersPurged();
-}
-
 /// 头像**实际下载完成**(remoteVersion > localVersion + 文件写盘成功)。
 /// 避免每次 pull 都刷头像 widget 产生闪一下的体感。
 class AvatarChanged extends SyncEvent {

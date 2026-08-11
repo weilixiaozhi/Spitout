@@ -182,8 +182,8 @@ final currentLedgerPersistProvider = FutureProvider<void>((ref) async {
     } catch (_) {}
   });
 
-  // 运行时自愈：任意路径（切本地全量 purge / 云端下线 LedgersPurged / 换账号
-  // per-ledger GC / 手动删当前账本）导致 currentLedgerProvider 解析为 null 时，
+  // 运行时自愈：任意路径（切本地全量 purge / 换账号 per-ledger GC / 手动删
+  // 当前账本）导致 currentLedgerProvider 解析为 null 时，
   // 若本地仍有账本则自动回退第一个；若确无账本则重置哨兵 0。不关心「谁、从
   // 哪条路径」清的账本，只监听「当前账本失效」这一个事实（防御性设计，天然
   // 覆盖所有未来新增的清账本路径）。

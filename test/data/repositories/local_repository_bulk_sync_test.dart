@@ -338,7 +338,7 @@ void main() {
       expect(await historyCount(), 0);
     });
 
-    test('purgeAllSharedLedgers 同步清理编辑历史', () async {
+    test('purgeAllCloudLedgers 同步清理编辑历史', () async {
       final ledgerId = await db
           .into(db.ledgers)
           .insert(
@@ -351,7 +351,7 @@ void main() {
           );
       await seedTxWithHistory(ledgerId, 'tx-1');
 
-      await repo.purgeAllSharedLedgers();
+      await repo.purgeAllCloudLedgers();
 
       expect(await historyCount(), 0);
     });

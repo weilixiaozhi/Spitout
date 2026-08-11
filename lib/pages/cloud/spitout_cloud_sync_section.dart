@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
-    show CloudUser, TwoFactorStatus;
+    show CloudNotAuthenticatedException, CloudUser, TwoFactorStatus;
 
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/data/models.dart';
@@ -129,6 +129,21 @@ class SpitoutCloudSyncSectionState
     }
   }
 
+  /// 下拉刷新失败的 toast：登录态确认失效时提示重新登录，其余失败保持通用文案。
+  ///
+  /// 设计意图：401/403 确认失效不再清数据，只需在非阻塞位置告知用户重新登录；
+  /// 瞬时网络失败仍按普通同步失败提示，避免主流程出现任何弹窗/阻断。
+  void _toastRefreshFailure(Object error) {
+    if (!mounted) return;
+    final l10n = AppLocalizations.of(context);
+    showToast(
+      context,
+      error is CloudNotAuthenticatedException
+          ? l10n.syncHealthNeedsLogin
+          : l10n.commonOperationFailed,
+    );
+  }
+
   /// 下拉刷新入口:对账 → 健康检查 → 有差异自动 syncAccount。
   ///
   /// 走账户级入口而非单本 sync():用户选中本地账本时 currentLedgerId 指向
@@ -241,12 +256,7 @@ class SpitoutCloudSyncSectionState
           }
         } catch (e, st) {
           logger.error('CloudSyncSection', 'refresh: syncAccount 失败', e, st);
-          if (mounted) {
-            showToast(
-              context,
-              AppLocalizations.of(context).commonOperationFailed,
-            );
-          }
+          _toastRefreshFailure(e);
         } finally {
           if (mounted) setState(() => _autoSyncing = false);
         }
@@ -261,9 +271,7 @@ class SpitoutCloudSyncSectionState
       // 外层兜底:reconcileProfileToServer / syncMyProfile / 对账 / 健康检查
       // 任一失败都不能成为未处理异步错误,提示用户并复位检查态。
       logger.error('CloudSyncSection', 'refresh 流程失败', e, st);
-      if (mounted) {
-        showToast(context, AppLocalizations.of(context).commonOperationFailed);
-      }
+      _toastRefreshFailure(e);
     } finally {
       if (mounted) setState(() => _checking = false);
     }

@@ -119,13 +119,6 @@ abstract class LedgerRepository {
   /// 幂等:若本地已无该账本(externalId 解析不到 localId),直接返回。
   Future<void> purgeSharedLedger(String externalId, {int? localId});
 
-  /// 批量清除本地所有 isShared=true 账本（云端下线场景）。
-  ///
-  /// 以 isShared 为唯一闸门,级联清理 local_changes / 镜像表 / 交易 / 账本行。
-  /// 选择键与 syncId 无关,因此个人账本(即使 syncId 为空)绝不受影响。
-  /// 幂等:本地无共享账本时直接返回。
-  Future<void> purgeAllSharedLedgers();
-
   /// 批量清除本地所有云端账本（退出登录场景）。
   ///
   /// 选择键 `storage_mode='cloud' OR isShared=true`:云端账本的数据留在服务端,

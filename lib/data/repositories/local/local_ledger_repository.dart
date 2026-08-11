@@ -657,49 +657,6 @@ class LocalLedgerRepository implements LedgerRepository {
   }
 
   @override
-  Future<void> purgeAllSharedLedgers() async {
-    // 一次取出所有共享账本的本地 id 与 syncId。
-    // 选择键是 isShared,与 syncId 是否为空无关——空 syncId 行也会在此被清,
-    // 且只清共享账本,个人账本(syncId 可能也为空)不受影响。
-    final rows = await (db.select(
-      db.ledgers,
-    )..where((l) => l.isShared.equals(true))).get();
-    if (rows.isEmpty) return; // 幂等快路径:本地没有任何共享账本
-    final localIds = rows.map((r) => r.id).toList();
-    // 过滤 null / 空串:镜像表按 ledgerSyncId(Text)清,null 无法参与 IN 匹配,
-    // 空串行本就不该存在于镜像表,过滤后语义更干净。
-    final syncIds = rows
-        .map((r) => r.syncId)
-        .whereType<String>()
-        .where((s) => s.isNotEmpty)
-        .toList();
-
-    // 单事务内按「local_changes → 镜像表 → 交易 → 账本行」级联清除,
-    // 保证要么全清要么不清,避免半清状态被 sync 误用。
-    await db.transaction(() async {
-      await (db.delete(
-        db.localChanges,
-      )..where((c) => c.ledgerId.isIn(localIds))).go();
-      if (syncIds.isNotEmpty) {
-        await (db.delete(
-          db.ledgerMembers,
-        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
-        await (db.delete(
-          db.sharedLedgerCategories,
-        )..where((t) => t.ledgerSyncId.isIn(syncIds))).go();
-      }
-      final txIds =
-          (await (db.select(
-                db.transactions,
-              )..where((t) => t.ledgerId.isIn(localIds))).get())
-              .map((t) => t.id)
-              .toList();
-      await deleteTransactionsWithEditHistories(db, txIds);
-      await (db.delete(db.ledgers)..where((l) => l.id.isIn(localIds))).go();
-    });
-  }
-
-  @override
   Future<void> purgeAllCloudLedgers() async {
     // 退出登录 = 这台设备不持有云账号的数据。
     // 选择键统一走 ledger_kind.dart 的 cloudLedgerFilter(语义:storage_mode='cloud'

@@ -24,7 +24,6 @@ import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
-import 'package:spitout/providers/sync/ledger_list_providers.dart';
 import 'package:spitout/providers/core/refresh_ticks.dart';
 
 // 叶子 provider 统一定义在独立叶子模块：sync_state_providers.dart（云配置 +
@@ -210,18 +209,6 @@ final syncServiceProvider = Provider<SyncService>((ref) {
           // 并保留错误日志便于排查。
           logger.warning('SyncProvider', '同步失败事件: $error');
           ref.read(syncStatusRefreshProvider.notifier).tick();
-        case LedgersPurged():
-          // 云端下线已全量清共享账本:当前账本可能刚被删,重指第一个。
-          // listener 是 sync:true 广播的同步回调,不能 await;用 catchError
-          // 兜底 fire-and-forget,避免 selectFirstLedger 内部异常冒泡打断
-          // 后续 invalidate。
-          selectFirstLedger(ref.read).catchError((Object e, StackTrace st) {
-            logger.error('SyncProvider', 'LedgersPurged 重指账本失败: $e', e, st);
-          });
-          ref.invalidate(localLedgersProvider);
-          ref.read(ledgerListRefreshProvider.notifier).tick();
-          ref.invalidate(currentLedgerProvider);
-          ref.read(cachedTransactionsProvider.notifier).set(null);
         case SharedResourceChanged():
           ref.read(sharedResourceRefreshProvider.notifier).tick();
         case AvatarChanged():
