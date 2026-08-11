@@ -63,10 +63,11 @@ Future<void> moveLedgerToCloudProvider(
   _refreshAfterMove(ref);
 }
 
-/// 登录 Spitout Cloud 后执行全库本地身份迁移。
+/// 登录 Spitout Cloud 后执行存量身份修复。
 ///
-/// 把库中所有 localSelfId 引用改写为云 userId,使本地账本的「我」与云身份统一。
-/// 幂等(标记位防重跑),失败仅记日志不阻塞 UI。
+/// 云端账本把 localSelfId 改写为云 userId，本地账本把所有外来身份收敛为
+/// localSelfId，保证「本地账本不受云端影响、云端账本只有云端身份」。
+/// 幂等可重跑，失败仅记日志不阻塞 UI。
 /// 用 [ProviderContainer] 而非 WidgetRef:页面销毁后迁移仍可完成。
 Future<void> migrateLocalIdentityAfterLoginWithContainer(
   ProviderContainer container,
@@ -78,15 +79,15 @@ Future<void> migrateLocalIdentityAfterLoginWithContainer(
     if (cloudUserId == null || cloudUserId.isEmpty) return;
     final localSelfId = await container.read(localSelfIdProvider.future);
     final db = container.read(databaseProvider);
-    await LocalIdentityMigrationService.migrateToCloudUserId(
+    await LocalIdentityMigrationService.repairAuthorIdsByStorageMode(
       db: db,
-      cloudUserId: cloudUserId,
       localSelfId: localSelfId,
+      cloudUserId: cloudUserId,
     );
   } catch (e, st) {
     logger.warning(
       'LedgerStorage',
-      '登录后本地身份迁移失败(非阻塞,下次登录会重试)',
+      '登录后身份修复失败(非阻塞,下次登录会重试)',
       '$e\n$st',
     );
   }

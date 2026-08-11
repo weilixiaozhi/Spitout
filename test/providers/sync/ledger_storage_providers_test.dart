@@ -4,8 +4,8 @@
 //   1. moveLedgerToCloudProvider：未登录抛可读异常；登录后身份迁移 + moveToCloud + 刷新；
 //   2. moveLedgerToLocalProvider：云端账本完整迁回本地（删云端 + 原子断联）；
 //   3. copyLedgerToLocalProvider：云端账本复制本地副本（云端保留）；
-//   4. migrateLocalIdentityAfterLoginWithContainer：登录后全库 localSelfId → 云 userId，
-//      幂等标记、未登录 / 无 userId / 异常均不阻断。
+//   4. migrateLocalIdentityAfterLoginWithContainer：登录后云端账本 localSelfId → 云 userId、
+//      本地账本收敛为 localSelfId，未登录 / 无 userId / 异常均不阻断。
 // 使用真实 SQLite + 真实 SyncEngine + FakeSpitoutCloudProvider 断言真实副作用。
 // WidgetRef 通过 Consumer 在 build 阶段捕获（与 shared_ledger_providers_test 同模式）。
 
@@ -343,24 +343,44 @@ void main() {
   });
 
   group('migrateLocalIdentityAfterLoginWithContainer', () {
-    testWidgets('登录后全库 localSelfId → 云 userId，并写幂等标记', (tester) async {
-      final id = await createLedger('本地账本', 'local');
-      await addTx(id);
-      await markLocalSelfAuthors(id);
+    testWidgets('登录后：云端账本收敛为云 userId，本地账本收敛为 localSelfId', (tester) async {
+      final localId = await createLedger('本地账本', 'local');
+      await addTx(localId);
+      await markLocalSelfAuthors(localId);
+      // 模拟历史混存：本地账本交易里混入云 userId。
+      await db.customUpdate(
+        'UPDATE transactions SET paid_by_user_id = ?1 WHERE ledger_id = ?2',
+        variables: [Variable<String>('test-user-id'), Variable<int>(localId)],
+        updates: {db.transactions},
+      );
+
+      final cloudId = await createLedger('云端账本', 'cloud');
+      await addTx(cloudId);
+      await markLocalSelfAuthors(cloudId);
       final container = buildContainer();
 
       await migrateLocalIdentityAfterLoginWithContainer(container);
 
-      final tx = await (db.select(db.transactions)
-            ..where((t) => t.ledgerId.equals(id)))
+      final localTx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(localId)))
           .getSingle();
-      expect(tx.paidByUserId, 'test-user-id');
-      expect(tx.createdByUserId, 'test-user-id');
-      expect(tx.lastEditedByUserId, 'test-user-id');
-      final ledger = await repo.getLedgerById(id);
-      expect(ledger!.ownerUserId, 'test-user-id');
+      expect(localTx.paidByUserId, 'local-self-id',
+          reason: '本地账本混入的云 userId 必须收敛回本地身份');
+      expect(localTx.createdByUserId, 'local-self-id');
+      expect(localTx.lastEditedByUserId, 'local-self-id');
+      final localLedger = await repo.getLedgerById(localId);
+      expect(localLedger!.ownerUserId, 'local-self-id');
 
-      // 幂等：再跑一次不报错（prefs 标记命中）
+      final cloudTx = await (db.select(db.transactions)
+            ..where((t) => t.ledgerId.equals(cloudId)))
+          .getSingle();
+      expect(cloudTx.paidByUserId, 'test-user-id');
+      expect(cloudTx.createdByUserId, 'test-user-id');
+      expect(cloudTx.lastEditedByUserId, 'test-user-id');
+      final cloudLedger = await repo.getLedgerById(cloudId);
+      expect(cloudLedger!.ownerUserId, 'test-user-id');
+
+      // 幂等：再跑一次不报错、不改变结果。
       await migrateLocalIdentityAfterLoginWithContainer(container);
       await flushTimers(tester);
     });

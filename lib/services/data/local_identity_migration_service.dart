@@ -1,119 +1,159 @@
 import 'dart:convert';
 
 import 'package:drift/drift.dart' as d;
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/data/db.dart';
 
-/// 本地身份 → 云身份迁移服务（方案 B）。
+/// 本地身份按账本归属收敛服务。
 ///
 /// 设计意图：未登录时本地账本的作者字段(paidByUserId / createdByUserId /
 /// lastEditedByUserId / ledger.ownerUserId / record_edit_histories.operatorUserId)
-/// 写的是 localSelfId(设备 UUID)。首次登录 Spitout Cloud 后，把这些字段
-/// 一次性改写为云 userId，使本地账本的「我」与云身份统一。
+/// 只能写 localSelfId(设备 UUID)，云端账本只能写云 userId，两者不得混存。
+/// 历史版本曾把云 userId 写进本地账本、把 localSelfId 写进云端账本，
+/// 本服务按 storage_mode 逐账本收敛，保证「本地账本不受云端影响」。
 ///
-/// 幂等保证：迁移完成后写 prefs 标记位 `local_self_id_migrated_<cloudUserId>`，
-/// 再次登录同一账号不会重跑。换账号登录时 cloudUserId 不同，标记位不命中，
-/// 会把当前 localSelfId 迁移到新账号(符合方案 B「换号旧记录归属旧号」语义)。
-///
-/// 注意：登出后新记的账会重新写 localSelfId，再次登录同账号时标记位已存在
-/// 不会重跑——这部分「登出期间产生的 localSelfId 记录」会保留 localSelfId，
-/// 由展示层统一解析为昵称/「我」。这是方案 B 已知的行为，用户已确认接受。
+/// 幂等：全部使用 UPDATE WHERE 或按行 JSON 收敛，可重复执行。
 class LocalIdentityMigrationService {
   LocalIdentityMigrationService._();
 
-  /// 迁移 prefs 标记位前缀。
-  static const String _migratedKeyPrefix = 'local_self_id_migrated_';
-
-  /// 把库中所有 localSelfId 引用改写为 cloudUserId。
+  /// 按账本归属修复存量混存身份（登录后调用）。
   ///
-  /// 调用时机：登录 Spitout Cloud 成功后、首次同步前。
-  /// - [db] 本地数据库实例。
-  /// - [cloudUserId] 当前登录用户云 userId。
-  /// - [localSelfId] 设备本地身份(由调用方从 localSelfIdProvider 注入)。
+  /// 设计意图：本地账本的作者身份只能属于本机（localSelfId），云端账本只能
+  /// 属于云账号（cloudUserId）。历史版本可能把两种 id 混进同一账本，这里按
+  /// storage_mode 逐账本收敛；UPDATE WHERE 天然幂等，可重复执行。
   ///
-  /// 返回 true 表示执行了迁移(或已迁移过)，false 表示跳过(如 localSelfId 缺失)。
-  static Future<bool> migrateToCloudUserId({
+  /// - 本地账本：所有非虚拟用户 id → localSelfId（虚拟用户按表排除）；
+  /// - 云端账本：localSelfId → cloudUserId，其他成员 id 保留。
+  static Future<void> repairAuthorIdsByStorageMode({
     required SpitoutDatabase db,
+    required String localSelfId,
     required String cloudUserId,
+  }) async {
+    if (localSelfId.isEmpty ||
+        cloudUserId.isEmpty ||
+        localSelfId == cloudUserId) {
+      return;
+    }
+    final rows = await db.customSelect(
+      'SELECT id, storage_mode, is_shared FROM ledgers',
+      readsFrom: {db.ledgers},
+    ).get();
+    for (final row in rows) {
+      final ledgerId = row.read<int>('id');
+      final storageMode = row.read<String?>('storage_mode') ?? 'local';
+      final isShared = row.read<bool>('is_shared');
+      if (storageMode == 'cloud' || isShared) {
+        await migrateLedgerToCloudUserId(
+          db: db,
+          ledgerId: ledgerId,
+          cloudUserId: cloudUserId,
+          localSelfId: localSelfId,
+        );
+      } else {
+        await repairLocalLedgerToLocalSelfId(
+          db: db,
+          ledgerId: ledgerId,
+          localSelfId: localSelfId,
+        );
+      }
+    }
+  }
+
+  /// 仅修复本地账本（启动期兜底，不依赖云端登录态）。
+  static Future<void> repairLocalLedgersToLocalSelfId({
+    required SpitoutDatabase db,
     required String localSelfId,
   }) async {
-    if (cloudUserId.isEmpty) {
-      logger.warning('LocalIdentityMigration', 'cloudUserId 为空，跳过迁移');
-      return false;
+    if (localSelfId.isEmpty) return;
+    final rows = await db.customSelect(
+      "SELECT id FROM ledgers WHERE is_shared = 0 "
+      "AND (storage_mode IS NULL OR storage_mode = 'local')",
+      readsFrom: {db.ledgers},
+    ).get();
+    for (final row in rows) {
+      await repairLocalLedgerToLocalSelfId(
+        db: db,
+        ledgerId: row.read<int>('id'),
+        localSelfId: localSelfId,
+      );
     }
-    if (localSelfId.isEmpty) {
-      logger.warning('LocalIdentityMigration', 'localSelfId 为空，跳过迁移');
-      return false;
+  }
+
+  /// 把单个本地账本内所有作者位收敛为 localSelfId（虚拟用户 id 保留）。
+  static Future<void> repairLocalLedgerToLocalSelfId({
+    required SpitoutDatabase db,
+    required int ledgerId,
+    required String localSelfId,
+  }) async {
+    final virtualRows = await (db.select(db.ledgerVirtualUsers)
+          ..where((v) => v.ledgerId.equals(ledgerId)))
+        .get();
+    final virtualIds = <String>{
+      for (final v in virtualRows) v.syncId ?? 'vu_${v.id}',
+    };
+
+    Future<void> rewriteColumn(String column) async {
+      final notIn = virtualIds.isEmpty
+          ? ''
+          : ' AND $column NOT IN ('
+              '${[for (var i = 0; i < virtualIds.length; i++) '?${3 + i}'].join(', ')})';
+      await db.customUpdate(
+        'UPDATE transactions SET $column = ?1 WHERE ledger_id = ?2 '
+        'AND $column IS NOT NULL AND $column != ?1$notIn',
+        variables: [
+          d.Variable<String>(localSelfId),
+          d.Variable<int>(ledgerId),
+          ...virtualIds.map((id) => d.Variable<String>(id)),
+        ],
+        updates: {db.transactions},
+      );
     }
-    // localSelfId 与 cloudUserId 相同时无需迁移(理论上不会发生)。
-    if (localSelfId == cloudUserId) return true;
 
-    final prefs = await SharedPreferences.getInstance();
-    final migratedKey = '$_migratedKeyPrefix$cloudUserId';
-    if (prefs.getBool(migratedKey) == true) {
-      // 已迁移过此账号，跳过(幂等)。
-      return true;
-    }
+    await db.transaction(() async {
+      // 交易三字段：支出人 / 创建人 / 编辑人。
+      await rewriteColumn('paid_by_user_id');
+      await rewriteColumn('created_by_user_id');
+      await rewriteColumn('last_edited_by_user_id');
 
-    logger.info('LocalIdentityMigration',
-        '开始迁移 localSelfId → cloudUserId($cloudUserId)');
+      // 账本所有者。
+      await db.customUpdate(
+        'UPDATE ledgers SET owner_user_id = ?1 WHERE id = ?2 '
+        'AND owner_user_id IS NOT NULL AND owner_user_id != ?1',
+        variables: [
+          d.Variable<String>(localSelfId),
+          d.Variable<int>(ledgerId),
+        ],
+        updates: {db.ledgers},
+      );
 
-    try {
-      // 单事务内改写所有引用 localSelfId 的字段，保证原子一致。
-      // 顺序无强约束(都是 UPDATE WHERE)，但放同一事务避免半迁移。
-      await db.transaction(() async {
-        // 交易表：支出人 / 创建人 / 编辑人
-        await db.customUpdate(
-          'UPDATE transactions SET paid_by_user_id = ?1 WHERE paid_by_user_id = ?2',
-          variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
-          updates: {db.transactions},
-        );
-        await db.customUpdate(
-          'UPDATE transactions SET created_by_user_id = ?1 WHERE created_by_user_id = ?2',
-          variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
-          updates: {db.transactions},
-        );
-        await db.customUpdate(
-          'UPDATE transactions SET last_edited_by_user_id = ?1 WHERE last_edited_by_user_id = ?2',
-          variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
-          updates: {db.transactions},
-        );
+      // 编辑历史操作者（虚拟用户同样排除）。
+      final historyNotIn = virtualIds.isEmpty
+          ? ''
+          : ' AND operator_user_id NOT IN ('
+              '${[for (var i = 0; i < virtualIds.length; i++) '?${3 + i}'].join(', ')})';
+      await db.customUpdate(
+        'UPDATE record_edit_histories SET operator_user_id = ?1 '
+        'WHERE operator_user_id IS NOT NULL AND operator_user_id != ?1'
+        '$historyNotIn '
+        'AND record_id IN (SELECT id FROM transactions WHERE ledger_id = ?2)',
+        variables: [
+          d.Variable<String>(localSelfId),
+          d.Variable<int>(ledgerId),
+          ...virtualIds.map((id) => d.Variable<String>(id)),
+        ],
+        updates: {db.recordEditHistories},
+      );
 
-        // 账本表：所有者
-        await db.customUpdate(
-          'UPDATE ledgers SET owner_user_id = ?1 WHERE owner_user_id = ?2',
-          variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
-          updates: {db.ledgers},
-        );
-
-        // 编辑历史表：操作者
-        await db.customUpdate(
-          'UPDATE record_edit_histories SET operator_user_id = ?1 WHERE operator_user_id = ?2',
-          variables: [d.Variable<String>(cloudUserId), d.Variable<String>(localSelfId)],
-          updates: {db.recordEditHistories},
-        );
-
-        // AA 分摊引用：aaParticipants(JSON 数组)/aaSplits(JSON 对象)里的
-        // localSelfId 一并改写，否则迁移后“我”在历史 AA 账目中变成陌生参与人。
-        await _rewriteAaReferencesInTx(
-          db: db,
-          localSelfId: localSelfId,
-          cloudUserId: cloudUserId,
-        );
-      });
-
-      // 标记迁移完成，防止重跑。
-      await prefs.setBool(migratedKey, true);
-      logger.info('LocalIdentityMigration', '迁移完成，已写标记位 $migratedKey');
-      return true;
-    } catch (e, st) {
-      logger.error('LocalIdentityMigration', '迁移失败', e, st);
-      // 不写标记位，下次登录会重试。
-      return false;
-    }
+      // AA 分摊 JSON 引用同样收敛，避免统计侧出现陌生参与人。
+      await _rewriteLocalAaReferencesInTx(
+        db: db,
+        ledgerId: ledgerId,
+        localSelfId: localSelfId,
+        virtualIds: virtualIds,
+      );
+    });
   }
 
   /// 读取备份用 localSelfId（供备份服务调用）。
@@ -125,8 +165,7 @@ class LocalIdentityMigrationService {
 
   /// 把指定账本内的 localSelfId 引用改写为 cloudUserId（转云端用）。
   ///
-  /// 与 [migrateToCloudUserId] 区别：仅迁移单个账本，不写全局标记位
-  /// （全局标记位用于整库迁移；单账本迁移是转云端时按需触发，可重复执行）。
+  /// 仅迁移单个账本，不影响其他账本；可重复执行。
   ///
   /// - [ledgerId] 待迁移的账本 id。
   static Future<void> migrateLedgerToCloudUserId({
@@ -211,6 +250,99 @@ class LocalIdentityMigrationService {
     } catch (e, st) {
       logger.error('LocalIdentityMigration', '账本 $ledgerId 转云端身份迁移失败', e, st);
       rethrow;
+    }
+  }
+
+  /// 把单个本地账本交易 AA 字段中的外来身份收敛为 localSelfId。
+  ///
+  /// 虚拟用户 id 保留；外来身份并入 localSelfId 时若本地已有金额则保留本地值，
+  /// 与云端收敛语义一致。JSON 解析失败的行保持原样并记日志。
+  static Future<void> _rewriteLocalAaReferencesInTx({
+    required SpitoutDatabase db,
+    required int ledgerId,
+    required String localSelfId,
+    required Set<String> virtualIds,
+  }) async {
+    final rows = await db.customSelect(
+      'SELECT id, aa_participants, aa_splits FROM transactions '
+      'WHERE ledger_id = ?1',
+      variables: [d.Variable<int>(ledgerId)],
+      readsFrom: {db.transactions},
+    ).get();
+
+    for (final row in rows) {
+      final txId = row.read<int>('id');
+      var participants = row.readNullable<String>('aa_participants');
+      var splits = row.readNullable<String>('aa_splits');
+      var participantsChanged = false;
+      var splitsChanged = false;
+
+      // aaParticipants：非虚拟用户 id 一律收敛为 localSelfId 并去重。
+      if (participants != null && participants.isNotEmpty) {
+        try {
+          final list = (jsonDecode(participants) as List).cast<String>();
+          final replaced = <String>[];
+          for (final id in list) {
+            final target = (id == localSelfId || virtualIds.contains(id))
+                ? id
+                : localSelfId;
+            if (!replaced.contains(target)) replaced.add(target);
+          }
+          final encoded = jsonEncode(replaced);
+          if (encoded != participants) {
+            participants = encoded;
+            participantsChanged = true;
+          }
+        } catch (e, st) {
+          logger.warning(
+              'LocalIdentityMigration', '解析 aaParticipants 失败 tx=$txId', '$e\n$st');
+        }
+      }
+
+      // aaSplits：非虚拟用户 key 并入 localSelfId，本地已有金额优先保留。
+      if (splits != null && splits.isNotEmpty) {
+        try {
+          final map = (jsonDecode(splits) as Map).cast<String, String>();
+          final merged = <String, String>{};
+          // 本地身份已有金额优先保留，外来身份并入时不得覆盖。
+          final localValue = map[localSelfId];
+          if (localValue != null) merged[localSelfId] = localValue;
+          for (final e in map.entries) {
+            if (e.key == localSelfId) continue;
+            final key = (e.key == localSelfId || virtualIds.contains(e.key))
+                ? e.key
+                : localSelfId;
+            merged.putIfAbsent(key, () => e.value);
+          }
+          final encoded = jsonEncode(merged);
+          if (encoded != splits) {
+            splits = encoded;
+            splitsChanged = true;
+          }
+        } catch (e, st) {
+          logger.warning(
+              'LocalIdentityMigration', '解析 aaSplits 失败 tx=$txId', '$e\n$st');
+        }
+      }
+
+      if (participantsChanged || splitsChanged) {
+        final assignments = <String>[];
+        final variables = <d.Variable<Object>>[];
+        if (participantsChanged) {
+          assignments.add('aa_participants = ?${assignments.length + 1}');
+          variables.add(d.Variable<String>(participants!));
+        }
+        if (splitsChanged) {
+          assignments.add('aa_splits = ?${assignments.length + 1}');
+          variables.add(d.Variable<String>(splits!));
+        }
+        await db.customUpdate(
+          'UPDATE transactions SET ${assignments.join(', ')} '
+          'WHERE id = ?${assignments.length + 1}',
+          variables: [...variables, d.Variable<int>(txId)],
+          updates: {db.transactions},
+        );
+      }
     }
   }
 

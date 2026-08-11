@@ -88,6 +88,13 @@ final appSplashInitProvider = FutureProvider<void>((ref) async {
       logger.error(tag, '共享账本分类历史修复执行失败', e, st);
     }
 
+    // 一次性修复本地账本混存身份（localSelfId 收敛）。
+    try {
+      await ref.watch(localIdentityRepairRunProvider.future);
+    } catch (e, st) {
+      logger.error(tag, '本地账本身份修复执行失败', e, st);
+    }
+
     // 获取 repository
     final repo = ref.read(repositoryProvider);
 

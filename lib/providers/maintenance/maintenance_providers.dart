@@ -19,6 +19,8 @@ import 'package:spitout/services/maintenance/shared_ledger_category_repair.dart'
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
+import 'package:spitout/services/data/local_identity_migration_service.dart';
 
 // UI 侧通过 providers 门面使用测试数据填充，不直接触碰服务层。
 export 'package:spitout/services/maintenance/analytics_test_data_seeder.dart'
@@ -83,6 +85,19 @@ final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
   } catch (e, st) {
     logger.error('SharedLedgerCategoryRepair', '历史脏数据修复失败，将在下次启动重试', e, st);
   }
+});
+
+/// 启动期本地账本身份修复（幂等，可重复执行）。
+///
+/// 历史版本可能把云 userId 混进本地账本，统一收敛为 localSelfId，
+/// 保证「本地账本不受云端影响」；云端账本的修复在登录时执行。
+final localIdentityRepairRunProvider = FutureProvider<void>((ref) async {
+  final db = ref.watch(databaseProvider);
+  final localSelfId = await ref.watch(localSelfIdProvider.future);
+  await LocalIdentityMigrationService.repairLocalLedgersToLocalSelfId(
+    db: db,
+    localSelfId: localSelfId,
+  );
 });
 
 /// 一次扫描的全部结果。autoDispose:用户离开页面后下次进来重扫。

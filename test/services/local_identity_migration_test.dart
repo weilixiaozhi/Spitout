@@ -1,45 +1,46 @@
-// LocalIdentityMigrationService 迁移服务测试。
+// LocalIdentityMigrationService 存量身份修复测试。
 //
-// 覆盖方案 B 核心契约:
-//   1. migrateToCloudUserId: 把库中所有 localSelfId 引用改写为 cloudUserId
-//      (transactions 三字段 + ledgers.ownerUserId + record_edit_histories.operatorUserId)
-//   2. 幂等:同一 cloudUserId 第二次调用不重跑(标记位命中)
-//   3. migrateLedgerToCloudUserId: 仅迁移指定账本,不影响其他账本
+// 覆盖归属模型契约：
+//   1. repairAuthorIdsByStorageMode：本地账本所有作者位收敛为 localSelfId；
+//      云端账本把 localSelfId 改写为 cloudUserId（其他成员 id 保留）；
+//   2. repairLocalLedgersToLocalSelfId：仅修复本地账本，云端账本不动（启动期兜底）；
+//   3. migrateLedgerToCloudUserId：仅迁移指定账本（转云端路径复用）。
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
-  SharedPreferences.setMockInitialValues({});
 
   late SpitoutDatabase db;
 
   setUp(() async {
     db = SpitoutDatabase.forTesting(NativeDatabase.memory());
-    SharedPreferences.setMockInitialValues({});
   });
 
   tearDown(() => db.close());
 
-  /// 插入账本,返回 id。
-  Future<int> createLedger({String? ownerUserId}) async {
+  Future<int> createLedger({
+    String? ownerUserId,
+    String storageMode = 'local',
+    bool isShared = false,
+  }) async {
     return db.into(db.ledgers).insert(
           LedgersCompanion.insert(
             name: 'test',
             ownerUserId: ownerUserId != null
                 ? Value(ownerUserId)
                 : const Value.absent(),
+            storageMode: Value(storageMode),
+            isShared: Value(isShared),
           ),
         );
   }
 
-  /// 插入交易,返回 id。
   Future<int> createTx({
     required int ledgerId,
     String? paidByUserId,
@@ -73,137 +74,177 @@ void main() {
         );
   }
 
-  group('migrateToCloudUserId', () {
-    test('把所有 localSelfId 引用改写为 cloudUserId', () async {
-      const localSelfId = 'local-uuid-111';
-      const cloudUserId = 'cloud-user-222';
-      final ledgerId = await createLedger(ownerUserId: localSelfId);
+  Future<void> createVirtualUser({
+    required int ledgerId,
+    String? syncId,
+  }) async {
+    await db.into(db.ledgerVirtualUsers).insert(
+          LedgerVirtualUsersCompanion.insert(
+            ledgerId: ledgerId,
+            name: '虚拟用户',
+            syncId: syncId != null ? Value(syncId) : const Value.absent(),
+          ),
+        );
+  }
+
+  Future<void> createHistory({
+    required int recordId,
+    required String operatorUserId,
+  }) async {
+    await db.into(db.recordEditHistories).insert(
+          RecordEditHistoriesCompanion.insert(
+            recordId: recordId,
+            version: 1,
+            operatorUserId: Value(operatorUserId),
+            summary: 's',
+          ),
+        );
+  }
+
+  group('repairAuthorIdsByStorageMode', () {
+    test('本地账本：混存的云 userId 与 localSelfId 全部收敛为 localSelfId', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      final ledgerId = await createLedger(ownerUserId: cloudUserId);
+      final txId = await createTx(
+        ledgerId: ledgerId,
+        paidByUserId: cloudUserId,
+        createdByUserId: localSelfId,
+        lastEditedByUserId: cloudUserId,
+      );
+      await createHistory(recordId: txId, operatorUserId: cloudUserId);
+
+      await LocalIdentityMigrationService.repairAuthorIdsByStorageMode(
+        db: db,
+        localSelfId: localSelfId,
+        cloudUserId: cloudUserId,
+      );
+
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(txId)))
+          .getSingle();
+      expect(tx.paidByUserId, localSelfId);
+      expect(tx.createdByUserId, localSelfId);
+      expect(tx.lastEditedByUserId, localSelfId);
+
+      final ledger = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(ledgerId)))
+          .getSingle();
+      expect(ledger.ownerUserId, localSelfId);
+
+      final history = await (db.select(db.recordEditHistories)
+            ..where((h) => h.recordId.equals(txId)))
+          .getSingle();
+      expect(history.operatorUserId, localSelfId);
+    });
+
+    test('本地账本：虚拟用户 id 保留，AA 引用收敛且去重', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      const virtualId = 'vu-sync';
+      final ledgerId = await createLedger();
+      await createVirtualUser(ledgerId: ledgerId, syncId: virtualId);
+      final txId = await createTx(
+        ledgerId: ledgerId,
+        paidByUserId: virtualId,
+        aaParticipants: '["$virtualId","$cloudUserId","$localSelfId"]',
+        aaSplits: '{"$virtualId":"5.00","$cloudUserId":"5.00","$localSelfId":"10.00"}',
+      );
+
+      await LocalIdentityMigrationService.repairAuthorIdsByStorageMode(
+        db: db,
+        localSelfId: localSelfId,
+        cloudUserId: cloudUserId,
+      );
+
+      final tx = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(txId)))
+          .getSingle();
+      expect(tx.paidByUserId, virtualId, reason: '虚拟用户 id 不属于作者身份，不得改写');
+      expect(tx.aaParticipants, '["$virtualId","$localSelfId"]',
+          reason: '虚拟用户保留、其他身份收敛为 localSelfId 并去重');
+      expect(tx.aaSplits, '{"$localSelfId":"10.00","$virtualId":"5.00"}',
+          reason: '本地已有金额保留，外来身份并入本地不覆盖');
+    });
+
+    test('云端账本：localSelfId → cloudUserId，其他成员 id 保留', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      const memberId = 'member-1';
+      final ledgerId = await createLedger(
+        ownerUserId: localSelfId,
+        storageMode: 'cloud',
+      );
       final txId = await createTx(
         ledgerId: ledgerId,
         paidByUserId: localSelfId,
-        createdByUserId: localSelfId,
-        lastEditedByUserId: localSelfId,
+        createdByUserId: memberId,
       );
 
-      await LocalIdentityMigrationService.migrateToCloudUserId(
+      await LocalIdentityMigrationService.repairAuthorIdsByStorageMode(
         db: db,
-        cloudUserId: cloudUserId,
         localSelfId: localSelfId,
+        cloudUserId: cloudUserId,
       );
 
       final tx = await (db.select(db.transactions)
             ..where((t) => t.id.equals(txId)))
           .getSingle();
       expect(tx.paidByUserId, cloudUserId);
-      expect(tx.createdByUserId, cloudUserId);
-      expect(tx.lastEditedByUserId, cloudUserId);
+      expect(tx.createdByUserId, memberId, reason: '其他成员 id 不得改写');
 
       final ledger = await (db.select(db.ledgers)
             ..where((l) => l.id.equals(ledgerId)))
           .getSingle();
       expect(ledger.ownerUserId, cloudUserId);
     });
+  });
 
-    test('aaParticipants/aaSplits 里的 localSelfId 一并改写', () async {
-      const localSelfId = 'local-uuid-aa';
-      const cloudUserId = 'cloud-user-aa';
-      final ledgerId = await createLedger();
-      await createTx(
-        ledgerId: ledgerId,
+  group('repairLocalLedgersToLocalSelfId', () {
+    test('仅修复本地账本，云端账本不动', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      final localId = await createLedger(ownerUserId: cloudUserId);
+      final localTx = await createTx(
+        ledgerId: localId,
+        paidByUserId: cloudUserId,
+      );
+      final cloudId = await createLedger(
+        ownerUserId: localSelfId,
+        storageMode: 'cloud',
+      );
+      final cloudTx = await createTx(
+        ledgerId: cloudId,
         paidByUserId: localSelfId,
-        aaParticipants: '["$localSelfId","u2","vu-1"]',
-        aaSplits: '{"$localSelfId":"20.00","u2":"20.00","vu-1":"10.00"}',
       );
 
-      await LocalIdentityMigrationService.migrateToCloudUserId(
+      await LocalIdentityMigrationService.repairLocalLedgersToLocalSelfId(
         db: db,
-        cloudUserId: cloudUserId,
         localSelfId: localSelfId,
       );
 
-      final tx = (await db.select(db.transactions).get()).single;
-      expect(tx.aaParticipants, '["$cloudUserId","u2","vu-1"]',
-          reason: 'aaParticipants 中的本地身份应改写为云身份');
-      expect(tx.aaSplits,
-          '{"u2":"20.00","vu-1":"10.00","$cloudUserId":"20.00"}',
-          reason: 'aaSplits 的 key 应改写为云身份且金额不变');
-    });
-
-    test('aa 字段中 localSelfId 与 cloudUserId 并存时去重且不丢云端金额', () async {
-      const localSelfId = 'local-uuid-dup';
-      const cloudUserId = 'cloud-user-dup';
-      final ledgerId = await createLedger();
-      await createTx(
-        ledgerId: ledgerId,
-        aaParticipants: '["$localSelfId","$cloudUserId"]',
-        aaSplits: '{"$localSelfId":"5.00","$cloudUserId":"7.00"}',
-      );
-
-      await LocalIdentityMigrationService.migrateToCloudUserId(
-        db: db,
-        cloudUserId: cloudUserId,
-        localSelfId: localSelfId,
-      );
-
-      final tx = (await db.select(db.transactions).get()).single;
-      expect(tx.aaParticipants, '["$cloudUserId"]',
-          reason: '并存时替换后应去重，避免同一参与人出现两次');
-      expect(tx.aaSplits, '{"$cloudUserId":"7.00"}',
-          reason: '云端已有金额应保留，不覆盖为本地旧值');
-    });
-
-    test('幂等:同一 cloudUserId 第二次调用不重跑', () async {
-      const localSelfId = 'local-uuid-333';
-      const cloudUserId = 'cloud-user-444';
-      final ledgerId = await createLedger(ownerUserId: localSelfId);
-
-      await LocalIdentityMigrationService.migrateToCloudUserId(
-        db: db,
-        cloudUserId: cloudUserId,
-        localSelfId: localSelfId,
-      );
-      // 第二次调用应跳过(标记位命中)。
-      await LocalIdentityMigrationService.migrateToCloudUserId(
-        db: db,
-        cloudUserId: cloudUserId,
-        localSelfId: localSelfId,
-      );
-
-      final ledger = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
+      final local = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(localTx)))
           .getSingle();
-      expect(ledger.ownerUserId, cloudUserId);
-    });
-
-    test('不同 cloudUserId 不命中标记位,会重新迁移', () async {
-      const localSelfId = 'local-uuid-555';
-      const cloudUserId1 = 'cloud-user-666';
-      const cloudUserId2 = 'cloud-user-777';
-      final ledgerId = await createLedger(ownerUserId: localSelfId);
-
-      await LocalIdentityMigrationService.migrateToCloudUserId(
-        db: db,
-        cloudUserId: cloudUserId1,
-        localSelfId: localSelfId,
-      );
-      // 此时 ownerUserId 已是 cloudUserId1,无 localSelfId 可迁移,
-      // 但标记位不同,第二次调用仍会执行(UPDATE 0 行,不报错)。
-      await LocalIdentityMigrationService.migrateToCloudUserId(
-        db: db,
-        cloudUserId: cloudUserId2,
-        localSelfId: localSelfId,
+      expect(local.paidByUserId, localSelfId);
+      expect(
+        (await (db.select(db.ledgers)
+                  ..where((l) => l.id.equals(localId)))
+              .getSingle())
+            .ownerUserId,
+        localSelfId,
       );
 
-      final ledger = await (db.select(db.ledgers)
-            ..where((l) => l.id.equals(ledgerId)))
+      final cloud = await (db.select(db.transactions)
+            ..where((t) => t.id.equals(cloudTx)))
           .getSingle();
-      // 仍是 cloudUserId1(第二次迁移无 localSelfId 可改)。
-      expect(ledger.ownerUserId, cloudUserId1);
+      expect(cloud.paidByUserId, localSelfId,
+          reason: '云端账本由登录后修复处理，启动期本地修复不得改动');
     });
   });
 
   group('migrateLedgerToCloudUserId', () {
-    test('仅迁移指定账本,不影响其他账本', () async {
+    test('仅迁移指定账本，不影响其他账本', () async {
       const localSelfId = 'local-uuid-888';
       const cloudUserId = 'cloud-user-999';
       final ledger1 = await createLedger(ownerUserId: localSelfId);
@@ -230,9 +271,7 @@ void main() {
       final t2 = await (db.select(db.transactions)
             ..where((t) => t.id.equals(tx2)))
           .getSingle();
-      // ledger1 的交易被迁移。
       expect(t1.paidByUserId, cloudUserId);
-      // ledger2 的交易不受影响。
       expect(t2.paidByUserId, localSelfId);
 
       final l1 = await (db.select(db.ledgers)
@@ -245,7 +284,7 @@ void main() {
       expect(l2.ownerUserId, localSelfId);
     });
 
-    test('仅改写指定账本的 aa 字段,不影响其他账本', () async {
+    test('仅改写指定账本的 aa 字段，不影响其他账本', () async {
       const localSelfId = 'local-uuid-aa-ledger';
       const cloudUserId = 'cloud-user-aa-ledger';
       final ledger1 = await createLedger();
@@ -273,8 +312,7 @@ void main() {
       final t2 = txs.firstWhere((t) => t.ledgerId == ledger2);
       expect(t1.aaParticipants, '["$cloudUserId"]');
       expect(t1.aaSplits, '{"$cloudUserId":"30.00"}');
-      expect(t2.aaParticipants, '["$localSelfId"]',
-          reason: '其他账本的 aa 引用不应被改写');
+      expect(t2.aaParticipants, '["$localSelfId"]');
       expect(t2.aaSplits, '{"$localSelfId":"30.00"}');
     });
   });
