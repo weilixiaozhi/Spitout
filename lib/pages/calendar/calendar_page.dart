@@ -94,6 +94,10 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     final ledgerId = ref.watch(currentLedgerIdProvider);
     final ledgerAsync = ref.watch(currentLedgerProvider);
     final primaryColor = Theme.of(context).colorScheme.primary;
+    // 仅未选中今天时显示「回到今天」：选中今天时隐藏；切到其他月会清空选中，
+    // 此时必须保留按钮，否则没有快捷返回今天的入口。
+    final showBackToToday =
+        _selectedDay == null || !isSameDay(_selectedDay, DateTime.now());
     // 账本本位币代码：优先取当前账本 currency，未设置时回退 CNY。
     final ledgerCurrencyCode = ledgerAsync.maybeWhen(
       data: (ledger) => ledger?.currency ?? 'CNY',
@@ -117,11 +121,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           PrimaryHeader(
             title: l10n.calendarTitle,
             actions: [
-              // 「今天」文字链：统一全局文字链规格（14/w600/主题主色）
-              HeaderTextAction(
-                label: l10n.calendarToday,
-                onPressed: _jumpToToday,
-              ),
+              if (showBackToToday)
+                // 「今天」文字链：统一全局文字链规格（14/w600/主题主色）
+                HeaderTextAction(
+                  label: l10n.calendarToday,
+                  onPressed: _jumpToToday,
+                ),
             ],
           ),
 

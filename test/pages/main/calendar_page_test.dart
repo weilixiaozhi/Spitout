@@ -172,4 +172,37 @@ void main() {
 
     await disposeTree(tester);
   });
+
+  testWidgets('回到今天按钮仅在未选中今天时显示', (tester) async {
+    await pumpCalendar(tester);
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(CalendarPage)),
+    );
+    final addTxFinder = find.text(l10n.calendarAddTransaction);
+    final todayAction = find.text(l10n.calendarToday);
+
+    // 进入页面自动选中今天：「回到今天」应隐藏。
+    await pumpUntilFound(tester, addTxFinder);
+    expect(todayAction, findsNothing);
+
+    // 当前月选中非今天日期：「回到今天」出现。
+    final now = DateTime.now();
+    final otherDay = now.day == 15 ? 16 : 15;
+    await tester.tap(find.text('$otherDay'));
+    await tester.pump();
+    expect(todayAction, findsOneWidget);
+
+    // 切到其他月（选中态清空）：保留按钮作为唯一返回入口。
+    await tapChevron(tester, AppIcons.chevronRight);
+    expect(todayAction, findsOneWidget);
+
+    // 点击「回到今天」：回到本月并选中今天，按钮隐藏。
+    await tester.tap(todayAction);
+    await tester.pump();
+    await pumpUntilFound(tester, addTxFinder);
+    expect(todayAction, findsNothing);
+
+    await disposeTree(tester);
+  });
 }
