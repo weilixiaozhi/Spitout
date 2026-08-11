@@ -336,16 +336,17 @@ Future<bool> purgeLocalCloudLedgersWithContainer(ProviderContainer container) =>
 /// 只传 txId，不直接 import tx_author_service.dart（保持
 /// `pages/widgets → providers → services` 单向）。失败静默，本函数不抛错。
 ///
-/// 身份解析:已登录写云 userId,未登录写 localSelfId(设备身份 UUID)。
+/// 身份解析按账本归属选择：本地账本写 localSelfId，云端账本写缓存的云 userId；
+/// 云身份缓存未就绪时留空，由同步推送后服务端注入，绝不降级写 localSelfId。
 /// paidByUserId 回填规则:为空时取操作者,编辑器已显式写入的值(指定分摊)不覆盖。
 Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
   final repo = ref.read(repositoryProvider);
-  final localSelfId = await ref.read(localSelfIdProvider.future);
-  final cloudUserId = await _cloudUserIdWithinTimeout(ref);
+  final userId = await _authorUserIdForTx(ref, txId);
+  if (userId == null || userId.isEmpty) return;
   try {
     await repo.markTxAuthor(
       txId: txId,
-      userId: cloudUserId ?? localSelfId,
+      userId: userId,
       isCreate: true,
     );
   } catch (e, st) {
@@ -360,12 +361,12 @@ Future<void> markTxCreatedFromUi(WidgetRef ref, int txId) async {
 /// 用户手改值保留。身份解析同 [markTxCreatedFromUi]。
 Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
   final repo = ref.read(repositoryProvider);
-  final localSelfId = await ref.read(localSelfIdProvider.future);
-  final cloudUserId = await _cloudUserIdWithinTimeout(ref);
+  final userId = await _authorUserIdForTx(ref, txId);
+  if (userId == null || userId.isEmpty) return;
   try {
     await repo.markTxAuthor(
       txId: txId,
-      userId: cloudUserId ?? localSelfId,
+      userId: userId,
       isCreate: false,
     );
   } catch (e, st) {
@@ -373,30 +374,57 @@ Future<void> markTxEditedFromUi(WidgetRef ref, int txId) async {
   }
 }
 
-/// 读取当前登录用户 id（动作函数，供写编辑历史时作 operatorUserId）。
+/// 按交易所属账本归属解析当前操作者 id（作者位统一入口）。
 ///
-/// 单人账本 / 未登录 / 异常一律返回 null（service 内部已 swallow），
-/// 调用方据此决定历史记录是否写操作者。
-Future<String?> currentOperatorUserIdFromUi(WidgetRef ref) async {
-  return _cloudUserIdWithinTimeout(ref);
+/// 本地账本一律 localSelfId；云端账本一律缓存的云 userId（可返回 null）。
+Future<String?> _authorUserIdForTx(WidgetRef ref, int txId) async {
+  final repo = ref.read(repositoryProvider);
+  final tx = await repo.getTransactionById(txId);
+  if (tx == null) return null;
+  return authorUserIdForLedger(ref, tx.ledgerId);
 }
 
-/// 云端身份解析的短超时封装。
+/// 按账本归属解析当前操作者 id。
 ///
-/// 主流程(记账保存 / AA 保存 / 编辑历史)不应等待云端初始化或 token refresh;
-/// 网络差时最多等 [kCloudIdentityTimeout],拿不到云 userId 就返回 null,
-/// 由调用方降级到 localSelfId / 不写操作者,云端同步后续自行补。
-const kCloudIdentityTimeout = Duration(milliseconds: 250);
-
-Future<String?> _cloudUserIdWithinTimeout(WidgetRef ref) async {
+/// - 本地账本（storage_mode='local'）：一律 localSelfId，云端登录不影响；
+/// - 云端账本（storage_mode='cloud' 或 isShared）：一律缓存的云 userId，
+///   缓存未就绪返回 null，由同步服务端回填，绝不降级写 localSelfId。
+Future<String?> authorUserIdForLedger(WidgetRef ref, int ledgerId) async {
+  final repo = ref.read(repositoryProvider);
+  bool isCloudLedger = false;
   try {
-    final cloud = await ref
-        .read(spitoutCloudProviderInstance.future)
-        .timeout(kCloudIdentityTimeout);
+    final ledger = await repo.getLedgerById(ledgerId);
+    isCloudLedger = ledger != null &&
+        ((ledger.storageMode == 'cloud') || ledger.isShared);
+  } catch (e, st) {
+    // 读不到账本归属时不确定身份来源，宁可不写作者位（由同步服务端回填），
+    // 也不降级写 localSelfId，同时保证保存动作不被阻塞。
+    logger.warning('AuthorIdentity', '读取账本归属失败，作者位留空待同步回填', '$e\n$st');
+    return null;
+  }
+  return currentAuthorIdByLedgerMode(ref, isCloudLedger: isCloudLedger);
+}
+
+/// 按账本归属模式解析当前操作者 id（新建账本等尚无 ledgerId 的场景）。
+Future<String?> currentAuthorIdByLedgerMode(
+  WidgetRef ref, {
+  required bool isCloudLedger,
+}) async {
+  if (!isCloudLedger) return ref.read(localSelfIdProvider.future);
+  return currentOperatorUserIdFromUi(ref);
+}
+
+/// 读取已缓存的云身份（本地持久化 session 种子，离线可用、无网络、无超时）。
+///
+/// 云端账本存在即说明会话已恢复；缓存未就绪时返回 null，调用方留空作者位，
+/// 由同步推送后服务端注入真实身份，绝不降级写 localSelfId。
+Future<String?> currentOperatorUserIdFromUi(WidgetRef ref) async {
+  try {
+    final cloud = await ref.read(spitoutCloudProviderInstance.future);
     if (cloud == null) return null;
-    return await TxAuthorService.currentUserId(cloud.auth)
-        .timeout(kCloudIdentityTimeout);
-  } catch (_) {
+    return TxAuthorService.cachedCurrentUserId(cloud.auth);
+  } catch (e, st) {
+    logger.warning('AuthorIdentity', '读取云端身份失败，作者位留空待同步回填', '$e\n$st');
     return null;
   }
 }

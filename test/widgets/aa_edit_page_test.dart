@@ -10,7 +10,10 @@ library;
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:mocktail/mocktail.dart';
 
+import 'package:spitout/data/db.dart' as db;
+import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/pages/statistics/aa_edit_page.dart';
@@ -26,6 +29,22 @@ const _options = [
   AaParticipantOption(id: 'vu_1', name: '小明', isVirtual: true),
 ];
 
+class _MockRepo extends Mock implements BaseRepository {}
+
+db.Ledger _localLedger() => db.Ledger(
+  id: 1,
+  name: '测试账本',
+  currency: 'CNY',
+  type: 'personal',
+  createdAt: DateTime(2026, 1, 1),
+  myRole: 'owner',
+  memberCount: 1,
+  isShared: false,
+  monthStartDay: 1,
+  storageMode: 'local',
+  aaEnabled: true,
+);
+
 /// 用 Navigator push 触发页路由,结果存入 [result] 槽位。
 ///
 /// [localSelfId] 用于桩操作者身份:默认不传时走真实 UUID(不在名册,
@@ -37,9 +56,13 @@ Future<void> _openAaEdit(
   String displayName = '',
   String? localSelfId,
 }) async {
+  final repo = _MockRepo();
+  // 身份按账本归属解析需要账本行；本测试账本为本地账本。
+  when(() => repo.getLedgerById(any())).thenAnswer((_) async => _localLedger());
   await tester.pumpWidget(
     ProviderScope(
       overrides: [
+        repositoryProvider.overrideWithValue(repo),
         aaParticipantOptionsProvider.overrideWith(
           (ref, ledgerId) async => _options,
         ),

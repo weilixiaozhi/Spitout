@@ -114,9 +114,10 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   /// 无「我」所在行,不锁定任何参与人行(顶部展示回退「我」兜底)。
   Future<void> _resolveDefaultPayerId(List<AaParticipantOption> options) async {
     try {
-      // 操作者 id 优先级与落库层一致:云 userId > localSelfId(设备身份)。
-      final operatorId = await currentOperatorIdFromUi(ref);
-      if (operatorId.isEmpty || !mounted) return;
+      // 操作者 id 与落库层口径一致:本地账本 localSelfId,云端账本云 userId。
+      final operatorId =
+          await currentOperatorIdForLedger(ref, widget.args.ledgerId);
+      if (operatorId == null || operatorId.isEmpty || !mounted) return;
       // 操作者不在名册中时放弃,避免锁定一个不存在的行。
       if (!options.any((o) => o.id == operatorId)) return;
       setState(() => _paidById = operatorId);

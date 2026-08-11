@@ -33,6 +33,9 @@ class SupabaseAuthService implements CloudAuthService {
   }
 
   @override
+  String? get currentUserId => client.auth.currentUser?.id;
+
+  @override
   Future<void> signOut() => client.auth.signOut();
 
   @override

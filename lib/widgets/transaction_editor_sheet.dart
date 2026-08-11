@@ -333,8 +333,7 @@ class _TransactionEditorSheetState
       final repo = ref.read(repositoryProvider);
       // 身份解析与落库并行发起:本地身份很快,云端身份带短超时,
       // 云端不可用时降级到本地设备身份,保存动作不会被云端卡住。
-      final localSelfIdFuture = ref.read(localSelfIdProvider.future);
-      final cloudUserIdFuture = currentOperatorUserIdFromUi(ref);
+      final authorIdFuture = authorUserIdForLedger(ref, _ledgerId);
       // Category 是 synthetic（id<0）时，categoryId 留 null，override 走 syncId
       final isSyntheticCategory = c.id < 0;
       final categoryIdForWrite = isSyntheticCategory ? null : c.id;
@@ -361,18 +360,19 @@ class _TransactionEditorSheetState
           aaSplits: aa.aaSplits,
         );
         transactionId = widget.editingTransactionId!;
-        final operatorUserId =
-            (await cloudUserIdFuture) ?? (await localSelfIdFuture);
-        // 共享账本：本地 lastEditedByUserId 立即回填。身份已在上方解析,
-        // 这里只写库，不等待云端。
-        try {
-          await repo.markTxAuthor(
-            txId: transactionId,
-            userId: operatorUserId,
-            isCreate: false,
-          );
-        } catch (e, st) {
-          logger.warning('TransactionEditorSheet', '回填编辑人失败(不阻断保存): $e', st);
+        final operatorUserId = await authorIdFuture;
+        // 本地 lastEditedByUserId 立即回填；云身份未就绪时不写，由同步服务端注入。
+        if (operatorUserId != null && operatorUserId.isNotEmpty) {
+          try {
+            await repo.markTxAuthor(
+              txId: transactionId,
+              userId: operatorUserId,
+              isCreate: false,
+            );
+          } catch (e, st) {
+            logger.warning(
+                'TransactionEditorSheet', '回填编辑人失败(不阻断保存): $e', st);
+          }
         }
 
         // 闭环：在编辑历史表追加一条同版本号快照，让详情页"编辑记录"区块
@@ -415,18 +415,20 @@ class _TransactionEditorSheetState
           aaParticipants: aa.aaParticipants,
           aaSplits: aa.aaSplits,
         );
-        final operatorUserId =
-            (await cloudUserIdFuture) ?? (await localSelfIdFuture);
-        // 共享账本：新建本地 tx 回填创建人 + 编辑人（同一个 user）;
+        final operatorUserId = await authorIdFuture;
+        // 新建 tx 回填创建人 + 编辑人（同一个 user）;
         // paidByUserId 为空时回填操作者,已显式写入的值(指定分摊)不覆盖。
-        try {
-          await repo.markTxAuthor(
-            txId: transactionId,
-            userId: operatorUserId,
-            isCreate: true,
-          );
-        } catch (e, st) {
-          logger.warning('TransactionEditorSheet', '回填创建人失败(不阻断保存): $e', st);
+        if (operatorUserId != null && operatorUserId.isNotEmpty) {
+          try {
+            await repo.markTxAuthor(
+              txId: transactionId,
+              userId: operatorUserId,
+              isCreate: true,
+            );
+          } catch (e, st) {
+            logger.warning(
+                'TransactionEditorSheet', '回填创建人失败(不阻断保存): $e', st);
+          }
         }
       }
 

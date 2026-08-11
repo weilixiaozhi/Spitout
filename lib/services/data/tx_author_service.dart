@@ -65,6 +65,21 @@ class TxAuthorService {
     }
   }
 
+  /// 读取当前登录用户 id 的同步缓存（不触发网络刷新）。
+  ///
+  /// 供保存/导入等写路径使用：本地持久化会话在离线时也可用，
+  /// 不等待 token refresh；未登录 / 会话未恢复时返回 null。
+  static String? cachedCurrentUserId(CloudAuthService? auth) {
+    try {
+      if (auth == null) return null;
+      final userId = auth.currentUserId;
+      return (userId == null || userId.isEmpty) ? null : userId;
+    } catch (e, st) {
+      logger.warning('TxAuthorService', 'cachedCurrentUserId 读取失败', '$e\n$st');
+      return null;
+    }
+  }
+
   static Future<void> _markImpl(
     CloudAuthService? auth,
     BaseRepository repo,

@@ -21,6 +21,9 @@ class S3AuthService implements CloudAuthService {
   String get _userId =>
       's3-${sha256.convert(utf8.encode(client.accessKey)).toString().substring(0, 8)}';
 
+  @override
+  String? get currentUserId => _userId;
+
   Future<CloudUser?> getCurrentUser() async {
     // S3 使用 Access Key 认证，无用户概念
     // 直接返回用户信息，不需要网络验证（类似 WebDAV）

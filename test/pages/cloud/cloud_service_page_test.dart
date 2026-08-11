@@ -48,6 +48,9 @@ class _FakeSpitoutAuth extends CloudAuthService {
   Future<CloudUser?> get currentUser async => null;
 
   @override
+  String? get currentUserId => null;
+
+  @override
   Future<CloudUser> signInWithAccount({
     required String account,
     required String password,

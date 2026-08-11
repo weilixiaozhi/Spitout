@@ -53,6 +53,9 @@ class _LoggedInAuthService implements CloudAuthService {
   Future<CloudUser?> get currentUser async => user;
 
   @override
+  String? get currentUserId => user.id;
+
+  @override
   Future<CloudUser> signInWithAccount({
     required String account,
     required String password,

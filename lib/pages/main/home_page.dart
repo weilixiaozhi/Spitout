@@ -197,17 +197,13 @@ class _HomePageState extends ConsumerState<HomePage>
 
     final ledgerId = ref.read(currentLedgerIdProvider);
     final baseCurrency = ref.read(currentLedgerCurrencyProvider);
-    // 解析当前操作者标识作为填充交易的支出人(云 userId 优先,未登录
-    // 用设备身份兜底),与真实创建路径的 markTxAuthor 回填口径一致,
+    // 解析当前操作者标识作为填充交易的支出人(按账本归属:本地账本
+    // localSelfId,云端账本云 userId),与真实创建路径口径一致,
     // 避免填充数据出现「支出人未知」或分摊统计误归因。
     String? paidByUserId;
     try {
-      // 经 providers 门面解析当前操作者：云 userId 优先，未登录用设备身份兜底。
-      final cloudUserId = await currentOperatorUserIdFromUi(ref);
-      final localSelfId = await ref.read(localSelfIdProvider.future);
-      paidByUserId = (cloudUserId != null && cloudUserId.isNotEmpty)
-          ? cloudUserId
-          : localSelfId;
+      // 经 providers 门面按账本归属解析当前操作者。
+      paidByUserId = await authorUserIdForLedger(ref, ledgerId);
     } catch (e) {
       // 未配置/未登录时跳过,seeder 侧不传支出人(仅 debug 数据,不影响生产)。
       paidByUserId = null;

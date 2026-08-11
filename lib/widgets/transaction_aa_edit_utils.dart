@@ -75,10 +75,9 @@ class TransactionAaEditUtils {
     // 支出人(paidByUserId)属全局交易语义(非 AA 专属):未手选回传 null 不更新
     // 保持原值,手选后恒写手选值,不受分摊方式切换影响。
     final repo = ref.read(repositoryProvider);
-    // 身份解析与落库并行发起:云端不可用时降级本地设备身份,
-    // 编辑分摊保存不会被云端初始化/token refresh 卡住。
-    final localSelfIdFuture = ref.read(localSelfIdProvider.future);
-    final cloudUserIdFuture = currentOperatorUserIdFromUi(ref);
+    // 身份解析与落库并行发起:本地账本写 localSelfId,云端账本写缓存的云 userId,
+    // 云身份未就绪时留空由同步服务端回填,不降级也不阻塞保存。
+    final authorIdFuture = authorUserIdForLedger(ref, transaction.ledgerId);
     final newVersion = await repo.updateTransaction(
       id: transaction.id,
       type: transaction.type,
@@ -103,19 +102,20 @@ class TransactionAaEditUtils {
       ),
       aaSplits: aaSplitsJsonForWrite(result.aaSplits, isEditing: true),
     );
-    final operatorUserId =
-        (await cloudUserIdFuture) ?? (await localSelfIdFuture);
+    final operatorUserId = await authorIdFuture;
 
-    // 共享账本:本地 lastEditedByUserId 立即回填。
-    try {
-      await repo.markTxAuthor(
-        txId: transaction.id,
-        userId: operatorUserId,
-        isCreate: false,
-      );
-    } catch (e, st) {
-      logger.warning(
-          'TransactionAaEditUtils', '回填编辑人失败(不阻断保存): $e', st);
+    // 本地 lastEditedByUserId 立即回填;云身份未就绪时不写,由同步服务端注入。
+    if (operatorUserId != null && operatorUserId.isNotEmpty) {
+      try {
+        await repo.markTxAuthor(
+          txId: transaction.id,
+          userId: operatorUserId,
+          isCreate: false,
+        );
+      } catch (e, st) {
+        logger.warning(
+            'TransactionAaEditUtils', '回填编辑人失败(不阻断保存): $e', st);
+      }
     }
 
     // 编辑历史闭环:追加一条同版本号快照,详情页编辑记录区块可见。

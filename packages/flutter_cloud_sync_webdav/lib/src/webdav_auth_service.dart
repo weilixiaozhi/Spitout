@@ -34,6 +34,9 @@ class WebDAVAuthService implements CloudAuthService {
   }
 
   @override
+  String? get currentUserId => _currentUser?.id;
+
+  @override
   Future<CloudUser?> get currentUser async {
     return _currentUser;
   }

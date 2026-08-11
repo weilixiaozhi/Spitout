@@ -41,6 +41,9 @@ class MockCloudAuthService implements CloudAuthService {
   Future<CloudUser?> get currentUser async => _currentUser;
 
   @override
+  String? get currentUserId => _currentUser?.id;
+
+  @override
   Stream<CloudUser?> get authStateChanges => Stream.value(_currentUser);
 
   @override

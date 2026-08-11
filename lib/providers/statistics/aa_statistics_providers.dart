@@ -136,18 +136,12 @@ Future<void> deleteVirtualUser(WidgetRef ref, int id) async {
   }
 }
 
-/// 解析当前操作者 id(云 userId 优先,未登录回退设备身份 localSelfId)。
+/// 按账本归属解析当前操作者 id。
 ///
 /// 供分摊编辑页默认支出人展示/锁定使用;与落库层 markTxAuthor 的身份
-/// 解析口径一致,避免页面直接依赖 TxAuthorService。
-Future<String> currentOperatorIdFromUi(WidgetRef ref) async {
-  final cloud = await ref.read(spitoutCloudProviderInstance.future);
-  final cloudUserId = await TxAuthorService.currentUserId(cloud?.auth);
-  final localSelfId = await ref.read(localSelfIdProvider.future);
-  return (cloudUserId != null && cloudUserId.isNotEmpty)
-      ? cloudUserId
-      : localSelfId;
-}
+/// 解析口径一致(本地账本 localSelfId,云端账本云 userId),避免页面直接依赖 TxAuthorService。
+Future<String?> currentOperatorIdForLedger(WidgetRef ref, int ledgerId) =>
+    authorUserIdForLedger(ref, ledgerId);
 
 /// 账本 AA 参与人选项列表(真实成员 + 虚拟用户)。
 ///

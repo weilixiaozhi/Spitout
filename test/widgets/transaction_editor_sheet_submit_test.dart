@@ -39,6 +39,9 @@ import 'package:spitout/widgets/collaborator_avatar.dart';
 import 'package:spitout/widgets/press_key.dart';
 import 'package:spitout/widgets/transaction_editor_sheet.dart';
 
+import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
+import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudSyncBackend;
+
 class _MockRepo extends Mock implements BaseRepository {}
 
 class _MockSyncService extends Mock implements SyncService {}
@@ -82,12 +85,15 @@ void main() {
     when(() => repo.getCategoryTree(any())).thenAnswer(
       (_) async => const CategoryPickerTree(topLevel: [], children: {}),
     );
+    // 默认本地账本；作者身份按账本归属解析需要读到账本行。
+    when(() => repo.getLedgerById(any())).thenAnswer((_) async => _ledger());
   });
 
   /// 构建宿主：直接以 TransactionEditorSheet 为 home（无 bottom sheet 包装，
   /// 便于断言提交后 pop 行为）。
   Widget buildApp({
     db.Ledger? ledger,
+    SpitoutCloudSyncBackend? cloudBackend,
     List<db.Category> topLevel = const [],
     Map<String, EffectiveRate> rates = const {},
     RouteFactory? routeFactory,
@@ -113,7 +119,7 @@ void main() {
           ),
         ),
         syncServiceProvider.overrideWithValue(syncService),
-        spitoutCloudProviderInstance.overrideWith((ref) async => null),
+        spitoutCloudProviderInstance.overrideWith((ref) async => cloudBackend),
         localSelfIdProvider.overrideWith((ref) async => 'device-1'),
       ],
       child: MaterialApp(
@@ -256,6 +262,179 @@ void main() {
     ).called(1);
     // sheet 提交后关闭。
     expect(find.byType(TransactionEditorSheet), findsNothing);
+  });
+
+  testWidgets('本地账本 + 已登录云端：markTxAuthor 仍写 localSelfId，不受云身份影响',
+      (tester) async {
+    when(() => repo.getLedgerById(1))
+        .thenAnswer((_) async => _ledger());
+    when(() => repo.addTransaction(
+      ledgerId: any(named: 'ledgerId'),
+      type: any(named: 'type'),
+      amount: any(named: 'amount'),
+      categoryId: any(named: 'categoryId'),
+      happenedAt: any(named: 'happenedAt'),
+      note: any(named: 'note'),
+      categorySyncIdOverride: any(named: 'categorySyncIdOverride'),
+      excludeFromStats: any(named: 'excludeFromStats'),
+      currencyCode: any(named: 'currencyCode'),
+      nativeAmount: any(named: 'nativeAmount'),
+      paidByUserId: any(named: 'paidByUserId'),
+      aaMode: any(named: 'aaMode'),
+      aaParticipants: any(named: 'aaParticipants'),
+      aaSplits: any(named: 'aaSplits'),
+    )).thenAnswer((_) async => 42);
+    when(
+      () => repo.markTxAuthor(
+        txId: any(named: 'txId'),
+        userId: any(named: 'userId'),
+        isCreate: any(named: 'isCreate'),
+      ),
+    ).thenAnswer((_) async {});
+
+    await tester.pumpWidget(
+      buildApp(
+        topLevel: [_category(1, '餐饮')],
+        cloudBackend: FakeSpitoutCloudProvider(userId: 'cloud-1'),
+      ),
+    );
+    await openEditor(tester);
+    await tester.tap(find.text('餐饮'));
+    await tester.pump();
+    await tapKeypadDigit(tester, '5');
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AmountKeypad),
+        matching: find.byIcon(AppIcons.keyboardReturn),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    verify(
+      () => repo.markTxAuthor(
+        txId: 42,
+        userId: 'device-1',
+        isCreate: true,
+      ),
+    ).called(1);
+    expect(find.byType(TransactionEditorSheet), findsNothing);
+  });
+
+  testWidgets('云端账本 + 已登录：markTxAuthor 写云 userId', (tester) async {
+    when(() => repo.getLedgerById(1))
+        .thenAnswer((_) async => _ledger(isShared: true));
+    when(() => repo.addTransaction(
+      ledgerId: any(named: 'ledgerId'),
+      type: any(named: 'type'),
+      amount: any(named: 'amount'),
+      categoryId: any(named: 'categoryId'),
+      happenedAt: any(named: 'happenedAt'),
+      note: any(named: 'note'),
+      categorySyncIdOverride: any(named: 'categorySyncIdOverride'),
+      excludeFromStats: any(named: 'excludeFromStats'),
+      currencyCode: any(named: 'currencyCode'),
+      nativeAmount: any(named: 'nativeAmount'),
+      paidByUserId: any(named: 'paidByUserId'),
+      aaMode: any(named: 'aaMode'),
+      aaParticipants: any(named: 'aaParticipants'),
+      aaSplits: any(named: 'aaSplits'),
+    )).thenAnswer((_) async => 42);
+    when(
+      () => repo.markTxAuthor(
+        txId: any(named: 'txId'),
+        userId: any(named: 'userId'),
+        isCreate: any(named: 'isCreate'),
+      ),
+    ).thenAnswer((_) async {});
+
+    await tester.pumpWidget(
+      buildApp(
+        ledger: _ledger(isShared: true),
+        topLevel: [_category(1, '餐饮')],
+        cloudBackend: FakeSpitoutCloudProvider(userId: 'cloud-1'),
+      ),
+    );
+    await openEditor(tester);
+    await tester.tap(find.text('餐饮'));
+    await tester.pump();
+    await tapKeypadDigit(tester, '6');
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AmountKeypad),
+        matching: find.byIcon(AppIcons.keyboardReturn),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    verify(
+      () => repo.markTxAuthor(
+        txId: 42,
+        userId: 'cloud-1',
+        isCreate: true,
+      ),
+    ).called(1);
+    expect(find.byType(TransactionEditorSheet), findsNothing);
+  });
+
+  testWidgets('云端账本 + 云身份未就绪：不阻止保存，作者位留空', (tester) async {
+    when(() => repo.getLedgerById(1))
+        .thenAnswer((_) async => _ledger(isShared: true));
+    when(() => repo.addTransaction(
+      ledgerId: any(named: 'ledgerId'),
+      type: any(named: 'type'),
+      amount: any(named: 'amount'),
+      categoryId: any(named: 'categoryId'),
+      happenedAt: any(named: 'happenedAt'),
+      note: any(named: 'note'),
+      categorySyncIdOverride: any(named: 'categorySyncIdOverride'),
+      excludeFromStats: any(named: 'excludeFromStats'),
+      currencyCode: any(named: 'currencyCode'),
+      nativeAmount: any(named: 'nativeAmount'),
+      paidByUserId: any(named: 'paidByUserId'),
+      aaMode: any(named: 'aaMode'),
+      aaParticipants: any(named: 'aaParticipants'),
+      aaSplits: any(named: 'aaSplits'),
+    )).thenAnswer((_) async => 42);
+
+    await tester.pumpWidget(
+      buildApp(
+        ledger: _ledger(isShared: true),
+        topLevel: [_category(1, '餐饮')],
+      ),
+    );
+    await openEditor(tester);
+    await tester.tap(find.text('餐饮'));
+    await tester.pump();
+    await tapKeypadDigit(tester, '7');
+    await tester.tap(
+      find.descendant(
+        of: find.byType(AmountKeypad),
+        matching: find.byIcon(AppIcons.keyboardReturn),
+      ),
+    );
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 300));
+    for (var i = 0; i < 20; i++) {
+      await tester.pump(const Duration(milliseconds: 100));
+    }
+
+    // 保存不被阻止（sheet 正常关闭），但作者位不写 localSelfId。
+    expect(find.byType(TransactionEditorSheet), findsNothing);
+    verifyNever(
+      () => repo.markTxAuthor(
+        txId: any(named: 'txId'),
+        userId: any(named: 'userId'),
+        isCreate: any(named: 'isCreate'),
+      ),
+    );
   });
 
   testWidgets('未选分类提交：toast 提示并保持开启', (tester) async {

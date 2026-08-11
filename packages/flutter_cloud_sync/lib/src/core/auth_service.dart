@@ -43,6 +43,12 @@ abstract class CloudAuthService {
   /// 未登录时返回 null。
   Future<CloudUser?> get currentUser;
 
+  /// 当前已登录用户 id 的同步缓存（无网络、无刷新）。
+  ///
+  /// 供保存/导入等写路径在提交瞬间直接取本地会话身份，
+  /// 不等待 token refresh；未登录 / 会话未恢复时返回 null。
+  String? get currentUserId;
+
   /// 使用账号 + 密码登录。
   ///
   /// 登录失败时抛出 [CloudAuthException]。
@@ -83,6 +89,9 @@ class NoopAuthService implements CloudAuthService {
 
   @override
   Future<CloudUser?> get currentUser async => null;
+
+  @override
+  String? get currentUserId => null;
 
   @override
   Future<CloudUser> signInWithAccount({

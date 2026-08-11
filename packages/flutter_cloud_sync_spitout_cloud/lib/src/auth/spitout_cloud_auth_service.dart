@@ -352,6 +352,7 @@ class SpitoutCloudAuthService implements CloudAuthService {
   }
 
   String? get currentDeviceId => _session?.deviceId;
+  @override
   String? get currentUserId => _session?.userId;
 
   /// 静默恢复冷却剩余时间;非冷却期(包括未登录首页、恢复成功、2FA 取消等)返回 null。

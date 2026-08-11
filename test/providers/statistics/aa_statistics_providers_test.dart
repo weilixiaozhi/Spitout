@@ -3,7 +3,7 @@
 // 需求锚点：
 //   1. aaEnabledProvider 反映 ledger.aaEnabled 流；
 //   2. setAaEnabled / 虚拟用户 CRUD 走 repository 并失效率刷新；失败向上抛；
-//   3. currentOperatorIdFromUi：云 userId 优先，未登录回退 localSelfId；
+//   3. currentOperatorIdForLedger：本地账本回退 localSelfId，云端账本返回云 userId；
 //   4. aaParticipantOptionsProvider：单人账本把 owner（或 localSelfId 兜底）纳入参与人，并追加虚拟用户；
 //   5. aaStatisticsProvider：AA 关闭返回空汇总；开启后含参与人/虚拟用户；
 //   6. aaParticipantAvatarContextProvider：本地账本返回空上下文；
@@ -16,6 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/test_isolation.dart';
+import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
@@ -97,9 +98,34 @@ void main() {
     expect(await repo.getByLedger(1), isEmpty);
   });
 
-  testWidgets('currentOperatorIdFromUi：未登录回退 localSelfId', (tester) async {
+  testWidgets('currentOperatorIdForLedger：本地账本回退 localSelfId', (tester) async {
     final ref = await captureRef(tester, container);
-    expect(await currentOperatorIdFromUi(ref), 'local-self');
+    expect(await currentOperatorIdForLedger(ref, 1), 'local-self');
+  });
+
+  testWidgets('currentOperatorIdForLedger：云端账本返回缓存的云 userId', (tester) async {
+    final cloudLedgerId = await repo.createLedger(
+      name: '云端账本',
+      storageMode: 'cloud',
+      ownerUserId: 'cloud-owner',
+    );
+    final cloudContainer = ProviderContainer(
+      overrides: [
+        databaseProvider.overrideWithValue(db),
+        repositoryProvider.overrideWithValue(repo),
+        spitoutCloudProviderInstance.overrideWith(
+          (ref) async => FakeSpitoutCloudProvider(userId: 'cloud-user-1'),
+        ),
+        localSelfIdProvider.overrideWith((ref) async => 'local-self'),
+        currentLedgerIdProvider.overrideWithBuild((ref, notifier) => 1),
+      ],
+    );
+    addTearDown(cloudContainer.dispose);
+    final ref = await captureRef(tester, cloudContainer);
+    expect(
+      await currentOperatorIdForLedger(ref, cloudLedgerId),
+      'cloud-user-1',
+    );
   });
 
   test('aaParticipantOptionsProvider：单人账本含 owner 与虚拟用户', () async {

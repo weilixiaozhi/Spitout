@@ -878,11 +878,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
         aaEnabled: _aaEnabled,
       );
     } else {
-      // 账本所有者身份:一律用 localSelfId 作为初始 ownerUserId。
-      // cloud 归属账本的 ownerUserId 会在同步/转云端时由迁移服务
-      // (LocalIdentityMigrationService)改写为云 userId,此处不读取
-      // spitoutCloudProviderInstance,避免未初始化时报错阻断建账本。
-      final localSelfId = await ref.read(localSelfIdProvider.future);
+      // 账本所有者身份按归属选择:本地账本写 localSelfId,云端账本写缓存的云 userId。
+      // 云端身份未就绪时留空(服务端建本时以调用者身份登记),不降级 localSelfId。
+      final ownerUserId = await currentAuthorIdByLedgerMode(
+        ref,
+        isCloudLedger: storageMode == 'cloud',
+      );
       if (storageMode == 'cloud') {
         // 云端账本 = 云端优先：必须先确保云端建本成功才算保存成功。
         // 失败/超时抛错由 _handleSave 提示，本地不落账本，页面保留现场，
@@ -891,7 +892,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           container,
           name: name,
           currency: _currency,
-          ownerUserId: localSelfId,
+          ownerUserId: ownerUserId,
           aaEnabled: _aaEnabled,
           monthStartDay: _monthStartDay,
         );
@@ -908,7 +909,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           name: name,
           currency: _currency,
           storageMode: storageMode,
-          ownerUserId: localSelfId,
+          ownerUserId: ownerUserId,
           aaEnabled: _aaEnabled,
         );
       }
