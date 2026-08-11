@@ -28,6 +28,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/ledger_edit_page.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'package:spitout/widgets/text_state_switch.dart';
 
 import '../../helpers/test_isolation.dart';
@@ -311,6 +312,8 @@ void main() {
       // 点击月起始日行打开 28 宫格选择器。
       await tester.tap(find.text(l10n.ledgersMonthStartDayNatural));
       await tester.pumpAndSettle();
+      expect(find.byType(SheetGrabHandle), findsOneWidget,
+          reason: '底部弹层应有统一拖拽条');
       await tester.tap(find.text('15'));
       await tester.pumpAndSettle();
 

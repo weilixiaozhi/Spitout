@@ -7,6 +7,7 @@ import 'package:spitout/theme/colors.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 分类过滤器回调类型
@@ -183,9 +184,10 @@ class _ParentCategorySelectorSheetState
       padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
       child: Column(
         children: [
+          const SheetGrabHandle(),
           // ── 标题栏 ──
           Padding(
-            padding: const EdgeInsets.fromLTRB(24, 24, 24, 0),
+            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
             child: Align(
               alignment: Alignment.centerLeft,
               child: Text(

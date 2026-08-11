@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'app_route.dart';
+import 'sheet_grab_handle.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
 
@@ -52,6 +53,7 @@ class _WheelPickerState<T> extends State<WheelPicker<T>> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SheetGrabHandle(),
           Container(
             height: 52,
             padding: const EdgeInsets.symmetric(horizontal: 12),

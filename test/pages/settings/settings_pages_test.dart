@@ -32,6 +32,7 @@ import 'package:spitout/services/notification/notification_factory.dart';
 import 'package:spitout/services/notification/notification_util.dart';
 import 'package:spitout/services/notification/reminder_constants.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'package:spitout/widgets/wheel_time_picker.dart';
 
 import '../../helpers/test_isolation.dart';
@@ -310,6 +311,8 @@ void main() {
       await tester.tap(find.text('自动锁定时间'));
       await tester.pumpAndSettle();
       expect(find.text('1分钟后'), findsOneWidget);
+      expect(find.byType(SheetGrabHandle), findsOneWidget,
+          reason: '底部弹层应有统一拖拽条');
 
       await tester.tap(find.text('1分钟后'));
       await tester.pumpAndSettle();
@@ -340,6 +343,8 @@ void main() {
       await tester.tap(find.text('提醒时间'));
       await tester.pumpAndSettle();
       expect(find.byType(WheelTimePicker), findsOneWidget);
+      expect(find.byType(SheetGrabHandle), findsOneWidget,
+          reason: '时间滚轮底部弹层应有统一拖拽条');
     });
 
     testWidgets('时间滚轮确定后更新并持久化', (tester) async {

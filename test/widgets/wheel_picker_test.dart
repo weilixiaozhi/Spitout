@@ -9,6 +9,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'package:spitout/widgets/wheel_picker.dart';
 
 void main() {
@@ -49,6 +50,8 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
     expect(find.text('选择频率'), findsOneWidget);
+    expect(find.byType(SheetGrabHandle), findsOneWidget,
+        reason: '底部弹层应有统一拖拽条');
 
     await tester.tap(find.text('确定'));
     await tester.pumpAndSettle();

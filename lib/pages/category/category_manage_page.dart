@@ -11,6 +11,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'category_edit_page.dart';
 import 'category_template_flat_page.dart';
 import 'category_template_hierarchical_page.dart';
@@ -1551,10 +1552,11 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
       constraints: BoxConstraints(
         maxHeight: MediaQuery.of(context).size.height * 0.8,
       ),
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          const SheetGrabHandle(),
           // 标题
           Text(
             l10n.categoryMigrateSelectTargetTitle,

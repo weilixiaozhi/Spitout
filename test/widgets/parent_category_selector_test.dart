@@ -16,6 +16,7 @@ import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/widgets/category_selector_dialog.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 /// Mock 整个 BaseRepository
 class _MockRepo extends Mock implements BaseRepository {}
@@ -90,6 +91,8 @@ void main() {
     await openSheet(tester);
 
     expect(find.text('选择所属分类'), findsOneWidget, reason: '应有 sheet 标题');
+    expect(find.byType(SheetGrabHandle), findsOneWidget,
+        reason: '底部弹层应有统一拖拽条');
     expect(find.text('餐饮'), findsOneWidget);
     expect(find.text('交通'), findsOneWidget);
     expect(find.text('购物'), findsOneWidget);

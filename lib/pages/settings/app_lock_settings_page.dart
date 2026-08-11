@@ -10,6 +10,7 @@ import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/auth/pin_setup_page.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 class AppLockSettingsPage extends ConsumerStatefulWidget {
   const AppLockSettingsPage({super.key});
@@ -141,8 +142,9 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              const SheetGrabHandle(),
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
                 child: Text(
                   l10n.appLockTimeout,
                   style: TextStyle(

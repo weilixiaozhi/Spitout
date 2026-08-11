@@ -21,6 +21,7 @@ import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/widgets/overlay_keyboard_guard.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 /// 账本编辑二级页面
 ///
@@ -1364,11 +1365,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
         final l10n = AppLocalizations.of(ctx);
         return SafeArea(
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                const SheetGrabHandle(),
                 Text(
                   l10n.ledgersMonthStartDay,
                   style: Theme.of(ctx).textTheme.titleMedium,

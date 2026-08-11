@@ -21,6 +21,7 @@ import 'package:spitout/pages/category/category_edit_page.dart';
 import 'package:spitout/pages/category/category_manage_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 /// Mock 整个 BaseRepository，未 stub 的方法返回默认值不抛异常。
 class _MockRepo extends Mock implements BaseRepository {}
@@ -755,6 +756,8 @@ void main() {
 
       // 迁移目标 BottomSheet：选择「购物」→ 确认
       expect(find.text('选择数据迁移到的分类'), findsOneWidget);
+      expect(find.byType(SheetGrabHandle), findsOneWidget,
+          reason: '底部弹层应有统一拖拽条');
       // 用搜索过滤到唯一目标（背后网格也有同名分类，取 sheet 中的最后一个）
       await tester.enterText(find.byType(TextField).last, '购物');
       await tester.pump(const Duration(milliseconds: 100));
