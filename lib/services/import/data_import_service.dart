@@ -89,6 +89,7 @@ class DataImportService implements DataImportPort {
     String defaultCurrency = 'CNY',
     void Function(int done, int total)? onProgress,
     bool recordChanges = true,
+    String? authorUserId,
   }) async {
     // 0. 入口统一校验：导入（CSV/云恢复）是脏数据的主要入口，
     // 非法分类/交易在这里拦截并计入 failed，不进入落库流程。
@@ -173,6 +174,7 @@ class DataImportService implements DataImportPort {
       categoryCache: categoryCache,
       onProgress: onProgress,
       recordChanges: recordChanges,
+      authorUserId: authorUserId,
     );
 
     return ImportResult(
@@ -359,6 +361,7 @@ class DataImportService implements DataImportPort {
     required Map<String, int> categoryCache,
     void Function(int done, int total)? onProgress,
     bool recordChanges = true,
+    String? authorUserId,
   }) async {
     int inserted = 0;
     int failed = 0;
@@ -598,9 +601,19 @@ class DataImportService implements DataImportPort {
         excludeFromStats: d.Value(tx.excludeFromStats ?? false),
         // AA 分摊字段:JSON 缺键落 null(列默认值),有值显式写入。
         // 与 server snapshot「缺键 = 未启用 AA」语义对齐。
-        // 支出人兜底:备份未携带(旧 v6/CSV)时默认与创建人一致(用户数据修复
-        // 约定),双缺失落空串,展示层降级"未知"、计算层跳过。
-        paidByUserId: d.Value(tx.paidByUserId ?? tx.createdByUserId ?? ''),
+        // 支出人:手动导入传入 authorUserId 时以当前身份为准;
+        // 云同步拉取不传则保留备份值(旧 v6/CSV 双缺失落空串,展示层降级"未知")。
+        paidByUserId: d.Value(
+          authorUserId ?? tx.paidByUserId ?? tx.createdByUserId ?? '',
+        ),
+        // 创建者/编辑者:手动导入以当前身份回填,解决详情页作者位为空;
+        // 云同步拉取不传,保持 null 由 server 快照后续覆盖。
+        createdByUserId: authorUserId == null
+            ? const d.Value.absent()
+            : d.Value(authorUserId),
+        lastEditedByUserId: authorUserId == null
+            ? const d.Value.absent()
+            : d.Value(authorUserId),
         aaMode: d.Value(tx.aaMode),
         aaParticipants: d.Value(tx.aaParticipants),
         aaSplits: d.Value(tx.aaSplits),

@@ -17,6 +17,7 @@ abstract class DataImportPort {
     String defaultCurrency = 'CNY',
     void Function(int done, int total)? onProgress,
     bool recordChanges = true,
+    String? authorUserId,
   });
 
   /// 导入分类（先一级后二级），返回分类缓存供交易导入复用。
@@ -33,5 +34,6 @@ abstract class DataImportPort {
     required Map<String, int> categoryCache,
     void Function(int done, int total)? onProgress,
     bool recordChanges = true,
+    String? authorUserId,
   });
 }

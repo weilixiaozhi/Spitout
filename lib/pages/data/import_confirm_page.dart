@@ -433,6 +433,12 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
       return;
     }
     final ledgerCurrency = currentLedger.currency;
+    // 导入以当前身份落库：本地账本 localSelfId，云端账本云 userId。
+    final authorUserId = await currentAuthorIdByLedgerMode(
+      ref,
+      isCloudLedger: currentLedger.storageMode == 'cloud' ||
+          currentLedger.isShared,
+    );
 
     final dataStart = widget.hasHeader ? (headerRow + 1) : 0;
     final total = rows.length - dataStart;
@@ -531,6 +537,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
         ledgerId,
         importData,
         defaultCurrency: ledgerCurrency,
+        authorUserId: authorUserId,
         onProgress: (processed, progressTotal) {
           // 批次间隙检查取消:抛异常中止导入服务,未处理批次不再写入。
           if (_cancelled) {

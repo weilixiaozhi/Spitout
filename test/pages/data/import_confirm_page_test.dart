@@ -10,13 +10,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
+import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/cloud/sync/sync_service.dart' show LocalOnlySyncService;
+import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudSyncBackend;
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/data/import_confirm_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
+import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show syncServiceProvider;
 
@@ -88,10 +92,15 @@ void main() {
     required String csv,
     required bool hasHeader,
     int ledgerId = 1,
+    String? localSelfId,
+    SpitoutCloudSyncBackend? cloudBackend,
   }) {
     return ProviderScope(
       overrides: [
         repositoryProvider.overrideWithValue(repo),
+        if (localSelfId != null)
+          localSelfIdProvider.overrideWith((ref) async => localSelfId),
+        spitoutCloudProviderInstance.overrideWith((ref) async => cloudBackend),
         currentLedgerIdProvider.overrideWithBuild(
             (ref, notifier) => ledgerId),
         syncServiceProvider.overrideWith((ref) => LocalOnlySyncService()),
@@ -354,6 +363,80 @@ void main() {
       // 冲刷 5 秒延迟清空进度与 toast 定时器
       await tester.pump(const Duration(seconds: 5));
       await tester.pump(const Duration(seconds: 2));
+    });
+
+    testWidgets('导入落库：本地账本以 localSelfId 为作者身份', (tester) async {
+      await openAndParse(
+        tester,
+        buildApp(csv: _csv, hasHeader: true, localSelfId: 'device-1'),
+      );
+      await goToCategoryStep(tester);
+      await tester.tap(find.text('开始导入'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 2));
+
+      final captured = verify(
+        () => repo.insertTransactionsBatchWithRelations(
+          transactions: captureAny(named: 'transactions'),
+          recordChanges: any(named: 'recordChanges'),
+        ),
+      ).captured;
+      final txs = captured.single as List<TransactionsCompanion>;
+      expect(txs, hasLength(2));
+      for (final t in txs) {
+        expect(t.paidByUserId.value, 'device-1');
+        expect(t.createdByUserId.value, 'device-1');
+        expect(t.lastEditedByUserId.value, 'device-1');
+      }
+    });
+
+    testWidgets('导入落库：云端账本以云 userId 为作者身份', (tester) async {
+      when(() => repo.getLedgerById(1)).thenAnswer((_) async => Ledger(
+            id: 1,
+            name: '云端账本',
+            currency: 'CNY',
+            type: 'personal',
+            createdAt: DateTime(2026, 1, 1),
+            myRole: 'owner',
+            memberCount: 1,
+            isShared: true,
+            monthStartDay: 1,
+            syncId: 'sync-1',
+            storageMode: 'cloud',
+            aaEnabled: false,
+          ));
+      await openAndParse(
+        tester,
+        buildApp(
+          csv: _csv,
+          hasHeader: true,
+          cloudBackend: FakeSpitoutCloudProvider(userId: 'cloud-1'),
+        ),
+      );
+      await goToCategoryStep(tester);
+      await tester.tap(find.text('开始导入'));
+      await tester.pump();
+      await tester.pump(const Duration(milliseconds: 300));
+      await tester.pumpAndSettle();
+      await tester.pump(const Duration(seconds: 5));
+      await tester.pump(const Duration(seconds: 2));
+
+      final captured = verify(
+        () => repo.insertTransactionsBatchWithRelations(
+          transactions: captureAny(named: 'transactions'),
+          recordChanges: any(named: 'recordChanges'),
+        ),
+      ).captured;
+      final txs = captured.single as List<TransactionsCompanion>;
+      expect(txs, hasLength(2));
+      for (final t in txs) {
+        expect(t.paidByUserId.value, 'cloud-1');
+        expect(t.createdByUserId.value, 'cloud-1');
+        expect(t.lastEditedByUserId.value, 'cloud-1');
+      }
     });
 
     testWidgets('坏行与跳过类型：完成弹窗展示明细，确认后关闭页面', (tester) async {
