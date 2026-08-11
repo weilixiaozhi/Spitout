@@ -176,6 +176,8 @@ Future<int> createCloudLedgerFromUi(
         ledgerId: syncId,
         ledgerName: name,
         currency: currency,
+        aaEnabled: aaEnabled,
+        monthStartDay: monthStartDay,
       )
       .timeout(timeout);
   return container.read(repositoryProvider).createBoundLedger(

@@ -459,6 +459,8 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
     String? ledgerId,
     required String ledgerName,
     String currency = 'CNY',
+    bool aaEnabled = false,
+    int monthStartDay = 1,
     String? idempotencyKey,
   }) async {
     final injector = writeCreateLedgerErrorInjector;
@@ -482,6 +484,8 @@ class FakeSpitoutCloudProvider implements SpitoutCloudSyncBackend {
         ledgerId: meta.ledgerId,
         ledgerName: ledgerName,
         currency: currency,
+        aaEnabled: aaEnabled,
+        monthStartDay: monthStartDay,
       );
     }
     return meta;

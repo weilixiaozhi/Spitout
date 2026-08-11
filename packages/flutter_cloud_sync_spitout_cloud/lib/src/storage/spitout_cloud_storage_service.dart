@@ -920,11 +920,16 @@ class SpitoutCloudStorageService implements CloudStorageService {
     String? ledgerId,
     required String ledgerName,
     String currency = 'CNY',
+    bool aaEnabled = false,
+    int monthStartDay = 1,
     String? idempotencyKey,
   }) async {
     final body = <String, dynamic>{
       'ledger_name': ledgerName,
       'currency': currency,
+      // 建本时同步落 AA 开关与月起始日，避免服务端默认值在下次对账时覆盖本地
+      'aa_enabled': aaEnabled,
+      'month_start_day': monthStartDay,
       if (ledgerId != null && ledgerId.trim().isNotEmpty)
         'ledger_id': ledgerId.trim(),
     };

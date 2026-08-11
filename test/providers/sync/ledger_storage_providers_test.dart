@@ -263,6 +263,37 @@ void main() {
       await flushTimers(tester);
     });
 
+    testWidgets('aaEnabled=true + monthStartDay≠1 随建本请求落到服务端，对账后不回滚', (tester) async {
+      provider.autoRegisterWrittenLedgers = true;
+      final container = buildContainer();
+
+      final id = await createCloudLedgerFromUi(
+        container,
+        name: 'AA账本',
+        currency: 'CNY',
+        ownerUserId: 'local-self-id',
+        aaEnabled: true,
+        monthStartDay: 15,
+      );
+
+      // 本地绑定行必须保留用户选择的开关与月起始日
+      final ledger = await repo.getLedgerById(id);
+      expect(ledger!.aaEnabled, isTrue);
+      expect(ledger.monthStartDay, 15);
+
+      // 服务端 canonical 状态必须与本地一致，否则下次 syncLedgersFromServer 对账会回滚
+      final serverLedgers = await provider.readLedgers();
+      expect(serverLedgers.single.aaEnabled, isTrue);
+      expect(serverLedgers.single.monthStartDay, 15);
+
+      // 模拟下一次对账：拉取服务端清单后本地值不得被默认值覆盖
+      await engine.syncLedgersFromServer();
+      final after = await repo.getLedgerById(id);
+      expect(after!.aaEnabled, isTrue);
+      expect(after.monthStartDay, 15);
+      await flushTimers(tester);
+    });
+
     testWidgets('云端创建失败 → 抛错且本地不落账本', (tester) async {
       provider.writeCreateLedgerErrorInjector = () => Exception('cloud boom');
       final container = buildContainer();

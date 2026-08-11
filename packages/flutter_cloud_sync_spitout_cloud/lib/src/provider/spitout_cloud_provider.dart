@@ -159,6 +159,8 @@ abstract interface class SpitoutCloudSyncBackend implements CloudProvider {
     String? ledgerId,
     required String ledgerName,
     String currency,
+    bool aaEnabled = false,
+    int monthStartDay = 1,
     String? idempotencyKey,
   });
 
@@ -870,6 +872,8 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
     String? ledgerId,
     required String ledgerName,
     String currency = 'CNY',
+    bool aaEnabled = false,
+    int monthStartDay = 1,
     String? idempotencyKey,
   }) async {
     final storage = _storage;
@@ -881,6 +885,8 @@ class SpitoutCloudProvider implements SpitoutCloudSyncBackend {
       ledgerId: ledgerId,
       ledgerName: ledgerName,
       currency: currency,
+      aaEnabled: aaEnabled,
+      monthStartDay: monthStartDay,
       idempotencyKey: idempotencyKey,
     );
   }

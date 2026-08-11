@@ -210,6 +210,8 @@ extension SyncEngineSerializationExt on SyncEngine {
         ledgerId: pathForSnapshot,
         ledgerName: ledger.name,
         currency: ledger.currency,
+        aaEnabled: ledger.aaEnabled,
+        monthStartDay: ledger.monthStartDay,
       );
       logger.info('SyncEngine',
           'writeCreateLedger 成功: ledgerId=$pathForSnapshot, name=${ledger.name}, currency=${ledger.currency}');
