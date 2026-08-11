@@ -12,6 +12,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
 import 'format_money.dart';
+import 'member_avatar.dart';
 import 'me_suffix.dart';
 import 'person_avatar.dart';
 import 'section_card.dart';
@@ -233,7 +234,7 @@ class _MemberStatTile extends ConsumerWidget {
   }
 }
 
-/// 成员支出头像 — 本人优先用本地头像文件，真实成员用 server avatar_url，
+/// 成员支出头像 — 本人优先用本地头像文件，真实成员走磁盘缓存，
 /// 都没有或加载失败才回退 person 图标。
 class _StatsAvatar extends ConsumerWidget {
   const _StatsAvatar({required this.stat});
@@ -257,31 +258,13 @@ class _StatsAvatar extends ConsumerWidget {
       );
     }
 
-    final relativeUrl = stat.avatarUrl;
-    if (relativeUrl == null || relativeUrl.isEmpty) {
-      return const PersonAvatar(size: 40, iconSize: 18);
-    }
-    final cloudAsync = ref.watch(spitoutCloudProviderInstance);
-    final base = cloudAsync.value?.baseUrl;
-    if (base == null || base.isEmpty) {
-      return const PersonAvatar(size: 40, iconSize: 18);
-    }
-    final trimmedBase =
-        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    final absoluteUrl =
-        relativeUrl.startsWith('http') ? relativeUrl : '$trimmedBase$relativeUrl';
-    return ClipOval(
-      child: Image.network(
-        absoluteUrl,
-        width: 40,
-        height: 40,
-        fit: BoxFit.cover,
-        loadingBuilder: (ctx, child, progress) => progress == null
-            ? child
-            : const PersonAvatar(size: 40, iconSize: 18),
-        errorBuilder: (_, _, _) =>
-            const PersonAvatar(size: 40, iconSize: 18),
-      ),
+    // 非本人真实成员:统一走磁盘缓存(断网可用),未配置头像/加载失败回退占位。
+    return MemberAvatar(
+      userId: stat.participantId,
+      version: stat.avatarVersion,
+      hasAvatar: stat.avatarUrl != null && stat.avatarUrl!.trim().isNotEmpty,
+      size: 40,
+      iconSize: 18,
     );
   }
 }

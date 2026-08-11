@@ -250,6 +250,7 @@ class MemberExpenseStatItem {
     required this.txCount,
     this.isSelf = false,
     this.avatarUrl,
+    this.avatarVersion = 0,
     this.localAvatarPath,
   });
 
@@ -273,6 +274,9 @@ class MemberExpenseStatItem {
 
   /// 服务端头像相对/绝对 URL(真实成员);虚拟用户为 null。
   final String? avatarUrl;
+
+  /// 服务端头像版本号(真实成员);用于本地缓存键,虚拟用户为 0。
+  final int avatarVersion;
 
   /// 本人本地头像文件路径;无头像或非本人为 null。
   final String? localAvatarPath;
@@ -324,6 +328,8 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       final selfMap = <String, bool>{};
       // 真实成员的头像 URL(userId → server avatarUrl)
       final avatarUrlMap = <String, String?>{};
+      // 真实成员的头像版本号(userId → server avatarVersion),供缓存键使用。
+      final avatarVersionMap = <String, int>{};
       // 虚拟用户:syncId 作为参与人标识。
       final virtualUsers = await repo.getByLedger(ledgerId);
       for (final vu in virtualUsers) {
@@ -342,6 +348,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
                 : m.account;
             selfMap[m.userId] = m.isSelf;
             avatarUrlMap[m.userId] = m.avatarUrl;
+            avatarVersionMap[m.userId] = m.avatarVersion;
           }
         } catch (e, st) {
           logger.warning(
@@ -381,6 +388,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
             txCount: countMap[pid] ?? 0,
             isSelf: isSelf,
             avatarUrl: avatarUrlMap[pid],
+            avatarVersion: avatarUrlMap[pid] == null ? 0 : (avatarVersionMap[pid] ?? 0),
             localAvatarPath: isSelf ? localAvatarPath : null,
           ),
         );
@@ -605,14 +613,10 @@ final aaMemberDetailProvider = FutureProvider.autoDispose
 class AaParticipantAvatarContext {
   const AaParticipantAvatarContext({
     this.members = const {},
-    this.baseUrl = '',
   });
 
   /// 参与人标识(userId) → 云端成员(共享账本才可能有数据)。
   final Map<String, SpitoutCloudLedgerMember> members;
-
-  /// 云服务 baseUrl，用于把相对头像路径拼成完整 URL。
-  final String baseUrl;
 }
 
 /// 账本参与人头像上下文(共享账本成员 + 云 baseUrl)。
@@ -632,10 +636,8 @@ final aaParticipantAvatarContextProvider = FutureProvider.autoDispose
       }
       try {
         final members = await ref.read(ledgerMembersProvider(syncId).future);
-        final cloud = await ref.read(spitoutCloudProviderInstance.future);
         return AaParticipantAvatarContext(
           members: {for (final m in members) m.userId: m},
-          baseUrl: cloud?.baseUrl ?? '',
         );
       } catch (e, st) {
         logger.warning(

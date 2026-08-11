@@ -6,9 +6,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart'
     show aaParticipantAvatarContextProvider;
 import 'package:spitout/providers/ui/avatar_providers.dart' show avatarPathProvider;
+import 'member_avatar.dart';
 import 'person_avatar.dart';
 
-/// AA 参与人头像（本人本地头像 → 云端成员头像 → person 占位图标）。
+/// AA 参与人头像（本人本地头像 → 云端成员头像磁盘缓存 → person 占位图标）。
 ///
 /// 分摊统计页成员行、成员账单详情页头部与分摊明细共用，保证同一参与人在
 /// 各处的头像样式完全一致（含加载中 / 加载失败回退），不散落各自的头像
@@ -50,35 +51,17 @@ class AaParticipantAvatar extends ConsumerWidget {
       );
     }
 
-    // 真实成员云端头像：从参与人头像上下文取成员 + baseUrl 拼完整 URL。
+    // 真实成员云端头像：从参与人头像上下文取成员，走磁盘缓存（断网可用）。
     final ctx = ref.watch(aaParticipantAvatarContextProvider(ledgerId)).value;
-    final rawUrl = ctx?.members[participantId]?.avatarUrl;
-    if (rawUrl != null && rawUrl.trim().isNotEmpty) {
-      final base = ctx?.baseUrl.trim() ?? '';
-      // 绝对地址直用；相对地址拼 baseUrl（去掉尾部斜杠避免双斜杠）。
-      String? resolved;
-      if (rawUrl.startsWith('http://') || rawUrl.startsWith('https://')) {
-        resolved = rawUrl;
-      } else if (base.isNotEmpty) {
-        final trimmedBase = base.endsWith('/')
-            ? base.substring(0, base.length - 1)
-            : base;
-        resolved = '$trimmedBase$rawUrl';
-      }
-      if (resolved != null) {
-        return ClipOval(
-          child: Image.network(
-            resolved,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            // 加载中 / 失败统一回退 person 占位，避免闪空白。
-            loadingBuilder: (ctx, child, progress) =>
-                progress == null ? child : PersonAvatar(size: size),
-            errorBuilder: (_, _, _) => PersonAvatar(size: size),
-          ),
-        );
-      }
+    final member = ctx?.members[participantId];
+    if (member != null) {
+      return MemberAvatar(
+        userId: member.userId,
+        version: member.avatarVersion,
+        hasAvatar: member.avatarUrl != null && member.avatarUrl!.trim().isNotEmpty,
+        size: size,
+        iconSize: size * 0.45,
+      );
     }
 
     // 虚拟用户 / 未配置头像：与全项目无头像占位样式一致。

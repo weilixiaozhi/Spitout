@@ -9,8 +9,7 @@ import 'category_icon.dart';
 import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart' show expenseColorSchemeProvider;
-import 'package:spitout/providers/providers.dart'
-    show SpitoutCloudLedgerMember, spitoutCloudProviderInstance;
+import 'package:spitout/providers/providers.dart' show SpitoutCloudLedgerMember;
 import 'collaborator_avatar.dart';
 import 'amount_text.dart';
 
@@ -325,9 +324,6 @@ class TransactionListItem extends ConsumerWidget {
           final editor = (!isMembersLoading && editorUserId != null)
               ? collaboratorMap![editorUserId]
               : null;
-          // 实时读取云基础地址以拼接成员头像相对路径
-          final baseUrl =
-              ref.watch(spitoutCloudProviderInstance).value?.baseUrl ?? '';
           parts.add(Row(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -336,7 +332,6 @@ class TransactionListItem extends ConsumerWidget {
                 editor: editor,
                 creatorUserId: creatorUserId,
                 editorUserId: editorUserId,
-                baseUrl: baseUrl,
                 radius: 9,
                 membersLoading: isMembersLoading,
               ),

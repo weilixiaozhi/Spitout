@@ -789,9 +789,6 @@ class _TxAuthorAvatars extends ConsumerWidget {
     final contextAsync = ref.watch(
       _txAuthorContextProvider(editingTransactionId),
     );
-    // 获取云端baseUrl用于拼接头像绝对路径
-    final baseUrl =
-        ref.watch(spitoutCloudProviderInstance).value?.baseUrl ?? '';
 
     return contextAsync.when(
       // 加载中 / 出错 / 非共享账本 → 不展示
@@ -834,7 +831,6 @@ class _TxAuthorAvatars extends ConsumerWidget {
               editor: editor,
               creatorUserId: ctx.creatorUserId,
               editorUserId: ctx.lastEditedByUserId,
-              baseUrl: baseUrl,
               radius: 11,
             );
           },

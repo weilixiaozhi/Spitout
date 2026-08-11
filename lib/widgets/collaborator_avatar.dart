@@ -1,67 +1,35 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/providers/providers.dart' show SpitoutCloudLedgerMember;
 import 'package:spitout/l10n/app_localizations.dart';
+import 'member_avatar.dart';
 import 'person_avatar.dart';
 
-/// 协作头像「单个槽位」：无头像、加载中或加载失败统一回退 [PersonAvatar] 占位。
+/// 协作头像「单个槽位」：无头像、缓存加载中或失败统一回退 [PersonAvatar] 占位。
 ///
-/// URL 拼接去掉 baseUrl 尾部多余斜杠避免双斜杠。
+/// 头像经 [MemberAvatar] 走本地磁盘缓存，不再直连 `Image.network`，
+/// 断网时也能显示已缓存过的成员头像。
 class CollaboratorAvatarSlot extends StatelessWidget {
   final SpitoutCloudLedgerMember? member;
-  final String baseUrl;
   final double radius;
 
   const CollaboratorAvatarSlot({
     super.key,
     required this.member,
-    required this.baseUrl,
     this.radius = 11,
   });
 
-  /// 解析成员真实头像完整 URL：相对路径拼 baseUrl（去掉尾部斜杠），
-  /// 已含 http(s) 的绝对路径直用。
-  String? get _resolvedUrl {
-    final raw = member?.avatarUrl;
-    if (raw == null || raw.trim().isEmpty) return null;
-    if (raw.startsWith('http://') || raw.startsWith('https://')) return raw;
-    final base = baseUrl.trim();
-    if (base.isEmpty) return null;
-    final trimmedBase =
-        base.endsWith('/') ? base.substring(0, base.length - 1) : base;
-    return '$trimmedBase$raw';
-  }
-
   @override
   Widget build(BuildContext context) {
-    final resolved = _resolvedUrl;
-    final scheme = Theme.of(context).colorScheme;
-    // 圆形底色用不透明主色 primary，不透明避免重叠时透出下层。
-    final bg = scheme.primary;
-
-    // 无头像:直接展示虚拟用户同等 person 图标,不用昵称首字母兜底,
-    // 保证所有未设置头像的占位样式全局一致。
-    if (resolved == null) {
+    final m = member;
+    if (m == null) {
       return PersonAvatar(size: radius * 2);
     }
-
-    return CircleAvatar(
-      radius: radius,
-      backgroundColor: bg,
-      // 有头像时用 ClipOval 显式裁圆;加载中 / 加载失败回退到 person 图标。
-      child: ClipOval(
-        child: Image.network(
-          resolved,
-          width: radius * 2,
-          height: radius * 2,
-          fit: BoxFit.cover,
-          // 加载中先显示 person 图标，网络慢时不闪空白
-          loadingBuilder: (ctx, child, progress) =>
-              progress == null ? child : PersonAvatar(size: radius * 2),
-          // 加载失败兜底 person 图标
-          errorBuilder: (ctx, error, stack) =>
-              PersonAvatar(size: radius * 2),
-        ),
-      ),
+    return MemberAvatar(
+      userId: m.userId,
+      version: m.avatarVersion,
+      hasAvatar: m.avatarUrl != null && m.avatarUrl!.trim().isNotEmpty,
+      size: radius * 2,
+      iconSize: radius * 2 * 0.45,
     );
   }
 }
@@ -76,20 +44,18 @@ class CollaboratorAvatarGroup extends StatelessWidget {
   final SpitoutCloudLedgerMember? editor;
   final String? creatorUserId;
   final String? editorUserId;
-    final String baseUrl;
-    final double radius;
-    final bool membersLoading;
+  final double radius;
+  final bool membersLoading;
 
-    const CollaboratorAvatarGroup({
-      super.key,
-      required this.creator,
-      required this.editor,
-      required this.creatorUserId,
-      required this.editorUserId,
-      required this.baseUrl,
-      this.radius = 11,
-      this.membersLoading = false,
-    });
+  const CollaboratorAvatarGroup({
+    super.key,
+    required this.creator,
+    required this.editor,
+    required this.creatorUserId,
+    required this.editorUserId,
+    this.radius = 11,
+    this.membersLoading = false,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -105,7 +71,6 @@ class CollaboratorAvatarGroup extends StatelessWidget {
       final overlap = radius * 0.32;
       final placeholder = CollaboratorAvatarSlot(
         member: null,
-        baseUrl: baseUrl,
         radius: radius,
       );
       if (!samePerson) {
@@ -130,18 +95,16 @@ class CollaboratorAvatarGroup extends StatelessWidget {
 
     final samePerson = creatorUserId == editorUserId;
 
-    final creatorName = creator?.displayName ?? creator?.account ?? creatorUserId ?? '';
-    final editorName = editor?.displayName ?? editor?.account ?? editorUserId ?? '';
+    final creatorName =
+        creator?.displayName ?? creator?.account ?? creatorUserId ?? '';
+    final editorName =
+        editor?.displayName ?? editor?.account ?? editorUserId ?? '';
 
     // 同一人 → 1 个头像
     if (samePerson) {
       return Tooltip(
         message: l10n.sharedTxCreatedAndEditedBy(creatorName),
-        child: CollaboratorAvatarSlot(
-          member: creator,
-          baseUrl: baseUrl,
-          radius: radius,
-        ),
+        child: CollaboratorAvatarSlot(member: creator, radius: radius),
       );
     }
 
@@ -152,21 +115,13 @@ class CollaboratorAvatarGroup extends StatelessWidget {
       children: [
         Tooltip(
           message: l10n.sharedTxCreatedBy(creatorName),
-          child: CollaboratorAvatarSlot(
-            member: creator,
-            baseUrl: baseUrl,
-            radius: radius,
-          ),
+          child: CollaboratorAvatarSlot(member: creator, radius: radius),
         ),
         Transform.translate(
           offset: Offset(-overlap, 0),
           child: Tooltip(
             message: l10n.sharedTxEditedBy(editorName),
-            child: CollaboratorAvatarSlot(
-              member: editor,
-              baseUrl: baseUrl,
-              radius: radius,
-            ),
+            child: CollaboratorAvatarSlot(member: editor, radius: radius),
           ),
         ),
       ],

@@ -27,6 +27,7 @@ import 'package:spitout/data/models.dart' show LedgerVirtualUser;
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'app_dialog.dart';
+import 'member_avatar.dart';
 import 'person_avatar.dart';
 import 'section_card.dart';
 import 'toast.dart';
@@ -1120,7 +1121,7 @@ class _SkeletonBar extends StatelessWidget {
   }
 }
 
-/// 成员头像 — 本人优先用本地头像文件，其他成员用 server avatar_url 拼 baseUrl；
+/// 成员头像 — 本人优先用本地头像文件，其他成员走磁盘缓存；
 /// 都没有或加载失败才回退 person 图标。
 class _MemberAvatar extends ConsumerWidget {
   const _MemberAvatar({required this.member});
@@ -1148,37 +1149,13 @@ class _MemberAvatar extends ConsumerWidget {
       }
     }
 
-    final relativeUrl = member.avatarUrl;
-    if (relativeUrl == null || relativeUrl.isEmpty) {
-      // 未配置头像:统一展示与虚拟用户相同的 person 图标,不用昵称首字母,
-      // 保证所有未设置头像的占位样式全局一致。
-      return const PersonAvatar(size: 40, iconSize: 18);
-    }
-    final cloudAsync = ref.watch(spitoutCloudProviderInstance);
-    final cloud = cloudAsync.value;
-    final base = cloud?.baseUrl;
-    if (base == null || base.isEmpty) {
-      return const PersonAvatar(size: 40, iconSize: 18);
-    }
-    final trimmedBase = base.endsWith('/')
-        ? base.substring(0, base.length - 1)
-        : base;
-    final absoluteUrl = relativeUrl.startsWith('http')
-        ? relativeUrl
-        : '$trimmedBase$relativeUrl';
-    // 用 Image.network + 圆形裁切：加载中/失败才显示 person 图标，
-    // 避免 CircleAvatar 的 child 常驻叠加在头像图片上方。
-    return ClipOval(
-      child: Image.network(
-        absoluteUrl,
-        width: 40,
-        height: 40,
-        fit: BoxFit.cover,
-        loadingBuilder: (ctx, child, progress) => progress == null
-            ? child
-            : const PersonAvatar(size: 40, iconSize: 18),
-        errorBuilder: (_, _, _) => const PersonAvatar(size: 40, iconSize: 18),
-      ),
+    // 非本人成员:统一走磁盘缓存(断网可用),未配置头像/加载失败回退占位。
+    return MemberAvatar(
+      userId: member.userId,
+      version: member.avatarVersion,
+      hasAvatar: member.avatarUrl != null && member.avatarUrl!.trim().isNotEmpty,
+      size: 40,
+      iconSize: 18,
     );
   }
 }
