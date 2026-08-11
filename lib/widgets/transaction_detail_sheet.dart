@@ -483,9 +483,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                     label: l10n.homeDetailLastEditor,
                     name: resolver.resolve(t.lastEditedByUserId),
                     // 本人最后编辑人:同样追加「(我)」共享后缀。
-                    isSelf: resolver.isSelf(t.lastEditedByUserId),
-                    subtext:
-                        t.lastEditedAt != null ? _fmt(t.lastEditedAt!) : null),
+                    isSelf: resolver.isSelf(t.lastEditedByUserId)),
             ],
             // 4. 编辑记录(仅供查看)
             _Divider(),
@@ -634,13 +632,11 @@ class _InfoRow extends StatelessWidget {
 class _MemberRow extends StatelessWidget {
   final String label;
   final String name;
-  final String? subtext;
   // 是否本人;为真时名字后追加「(我)」共享后缀,与全局规范一致。
   final bool isSelf;
   const _MemberRow({
     required this.label,
     required this.name,
-    this.subtext,
     this.isSelf = false,
   });
   @override
@@ -671,11 +667,6 @@ class _MemberRow extends StatelessWidget {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  if (subtext != null)
-                    Text(subtext!,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: SpitoutTokens.textTertiary(context))),
                 ],
               ),
             ),
