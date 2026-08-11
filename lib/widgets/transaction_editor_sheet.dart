@@ -23,6 +23,7 @@ import 'keypad_constants.dart';
 import 'note_input_row.dart';
 import 'collaborator_avatar.dart';
 import 'aa_fields_utils.dart';
+import 'sheet_grab_handle.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'aa_mode_toggle.dart';
 
@@ -542,17 +543,7 @@ class _TransactionEditorSheetState
               mainAxisSize: MainAxisSize.max,
               children: [
                 // —— 拖拽条 ——
-                Container(
-                  width: 36,
-                  height: 4,
-                  margin: const EdgeInsets.only(top: 8, bottom: 4),
-                  decoration: BoxDecoration(
-                    color: SpitoutTokens.textTertiary(
-                      context,
-                    ).withValues(alpha: 0.3),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
+                const SheetGrabHandle(),
                 // —— Header：返回 + 记一笔 + 分摊方式(弱化) + 作者头像 ——
                 _buildHeader(context, l10n, editingTxId, aaEnabled),
                 // —— 分类区（始终显示，含系统键盘拉起时） ——

@@ -1,6 +1,6 @@
 /// 日期选择 sheet 头部与汇率选择 sheet 头部一致性回归测试。
 ///
-/// 需求锚点：记账编辑器日期选择 sheet 的头部（顶部描边圆角 + 拖拽条）
+/// 需求锚点：记账编辑器日期选择 sheet 的头部（圆角 + 拖拽条，无顶部描边）
 /// 应与汇率选择 sheet（currency_picker_sheet.dart）完全一致，
 /// 保证两处弹层头部视觉与代码逻辑统一。
 library;
@@ -38,7 +38,7 @@ void main() {
     );
   }
 
-  testWidgets('日期选择 sheet 顶部描边与圆角与汇率选择 sheet 一致', (tester) async {
+  testWidgets('日期选择 sheet 顶部无描边、圆角 16px', (tester) async {
     await pumpDateSheet(tester);
     final ctx = tester.element(find.byType(WheelDatePicker));
 
@@ -58,19 +58,12 @@ void main() {
 
     expect(
       deco.border,
-      isNotNull,
-      reason: '顶部应有与汇率选择 sheet 一致的分隔描边（2px 强边框色）',
-    );
-    final border = deco.border! as Border;
-    expect(border.top.width, 2, reason: '描边宽度应与汇率选择 sheet 一致');
-    expect(
-      border.top.color,
-      SpitoutTokens.borderStrong(ctx),
-      reason: '描边颜色应与汇率选择 sheet 一致',
+      isNull,
+      reason: '顶部不应有描边，统一只保留 36x4 拖拽条',
     );
   });
 
-  testWidgets('日期选择 sheet 拖拽条与汇率选择 sheet 一致：36x4、上 12 下 4、muted 自适应色', (tester) async {
+  testWidgets('日期选择 sheet 拖拽条与汇率选择 sheet 一致：36x4、上 8 下 4、主题 token 自适应色', (tester) async {
     await pumpDateSheet(tester);
     final ctx = tester.element(find.byType(WheelDatePicker));
 
@@ -83,7 +76,7 @@ void main() {
     );
     expect(handle, isNotNull, reason: '头部应渲染 36x4 拖拽条');
 
-    // 拖拽条外层统一间距（上 12 / 下 4），由共享组件 SheetGrabHandle 提供。
+    // 拖拽条外层统一间距（上 8 / 下 4），由共享组件 SheetGrabHandle 提供。
     final wrapper = tester.widget<Padding>(
       find
           .ancestor(
@@ -94,17 +87,15 @@ void main() {
     );
     expect(
       wrapper.padding,
-      const EdgeInsets.only(top: 12, bottom: 4),
+      const EdgeInsets.only(top: 8, bottom: 4),
       reason: '拖拽条间距应与汇率选择 sheet 一致',
     );
 
     final deco = handle.decoration! as BoxDecoration;
     expect(
       deco.color,
-      SpitoutTokens.isDark(ctx)
-          ? Colors.white.withValues(alpha: 0.20)
-          : Colors.black.withValues(alpha: 0.15),
-      reason: '拖拽条颜色应与汇率选择 sheet 一致（muted 自适应色）',
+      SpitoutTokens.grabHandleColor(ctx),
+      reason: '拖拽条颜色应统一走 SpitoutTokens.grabHandleColor，不硬编码',
     );
     expect(
       deco.borderRadius,

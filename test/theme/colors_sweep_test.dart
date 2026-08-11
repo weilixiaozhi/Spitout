@@ -66,6 +66,7 @@ void main() {
 
       expect(SpitoutTokens.border(ctx), isA<Color>());
       expect(SpitoutTokens.borderStrong(ctx), isA<Color>());
+      expect(SpitoutTokens.grabHandleColor(ctx), isA<Color>());
       expect(SpitoutTokens.borderThemed(ctx), isA<Color>());
       expect(SpitoutTokens.cardOuterBorderColor(ctx), Colors.transparent);
       expect(SpitoutTokens.cardOuterBorderWidth(ctx), 0);

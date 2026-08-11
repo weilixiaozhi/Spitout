@@ -350,6 +350,11 @@ class SpitoutTokens {
       ? SpitoutColors.darkBorder.withValues(alpha: 0.10)
       : Colors.black.withValues(alpha: 0.12);
 
+  /// 底部弹层统一拖拽条颜色（shadcn muted：亮色黑 15%、暗色白 20%）。
+  static Color grabHandleColor(BuildContext context) => isDark(context)
+      ? Colors.white.withValues(alpha: 0.20)
+      : Colors.black.withValues(alpha: 0.15);
+
   /// 主题色边框（用于卡片等）
   /// - 亮色模式：transparent
   /// - 暗黑模式：主题色 30% 透明度

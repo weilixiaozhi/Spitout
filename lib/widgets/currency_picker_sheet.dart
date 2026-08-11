@@ -49,14 +49,8 @@ Future<String?> showCurrencyPickerSheet(
     sheetAnimationStyle: kSheetAnimationStyle,
     // 抬升阴影：记账页内拉起时遮罩为透明，阴影让弹窗与下层记账页分出层级
     elevation: 8,
-    shape: RoundedRectangleBorder(
-      borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-      // 顶部分隔线：sheet 左右/下边缘均在屏幕外或圆角内不可见，
-      // 整圈描边最终只呈现为顶部一条细分隔线
-      side: BorderSide(
-        color: SpitoutTokens.borderStrong(context),
-        width: 2,
-      ),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
     builder: (bctx) {
       String query = '';
@@ -94,7 +88,6 @@ Future<String?> showCurrencyPickerSheet(
           padding: EdgeInsets.only(
             left: 16,
             right: 16,
-            top: 12,
             bottom: 16 + MediaQuery.of(bctx).viewInsets.bottom,
           ),
           child: SizedBox(

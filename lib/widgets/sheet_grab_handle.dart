@@ -2,27 +2,24 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
 
-/// 底部弹层统一头部拖拽条（36x4 圆角条、muted 色调）。
+/// 底部弹层统一头部拖拽条（36x4 圆角条、muted 色调、距顶 8px）。
 ///
-/// 所有 BottomSheet（AppSheet / 币种汇率选择 / 日期选择）共用本组件，
-/// 视觉调整只改这一处；不用 Material 自带 showDragHandle，以统一 shadcn/ui 视觉。
+/// 所有 BottomSheet（AppSheet / 币种汇率选择 / 日期选择 / 记账编辑器）共用本组件，
+/// 颜色走 [SpitoutTokens.grabHandleColor] 主题 token，视觉调整只改这一处；
+/// 不用 Material 自带 showDragHandle，以统一 shadcn/ui 视觉。
 class SheetGrabHandle extends StatelessWidget {
   const SheetGrabHandle({super.key});
 
   @override
   Widget build(BuildContext context) {
-    // 暗色用前景色 20% 透明,亮色用黑色 15% 透明,对应 shadcn muted 调。
-    final color = SpitoutTokens.isDark(context)
-        ? Colors.white.withValues(alpha: 0.20)
-        : Colors.black.withValues(alpha: 0.15);
     return Padding(
-      padding: const EdgeInsets.only(top: 12, bottom: 4),
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
       child: Center(
         child: Container(
           width: 36,
           height: 4,
           decoration: BoxDecoration(
-            color: color,
+            color: SpitoutTokens.grabHandleColor(context),
             borderRadius: BorderRadius.circular(2),
           ),
         ),

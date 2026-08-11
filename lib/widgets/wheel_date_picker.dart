@@ -566,79 +566,69 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
       decoration: BoxDecoration(
         color: SpitoutTokens.surfaceSheet(context),
         borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
-        // 与币种/汇率选择 sheet 一致：整圈描边在圆角 + 贴屏布局下
-        // 最终只呈现为顶部一条 2px 分隔线
-        border: Border.all(
-          color: SpitoutTokens.borderStrong(context),
-          width: 2,
-        ),
       ),
       child: SafeArea(
         top: false,
-        child: Padding(
-          // 顶部留白与币种/汇率选择 sheet 一致（外层 12px）
-          padding: const EdgeInsets.only(top: 12),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // 头部与汇率选择 sheet 同源：统一拖拽条 + 居中标题
-              const SheetGrabHandle(),
-              if (widget.title.isNotEmpty || widget.subtitle != null)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            // 头部与汇率选择 sheet 同源：统一拖拽条 + 居中标题
+            const SheetGrabHandle(),
+            if (widget.title.isNotEmpty || widget.subtitle != null)
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      widget.title,
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: _textPrimary(context),
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    if (widget.subtitle != null) ...[
+                      const SizedBox(height: 4),
                       Text(
-                        widget.title,
+                        widget.subtitle!,
                         style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w600,
-                          color: _textPrimary(context),
+                          fontSize: 13,
+                          color: SpitoutTokens.textSecondary(context),
                         ),
                         textAlign: TextAlign.center,
                       ),
-                      if (widget.subtitle != null) ...[
-                        const SizedBox(height: 4),
-                        Text(
-                          widget.subtitle!,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-                      ],
                     ],
-                  ),
+                  ],
                 ),
-              const SizedBox(height: 12),
-              body,
-              Padding(
-                padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-                child: SizedBox(
-                  width: double.infinity,
-                  height: 48,
-                  child: FilledButton(
-                    style: FilledButton.styleFrom(
-                      backgroundColor: primary,
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10)),
-                    ),
-                    onPressed: () => Navigator.of(context).pop(_buildResult()),
-                    child: Text(
-                      widget.confirmLabel,
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: Theme.of(context).colorScheme.onPrimary,
-                      ),
+              ),
+            const SizedBox(height: 12),
+            body,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              child: SizedBox(
+                width: double.infinity,
+                height: 48,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    backgroundColor: primary,
+                    shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(_buildResult()),
+                  child: Text(
+                    widget.confirmLabel,
+                    style: TextStyle(
+                      fontSize: 16,
+                      color: Theme.of(context).colorScheme.onPrimary,
                     ),
                   ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
