@@ -7,7 +7,8 @@ import 'package:spitout/theme/colors.dart';
 /// (如"关闭AA分摊"/"开启AA分摊")时使用本组件:文案写在轨道内部,
 /// 滑块随状态左右滑动(开启靠右、关闭靠左),文字在让出滑块后的
 /// 剩余空间内居中展示。两态文案字数相同,文字区宽度一致,布局完全对称。
-/// 颜色/尺寸均可在使用处定制,禁用态(onChanged=null)整体灰化。
+/// 颜色/尺寸均可在使用处定制,禁用态(onChanged=null)保留「开/关」语义色并
+/// 半透明化,与可编辑态区分,避免只读时开启/关闭看起来一样。
 class TextStateSwitch extends StatelessWidget {
   /// 当前开关状态
   final bool value;
@@ -48,17 +49,19 @@ class TextStateSwitch extends StatelessWidget {
     final theme = Theme.of(context);
     final colors = theme.colorScheme;
     final enabled = onChanged != null;
-    // 开启态:主色轨道+白字;关闭态:Switch 专用关闭轨道色(比表面浅灰更深,
-    // 与系统 Switch 关闭态视觉一致)+次级文字色,状态语义一目了然
-    final trackColor = enabled
-        ? (value ? colors.primary : SpitoutTokens.switchInactiveTrack(context))
-        : colors.onSurface.withValues(alpha: 0.12);
-    final thumbColor = enabled
-        ? (value ? Colors.white : SpitoutTokens.surface(context))
-        : colors.onSurface.withValues(alpha: 0.2);
-    final textColor = enabled
-        ? (value ? Colors.white : SpitoutTokens.textSecondary(context))
-        : colors.onSurface.withValues(alpha: 0.38);
+    // 先按「开/关」取语义色(开启=主色+白字,关闭=Switch 关闭轨道色+次级文字色),
+    // 再统一叠加透明度:可编辑态不透明、只读态半透明。
+    // 这样四种组合(开/关 × 可编辑/只读)两两可区分,且只读态仍保留开关语义。
+    final trackColor = (value
+            ? colors.primary
+            : SpitoutTokens.switchInactiveTrack(context))
+        .withValues(alpha: enabled ? 1 : 0.5);
+    final thumbColor = (value ? Colors.white : SpitoutTokens.surface(context))
+        .withValues(alpha: enabled ? 1 : 0.75);
+    final textColor = (value
+            ? Colors.white
+            : SpitoutTokens.textSecondary(context))
+        .withValues(alpha: enabled ? 1 : 0.75);
     // 滑块直径 = 轨道高度 - 上下内边距,保证滑块与轨道同心且不溢出
     final thumbSize = height - 2 * _padding;
 
