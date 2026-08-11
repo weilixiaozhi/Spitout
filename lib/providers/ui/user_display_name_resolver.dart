@@ -1,8 +1,9 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:spitout/providers/providers.dart'
-    show CloudUser, SpitoutCloudLedgerMember, localSelfIdProvider;
+import 'package:spitout/cloud/spitout_cloud.dart'
+    show SpitoutCloudLedgerMember;
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/core/local_self_id_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
 
@@ -15,11 +16,9 @@ import 'package:spitout/providers/ui/theme_providers.dart';
 ///
 /// 解析优先级:
 /// 1. 共享账本成员表(昵称 → 账号)
-/// 2. 当前登录用户(userId == cloudUserId → 账号,或本地昵称)
-/// 3. localSelfId(本地账本未登录的「我」→ 本地昵称/「我」)
-/// 4. 虚拟用户名(由调用方传入)
-/// 5. 本地昵称兜底(本地账本无成员表时,任何作者位都属于「我」,统一展示昵称)
-/// 6. 原始 id
+/// 2. 本人(当前云 userId 或 localSelfId → 本地昵称 → 云账号 → 「未设置昵称」)
+/// 3. 虚拟用户名(由调用方传入)
+/// 4. 原始 id(未知 id 不套用本地昵称,避免张冠李戴)
 class UserDisplayNameResolver {
   final Map<String, SpitoutCloudLedgerMember> memberDisplayMap;
   final String? localOwnerDisplayName;
@@ -53,35 +52,26 @@ class UserDisplayNameResolver {
       if (account.isNotEmpty) return account;
     }
 
-    // 2. 当前登录用户:userId == cloudUserId 时,用账号兜底(本地昵称由 3 覆盖)
-    if (currentUser != null && userId == currentUser!.id) {
-      final account = currentUser!.account?.trim() ?? '';
-      if (account.isNotEmpty) return account;
-      // 云 userId 命中但无账号:走本地昵称兜底
+    // 2. 本人(当前云 userId 或 localSelfId):本地昵称 → 云账号 → 「未设置昵称」。
+    // 两种 id 显示完全一致,避免同一人因身份来源不同出现账号/昵称混用。
+    final isCloudMe = currentUser != null && userId == currentUser!.id;
+    if (isCloudMe || userId == localSelfId) {
       final localName = localOwnerDisplayName?.trim() ?? '';
       if (localName.isNotEmpty) return localName;
+      if (isCloudMe) {
+        final account = currentUser!.account?.trim() ?? '';
+        if (account.isNotEmpty) return account;
+      }
       // 无昵称兜底:仅返回纯名「未设置昵称」,「(我)」后缀由 UI 层通过
-      // 共享 meSuffixSpan 渲染,保证与成员管理/AA 记账页样式一致。
+      // 共享 meSuffixSpan 统一渲染。
       return l10n.mineSlogan;
     }
 
-    // 3. localSelfId:本地账本未登录的「我」→ 本地昵称 / 「未设置昵称」
-    if (userId == localSelfId) {
-      final localName = localOwnerDisplayName?.trim() ?? '';
-      // 无昵称兜底:仅返回纯名「未设置昵称」,「(我)」后缀由 UI 层统一渲染。
-      return localName.isNotEmpty ? localName : l10n.mineSlogan;
-    }
-
-    // 4. 虚拟用户
+    // 3. 虚拟用户
     final virtualName = virtualNames[userId];
     if (virtualName != null && virtualName.isNotEmpty) return virtualName;
 
-    // 5. 本地昵称兜底:本地账本无成员表时,创建人/编辑人等作者位都属于「我」,
-    // 设置了本地昵称就展示昵称而非原始 id(与云端登录态无关)。
-    final localName = localOwnerDisplayName?.trim() ?? '';
-    if (localName.isNotEmpty) return localName;
-
-    // 6. 兜底原始 id
+    // 4. 兜底原始 id:未知 id 不套用本地昵称,避免张冠李戴。
     return userId;
   }
 

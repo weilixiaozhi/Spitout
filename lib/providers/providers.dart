@@ -9,6 +9,7 @@
 
 // 主题相关（叶子模块，可安全 export）
 export 'package:spitout/providers/ui/theme_providers.dart';
+export 'package:spitout/providers/ui/user_display_name_resolver.dart';
 
 // 数据库相关
 export 'package:spitout/providers/core/database_providers.dart';

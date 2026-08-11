@@ -6,6 +6,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart'
     show
         SpitoutCloudLedgerMember,
+        UserDisplayNameResolver,
         currentLedgerProvider,
         expenseColorSchemeProvider,
         ledgerVirtualUsersProvider,
@@ -23,7 +24,6 @@ import 'app_sheet.dart';
 import 'format_money.dart';
 import 'amount_text.dart';
 import 'me_suffix.dart';
-import 'user_display_name_resolver.dart';
 import 'aa_fields_utils.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
@@ -112,8 +112,9 @@ class _TransactionDetailBody extends ConsumerWidget {
   ) {
     // 同步读取缓存值:这些 provider 在 app 启动后早已解析,sheet 打开时必然命中缓存。
     // 若极端情况下未就绪(首次启动极早期),asData?.value 返回 null,解析器走兜底逻辑。
-    final localSelfId = ref.read(localSelfIdProvider).asData?.value ?? '';
-    final currentUser = ref.read(cloudCurrentUserProvider).asData?.value;
+    // watch 而非 read:身份 provider 在冷启动可能尚未解析,解析完成后自动重建。
+    final localSelfId = ref.watch(localSelfIdProvider).asData?.value ?? '';
+    final currentUser = ref.watch(cloudCurrentUserProvider).asData?.value;
     final localName = localOwnerDisplayName ?? ref.read(displayNameProvider);
     return UserDisplayNameResolver(
       memberDisplayMap: memberDisplayMap,

@@ -2,11 +2,9 @@
 //
 // 覆盖修复「id/账号/昵称混用」的解析优先级:
 //   1. 共享账本成员表(昵称 → 账号)
-//   2. 当前登录用户(userId == cloudUserId → 账号/本地昵称)
-//   3. localSelfId(本地账本未登录的「我」→ 本地昵称/「我」)
-//   4. 虚拟用户名
-//   5. 本地昵称兜底(本地账本无成员表时,任意作者位统一展示昵称)
-//   6. 兜底原始 id
+//   2. 本人(当前云 userId 或 localSelfId → 本地昵称 → 云账号 → 「未设置昵称」)
+//   3. 虚拟用户名
+//   4. 兜底原始 id(未知 id 不套用本地昵称,避免张冠李戴)
 
 import 'dart:ui';
 
@@ -14,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' show CloudUser;
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudLedgerMember;
 
-import 'package:spitout/widgets/user_display_name_resolver.dart';
+import 'package:spitout/providers/ui/user_display_name_resolver.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 
 void main() {
@@ -75,19 +73,19 @@ void main() {
       expect(r.resolve('u1'), 'alice@example.com');
     });
 
-    test('2. 当前登录用户(userId 命中 cloudUserId)用账号', () {
+    test('2. 当前登录用户(userId 命中 cloudUserId)有本地昵称时优先昵称', () {
+      final r = buildResolver(
+        localOwnerDisplayName: '我的昵称',
+        currentUser: CloudUser(id: 'cloud-user-1', account: 'me@example.com'),
+      );
+      expect(r.resolve('cloud-user-1'), '我的昵称');
+    });
+
+    test('2b. 当前登录用户无本地昵称时用云账号', () {
       final r = buildResolver(
         currentUser: CloudUser(id: 'cloud-user-1', account: 'me@example.com'),
       );
       expect(r.resolve('cloud-user-1'), 'me@example.com');
-    });
-
-    test('2b. 当前登录用户无账号时用本地昵称', () {
-      final r = buildResolver(
-        localOwnerDisplayName: '我的昵称',
-        currentUser: const CloudUser(id: 'cloud-user-1'),
-      );
-      expect(r.resolve('cloud-user-1'), '我的昵称');
     });
 
     test('2c. 当前登录用户无账号无昵称时回退「未设置昵称」', () {
@@ -112,6 +110,16 @@ void main() {
       expect(r.resolve('local-uuid'), l10n.mineSlogan);
     });
 
+    test('3c. 本人两种 id 显示一致：都优先本地昵称', () {
+      final r = buildResolver(
+        localOwnerDisplayName: '我的昵称',
+        localSelfId: 'local-uuid',
+        currentUser: CloudUser(id: 'cloud-user-1', account: 'me@example.com'),
+      );
+      expect(r.resolve('local-uuid'), '我的昵称');
+      expect(r.resolve('cloud-user-1'), '我的昵称');
+    });
+
     test('4. 虚拟用户名', () {
       final r = buildResolver(
         virtualNames: {'vu_1': '虚拟成员A'},
@@ -119,12 +127,12 @@ void main() {
       expect(r.resolve('vu_1'), '虚拟成员A');
     });
 
-    test('5. 本地昵称兜底:未知 id 但已设置昵称时展示昵称', () {
+    test('5. 未知 id 不套用本地昵称,直接兜底原始 id', () {
       final r = buildResolver(localOwnerDisplayName: '本地昵称');
-      expect(r.resolve('unknown-id'), '本地昵称');
+      expect(r.resolve('unknown-id'), 'unknown-id');
     });
 
-    test('5b. 虚拟用户优先于本地昵称兜底', () {
+    test('5b. 虚拟用户名优先于未知 id 兜底', () {
       final r = buildResolver(
         localOwnerDisplayName: '本地昵称',
         virtualNames: {'vu_1': '虚拟成员A'},
@@ -132,7 +140,7 @@ void main() {
       expect(r.resolve('vu_1'), '虚拟成员A');
     });
 
-    test('6. 兜底原始 id', () {
+    test('6. 无任何名称可用时兜底原始 id', () {
       final r = buildResolver();
       expect(r.resolve('unknown-id'), 'unknown-id');
     });

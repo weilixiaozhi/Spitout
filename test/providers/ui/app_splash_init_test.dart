@@ -30,6 +30,7 @@ void main() {
     // 跳过一次性历史修复，避免依赖真实 DB。
     SharedPreferences.setMockInitialValues({
       'shared_ledger_category_repair_v1_done': true,
+      'local_identity_repair_v1_done': true,
     });
 
     when(() => repo.getAllLedgers()).thenAnswer((_) async => <db.Ledger>[]);

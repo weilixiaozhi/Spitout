@@ -98,6 +98,8 @@ void main() {
       ),
     ).thenAnswer((_) => txsStreamFactory());
     when(() => repo.getAllLedgers()).thenAnswer((_) async => <Ledger>[]);
+    // 作者身份按账本归属解析需要账本行；默认本地账本。
+    when(() => repo.getLedgerById(any())).thenAnswer((_) async => testLedger);
     when(() => repo.countUnconvertedForeignTx(any())).thenAnswer((_) async => 0);
     when(() => repo.deleteTransaction(any())).thenAnswer((_) async {});
   });
@@ -326,8 +328,22 @@ void main() {
     await tester.pump(const Duration(seconds: 3));
   });
 
-  testWidgets('debug 填充：云端已登录时用云端 userId 作为支出人', (tester) async {
+  testWidgets('debug 填充：云端账本 + 已登录时用云端 userId 作为支出人', (tester) async {
     final seeder = _FakeSeeder(repo);
+    when(() => repo.getLedgerById(any())).thenAnswer((_) async => Ledger(
+          id: 1,
+          name: '云端账本',
+          currency: 'CNY',
+          type: 'personal',
+          createdAt: DateTime(2026, 1, 1),
+          myRole: 'owner',
+          memberCount: 1,
+          isShared: true,
+          monthStartDay: 1,
+          syncId: 'sync-1',
+          storageMode: 'cloud',
+          aaEnabled: false,
+        ));
     await tester.pumpWidget(
       buildApp(
         extraOverrides: [
@@ -348,7 +364,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 400));
 
     expect(seeder.lastPaidBy, 'test-user-id',
-        reason: '云端已登录时应优先用云端 userId，而非本地身份');
+        reason: '云端账本已登录时应写云 userId');
     await tester.pump(const Duration(seconds: 3));
   });
 

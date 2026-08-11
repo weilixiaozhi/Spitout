@@ -26,6 +26,7 @@ import 'package:spitout/providers/sync/shared_ledger_providers.dart';
 import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/ui/language_provider.dart';
 import 'package:spitout/providers/ui/theme_providers.dart';
+import 'package:spitout/providers/ui/user_display_name_resolver.dart';
 import 'package:spitout/services/data/tx_author_service.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/services/statistics/aa_member_detail_models.dart';
@@ -330,6 +331,22 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
         final pid = vu.syncId ?? 'vu_${vu.id}';
         displayNameMap[pid] = vu.name;
       }
+      // 展示名统一走 UserDisplayNameResolver 兜底：本地账本的 localSelfId 与
+      // 云 userId 都解析为本人昵称，未知 id 兜底原始 id（与详情页口径一致）。
+      final resolver = UserDisplayNameResolver(
+        memberDisplayMap: const {},
+        localOwnerDisplayName: ref.read(displayNameProvider),
+        localSelfId: await ref.read(localSelfIdProvider.future),
+        currentUser: ref.read(cloudCurrentUserProvider).asData?.value,
+        virtualNames: {
+          for (final vu in virtualUsers)
+            (vu.syncId ?? 'vu_${vu.id}'): vu.name,
+        },
+        l10n: lookupAppLocalizations(
+          ref.read(languageProvider) ??
+              ui.PlatformDispatcher.instance.locale,
+        ),
+      );
       // 真实成员:共享账本从 ledgerMembersProvider 取;单人/本地账本纳入 owner。
       final syncId = ledger.syncId;
       if (syncId != null && syncId.isNotEmpty) {
@@ -373,11 +390,11 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       // 组装结果:仅保留有支出的参与人(amountMap 的 key),按金额降序。
       final items = <MemberExpenseStatItem>[];
       amountMap.forEach((pid, total) {
-        final isSelf = selfMap[pid] ?? false;
+        final isSelf = selfMap[pid] ?? resolver.isSelf(pid);
         items.add(
           MemberExpenseStatItem(
             participantId: pid,
-            displayName: displayNameMap[pid] ?? pid,
+            displayName: displayNameMap[pid] ?? resolver.resolve(pid),
             expenseTotal: total / 100,
             txCount: countMap[pid] ?? 0,
             isSelf: isSelf,

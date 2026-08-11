@@ -1,7 +1,7 @@
 /// 记录详情 Bottom Sheet 展示名四级兜底测试。
 ///
-/// 锁定:共享账本成员表(昵称 → 完整账号) → 本地昵称 → 原始 id 的兜底顺序;
-/// 本地账本(无成员表)只要设置了本地昵称就必须显示昵称而非 id,与云端登录态无关。
+/// 锁定:共享账本成员表(昵称 → 完整账号) → 本人(本地昵称/云账号) → 虚拟用户
+/// → 原始 id 的兜底顺序;未知 id 不套用本地昵称,避免张冠李戴。
 library;
 
 import 'package:flutter/material.dart';
@@ -14,7 +14,11 @@ import 'package:spitout/data/models.dart'
     show Ledger, RecordEditHistory, Transaction;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart'
-    show currentLedgerProvider, ledgerVirtualUsersProvider;
+    show
+        cloudCurrentUserProvider,
+        currentLedgerProvider,
+        ledgerVirtualUsersProvider,
+        localSelfIdProvider;
 import 'package:spitout/providers/statistics/record_history_providers.dart'
     show recordEditHistoryProvider;
 import 'package:spitout/widgets/transaction_detail_sheet.dart';
@@ -34,6 +38,7 @@ Future<void> _openSheet(
   required Transaction transaction,
   Map<String, SpitoutCloudLedgerMember> memberDisplayMap = const {},
   String? localOwnerDisplayName,
+  String? localSelfId,
   bool aaEnabled = false,
 }) async {
   await tester.pumpWidget(
@@ -51,6 +56,8 @@ Future<void> _openSheet(
           (ref, ledgerId) =>
               Stream<List<LedgerVirtualUser>>.value(const []),
         ),
+        if (localSelfId != null)
+          localSelfIdProvider.overrideWith((ref) async => localSelfId),
       ],
       child: MaterialApp(
         locale: const Locale('zh'),
@@ -59,19 +66,32 @@ Future<void> _openSheet(
         home: Scaffold(
           body: Builder(
             builder: (context) => Center(
-              child: ElevatedButton(
-                onPressed: () => showTransactionDetailSheet(
-                  context: context,
-                  transaction: transaction,
-                  category: null,
-                  memberDisplayMap: memberDisplayMap,
-                  localOwnerDisplayName: localOwnerDisplayName,
-                  aaEnabled: aaEnabled,
-                  onEdit: () async {},
-                  onEditAa: () async {},
-                  onDelete: () async {},
-                ),
-                child: const Text('打开详情'),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Consumer(
+                    builder: (context, ref, _) {
+                      // 预解析身份 provider，保证 sheet 打开时 asData 已就绪。
+                      ref.watch(localSelfIdProvider);
+                      ref.watch(cloudCurrentUserProvider);
+                      return const SizedBox.shrink();
+                    },
+                  ),
+                  ElevatedButton(
+                    onPressed: () => showTransactionDetailSheet(
+                      context: context,
+                      transaction: transaction,
+                      category: null,
+                      memberDisplayMap: memberDisplayMap,
+                      localOwnerDisplayName: localOwnerDisplayName,
+                      aaEnabled: aaEnabled,
+                      onEdit: () async {},
+                      onEditAa: () async {},
+                      onDelete: () async {},
+                    ),
+                    child: const Text('打开详情'),
+                  ),
+                ],
               ),
             ),
           ),
@@ -117,18 +137,21 @@ void main() {
     resetGlobalTestState();
   });
 
-  testWidgets('本地账本 + 已设置昵称:创建人/编辑人显示昵称而非 id',
+  testWidgets('本地账本 + 已设置昵称:本人 id 显示昵称而非 id',
       (tester) async {
     await _openSheet(
       tester,
-      transaction: _transaction(),
+      transaction: _transaction(
+        createdByUserId: 'local-self-uuid',
+        lastEditedByUserId: 'local-self-uuid',
+      ),
       localOwnerDisplayName: '本地昵称',
+      localSelfId: 'local-self-uuid',
     );
 
     // 昵称出现两次(创建人 + 编辑人),id 不应出现
-    expect(find.text('本地昵称'), findsNWidgets(2));
-    expect(find.text('u_creator'), findsNothing);
-    expect(find.text('u_editor'), findsNothing);
+    expect(find.textContaining('本地昵称', findRichText: true), findsNWidgets(2));
+    expect(find.text('local-self-uuid'), findsNothing);
   });
 
   testWidgets('本地账本 + 未设置昵称:回退显示 id', (tester) async {
@@ -168,7 +191,7 @@ void main() {
     expect(find.text('u_cloud'), findsNothing);
   });
 
-  testWidgets('共享账本:成员表未命中(无 displayName)回退到本地昵称/id',
+  testWidgets('共享账本:成员表未命中(无 displayName)回退到账号/原始 id',
       (tester) async {
     await _openSheet(
       tester,
@@ -186,11 +209,12 @@ void main() {
       localOwnerDisplayName: '本地昵称',
     );
 
-    // u_creator 在成员表但 displayName 为空 → 展示完整账号;u_editor 不在成员表 → 本地昵称
-    expect(find.text('本地昵称'), findsOneWidget);
+    // u_creator 在成员表但 displayName 为空 → 展示完整账号;
+    // u_editor 不在成员表 → 原始 id(不套用本地昵称)。
+    expect(find.text('本地昵称'), findsNothing);
     expect(find.text('creator@example.com'), findsOneWidget);
     expect(find.text('u_creator'), findsNothing);
-    expect(find.text('u_editor'), findsNothing);
+    expect(find.text('u_editor'), findsOneWidget);
   });
 
   testWidgets('创建人/编辑人为空时不渲染协作成员区块', (tester) async {
@@ -262,7 +286,7 @@ void main() {
     // 单人参与人：姓名仍在，尾部人数标注消失
     expect(find.textContaining('（1人）', findRichText: true), findsNothing,
         reason: '单人参与人无需「（1人）」尾部');
-    expect(find.textContaining('本地昵称', findRichText: true), findsWidgets,
-        reason: '参与人/支出人姓名应正常渲染');
+    expect(find.textContaining('u1', findRichText: true), findsWidgets,
+        reason: '未知参与人/支出人应兜底渲染原始 id');
   });
 }

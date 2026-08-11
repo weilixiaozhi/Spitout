@@ -20,6 +20,7 @@ import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/local_self_id_providers.dart';
+import 'package:spitout/providers/core/read_provider_future.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
 
 // UI 侧通过 providers 门面使用测试数据填充，不直接触碰服务层。
@@ -92,12 +93,19 @@ final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
 /// 历史版本可能把云 userId 混进本地账本，统一收敛为 localSelfId，
 /// 保证「本地账本不受云端影响」；云端账本的修复在登录时执行。
 final localIdentityRepairRunProvider = FutureProvider<void>((ref) async {
+  const key = 'local_identity_repair_v1_done';
+  final prefs = await SharedPreferences.getInstance();
+  if (prefs.getBool(key) ?? false) return;
   final db = ref.watch(databaseProvider);
-  final localSelfId = await ref.watch(localSelfIdProvider.future);
+  final localSelfId = await readProviderFutureFromRef(
+    ref,
+    localSelfIdProvider.future,
+  );
   await LocalIdentityMigrationService.repairLocalLedgersToLocalSelfId(
     db: db,
     localSelfId: localSelfId,
   );
+  await prefs.setBool(key, true);
 });
 
 /// 一次扫描的全部结果。autoDispose:用户离开页面后下次进来重扫。
