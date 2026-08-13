@@ -142,7 +142,7 @@ class ReminderSettingsPage extends ConsumerWidget {
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
+                foregroundColor: SpitoutTokens.textOnPrimary(context),
                 padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(SpitoutDimens.radius8),

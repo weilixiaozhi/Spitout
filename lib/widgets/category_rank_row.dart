@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'category_icon.dart';
 import 'amount_text.dart';
 import 'package:spitout/utils/category_utils.dart';
@@ -185,7 +186,7 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
                 value: value,
                 signed: false,
                 showCurrency: true,
-                style: TextStyle(fontSize: isTopLevel ? 14 : 13),
+                style: SpitoutTextTokens.body(context),
               ),
             ],
           ),
@@ -196,7 +197,6 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
                 '${(percent * 100).toStringAsFixed(1)}%',
                 style: Theme.of(context).textTheme.labelMedium?.copyWith(
                   color: SpitoutTokens.textTertiary(context),
-                  fontSize: isTopLevel ? 12 : 11,
                 ),
               ),
             ],

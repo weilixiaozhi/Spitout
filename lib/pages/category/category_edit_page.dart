@@ -334,12 +334,12 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                   ? null
                   : _saveCategory,
               child: _saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 20,
                       height: 20,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: Colors.white,
+                        color: SpitoutTokens.textOnPrimary(context),
                       ),
                     )
                   : Text(l10n.commonSave),

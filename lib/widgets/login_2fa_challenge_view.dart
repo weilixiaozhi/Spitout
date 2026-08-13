@@ -244,16 +244,16 @@ class _Login2FAChallengeDialogState
         FilledButton(
           style: FilledButton.styleFrom(
             backgroundColor: primary,
-            foregroundColor: Colors.white,
+            foregroundColor: SpitoutTokens.textOnPrimary(context),
           ),
           onPressed: _canSubmit ? _onSubmit : null,
           child: _verifying
-              ? const SizedBox(
+              ? SizedBox(
                   width: 16,
                   height: 16,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.white,
+                    color: SpitoutTokens.textOnPrimary(context),
                   ),
                 )
               : Text(l10n.twofaVerifyButton),

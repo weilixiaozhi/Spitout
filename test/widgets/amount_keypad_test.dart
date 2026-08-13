@@ -14,7 +14,7 @@
 ///        底部行 = h，随容器高度伸缩（无绝对像素行高）；
 ///     7. 运算符顺序自上而下 + - × ÷；
 ///     8. 数字/运算符/日期为白色色块，完成为主题主色；
-///     9. 键距/行距全局 4px、按键圆角统一 5px；
+///     9. 键距/行距全局 4px、按键圆角统一 4px；
 ///     10. textScaler 封顶 1.0：系统 1.5× 大字体下文字高度不超 1.0× 基线。
 library;
 
@@ -377,7 +377,7 @@ void main() {
       expect(tester.widget<PressKey>(doneKey).backgroundColor, primary);
     });
 
-    testWidgets('键距/行距全局 4px、按键圆角统一 5px', (tester) async {
+    testWidgets('键距/行距全局 4px、按键圆角统一 4px', (tester) async {
       await tester.pumpWidget(
         buildHarness(
           keypadHeight: 400,
@@ -392,7 +392,7 @@ void main() {
       // 常量单一来源
       expect(KeypadLayout.gap, 4);
       expect(KeypadLayout.rowGap, 4);
-      expect(KeypadLayout.keyRadius, 5);
+      expect(KeypadLayout.keyRadius, 4);
 
       // 底部行水平键距 4px：'0' 与 '.' 中心距 = 列宽 + 4
       final colWidth = (360 - 3 * KeypadLayout.gap) / 4;
@@ -409,7 +409,7 @@ void main() {
           .dy;
       expect(bottomTop - gridBottom, KeypadLayout.rowGap);
 
-      // 所有带圆角的按键统一 5px（运算符热区透明、由长条统一圆角）
+      // 所有带圆角的按键统一 4px（运算符热区透明、由长条统一圆角）
       for (final key in tester.widgetList<PressKey>(find.byType(PressKey))) {
         if (key.borderRadius != null) {
           expect(

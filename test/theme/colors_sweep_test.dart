@@ -59,17 +59,13 @@ void main() {
       expect(SpitoutTokens.border(ctx), isA<Color>());
       expect(SpitoutTokens.borderStrong(ctx), isA<Color>());
       expect(SpitoutTokens.grabHandleColor(ctx), isA<Color>());
-      expect(SpitoutTokens.borderThemed(ctx), isA<Color>());
       expect(SpitoutTokens.cardOuterBorderColor(ctx), Colors.transparent);
       expect(SpitoutTokens.cardOuterBorderWidth(ctx), 0);
       expect(SpitoutTokens.cardInnerDividerColor(ctx), isA<Color>());
       expect(SpitoutTokens.cardInnerDividerHeight(ctx), isA<double>());
-      expect(SpitoutTokens.listDayDividerHeight(ctx), 1);
-      expect(SpitoutTokens.listDayDividerColor(ctx), isA<Color>());
       expect(SpitoutTokens.cardDivider(ctx), isA<Divider>());
 
       expect(SpitoutTokens.primary(ctx), isA<Color>());
-      expect(SpitoutTokens.secondary(ctx), isA<Color>());
       expect(SpitoutTokens.success(ctx), isA<Color>());
       expect(SpitoutTokens.warning(ctx), isA<Color>());
       expect(SpitoutTokens.error(ctx), isA<Color>());

@@ -244,8 +244,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           color: primaryColor,
           shape: BoxShape.circle,
         ),
-        selectedTextStyle: const TextStyle(
-          color: Colors.white,
+        selectedTextStyle: TextStyle(
+          color: SpitoutTokens.textOnPrimary(context),
           fontWeight: FontWeight.bold,
         ),
 
@@ -325,7 +325,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     // 文字颜色
     Color textColor;
     if (isSelected) {
-      textColor = Colors.white;
+      textColor = SpitoutTokens.textOnPrimary(context);
     } else if (isToday) {
       textColor = primaryColor;
     } else if (isOutside) {
@@ -434,12 +434,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(AppIcons.add,
-                        size: SpitoutDimens.icon16, color: Colors.white),
+                    Icon(AppIcons.add,
+                        size: SpitoutDimens.icon16,
+                        color: SpitoutTokens.textOnPrimary(context)),
                     const SizedBox(width: SpitoutDimens.p4),
                     Text(
                       l10n.calendarAddTransaction,
-                      style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: Colors.white),
+                      style: SpitoutTextTokens.label(context).copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: SpitoutTokens.textOnPrimary(context)),
                     ),
                   ],
                 ),

@@ -302,13 +302,6 @@ class SpitoutTokens {
       ? Colors.white.withValues(alpha: 0.20)
       : Colors.black.withValues(alpha: 0.15);
 
-  /// 主题色边框（用于卡片等）
-  /// - 亮色模式：transparent
-  /// - 暗黑模式：主题色 30% 透明度
-  static Color borderThemed(BuildContext context) => isDark(context)
-      ? Theme.of(context).colorScheme.primary.withValues(alpha: 0.3)
-      : Colors.transparent;
-
   // ========== 卡片边框 Token (Card Border) ==========
 
   /// 卡片外边框颜色
@@ -334,13 +327,6 @@ class SpitoutTokens {
   static double cardInnerDividerHeight(BuildContext context) =>
       isDark(context) ? 0 : 1;
 
-  /// 明细列表「天」之间的分隔线。区别于卡片内 item 分隔(cardInnerDivider
-  /// 暗黑不显示):明细 day 分隔亮暗都显示细线(暗黑 white 8% / 亮 black 6%)。
-  static double listDayDividerHeight(BuildContext context) => 1;
-  static Color listDayDividerColor(BuildContext context) => isDark(context)
-      ? Colors.white.withValues(alpha: 0.08)
-      : Colors.black.withValues(alpha: 0.06);
-
   /// 卡片内部分割线组件
   /// 封装了 height、thickness、color 三个属性
   /// 设置项分割线。默认左缩进 48(对齐 AppListTile 内容:icon 容器 36 + 间距 12),
@@ -360,10 +346,6 @@ class SpitoutTokens {
   /// - 暗黑模式：深色版本（如 #C49A15）
   static Color primary(BuildContext context) =>
       Theme.of(context).colorScheme.primary;
-
-  /// 辅助色
-  static Color secondary(BuildContext context) =>
-      Theme.of(context).colorScheme.secondary;
 
   // ========== 语义色 Token (Semantic) ==========
 

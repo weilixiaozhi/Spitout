@@ -2,7 +2,7 @@
 ///
 /// 金额栏是键盘容器 6 行中的 1 行，行高由父级 SizedBox 提供；
 /// 币种框 / 金额区 / 删除键三个区块统一 stretch 填满整行；
-/// 币种框/金额区为白色块、删除键为深灰块、圆角 5px、水平键距 4px。
+/// 币种框/金额区为白色块、删除键为深灰块、圆角 4px、水平键距 4px。
 library;
 
 import 'package:flutter/material.dart';
@@ -97,7 +97,7 @@ void main() {
     );
   });
 
-  testWidgets('币种/金额区/删除块配色：币种白、金额白、删除深灰、圆角 5px、键距 4px', (tester) async {
+  testWidgets('币种/金额区/删除块配色：币种白、金额白、删除深灰、圆角 4px、键距 4px', (tester) async {
     await tester.pumpWidget(buildHarness(rowHeight: 80));
 
     // 币种框与金额区背景色

@@ -246,7 +246,7 @@ Widget buildCloudServiceSectionHeader(
         height: 15,
         decoration: BoxDecoration(
           color: Theme.of(context).colorScheme.primary,
-          borderRadius: BorderRadius.circular(2),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
         ),
       ),
       const SizedBox(width: SpitoutDimens.p8),
@@ -319,9 +319,9 @@ Widget buildCloudServiceCard({
       ),
       child: SectionCard(
         margin: EdgeInsets.zero,
-        // 将 SectionCard 默认 12 内边距收窄为 5：按钮/勾选浮层 right:0 仅距卡片外边 5px
+        // 将 SectionCard 默认 12 内边距收窄为 p4：按钮/勾选浮层 right:0 仅距卡片外边 4px
         // （保留轻量边缘留白）。
-        padding: const EdgeInsets.all(5),
+        padding: const EdgeInsets.all(SpitoutDimens.p4),
         // Stack 让「配置 / 教程」按钮行以绝对定位浮在卡片右下角，不参与布局流，
         // 因此卡片内容区高度可严格等于本地卡片（无按钮行）的自然高度，保证整页卡片等高一致。
         child: Stack(

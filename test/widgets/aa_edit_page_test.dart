@@ -628,7 +628,7 @@ void main() {
     );
   });
 
-  testWidgets('分摊方式按钮与记账编辑器一致:80x24、圆角 5', (tester) async {
+  testWidgets('分摊方式按钮与记账编辑器一致:80x24、圆角 4', (tester) async {
     await _openAaEdit(
       tester,
       args: AaEditPageArgs(
@@ -650,8 +650,8 @@ void main() {
     final deco = box.decoration! as BoxDecoration;
     expect(
       deco.borderRadius,
-      BorderRadius.circular(5),
-      reason: '按钮缩小后圆角应同步减少（6 → 5）',
+      BorderRadius.circular(4),
+      reason: '按钮缩小后圆角应同步减少（5 → 4）',
     );
   });
 }

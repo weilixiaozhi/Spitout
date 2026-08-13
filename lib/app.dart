@@ -195,9 +195,7 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
               bottom: 100,
               child: FloatingActionButton.small(
                 heroTag: 'themeSwitcher',
-                backgroundColor: Theme.of(context).brightness == Brightness.dark
-                    ? Colors.white
-                    : Colors.black,
+                backgroundColor: SpitoutTokens.surfaceInverse(context),
                 onPressed: () {
                   final current = ref.read(themeModeProvider);
                   final next = current == ThemeMode.dark
@@ -209,9 +207,7 @@ class _SpitoutAppState extends ConsumerState<SpitoutApp>
                   Theme.of(context).brightness == Brightness.dark
                       ? AppIcons.lightMode
                       : AppIcons.darkMode,
-                  color: Theme.of(context).brightness == Brightness.dark
-                      ? Colors.black
-                      : Colors.white,
+                  color: SpitoutTokens.onSurfaceInverse(context),
                 ),
               ),
             ),

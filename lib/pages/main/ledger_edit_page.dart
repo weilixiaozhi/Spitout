@@ -247,7 +247,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             height: 15,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
             ),
           ),
           const SizedBox(width: SpitoutDimens.p8),
@@ -800,12 +800,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       child: FilledButton(
         onPressed: _saving ? null : _handleSave,
         child: _saving
-            ? const SizedBox(
+            ? SizedBox(
                 width: 20,
                 height: 20,
                 child: CircularProgressIndicator(
                   strokeWidth: 2,
-                  color: Colors.white,
+                  color: SpitoutTokens.textOnPrimary(context),
                 ),
               )
             : Text(_isCreating ? l10n.ledgersCreate : l10n.commonSave),

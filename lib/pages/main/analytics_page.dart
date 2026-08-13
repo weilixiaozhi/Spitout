@@ -1075,7 +1075,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     height: 6,
                     decoration: BoxDecoration(
                       color: placeholder,
-                      borderRadius: BorderRadius.circular(3),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                     ),
                   ),
                 ],

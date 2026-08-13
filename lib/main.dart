@@ -13,6 +13,7 @@ import 'router.dart';
 import 'widgets/app_route.dart';
 import 'widgets/login_2fa_challenge_view.dart';
 import 'theme/app_theme.dart';
+import 'theme/colors.dart';
 import 'package:spitout/providers/providers.dart';
 import 'services/notification/notification_factory.dart';
 import 'services/notification/reminder_constants.dart';
@@ -170,7 +171,7 @@ class MainApp extends ConsumerWidget {
   const MainApp({super.key});
 
   // 根据初始化状态和欢迎页面状态决定显示哪个页面
-  Widget _getHomePage(AppInitState initState, WidgetRef ref) {
+  Widget _getHomePage(BuildContext context, AppInitState initState, WidgetRef ref) {
     // 首先检查是否需要显示欢迎页面
     final shouldShowWelcome = ref.watch(shouldShowWelcomeProvider);
     if (shouldShowWelcome) {
@@ -182,9 +183,9 @@ class MainApp extends ConsumerWidget {
     // appInitState 已是 ready，此处不会触发。
     // 仅作为防御性兜底（如 main() 中预加载异常未执行）。
     if (initState != AppInitState.ready) {
-      return const Scaffold(
-        backgroundColor: Colors.white,
-        body: SizedBox.shrink(),
+      return Scaffold(
+        backgroundColor: SpitoutTokens.scaffoldBackground(context),
+        body: const SizedBox.shrink(),
       );
     }
 
@@ -260,12 +261,13 @@ class MainApp extends ConsumerWidget {
                   child: BackdropFilter(
                     filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
                     child: Container(
-                      color: Colors.black.withValues(alpha: 0.3),
+                      color: SpitoutTokens.overlay(context),
                       alignment: Alignment.center,
                       child: Icon(
                         AppIcons.lock,
                         size: 64,
-                        color: Colors.white.withValues(alpha: 0.7),
+                        color: SpitoutTokens.textOnPrimary(context)
+                            .withValues(alpha: 0.7),
                       ),
                     ),
                   ),
@@ -275,7 +277,7 @@ class MainApp extends ConsumerWidget {
           );
         },
         // 显式命名根路由，便于路由名调试与埋点识别
-        home: _getHomePage(initState, ref),
+        home: _getHomePage(context, initState, ref),
         onGenerateRoute: (settings) {
           // 先委托给全局路由层：由 router.dart 统一解析命名路由。
           final named = appRoute(settings);
@@ -283,7 +285,7 @@ class MainApp extends ConsumerWidget {
           if (settings.name == Navigator.defaultRouteName ||
               settings.name == '/') {
             return appPageRoute(
-                builder: (_) => _getHomePage(initState, ref),
+                builder: (_) => _getHomePage(context, initState, ref),
                 settings: const RouteSettings(name: '/'));
           }
           return null;

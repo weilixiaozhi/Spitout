@@ -13,7 +13,7 @@ import 'press_key.dart';
 ///   [onRollback] 回滚最近一次提交，做到与系统键盘一样的"按下即反馈"；
 /// - 完成键（提交/等号）：等号按下即算，提交松手触发，避免误触直接关页；
 /// - 触觉反馈由父级金额面板统一触发，本组件不重复触发；
-/// - 水平键距 4px、行距 4px、按键圆角 5px（统一来自 KeypadLayout）；
+/// - 水平键距 4px、行距 4px、按键圆角 4px（统一来自 KeypadLayout）；
 /// - 数字/运算符/日期为白色色块（keyDigit），完成键为主题主色。
 ///
 /// 布局：
@@ -228,7 +228,7 @@ class AmountKeypad extends StatelessWidget {
     // 完成键是主操作：可用时用主题主色（buttonPrimary）+ 白色内容；
     // 禁用时用规范 buttonDisabled 背景 + textSecondary 图标，保证可辨识。
     final iconColor = enabled
-        ? Colors.white
+        ? SpitoutTokens.textOnPrimary(context)
         : SpitoutTokens.textSecondary(context);
 
     return PressKey(

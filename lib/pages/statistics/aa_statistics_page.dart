@@ -277,7 +277,8 @@ class AaStatisticsPage extends ConsumerWidget {
   Widget _buildViewDetailsPill(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: 3),
+      padding: const EdgeInsets.symmetric(
+          horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
@@ -548,7 +549,7 @@ class AaStatisticsPage extends ConsumerWidget {
             height: 15,
             decoration: BoxDecoration(
               color: color,
-              borderRadius: BorderRadius.circular(2),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
             ),
           ),
           const SizedBox(width: SpitoutDimens.p8),

@@ -57,10 +57,12 @@ class TextStateSwitch extends StatelessWidget {
             ? colors.primary
             : SpitoutTokens.switchInactiveTrack(context))
         .withValues(alpha: enabled ? 1 : 0.5);
-    final thumbColor = (value ? Colors.white : SpitoutTokens.surface(context))
+    final thumbColor = (value
+            ? SpitoutTokens.textOnPrimary(context)
+            : SpitoutTokens.surface(context))
         .withValues(alpha: enabled ? 1 : 0.75);
     final textColor = (value
-            ? Colors.white
+            ? SpitoutTokens.textOnPrimary(context)
             : SpitoutTokens.textSecondary(context))
         .withValues(alpha: enabled ? 1 : 0.75);
     // 滑块直径 = 轨道高度 - 上下内边距,保证滑块与轨道同心且不溢出

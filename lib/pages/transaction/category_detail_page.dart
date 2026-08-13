@@ -829,7 +829,7 @@ class _SortButton extends StatelessWidget {
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
             color: isSelected
-              ? Colors.white
+              ? SpitoutTokens.textOnPrimary(context)
               : Theme.of(context).colorScheme.onSurface,
             fontWeight: isSelected ? FontWeight.w400 : FontWeight.normal,
           ),

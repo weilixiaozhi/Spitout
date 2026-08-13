@@ -310,12 +310,12 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       // 弱化 loading：无遮罩，仅居中展示细线条、浅颜色的
                       // CircularProgressIndicator，1s 过渡反馈后弹 toast「已更换」。
                       final overlayEntry = OverlayEntry(
-                        builder: (_) => const Center(
+                        builder: (context) => Center(
                           child: CircularProgressIndicator(
                             strokeWidth: 2.0,
                             strokeCap: StrokeCap.round,
                             valueColor: AlwaysStoppedAnimation<Color>(
-                              Colors.grey,
+                              SpitoutTokens.iconTertiary(context),
                             ),
                           ),
                         ),
@@ -340,12 +340,14 @@ class AppearanceSettingsPage extends ConsumerWidget {
                       }
                     },
               child: saving
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 18,
                       height: 18,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          SpitoutTokens.textOnPrimary(context),
+                        ),
                       ),
                     )
                   : Text(l10n.commonSave),

@@ -55,21 +55,21 @@ class CapsuleSwitcher<T> extends StatelessWidget {
         (isDark
             ? SpitoutTokens.primary(context)
             : SpitoutTokens.surfaceInverse(context));
-    final selectedFg = selectedTextColor ?? Colors.white;
+    final selectedFg = selectedTextColor ?? SpitoutTokens.textOnPrimary(context);
     final unselectedFg = unselectedTextColor ?? SpitoutTokens.textPrimary(context);
     final radius = borderRadius ?? BorderRadius.circular(SpitoutDimens.radius20);
 
     Widget buildSegment(CapsuleOption<T> option) {
       final selected = selectedValue == option.value;
       // 分段圆角与选中态底色变化保持一致；选中变色即反馈，按统一原则不加涟漪
-      final radius = BorderRadius.circular((height - 6) / 2);
+      final radius = BorderRadius.circular((height - 8) / 2);
       return Expanded(
         child: GestureDetector(
           onTap: () => onChanged(option.value),
           behavior: HitTestBehavior.opaque,
           child: AnimatedContainer(
             duration: const Duration(milliseconds: 160),
-            height: height - 6, // 减去padding
+            height: height - 8, // 容器高 - 上下 padding(2 × p4)
             decoration: BoxDecoration(
               color: selected ? selectedBg : Colors.transparent,
               borderRadius: radius,
@@ -122,7 +122,7 @@ class CapsuleSwitcher<T> extends StatelessWidget {
 
     return Container(
       height: height,
-      padding: const EdgeInsets.all(3),
+      padding: const EdgeInsets.all(SpitoutDimens.p4),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: radius,

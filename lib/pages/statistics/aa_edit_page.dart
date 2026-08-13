@@ -841,7 +841,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
         ),
         child: checked
-            ? Icon(AppIcons.check, size: SpitoutDimens.icon12, color: Colors.white)
+            ? Icon(AppIcons.check,
+                size: SpitoutDimens.icon12,
+                color: SpitoutTokens.textOnPrimary(context))
             : null,
       ),
     );

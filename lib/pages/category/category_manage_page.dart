@@ -1378,10 +1378,10 @@ class _CategoryCard extends ConsumerWidget {
                     color: Theme.of(context).colorScheme.primary,
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
+                  child: Icon(
                     AppIcons.moreHorizontal,
                     size: SpitoutDimens.icon12,
-                    color: Colors.white,
+                    color: SpitoutTokens.textOnPrimary(context),
                   ),
                 ),
               ),
@@ -1413,9 +1413,11 @@ class _DeleteModeCheckbox extends StatelessWidget {
         decoration: BoxDecoration(
           color: errorColor,
           shape: BoxShape.circle,
-          border: Border.all(color: Colors.white, width: 1.5),
+          border: Border.all(color: SpitoutTokens.textOnPrimary(context), width: 1.5),
         ),
-        child: const Icon(Icons.check, size: SpitoutDimens.icon12, color: Colors.white),
+        child: Icon(Icons.check,
+            size: SpitoutDimens.icon12,
+            color: SpitoutTokens.textOnPrimary(context)),
       );
     }
 
@@ -1692,10 +1694,8 @@ class _MigrateCategoryChip extends StatelessWidget {
             const SizedBox(height: SpitoutDimens.p4),
             Text(
               CategoryUtils.getDisplayName(item.category.name, context),
-              style: TextStyle(
-                fontSize: isSub ? 10 : 11,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.caption(context)
+                  .copyWith(color: SpitoutTokens.textPrimary(context)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,

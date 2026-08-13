@@ -424,16 +424,17 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                   ? null
                   : () => _cleanSelected(report),
               icon: _cleaning
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
-                          strokeWidth: 2, color: Colors.white),
+                          strokeWidth: 2,
+                          color: SpitoutTokens.textOnPrimary(context)),
                     )
-                  : const Icon(AppIcons.clearAll,
-                      color: Colors.white),
+                  : Icon(AppIcons.clearAll,
+                      color: SpitoutTokens.textOnPrimary(context)),
               label: Text(l10n.maintenanceOrphanCleanSelected,
-                  style: const TextStyle(color: Colors.white)),
+                  style: TextStyle(color: SpitoutTokens.textOnPrimary(context))),
             ),
           ],
         ),

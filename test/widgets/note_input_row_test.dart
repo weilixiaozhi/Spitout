@@ -107,7 +107,7 @@ void main() {
     expect(
       clip.borderRadius,
       BorderRadius.circular(KeypadLayout.keyRadius),
-      reason: '备注输入框圆角应与键盘按键统一为 5px',
+      reason: '备注输入框圆角应与键盘按键统一为 4px',
     );
 
     controller.dispose();

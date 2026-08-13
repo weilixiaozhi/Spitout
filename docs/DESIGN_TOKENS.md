@@ -2,7 +2,6 @@
 
 > 文件位置：`lib/theme/colors.dart`（核心）、`lib/theme/typography.dart`、`lib/theme/dimens.dart`、
 > `lib/theme/shadows.dart`、`lib/theme/chart_tokens.dart`
-> 最后更新：2026-08-13
 >
 > 统一的 Design Token 系统，包含颜色、尺寸、阴影、字体等所有设计令牌。
 > 所有 UI 组件都应该使用 Token 而非直接使用颜色值，以确保亮暗模式正确适配。
@@ -90,11 +89,10 @@ Container(
 | `divider` | 分割线 | `rgba(0,0,0,0.06)` | `rgba(243,244,246,0.10)` |
 | `border` | 卡片边框 | `transparent`（使用阴影） | `rgba(243,244,246,0.10)` |
 | `borderStrong` | 强调边框 | `rgba(0,0,0,0.12)` | `rgba(243,244,246,0.10)` |
-| `borderThemed` | 主题色边框 | `transparent` | 主题色 30% |
 | `grabHandleColor` | 底部弹层拖拽条（shadcn muted） | `rgba(0,0,0,0.15)` | `rgba(255,255,255,0.20)` |
 
 > 暗黑模式下常规边框统一使用 shadcn border dark（`#F3F4F6` 10% 透明度），
-> 仅 `borderThemed` 保留主题色 30% 透明度用于强调场景。
+> 亮色模式使用阴影替代边框。
 
 ---
 
@@ -106,8 +104,6 @@ Container(
 | `cardOuterBorderWidth` | 卡片外边框宽度 | `0` | `0` |
 | `cardInnerDividerColor` | 卡片内分割线颜色 | `rgba(0,0,0,0.06)` | `transparent`（去掉分割线） |
 | `cardInnerDividerHeight` | 卡片内分割线高度 | `1` | `0` |
-| `listDayDividerHeight` | 明细列表「天」分隔线高度（亮暗均显示） | `1` | `1` |
-| `listDayDividerColor` | 明细列表「天」分隔线颜色 | `rgba(0,0,0,0.06)` | `rgba(255,255,255,0.08)` |
 
 ### 卡片内分割线组件
 
@@ -125,7 +121,6 @@ SpitoutTokens.cardDivider(context, indent: 0)
 | Token 名称 | 用途 | 说明 |
 |-----------|------|------|
 | `primary` | 主题色（自动适配用户选择） | 亮色模式为用户选择色，暗黑模式为深色版本 |
-| `secondary` | 辅助色 | 取自 `colorScheme.secondary` |
 
 ---
 
@@ -285,9 +280,6 @@ final color = ref.watch(expenseColorSchemeProvider) == 'green'
 | `SpitoutDimens.listHeaderVertical` | `6` | 列表头垂直内边距 |
 | `SpitoutDimens.listRowVertical` | `8` | 列表行垂直内边距 |
 
-> **归一规则**：圆角 6/10→`radius8`、18/19/22/24→`radius20`、28/32→`radius28`、44/48→`radius44`；
-> 间距 2/6→`p4`、10→`p8`、14→`p12`、20→`p16`、24→`p20`；
-> 图标 14→`icon12`、18→`icon16`、24→`icon22`、32→`icon28`、48→`icon40`。
 > 启动页 Logo、空态与头像大尺寸（64/88/120）为组件级尺寸，暂不入 token。
 
 > 页面头部规范由 `PrimaryHeader` 组件内置承载（不设独立令牌）：
@@ -407,10 +399,9 @@ Spitout 暗黑模式基于 **shadcn dark 调色板**，通过不同深度的灰�
 3. **次级背景**：`#374151`（shadcn secondary dark，嵌套卡片/输入框/Chip 等）
 4. **二级分类图标底（暗）**：`#3A3A3C`（`surfaceCategoryIconLight`）
 5. **分类图标背景**：`#48484A`（未选中状态）
-6. **边框**：常规边框统一 `#F3F4F6` 10% 透明度；`borderThemed` 保留主题色 30% 用于强调
+6. **边框**：常规边框统一 `#F3F4F6` 10% 透明度；亮色模式用阴影替代边框
 7. **去除卡片内分割线**：暗黑模式下 `cardInnerDividerHeight` 为 0
-8. **明细天分隔线保留**：`listDayDivider` 亮暗均显示细线（暗黑 white 8%）
-9. **反转色**：FAB 等反色组件用 `surfaceInverse`（暗黑=白）+ `onSurfaceInverse`（暗黑=黑）
+8. **反转色**：FAB 等反色组件用 `surfaceInverse`（暗黑=白）+ `onSurfaceInverse`（暗黑=黑）
 
 ---
 

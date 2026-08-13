@@ -1,16 +1,18 @@
+import 'package:spitout/theme/dimens.dart';
+
 /// 记账键盘统一布局常量：键距 / 行距 / 圆角 / 行高关系的单一来源，
 /// 避免各处维护导致改一处漏一处的静默失配。
 class KeypadLayout {
   const KeypadLayout._();
 
   /// 相邻键位水平间距（px）。
-  static const double gap = 4;
+  static const double gap = SpitoutDimens.p4;
 
   /// 键盘相邻两行之间的纵向行距（px）。
-  static const double rowGap = 4;
+  static const double rowGap = SpitoutDimens.p4;
 
   /// 按键圆角（px）。
-  static const double keyRadius = 5;
+  static const double keyRadius = SpitoutDimens.radius4;
 
   /// 备注行比其余 5 行（金额栏 + 3 行数字 + 底部行）矮的高度（px）。
   static const double noteRowDelta = 5;

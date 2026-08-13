@@ -411,7 +411,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                   const SizedBox(height: SpitoutDimens.p16),
                   Text(
                     l10n.localBackupRestoring,
-                    style: SpitoutTextTokens.body(context).copyWith(color: Colors.white,
+                    style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textOnPrimary(context),
                       decoration: TextDecoration.none),
                   ),
                 ],

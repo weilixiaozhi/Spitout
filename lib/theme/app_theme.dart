@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'colors.dart';
+import 'dimens.dart';
 import 'typography.dart';
 
 /// 全局主题定义。
@@ -68,13 +69,15 @@ class SpitoutTheme {
       // 列表项紧凑样式，图标用深灰
       listTileTheme: ListTileThemeData(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12),
         iconColor: Colors.black87,
       ),
       // 对话框：白底 + 圆角 + 深灰标题/正文
       dialogTheme: base.dialogTheme.copyWith(
         backgroundColor: SpitoutColors.lightSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
         titleTextStyle: textTheme.titleMedium?.copyWith(
             color: SpitoutColors.lightTextPrimary,
             fontWeight: FontWeight.w600),
@@ -93,8 +96,8 @@ class SpitoutTheme {
         style: FilledButton.styleFrom(
           backgroundColor: seedColor,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
         ),
       ),
       // 次按钮（描边按钮）：M3 默认描边是灰色，这里显式指定为主色描边 + 主色文字
@@ -113,7 +116,8 @@ class SpitoutTheme {
       cardTheme: base.cardTheme.copyWith(
         color: SpitoutColors.lightSurface,
         elevation: 0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
         margin: EdgeInsets.zero,
       ),
       // 全局输入框主题：色块样式（filled 背景 + 无描边圆角），
@@ -122,33 +126,33 @@ class SpitoutTheme {
         filled: true,
         fillColor: SpitoutColors.lightInputBg,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide(
             color: SpitoutColors.errorLight,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide(
             color: SpitoutColors.errorLight,
             width: 1,
           ),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
       ),
     );
   }
@@ -202,13 +206,15 @@ class SpitoutTheme {
       // 列表项紧凑样式，图标用白色
       listTileTheme: ListTileThemeData(
         dense: true,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 12),
+        contentPadding:
+            const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12),
         iconColor: Colors.white,
       ),
       // 对话框：shadcn/ui 暗色 card darkSurface + 圆角 + foreground/mutedForeground
       dialogTheme: base.dialogTheme.copyWith(
         backgroundColor: SpitoutColors.darkSurface,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
         titleTextStyle: textTheme.titleMedium?.copyWith(
             color: SpitoutColors.darkTextPrimary, fontWeight: FontWeight.w600),
         contentTextStyle: textTheme.bodyMedium
@@ -226,8 +232,8 @@ class SpitoutTheme {
         style: FilledButton.styleFrom(
           backgroundColor: seedColor,
           foregroundColor: Colors.white,
-          shape:
-              RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
         ),
       ),
       // 次按钮（描边按钮）：主色描边 + 主色文字
@@ -247,7 +253,7 @@ class SpitoutTheme {
         color: SpitoutColors.darkSurface,
         elevation: 0,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           side: BorderSide(
             color: SpitoutColors.darkBorder.withValues(alpha: 0.10),
             width: 1,
@@ -265,33 +271,33 @@ class SpitoutTheme {
         filled: true,
         fillColor: SpitoutColors.darkSurfaceSecondary,
         border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide.none,
         ),
         errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide(
             color: SpitoutColors.errorDark,
             width: 1,
           ),
         ),
         focusedErrorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           borderSide: BorderSide(
             color: SpitoutColors.errorDark,
             width: 1,
           ),
         ),
-        contentPadding:
-            const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        contentPadding: const EdgeInsets.symmetric(
+            horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
       ),
       iconTheme: const IconThemeData(
         color: SpitoutColors.darkTextPrimary,

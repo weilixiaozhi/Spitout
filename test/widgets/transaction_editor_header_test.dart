@@ -2,7 +2,7 @@
 ///
 /// 需求锚点：全局文字 ×0.85 缩放后，头部「记一笔」标题变小，
 /// 但 AA 分摊方式按钮仍是原尺寸显得偏大——按钮需同步缩小，
-/// 且缩小后圆角按比例减少（6px → 5px）。
+/// 且缩小后圆角按比例减少（5px → 4px）。
 library;
 
 import 'package:flutter/material.dart';
@@ -28,7 +28,7 @@ class _MockRepo extends Mock implements BaseRepository {}
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
-  testWidgets('AA 开启时头部按钮缩小：80x24、圆角 5、字号 12', (tester) async {
+  testWidgets('AA 开启时头部按钮缩小：80x24、圆角 4、字号 12', (tester) async {
     final repo = _MockRepo();
     await tester.pumpWidget(
       ProviderScope(
@@ -101,8 +101,8 @@ void main() {
     final deco = box.decoration! as BoxDecoration;
     expect(
       deco.borderRadius,
-      BorderRadius.circular(5),
-      reason: '按钮缩小后圆角应同步减少（6 → 5）',
+      BorderRadius.circular(4),
+      reason: '按钮缩小后圆角应同步减少（5 → 4）',
     );
 
     final modeText = tester.widget<Text>(

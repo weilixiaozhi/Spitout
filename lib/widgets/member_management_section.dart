@@ -414,7 +414,7 @@ class _MemberManagementSectionState
               height: 15,
               decoration: BoxDecoration(
                 color: primary,
-                borderRadius: BorderRadius.circular(2),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
               ),
             ),
             const SizedBox(width: SpitoutDimens.p8),

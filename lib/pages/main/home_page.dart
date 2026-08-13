@@ -836,7 +836,7 @@ class _HomePageState extends ConsumerState<HomePage>
 /// 布局:
 /// - 卡片内边距四边 20;内容自上而下:标题(本月支出) → 间距 10 → 主金额
 ///   (36px / Regular / 字距 -0.05em) → 间距 12 → 今日/本周小字。
-/// - 账本徽章以 tab 形式挂在卡片右缘(半透明白底、仅左侧圆角 5),
+/// - 账本徽章以 tab 形式挂在卡片右缘(半透明白底、仅左侧圆角 radius4),
 ///   与标题行纵向齐平,不内嵌占用标题行宽度。
 /// - 整张卡片可点击 → 跳转账本管理页(点击热区大,符合拇指操作友好原则)。
 /// - 今日/本周常驻展示(非当月金额显示为 -,保证切页时卡片高度固定不抖动)。
@@ -993,18 +993,18 @@ class _HeaderSummary extends ConsumerWidget {
               ),
               // 账本徽章 tab:挂卡片右缘(top 20 与标题行齐平,right 0 贴边)。
               // 底色沿用 token 体系内"主色之上的白"(onPrimary 0.18,与空态图标底
-              // 同一透明度),仅左侧圆角 5 —— 对应 UI稿的右缘 tab 形态,但不引入
+              // 同一透明度),仅左侧圆角 radius4 —— 对应 UI稿的右缘 tab 形态,但不引入
               // UI稿的具体灰色值,保证亮暗主题一致。
               Positioned(
                 top: 20,
                 right: 0,
                 child: Container(
-                  // UI稿徽章内边距:左 7 / 上 6 / 右 8 / 下 6(上下加大以增高色块)
-                  padding: const EdgeInsets.fromLTRB(7, SpitoutDimens.p4, SpitoutDimens.p8, SpitoutDimens.p4),
+                  // UI稿徽章内边距:左 p8 / 上 p4 / 右 p8 / 下 p4
+                  padding: const EdgeInsets.fromLTRB(SpitoutDimens.p8, SpitoutDimens.p4, SpitoutDimens.p8, SpitoutDimens.p4),
                   decoration: BoxDecoration(
                     color: onPrimary.withValues(alpha: 0.18),
                     borderRadius: const BorderRadius.horizontal(
-                      left: Radius.circular(5),
+                      left: Radius.circular(SpitoutDimens.radius4),
                     ),
                   ),
                   child: _LedgerEntryInCard(

@@ -373,7 +373,7 @@ import 'package:spitout/theme/typography.dart';
             alignment: Alignment.center,
             child: Text(
               num,
-              style: SpitoutTextTokens.label(context).copyWith(color: Colors.white,
+              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textOnPrimary(context),
                 fontWeight: FontWeight.bold),
             ),
           ),

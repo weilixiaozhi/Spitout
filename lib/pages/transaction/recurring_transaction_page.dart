@@ -202,7 +202,7 @@ class _RecurringTransactionCardState
                   height: 48,
                   decoration: BoxDecoration(
                     color: SpitoutTokens.error(context),
-                    borderRadius: BorderRadius.circular(1.5),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                   ),
                 ),
                 const SizedBox(width: SpitoutDimens.p12),

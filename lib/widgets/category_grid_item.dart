@@ -73,7 +73,8 @@ class CategoryGridItem extends StatelessWidget {
         : (isSubCategory
             ? SpitoutTokens.surface(context)
             : SpitoutTokens.surfaceCategoryIcon(context));
-    final iconColor = selected ? Colors.white : SpitoutTokens.iconCategory(context);
+    final iconColor =
+        selected ? SpitoutTokens.textOnPrimary(context) : SpitoutTokens.iconCategory(context);
     final labelColor = selected
         ? primaryColor
         : (isSubCategory
@@ -115,7 +116,7 @@ class CategoryGridItem extends StatelessWidget {
                         AppIcons.moreHorizontal,
                         size: 11,
                         color: selected
-                            ? Colors.white
+                            ? SpitoutTokens.textOnPrimary(context)
                             : SpitoutTokens.iconCategory(context),
                       ),
                     ),

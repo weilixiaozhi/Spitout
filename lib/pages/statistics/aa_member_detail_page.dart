@@ -118,9 +118,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                   children: [
                     Text(
                       args.displayName,
-                      style: SpitoutTextTokens.strongTitle(
-                        context,
-                      ).copyWith(fontSize: 14),
+                      style: SpitoutTextTokens.body(context),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
