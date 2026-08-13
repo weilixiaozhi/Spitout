@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 胶囊选项配置
@@ -56,7 +57,7 @@ class CapsuleSwitcher<T> extends StatelessWidget {
             : SpitoutTokens.surfaceInverse(context));
     final selectedFg = selectedTextColor ?? Colors.white;
     final unselectedFg = unselectedTextColor ?? SpitoutTokens.textPrimary(context);
-    final radius = borderRadius ?? BorderRadius.circular(20);
+    final radius = borderRadius ?? BorderRadius.circular(SpitoutDimens.radius20);
 
     Widget buildSegment(CapsuleOption<T> option) {
       final selected = selectedValue == option.value;
@@ -73,7 +74,7 @@ class CapsuleSwitcher<T> extends StatelessWidget {
               color: selected ? selectedBg : Colors.transparent,
               borderRadius: radius,
             ),
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               mainAxisSize: MainAxisSize.max,
@@ -95,18 +96,18 @@ class CapsuleSwitcher<T> extends StatelessWidget {
                   ),
                 ),
                 if (option.showArrow && option.onTap != null) ...[
-                  const SizedBox(width: 4),
+                  const SizedBox(width: SpitoutDimens.p4),
                   // 箭头是独立的纯动作（拉起下拉），无选中态，按原则补涟漪反馈
                   Material(
                     color: Colors.transparent,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                     clipBehavior: Clip.antiAlias,
                     child: InkWell(
                       onTap: option.onTap,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                       child: Icon(
                         AppIcons.chevronDown,
-                        size: 18,
+                        size: SpitoutDimens.icon16,
                         color: SpitoutTokens.iconTertiary(context),
                       ),
                     ),
@@ -129,7 +130,7 @@ class CapsuleSwitcher<T> extends StatelessWidget {
       child: Row(
         children: options
             .map((option) => buildSegment(option))
-            .expand((widget) => [widget, const SizedBox(width: 4)])
+            .expand((widget) => [widget, const SizedBox(width: SpitoutDimens.p4)])
             .take(options.length * 2 - 1) // 移除最后一个SizedBox
             .toList(),
       ),

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'format_money.dart';
 
@@ -65,31 +66,28 @@ class DaySectionHeader extends StatelessWidget {
           // 不设背景色:与交易行一样透明,显示同一外层列表背景。否则暗黑下 header
           // 是 surface 深灰(#1C1C1E)、交易行是纯黑 scaffold 底,两者不协调。
           padding: const EdgeInsets.symmetric(
-              horizontal: 12, vertical: SpitoutDimens.listHeaderVertical),
+              horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.listHeaderVertical),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(children: [
                 Text(dateText,
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelMedium
-                        ?.copyWith(color: grey, fontSize: 12)),
+                    style: SpitoutTextTokens.label(
+                      context,
+                    ).copyWith(color: grey)),
                 if (week.isNotEmpty) ...[
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   Text(week,
-                      style: Theme.of(context)
-                          .textTheme
-                          .labelMedium
-                          ?.copyWith(color: grey, fontSize: 12)),
+                      style: SpitoutTextTokens.label(
+                        context,
+                      ).copyWith(color: grey)),
                 ]
               ]),
               if (fmt(expense).isNotEmpty)
                 Text('${l10n.homeExpense} ${fmt(expense)}',
-                    style: Theme.of(context)
-                        .textTheme
-                        .labelMedium
-                        ?.copyWith(color: grey, fontSize: 12)),
+                    style: SpitoutTextTokens.label(
+                      context,
+                    ).copyWith(color: grey)),
             ],
           ),
         ),

@@ -18,6 +18,8 @@ import 'package:spitout/providers/ui/theme_providers.dart'
     show displayNameProvider;
 import 'package:spitout/services/statistics/aa_statistics_service.dart' show AaMode;
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'category_icon.dart';
 import 'currency_flag.dart';
 import 'app_sheet.dart';
@@ -200,17 +202,10 @@ class _TransactionDetailBody extends ConsumerWidget {
   }
 
   /// 构建信息行右对齐值样式(与 [_InfoRow] 默认值一致)。
-  TextStyle _infoValueStyle(BuildContext context) => TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w500,
-        color: SpitoutTokens.textPrimary(context),
-      );
+  TextStyle _infoValueStyle(BuildContext context) => SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context));
 
   /// 构建信息行 label 样式(与 [_InfoRow] 默认 label 一致)。
-  TextStyle _infoLabelStyle(BuildContext context) => TextStyle(
-        fontSize: 14,
-        color: SpitoutTokens.textSecondary(context),
-      );
+  TextStyle _infoLabelStyle(BuildContext context) => SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context));
 
   /// 构建带「(我)」共享后缀的右对齐富文本值。
   ///
@@ -323,14 +318,14 @@ class _TransactionDetailBody extends ConsumerWidget {
                     await onEditAa?.call();
                   },
                   style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12)),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
                   ),
                   child: Text(l10n.aaEditSplitButton),
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpitoutDimens.p12),
               Expanded(
                 child: FilledButton(
                   onPressed: () async {
@@ -338,9 +333,9 @@ class _TransactionDetailBody extends ConsumerWidget {
                     await onEdit();
                   },
                   style: FilledButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12))),
+                          borderRadius: BorderRadius.circular(SpitoutDimens.radius12))),
                   child: Text(l10n.homeDetailEditButton),
                 ),
               ),
@@ -355,9 +350,9 @@ class _TransactionDetailBody extends ConsumerWidget {
                   await onEdit();
                 },
                 style: FilledButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                     shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12))),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius12))),
                 child: Text(l10n.homeDetailEditButton),
               ),
             ),
@@ -377,29 +372,24 @@ class _TransactionDetailBody extends ConsumerWidget {
                   height: 36,
                   decoration: BoxDecoration(
                     color: SpitoutTokens.surfaceSecondary(context),
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                   ),
-                  child: CategoryIconWidget(category: category, size: 20),
+                  child: CategoryIconWidget(category: category, size: SpitoutDimens.icon20),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(categoryName,
-                          style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: SpitoutTokens.textPrimary(context)),
+                          style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis),
                       if (t.note != null && t.note!.isNotEmpty)
                         Padding(
-                          padding: const EdgeInsets.only(top: 2),
+                          padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                           child: Text(t.note!,
-                              style: TextStyle(
-                                  fontSize: 13,
-                                  color: SpitoutTokens.textSecondary(context)),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                               maxLines: 2,
                               overflow: TextOverflow.ellipsis),
                         ),
@@ -413,7 +403,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                 }),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             _Divider(),
             // 2. 信息区
             _InfoRow(label: l10n.homeDetailDate, value: _fmt(t.happenedAt)),
@@ -428,13 +418,9 @@ class _TransactionDetailBody extends ConsumerWidget {
                 signed: true,
                 showCurrency: true,
                 currencyCode: t.currencyCode,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: ref.watch(expenseColorSchemeProvider) == 'green'
+                style: SpitoutTextTokens.body(context).copyWith(color: ref.watch(expenseColorSchemeProvider) == 'green'
                       ? SpitoutTokens.success(context)
-                      : SpitoutTokens.error(context),
-                ),
+                      : SpitoutTokens.error(context)),
               ),
             ),
             if (t.currencyCode != null && t.currencyCode!.isNotEmpty)
@@ -447,11 +433,7 @@ class _TransactionDetailBody extends ConsumerWidget {
                     child: currencyFlagLabel(
                       context,
                       t.currencyCode!,
-                      textStyle: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      textStyle: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     ),
                   )),
             if (t.nativeAmount != null && t.nativeAmount != t.amount)
@@ -488,24 +470,20 @@ class _TransactionDetailBody extends ConsumerWidget {
             // 4. 编辑记录(仅供查看)
             _Divider(),
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
               child: Row(children: [
                 _SectionLabel(text: l10n.homeDetailEditHistory, dense: true),
-                const SizedBox(width: 6),
+                const SizedBox(width: SpitoutDimens.p4),
                 Text(l10n.homeDetailEditHistoryHint,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: SpitoutTokens.textTertiary(context))),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context))),
               ]),
             ),
             historyAsync.when(
               data: (h) => h.isEmpty
                   ? Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
                       child: Text(l10n.homeDetailNoHistory,
-                          style: TextStyle(
-                              fontSize: 13,
-                              color: SpitoutTokens.textTertiary(context))))
+                          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context))))
                   : Column(children: [
                       for (final e in h)
                         _HistoryRow(e, (id) => resolver.resolve(id),
@@ -513,20 +491,18 @@ class _TransactionDetailBody extends ConsumerWidget {
                             isSelfOf: (id) => resolver.isSelf(id))
                     ]),
               loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 12),
+                  padding: EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                   child: Center(
                       child: SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(strokeWidth: 2)))),
               error: (_, _) => Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 8),
+                  padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
                   child: Text(l10n.homeDetailNoHistory,
-                      style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textTertiary(context)))),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)))),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
           ],
         ),
       ),
@@ -548,7 +524,7 @@ class _DeleteTrailingIcon extends StatelessWidget {
       onPressed: () => onTap(),
       icon: Icon(
         AppIcons.delete,
-        size: 20,
+        size: SpitoutDimens.icon20,
         color: SpitoutTokens.error(context),
       ),
       // 收紧尺寸:与其他 sheet 顶部 trailing 一致(32px 行高),
@@ -580,12 +556,9 @@ class _SectionLabel extends StatelessWidget {
   const _SectionLabel({required this.text, this.dense = false});
   @override
   Widget build(BuildContext context) => Padding(
-        padding: EdgeInsets.symmetric(vertical: dense ? 0 : 8),
+        padding: EdgeInsets.symmetric(vertical: dense ? 0 : SpitoutDimens.p8),
         child: Text(text,
-            style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w600,
-                color: SpitoutTokens.textSecondary(context))),
+            style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textSecondary(context))),
       );
 }
 
@@ -604,22 +577,17 @@ class _InfoRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             labelWidget ??
                 Text(label,
-                    style: TextStyle(
-                        fontSize: 14,
-                        color: SpitoutTokens.textSecondary(context))),
+                    style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context))),
             Flexible(
               child: valueWidget ??
                   Text(value,
-                      style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: SpitoutTokens.textPrimary(context)),
+                      style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       textAlign: TextAlign.right,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis),
@@ -641,13 +609,12 @@ class _MemberRow extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) => Padding(
-        padding: const EdgeInsets.symmetric(vertical: 6),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(label,
-                style: TextStyle(
-                    fontSize: 13, color: SpitoutTokens.textSecondary(context))),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context))),
             Flexible(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -655,10 +622,7 @@ class _MemberRow extends StatelessWidget {
                   Text.rich(
                     TextSpan(
                       text: name,
-                      style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                          color: SpitoutTokens.textPrimary(context)),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       children: [
                         if (isSelf)
                           meSuffixSpan(context, AppLocalizations.of(context)),
@@ -688,54 +652,45 @@ class _HistoryRow extends StatelessWidget {
     final operator = displayNameOf(h.operatorUserId);
     final operatorIsSelf = isSelfOf?.call(h.operatorUserId) ?? false;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // 版本号标签 vN
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4, vertical: SpitoutDimens.p4),
             decoration: BoxDecoration(
               color:
                   Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
-              borderRadius: BorderRadius.circular(4),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
             ),
             child: Text('v${h.version}',
-                style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w600,
-                    color: Theme.of(context).colorScheme.primary)),
+                style: SpitoutTextTokens.caption(context).copyWith(fontWeight: FontWeight.w600, color: Theme.of(context).colorScheme.primary)),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           // 摘要 + 操作者·时间
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(h.summary,
-                    style: TextStyle(
-                        fontSize: 13,
-                        color: SpitoutTokens.textPrimary(context)),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis),
                 if (operator.isNotEmpty)
                   Padding(
-                    padding: const EdgeInsets.only(top: 2),
+                    padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                     child: Text.rich(
                       TextSpan(
                         text: operator,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: SpitoutTokens.textTertiary(context)),
+                        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                         children: [
                           // 本人操作者:追加「(我)」共享后缀,与全局规范一致。
                           if (operatorIsSelf)
                             meSuffixSpan(context, AppLocalizations.of(context)),
                           TextSpan(
                               text: ' · ${_fmtDate(h.createdAt)}',
-                              style: TextStyle(
-                                  fontSize: 11,
-                                  color: SpitoutTokens.textTertiary(context))),
+                              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context))),
                         ],
                       ),
                     ),

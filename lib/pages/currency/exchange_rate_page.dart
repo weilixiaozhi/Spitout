@@ -8,6 +8,8 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/utils/currency/currencies.dart';
@@ -127,31 +129,28 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
             Expanded(
               child: Center(
                 child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 32.0),
+                  padding: EdgeInsets.symmetric(horizontal: SpitoutDimens.p32),
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Icon(
                         AppIcons.error,
-                        size: 48,
+                        size: SpitoutDimens.icon40,
                         color: Theme.of(context)
                             .colorScheme
                             .error
                             .withValues(alpha: 0.6),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: SpitoutDimens.p12),
                       Text(
                         l10n.analyticsLoadFailed,
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
-                      SizedBox(height: 12),
+                      SizedBox(height: SpitoutDimens.p12),
                       TextButton.icon(
                         onPressed: () => _onRefresh(),
-                        icon: Icon(AppIcons.refresh, size: 18),
+                        icon: Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
                         label: Text(l10n.analyticsRetry),
                       ),
                     ],
@@ -180,15 +179,15 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                 Expanded(
                   child: ListView(
               padding: EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p12,
+                vertical: SpitoutDimens.p8,
               ),
               children: [
                 // 顶部说明模块(主币种含义与手动汇率用法)
                 SectionCard(
                   margin: EdgeInsets.zero,
                   child: Padding(
-                    padding: EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(SpitoutDimens.p12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -196,46 +195,36 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                           children: [
                             Icon(
                               AppIcons.info,
-                              size: 20.0,
+                              size: SpitoutDimens.icon20,
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            SizedBox(width: 8.0),
+                            SizedBox(width: SpitoutDimens.p8),
                             Text(
                               l10n.exchangeRateInfoTitle,
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w600,
-                                color: SpitoutTokens.textPrimary(context),
-                              ),
+                              style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                             ),
                           ],
                         ),
-                        SizedBox(height: 8.0),
+                        SizedBox(height: SpitoutDimens.p8),
                         Text(
                           l10n.exchangeRateInfoMessage,
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: SpitoutTokens.textSecondary(context),
-                            height: 1.5,
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                            height: 1.5),
                         ),
                       ],
                     ),
                   ),
                 ),
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
                 // 作用域标注(按账本维度):
                 // 汇率组 = 当前账本视角,避免用户误以为基准仍是全局的。
                 // 无账本时隐藏。
                 if (currentLedger != null)
                   Padding(
-                    padding: const EdgeInsets.only(left: 4.0, bottom: 4.0),
+                    padding: const EdgeInsets.only(left: SpitoutDimens.p4, bottom: SpitoutDimens.p4),
                     child: Text(
                       l10n.exchangeRateCurrentLedger(currentLedger.name),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: SpitoutTokens.textTertiary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                     ),
                   ),
                 // 1. 基准币种(账本本位币;无账本时置灰,点击仅提示先创建账本)
@@ -243,36 +232,30 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                   margin: EdgeInsets.zero,
                   child: InkWell(
                     onTap: () => _pickBaseCurrency(context),
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        vertical: 8.0,
+                        vertical: SpitoutDimens.p8,
                       ),
                       child: Row(
                         children: [
                           Text(
                             l10n.ledgerBaseCurrencyLabel,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: SpitoutTokens.textPrimary(context),
-                            ),
+                            style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                           ),
                           const Spacer(),
                           // 全局统一「ISO + (符号)」展示
                           currencyFlagLabel(
                             context,
                             base,
-                            textStyle: TextStyle(
-                              fontSize: 14,
-                              color: currentLedger == null
+                            textStyle: SpitoutTextTokens.body(context).copyWith(color: currentLedger == null
                                   ? SpitoutTokens.textTertiary(context)
-                                  : SpitoutTokens.textSecondary(context),
-                            ),
+                                  : SpitoutTokens.textSecondary(context)),
                           ),
-                          SizedBox(width: 4.0),
+                          SizedBox(width: SpitoutDimens.p4),
                           Icon(
                             AppIcons.chevronRight,
-                            size: 18.0,
+                            size: SpitoutDimens.icon16,
                             color: SpitoutTokens.iconTertiary(context),
                           ),
                         ],
@@ -280,7 +263,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
                 // 1.5 币种管理入口:跳转「管理展示币种」页,
                 // 右侧实时显示已选币种数,让用户一眼知道当前过滤范围。
                 SectionCard(
@@ -292,32 +275,26 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                         builder: (_) => const CurrencyManagePage(),
                       ),
                     ),
-                    borderRadius: BorderRadius.circular(8.0),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                     child: Padding(
                       padding: EdgeInsets.symmetric(
-                        vertical: 8.0,
+                        vertical: SpitoutDimens.p8,
                       ),
                       child: Row(
                         children: [
                           Text(
                             l10n.currencyManageEntry,
-                            style: TextStyle(
-                              fontSize: 15,
-                              color: SpitoutTokens.textPrimary(context),
-                            ),
+                            style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                           ),
                           const Spacer(),
                           Text(
                             l10n.currencyManageCount(visible.length),
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: SpitoutTokens.textSecondary(context),
-                            ),
+                            style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                           ),
-                          SizedBox(width: 4.0),
+                          SizedBox(width: SpitoutDimens.p4),
                           Icon(
                             AppIcons.chevronRight,
-                            size: 18.0,
+                            size: SpitoutDimens.icon16,
                             color: SpitoutTokens.iconTertiary(context),
                           ),
                         ],
@@ -325,7 +302,7 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                     ),
                   ),
                 ),
-                SizedBox(height: 12.0),
+                SizedBox(height: SpitoutDimens.p12),
 
                 // 2. 汇率列表
                 SectionCard(
@@ -334,14 +311,11 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                   child: quotes.isEmpty
                       // 筛选无匹配:展示空状态提示,避免空白列表
                       ? Padding(
-                          padding: EdgeInsets.symmetric(vertical: 32.0),
+                          padding: EdgeInsets.symmetric(vertical: SpitoutDimens.p32),
                           child: Center(
                             child: Text(
                               l10n.commonEmpty,
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: SpitoutTokens.textTertiary(context),
-                              ),
+                              style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                             ),
                           ),
                         )
@@ -369,22 +343,19 @@ class _ExchangeRatePageState extends ConsumerState<ExchangeRatePage> {
                         ),
                 ),
 
-                SizedBox(height: 16.0),
+                SizedBox(height: SpitoutDimens.p16),
                 // 3. 免责声明
                 Padding(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 4.0,
+                    horizontal: SpitoutDimens.p4,
                   ),
                   child: Text(
                     l10n.rateDisclaimer,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                      height: 1.4,
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context),
+                      height: 1.4),
                   ),
                 ),
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
               ],
             ),    // ListView
             ),    // Expanded (nested in inner Column)
@@ -562,13 +533,10 @@ class _RateEditDialogState extends ConsumerState<_RateEditDialog> {
               suffixText: widget.base,
             ),
           ),
-          SizedBox(height: 10.0),
+          SizedBox(height: SpitoutDimens.p8),
           Text(
             l10n.rateInverseHint(widget.base, inverseText, widget.quote),
-            style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
         ],
       ),
@@ -657,36 +625,27 @@ class _RateRow extends ConsumerWidget {
     if (eff == null) {
       status = Text(
         l10n.rateNotFetched,
-        style: TextStyle(
-          fontSize: 12,
-          color: SpitoutTokens.textTertiary(context),
-        ),
+        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
       );
     } else if (isManual) {
       status = Text(
         l10n.rateSourceManual,
-        style: TextStyle(
-          fontSize: 12,
-          color: SpitoutTokens.textSecondary(context),
-        ),
+        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
       );
     } else {
       final stale = _isStale(eff!.rateDate);
       status = Text(
         '${l10n.rateSourceAuto} · ${l10n.rateUpdatedAt(eff!.rateDate ?? '')}',
-        style: TextStyle(
-          fontSize: 12,
-          color: stale
+        style: SpitoutTextTokens.label(context).copyWith(color: stale
               ? SpitoutTokens.warning(context)
-              : SpitoutTokens.textTertiary(context),
-        ),
+              : SpitoutTokens.textTertiary(context)),
       );
     }
 
     return Padding(
       padding: EdgeInsets.symmetric(
-        horizontal: 12.0,
-        vertical: 12.0,
+        horizontal: SpitoutDimens.p12,
+        vertical: SpitoutDimens.p12,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -703,23 +662,17 @@ class _RateRow extends ConsumerWidget {
                         mainName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: SpitoutTokens.textPrimary(context),
-                        ),
+                        style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       ),
                     ),
-                    SizedBox(width: 6.0),
+                    SizedBox(width: SpitoutDimens.p4),
                     Text(
                       quote,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: SpitoutTokens.textTertiary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                     ),
                   ],
                 ),
-                SizedBox(height: 2.0),
+                SizedBox(height: SpitoutDimens.p4),
                 // 状态文案 + 「恢复自动」文字链（仅手动态显示）。
                 // 放在状态文案右侧、左对齐，与右侧编辑按钮分离，避免误触。
                 // isManual=true 时 status 为「手动」（短文本），不会与链接溢出。
@@ -728,26 +681,23 @@ class _RateRow extends ConsumerWidget {
                   children: [
                     Flexible(child: status),
                     if (isManual) ...[
-                      SizedBox(width: 8.0),
+                      SizedBox(width: SpitoutDimens.p8),
                       // 「恢复自动」文字链使用 primary 色，让用户明确感知到
                       // 它是可点击的操作入口。
                       // 纯动作文字链（恢复自动），无选中态，按统一原则补涟漪反馈
                       Material(
                         color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                         clipBehavior: Clip.antiAlias,
                         child: InkWell(
                           onTap: onReset,
-                          borderRadius: BorderRadius.circular(6),
+                          borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                           // 对称 padding：涟漪在文字四周均匀外扩（参照 TextButton）。
                           child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
                             child: Text(
                               l10n.rateResetToAuto,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: primary,
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: primary),
                             ),
                           ),
                         ),
@@ -758,7 +708,7 @@ class _RateRow extends ConsumerWidget {
               ],
             ),
           ),
-          SizedBox(width: 8.0),
+          SizedBox(width: SpitoutDimens.p8),
           // 右:汇率值 + 下方编辑文字链（右对齐）
           Column(
             crossAxisAlignment: CrossAxisAlignment.end,
@@ -769,35 +719,27 @@ class _RateRow extends ConsumerWidget {
                 eff == null
                     ? '—'
                     : formatExchangeRate(quote, base, eff!.rate),
-                style: TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
-                  color: eff == null
+                style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: eff == null
                       ? SpitoutTokens.textTertiary(context)
-                      : SpitoutTokens.textPrimary(context),
-                ),
+                      : SpitoutTokens.textPrimary(context)),
               ),
-              SizedBox(height: 4.0),
+              SizedBox(height: SpitoutDimens.p4),
               // 编辑文字链常驻右对齐。「恢复自动」位于左侧手动文案旁边，
               // 不与编辑链并列，避免两个操作入口紧挨导致误触。
               // 纯动作文字链（编辑汇率），无选中态，按统一原则补涟漪反馈
               Material(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: onEdit,
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                   // 对称 padding：涟漪在文字四周均匀外扩（参照 TextButton）。
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
                     child: Text(
                       l10n.rateEditLabel,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: primary,
-                        fontWeight: FontWeight.w600,
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: primary),
                     ),
                   ),
                 ),

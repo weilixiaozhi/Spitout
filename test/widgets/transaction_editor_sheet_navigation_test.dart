@@ -158,7 +158,7 @@ void main() {
     expect(amountText('12'), findsOneWidget, reason: '返回后已输入的金额应保留');
   });
 
-  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 5、间距 4、内边距 10/40、无阴影', (tester) async {
+  testWidgets('记账 sheet 键盘容器：6 行均分、备注行矮 5、间距 4、内边距 8/40、无阴影', (tester) async {
     await tester.pumpWidget(buildApp());
     await tester.tap(find.text('open-sheet'));
     await tester.pumpAndSettle();
@@ -201,13 +201,13 @@ void main() {
     expect(categoryH, greaterThan(200), reason: '分类区应吃掉剩余空间，而非停在保底 100px');
     expect(categoryH, lessThan(400), reason: '分类区不应再被键盘区挤到只剩一行');
 
-    // 底部键盘容器内边距：上 10 / 左 10 / 右 10 / 下 40
+    // 底部键盘容器内边距：上 8 / 左 8 / 右 8 / 下 40
     final bottomPadding = find.byWidgetPredicate(
       (w) =>
           w is Padding &&
-          w.padding == const EdgeInsets.fromLTRB(10, 10, 10, 40),
+          w.padding == const EdgeInsets.fromLTRB(8, 8, 8, 40),
     );
-    expect(bottomPadding, findsWidgets, reason: '底部键盘容器内边距应为上 10 / 下 40');
+    expect(bottomPadding, findsWidgets, reason: '底部键盘容器内边距应为上 8 / 下 40');
 
     // 无向上阴影
     final shadowed = find.byWidgetPredicate(

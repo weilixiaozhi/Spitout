@@ -4,6 +4,8 @@ import 'package:intl/intl.dart';
 import 'package:spitout/cloud/sync/sync_diff_service.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/amount_text.dart';
 
 /// 同步预览弹窗
@@ -77,14 +79,10 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
 
     return AlertDialog(
       backgroundColor: SpitoutTokens.surface(context),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
       title: Text(
         l10n.syncPreviewTitle,
-        style: TextStyle(
-          color: SpitoutTokens.textPrimary(context),
-          fontSize: 18,
-          fontWeight: FontWeight.w600,
-        ),
+        style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context),),
       ),
       content: SizedBox(
         width: double.maxFinite,
@@ -95,7 +93,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
             // 汇总行
             _buildSummaryRow(context, addedChanges.length,
                 modifiedChanges.length, deletedChanges.length),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             // 全选/取消全选
             InkWell(
               onTap: _toggleAll,
@@ -110,22 +108,19 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                       activeColor: widget.primaryColor,
                     ),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   Text(
                     allSelected
                         ? l10n.syncPreviewDeselectAll
                         : l10n.syncPreviewSelectAll,
-                    style: TextStyle(
-                      color: SpitoutTokens.textSecondary(context),
-                      fontSize: 13,
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                 ],
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Divider(color: SpitoutTokens.divider(context), height: 1),
-            const SizedBox(height: 4),
+            const SizedBox(height: SpitoutDimens.p4),
             // 变更列表
             Flexible(
               child: ConstrainedBox(
@@ -216,18 +211,14 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
 
   Widget _buildBadge(BuildContext context, String text, Color color) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       ),
       child: Text(
         text,
-        style: TextStyle(
-          color: color,
-          fontSize: 12,
-          fontWeight: FontWeight.w500,
-        ),
+        style: SpitoutTextTokens.label(context).copyWith(color: color,),
       ),
     );
   }
@@ -235,7 +226,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
   Widget _buildSectionHeader(
       BuildContext context, String title, Color color) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p8, bottom: SpitoutDimens.p4),
       child: Row(
         children: [
           Container(
@@ -246,14 +237,10 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
               shape: BoxShape.circle,
             ),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpitoutDimens.p4),
           Text(
             title,
-            style: TextStyle(
-              color: SpitoutTokens.textSecondary(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),),
           ),
         ],
       ),
@@ -319,7 +306,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
         });
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 4),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
         child: Row(
           children: [
             SizedBox(
@@ -335,27 +322,21 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                 activeColor: widget.primaryColor,
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     title,
-                    style: TextStyle(
-                      color: SpitoutTokens.textPrimary(context),
-                      fontSize: 13,
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                   if (detail != null)
                     Text(
                       detail,
-                      style: TextStyle(
-                        color: SpitoutTokens.textTertiary(context),
-                        fontSize: 11,
-                      ),
+                      style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                   ),
@@ -363,7 +344,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
               ),
             ),
             if (amountValue != null) ...[
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               // 金额按交易自身币种展示:非本位币交易显示原币种符号,
               // 未携带币种时回退到当前账本本位币(AmountText 内置兜底)。
               AmountText(
@@ -371,10 +352,7 @@ class _SyncPreviewDialogState extends State<_SyncPreviewDialog> {
                 signed: true,
                 showCurrency: true,
                 currencyCode: currencyCode,
-                style: TextStyle(
-                  color: SpitoutTokens.textPrimary(context),
-                  fontSize: 13,
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
               ),
             ],
           ],

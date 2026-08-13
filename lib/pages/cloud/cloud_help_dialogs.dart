@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
   void showMultiDeviceDetailDialog(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final primaryText = SpitoutTokens.textPrimary(context);
@@ -16,17 +18,13 @@ import 'package:spitout/theme/icons/app_icons.dart';
             Icon(
               AppIcons.info,
               color: Theme.of(context).colorScheme.primary,
-              size: 24,
+              size: SpitoutDimens.icon22,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: Text(
                 l10n.cloudSyncGuideTitle,
-                style: TextStyle(
-                  color: primaryText,
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: SpitoutTextTokens.boldTitle(context).copyWith(color: primaryText,),
               ),
             ),
           ],
@@ -50,7 +48,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                     l10n.cloudSyncGuideHowItem3,
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: SpitoutDimens.p16),
                 // 正确用法
                 _buildGuideSection(
                   context,
@@ -64,7 +62,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                     l10n.cloudSyncGuideCorrectItem4,
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: SpitoutDimens.p16),
                 // 错误用法
                 _buildGuideSection(
                   context,
@@ -77,7 +75,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                     l10n.cloudSyncGuideWrongItem3,
                   ],
                 ),
-                const SizedBox(height: 16),
+                const SizedBox(height: SpitoutDimens.p16),
                 // 已知限制
                 _buildGuideSection(
                   context,
@@ -121,42 +119,32 @@ import 'package:spitout/theme/icons/app_icons.dart';
           children: [
             Icon(
               icon,
-              size: 18,
+              size: SpitoutDimens.icon16,
               color: iconColor ?? SpitoutTokens.textSecondary(context),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SpitoutDimens.p4),
             Text(
               title,
-              style: TextStyle(
-                color: SpitoutTokens.textPrimary(context),
-                fontSize: 15,
-                fontWeight: FontWeight.w600,
-              ),
+              style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context),),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: SpitoutDimens.p4),
         ...items.map(
           (item) => Padding(
-            padding: const EdgeInsets.only(left: 24, bottom: 4),
+            padding: const EdgeInsets.only(left: SpitoutDimens.p20, bottom: SpitoutDimens.p4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '• ',
-                  style: TextStyle(
-                    color: SpitoutTokens.textSecondary(context),
-                    fontSize: 13,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                 ),
                 Expanded(
                   child: Text(
                     item,
-                    style: TextStyle(
-                      color: SpitoutTokens.textSecondary(context),
-                      fontSize: 13,
-                      height: 1.4,
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                      height: 1.4),
                   ),
                 ),
               ],
@@ -175,7 +163,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
         title: Row(
           children: [
             Icon(AppIcons.storage, color: SpitoutTokens.brandSupabase),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.cloudSupabaseHelpTitle),
           ],
         ),
@@ -189,7 +177,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudSupabaseHelpIntro2,
                 l10n.cloudSupabaseHelpIntro3,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudSupabaseHelpSteps, [
                 l10n.cloudSupabaseHelpStep1,
                 l10n.cloudSupabaseHelpStep2,
@@ -197,34 +185,31 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudSupabaseHelpStep4,
                 l10n.cloudSupabaseHelpStep5,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudSupabaseHelpFaq, [
                 '• ${l10n.cloudSupabaseHelpFaq1}',
                 '• ${l10n.cloudSupabaseHelpFaq2}',
                 '• ${l10n.cloudSupabaseHelpFaq3}',
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(SpitoutDimens.p12),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.brandSupabase.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       AppIcons.info,
                       color: SpitoutTokens.brandSupabase,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpitoutDimens.p8),
                     Expanded(
                       child: Text(
                         l10n.cloudSupabaseHelpNote,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
                     ),
                   ],
@@ -251,7 +236,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
         title: Row(
           children: [
             Icon(AppIcons.cloudQueue, color: SpitoutTokens.brandCloud),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.cloudTutorialTitle),
           ],
         ),
@@ -263,13 +248,10 @@ import 'package:spitout/theme/icons/app_icons.dart';
               // 介绍
               Text(
                 l10n.cloudTutorialIntro,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: SpitoutTokens.textSecondary(context),
-                  height: 1.5,
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                  height: 1.5),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               // 4 步教程
               _buildBeeCloudStep(context,
                 '1',
@@ -291,52 +273,48 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudTutorialStep4Title,
                 l10n.cloudTutorialStep4Desc,
               ),
-              const SizedBox(height: 4),
+              const SizedBox(height: SpitoutDimens.p4),
               // 特色功能 —— 强调 Web + 多设备协同 + 多用户 + 共享账本
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(SpitoutDimens.p12),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.brandCloud.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       l10n.cloudTutorialFeaturesTitle,
-                      style: TextStyle(
-                        fontWeight: FontWeight.w600,
-                        color: SpitoutTokens.brandCloud,
-                        fontSize: 13,
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.brandCloud),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: SpitoutDimens.p4),
                     Text(
                       l10n.cloudTutorialFeature1,
-                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                      style: SpitoutTextTokens.caption(context).copyWith(height: 1.7),
                     ),
                     Text(
                       l10n.cloudTutorialFeature2,
-                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                      style: SpitoutTextTokens.caption(context).copyWith(height: 1.7),
                     ),
                     Text(
                       l10n.cloudTutorialFeature3,
-                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                      style: SpitoutTextTokens.caption(context).copyWith(height: 1.7),
                     ),
                     Text(
                       l10n.cloudTutorialFeature4,
-                      style: const TextStyle(fontSize: 12.5, height: 1.7),
+                      style: SpitoutTextTokens.caption(context).copyWith(height: 1.7),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpitoutDimens.p12),
               // Tip
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(SpitoutDimens.p12),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.brandCloud.withValues(alpha: 0.08),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -344,27 +322,20 @@ import 'package:spitout/theme/icons/app_icons.dart';
                     Icon(
                       AppIcons.info,
                       color: SpitoutTokens.brandCloud,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpitoutDimens.p8),
                     Expanded(
                       child: Text.rich(
                         TextSpan(
                           children: [
                             TextSpan(
                               text: '${l10n.cloudTutorialTipTitle}: ',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                                color: SpitoutTokens.textSecondary(context),
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textSecondary(context)),
                             ),
                             TextSpan(
                               text: l10n.cloudTutorialTipDesc,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: SpitoutTokens.textSecondary(context),
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                             ),
                           ],
                         ),
@@ -388,7 +359,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
 
   Widget _buildBeeCloudStep(BuildContext context, String num, String title, String desc) {
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.only(bottom: SpitoutDimens.p12),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -402,33 +373,24 @@ import 'package:spitout/theme/icons/app_icons.dart';
             alignment: Alignment.center,
             child: Text(
               num,
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: Colors.white,
+                fontWeight: FontWeight.bold),
             ),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: SpitoutDimens.p8),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w600,
-                    fontSize: 13,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   desc,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: SpitoutTokens.textSecondary(context),
-                    height: 1.5,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                    height: 1.5),
                 ),
               ],
             ),
@@ -446,7 +408,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
         title: Row(
           children: [
             Icon(AppIcons.folderShared, color: SpitoutTokens.brandWebdav),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.cloudWebdavHelpTitle),
           ],
         ),
@@ -460,14 +422,14 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudWebdavHelpIntro2,
                 l10n.cloudWebdavHelpIntro3,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudWebdavHelpProviders, [
                 l10n.cloudWebdavHelpProvider1,
                 l10n.cloudWebdavHelpProvider2,
                 l10n.cloudWebdavHelpProvider3,
                 l10n.cloudWebdavHelpProvider4,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudWebdavHelpSteps, [
                 l10n.cloudWebdavHelpStep1,
                 l10n.cloudWebdavHelpStep2,
@@ -475,28 +437,25 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudWebdavHelpStep4,
                 l10n.cloudWebdavHelpStep5,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(SpitoutDimens.p12),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.brandWebdav.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
                 child: Row(
                   children: [
                     Icon(
                       AppIcons.info,
                       color: SpitoutTokens.brandWebdav,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: SpitoutDimens.p8),
                     Expanded(
                       child: Text(
                         l10n.cloudWebdavHelpNote,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
                     ),
                   ],
@@ -523,7 +482,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
         title: Row(
           children: [
             Icon(AppIcons.storage, color: SpitoutTokens.brandS3),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.cloudS3HelpTitle),
           ],
         ),
@@ -537,7 +496,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudS3HelpIntro2,
                 l10n.cloudS3HelpIntro3,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudS3HelpProviders, [
                 l10n.cloudS3HelpProvider1,
                 l10n.cloudS3HelpProvider2,
@@ -547,7 +506,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudS3HelpProvider6,
                 l10n.cloudS3HelpProvider7,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildHelpSection(context, l10n.cloudS3HelpSteps, [
                 l10n.cloudS3HelpStep1,
                 l10n.cloudS3HelpStep2,
@@ -555,24 +514,21 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 l10n.cloudS3HelpStep4,
                 l10n.cloudS3HelpStep5,
               ]),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(SpitoutDimens.p12),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.brandS3.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
                 child: Row(
                   children: [
-                    Icon(AppIcons.info, color: SpitoutTokens.brandS3, size: 20),
-                    const SizedBox(width: 8),
+                    Icon(AppIcons.info, color: SpitoutTokens.brandS3, size: SpitoutDimens.icon20),
+                    const SizedBox(width: SpitoutDimens.p8),
                     Expanded(
                       child: Text(
                         l10n.cloudS3HelpNote,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
                     ),
                   ],
@@ -597,22 +553,15 @@ import 'package:spitout/theme/icons/app_icons.dart';
       children: [
         Text(
           title,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            fontSize: 14,
-            color: SpitoutTokens.textPrimary(context),
-          ),
+          style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         ...items.map(
           (item) => Padding(
-            padding: const EdgeInsets.only(left: 8, bottom: 4),
+            padding: const EdgeInsets.only(left: SpitoutDimens.p8, bottom: SpitoutDimens.p4),
             child: Text(
               item,
-              style: TextStyle(
-                fontSize: 13,
-                color: SpitoutTokens.textSecondary(context),
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
           ),
         ),

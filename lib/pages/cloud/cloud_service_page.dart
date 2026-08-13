@@ -6,6 +6,7 @@ import 'package:spitout/cloud/spitout_cloud.dart'
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/pages/settings/local_backup_page.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'cloud_sync_section.dart';
 import 'spitout_cloud_sync_section.dart';
 import 'cloud_help_dialogs.dart';
@@ -79,7 +80,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
               // 不用头部 icon 按钮，避免与内联状态重复。
               content: Padding(
                 // 底部留白 4：收紧配置信息自身底部留白，让分组标题更贴近。
-                padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+                padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p8, SpitoutDimens.p16, SpitoutDimens.p4),
                 child: buildCloudServiceStatusHeader(
                   context: context,
                   config: active,
@@ -107,7 +108,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                   onRefresh: () => _onHostRefresh(active),
                   child: ListView(
                     // 顶部留白从 8 增至 16：首个分组“离线模式”距顶部 PrimaryHeader 太近，增加呼吸感
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+                    padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16),
                     // 内容不足一屏时也允许下拉手势触发刷新
                     physics: const AlwaysScrollableScrollPhysics(),
                     children: [
@@ -136,7 +137,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                         ),
                       ),
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: SpitoutDimens.p16),
                       // ===== 备份同步 =====
                       buildCloudServiceSectionHeader(
                         context,
@@ -145,7 +146,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                       if (active.type != CloudBackendType.local &&
                           active.type != CloudBackendType.spitoutCloud) ...[
                         buildCloudMultiDeviceWarning(context),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: SpitoutDimens.p12),
                       ],
 
                       // WebDAV
@@ -182,11 +183,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                       // 备份同步操作区块：仅当前选中 WebDAV 时显示在该卡片正下方
                       //（需求：选中哪个模块就展示在哪个模块下，local/SpitoutCloud 时隐藏）
                       if (active.type == CloudBackendType.webdav) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         const CloudSyncSection(),
                       ],
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpitoutDimens.p12),
                       // S3
                       s3Async.when(
                         loading: () => const SizedBox(
@@ -220,11 +221,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                       ),
                       // 备份同步操作区块：仅当前选中 S3 时显示在该卡片正下方
                       if (active.type == CloudBackendType.s3) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         const CloudSyncSection(),
                       ],
 
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpitoutDimens.p12),
                       // Supabase
                       supabaseAsync.when(
                         loading: () => const SizedBox(
@@ -260,11 +261,11 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                       ),
                       // 备份同步操作区块：仅当前选中 Supabase 时显示在该卡片正下方
                       if (active.type == CloudBackendType.supabase) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         const CloudSyncSection(),
                       ],
 
-                      const SizedBox(height: 20),
+                      const SizedBox(height: SpitoutDimens.p16),
                       // ===== 云端协同 (Spitout Cloud) =====
                       buildCloudServiceSectionHeader(
                         context,
@@ -309,7 +310,7 @@ class _CloudServicePageState extends ConsumerState<CloudServicePage>
                       // 显示在该卡片正下方（账号/2FA/对账面板/同步说明）。
                       // 挂 GlobalKey 供宿主下拉刷新转发。
                       if (active.type == CloudBackendType.spitoutCloud) ...[
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         SpitoutCloudSyncSection(key: _spitoutSyncKey),
                       ],
 

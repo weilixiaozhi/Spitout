@@ -6,6 +6,8 @@ import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/utils/file_picker_helper.dart';
@@ -292,15 +294,15 @@ class _ConfigImportExportPageState
           Expanded(
             child: ListView(
               padding: EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p12,
+                vertical: SpitoutDimens.p8,
               ),
               children: [
                 // 说明卡片
                 SectionCard(
                   margin: EdgeInsets.zero,
                   child: Padding(
-                    padding: EdgeInsets.all(12.0),
+                    padding: EdgeInsets.all(SpitoutDimens.p12),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -308,64 +310,53 @@ class _ConfigImportExportPageState
                           children: [
                             Icon(
                               AppIcons.info,
-                              size: 20.0,
+                              size: SpitoutDimens.icon20,
                               color: Theme.of(context).colorScheme.primary,
                             ),
-                            SizedBox(width: 8.0),
+                            SizedBox(width: SpitoutDimens.p8),
                             Text(
                               l10n.configImportExportInfoTitle,
-                              style: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w600,
-                                color: SpitoutTokens.textPrimary(context),
-                              ),
+                              style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                             ),
                           ],
                         ),
-                        SizedBox(height: 8.0),
+                        SizedBox(height: SpitoutDimens.p8),
                         Text(
                           l10n.configImportExportInfoMessage,
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            color: SpitoutTokens.textSecondary(context),
-                            height: 1.5,
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                            height: 1.5),
                         ),
-                        SizedBox(height: 12.0),
+                        SizedBox(height: SpitoutDimens.p12),
                         // 包含的配置项列表（合并自原底部说明卡片，仅保留一个说明区域）
                         Text(
                           l10n.configImportExportIncludesTitle,
-                          style: TextStyle(
-                            fontSize: 14.0,
-                            fontWeight: FontWeight.w600,
-                            color: SpitoutTokens.textPrimary(context),
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
                         ),
-                        SizedBox(height: 8.0),
+                        SizedBox(height: SpitoutDimens.p8),
                         _buildConfigItem(context, ref, AppIcons.book, l10n.configIncludeLedgers),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.category, l10n.configIncludeCategories),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.repeat, l10n.configIncludeRecurringTransactions),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.cloud, l10n.configIncludeSupabase),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.folder, l10n.configIncludeWebdav),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.storage, l10n.configIncludeS3),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.cloudSync, l10n.configIncludeSpitoutCloud),
-                        SizedBox(height: 6.0),
+                        SizedBox(height: SpitoutDimens.p4),
                         _buildConfigItem(context, ref, AppIcons.settings, l10n.configIncludeAppSettings),
-                        SizedBox(height: 12.0),
+                        SizedBox(height: SpitoutDimens.p12),
                         // 注意事项：用橙色背景区块突出敏感信息和覆盖风险
                         Container(
-                          padding: EdgeInsets.all(10.0),
+                          padding: EdgeInsets.all(SpitoutDimens.p8),
                           decoration: BoxDecoration(
                             color: SpitoutTokens.warning(
                               context,
                             ).withValues(alpha: 0.08),
-                            borderRadius: BorderRadius.circular(8.0),
+                            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                             border: Border.all(
                               color: SpitoutTokens.warning(
                                 context,
@@ -377,18 +368,15 @@ class _ConfigImportExportPageState
                             children: [
                               Icon(
                                 AppIcons.warning,
-                                size: 18.0,
+                                size: SpitoutDimens.icon16,
                                 color: SpitoutTokens.warning(context),
                               ),
-                              SizedBox(width: 8.0),
+                              SizedBox(width: SpitoutDimens.p8),
                               Expanded(
                                 child: Text(
                                   l10n.configImportExportWarning,
-                                  style: TextStyle(
-                                    fontSize: 13.0,
-                                    color: SpitoutTokens.warning(context),
-                                    height: 1.5,
-                                  ),
+                                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.warning(context),
+                                    height: 1.5),
                                 ),
                               ),
                             ],
@@ -398,7 +386,7 @@ class _ConfigImportExportPageState
                     ),
                   ),
                 ),
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
                 // 功能按钮
                 SectionCard(
                   margin: EdgeInsets.zero,
@@ -426,8 +414,8 @@ class _ConfigImportExportPageState
                         SpitoutTokens.cardDivider(context),
                         Container(
                           padding: EdgeInsets.symmetric(
-                            horizontal: 16.0,
-                            vertical: 12.0,
+                            horizontal: SpitoutDimens.p16,
+                            vertical: SpitoutDimens.p12,
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -436,27 +424,24 @@ class _ConfigImportExportPageState
                                 children: [
                                   Icon(
                                     AppIcons.checkCircle,
-                                    size: 16.0,
+                                    size: SpitoutDimens.icon16,
                                     color: SpitoutTokens.success(context),
                                   ),
-                                  SizedBox(width: 8.0),
+                                  SizedBox(width: SpitoutDimens.p8),
                                   Expanded(
                                     child: Text(
                                       l10n.configExportSavedTo(_lastExportedDisplayPath ?? _lastExportedFilePath!),
-                                      style: TextStyle(
-                                        fontSize: 13.0,
-                                        color: SpitoutTokens.textSecondary(context),
-                                      ),
+                                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                                     ),
                                   ),
                                 ],
                               ),
-                              SizedBox(height: 8.0),
+                              SizedBox(height: SpitoutDimens.p8),
                               SizedBox(
                                 width: double.infinity,
                                 child: OutlinedButton.icon(
                                   onPressed: _viewExportedContent,
-                                  icon: const Icon(AppIcons.visibility, size: 18),
+                                  icon: const Icon(AppIcons.visibility, size: SpitoutDimens.icon16),
                                   label: Text(l10n.configExportViewContent),
                                   style: OutlinedButton.styleFrom(
                                     foregroundColor: Theme.of(context).colorScheme.primary,
@@ -509,17 +494,14 @@ class _ConfigImportExportPageState
       children: [
         Icon(
           icon,
-          size: 18.0,
+          size: SpitoutDimens.icon16,
           color: Theme.of(context).colorScheme.primary,
         ),
-        SizedBox(width: 8.0),
+        SizedBox(width: SpitoutDimens.p8),
         Expanded(
           child: Text(
             text,
-            style: TextStyle(
-              fontSize: 14.0,
-              color: SpitoutTokens.textPrimary(context),
-            ),
+            style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
           ),
         ),
       ],
@@ -542,30 +524,27 @@ class _ConfigContentDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 40),
+      insetPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p40),
       child: Column(
         children: [
           // 标题栏
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(4),
-                topRight: Radius.circular(4),
+                topLeft: Radius.circular(SpitoutDimens.radius4),
+                topRight: Radius.circular(SpitoutDimens.radius4),
               ),
             ),
             child: Row(
               children: [
                 const Icon(AppIcons.description),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     l10n.configExportViewContent,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: SpitoutTextTokens.strongTitle(context),
                   ),
                 ),
                 IconButton(
@@ -581,25 +560,23 @@ class _ConfigContentDialog extends StatelessWidget {
           Expanded(
             child: Container(
               width: double.infinity,
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               child: SingleChildScrollView(
                 child: SelectableText(
                   content,
-                  style: const TextStyle(
-                    fontSize: 12,
-                  ),
+                  style: SpitoutTextTokens.label(context),
                 ),
               ),
             ),
           ),
           // 底部按钮
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(4),
-                bottomRight: Radius.circular(4),
+                bottomLeft: Radius.circular(SpitoutDimens.radius4),
+                bottomRight: Radius.circular(SpitoutDimens.radius4),
               ),
             ),
             child: Row(
@@ -607,7 +584,7 @@ class _ConfigContentDialog extends StatelessWidget {
               children: [
                 TextButton.icon(
                   onPressed: onCopy,
-                  icon: const Icon(AppIcons.copy, size: 18),
+                  icon: const Icon(AppIcons.copy, size: SpitoutDimens.icon16),
                   label: Text(l10n.configExportCopyContent),
                 ),
               ],
@@ -642,33 +619,30 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
     final primary = Theme.of(context).colorScheme.primary;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p20, vertical: SpitoutDimens.p40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
       backgroundColor: SpitoutTokens.surfaceElevated(context),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           // 标题栏
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(SpitoutDimens.radius12),
+                topRight: Radius.circular(SpitoutDimens.radius12),
               ),
             ),
             child: Row(
               children: [
                 const Icon(AppIcons.checklist),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     l10n.configExportSelectTitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: SpitoutTextTokens.strongTitle(context),
                   ),
                 ),
                 IconButton(
@@ -682,7 +656,7 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
           ),
           // 选项列表
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
             child: Column(
               children: [
                 CheckboxListTile(
@@ -715,10 +689,7 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
                   title: Text(l10n.configIncludeOtherSettings),
                   subtitle: Text(
                     l10n.configIncludeOtherSettingsSubtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                   secondary: Icon(AppIcons.settings, color: primary),
                   controlAffinity: ListTileControlAffinity.trailing,
@@ -731,10 +702,7 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
                   title: Text(l10n.configIncludeCredentials),
                   subtitle: Text(
                     l10n.configIncludeCredentialsSubtitle,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                   secondary: Icon(AppIcons.warning, color: primary),
                   controlAffinity: ListTileControlAffinity.trailing,
@@ -743,10 +711,10 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           // 底部按钮
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -754,7 +722,7 @@ class _ExportOptionsDialogState extends State<_ExportOptionsDialog> {
                   onPressed: () => Navigator.pop(context),
                   child: Text(l10n.commonCancel),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 FilledButton(
                   onPressed: () {
                     final options = ExportOptions(
@@ -792,32 +760,29 @@ class _ExportPreviewDialog extends StatelessWidget {
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p20, vertical: SpitoutDimens.p40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
       backgroundColor: SpitoutTokens.surfaceElevated(context),
       child: Column(
         children: [
           // 标题栏
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(SpitoutDimens.radius12),
+                topRight: Radius.circular(SpitoutDimens.radius12),
               ),
             ),
             child: Row(
               children: [
                 const Icon(AppIcons.preview),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     l10n.configExportPreviewTitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: SpitoutTextTokens.strongTitle(context),
                   ),
                 ),
                 IconButton(
@@ -832,18 +797,18 @@ class _ExportPreviewDialog extends StatelessWidget {
           // 内容区域
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (includeCredentials)
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      padding: const EdgeInsets.all(SpitoutDimens.p8),
                       decoration: BoxDecoration(
                         color: SpitoutTokens.error(
                           context,
                         ).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         border: Border.all(
                           color: SpitoutTokens.error(
                             context,
@@ -856,36 +821,30 @@ class _ExportPreviewDialog extends StatelessWidget {
                             AppIcons.warning,
                             color: SpitoutTokens.error(context),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: SpitoutDimens.p8),
                           Expanded(
                             child: Text(
                               l10n.configExportContainsSecretsWarning,
-                              style: TextStyle(
-                                fontSize: 13,
-                                color: SpitoutTokens.error(context),
-                                height: 1.4,
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.error(context),
+                                height: 1.4),
                             ),
                           ),
                         ],
                       ),
                     ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: SpitoutDimens.p12),
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(SpitoutDimens.p12),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                       border: Border.all(color: SpitoutTokens.border(context)),
                     ),
                     child: SelectableText(
                       yamlContent,
-                      style: TextStyle(
-                        fontSize: 12,
-                        height: 1.5,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(height: 1.5,
+                        color: SpitoutTokens.textPrimary(context)),
                     ),
                   ),
                 ],
@@ -894,7 +853,7 @@ class _ExportPreviewDialog extends StatelessWidget {
           ),
           // 底部按钮
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -902,7 +861,7 @@ class _ExportPreviewDialog extends StatelessWidget {
                   onPressed: () => Navigator.pop(context, false),
                   child: Text(l10n.commonCancel),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 FilledButton(
                   onPressed: () => Navigator.pop(context, true),
                   child: Text(l10n.configExportConfirmTitle),
@@ -955,32 +914,29 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
     final info = widget.contentInfo;
 
     return Dialog(
-      insetPadding: const EdgeInsets.symmetric(horizontal: 24, vertical: 40),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      insetPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p20, vertical: SpitoutDimens.p40),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
       backgroundColor: SpitoutTokens.surfaceElevated(context),
       child: Column(
         children: [
           // 标题栏
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(12),
-                topRight: Radius.circular(12),
+                topLeft: Radius.circular(SpitoutDimens.radius12),
+                topRight: Radius.circular(SpitoutDimens.radius12),
               ),
             ),
             child: Row(
               children: [
                 const Icon(AppIcons.preview),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     l10n.configImportPreviewTitle,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
+                    style: SpitoutTextTokens.strongTitle(context),
                   ),
                 ),
                 IconButton(
@@ -995,18 +951,18 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
           // YAML 内容预览
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // 警告提示
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(SpitoutDimens.p12),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.warning(
                         context,
                       ).withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                       border: Border.all(
                         color: SpitoutTokens.warning(
                           context,
@@ -1019,54 +975,44 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                         Icon(
                           AppIcons.warning,
                           color: SpitoutTokens.warning(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: SpitoutDimens.p8),
                         Expanded(
                           child: Text(
                             l10n.configImportOverwriteWarning,
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: SpitoutTokens.warning(context),
-                            ),
+                            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.warning(context)),
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
                   // YAML 内容
                   Container(
                     width: double.infinity,
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.all(SpitoutDimens.p12),
                     constraints: const BoxConstraints(maxHeight: 200),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                       border: Border.all(color: SpitoutTokens.border(context)),
                     ),
                     child: SingleChildScrollView(
                       child: SelectableText(
                         widget.yamlContent,
-                        style: TextStyle(
-                          fontSize: 12,
-                          height: 1.5,
-                          color: SpitoutTokens.textPrimary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(height: 1.5,
+                          color: SpitoutTokens.textPrimary(context)),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
                   // 选择导入内容标题
                   Text(
                     l10n.configImportSelectTitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                   // 选项列表
                   if (info.hasLedgers)
                     CheckboxListTile(
@@ -1105,10 +1051,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                       title: Text(l10n.configIncludeOtherSettings),
                       subtitle: Text(
                         l10n.configIncludeOtherSettingsSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
                       secondary: Icon(AppIcons.settings, color: primary),
                       controlAffinity: ListTileControlAffinity.trailing,
@@ -1123,10 +1066,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                       title: Text(l10n.configIncludeCredentials),
                       subtitle: Text(
                         l10n.configIncludeCredentialsSubtitle,
-                        style: TextStyle(
-                          fontSize: 12,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                       ),
                       secondary: Icon(AppIcons.warning, color: primary),
                       controlAffinity: ListTileControlAffinity.trailing,
@@ -1139,12 +1079,12 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
           ),
           // 底部按钮
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceElevated(context),
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(12),
-                bottomRight: Radius.circular(12),
+                bottomLeft: Radius.circular(SpitoutDimens.radius12),
+                bottomRight: Radius.circular(SpitoutDimens.radius12),
               ),
             ),
             child: Row(
@@ -1154,7 +1094,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                   onPressed: () => Navigator.pop(context),
                   child: Text(l10n.commonCancel),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 FilledButton(
                   onPressed: () {
                     final options = ExportOptions(

@@ -4,8 +4,10 @@ import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/data/models.dart' as db;
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/l10n/app_localizations.dart';
@@ -155,7 +157,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                     );
                     return Container(
                       height: 120,
-                      margin: const EdgeInsets.all(16),
+                      margin: const EdgeInsets.all(SpitoutDimens.p16),
                       child: Center(
                         child: Text(
                           AppLocalizations.of(context).categoryDetailLoadFailed,
@@ -222,10 +224,10 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
   
   Widget _buildSummaryCard(({int totalCount, double totalAmount, double averageAmount}) summary) {
     return Container(
-      margin: const EdgeInsets.all(16),
+      margin: const EdgeInsets.all(SpitoutDimens.p16),
       child: SectionCard(
         child: Padding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(SpitoutDimens.p16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -234,9 +236,9 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   Icon(
                     AppIcons.barChart,
                     color: Theme.of(context).colorScheme.primary,
-                    size: 20,
+                    size: SpitoutDimens.icon20,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   Expanded(
                     child: Text(
                       widget.periodLabel != null
@@ -249,7 +251,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               Row(
                 children: [
                   Expanded(
@@ -286,22 +288,22 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
 
   Widget _buildSortControls(SortType currentSortType) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p8),
       child: Row(
         children: [
           Icon(
             AppIcons.sort,
-            size: 16,
+            size: SpitoutDimens.icon16,
             color: Theme.of(context).colorScheme.outline,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           Text(
             AppLocalizations.of(context).categoryDetailSortTitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
               color: Theme.of(context).colorScheme.outline,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
@@ -312,19 +314,19 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
                     isSelected: currentSortType == SortType.timeDesc,
                     onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.timeDesc),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortTimeAsc,
                     isSelected: currentSortType == SortType.timeAsc,
                     onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.timeAsc),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortAmountDesc,
                     isSelected: currentSortType == SortType.amountDesc,
                     onTap: () => ref.read(_categorySortTypeProvider(widget.categoryId).notifier).set(SortType.amountDesc),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   _SortButton(
                     label: AppLocalizations.of(context).categoryDetailSortAmountAsc,
                     isSelected: currentSortType == SortType.amountAsc,
@@ -395,10 +397,10 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             l10n.categoryDetailLoadFailed,
             style: TextStyle(color: SpitoutTokens.textSecondary(context)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           TextButton.icon(
             onPressed: onRetry,
-            icon: const Icon(AppIcons.refresh, size: 18),
+            icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
             label: Text(l10n.analyticsRetry),
           ),
         ],
@@ -507,7 +509,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
@@ -633,18 +635,18 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
         v == 0 ? '' : formatMoneyWithCurrency(v, currencyCode: currencyCode);
 
     return Container(
-      margin: const EdgeInsets.only(top: 16, bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      margin: const EdgeInsets.only(top: SpitoutDimens.p16, bottom: SpitoutDimens.p4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
       decoration: BoxDecoration(
         color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Row(children: [
-            Icon(icon, size: 18, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: 8),
+            Icon(icon, size: SpitoutDimens.icon16, color: Theme.of(context).colorScheme.primary),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(
               _formatCategoryLabel(category, categoryMap, context),
               style: Theme.of(context).textTheme.labelLarge?.copyWith(
@@ -655,10 +657,9 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
           if (fmt(expense).isNotEmpty)
             Text(
               '${l10n.homeExpense} ${fmt(expense)}',
-              style: Theme.of(context)
-                  .textTheme
-                  .labelMedium
-                  ?.copyWith(color: grey, fontSize: 12),
+              style: SpitoutTextTokens.label(
+                context,
+              ).copyWith(color: grey),
             ),
         ],
       ),
@@ -708,7 +709,7 @@ class _SummaryItem extends ConsumerWidget {
     return Column(
       children: [
         valueWidget,
-        const SizedBox(height: 4),
+        const SizedBox(height: SpitoutDimens.p4),
         Text(
           label,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -812,12 +813,12 @@ class _SortButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p4),
         decoration: BoxDecoration(
           color: isSelected
             ? Theme.of(context).colorScheme.primary
             : Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
           border: Border.all(
             color: isSelected
               ? Theme.of(context).colorScheme.primary
@@ -830,7 +831,7 @@ class _SortButton extends StatelessWidget {
             color: isSelected
               ? Colors.white
               : Theme.of(context).colorScheme.onSurface,
-            fontWeight: isSelected ? FontWeight.w500 : FontWeight.normal,
+            fontWeight: isSelected ? FontWeight.w400 : FontWeight.normal,
           ),
         ),
       ),

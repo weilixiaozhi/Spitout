@@ -4,12 +4,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudNotAuthenticatedException, CloudUser, TwoFactorStatus;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/pages/auth/login_page.dart';
@@ -295,7 +296,7 @@ class SpitoutCloudSyncSectionState
     if (ledgerId == 0) {
       // 无账本时展示简化提示（原独立页面为整页 Scaffold，嵌入后收敛为行内文案）
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         child: Text(
           l10n.aiOcrNoLedger,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -337,7 +338,7 @@ class SpitoutCloudSyncSectionState
               ],
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           // Section 2: 同步说明(折叠) — 解释增量/全量、断点续传、排查
           SectionCard(child: _buildSyncHelpSection(context)),
           // Spitout Cloud server 版本号,底部弱展示。
@@ -351,14 +352,11 @@ class SpitoutCloudSyncSectionState
                 return const SizedBox.shrink();
               }
               return Padding(
-                padding: const EdgeInsets.only(top: 16, bottom: 8),
+                padding: const EdgeInsets.only(top: SpitoutDimens.p16, bottom: SpitoutDimens.p8),
                 child: Center(
                   child: Text(
                     'Spitout Cloud v$v',
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                   ),
                 ),
               );
@@ -398,7 +396,7 @@ class SpitoutCloudSyncSectionState
           ).push(appPageRoute(builder: (_) => const LoginPage()));
           ref.read(syncStatusRefreshProvider.notifier).tick();
         },
-        icon: const Icon(AppIcons.login, size: 18),
+        icon: const Icon(AppIcons.login, size: SpitoutDimens.icon16),
         label: Text(l10n.mineLoginTitle),
       ),
     );
@@ -412,18 +410,14 @@ class SpitoutCloudSyncSectionState
       data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
       child: ExpansionTile(
         tilePadding: EdgeInsets.zero,
-        childrenPadding: const EdgeInsets.only(bottom: 4),
+        childrenPadding: const EdgeInsets.only(bottom: SpitoutDimens.p4),
         leading: Icon(
           AppIcons.help,
           color: SpitoutTokens.iconSecondary(context),
         ),
         title: Text(
           l10n.cloudSyncHelpTitle,
-          style: TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-            color: SpitoutTokens.textPrimary(context),
-          ),
+          style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
         ),
         children: [
           _helpBlock(
@@ -446,7 +440,7 @@ class SpitoutCloudSyncSectionState
             l10n.cloudSyncHelpTroubleshootTitle,
             l10n.cloudSyncHelpTroubleshootBody,
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpitoutDimens.p4),
           Align(
             alignment: Alignment.centerLeft,
             child: TextButton.icon(
@@ -459,7 +453,7 @@ class SpitoutCloudSyncSectionState
                 minimumSize: const Size(0, 36),
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              icon: const Icon(AppIcons.article, size: 18),
+              icon: const Icon(AppIcons.article, size: SpitoutDimens.icon16),
               label: Text(l10n.cloudSyncHelpOpenLogCenter),
             ),
           ),
@@ -471,26 +465,19 @@ class SpitoutCloudSyncSectionState
   /// 同步说明里的一段:加粗小标题 + 正文(正文里用 \n 分条)。
   Widget _helpBlock(BuildContext context, String title, String body) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p8),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: SpitoutTokens.textPrimary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpitoutDimens.p4),
           Text(
             body,
-            style: TextStyle(
-              fontSize: 12.5,
-              height: 1.5,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.caption(context).copyWith(height: 1.5,
+              color: SpitoutTokens.textSecondary(context)),
           ),
         ],
       ),
@@ -580,7 +567,7 @@ class SpitoutCloudSyncSectionState
               AppIcons.cloudSync,
               color: Theme.of(context).colorScheme.primary,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.syncHealthTitle, style: SpitoutTextTokens.title(context)),
             const Spacer(),
             if (_checking || _autoSyncing)
@@ -591,7 +578,7 @@ class SpitoutCloudSyncSectionState
               ),
           ],
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: SpitoutDimens.p4),
         // 状态文案:恢复中 / 需登录 / 差异 / 一致 ……(颜色由上述分支决定)。
         Text(
           statusText,
@@ -599,7 +586,7 @@ class SpitoutCloudSyncSectionState
             context,
           ).copyWith(color: statusColor ?? SpitoutTokens.textPrimary(context)),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         // 当前账本分组:交易数。
         //
         // 用 `== ledgerId` 而非 `!= null`,三层原因:
@@ -642,7 +629,7 @@ class SpitoutCloudSyncSectionState
         Row(
           children: [
             Icon(AppIcons.cloudSync, color: theme.colorScheme.primary),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.syncHealthTitle, style: SpitoutTextTokens.title(context)),
             const Spacer(),
             if (showSpinner)
@@ -653,15 +640,15 @@ class SpitoutCloudSyncSectionState
               ),
           ],
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         Row(
           children: [
             Icon(
               Icons.info_outline,
-              size: 16,
+              size: SpitoutDimens.icon16,
               color: color ?? theme.colorScheme.primary,
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SpitoutDimens.p4),
             Expanded(
               child: Text(
                 message,
@@ -680,7 +667,7 @@ class SpitoutCloudSyncSectionState
   Widget _groupHeader(BuildContext context, String text) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 10, bottom: 2),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p8, bottom: SpitoutDimens.p4),
       child: Text(
         text,
         style: theme.textTheme.bodySmall?.copyWith(fontWeight: FontWeight.w600),
@@ -703,7 +690,7 @@ class SpitoutCloudSyncSectionState
         ? l10n.syncHealthValueRemoteMissing(pair.local)
         : l10n.syncHealthValue(pair.local, pair.remote);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: Row(
         children: [
           Expanded(child: Text(label, style: theme.textTheme.bodyMedium)),
@@ -722,26 +709,20 @@ class SpitoutCloudSyncSectionState
   Widget _unpushedRow(BuildContext context, int count) {
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p4),
       child: Row(
         children: [
           Text(
             l10n.syncHealthRowUnpushed,
-            style: TextStyle(
-              fontSize: 13,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
           ),
           Expanded(
             child: Text(
               '$count',
-              style: TextStyle(
-                fontSize: 13,
-                color: count > 0
+              style: SpitoutTextTokens.label(context).copyWith(color: count > 0
                     ? SpitoutTokens.warning(context)
                     : SpitoutTokens.textPrimary(context),
-                fontWeight: count > 0 ? FontWeight.w600 : FontWeight.w400,
-              ),
+                fontWeight: count > 0 ? FontWeight.w600 : FontWeight.w400),
             ),
           ),
         ],

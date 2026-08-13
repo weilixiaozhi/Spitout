@@ -4,6 +4,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudInvitePreview;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -167,7 +169,7 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
                 if (preview != null)
                   _buildPreviewCard(preview, l10n)
                 else
@@ -189,23 +191,19 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
               l10n.sharedJoinEnterCode,
               style: Theme.of(context).textTheme.titleMedium,
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Text(
               l10n.sharedJoinEnterCodeHint,
               style: TextStyle(color: SpitoutTokens.textSecondary(context)),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: _codeController,
               autofocus: true,
               textAlign: TextAlign.center,
               maxLength: 7, // 6 chars + 1 space
               textCapitalization: TextCapitalization.characters,
-              style: const TextStyle(
-                fontSize: 28,
-                letterSpacing: 6,
-                fontWeight: FontWeight.w600,
-              ),
+              style: SpitoutTextTokens.display2(context).copyWith(letterSpacing: 6),
               decoration: InputDecoration(
                 hintText: 'ABC 123',
                 counterText: '',
@@ -230,7 +228,7 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
               },
               onSubmitted: (_) => _doPreview(),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             FilledButton(
               onPressed: _busy ? null : _doPreview,
               child: _busy
@@ -255,23 +253,23 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
             const Center(
               child: PersonAvatar(size: 56, iconSize: 26),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             Center(
               child: Text(
                 l10n.sharedJoinInvitedBy(preview.invitedByDisplay),
                 style: TextStyle(color: SpitoutTokens.textSecondary(context)),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Center(
               child: Text(
                 preview.ledgerName ?? preview.ledgerExternalId,
                 style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.w700,
+                      fontWeight: FontWeight.w800,
                     ),
               ),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             Center(
               child: Chip(
                 label: Text(
@@ -279,29 +277,23 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
                 ),
               ),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Center(
               child: Text(
                 _formatExpiry(preview.expiresAt, l10n),
-                style: TextStyle(
-                  color: SpitoutTokens.textTertiary(context),
-                  fontSize: 12,
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
               ),
             ),
             if (_error != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: SpitoutDimens.p8),
               Center(
                 child: Text(
                   _error!,
-                  style: TextStyle(
-                    color: SpitoutTokens.error(context),
-                    fontSize: 13,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.error(context)),
                 ),
               ),
             ],
-            const SizedBox(height: 24),
+            const SizedBox(height: SpitoutDimens.p20),
             Row(
               children: [
                 Expanded(
@@ -317,7 +309,7 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
                     child: Text(l10n.commonCancel),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 Expanded(
                   child: FilledButton(
                     onPressed: _busy ? null : _doAccept,
@@ -332,15 +324,15 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             if (preview.expiresAt != null)
               Center(
                 child: Text(
                   DateFormat('yyyy-MM-dd HH:mm')
                       .format(preview.expiresAt!.toLocal()),
-                  style: TextStyle(
-                      color: SpitoutTokens.textTertiary(context),
-                      fontSize: 11),
+                  style: SpitoutTextTokens.caption(
+                    context,
+                  ).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ),
           ],

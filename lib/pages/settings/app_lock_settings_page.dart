@@ -2,10 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/security/app_lock_service.dart';
 import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/auth/pin_setup_page.dart';
@@ -161,7 +162,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                 },
               );
             }),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
           ],
         ),
       ),
@@ -203,8 +204,8 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
           Expanded(
             child: ListView(
               padding: EdgeInsets.only(
-                top: 8.0,
-                bottom: 16.0,
+                top: SpitoutDimens.p8,
+                bottom: SpitoutDimens.p16,
               ),
               children: [
                 // 应用锁开关
@@ -223,7 +224,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                   ),
                 ),
                 if (enabled) ...[
-                  SizedBox(height: 8.0),
+                  SizedBox(height: SpitoutDimens.p8),
                   // PIN 管理
                   SectionCard(
                     child: Column(
@@ -233,13 +234,13 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                           title: l10n.appLockChangePin,
                           trailing: Icon(AppIcons.chevronRight,
                               color: SpitoutTokens.iconTertiary(context),
-                              size: 20),
+                              size: SpitoutDimens.icon20),
                           onTap: _changePin,
                         ),
                       ],
                     ),
                   ),
-                  SizedBox(height: 8.0),
+                  SizedBox(height: SpitoutDimens.p8),
                   // 生物识别 + 超时
                   SectionCard(
                     child: Column(
@@ -261,7 +262,7 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
                           subtitle: _timeoutLabel(timeout),
                           trailing: Icon(AppIcons.chevronRight,
                               color: SpitoutTokens.iconTertiary(context),
-                              size: 20),
+                              size: SpitoutDimens.icon20),
                           onTap: _showTimeoutPicker,
                         ),
                       ],
@@ -298,7 +299,7 @@ class _SwitchTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: Row(
         children: [
           Container(
@@ -308,9 +309,9 @@ class _SwitchTile extends StatelessWidget {
               color: primaryColor.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: primaryColor, size: 20),
+            child: Icon(icon, color: primaryColor, size: SpitoutDimens.icon20),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -320,7 +321,7 @@ class _SwitchTile extends StatelessWidget {
                   style: SpitoutTextTokens.title(context)
                       .copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: SpitoutDimens.p4),
                 Text(
                   subtitle,
                   style: SpitoutTextTokens.label(context)
@@ -407,13 +408,9 @@ class _PinVerifyPageState extends ConsumerState<_PinVerifyPage> {
                   const Spacer(flex: 2),
                   Text(
                     l10n.appLockVerifyCurrentPin,
-                    style: TextStyle(
-                      fontSize: 18.0,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                   ),
-                  SizedBox(height: 32.0),
+                  SizedBox(height: SpitoutDimens.p32),
                   PinDotIndicator(
                     filledCount: _pin.length,
                     isError: _isError,
@@ -421,13 +418,13 @@ class _PinVerifyPageState extends ConsumerState<_PinVerifyPage> {
                   const Spacer(flex: 1),
                   Padding(
                     padding: EdgeInsets.symmetric(
-                        horizontal: 40.0),
+                        horizontal: SpitoutDimens.p40),
                     child: NumberPad(
                       onNumberTap: _onNumberTap,
                       onDelete: _onDelete,
                     ),
                   ),
-                  SizedBox(height: 32.0),
+                  SizedBox(height: SpitoutDimens.p32),
                 ],
               ),
             ),

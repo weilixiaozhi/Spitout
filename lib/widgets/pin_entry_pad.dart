@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'press_key.dart';
 
 /// PIN 码圆点指示器
@@ -33,7 +35,7 @@ class PinDotIndicator extends ConsumerWidget {
 
         return AnimatedContainer(
           duration: const Duration(milliseconds: 150),
-          margin: EdgeInsets.symmetric(horizontal: 10.0),
+          margin: EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
           width: dotSize,
           height: dotSize,
           decoration: BoxDecoration(
@@ -75,7 +77,7 @@ class NumberPad extends ConsumerWidget {
       mainAxisSize: MainAxisSize.min,
       children: keys.map((row) {
         return Padding(
-          padding: EdgeInsets.symmetric(vertical: 6.0),
+          padding: EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: row.map((key) {
@@ -85,7 +87,7 @@ class NumberPad extends ConsumerWidget {
                   ref,
                   child: showBiometric
                       ? Icon(AppIcons.fingerprint,
-                          size: 28.0,
+                          size: SpitoutDimens.icon28,
                           color: SpitoutTokens.textPrimary(context))
                       : const SizedBox.shrink(),
                   onTap: showBiometric ? onBiometric : null,
@@ -96,7 +98,7 @@ class NumberPad extends ConsumerWidget {
                   context,
                   ref,
                   child: Icon(AppIcons.backspace,
-                      size: 24.0,
+                      size: SpitoutDimens.icon22,
                       color: SpitoutTokens.textPrimary(context)),
                   onTap: onDelete,
                 );
@@ -106,11 +108,7 @@ class NumberPad extends ConsumerWidget {
                 ref,
                 child: Text(
                   key,
-                  style: TextStyle(
-                    fontSize: 28.0,
-                    fontWeight: FontWeight.w400,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.display2(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
                 onTap: () => onNumberTap(key),
               );

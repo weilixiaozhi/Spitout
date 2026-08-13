@@ -12,6 +12,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show CloudBackendType;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 
@@ -165,7 +167,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
       // 内容不足一屏时（如只有一两个账本）夹紧滚动物理不产生 overscroll，
       // 下拉刷新会失效；AlwaysScrollableScrollPhysics 保证任何状态都可下拉。
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
       children: [
         // ---------------- 本地账本 ----------------
         _buildSectionHeader(
@@ -180,14 +182,14 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
             // 全空时这里是用户唯一的引导入口，保留「新建账本」按钮。
             action: OutlinedButton.icon(
               onPressed: () => _showCreateLedgerDialog(context),
-              icon: const Icon(AppIcons.addCircle, size: 18),
+              icon: const Icon(AppIcons.addCircle, size: SpitoutDimens.icon16),
               label: Text(l10n.ledgersNew),
             ),
           )
         else
           ...localOnly.map(card),
 
-        const SizedBox(height: 20.0),
+        const SizedBox(height: SpitoutDimens.p16),
 
         // ---------------- Spitout Cloud 账本 ----------------
         _buildSectionHeader(
@@ -199,9 +201,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
         // 归属模型下它属于云端范畴，因此收进云端分区标题下方。
         if (isSpitoutCloud)
           Padding(
-            padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 8.0),
+            padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, SpitoutDimens.p8),
             child: OutlinedButton.icon(
-              icon: const Icon(AppIcons.personAdd, size: 18),
+              icon: const Icon(AppIcons.personAdd, size: SpitoutDimens.icon16),
               label: Text(l10n.sharedJoinPageTitle),
               onPressed: () async {
                 await Navigator.of(context).push(
@@ -211,7 +213,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               style: OutlinedButton.styleFrom(
                 minimumSize: const Size(double.infinity, 40.0),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
               ),
             ),
@@ -242,11 +244,11 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   }) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 8.0, 16.0, 8.0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p8, SpitoutDimens.p16, SpitoutDimens.p8),
       child: Row(
         children: [
-          Icon(icon, size: 16, color: theme.colorScheme.outline),
-          const SizedBox(width: 8),
+          Icon(icon, size: SpitoutDimens.icon16, color: theme.colorScheme.outline),
+          const SizedBox(width: SpitoutDimens.p8),
           Text(
             title,
             style: theme.textTheme.titleSmall?.copyWith(
@@ -270,7 +272,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
   }) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16.0, 4.0, 16.0, 12.0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, SpitoutDimens.p12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -280,7 +282,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               color: theme.colorScheme.outline,
             ),
           ),
-          if (action != null) ...[const SizedBox(height: 10), action],
+          if (action != null) ...[const SizedBox(height: SpitoutDimens.p8), action],
         ],
       ),
     );
@@ -395,16 +397,16 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
           builder: (stateContext, processing, _) {
             return AlertDialog(
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
               ),
               title: Row(
                 children: [
                   Icon(
                     AppIcons.warning,
                     color: SpitoutTokens.error(dialogContext),
-                    size: 28,
+                    size: SpitoutDimens.icon28,
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: SpitoutDimens.p12),
                   Text(l10n.ledgersConflictTitle),
                 ],
               ),
@@ -415,21 +417,18 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                   children: [
                     Text(
                       l10n.ledgersConflictMessage,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: SpitoutTextTokens.body(context),
                     ),
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpitoutDimens.p16),
 
                     // 本地信息
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(SpitoutDimens.p12),
                       decoration: BoxDecoration(
                         color: SpitoutTokens.info(
                           dialogContext,
                         ).withValues(alpha: 0.08),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -438,32 +437,29 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                             l10n.ledgersConflictLocalInfo(status.localCount),
                             style: const TextStyle(fontWeight: FontWeight.w600),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: SpitoutDimens.p4),
                           Text(
                             l10n.ledgersConflictLocalFingerprint(
                               _shortFingerprint(status.localFingerprint),
                             ),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: SpitoutTokens.textSecondary(dialogContext),
-                            ),
+                            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(dialogContext)),
                           ),
                         ],
                       ),
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: SpitoutDimens.p12),
 
                     // 云端信息
                     if (status.cloudFingerprint != null &&
                         status.cloudExportedAt != null)
                       Container(
-                        padding: const EdgeInsets.all(12),
+                        padding: const EdgeInsets.all(SpitoutDimens.p12),
                         decoration: BoxDecoration(
                           color: SpitoutTokens.warning(
                             dialogContext,
                           ).withValues(alpha: 0.08),
-                          borderRadius: BorderRadius.circular(8),
+                          borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         ),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -476,27 +472,21 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                                 fontWeight: FontWeight.w600,
                               ),
                             ),
-                            const SizedBox(height: 4),
+                            const SizedBox(height: SpitoutDimens.p4),
                             Text(
                               l10n.ledgersConflictRemoteUpdated(
                                 dateFormat.format(
                                   status.cloudExportedAt!.toLocal(),
                                 ),
                               ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: SpitoutTokens.textSecondary(dialogContext),
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(dialogContext)),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: SpitoutDimens.p4),
                             Text(
                               l10n.ledgersConflictRemoteFingerprint(
                                 _shortFingerprint(status.cloudFingerprint),
                               ),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: SpitoutTokens.textSecondary(dialogContext),
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(dialogContext)),
                             ),
                           ],
                         ),
@@ -507,7 +497,7 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               actions: [
                 if (processing)
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
                     child: SizedBox(
                       width: 20,
                       height: 20,
@@ -559,8 +549,8 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(AppIcons.download, size: 18),
-                        const SizedBox(width: 4),
+                        const Icon(AppIcons.download, size: SpitoutDimens.icon16),
+                        const SizedBox(width: SpitoutDimens.p4),
                         Text(l10n.ledgersConflictDownload),
                       ],
                     ),
@@ -603,8 +593,8 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Icon(AppIcons.upload, size: 18),
-                        const SizedBox(width: 4),
+                        const Icon(AppIcons.upload, size: SpitoutDimens.icon16),
+                        const SizedBox(width: SpitoutDimens.p4),
                         Text(l10n.ledgersConflictUpload),
                       ],
                     ),

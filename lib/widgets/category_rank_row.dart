@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'category_icon.dart';
 import 'amount_text.dart';
@@ -164,13 +165,13 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
                     // 放在标题右侧而非金额下方，使箭头的语义与标题直接绑定，更直观。
                     // 使用 AnimatedRotation 平滑过渡，避免图标突兀切换。
                     if (isTopLevel && _hasSubCategories) ...[
-                      const SizedBox(width: 4),
+                      const SizedBox(width: SpitoutDimens.p4),
                       AnimatedRotation(
                         turns: _expanded ? 0.25 : 0.0,
                         duration: const Duration(milliseconds: 200),
                         child: Icon(
                           AppIcons.chevronRight,
-                          size: 16,
+                          size: SpitoutDimens.icon16,
                           color: SpitoutTokens.iconTertiary(context),
                         ),
                       ),
@@ -178,7 +179,7 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
                   ],
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               // 金额补上货币符号（showCurrency: true），与趋势网格口径一致
               AmountText(
                 value: value,
@@ -188,7 +189,7 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpitoutDimens.p4),
           Row(
             children: [
               Text(
@@ -200,9 +201,9 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
               ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpitoutDimens.p4),
           ClipRRect(
-            borderRadius: BorderRadius.circular(4),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
             child: Stack(
               children: [
                 Container(
@@ -242,8 +243,8 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
       return Padding(
         padding: const EdgeInsets.only(
           left: 0,
-          top: 10.0,
-          bottom: 10.0,
+          top: SpitoutDimens.p8,
+          bottom: SpitoutDimens.p8,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -251,17 +252,17 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
             // icon 区域：独立可点击，跳转分类汇总页
             Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(22),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: categoryId != null
                     ? () => _handleTap(categoryId, name)
                     : null,
-                borderRadius: BorderRadius.circular(22),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
                 child: iconContainer,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             // 内容区域：点击展开/折叠子分类。
             // Expanded 必须作为 Row 直接子节点；GestureDetector 包在 Expanded
             // 内部（而非外部），否则 Expanded 脱离 Flex 父级会触发断言异常。
@@ -283,15 +284,15 @@ class _CategoryRankRowState extends ConsumerState<CategoryRankRow> {
       onTap: () => _handleTap(categoryId, name),
       child: Padding(
         padding: const EdgeInsets.only(
-          left: 16.0,
-          top: 8.0,
-          bottom: 8.0,
+          left: SpitoutDimens.p16,
+          top: SpitoutDimens.p8,
+          bottom: SpitoutDimens.p8,
         ),
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             iconContainer,
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(child: contentColumn),
           ],
         ),

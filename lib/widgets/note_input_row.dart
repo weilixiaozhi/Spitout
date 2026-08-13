@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'keypad_constants.dart';
 
@@ -69,7 +70,7 @@ class NoteInputRow extends ConsumerWidget {
                     fillColor: Colors.transparent,
                     border: InputBorder.none,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 14,
+                      horizontal: SpitoutDimens.p12,
                       vertical: 5,
                     ),
                     // 清空按钮（后缀）：CircleX 图标，仅备注非空时显示。
@@ -83,7 +84,7 @@ class NoteInputRow extends ConsumerWidget {
                           onTap: () => onNotePicked(''),
                           child: Icon(
                             AppIcons.cancel,
-                            size: 18,
+                            size: SpitoutDimens.icon16,
                             color: SpitoutTokens.iconSecondary(context),
                           ),
                         );

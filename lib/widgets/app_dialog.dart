@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 
 /// 弹窗底部按钮之间的最小水平间距（全局统一）。设为 60，避免确定/取消挨太近。
 /// 实际间距会随弹窗宽度自适应：剩余空间由下方的 Expanded 均分到按钮之间，
@@ -10,7 +11,7 @@ const double _kButtonSpacing = 60;
 // 弹窗按钮水平内边距。M3 默认 24 偏宽，窄屏（<~380dp）下两个并排按钮的
 // 可用宽度有限，长文案（如 4 字的"立即切换"）会被迫换行；收紧到 16 使
 // 常规中文按钮文案保持单行，整体更紧凑。
-const EdgeInsets _kButtonPadding = EdgeInsets.symmetric(horizontal: 16);
+const EdgeInsets _kButtonPadding = EdgeInsets.symmetric(horizontal: SpitoutDimens.p16);
 
 /// 统一弹窗（基础 UI 组件）
 class AppDialog {
@@ -156,8 +157,8 @@ class AppDialog {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: SpitoutTokens.surfaceElevated(ctx),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        contentPadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
+        contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16, 0),
         content: ConstrainedBox(
           constraints: BoxConstraints(
             maxHeight: MediaQuery.of(context).size.height * 0.7,
@@ -173,7 +174,7 @@ class AppDialog {
                     fontWeight: FontWeight.w600,
                     color: SpitoutTokens.textPrimary(ctx)),
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpitoutDimens.p12),
               Flexible(
                 child: SingleChildScrollView(
                   child: Text(
@@ -188,7 +189,7 @@ class AppDialog {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               Row(
                 children: [
                   for (int i = 0; i < act.length; i++) ...[
@@ -207,7 +208,7 @@ class AppDialog {
                                     foregroundColor: primary,
                                     side: BorderSide(color: primary),
                                     shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(10)),
+                                        borderRadius: BorderRadius.circular(SpitoutDimens.radius8)),
                                     padding: _kButtonPadding,
                                   ),
                                   child: _dialogButtonLabel(act[i].label),
@@ -217,7 +218,7 @@ class AppDialog {
                                 onPressed: act[i].onTap,
                                 style: FilledButton.styleFrom(
                                   shape: RoundedRectangleBorder(
-                                      borderRadius: BorderRadius.circular(10)),
+                                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8)),
                                   padding: _kButtonPadding,
                                 ),
                                 child: _dialogButtonLabel(act[i].label)),
@@ -230,7 +231,7 @@ class AppDialog {
                   ]
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: SpitoutDimens.p12),
             ],
           ),
         ),

@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:intl/intl.dart';
 
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/core/logging/logger_service.dart';
@@ -134,8 +136,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           Expanded(
             child: ListView(
               padding: EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p12,
+                vertical: SpitoutDimens.p8,
               ),
               children: [
                 // 日历视图
@@ -158,7 +160,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       logger.error('Calendar', '加载当月统计失败', err, stack);
                       return Center(
                         child: Padding(
-                          padding: const EdgeInsets.all(20),
+                          padding: const EdgeInsets.all(SpitoutDimens.p16),
                           child: Text(l10n.commonOperationFailed),
                         ),
                       );
@@ -166,7 +168,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                   ),
                 ),
 
-                SizedBox(height: 12.0),
+                SizedBox(height: SpitoutDimens.p12),
 
                 // 选中日期的交易列表（无日期标题和统计）
                 if (_selectedDay != null)
@@ -222,11 +224,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         titleCentered: true,
         leftChevronIcon: Icon(AppIcons.chevronLeft, color: SpitoutTokens.iconTertiary(context)),
         rightChevronIcon: Icon(AppIcons.chevronRight, color: SpitoutTokens.iconTertiary(context)),
-        titleTextStyle: TextStyle(
-          fontSize: 16,
-          fontWeight: FontWeight.w600,
-          color: SpitoutTokens.textPrimary(context),
-        ),
+        titleTextStyle: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
       ),
 
       // 日历样式
@@ -274,14 +272,8 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
 
       // 星期标题样式
       daysOfWeekStyle: DaysOfWeekStyle(
-        weekdayStyle: TextStyle(
-          color: SpitoutTokens.textSecondary(context),
-          fontSize: 12,
-        ),
-        weekendStyle: TextStyle(
-          color: SpitoutTokens.textSecondary(context),
-          fontSize: 12,
-        ),
+        weekdayStyle: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
+        weekendStyle: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
       ),
 
       // 日期标记构建器
@@ -343,7 +335,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 1),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4, horizontal: 1),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.center,
@@ -366,18 +358,15 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
             alignment: Alignment.center,
             child: Text(
               '${day.day}',
-              style: TextStyle(
-                color: textColor,
-                fontSize: 14,
+              style: SpitoutTextTokens.body(context).copyWith(color: textColor,
                 fontWeight:
                     isToday || isSelected ? FontWeight.bold : FontWeight.normal,
-                height: 1.0,
-              ),
+                height: 1.0),
             ),
           ),
           // 支出（在圆形外面）
           if (!isOutside && hasTransaction) ...[
-            const SizedBox(height: 2),
+            const SizedBox(height: SpitoutDimens.p4),
             // 支出：保留 1.2k/1.2w 缩写以适配日历格子窄空间，
             // 同时加账本本位币货币符号前缀（如 -¥1.2w）。
             if (expense > 0)
@@ -387,12 +376,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                     : expense >= 1000
                         ? '-$currencySymbol${(expense / 1000).toStringAsFixed(1)}k'
                         : '-$currencySymbol${expense.toInt()}',
-                style: TextStyle(
-                  color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w600,
-                  height: 1.1,
-                ),
+                style: SpitoutTextTokens.caption(context).copyWith(fontWeight: FontWeight.w600, color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),height: 1.1),
                 maxLines: 1,
                 overflow: TextOverflow.clip,
               ),
@@ -418,7 +402,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     );
 
     final header = Padding(
-      padding: const EdgeInsets.fromLTRB(4, 0, 4, 10),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p4, 0, SpitoutDimens.p4, SpitoutDimens.p8),
       child: Row(
         children: [
           Expanded(
@@ -426,19 +410,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
               children: [
                 Text(
                   dateLabel,
-                  style: TextStyle(
-                    color: SpitoutTokens.textPrimary(context),
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context),),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: SpitoutDimens.p4),
                 Text(
                   weekdayLabel,
-                  style: TextStyle(
-                    color: SpitoutTokens.textTertiary(context),
-                    fontSize: 12,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ],
             ),
@@ -447,26 +424,22 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           // 不套 Ink + boxShadow，避免出现直角浅蓝色背景蒙层。
           Material(
             color: primaryColor,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
             child: InkWell(
-              borderRadius: BorderRadius.circular(20),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
               onTap: _addTransactionForSelectedDate,
               child: Padding(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 14, vertical: 8),
+                    horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(AppIcons.add,
-                        size: 18, color: Colors.white),
-                    const SizedBox(width: 4),
+                        size: SpitoutDimens.icon16, color: Colors.white),
+                    const SizedBox(width: SpitoutDimens.p4),
                     Text(
                       l10n.calendarAddTransaction,
-                      style: const TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white,
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: Colors.white),
                     ),
                   ],
                 ),
@@ -485,7 +458,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         data: (transactions) {
           if (transactions.isEmpty) {
             return Padding(
-              padding: EdgeInsets.all(24.0),
+              padding: EdgeInsets.all(SpitoutDimens.p20),
               child: Center(
                 child: Text(
                   l10n.calendarNoTransactions,
@@ -555,7 +528,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         error: (err, stack) {
           logger.error('Calendar', '加载当日交易失败', err, stack);
           return Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(SpitoutDimens.p20),
             child: Center(child: Text(l10n.commonOperationFailed)),
           );
         },
@@ -584,15 +557,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         dateLabel,
       ),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 12),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
         child: Center(
           child: Text(
             l10n.calendarViewAllTransactions(transactions.length),
-            style: TextStyle(
-              color: primaryColor,
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: primaryColor,),
           ),
         ),
       ),
@@ -658,11 +627,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         child: SizedBox(
           height: 488,
           child: Padding(
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(SpitoutDimens.p12),
             child: Column(
               children: [
                 const SkeletonBar(height: 18, widthFactor: 0.4),
-                const SizedBox(height: 14),
+                const SizedBox(height: SpitoutDimens.p12),
                 for (int row = 0; row < 6; row++)
                   Row(
                     children: List.generate(
@@ -670,7 +639,7 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                       (_) => const Expanded(
                         child: Padding(
                           padding: EdgeInsets.symmetric(
-                              horizontal: 4, vertical: 4),
+                              horizontal: SpitoutDimens.p4, vertical: SpitoutDimens.p4),
                           child: SkeletonBar(height: 56),
                         ),
                       ),

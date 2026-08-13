@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'app_sheet.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 
 class WheelTimePicker extends StatefulWidget {
   final TimeOfDay initial;
@@ -73,10 +74,7 @@ class _WheelTimePickerState extends State<WheelTimePicker> {
                   return Center(
                     child: Text(
                       index.toString().padLeft(2, '0'),
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     ),
                   );
                 }),
@@ -86,11 +84,7 @@ class _WheelTimePickerState extends State<WheelTimePicker> {
             // 分隔符
             Text(
               ':',
-              style: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.w500,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
             ),
 
             // 分钟选择器
@@ -107,10 +101,7 @@ class _WheelTimePickerState extends State<WheelTimePicker> {
                   return Center(
                     child: Text(
                       index.toString().padLeft(2, '0'),
-                      style: TextStyle(
-                        fontSize: 20,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     ),
                   );
                 }),

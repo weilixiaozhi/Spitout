@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 菜单项类型
 enum SpitoutMenuItemType {
@@ -118,7 +120,7 @@ class SpitoutPopupMenu extends StatelessWidget {
       ),
       tooltip: tooltip,
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       ),
       color: SpitoutTokens.surface(context),
       elevation: isDark ? 8 : 4,
@@ -175,7 +177,7 @@ class SpitoutPopupMenu extends StatelessWidget {
       child: Container(
         width: _menuWidth,
         height: _rowHeight,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
         alignment: Alignment.centerLeft,
         decoration: BoxDecoration(
           border: showBottomLine
@@ -189,15 +191,11 @@ class SpitoutPopupMenu extends StatelessWidget {
         ),
         child: Text(
           item.label ?? '',
-          style: TextStyle(
-            fontSize: 15,
-            // 自定义颜色优先，其次危险红色，最后主题主色
+          style: SpitoutTextTokens.title(context).copyWith(// 自定义颜色优先，其次危险红色，最后主题主色
             color: item.color ??
                 (item.isDanger
                     ? SpitoutTokens.error(context)
-                    : SpitoutTokens.textPrimary(context)),
-            fontWeight: FontWeight.w400,
-          ),
+                    : SpitoutTokens.textPrimary(context))),
         ),
       ),
     );
@@ -213,14 +211,11 @@ class SpitoutPopupMenu extends StatelessWidget {
       child: Container(
         width: _menuWidth,
         height: 40,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
         alignment: Alignment.centerLeft,
         child: Text(
           item.label ?? '',
-          style: TextStyle(
-            fontSize: 12,
-            color: SpitoutTokens.textTertiary(context),
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
       ),
     );

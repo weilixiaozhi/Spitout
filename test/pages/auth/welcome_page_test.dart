@@ -102,16 +102,15 @@ void main() {
         reason: '符号长短不一（¥ 与 HK\$）时名称列仍应左对齐到同一 x 位置');
   });
 
-  testWidgets('列表下方间距压缩为 6：列表区加高 10px', (tester) async {
+  testWidgets('列表下方间距压缩为 4：列表区加高让位', (tester) async {
     await prime(tester);
 
-    // 币种列表（Expanded）与底部描述文案之间的间距由 16 压缩为 6，
-    // 压缩出的 10px 由 Expanded 列表吸收，列表总高度因此增加 10px。
+    // 币种列表（Expanded）与底部描述文案之间的间距压缩为 4（SpitoutDimens.p4）。
     expect(
       find.byWidgetPredicate(
-          (w) => w is SizedBox && w.height == 6 && w.width == null),
+          (w) => w is SizedBox && w.height == 4 && w.width == null),
       findsOneWidget,
-      reason: '列表下方应为 6px 间距（由原 16px 压缩 10px 让给列表区）',
+      reason: '列表下方应为 4px 间距（p4）',
     );
   });
 }

@@ -88,30 +88,30 @@ class AaMemberDetailPage extends ConsumerWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.only(top: 10, left: 14, right: 14),
+          padding: const EdgeInsets.only(top: SpitoutDimens.p8, left: SpitoutDimens.p12, right: SpitoutDimens.p12),
           child: Row(
             children: [
               IconButton(
                 icon: Icon(
                   AppIcons.back,
-                  size: 20,
+                  size: SpitoutDimens.icon20,
                   color: SpitoutTokens.iconPrimary(context),
                 ),
                 onPressed: () => Navigator.of(context).maybePop(),
-                padding: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(SpitoutDimens.p8),
                 constraints: const BoxConstraints(minWidth: 30, minHeight: 30),
                 style: IconButton.styleFrom(
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               AaParticipantAvatar(
                 ledgerId: args.ledgerId,
                 participantId: args.participantId,
                 isSelf: args.isSelf,
-                size: 32,
+                size: SpitoutDimens.icon28,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -165,7 +165,7 @@ class AaMemberDetailPage extends ConsumerWidget {
         : _flattenBillEntries(data.bills);
 
     return ListView.builder(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       itemCount: 2 + (data.bills.isEmpty ? 1 : entries.length),
       itemBuilder: (context, index) {
         if (index == 0) {
@@ -180,7 +180,7 @@ class AaMemberDetailPage extends ConsumerWidget {
         if (index == 1) {
           // 汇总卡与分摊方式卡之间保持 20 间距,与改动前视觉一致。
           return Padding(
-            padding: const EdgeInsets.symmetric(vertical: 20),
+            padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p16),
             child: _buildSplitMethod(
               context,
               l10n,
@@ -233,7 +233,7 @@ class AaMemberDetailPage extends ConsumerWidget {
 
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -242,20 +242,17 @@ class AaMemberDetailPage extends ConsumerWidget {
             children: [
               Icon(
                 AppIcons.receipt,
-                size: 14,
+                size: SpitoutDimens.icon12,
                 color: SpitoutTokens.textTertiary(context),
               ),
-              const SizedBox(width: 6),
+              const SizedBox(width: SpitoutDimens.p4),
               Text(
                 l10n.aaStatisticsBillSummary,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: SpitoutTokens.textSecondary(context),
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
           // 总笔数 / 总金额：两个指标共用同一套标签在上、数值在下的居中样式，
           // 与分摊详情表的成员指标视觉一致，不为不同字段区分字号和颜色。
           Row(
@@ -280,18 +277,15 @@ class AaMemberDetailPage extends ConsumerWidget {
               ),
             ],
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
           Divider(height: 1, color: SpitoutTokens.divider(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
                 netLabel,
-                style: TextStyle(
-                  fontSize: 12,
-                  color: SpitoutTokens.textSecondary(context),
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
               ),
               Flexible(
                 child: FittedBox(
@@ -302,11 +296,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                       net.abs(),
                       currencyCode: currencyCode,
                     ),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: netColor,
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: netColor),
                   ),
                 ),
               ),
@@ -324,22 +314,15 @@ class AaMemberDetailPage extends ConsumerWidget {
       children: [
         Text(
           label,
-          style: TextStyle(
-            fontSize: 11,
-            color: SpitoutTokens.textTertiary(context),
-          ),
+          style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
-        const SizedBox(height: 4),
+        const SizedBox(height: SpitoutDimens.p4),
         FittedBox(
           fit: BoxFit.scaleDown,
           child: Text(
             value,
             maxLines: 1,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w600,
-              color: SpitoutTokens.textPrimary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
           ),
         ),
       ],
@@ -359,16 +342,13 @@ class AaMemberDetailPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
           child: Text(
             l10n.aaSplitMode,
-            style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         Row(
           children: [
             Expanded(
@@ -378,7 +358,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                 l10n.aaStatisticsModePerPerson,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
               child: _buildMethodCard(
                 context,
@@ -386,7 +366,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                 l10n.aaStatisticsModeCustom,
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
               child: _buildMethodCard(
                 context,
@@ -407,7 +387,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     final number = SpitoutTokens.textPrimary(context);
     final text = SpitoutTokens.textTertiary(context);
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p12),
       decoration: BoxDecoration(
         color: bg,
         borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
@@ -417,17 +397,13 @@ class AaMemberDetailPage extends ConsumerWidget {
         children: [
           Text(
             '$count',
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.w700,
-              color: number,
-              height: 1,
-            ),
+            style: SpitoutTextTokens.display1(context).copyWith(color: number,
+              height: 1),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpitoutDimens.p4),
           Text(
             label,
-            style: TextStyle(fontSize: 11, color: text),
+            style: SpitoutTextTokens.caption(context).copyWith(color: text),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
           ),
@@ -479,7 +455,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     String currencyCode,
   ) {
     return Container(
-      margin: EdgeInsets.only(bottom: entry.isLastInGroup ? 16 : 0),
+      margin: EdgeInsets.only(bottom: entry.isLastInGroup ? SpitoutDimens.p16 : 0),
       decoration: BoxDecoration(
         color: SpitoutTokens.surface(context),
         borderRadius: BorderRadius.vertical(
@@ -532,7 +508,7 @@ class AaMemberDetailPage extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
+          padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p12, SpitoutDimens.p16, SpitoutDimens.p8),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -544,9 +520,9 @@ class AaMemberDetailPage extends ConsumerWidget {
                   color: SpitoutTokens.surfaceSecondary(context),
                   shape: BoxShape.circle,
                 ),
-                child: CategoryIconWidget(category: bill.category, size: 20),
+                child: CategoryIconWidget(category: bill.category, size: SpitoutDimens.icon20),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpitoutDimens.p12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -561,37 +537,31 @@ class AaMemberDetailPage extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SpitoutDimens.p4),
                         _buildSplitBadge(context, bill.mode, l10n),
                       ],
                     ),
                     if (bill.tx.note != null && bill.tx.note!.isNotEmpty) ...[
-                      const SizedBox(height: 2),
+                      const SizedBox(height: SpitoutDimens.p4),
                       Text(
                         bill.tx.note!,
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
+                        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
                     ],
-                    const SizedBox(height: 2),
+                    const SizedBox(height: SpitoutDimens.p4),
                     Text(
                       '$timeText · ${l10n.aaStatisticsPayerPrefix}: '
                       '${bill.payerName}',
-                      style: TextStyle(
-                        fontSize: 11,
-                        color: SpitoutTokens.textTertiary(context),
-                      ),
+                      style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
                   ],
                 ),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpitoutDimens.p12),
               // 右侧：账单总额（红色加粗）。本人应摊金额已在下方的分摊明细中
               // 展示，这里不重复显示，副标题「账单总额」一并移除。
               Column(
@@ -603,11 +573,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                     showCurrency: true,
                     currencyCode: currencyCode,
                     scaleDown: true,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.error(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.error(context)),
                   ),
                 ],
               ),
@@ -617,8 +583,8 @@ class AaMemberDetailPage extends ConsumerWidget {
         // 分摊明细：仅 AA 账单渲染；不分摊账单无分摊明细。
         if (bill.splits.isNotEmpty)
           Container(
-            margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            margin: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p12),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceSecondary(context),
               borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
@@ -628,12 +594,9 @@ class AaMemberDetailPage extends ConsumerWidget {
               children: [
                 Text(
                   l10n.aaStatisticsSplitDetail,
-                  style: TextStyle(
-                    fontSize: 10,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
+                  style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpitoutDimens.p4),
                 for (final s in bill.splits)
                   Padding(
                     padding: const EdgeInsets.symmetric(vertical: 3),
@@ -643,17 +606,14 @@ class AaMemberDetailPage extends ConsumerWidget {
                           ledgerId: args.ledgerId,
                           participantId: s.participantId,
                           isSelf: s.isSelf,
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SpitoutDimens.p4),
                         Expanded(
                           child: Text.rich(
                             TextSpan(
                               text: s.displayName,
-                              style: TextStyle(
-                                fontSize: 11,
-                                color: SpitoutTokens.textSecondary(context),
-                              ),
+                              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                               children: [
                                 if (s.isSelf) meSuffixSpan(context, l10n),
                               ],
@@ -662,7 +622,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                             overflow: TextOverflow.ellipsis,
                           ),
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: SpitoutDimens.p8),
                         Flexible(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
@@ -672,11 +632,7 @@ class AaMemberDetailPage extends ConsumerWidget {
                                 s.amount,
                                 currencyCode: currencyCode,
                               ),
-                              style: TextStyle(
-                                fontSize: 11,
-                                fontWeight: FontWeight.w500,
-                                color: SpitoutTokens.textPrimary(context),
-                              ),
+                              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                             ),
                           ),
                         ),
@@ -704,18 +660,14 @@ class AaMemberDetailPage extends ConsumerWidget {
       AaMode.noSplit => l10n.aaModeNoSplit,
     };
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4, vertical: SpitoutDimens.p4),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 9,
-          fontWeight: FontWeight.w500,
-          color: color,
-        ),
+        style: SpitoutTextTokens.caption(context).copyWith(color: color),
       ),
     );
   }
@@ -723,14 +675,11 @@ class AaMemberDetailPage extends ConsumerWidget {
   Widget _buildEmptyCard(BuildContext context, AppLocalizations l10n) {
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(vertical: 32),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p32),
       child: Center(
         child: Text(
           l10n.aaStatisticsMemberTxEmpty,
-          style: TextStyle(
-            fontSize: 13,
-            color: SpitoutTokens.textTertiary(context),
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
       ),
     );

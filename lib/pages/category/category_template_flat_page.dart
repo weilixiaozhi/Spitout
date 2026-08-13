@@ -8,6 +8,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'category_template_widgets.dart';
 
@@ -87,7 +88,7 @@ class _CategoryTemplateFlatPageState
       children: [
         Expanded(
           child: GridView.builder(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 4,
               mainAxisSpacing: 12,

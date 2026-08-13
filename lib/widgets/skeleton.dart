@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 
 /// 延迟显示骨架屏:< [DelayedSkeleton.defaultDelay] 期间显示等高占位,
 /// >= 才出真正的骨架。快速查询(<300ms)用户根本看不到骨架,
@@ -131,7 +132,7 @@ class SkeletonBar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: SpitoutTokens.surfaceSecondary(context),
-        borderRadius: borderRadius ?? BorderRadius.circular(6),
+        borderRadius: borderRadius ?? BorderRadius.circular(SpitoutDimens.radius4),
       ),
     );
     if (widthFactor != null) {
@@ -173,7 +174,7 @@ class SkeletonListTile extends StatelessWidget {
   const SkeletonListTile({
     super.key,
     this.iconSize = 36,
-    this.padding = const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+    this.padding = const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
   });
 
   @override
@@ -183,18 +184,18 @@ class SkeletonListTile extends StatelessWidget {
       child: Row(
         children: [
           SkeletonCircle(size: iconSize),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           const Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 SkeletonBar(height: 14, width: 110),
-                SizedBox(height: 6),
+                SizedBox(height: SpitoutDimens.p4),
                 SkeletonBar(height: 11, width: 70),
               ],
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           const SkeletonBar(height: 16, width: 60),
         ],
       ),

@@ -5,6 +5,7 @@ import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'app_list_tile.dart';
 
@@ -98,7 +99,7 @@ class CloudServiceEntryTile extends ConsumerWidget {
               child: CircularProgressIndicator(strokeWidth: 2),
             )
           : Icon(AppIcons.chevronRight,
-              color: SpitoutTokens.iconTertiary(context), size: 20),
+              color: SpitoutTokens.iconTertiary(context), size: SpitoutDimens.icon20),
       onTap: onTap,
     );
   }

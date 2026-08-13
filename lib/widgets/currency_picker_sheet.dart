@@ -5,6 +5,8 @@ import 'app_route.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'currency_flag.dart';
@@ -50,7 +52,7 @@ Future<String?> showCurrencyPickerSheet(
     // 抬升阴影：记账页内拉起时遮罩为透明，阴影让弹窗与下层记账页分出层级
     elevation: 8,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(SpitoutDimens.radius16)),
     ),
     builder: (bctx) {
       String query = '';
@@ -97,13 +99,9 @@ Future<String?> showCurrencyPickerSheet(
                 const SheetGrabHandle(),
                 Text(
                   sheetTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: SpitoutTokens.textPrimary(bctx),
-                  ),
+                  style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(bctx)),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
                 TextField(
                   decoration: InputDecoration(
                     prefixIcon: const Icon(AppIcons.search),
@@ -111,7 +109,7 @@ Future<String?> showCurrencyPickerSheet(
                   ),
                   onChanged: (v) => setSheetState(() => query = v),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
                 Expanded(
                   // 汇率展示:rateBase 传入时用 Consumer 拿全量汇率;否则空 map。
                   child: Consumer(builder: (cctx, ref, _) {
@@ -155,10 +153,7 @@ Future<String?> showCurrencyPickerSheet(
                           // horizontalTitleGap 后「名称 (ISO)」整列左对齐。
                           leading: currencySymbolColumn(
                             c.code,
-                            style: TextStyle(
-                              fontSize: 16,
-                              color: SpitoutTokens.textSecondary(cctx),
-                            ),
+                            style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textSecondary(cctx)),
                           ),
                           title: Text(
                             '${c.name} (${c.code})',
@@ -174,10 +169,7 @@ Future<String?> showCurrencyPickerSheet(
                               ? null
                               : Text(
                                   rateText,
-                                  style: TextStyle(
-                                    fontSize: 11,
-                                    color: SpitoutTokens.textTertiary(cctx),
-                                  ),
+                                  style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(cctx)),
                                 ),
                           trailing: sel
                               ? Icon(AppIcons.check, color: primaryColor)

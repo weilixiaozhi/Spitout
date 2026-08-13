@@ -5,6 +5,8 @@ import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/import/file_reader.dart';
 import 'package:spitout/services/import/xlsx_reader.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import 'detail_export_page.dart';
@@ -53,15 +55,15 @@ class _DetailImportExportPageState
               children: [
                 ListView(
                   padding: EdgeInsets.symmetric(
-                    horizontal: 12.0,
-                    vertical: 8.0,
+                    horizontal: SpitoutDimens.p12,
+                    vertical: SpitoutDimens.p8,
                   ),
                   children: [
                     // —— 头部：功能说明模块（整合原「功能说明」+「模板预览」两个卡片）——
                     SectionCard(
                       margin: EdgeInsets.zero,
                       child: Padding(
-                        padding: EdgeInsets.all(12.0),
+                        padding: EdgeInsets.all(SpitoutDimens.p12),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -69,21 +71,17 @@ class _DetailImportExportPageState
                               children: [
                                 Icon(
                                   AppIcons.info,
-                                  size: 20.0,
+                                  size: SpitoutDimens.icon20,
                                   color: Theme.of(context).colorScheme.primary,
                                 ),
-                                SizedBox(width: 8.0),
+                                SizedBox(width: SpitoutDimens.p8),
                                 Text(
                                   l10n.configImportExportInfoTitle,
-                                  style: TextStyle(
-                                    fontSize: 16.0,
-                                    fontWeight: FontWeight.w600,
-                                    color: SpitoutTokens.textPrimary(context),
-                                  ),
+                                  style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                                 ),
                               ],
                             ),
-                            SizedBox(height: 8.0),
+                            SizedBox(height: SpitoutDimens.p8),
                             // 导入说明：结构化分条展示（原长段落不利于扫读）
                             _infoSection(
                               context,
@@ -95,7 +93,7 @@ class _DetailImportExportPageState
                                 l10n.detailImportExportImportPoint3,
                               ],
                             ),
-                            SizedBox(height: 10.0),
+                            SizedBox(height: SpitoutDimens.p8),
                             // 导出说明：结构化分条展示
                             _infoSection(
                               context,
@@ -110,19 +108,16 @@ class _DetailImportExportPageState
                               // 与「包含字段如下：」引导语配套，采用模板样式（13px 三级文字）
                               footer: Padding(
                                 padding:
-                                    const EdgeInsets.only(top: 4.0, left: 12.0),
+                                    const EdgeInsets.only(top: SpitoutDimens.p4, left: SpitoutDimens.p12),
                                 child: Text(
                                   '${l10n.exportCsvHeaderType} / ${l10n.exportCsvHeaderCategory} / ${l10n.exportCsvHeaderSubCategory} / ${l10n.exportCsvHeaderAmount} / ${l10n.exportCsvHeaderCurrency} / ${l10n.exportCsvHeaderNote} / ${l10n.exportCsvHeaderTime}',
-                                  style: TextStyle(
-                                    fontSize: 13.0,
-                                    color:
+                                  style: SpitoutTextTokens.label(context).copyWith(color:
                                         SpitoutTokens.textTertiary(context),
-                                    height: 1.5,
-                                  ),
+                                    height: 1.5),
                                 ),
                               ),
                             ),
-                            SizedBox(height: 10.0),
+                            SizedBox(height: SpitoutDimens.p8),
                             // 账本迁移提示：说明可经「导出当前账本 → 导入目标账本」完成账本间平滑迁移
                             _infoSection(
                               context,
@@ -136,7 +131,7 @@ class _DetailImportExportPageState
                         ),
                       ),
                     ),
-                    SizedBox(height: 8.0),
+                    SizedBox(height: SpitoutDimens.p8),
                     // —— 功能按钮卡片：导入明细 + 导出明细 ——
                     SectionCard(
                       margin: EdgeInsets.zero,
@@ -159,7 +154,7 @@ class _DetailImportExportPageState
                                   )
                                 :                                 Icon(AppIcons.chevronRight,
                                     color: SpitoutTokens.iconTertiary(context),
-                                    size: 20),
+                                    size: SpitoutDimens.icon20),
                             onTap: _reading ? null : _pickAndImport,
                           ),
                           SpitoutTokens.cardDivider(context),
@@ -170,7 +165,7 @@ class _DetailImportExportPageState
                             subtitle: l10n.detailImportExportExportSubtitle,
                             trailing: Icon(AppIcons.chevronRight,
                                 color: SpitoutTokens.iconTertiary(context),
-                                size: 20),
+                                size: SpitoutDimens.icon20),
                             onTap: () {
                               Navigator.of(context).push(
                                 appPageRoute(
@@ -191,23 +186,23 @@ class _DetailImportExportPageState
                       color: SpitoutTokens.overlay(context),
                       child: Center(
                         child: Container(
-                          padding: const EdgeInsets.all(16),
+                          padding: const EdgeInsets.all(SpitoutDimens.p16),
                           decoration: BoxDecoration(
                             color: SpitoutTokens.surfaceElevated(context),
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                           ),
                           width: 320,
                           child: Column(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(AppLocalizations.of(context).importReading),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: SpitoutDimens.p12),
                               LinearProgressIndicator(value: _readProgress),
-                              const SizedBox(height: 8),
+                              const SizedBox(height: SpitoutDimens.p8),
                               Text(_readProgress == null
                                   ? AppLocalizations.of(context).importPreparing
                                   : '${((_readProgress ?? 0) * 100).clamp(0, 100).toStringAsFixed(0)}%'),
-                              const SizedBox(height: 12),
+                              const SizedBox(height: SpitoutDimens.p12),
                               TextButton(
                                 onPressed: () {
                                   setState(() => _cancelRead = true);
@@ -247,42 +242,32 @@ class _DetailImportExportPageState
         // 分节小标题：复用功能按钮的标题文案（导入明细 / 导出明细）
         Row(
           children: [
-            Icon(icon, size: 16.0, color: SpitoutTokens.textSecondary(context)),
-            SizedBox(width: 6.0),
+            Icon(icon, size: SpitoutDimens.icon16, color: SpitoutTokens.textSecondary(context)),
+            SizedBox(width: SpitoutDimens.p4),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 14.0,
-                fontWeight: FontWeight.w600,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
             ),
           ],
         ),
-        SizedBox(height: 4.0),
+        SizedBox(height: SpitoutDimens.p4),
         // 圆点条目：圆点与正文首行基线对齐，折行时悬挂缩进保持对齐
         for (final point in points)
           Padding(
-            padding: const EdgeInsets.only(top: 2.0),
+            padding: const EdgeInsets.only(top: SpitoutDimens.p4),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '• ',
-                  style: TextStyle(
-                    fontSize: 14.0,
-                    color: SpitoutTokens.textSecondary(context),
-                    height: 1.5,
-                  ),
+                  style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                    height: 1.5),
                 ),
                 Expanded(
                   child: Text(
                     point,
-                    style: TextStyle(
-                      fontSize: 14.0,
-                      color: SpitoutTokens.textSecondary(context),
-                      height: 1.5,
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                      height: 1.5),
                   ),
                 ),
               ],

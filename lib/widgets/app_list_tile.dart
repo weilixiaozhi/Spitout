@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 
 class AppListTile extends StatelessWidget {
   final IconData leading;
@@ -28,7 +29,7 @@ class AppListTile extends StatelessWidget {
     final subStyle = SpitoutTextTokens.label(context)
         .copyWith(color: SpitoutTokens.textSecondary(context)); // ⭐ 使用 Token
     final tile = Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: Row(
         children: [
           leadingWidget ??
@@ -47,7 +48,7 @@ class AppListTile extends StatelessWidget {
                   color: Theme.of(context).colorScheme.primary,
                 ),
               ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,

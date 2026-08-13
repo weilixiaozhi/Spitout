@@ -3,6 +3,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/data/models.dart' as db;
 import 'package:spitout/l10n/app_localizations.dart';
@@ -238,12 +240,12 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(SpitoutDimens.p16),
                 children: [
                   // ── 1. 分类名称（移至最上方）──
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(SpitoutDimens.p16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -251,7 +253,7 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                             l10n.categoryNameLabel,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: SpitoutDimens.p8),
                           TextFormField(
                             controller: _nameController,
                             decoration: InputDecoration(
@@ -276,17 +278,17 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                       ),
                     ),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // ── 2. 所属分类 ──
                   _buildParentCategoryCard(context),
 
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // ── 3. 分类图标 ──
                   Card(
                     child: Padding(
-                      padding: const EdgeInsets.all(16),
+                      padding: const EdgeInsets.all(SpitoutDimens.p16),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
@@ -294,13 +296,13 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                             l10n.categoryIconLabel,
                             style: Theme.of(context).textTheme.titleMedium,
                           ),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: SpitoutDimens.p8),
                           // 当前图标预览
                           _buildCurrentIconPreview(context, primaryColor),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: SpitoutDimens.p8),
                           // 分割线
                           SpitoutTokens.cardDivider(context, indent: 0),
-                          const SizedBox(height: 8),
+                          const SizedBox(height: SpitoutDimens.p8),
                           // Lucide 图标网格（限高滚动）
                           SizedBox(
                             height: 360,
@@ -326,7 +328,7 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
           // 底部保存按钮
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             child: FilledButton(
               onPressed: (_saving || _isDuplicateName || _duplicateCheckFailed)
                   ? null
@@ -384,16 +386,16 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
         child: InkWell(
           // 仅非置灰状态可点击
           onTap: isDisabled ? null : () => _selectParentCategory(),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
             child: Row(
               // Row 整体垂直居中，无论有无副标题都对齐到同一个高度里
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
                 // 上箭头图标
-                Icon(AppIcons.parentCategory, color: iconColor, size: 24),
-                const SizedBox(width: 16),
+                Icon(AppIcons.parentCategory, color: iconColor, size: SpitoutDimens.icon22),
+                const SizedBox(width: SpitoutDimens.p16),
                 // 标题 + 副标题
                 Expanded(
                   child: Column(
@@ -406,27 +408,21 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                     children: [
                       Text(
                         l10n.categoryParentCategoryTitle,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: titleColor,
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: titleColor),
                       ),
                       // 副标题行：4.2 显示父分类名，4.3 显示置灰提示；
                       // 4.1 独立分类无内容时整行不渲染。
                       if (showSubtitle)
                         Padding(
-                          padding: const EdgeInsets.only(top: 4),
+                          padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                           child: Text(
                             isDisabled
                                 ? l10n.categoryHasSubCategories
                                 : CategoryUtils.getDisplayName(
                                     _selectedParentCategory!.name, context),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDisabled
+                            style: SpitoutTextTokens.label(context).copyWith(color: isDisabled
                                   ? SpitoutTokens.textDisabled(context)
-                                  : SpitoutTokens.textSecondary(context),
-                            ),
+                                  : SpitoutTokens.textSecondary(context)),
                           ),
                         ),
                     ],
@@ -437,7 +433,7 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
                   Icon(
                     AppIcons.chevronRight,
                     color: SpitoutTokens.iconTertiary(context),
-                    size: 24,
+                    size: SpitoutDimens.icon22,
                   ),
               ],
             ),
@@ -460,21 +456,18 @@ class _CategoryEditPageState extends ConsumerState<CategoryEditPage> {
           decoration: BoxDecoration(
             color: primaryColor.withValues(alpha: 0.1),
             border: Border.all(color: primaryColor, width: 2),
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
           ),
           child: Icon(
             lucideIconLibrary[_selectedIcon] ?? lucideFallback,
-            size: 20,
+            size: SpitoutDimens.icon20,
             color: primaryColor,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpitoutDimens.p12),
         Text(
           l10n.categoryCurrentIcon,
-          style: TextStyle(
-            fontSize: 14,
-            color: SpitoutTokens.textPrimary(context),
-          ),
+          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
         ),
       ],
     );
@@ -640,7 +633,7 @@ class _GroupedIconGrid extends StatelessWidget {
 
     // 使用 ListView 实现区域内滚动（不随全页 ListView 滚动）
     return ListView(
-      padding: const EdgeInsets.only(top: 4),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p4),
       children: iconGroups.map((group) {
         return Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -648,14 +641,11 @@ class _GroupedIconGrid extends StatelessWidget {
             // 分组标题：底部留白 12px，拉开“标题→首行图标”距离，避免与图标过于紧凑；
             // 组内行间距由 Wrap.runSpacing 控制（8px），组间间距见下方 SizedBox(18)。
             Padding(
-              padding: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.only(bottom: SpitoutDimens.p12),
               child: Text(
                 group.title,
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: primaryColor,
-                ),
+                style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.bold,
+                  color: primaryColor),
               ),
             ),
             // 图标网格：用 Wrap 实现。
@@ -684,7 +674,7 @@ class _GroupedIconGrid extends StatelessWidget {
                       width: itemWidth,
                       child: InkWell(
                         onTap: () => onIconSelected(iconItem.key),
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         child: Container(
                           decoration: BoxDecoration(
                             color: isSelected
@@ -696,10 +686,10 @@ class _GroupedIconGrid extends StatelessWidget {
                                   : SpitoutTokens.border(context),
                               width: isSelected ? 2 : 1,
                             ),
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                           ),
                           // 仅留少量内边距让盒子贴紧内容（不被强制拉高产生留白）
-                          padding: const EdgeInsets.symmetric(vertical: 4),
+                          padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
                           child: Column(
                             // min：盒子高度=内容高度，彻底消除居中留白 g
                             mainAxisSize: MainAxisSize.min,
@@ -709,21 +699,18 @@ class _GroupedIconGrid extends StatelessWidget {
                               Icon(
                                 // 键即 Lucide 图标名,经注册表反解;未命中走兜底防问号
                                 lucideIconLibrary[iconItem.key] ?? lucideFallback,
-                                size: 20,
+                                size: SpitoutDimens.icon20,
                                 color: isSelected
                                     ? primaryColor
                                     : SpitoutTokens.iconCategory(context),
                               ),
-                              const SizedBox(height: 4),
+                              const SizedBox(height: SpitoutDimens.p4),
                               // 图标名（Lucide 原名，不翻译）
                               Text(
                                 iconItem.key,
-                                style: TextStyle(
-                                  fontSize: 9,
-                                  color: isSelected
+                                style: SpitoutTextTokens.caption(context).copyWith(color: isSelected
                                       ? primaryColor
-                                      : SpitoutTokens.textTertiary(context),
-                                ),
+                                      : SpitoutTokens.textTertiary(context)),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                               ),

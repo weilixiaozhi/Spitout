@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
@@ -57,11 +59,11 @@ class RecurringTransactionPage extends ConsumerWidget {
                           color: SpitoutTokens.textSecondary(context),
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: SpitoutDimens.p8),
                       TextButton.icon(
                         onPressed: () =>
                             ref.invalidate(allRecurringTransactionsProvider),
-                        icon: const Icon(AppIcons.refresh, size: 18),
+                        icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
                         label: Text(l10n.analyticsRetry),
                       ),
                     ],
@@ -79,14 +81,14 @@ class RecurringTransactionPage extends ConsumerWidget {
                           size: 64,
                           color: SpitoutTokens.textTertiary(context),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpitoutDimens.p16),
                         Text(
                           AppLocalizations.of(context).recurringTransactionEmpty,
                           style: Theme.of(context).textTheme.titleMedium?.copyWith(
                             color: SpitoutTokens.textSecondary(context),
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         Text(
                           AppLocalizations.of(context).recurringTransactionEmptyHint,
                           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -99,13 +101,13 @@ class RecurringTransactionPage extends ConsumerWidget {
                 }
 
                 return ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p16),
                   itemCount: recurringTransactions.length + 1, // +1 for usage guide card
                   itemBuilder: (context, index) {
                     // 第一个显示使用说明卡片
                     if (index == 0) {
                       return Padding(
-                        padding: const EdgeInsets.only(bottom: 12),
+                        padding: const EdgeInsets.only(bottom: SpitoutDimens.p12),
                         child: _UsageGuideCard(),
                       );
                     }
@@ -157,10 +159,10 @@ class _RecurringTransactionCardState
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     return Container(
-      margin: const EdgeInsets.only(bottom: 8),
+      margin: const EdgeInsets.only(bottom: SpitoutDimens.p8),
       decoration: BoxDecoration(
         color: SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
         border: SpitoutTokens.isDark(context)
             ? Border.all(
                 color: recurring.enabled
@@ -175,7 +177,7 @@ class _RecurringTransactionCardState
       ),
       child: Material(
         color: Colors.transparent,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: () async {
@@ -189,9 +191,9 @@ class _RecurringTransactionCardState
               ref.invalidate(allRecurringTransactionsProvider);
             }
           },
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
           child: Padding(
-            padding: const EdgeInsets.all(14),
+            padding: const EdgeInsets.all(SpitoutDimens.p12),
             child: Row(
               children: [
                 // 左侧：类型指示条（全局仅支出模式）
@@ -203,7 +205,7 @@ class _RecurringTransactionCardState
                     borderRadius: BorderRadius.circular(1.5),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 // 中间：信息区域
                 Expanded(
                   child: Column(
@@ -223,15 +225,11 @@ class _RecurringTransactionCardState
                                   ?.name;
                           return Text(
                             CategoryUtils.getDisplayName(categoryName, context),
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: SpitoutTokens.textPrimary(context),
-                            ),
+                            style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                           );
                         },
                       ),
-                      const SizedBox(height: 6),
+                      const SizedBox(height: SpitoutDimens.p4),
                       // 第二行：账本 + 频率 + 时间
                       Row(
                         children: [
@@ -245,41 +243,29 @@ class _RecurringTransactionCardState
                                   '';
                               return Text(
                                 ledgerName,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: SpitoutTokens.textTertiary(context),
-                                ),
+                                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                               );
                             },
                           ),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 6),
+                            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                             child: Text(
                               '·',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: SpitoutTokens.textTertiary(context),
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                             ),
                           ),
                           // 频率
                           Text(
                             _getFrequencyDescription(context),
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: SpitoutTokens.textTertiary(context),
-                            ),
+                            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                           ),
                           // 下次生成时间（如果有）
                           if (recurring.lastGeneratedDate != null) ...[
                             Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 6),
+                              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                               child: Text(
                                 '·',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: SpitoutTokens.textTertiary(context),
-                                ),
+                                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                               ),
                             ),
                             Icon(
@@ -290,24 +276,17 @@ class _RecurringTransactionCardState
                             const SizedBox(width: 3),
                             Text(
                               DateFormat.Md().format(recurring.lastGeneratedDate!),
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: primaryColor,
-                                fontWeight: FontWeight.w500,
-                              ),
+                              style: SpitoutTextTokens.label(context).copyWith(color: primaryColor),
                             ),
                           ],
                         ],
                       ),
                       // 备注（如果有）
                       if (recurring.note != null && recurring.note!.isNotEmpty) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpitoutDimens.p4),
                         Text(
                           recurring.note!,
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
+                          style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -315,7 +294,7 @@ class _RecurringTransactionCardState
                     ],
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 // 右侧：金额 + 开关
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.end,
@@ -327,15 +306,11 @@ class _RecurringTransactionCardState
                           ? -recurring.amount / 100
                           : recurring.amount / 100,
                       signed: true,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                        color: recurring.type == 'expense'
+                      style: SpitoutTextTokens.boldTitle(context).copyWith(color: recurring.type == 'expense'
                             ? SpitoutTokens.error(context)
-                            : SpitoutTokens.success(context),
-                      ),
+                            : SpitoutTokens.success(context)),
                     ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: SpitoutDimens.p4),
                     // 开关
                     Transform.scale(
                       scale: 0.65,
@@ -440,30 +415,23 @@ class _UsageGuideCard extends ConsumerWidget {
         children: [
           Icon(
             AppIcons.info,
-            size: 20,
+            size: SpitoutDimens.icon20,
             color: primaryColor,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   l10n.recurringTransactionUsageTitle,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w600,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
-                const SizedBox(height: 6),
+                const SizedBox(height: SpitoutDimens.p4),
                 Text(
                   l10n.recurringTransactionUsageContent,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textSecondary(context),
-                    height: 1.5,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                    height: 1.5),
                 ),
               ],
             ),

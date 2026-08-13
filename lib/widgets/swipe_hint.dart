@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 左右滑动切换提示横幅（首页明细 / 统计页共用）。
 ///
@@ -17,7 +19,7 @@ class SwipeHint extends StatelessWidget {
     super.key,
     required this.icon,
     required this.text,
-    this.padding = const EdgeInsets.fromLTRB(8, 0, 8, 0),
+    this.padding = const EdgeInsets.fromLTRB(SpitoutDimens.p8, 0, SpitoutDimens.p8, 0),
   });
 
   /// 左侧图标（统一使用手势图标）。
@@ -36,15 +38,12 @@ class SwipeHint extends StatelessWidget {
       padding: padding,
       child: Row(
         children: [
-          Icon(icon, size: 14, color: SpitoutTokens.textTertiary(context)),
-          const SizedBox(width: 4),
+          Icon(icon, size: SpitoutDimens.icon12, color: SpitoutTokens.textTertiary(context)),
+          const SizedBox(width: SpitoutDimens.p4),
           Expanded(
             child: Text(
               text,
-              style: TextStyle(
-                fontSize: 10,
-                color: SpitoutTokens.textTertiary(context),
-              ),
+              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
             ),
           ),
         ],

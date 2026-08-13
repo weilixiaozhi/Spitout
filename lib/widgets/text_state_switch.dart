@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 轨道内带状态文案的开关
 ///
@@ -102,11 +103,7 @@ class TextStateSwitch extends StatelessWidget {
                     value ? onLabel : offLabel,
                     maxLines: 1,
                     overflow: TextOverflow.fade,
-                    style: theme.textTheme.labelSmall?.copyWith(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: textColor,
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(fontWeight: FontWeight.w600, color: textColor),
                   ),
                 ),
               ),

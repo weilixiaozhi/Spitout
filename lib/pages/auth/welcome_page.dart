@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'dart:io';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/file_picker_helper.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/providers.dart';
@@ -86,7 +88,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
 
             // 底部按钮区域：仅"完成"
             Padding(
-              padding: const EdgeInsets.all(24),
+              padding: const EdgeInsets.all(SpitoutDimens.p20),
               child: Row(
                 children: [
                   const Spacer(),
@@ -137,13 +139,13 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
           child: ConstrainedBox(
             constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 24),
+              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p20),
               // 垂直居中：整体内容下移，logo/标题/列表/描述在可用高度内居中
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const SizedBox(height: 24),
+                  const SizedBox(height: SpitoutDimens.p20),
 
                   // 品牌 LOGO（SVG 自带配色，不需主题色参数）
                   // 放大展示：图标 72 → 120、容器 96 → 160，提升首屏品牌辨识度与视觉重心
@@ -163,7 +165,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // 首屏列表高度固定为约 6 行，保证"刚好能看到 6 个币种"；
                   // 仍是完整 13 个、可滚动，仅限制可视区域高度（不改变滚动逻辑）。
@@ -176,7 +178,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         _kWelcomeListPeek,
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                     ),
                     child: ListView.separated(
                       key: const Key('currencyListView'), // 供测试精准定位币种列表
@@ -198,8 +200,8 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                             },
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 16,
-                                vertical: 14,
+                                horizontal: SpitoutDimens.p16,
+                                vertical: SpitoutDimens.p12,
                               ),
                               child: Row(
                                 children: [
@@ -211,24 +213,21 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                     color: isSelected
                                         ? SpitoutTokens.primary(context)
                                         : SpitoutTokens.iconSecondary(context),
-                                    size: 22,
+                                    size: SpitoutDimens.icon22,
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: SpitoutDimens.p12),
 
                                   // 与币种选择弹窗同一布局：固定宽度符号列 + 名称 (ISO) 左对齐。
                                   // 符号长短不一（¥ 与 HK$），固定列宽保证名称列
                                   // 在所有行中对齐到同一 x 位置。
                                   currencySymbolColumn(
                                     currency.code,
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      color: SpitoutTokens.textSecondary(
+                                    style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textSecondary(
                                         context,
-                                      ),
-                                    ),
+                                      )),
                                   ),
                                   // 与弹窗 ListTile 的图标-文字间距（horizontalTitleGap=16）一致
-                                  const SizedBox(width: 16),
+                                  const SizedBox(width: SpitoutDimens.p16),
 
                                   // 「名称 (ISO)」展示，例：人民币 (CNY)。
                                   // 用 Expanded 提供有界宽度，溢出以省略号收尾。
@@ -237,15 +236,12 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                                       '${currency.name} (${currency.code})',
                                       maxLines: 1,
                                       overflow: TextOverflow.ellipsis,
-                                      style: TextStyle(
-                                        color: SpitoutTokens.textPrimary(
+                                      style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(
                                           context,
                                         ),
-                                        fontSize: 16,
                                         fontWeight: isSelected
                                             ? FontWeight.w600
-                                            : FontWeight.w400,
-                                      ),
+                                            : FontWeight.w400),
                                     ),
                                   ),
                                 ],
@@ -258,7 +254,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                   ),
 
                   // 列表下方间距压缩 10px 让给列表区（列表 Expanded 因此加长 10px）
-                  const SizedBox(height: 6),
+                  const SizedBox(height: SpitoutDimens.p4),
 
                   // 底部描述文案：选择您常用的货币，之后可以随时在设置中更改
                   Text(
@@ -269,7 +265,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                     textAlign: TextAlign.center,
                   ),
 
-                  const SizedBox(height: 12),
+                  const SizedBox(height: SpitoutDimens.p12),
 
                   // 导入配置入口（紧凑样式）
                   TextButton(
@@ -288,10 +284,10 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                         else
                           Icon(
                             AppIcons.fileUpload,
-                            size: 16,
+                            size: SpitoutDimens.icon16,
                             color: SpitoutTokens.textLink(context),
                           ),
-                        const SizedBox(width: 6),
+                        const SizedBox(width: SpitoutDimens.p4),
                         Text(
                           _isImporting
                               ? l10n.welcomeImportingConfig
@@ -305,7 +301,7 @@ class _WelcomePageState extends ConsumerState<WelcomePage> {
                     ),
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                 ],
               ),
             ),

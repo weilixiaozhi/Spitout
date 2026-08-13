@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart' show compute;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:decimal/decimal.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/data/models.dart' as schema;
 import 'package:spitout/l10n/app_localizations.dart';
@@ -147,7 +148,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                         color: SpitoutTokens.textSecondary(context),
                       ),
                     ),
-                    const SizedBox(height: 12),
+                    const SizedBox(height: SpitoutDimens.p12),
                     FilledButton(
                       onPressed: () => Navigator.of(context).maybePop(),
                       child: Text(l10n.commonBack),
@@ -186,7 +187,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
               showBack: true),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+              padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p8, SpitoutDimens.p16, SpitoutDimens.p16),
               children: [
                 if (step == 0) ...[
                   if (rows.isEmpty)
@@ -212,11 +213,11 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
 
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: SpitoutDimens.p12),
                   // 预览仅展示前 N 行，避免大文件一次性渲染导致卡顿
                   Text(AppLocalizations.of(context).importPreview,
                       style: Theme.of(context).textTheme.labelLarge),
-                  const SizedBox(height: 6),
+                  const SizedBox(height: SpitoutDimens.p4),
                   SizedBox(
                     child: SingleChildScrollView(
                       scrollDirection: Axis.horizontal,
@@ -248,7 +249,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                             _PreviewTable(rows: limited),
                             if (totalRows > limited.length)
                               Padding(
-                                padding: const EdgeInsets.only(top: 6.0),
+                                padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                                 child: Text(
                                   AppLocalizations.of(context)
                                       .importPreviewLimit(
@@ -270,7 +271,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                         .importCategoryNotSelected),
                   Text(AppLocalizations.of(context)
                       .importCategoryMappingDescription),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                   FutureBuilder<List<schema.Category>>(
                     future: allCategoriesFuture,
                     builder: (context, snap) {
@@ -292,7 +293,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                             value: c.id,
                             // 二级分类缩进，视觉上体现父子层级
                             child: Padding(
-                              padding: EdgeInsets.only(left: isSub ? 16.0 : 0.0),
+                              padding: EdgeInsets.only(left: isSub ? SpitoutDimens.p16 : 0.0),
                               child: Text(
                                   '${CategoryUtils.getDisplayName(c.name, context, kind: c.kind)}（$levelLabel）'),
                             ),
@@ -303,14 +304,14 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                         children: [
                           for (final name in distinctCategories)
                             Padding(
-                              padding: const EdgeInsets.symmetric(vertical: 6),
+                              padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
                               child: Row(
                                 children: [
                                   Expanded(
                                       child: Text(name,
                                           maxLines: 1,
                                           overflow: TextOverflow.ellipsis)),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: SpitoutDimens.p12),
                                   DropdownButton<int?>(
                                     value: categoryMapping[name],
                                     items: items,
@@ -331,7 +332,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
           SafeArea(
             top: false,
             child: Padding(
-              padding: const EdgeInsets.all(16.0),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               child: Row(
                 children: [
                   if (importing)
@@ -362,7 +363,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
                       child: Text(
                           AppLocalizations.of(context).importPreviousStep),
                     ),
-                    const SizedBox(width: 12),
+                    const SizedBox(width: SpitoutDimens.p12),
                     FilledButton(
                       onPressed: importing ? null : _startImport,
                       child:
@@ -383,7 +384,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
       mainAxisSize: MainAxisSize.min,
       children: [
         SizedBox(width: 64, child: Text(label)),
-        const SizedBox(width: 8),
+        const SizedBox(width: SpitoutDimens.p8),
         SizedBox(
           width: 220,
           child: DropdownButton<int>(
@@ -464,7 +465,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
               p.total == 0 ? 0.0 : (p.done / p.total).clamp(0.0, 1.0);
           return AlertDialog(
             shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius12)),
             title: Text(AppLocalizations.of(context).importInProgress),
             content: Column(
               mainAxisSize: MainAxisSize.min,
@@ -472,7 +473,7 @@ class _ImportConfirmPageState extends ConsumerState<ImportConfirmPage> {
               children: [
                 LinearProgressIndicator(
                     value: percent > 0 && percent < 1 ? percent : null),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
                 // 实时进度文案（每50条更新一次，足够流畅）
                 Text(
                     AppLocalizations.of(context)
@@ -1018,22 +1019,21 @@ class _PreviewTable extends StatelessWidget {
   Widget build(BuildContext context) {
     if (rows.isEmpty) return const SizedBox.shrink();
     const double cellWidth = 140;
-    final isDark = SpitoutTokens.isDark(context);
     return ClipRRect(
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       child: Container(
         decoration: BoxDecoration(
           border: Border.all(color: SpitoutTokens.border(context)),
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         ),
         child: Column(
           children: [
             for (int r = 0; r < rows.length; r++)
               Container(
                 color: r == 0
-                    ? (isDark ? Colors.grey.shade800 : Colors.grey.shade100)
+                    ? SpitoutTokens.surfaceSecondary(context)
                     : SpitoutTokens.surfaceElevated(context),
-                padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
+                padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4, horizontal: SpitoutDimens.p8),
                 child: Row(
                   children: [
                     for (final cell in rows[r])

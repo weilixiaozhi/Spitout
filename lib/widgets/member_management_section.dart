@@ -15,6 +15,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/sync/sync_events.dart' show PushCompleted;
 import 'package:spitout/cloud/spitout_cloud.dart' show CloudStorageException;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
@@ -380,7 +382,7 @@ class _MemberManagementSectionState
       children: [
         // 标题行(色条 + "成员管理" + AA 分摊开关 + "添加虚拟用户"文字链)
         _buildHeader(context, l10n),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         _buildCardContent(context, l10n),
       ],
     );
@@ -396,11 +398,11 @@ class _MemberManagementSectionState
   Widget _buildHeader(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     final titleStyle = Theme.of(context).textTheme.titleSmall?.copyWith(
-      fontWeight: FontWeight.w700,
+      fontWeight: FontWeight.w800,
       color: primary,
     );
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: SizedBox(
         // 固定标题行高度:让开关/色条/按钮垂直居中,防止模块上下移动
         height: 44,
@@ -415,9 +417,9 @@ class _MemberManagementSectionState
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(l10n.sharedMembersPageTitle, style: titleStyle),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             // AA 分摊开关:状态文案内嵌在开关内部(开启/关闭文案不同),
             // 尺寸 100x30,宽度可容纳状态文案,高度与标题行紧凑对齐
             TextStateSwitch(
@@ -435,7 +437,7 @@ class _MemberManagementSectionState
             if (widget.aaEnabled && !widget.isReadOnly)
               TextButton.icon(
                 onPressed: _addVirtualUser,
-                icon: const Icon(AppIcons.personAdd, size: 14),
+                icon: const Icon(AppIcons.personAdd, size: SpitoutDimens.icon12),
                 label: Text(
                   l10n.aaAddVirtualUser,
                   style: Theme.of(context).textTheme.labelSmall,
@@ -444,7 +446,7 @@ class _MemberManagementSectionState
                   foregroundColor: primary,
                   visualDensity: VisualDensity.compact,
                   tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
                 ),
               ),
           ],
@@ -503,12 +505,12 @@ class _MemberManagementSectionState
     final theme = Theme.of(context);
     final placeholderColor = theme.colorScheme.surfaceContainerHighest;
     return SectionCard(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Column(
         children: [
           // 云端账本尚未就绪提示(404 场景下让用户知道在等云端创建)
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p8),
             child: Row(
               children: [
                 const SizedBox(
@@ -516,7 +518,7 @@ class _MemberManagementSectionState
                   height: 14,
                   child: CircularProgressIndicator(strokeWidth: 2),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     l10n.sharedMembersLoadingHint,
@@ -557,13 +559,13 @@ class _MemberManagementSectionState
   }) {
     final theme = Theme.of(context);
     return SectionCard(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p12),
         child: Row(
           children: [
-            Icon(AppIcons.error, size: 18, color: theme.colorScheme.error),
-            const SizedBox(width: 10),
+            Icon(AppIcons.error, size: SpitoutDimens.icon16, color: theme.colorScheme.error),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
               child: Text(
                 l10n.sharedMembersLoadFailed,
@@ -615,7 +617,7 @@ class _MemberManagementSectionState
         : members;
 
     return SectionCard(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Column(
         children: [
           // —— 真实成员行 ——
@@ -750,8 +752,8 @@ class _MemberManagementSectionState
     final primary = Theme.of(context).colorScheme.primary;
     final busy = _inviteBusy;
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 16),
-      leading: Icon(AppIcons.personAdd, size: 18, color: primary),
+      contentPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
+      leading: Icon(AppIcons.personAdd, size: SpitoutDimens.icon16, color: primary),
       title: Text(
         l10n.sharedMembersInviteCta,
         style: Theme.of(context).textTheme.titleMedium,
@@ -764,7 +766,7 @@ class _MemberManagementSectionState
             )
           : Icon(
               AppIcons.chevronRight,
-              size: 16,
+              size: SpitoutDimens.icon16,
               color: SpitoutTokens.iconTertiary(context),
             ),
       onTap: busy ? null : () => _handleInviteWithoutSyncId(context),
@@ -810,12 +812,12 @@ class _MemberManagementSectionState
         onExpansionChanged: (v) => setState(() => _inviteExpanded = v),
         tilePadding: EdgeInsets.zero,
         childrenPadding: const EdgeInsets.only(
-          top: 16,
-          bottom: 4,
-          left: 16,
-          right: 16,
+          top: SpitoutDimens.p16,
+          bottom: SpitoutDimens.p4,
+          left: SpitoutDimens.p16,
+          right: SpitoutDimens.p16,
         ),
-        leading: Icon(AppIcons.personAdd, size: 18, color: primary),
+        leading: Icon(AppIcons.personAdd, size: SpitoutDimens.icon16, color: primary),
         title: Text(
           l10n.sharedMembersInviteCta,
           style: Theme.of(context).textTheme.titleMedium,
@@ -823,7 +825,7 @@ class _MemberManagementSectionState
         // 收起朝右、展开朝下,指向明确
         trailing: Icon(
           _inviteExpanded ? AppIcons.chevronDown : AppIcons.chevronRight,
-          size: 18,
+          size: SpitoutDimens.icon16,
           color: SpitoutTokens.iconTertiary(context),
         ),
         children: [
@@ -845,7 +847,7 @@ class _MemberManagementSectionState
           l10n.sharedInviteFormRole,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         Wrap(
           spacing: 8,
           children: [
@@ -856,12 +858,12 @@ class _MemberManagementSectionState
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpitoutDimens.p16),
         Text(
           l10n.sharedInviteFormExpiry,
           style: Theme.of(context).textTheme.titleSmall,
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         Wrap(
           spacing: 8,
           children: [
@@ -877,7 +879,7 @@ class _MemberManagementSectionState
               ),
           ],
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpitoutDimens.p20),
         FilledButton.icon(
           onPressed: _busy ? null : _generate,
           icon: const Icon(AppIcons.qrCode),
@@ -890,22 +892,16 @@ class _MemberManagementSectionState
               : Text(l10n.sharedInviteGenerate),
         ),
         if (_error != null) ...[
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           Text(
             _error!,
-            style: TextStyle(
-              color: SpitoutTokens.error(context),
-              fontSize: 13,
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.error(context)),
           ),
         ],
-        const SizedBox(height: 16),
+        const SizedBox(height: SpitoutDimens.p16),
         Text(
           l10n.sharedInviteWarning,
-          style: TextStyle(
-            color: SpitoutTokens.textTertiary(context),
-            fontSize: 12,
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
       ],
     );
@@ -922,29 +918,22 @@ class _MemberManagementSectionState
         Center(
           child: SelectableText(
             invite.formattedCode,
-            style: const TextStyle(
-              fontSize: 36,
-              letterSpacing: 6,
-              fontWeight: FontWeight.w700,
-            ),
+            style: SpitoutTextTokens.display3(context).copyWith(letterSpacing: 6),
           ),
         ),
         // server 缺 / 坏 expires_at 时隐藏有效期行,不伪造时间展示。
         if (invite.expiresAt != null) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Center(
             child: Text(
               l10n.sharedInviteExpiresAt(
                 invite.expiresAt!.toLocal().toString().split('.').first,
               ),
-              style: TextStyle(
-                color: SpitoutTokens.textTertiary(context),
-                fontSize: 12,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
             ),
           ),
         ],
-        const SizedBox(height: 24),
+        const SizedBox(height: SpitoutDimens.p20),
         Row(
           children: [
             Expanded(
@@ -954,7 +943,7 @@ class _MemberManagementSectionState
                 onPressed: () => _copyInviteCode(invite, l10n),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: FilledButton.icon(
                 icon: const Icon(AppIcons.share),
@@ -964,18 +953,18 @@ class _MemberManagementSectionState
             ),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         OutlinedButton.icon(
           icon: const Icon(AppIcons.link),
           label: Text(l10n.sharedInviteCopyLink),
           onPressed: () => _copyInviteLink(invite, l10n),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpitoutDimens.p20),
         Text(
           l10n.sharedInviteInstruction,
           style: TextStyle(color: SpitoutTokens.textSecondary(context)),
         ),
-        const SizedBox(height: 16),
+        const SizedBox(height: SpitoutDimens.p16),
         TextButton(
           onPressed: () {
             setState(() {
@@ -1078,7 +1067,7 @@ class _MemberTile extends ConsumerWidget {
         children: [
           if (amOwner && !member.isSelf && !isOwner)
             IconButton(
-              icon: const Icon(AppIcons.personRemove, size: 20),
+              icon: const Icon(AppIcons.personRemove, size: SpitoutDimens.icon20),
               tooltip: l10n.sharedMembersRemoveCta,
               onPressed: onRemove,
               // 统一删除 icon 颜色为语义错误色,与虚拟用户删除 icon 一致
@@ -1116,7 +1105,7 @@ class _SkeletonBar extends StatelessWidget {
       height: height,
       decoration: BoxDecoration(
         color: color,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
       ),
     );
   }
@@ -1144,7 +1133,7 @@ class _MemberAvatar extends ConsumerWidget {
             height: 40,
             fit: BoxFit.cover,
             errorBuilder: (_, _, _) =>
-                const PersonAvatar(size: 40, iconSize: 18),
+                const PersonAvatar(size: SpitoutDimens.icon40, iconSize: SpitoutDimens.icon16),
           ),
         );
       }
@@ -1155,8 +1144,8 @@ class _MemberAvatar extends ConsumerWidget {
       userId: member.userId,
       version: member.avatarVersion,
       hasAvatar: member.avatarUrl != null && member.avatarUrl!.trim().isNotEmpty,
-      size: 40,
-      iconSize: 18,
+      size: SpitoutDimens.icon40,
+      iconSize: SpitoutDimens.icon16,
     );
   }
 }
@@ -1228,7 +1217,7 @@ class _VirtualUserTileState extends State<_VirtualUserTile> {
     // 左内边距取 12 与全局 ListTileTheme contentPadding 一致,
     // 保证真实成员行(ListTile)与虚拟用户行(自定义 Row)的头像左缘对齐。
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 8, 12, 8),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, SpitoutDimens.p8, SpitoutDimens.p12, SpitoutDimens.p8),
       child: Row(
         children: [
           Container(
@@ -1240,11 +1229,11 @@ class _VirtualUserTileState extends State<_VirtualUserTile> {
             ),
             child: Icon(
               AppIcons.person,
-              size: 18,
+              size: SpitoutDimens.icon16,
               color: SpitoutTokens.iconSecondary(context),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           // 固定宽度,仅容纳短昵称(如「虚拟用户1」),避免色块过宽。
           SizedBox(
             width: 140,
@@ -1260,29 +1249,26 @@ class _VirtualUserTileState extends State<_VirtualUserTile> {
                   color: SpitoutTokens.textTertiary(context),
                 ),
                 contentPadding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 8,
+                  horizontal: SpitoutDimens.p12,
+                  vertical: SpitoutDimens.p8,
                 ),
                 // 与全局编辑框一致的色块样式(filled 背景 + 无描边圆角)
                 filled: true,
                 fillColor: SpitoutTokens.surfaceInput(context),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   borderSide: BorderSide.none,
                 ),
                 enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   borderSide: BorderSide.none,
                 ),
                 focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   borderSide: BorderSide.none,
                 ),
               ),
-              style: TextStyle(
-                fontSize: 15,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
               // 失焦时提交重命名(避免每次按键都写库)。
               onTapOutside: (_) {
                 FocusScope.of(context).unfocus();
@@ -1293,7 +1279,7 @@ class _VirtualUserTileState extends State<_VirtualUserTile> {
           ),
           const Spacer(),
           IconButton(
-            icon: const Icon(AppIcons.personRemove, size: 20),
+            icon: const Icon(AppIcons.personRemove, size: SpitoutDimens.icon20),
             tooltip: l10n.commonDelete,
             onPressed: widget.isReadOnly ? null : widget.onDelete,
             style: IconButton.styleFrom(

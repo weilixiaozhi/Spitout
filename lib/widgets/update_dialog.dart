@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/theme/typography.dart';
 
@@ -70,7 +71,7 @@ class UpdateDialog extends StatelessWidget {
               label: Text(l10n.updateGotoDownload),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpitoutDimens.p4),
           // 次要行动：不抢戏的文字按钮。
           TextButton(
             onPressed: onDismiss,
@@ -109,7 +110,7 @@ class UpdateDialog extends StatelessWidget {
               label: Text(l10n.updateGoToGithub),
             ),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpitoutDimens.p4),
           TextButton(
             onPressed: onDismiss,
             child: Text(l10n.commonCancel),
@@ -120,7 +121,7 @@ class UpdateDialog extends StatelessWidget {
 
     return AlertDialog(
       // 自定义内边距，让圆形图标徽标有呼吸感。
-      contentPadding: const EdgeInsets.fromLTRB(24, 24, 24, 12),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p20, SpitoutDimens.p20, SpitoutDimens.p20, SpitoutDimens.p12),
       content: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -132,9 +133,9 @@ class UpdateDialog extends StatelessWidget {
               color: color.withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(icon, color: color, size: 28),
+            child: Icon(icon, color: color, size: SpitoutDimens.icon28),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
           Text(
             title,
             style: SpitoutTextTokens.title(context).copyWith(
@@ -143,7 +144,7 @@ class UpdateDialog extends StatelessWidget {
             textAlign: TextAlign.center,
           ),
           if (body != null) ...[
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Text(
               body,
               style: SpitoutTextTokens.label(context).copyWith(
@@ -152,7 +153,7 @@ class UpdateDialog extends StatelessWidget {
               textAlign: TextAlign.center,
             ),
           ],
-          const SizedBox(height: 20),
+          const SizedBox(height: SpitoutDimens.p16),
           ...actions,
         ],
       ),

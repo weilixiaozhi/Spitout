@@ -7,8 +7,10 @@ import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 
 /// 将「起始日 ~ 结束日」展开为导出时间范围（闭区间）。
@@ -108,8 +110,8 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p12,
+                vertical: SpitoutDimens.p8,
               ),
               children: [
                 SectionCard(
@@ -150,7 +152,7 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
       bottomNavigationBar: SafeArea(
         top: false,
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(12.0, 8.0, 12.0, 12.0),
+          padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, SpitoutDimens.p8, SpitoutDimens.p12, SpitoutDimens.p12),
           child: FilledButton(
             onPressed: _exporting || _rangeInvalid || _ledgersEmpty
                 ? null
@@ -182,23 +184,17 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
         if (snapshot.connectionState == ConnectionState.done &&
             ledgers.isEmpty) {
           return Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
             child: Row(
               children: [
                 Text(
                   l10n.detailExportLedgerLabel,
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
                 const Spacer(),
                 Text(
                   l10n.ledgersEmpty,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
+                  style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ],
             ),
@@ -206,15 +202,12 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
         }
 
         return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p4),
           child: Row(
             children: [
               Text(
                 l10n.detailExportLedgerLabel,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
+                style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
               ),
               const Spacer(),
               if (snapshot.connectionState != ConnectionState.done)
@@ -258,20 +251,14 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
           : (value) => setState(() => _selectAll = value ?? true),
       title: Text(
         l10n.detailExportSelectAllLabel,
-        style: TextStyle(
-          fontSize: 15,
-          color: SpitoutTokens.textPrimary(context),
-        ),
+        style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
       ),
       subtitle: Text(
         l10n.detailExportSelectAllSubtitle,
-        style: TextStyle(
-          fontSize: 13,
-          color: SpitoutTokens.textTertiary(context),
-        ),
+        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
       ),
       controlAffinity: ListTileControlAffinity.leading,
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12),
     );
   }
 
@@ -292,33 +279,27 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
       opacity: enabled ? 1 : 0.5,
       child: InkWell(
         onTap: enabled ? () => _pickDate(isStart: isStart) : null,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         child: Padding(
           padding: const EdgeInsets.symmetric(
-            vertical: 12.0,
-            horizontal: 12.0,
+            vertical: SpitoutDimens.p12,
+            horizontal: SpitoutDimens.p12,
           ),
           child: Row(
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
+                style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
               ),
               const Spacer(),
               Text(
                 ymd,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: SpitoutTokens.textSecondary(context),
-                ),
+                style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textSecondary(context)),
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: SpitoutDimens.p4),
               Icon(
                 AppIcons.chevronRight,
-                size: 20,
+                size: SpitoutDimens.icon20,
                 color: SpitoutTokens.iconTertiary(context),
               ),
             ],
@@ -331,22 +312,19 @@ class _DetailExportPageState extends ConsumerState<DetailExportPage> {
   /// 区间非法提示行。
   Widget _buildInvalidHint(BuildContext context, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12.0, 0, 12.0, 12.0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, 0, SpitoutDimens.p12, SpitoutDimens.p12),
       child: Row(
         children: [
           Icon(
             AppIcons.error,
-            size: 16,
+            size: SpitoutDimens.icon16,
             color: Theme.of(context).colorScheme.error,
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpitoutDimens.p4),
           Expanded(
             child: Text(
               l10n.detailExportDateInvalid,
-              style: TextStyle(
-                fontSize: 12,
-                color: Theme.of(context).colorScheme.error,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: Theme.of(context).colorScheme.error),
             ),
           ),
         ],

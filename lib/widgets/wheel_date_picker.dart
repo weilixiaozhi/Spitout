@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'app_sheet.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/date/week_math.dart'
     show mondayOf, mondayOfWeek, weekNumber, weeksInYear;
 
@@ -440,7 +442,7 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
           for (final v in items)
             Center(
               child: Text(formatter(v),
-                  style: TextStyle(fontSize: 18, color: _textPrimary(context))),
+                  style: SpitoutTextTokens.boldTitle(context).copyWith(color: _textPrimary(context))),
             ),
         ],
       ),
@@ -551,7 +553,7 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
           mainAxisSize: MainAxisSize.min,
           children: [
             group([yearPicker, monthPicker, dayPicker]),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             group([hourPicker, minutePicker]),
           ],
         );
@@ -561,14 +563,14 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
       key: const ValueKey('wheel_date_picker_sheet'),
       decoration: BoxDecoration(
         color: SpitoutTokens.surfaceSheet(context),
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(SpitoutDimens.radius16)),
       ),
       child: SafeArea(
         top: false,
         child: AppSheet(
           title: widget.title.isEmpty ? null : widget.title,
           subtitle: widget.subtitle,
-          contentPadding: const EdgeInsets.only(top: 12),
+          contentPadding: const EdgeInsets.only(top: SpitoutDimens.p12),
           footer: AppSheetFilledButton(
             label: widget.confirmLabel,
             onPressed: () => Navigator.of(context).pop(_buildResult()),

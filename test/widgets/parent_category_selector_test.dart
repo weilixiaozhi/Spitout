@@ -128,7 +128,7 @@ void main() {
     // 通过 tile 结构验证：选中行背景高亮 + 勾选图标存在
     final checkIcons = tester
         .widgetList<Icon>(find.byType(Icon))
-        .where((icon) => icon.size == 18)
+        .where((icon) => icon.size == 16)
         .length;
     expect(checkIcons, greaterThanOrEqualTo(1), reason: '选中行应出现勾选图标');
   });

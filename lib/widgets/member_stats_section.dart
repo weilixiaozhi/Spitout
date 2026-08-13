@@ -11,6 +11,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'format_money.dart';
 import 'member_avatar.dart';
 import 'me_suffix.dart';
@@ -50,15 +52,15 @@ class MemberStatsSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         _buildTitle(context, ref, l10n, statsAsync),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         // 模块内嵌在页面滚动视图中,加载 / 错误态只需占位展示,不撑满全屏。
         statsAsync.when(
           loading: () => const Padding(
-            padding: EdgeInsets.symmetric(vertical: 24),
+            padding: EdgeInsets.symmetric(vertical: SpitoutDimens.p20),
             child: Center(child: CircularProgressIndicator()),
           ),
           error: (e, _) => Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             child:
                 Text('${l10n.commonError}: $e', textAlign: TextAlign.center),
           ),
@@ -80,7 +82,7 @@ class MemberStatsSection extends ConsumerWidget {
     final amount = _totalExpenseText(
         statsAsync.value, ref.watch(currentLedgerCurrencyProvider));
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Row(
         children: [
           Container(
@@ -91,11 +93,11 @@ class MemberStatsSection extends ConsumerWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           Text(
             l10n.sharedMembersStatsTitle,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                   color: primary,
                 ),
           ),
@@ -104,18 +106,13 @@ class MemberStatsSection extends ConsumerWidget {
             // 右边缘与成员条目金额对齐：卡片 margin(4) + 卡片 padding(12) + ListTile contentPadding(12) = 28,
             // 减去标题行自身 padding(4) 后需补 24
             Padding(
-              padding: const EdgeInsets.only(right: 24),
+              padding: const EdgeInsets.only(right: SpitoutDimens.p20),
               child: Text(
                 amount,
                 // 与成员条目金额统一：12 号字 + 主题色（红/绿，跟随支出语义）
-                style: TextStyle(
-                  color: ref.watch(expenseColorSchemeProvider) == 'green'
+                style: SpitoutTextTokens.label(context).copyWith(color: ref.watch(expenseColorSchemeProvider) == 'green'
                       ? SpitoutTokens.success(context)
-                      : SpitoutTokens.error(context),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w500,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+                      : SpitoutTokens.error(context),fontFeatures: const [FontFeature.tabularFigures()]),
               ),
             ),
         ],
@@ -140,7 +137,7 @@ class MemberStatsSection extends ConsumerWidget {
   ) {
     if (stats.isEmpty) {
       return Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpitoutDimens.p16),
         child: Text(
           l10n.sharedMembersStatsEmpty,
           textAlign: TextAlign.center,
@@ -151,7 +148,7 @@ class MemberStatsSection extends ConsumerWidget {
     final totalExpense =
         stats.fold<double>(0, (s, it) => s + it.expenseTotal);
     return SectionCard(
-      margin: const EdgeInsets.symmetric(horizontal: 4),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Column(
         children: [
           for (final s in stats) ...[
@@ -197,10 +194,7 @@ class _MemberStatTile extends ConsumerWidget {
       ),
       subtitle: Text(
         l10n.sharedMembersStatsTxCount(stat.txCount),
-        style: TextStyle(
-          color: SpitoutTokens.textTertiary(context),
-          fontSize: 11,
-        ),
+        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
       ),
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
@@ -208,25 +202,17 @@ class _MemberStatTile extends ConsumerWidget {
           if (totalExpense > 0) ...[
             Text(
               '${share.toStringAsFixed(0)}%',
-              style: TextStyle(
-                color: SpitoutTokens.textTertiary(context),
-                fontSize: 10,
-              ),
+              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
             ),
-            const SizedBox(width: 4),
+            const SizedBox(width: SpitoutDimens.p4),
           ],
           Text(
             // 成员支出金额:带账本币种符号,与标题总支出口径一致。
             formatMoneyWithCurrency(stat.expenseTotal,
                 currencyCode: ref.watch(currentLedgerCurrencyProvider)),
-            style: TextStyle(
-              color: ref.watch(expenseColorSchemeProvider) == 'green'
+            style: SpitoutTextTokens.label(context).copyWith(color: ref.watch(expenseColorSchemeProvider) == 'green'
                   ? SpitoutTokens.success(context)
-                  : SpitoutTokens.error(context),
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
+                  : SpitoutTokens.error(context),fontFeatures: const [FontFeature.tabularFigures()]),
           ),
         ],
       ),
@@ -253,7 +239,7 @@ class _StatsAvatar extends ConsumerWidget {
           height: 40,
           fit: BoxFit.cover,
           errorBuilder: (_, _, _) =>
-              const PersonAvatar(size: 40, iconSize: 18),
+              const PersonAvatar(size: SpitoutDimens.icon40, iconSize: SpitoutDimens.icon16),
         ),
       );
     }
@@ -263,8 +249,8 @@ class _StatsAvatar extends ConsumerWidget {
       userId: stat.participantId,
       version: stat.avatarVersion,
       hasAvatar: stat.avatarUrl != null && stat.avatarUrl!.trim().isNotEmpty,
-      size: 40,
-      iconSize: 18,
+      size: SpitoutDimens.icon40,
+      iconSize: SpitoutDimens.icon16,
     );
   }
 }

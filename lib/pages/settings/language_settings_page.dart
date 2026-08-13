@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
@@ -24,7 +25,7 @@ class LanguageSettingsPage extends ConsumerWidget {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               children: [
                 // 跟随系统
                 _LanguageOption(
@@ -35,7 +36,7 @@ class LanguageSettingsPage extends ConsumerWidget {
                     ref.read(languageProvider.notifier).setLanguage(null);
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
 
                 // 简体中文
                 _LanguageOption(
@@ -46,7 +47,7 @@ class LanguageSettingsPage extends ConsumerWidget {
                     ref.read(languageProvider.notifier).setLanguage(const Locale('zh'));
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
 
                 // 繁體中文
                 _LanguageOption(
@@ -57,7 +58,7 @@ class LanguageSettingsPage extends ConsumerWidget {
                     ref.read(languageProvider.notifier).setLanguage(const Locale('zh', 'TW'));
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
 
                 // English
                 _LanguageOption(
@@ -68,7 +69,7 @@ class LanguageSettingsPage extends ConsumerWidget {
                     ref.read(languageProvider.notifier).setLanguage(const Locale('en'));
                   },
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
 
                 // 한국어
                 _LanguageOption(

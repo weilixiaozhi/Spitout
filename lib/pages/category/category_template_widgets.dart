@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/category_icon.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -36,7 +38,7 @@ class TemplateItemTile extends StatelessWidget {
       opacity: added ? 0.55 : 1,
       child: InkWell(
         onTap: added ? null : onToggle,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
         child: Stack(
           children: [
             Container(
@@ -46,7 +48,7 @@ class TemplateItemTile extends StatelessWidget {
                 color: highlighted
                     ? SpitoutTokens.surfaceSelected(context)
                     : SpitoutTokens.surface(context),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                 border: Border.all(
                   color: highlighted
                       ? SpitoutTokens.primary(context)
@@ -63,9 +65,9 @@ class TemplateItemTile extends StatelessWidget {
                       size: compact ? 22 : 26,
                       color: SpitoutTokens.primary(context),
                     ),
-                    const SizedBox(height: 6),
+                    const SizedBox(height: SpitoutDimens.p4),
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                       child: Text(
                         item.name,
                         maxLines: 1,
@@ -86,7 +88,7 @@ class TemplateItemTile extends StatelessWidget {
               right: 4,
               child: Icon(
                 checked ? AppIcons.checkSquare : AppIcons.square,
-                size: 16,
+                size: SpitoutDimens.icon16,
                 color: added
                     ? SpitoutTokens.textDisabled(context)
                     : checked
@@ -133,7 +135,7 @@ class TemplateBottomBar extends StatelessWidget {
     final canAdd = selectedCount > 0 && !isAdding;
 
     return Container(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p8, SpitoutDimens.p16, SpitoutDimens.p16),
       decoration: BoxDecoration(
         color: SpitoutTokens.surface(context),
         border: Border(
@@ -146,36 +148,30 @@ class TemplateBottomBar extends StatelessWidget {
           Expanded(
             child: Text(
               l10n.categoryTemplateSelectedCount(selectedCount),
-              style: TextStyle(
-                fontSize: 13,
-                color: SpitoutTokens.textSecondary(context),
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
           ),
           // 右：全选/取消全选文字链
           // 全选/取消全选文字链，纯动作无选中态，按原则补涟漪反馈
           Material(
             color: Colors.transparent,
-            borderRadius: BorderRadius.circular(6),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onToggleSelectAll,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
               child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
               child: Text(
                 allSelected
                     ? l10n.categoryTemplateDeselectAll
                     : l10n.categoryTemplateSelectAll,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: SpitoutTokens.textLink(context),
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textLink(context)),
               ),
             ),
           ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           // 右：添加按钮（未勾选时禁用）
           FilledButton(
             onPressed: canAdd ? onAdd : null,

@@ -26,13 +26,14 @@ void main() {
   }
 
   group('PrimaryHeader 内置规范', () {
-    testWidgets('默认留白为上/下 10、左/右 12，调用方不传 padding 即全局统一', (tester) async {
+    testWidgets('默认留白为上 8、下 0、左/右 12，调用方不传 padding 即全局统一', (tester) async {
       await tester.pumpWidget(buildHost(const PrimaryHeader(title: '标题')));
 
       final header =
           tester.widget<PrimaryHeader>(find.byType(PrimaryHeader));
-      expect(header.padding, const EdgeInsets.only(top: 10, left: 14, right: 14, bottom: 0),
-          reason: 'PrimaryHeader 默认 padding 应为上10、下0、左右14，承载全局头部留白规范');
+      expect(header.padding,
+          const EdgeInsets.only(top: 8, left: 12, right: 12, bottom: 0),
+          reason: 'PrimaryHeader 默认 padding 应为上8、下0、左右12，承载全局头部留白规范');
     });
 
     testWidgets('showBack 返回键图标为 20px、热区 30x30，与 HeaderIconAction 规格一致', (tester) async {
@@ -49,15 +50,15 @@ void main() {
           reason: '返回键热区应为 30x30，与首行最小高度一致');
     });
 
-    group('首行行高全局统一为 30（header 总高 40 = padding 10+30+0）', () {
+    group('首行行高全局统一为 30（header 总高 38 = padding 8+30+0）', () {
       // 测试环境 MediaQuery.viewPadding 默认为 0，SafeArea 不增加额外高度。
       double headerHeight(WidgetTester tester) =>
           tester.getSize(find.byType(PrimaryHeader)).height;
 
       testWidgets('无 actions：行高不被标题文字压低', (tester) async {
         await tester.pumpWidget(buildHost(const PrimaryHeader(title: '标题')));
-        expect(headerHeight(tester), 40,
-            reason: '仅标题时行高应为最小高度 30（10+30+0=40），不随文字行高收缩');
+        expect(headerHeight(tester), 38,
+            reason: '仅标题时行高应为最小高度 30（8+30+0=38），不随文字行高收缩');
       });
 
       testWidgets('含 HeaderIconAction：行高不被默认 48 热区撑大', (tester) async {
@@ -65,7 +66,7 @@ void main() {
           title: '标题',
           actions: [HeaderIconAction(icon: Icons.refresh, onPressed: () {})],
         )));
-        expect(headerHeight(tester), 40,
+        expect(headerHeight(tester), 38,
             reason: '含功能键时行高应仍为 30（热区 30x30），与无 action 页面一致');
       });
 
@@ -74,7 +75,7 @@ void main() {
           title: '标题',
           actions: [HeaderTextAction(label: '今天', onPressed: () {})],
         )));
-        expect(headerHeight(tester), 40,
+        expect(headerHeight(tester), 38,
             reason: '含文字链时行高应仍为 30，与图标键页面一致');
       });
 

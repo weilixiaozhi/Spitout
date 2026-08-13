@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
 
 class AppEmpty extends StatelessWidget {
   final String? text;
@@ -11,7 +12,7 @@ class AppEmpty extends StatelessWidget {
     final theme = Theme.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24.0),
+        padding: const EdgeInsets.all(SpitoutDimens.p20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -19,7 +20,7 @@ class AppEmpty extends StatelessWidget {
                 style: theme.textTheme.bodyMedium
                     ?.copyWith(fontWeight: FontWeight.w600)),
             if (subtext != null) ...[
-              const SizedBox(height: 6),
+              const SizedBox(height: SpitoutDimens.p4),
               Text(subtext!, style: theme.textTheme.bodySmall),
             ],
           ],

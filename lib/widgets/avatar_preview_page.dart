@@ -15,7 +15,9 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 头像全屏预览页。
 ///
@@ -88,7 +90,7 @@ class AvatarPreviewPage extends StatelessWidget {
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Padding(
-                  padding: const EdgeInsets.all(4.0),
+                  padding: const EdgeInsets.all(SpitoutDimens.p4),
                   child: IconButton(
                     icon: const Icon(Icons.close, color: Colors.white),
                     onPressed: () => Navigator.of(context).pop(),
@@ -116,7 +118,7 @@ class AvatarPreviewPage extends StatelessWidget {
                     if (hasAvatar &&
                         onDelete != null &&
                         deleteLabel != null) ...[
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpitoutDimens.p12),
                       _AvatarActionPill(
                         label: deleteLabel!,
                         icon: Icons.delete_outline,
@@ -156,26 +158,22 @@ class _AvatarActionPill extends StatelessWidget {
     final color = danger ? SpitoutTokens.error(context) : Colors.white;
     return Material(
       color: Colors.white.withValues(alpha: 0.12),
-      borderRadius: BorderRadius.circular(28),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius28),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
         child: Padding(
           padding:
-              const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+              const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p12),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   label,
-                  style: TextStyle(
-                    color: color,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: SpitoutTextTokens.title(context).copyWith(color: color,),
                 ),
               ),
-              Icon(icon, color: color, size: 22),
+              Icon(icon, color: color, size: SpitoutDimens.icon22),
             ],
           ),
         ),

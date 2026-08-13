@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 
 /// 底部弹层统一头部拖拽条（36x4 圆角条、muted 色调、距顶 8px）。
 ///
@@ -13,7 +14,7 @@ class SheetGrabHandle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p8, bottom: SpitoutDimens.p4),
       child: Center(
         child: Container(
           width: 36,

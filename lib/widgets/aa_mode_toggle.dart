@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 分摊方式三态切换按钮（人均 / 不分摊 / 指定分摊）。
 ///
@@ -57,11 +58,7 @@ class AaModeToggle extends StatelessWidget {
                   textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w400,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ),
               Icon(AppIcons.chevronRight, size: 10, color: arrowColor),

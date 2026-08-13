@@ -8,6 +8,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show CloudBackendType;
+import 'package:spitout/theme/dimens.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -238,7 +239,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
         ? Theme.of(context).disabledColor
         : Theme.of(context).colorScheme.primary;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Row(
         children: [
           Container(
@@ -249,11 +250,11 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           Text(
             text,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: color,
             ),
           ),
@@ -266,7 +267,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   Widget _buildLoadError(BuildContext context, AppLocalizations l10n) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(SpitoutDimens.p20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
@@ -275,10 +276,10 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               style: TextStyle(color: SpitoutTokens.textSecondary(context)),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             TextButton.icon(
               onPressed: _retryLoad,
-              icon: const Icon(AppIcons.refresh, size: 18),
+              icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
               label: Text(l10n.analyticsRetry),
             ),
           ],
@@ -291,7 +292,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     return Form(
       key: _formKey,
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpitoutDimens.p16),
         children: [
           // ── 1. 账本名称 ──
           // 不设置 elevation，与编辑分类等其他模块保持一致的扁平卡片风格。
@@ -300,10 +301,10 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             l10n.ledgerNameLabel,
             disabled: _isReadOnly,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Card(
             child: Padding(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               // 协作者只读：不渲染带边框的输入框，仅展示账本名称文本，
               // 避免「看起来还能编辑」的误导；文字同步置灰。
               child: _isReadOnly
@@ -327,7 +328,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
                     ),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
 
           // ── 2. 主币种 ──
           _buildSectionTitle(
@@ -335,12 +336,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             l10n.ledgerBaseCurrencyLabel,
             disabled: _isReadOnly,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Card(
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 4,
+                horizontal: SpitoutDimens.p16,
+                vertical: SpitoutDimens.p4,
               ),
               title: currencyFlagLabel(
                 context,
@@ -358,7 +359,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               trailing: !_isReadOnly
                   ? Icon(
                       AppIcons.chevronRight,
-                      size: 16,
+                      size: SpitoutDimens.icon16,
                       color: SpitoutTokens.iconTertiary(context),
                     )
                   : null,
@@ -389,7 +390,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
                   : null,
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
 
           // ── 3. 每月起始日 ──
           _buildSectionTitle(
@@ -397,12 +398,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             l10n.ledgersMonthStartDay,
             disabled: _isReadOnly,
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Card(
             child: ListTile(
               contentPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 4,
+                horizontal: SpitoutDimens.p16,
+                vertical: SpitoutDimens.p4,
               ),
               title: Text(
                 _monthStartDay <= 1
@@ -420,7 +421,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               trailing: !_isReadOnly
                   ? Icon(
                       AppIcons.chevronRight,
-                      size: 16,
+                      size: SpitoutDimens.icon16,
                       color: SpitoutTokens.iconTertiary(context),
                     )
                   : null,
@@ -449,7 +450,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
           // ── 5. 新建模式的账本归属选择 ──
           if (_isCreating) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             _buildStorageModeSelector(context, l10n),
           ],
 
@@ -478,7 +479,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
 
     return Card(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p12, SpitoutDimens.p16, SpitoutDimens.p12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -486,17 +487,17 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               l10n.ledgersStorageLocation,
               style: Theme.of(context).textTheme.titleSmall,
             ),
-            const SizedBox(height: 10),
+            const SizedBox(height: SpitoutDimens.p8),
             SegmentedButton<String>(
               segments: [
                 ButtonSegment(
                   value: 'local',
-                  icon: const Icon(AppIcons.localStorage, size: 16),
+                  icon: const Icon(AppIcons.localStorage, size: SpitoutDimens.icon16),
                   label: Text(l10n.ledgersSectionLocal),
                 ),
                 ButtonSegment(
                   value: 'cloud',
-                  icon: const Icon(AppIcons.cloudQueue, size: 16),
+                  icon: const Icon(AppIcons.cloudQueue, size: SpitoutDimens.icon16),
                   label: Text(l10n.ledgersSectionCloud),
                   enabled: isSpitoutCloud,
                 ),
@@ -505,7 +506,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
               showSelectedIcon: false,
               onSelectionChanged: (s) => setState(() => _storageMode = s.first),
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             Text(
               isSpitoutCloud
                   ? (mode == 'cloud'
@@ -533,7 +534,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     final ledgerName = ledger?.name ?? _nameController.text.trim();
 
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -564,7 +565,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
           ),
           // 成员支出常驻显示：新建态 / 本地账本(无 syncId)时数据归 0 空态，
           // 无需跟随云端。模块自带标题。
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
           MemberStatsSection(ledgerId: ledger?.id),
         ],
       ),
@@ -600,12 +601,12 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     // 「标题在外 + 内容卡片」与其他模块统一:存储归属操作(移动 / 复制到
     // 本地)不是散落的裸卡片,先给出模块标题,再收纳具体操作项。
     return Padding(
-      padding: const EdgeInsets.only(top: 16),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle(context, l10n.ledgersStorageLocation),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Card(
             child: Column(
               children: [
@@ -795,7 +796,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
   Widget _buildSaveButton(BuildContext context, AppLocalizations l10n) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       child: FilledButton(
         onPressed: _saving ? null : _handleSave,
         child: _saving
@@ -1359,7 +1360,7 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
       child: AppSheet(
         title: l10n.ledgersMonthStartDay,
         subtitle: l10n.ledgersMonthStartDayHint,
-        contentPadding: const EdgeInsets.only(top: 12),
+        contentPadding: const EdgeInsets.only(top: SpitoutDimens.p12),
         child: Wrap(
           spacing: 8,
           runSpacing: 8,
@@ -1368,13 +1369,13 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
             final isSelected = initial == day;
             return InkWell(
               onTap: () => Navigator.pop(context, day),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
               child: Container(
                 width: 40,
                 height: 40,
                 alignment: Alignment.center,
                 decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   color: isSelected
                       ? primary.withValues(alpha: 0.12)
                       : Colors.transparent,

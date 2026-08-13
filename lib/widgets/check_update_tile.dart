@@ -7,6 +7,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/theme/typography.dart';
 import 'app_list_tile.dart';
@@ -76,7 +77,7 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const CircularProgressIndicator(strokeWidth: 2.5),
-              const SizedBox(width: 16),
+              const SizedBox(width: SpitoutDimens.p16),
               Text(l10n.updateChecking),
             ],
           ),
@@ -139,10 +140,10 @@ class _CheckUpdateTileState extends State<CheckUpdateTile> {
     // trailing：有更新时显示成功色「更新」胶囊；否则显示默认箭头。
     final trailing = hasNew
         ? Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
             decoration: BoxDecoration(
               color: SpitoutTokens.success(context).withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             ),
             child: Text(
               l10n.mineUpdateNow,

@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'app_sheet.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 通用滚轮选择器
 class WheelPicker<T> extends StatefulWidget {
@@ -64,7 +65,7 @@ class _WheelPickerState<T> extends State<WheelPicker<T>> {
               Center(
                 child: Text(
                   widget.labelBuilder(item),
-                  style: TextStyle(fontSize: 18, color: _textPrimary(context)),
+                  style: SpitoutTextTokens.boldTitle(context).copyWith(color: _textPrimary(context)),
                 ),
               ),
           ],

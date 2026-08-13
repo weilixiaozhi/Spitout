@@ -10,7 +10,9 @@ import 'package:spitout/services/statistics/aa_decimal_util.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/widgets/aa_mode_toggle.dart';
@@ -336,15 +338,15 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             child: optionsAsync.isLoading && options.isEmpty
                 ? const Center(child: CircularProgressIndicator())
                 : ListView(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(SpitoutDimens.p16),
                     children: [
                       _buildSubjectCard(context, l10n, currencyCode),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: SpitoutDimens.p16),
                       // 分摊方式:独立区块标题(与账单详情的 _SectionLabel 对齐),
                       // 标题下方紧跟三态切换按钮,与主体卡分离。
                       _buildSplitModeSection(context, l10n),
                       if (_mode != AaMode.noSplit) ...[
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpitoutDimens.p16),
                         _buildSplitCard(
                           context,
                           l10n,
@@ -382,7 +384,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -394,22 +396,18 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: SpitoutTokens.surfaceSecondary(context),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                 ),
-                child: Icon(iconData, size: 20, color: primary),
+                child: Icon(iconData, size: SpitoutDimens.icon20, color: primary),
               ),
-              const SizedBox(width: 12),
+              const SizedBox(width: SpitoutDimens.p12),
               Expanded(
                 child: Text(
                   CategoryUtils.getDisplayName(
                     widget.args.categoryName,
                     context,
                   ),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -417,7 +415,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             ],
           ),
           // 与账单详情一致:icon 行后 12px 间距再接分隔线,避免 icon 压着分割线
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           _cardDivider(context),
           // 日期(只读)
           _infoRow(context, l10n.homeDetailDate, dateText),
@@ -432,11 +430,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
               // 主体卡金额带币种符号:与合计行/只读金额统一口径。
               showCurrency: true,
               currencyCode: currencyCode,
-              style: TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
             ),
           ),
           // 货币(只读)
@@ -460,24 +454,20 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   /// 堆叠造成的视觉错位。
   Widget _buildSplitModeSection(BuildContext context, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
       child: Row(
         children: [
           // 独立区块标题:与账单详情 _SectionLabel 完全一致(13px/w600/textSecondary)
           Text(
             l10n.aaSplitMode,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textSecondary(context)),
           ),
           const Spacer(),
           // 三态切换按钮:标题已表达语义,不重复左侧文案
-          // 右缩 26px = 页面 16px 内边距 + 金额文本右边界 10px 基准,
+          // 右缩 24px = 页面 16px 内边距 + 金额文本右边界 8px 基准,
           // 使按钮右边界与账单详情值/合计/参与人金额同一条直线
           Padding(
-            padding: const EdgeInsets.only(right: 26),
+            padding: const EdgeInsets.only(right: 24),
             child: AaModeToggle(
               modeText: _aaModeToggleText(l10n),
               onTap: _cycleAaMode,
@@ -523,7 +513,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
 
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p4),
       child: Column(
         children: [
           // 支出人(bottom sheet 选择)
@@ -532,15 +522,12 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           // 参与人标题行:文案「参与人」(原「合计」),不加粗,
           // 与支出人 label 同字号同色(textSecondary),作为参与人列表的标题行。
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12),
+            padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
             child: Row(
               children: [
                 Text(
                   l10n.aaParticipants,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                  style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                 ),
                 // 合计值右对齐占满剩余宽度:右缩 10px 对齐参与人金额列中
                 // 金额文本的右边界(可编辑输入框 contentPadding 右侧 10px,
@@ -551,19 +538,16 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   child: Align(
                     alignment: Alignment.centerRight,
                     child: Padding(
-                      padding: const EdgeInsets.only(right: 10),
+                      padding: const EdgeInsets.only(right: SpitoutDimens.p8),
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerRight,
                         child: Text(
                           '${formatMoneyWithCurrency(displaySum, currencyCode: currencyCode)}'
                           ' / ${formatMoneyWithCurrency(total, currencyCode: currencyCode)}',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: _mode == AaMode.perPerson || balanced
+                          style: SpitoutTextTokens.body(context).copyWith(color: _mode == AaMode.perPerson || balanced
                                 ? SpitoutTokens.success(context)
-                                : SpitoutTokens.warning(context),
-                          ),
+                                : SpitoutTokens.warning(context)),
                         ),
                       ),
                     ),
@@ -630,15 +614,12 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         }
       },
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 14),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
         child: Row(
           children: [
             Text(
               l10n.aaPayer,
-              style: TextStyle(
-                fontSize: 14,
-                color: SpitoutTokens.textSecondary(context),
-              ),
+              style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
             const Spacer(),
             // 支出人名右对齐,与其他信息行(日期/金额/货币)口径一致。
@@ -652,11 +633,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   ? Text.rich(
                       TextSpan(
                         text: payerName,
-                        style: TextStyle(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w500,
-                          color: SpitoutTokens.textPrimary(context),
-                        ),
+                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                         children: [meSuffixSpan(context, l10n)],
                       ),
                       textAlign: TextAlign.right,
@@ -666,23 +643,19 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   : Text(
                       payerName,
                       textAlign: TextAlign.right,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
             ),
-            const SizedBox(width: 6),
+            const SizedBox(width: SpitoutDimens.p4),
             // 右缩进 10px,使 chevron 右边界与参与人金额列中金额文本右边界对齐
             // (可编辑金额输入框 contentPadding 右侧 10px),避免选项按钮悬出金额列。
             Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.only(right: SpitoutDimens.p8),
               child: Icon(
                 AppIcons.chevronRight,
-                size: 16,
+                size: SpitoutDimens.icon16,
                 color: SpitoutTokens.iconTertiary(context),
               ),
             ),
@@ -723,7 +696,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         : SpitoutTokens.textPrimary(context);
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
       child: Row(
         children: [
           // 方框勾选:支出人锁定时置灰只读态(disabledColor),而非仅禁用点击;
@@ -735,14 +708,14 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
             locked: isPayer,
             onTap: isPayer ? null : () => _toggleParticipant(option.id),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: SpitoutDimens.p8),
           // icon + 名称(支出人/未勾选置灰)
           Icon(
             AppIcons.person,
-            size: 16,
+            size: SpitoutDimens.icon16,
             color: (isPayer || !selected) ? disabledColor : primary,
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           Expanded(
             // 本人参与人:名称后追加共享「(我)」后缀,与支出人行 / 成员管理
             // 口径一致;非本人用纯名 Text。
@@ -750,7 +723,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                 ? Text.rich(
                     TextSpan(
                       text: option.name,
-                      style: TextStyle(fontSize: 14, color: nameColor),
+                      style: SpitoutTextTokens.body(context).copyWith(color: nameColor),
                       children: [
                         meSuffixSpan(context, AppLocalizations.of(context)),
                       ],
@@ -760,12 +733,12 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                   )
                 : Text(
                     option.name,
-                    style: TextStyle(fontSize: 14, color: nameColor),
+                    style: SpitoutTextTokens.body(context).copyWith(color: nameColor),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           // 金额列:
           // - 高度固定 40(与输入框 contentPadding+边框高度一致),行高不随
           //   勾选状态收缩,取消勾选后整行不会上下移动;
@@ -790,11 +763,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                       ),
                     ],
                     textAlign: TextAlign.right,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     decoration: InputDecoration(
                       isDense: true,
                       // 输入框前缀币种符号:输入时即可确认分摊金额币种,
@@ -813,13 +782,13 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
                           ? _buildClearAmountButton(context, option.id)
                           : null,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 8,
+                        horizontal: SpitoutDimens.p8,
+                        vertical: SpitoutDimens.p8,
                       ),
                       filled: true,
                       fillColor: SpitoutTokens.surfaceInput(context),
                       border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         borderSide: BorderSide.none,
                       ),
                     ),
@@ -859,7 +828,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     return InkWell(
       key: key,
       onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
       child: Container(
         width: 20,
         height: 20,
@@ -869,10 +838,10 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           border: locked
               ? Border.all(color: Colors.transparent, width: 1.5)
               : Border.all(color: borderColor, width: 1.5),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
         ),
         child: checked
-            ? Icon(AppIcons.check, size: 14, color: Colors.white)
+            ? Icon(AppIcons.check, size: SpitoutDimens.icon12, color: Colors.white)
             : null,
       ),
     );
@@ -890,10 +859,10 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
         setState(() {});
       },
       child: Padding(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(SpitoutDimens.p4),
         child: Icon(
           AppIcons.cancel,
-          size: 18,
+          size: SpitoutDimens.icon16,
           color: SpitoutTokens.iconSecondary(context),
         ),
       ),
@@ -914,7 +883,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     required String? currencyCode,
   }) {
     return Padding(
-      padding: const EdgeInsets.only(right: 10),
+      padding: const EdgeInsets.only(right: SpitoutDimens.p8),
       child: Align(
         alignment: Alignment.centerRight,
         child: FittedBox(
@@ -923,13 +892,9 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
           child: Text(
             // 只读金额带币种符号,与可输入金额的前缀符号口径一致。
             formatMoneyWithCurrency(value, currencyCode: currencyCode),
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: dimmed
+            style: SpitoutTextTokens.body(context).copyWith(color: dimmed
                   ? Theme.of(context).disabledColor
-                  : SpitoutTokens.textPrimary(context),
-            ),
+                  : SpitoutTokens.textPrimary(context)),
           ),
         ),
       ),
@@ -951,31 +916,24 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
     Widget? valueWidget,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
           ),
           Flexible(
             // 右缩 10px:与分摊配置卡金额文本右边界(输入框 contentPadding
             // 右侧 10px)对齐,使全页右侧内容落在同一条直线上
             child: Padding(
-              padding: const EdgeInsets.only(right: 10),
+              padding: const EdgeInsets.only(right: SpitoutDimens.p8),
               child:
                   valueWidget ??
                   Text(
                     value,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     textAlign: TextAlign.right,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
@@ -995,7 +953,7 @@ class _AaEditPageState extends ConsumerState<AaEditPage> {
   ) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       child: FilledButton(
         onPressed: () => _onConfirm(options),
         child: Text(l10n.commonFinish),

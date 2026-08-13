@@ -26,7 +26,7 @@ void main() {
     expect(SpitoutTextTokens.title(captured), isA<TextStyle>());
     expect(SpitoutTextTokens.strongTitle(captured).fontWeight, FontWeight.w600);
     expect(SpitoutTextTokens.boldTitle(captured).fontSize, 18);
-    expect(SpitoutTextTokens.boldTitle(captured).fontWeight, FontWeight.w700);
+    expect(SpitoutTextTokens.boldTitle(captured).fontWeight, FontWeight.w800);
     expect(SpitoutTextTokens.body(captured), isA<TextStyle>());
     expect(SpitoutTextTokens.label(captured), isA<TextStyle>());
   });

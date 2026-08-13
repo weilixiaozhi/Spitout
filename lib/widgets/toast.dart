@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 
 /// 单个 Overlay 上当前活跃的 toast（entry + 自动消失定时器）。
 class _ActiveToast {
@@ -61,14 +62,14 @@ void showToastOnOverlay(
             child: Material(
               color: Colors.transparent,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 24),
+                margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p20),
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 14,
-                  vertical: 12,
+                  horizontal: SpitoutDimens.p12,
+                  vertical: SpitoutDimens.p12,
                 ),
                 decoration: BoxDecoration(
                   color: SpitoutTokens.toastBackground,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                   // 暗黑模式下添加白色阴影，提升可见度
                   boxShadow: dark ? SpitoutTokens.toastShadow : null,
                 ),

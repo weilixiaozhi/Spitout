@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/core/logging/logger_service.dart';
@@ -144,23 +146,19 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
             const Spacer(flex: 2),
             // Logo
             SpitoutIcon(size: 64.0),
-            SizedBox(height: 24.0),
+            SizedBox(height: SpitoutDimens.p20),
             // 标题
             Text(
               l10n.appLockEnterPin,
-              style: TextStyle(
-                fontSize: 18.0,
-                fontWeight: FontWeight.w600,
-                color: SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
             ),
-            SizedBox(height: 32.0),
+            SizedBox(height: SpitoutDimens.p32),
             // PIN 圆点
             PinDotIndicator(filledCount: _pin.length, isError: _isError),
             const Spacer(flex: 1),
             // 数字键盘
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 40.0),
+              padding: EdgeInsets.symmetric(horizontal: SpitoutDimens.p40),
               child: NumberPad(
                 onNumberTap: _onNumberTap,
                 onDelete: _onDelete,
@@ -168,7 +166,7 @@ class _AppLockScreenState extends ConsumerState<AppLockScreen> {
                 onBiometric: showBiometric ? _authenticateWithBiometrics : null,
               ),
             ),
-            SizedBox(height: 32.0),
+            SizedBox(height: SpitoutDimens.p32),
           ],
         ),
       ),

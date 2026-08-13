@@ -8,8 +8,10 @@ import 'package:spitout/cloud/auth_error_localizer.dart'
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/shadows.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 
 class AuthPage extends ConsumerStatefulWidget {
@@ -155,7 +157,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final radius = BorderRadius.circular(12);
+    final radius = BorderRadius.circular(SpitoutDimens.radius12);
 
     // 检测云服务类型
     final cloudConfig = ref.watch(activeCloudConfigProvider);
@@ -173,14 +175,14 @@ class _AuthPageState extends ConsumerState<AuthPage> {
             Expanded(
               child: Center(
                 child: Padding(
-                  padding: const EdgeInsets.all(24.0),
+                  padding: const EdgeInsets.all(SpitoutDimens.p20),
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 420),
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.all(24),
+                    margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
+                    padding: const EdgeInsets.all(SpitoutDimens.p20),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                       boxShadow: SpitoutTokens.isDark(context)
                           ? null
                           : SpitoutShadows.card,
@@ -193,7 +195,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           size: 64,
                           color: theme.colorScheme.primary,
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: SpitoutDimens.p20),
                         Text(
                           AppLocalizations.of(context).webdavConfiguredTitle,
                           style: theme.textTheme.titleLarge?.copyWith(
@@ -201,7 +203,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: SpitoutDimens.p12),
                         Text(
                           AppLocalizations.of(context).webdavConfiguredMessage,
                           style: theme.textTheme.bodyMedium?.copyWith(
@@ -209,7 +211,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                           ),
                           textAlign: TextAlign.center,
                         ),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: SpitoutDimens.p32),
                         FilledButton(
                           onPressed: () => Navigator.of(context).pop(),
                           child: Text(AppLocalizations.of(context).commonBack),
@@ -236,15 +238,15 @@ class _AuthPageState extends ConsumerState<AuthPage> {
           Expanded(
             child: Center(
               child: Padding(
-                padding: const EdgeInsets.all(24.0),
+                padding: const EdgeInsets.all(SpitoutDimens.p20),
                 child: SingleChildScrollView(
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 420),
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 20),
+                    margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
+                    padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                       boxShadow: SpitoutTokens.isDark(context)
                           ? null
                           : SpitoutShadows.card,
@@ -259,7 +261,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             labelText: AppLocalizations.of(context).authAccount,
                           ),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         TextField(
                           controller: pwdCtrl,
                           obscureText: !_showPwd,
@@ -278,7 +280,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             ),
                           ),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpitoutDimens.p4),
                         InkWell(
                           onTap: () {
                             setState(() {
@@ -314,13 +316,9 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                       AppLocalizations.of(
                                         context,
                                       ).authRememberAccountHint,
-                                      style: theme.textTheme.bodySmall
-                                          ?.copyWith(
-                                            color: SpitoutTokens.textSecondary(
+                                      style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(
                                               context,
-                                            ),
-                                            fontSize: 11,
-                                          ),
+                                            )),
                                     ),
                                   ],
                                 ),
@@ -328,10 +326,10 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                             ],
                           ),
                         ),
-                        const SizedBox(height: 12),
+                        const SizedBox(height: SpitoutDimens.p12),
                         if (errorText != null)
                           Padding(
-                            padding: const EdgeInsets.only(bottom: 8.0),
+                            padding: const EdgeInsets.only(bottom: SpitoutDimens.p8),
                             child: Text(
                               errorText!,
                               style: TextStyle(
@@ -451,7 +449,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                                 : Text(AppLocalizations.of(context).authLogin),
                           ),
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpitoutDimens.p16),
                       ],
                     ),
                   ),

@@ -7,6 +7,8 @@ import 'package:spitout/services/notification/notification_factory.dart';
 import 'package:spitout/services/notification/notification_android.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
@@ -32,14 +34,14 @@ class ReminderSettingsPage extends ConsumerWidget {
             child: ListView(
               padding: EdgeInsets.zero,
               children: [
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
           
           // 提醒开关
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surface(context),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
               border: isDark ? Border.all(color: SpitoutTokens.border(context)) : null,
             ),
             // Material 透明层：ListTile 的墨迹/背景绘制在最近 Material 祖先上，
@@ -49,18 +51,11 @@ class ReminderSettingsPage extends ConsumerWidget {
               child: SwitchListTile(
                 title: Text(
                   AppLocalizations.of(context).reminderDailyTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
                 subtitle: Text(
                   AppLocalizations.of(context).reminderDailySubtitle,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                  style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                 ),
                 value: reminderSettings.isEnabled,
                 onChanged: (value) {
@@ -71,14 +66,14 @@ class ReminderSettingsPage extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 16),
+          const SizedBox(height: SpitoutDimens.p16),
 
           // 提醒时间设置
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surface(context),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
               border: isDark ? Border.all(color: SpitoutTokens.border(context)) : null,
             ),
             child: Material(
@@ -86,18 +81,11 @@ class ReminderSettingsPage extends ConsumerWidget {
               child: ListTile(
                 title: Text(
                   AppLocalizations.of(context).reminderTimeTitle,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
                 subtitle: Text(
                   reminderSettings.timeString,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                  style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                 ),
                 trailing: Icon(
                   AppIcons.chevronRight,
@@ -123,11 +111,11 @@ class ReminderSettingsPage extends ConsumerWidget {
             ),
           ),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: SpitoutDimens.p20),
 
           // 测试通知按钮
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
+            margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
             width: double.infinity,
             child: ElevatedButton(
               onPressed: () async {
@@ -155,17 +143,14 @@ class ReminderSettingsPage extends ConsumerWidget {
               style: ElevatedButton.styleFrom(
                 backgroundColor: Theme.of(context).primaryColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(vertical: 12),
+                padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                 ),
               ),
               child: Text(
                 AppLocalizations.of(context).reminderTestNotification,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: SpitoutTextTokens.title(context),
               ),
             ),
           ),
@@ -173,11 +158,11 @@ class ReminderSettingsPage extends ConsumerWidget {
 
           // Android专用电池和渠道检查按钮
           if (Platform.isAndroid) ...[
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
 
             // 电池优化状态检查
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
@@ -206,26 +191,20 @@ class ReminderSettingsPage extends ConsumerWidget {
                             Text(l10n.reminderManufacturer(batteryInfo['manufacturer'] ?? 'Unknown')),
                             Text(l10n.reminderModel(batteryInfo['model'] ?? 'Unknown')),
                             Text(l10n.reminderAndroidVersion(batteryInfo['androidVersion'] ?? 'Unknown')),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: SpitoutDimens.p8),
                             Text(
                               (batteryInfo['isIgnoring'] == true)
                                   ? l10n.reminderBatteryIgnored
                                   : l10n.reminderBatteryNotIgnored,
-                              style: TextStyle(
-                                color: (batteryInfo['isIgnoring'] == true)
+                              style: TextStyle(color: (batteryInfo['isIgnoring'] == true)
                                     ? SpitoutTokens.success(context)
-                                    : SpitoutTokens.warning(context),
-                                fontWeight: FontWeight.w500,
-                              ),
+                                    : SpitoutTokens.warning(context)),
                             ),
                             if (batteryInfo['isIgnoring'] != true) ...[
-                              const SizedBox(height: 8),
+                              const SizedBox(height: SpitoutDimens.p8),
                               Text(
                                 l10n.reminderBatteryAdvice,
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: SpitoutTokens.error(context),
-                                ),
+                                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.error(context)),
                               ),
                             ],
                           ],
@@ -260,26 +239,23 @@ class ReminderSettingsPage extends ConsumerWidget {
                   }
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   ),
                 ),
                 child: Text(
                   AppLocalizations.of(context).reminderCheckBattery,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: SpitoutTextTokens.title(context),
                 ),
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
 
             // 通知渠道设置检查
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
@@ -319,7 +295,7 @@ class ReminderSettingsPage extends ConsumerWidget {
                               Text((channelInfo['bypassDnd'] == true)
                                   ? l10n.reminderChannelDndBypass
                                   : l10n.reminderChannelDndNoBypass),
-                            const SizedBox(height: 8),
+                            const SizedBox(height: SpitoutDimens.p8),
                             if (channelInfo['isEnabled'] != true ||
                                 channelInfo['importance'] == 'none' ||
                                 channelInfo['importance'] == 'min' ||
@@ -375,26 +351,23 @@ class ReminderSettingsPage extends ConsumerWidget {
                   }
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   ),
                 ),
                 child: Text(
                   AppLocalizations.of(context).reminderCheckChannel,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: SpitoutTextTokens.title(context),
                 ),
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
 
             // 打开应用设置
             Container(
-              margin: const EdgeInsets.symmetric(horizontal: 16),
+              margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
               width: double.infinity,
               child: OutlinedButton(
                 onPressed: () async {
@@ -417,31 +390,28 @@ class ReminderSettingsPage extends ConsumerWidget {
                   }
                 },
                 style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   ),
                 ),
                 child: Text(
                   AppLocalizations.of(context).reminderOpenAppSettings,
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w500,
-                  ),
+                  style: SpitoutTextTokens.title(context),
                 ),
               ),
             ),
 
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
           ],
 
           // 说明文字
           Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(16),
+            margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceSecondary(context),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
               border: isDark ? null : Border.all(
                 color: SpitoutTokens.borderStrong(context),
                 width: 0.5,
@@ -452,26 +422,20 @@ class ReminderSettingsPage extends ConsumerWidget {
               children: [
                 Text(
                   AppLocalizations.of(context).reminderDescription,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textSecondary(context),
-                    height: 1.4,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+                    height: 1.4),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: SpitoutDimens.p8),
                 Text(
                   AppLocalizations.of(context).reminderAndroidInstructions,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: SpitoutTokens.textTertiary(context),
-                    height: 1.4,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context),
+                    height: 1.4),
                 ),
               ],
             ),
           ),
 
-          const SizedBox(height: 32),
+          const SizedBox(height: SpitoutDimens.p32),
                 ],
               ),
             ),

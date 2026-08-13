@@ -9,7 +9,9 @@ import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/backup/local_backup_service.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/file_picker_helper.dart';
 import 'package:spitout/widgets/widgets.dart';
 
@@ -237,17 +239,17 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                       physics: const AlwaysScrollableScrollPhysics(),
                       padding: EdgeInsets.zero,
                       children: [
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpitoutDimens.p16),
                         // ===== 自动本地备份开关 =====
                         // 背景色由 Material 承载：若用带背景色的 Container 包裹
                         // SwitchListTile，其 ink 波纹会画在 DecoratedBox 之下而被
                         // 遮挡，触发 Flutter 的 ListTile 背景调试断言。
                         Container(
-                          margin: const EdgeInsets.symmetric(horizontal: 16),
+                          margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
                           child: Material(
                             color: SpitoutTokens.surface(context),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                               side: isDark
                                   ? BorderSide(
                                       color: SpitoutTokens.border(context),
@@ -258,18 +260,11 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                             child: SwitchListTile(
                               title: Text(
                                 l10n.localBackupAutoTitle,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w500,
-                                  color: SpitoutTokens.textPrimary(context),
-                                ),
+                                style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                               ),
                               subtitle: Text(
                                 l10n.localBackupAutoSubtitle,
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  color: SpitoutTokens.textSecondary(context),
-                                ),
+                                style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                               ),
                               // 默认 true（零干预兜底）；加载期间也按 true 展示避免闪烁
                               value: autoBackup.value ?? true,
@@ -279,55 +274,49 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: SpitoutDimens.p20),
                         // ===== 恢复列表 =====
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 16),
+                          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
                           child: Text(
                             l10n.localBackupListHint,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: SpitoutTokens.textSecondary(context),
-                            ),
+                            style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                           ),
                         ),
                         if (showOldBackupLink)
                           Align(
                             alignment: Alignment.center,
                             child: InkWell(
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                               onTap: _showOldBackupHelpDialog,
                               child: Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 8,
-                                  vertical: 6,
+                                  horizontal: SpitoutDimens.p8,
+                                  vertical: SpitoutDimens.p4,
                                 ),
                                 child: Row(
                                   mainAxisSize: MainAxisSize.min,
                                   children: [
                                     Icon(
                                       AppIcons.help,
-                                      size: 14,
+                                      size: SpitoutDimens.icon12,
                                       color: SpitoutTokens.textSecondary(
                                         context,
                                       ),
                                     ),
-                                    const SizedBox(width: 4),
+                                    const SizedBox(width: SpitoutDimens.p4),
                                     Text(
                                       l10n.localBackupOldLink,
-                                      style: TextStyle(
-                                        fontSize: 13,
-                                        color: SpitoutTokens.textSecondary(
+                                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(
                                           context,
-                                        ),
-                                      ),
+                                        )),
                                     ),
                                   ],
                                 ),
                               ),
                             ),
                           ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: SpitoutDimens.p8),
                         FutureBuilder<List<LocalBackupFile>>(
                           future: _backupsFuture,
                           builder: (context, snapshot) {
@@ -335,7 +324,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                             if (snapshot.connectionState !=
                                 ConnectionState.done) {
                               return const Padding(
-                                padding: EdgeInsets.all(32),
+                                padding: EdgeInsets.all(SpitoutDimens.p32),
                                 child: Center(
                                   child: CircularProgressIndicator(),
                                 ),
@@ -343,7 +332,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                             }
                             if (backups.isEmpty) {
                               return Padding(
-                                padding: const EdgeInsets.all(32),
+                                padding: const EdgeInsets.all(SpitoutDimens.p32),
                                 child: Center(
                                   child: Text(
                                     l10n.localBackupListEmpty,
@@ -364,44 +353,40 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                             );
                           },
                         ),
-                        const SizedBox(height: 16),
+                        const SizedBox(height: SpitoutDimens.p16),
                         // 导入文件恢复入口：卸载重装后历史备份可能不在恢复列表中，
                         // 此处常驻一个手动指定文件的兜底通道，避免"备份还在却恢复不了"。
                         // 放在列表底部居中，避免与标题区视觉冲突，且空列表时同样可见。
                         Center(
                           child: InkWell(
-                            borderRadius: BorderRadius.circular(8),
+                            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                             onTap: (_backingUp || _restoring)
                                 ? null
                                 : _importAndRestore,
                             child: Padding(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 8,
+                                horizontal: SpitoutDimens.p12,
+                                vertical: SpitoutDimens.p8,
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   Icon(
                                     AppIcons.fileUpload,
-                                    size: 16,
+                                    size: SpitoutDimens.icon16,
                                     color: Theme.of(context).primaryColor,
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: SpitoutDimens.p4),
                                   Text(
                                     l10n.localBackupImportFromFile,
-                                    style: TextStyle(
-                                      fontSize: 14,
-                                      fontWeight: FontWeight.w500,
-                                      color: Theme.of(context).primaryColor,
-                                    ),
+                                    style: SpitoutTextTokens.body(context).copyWith(color: Theme.of(context).primaryColor),
                                   ),
                                 ],
                               ),
                             ),
                           ),
                         ),
-                        const SizedBox(height: 24),
+                        const SizedBox(height: SpitoutDimens.p20),
                       ],
                     ),
                   ),
@@ -423,14 +408,11 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   const CircularProgressIndicator(),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
                   Text(
                     l10n.localBackupRestoring,
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      decoration: TextDecoration.none,
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(color: Colors.white,
+                      decoration: TextDecoration.none),
                   ),
                 ],
               ),
@@ -462,17 +444,13 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
             Icon(
               AppIcons.info,
               color: Theme.of(dialogContext).colorScheme.primary,
-              size: 24,
+              size: SpitoutDimens.icon22,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: Text(
                 l10n.localBackupOldDialogTitle,
-                style: TextStyle(
-                  color: SpitoutTokens.textPrimary(dialogContext),
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(dialogContext),),
               ),
             ),
           ],
@@ -489,7 +467,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                 title: l10n.localBackupOldReasonTitle,
                 body: l10n.localBackupOldReasonBody,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildOldBackupGuideSection(
                 dialogContext,
                 icon: AppIcons.settings,
@@ -499,7 +477,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                     ? l10n.localBackupOldHowBodyGranted
                     : l10n.localBackupOldHowBody,
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: SpitoutDimens.p16),
               _buildOldBackupGuideSection(
                 dialogContext,
                 icon: AppIcons.verifiedUser,
@@ -528,10 +506,10 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
                 children: [
                   Icon(
                     AppIcons.check,
-                    size: 16,
+                    size: SpitoutDimens.icon16,
                     color: Theme.of(dialogContext).disabledColor,
                   ),
-                  const SizedBox(width: 4),
+                  const SizedBox(width: SpitoutDimens.p4),
                   Text(
                     l10n.localBackupOldGranted,
                     style: TextStyle(
@@ -582,30 +560,23 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
       children: [
         Row(
           children: [
-            Icon(icon, size: 18, color: iconColor),
-            const SizedBox(width: 6),
+            Icon(icon, size: SpitoutDimens.icon16, color: iconColor),
+            const SizedBox(width: SpitoutDimens.p4),
             Expanded(
               child: Text(
                 title,
-                style: TextStyle(
-                  color: SpitoutTokens.textPrimary(context),
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context),),
               ),
             ),
           ],
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: SpitoutDimens.p4),
         Padding(
-          padding: const EdgeInsets.only(left: 24),
+          padding: const EdgeInsets.only(left: SpitoutDimens.p20),
           child: Text(
             body,
-            style: TextStyle(
-              color: SpitoutTokens.textSecondary(context),
-              fontSize: 13,
-              height: 1.5,
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context),
+              height: 1.5),
           ),
         ),
       ],
@@ -621,11 +592,11 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
     // 背景色交给 Material 承载（原因同自动备份开关卡片），
     // 外层仅留 margin，确保 ListTile 的最近 Material 祖先先于任何带背景的 DecoratedBox。
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p4),
       child: Material(
         color: SpitoutTokens.surface(context),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           side: isDark
               ? BorderSide(color: SpitoutTokens.border(context))
               : BorderSide.none,
@@ -634,18 +605,11 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
         child: ListTile(
           title: Text(
             backup.fileName,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: SpitoutTokens.textPrimary(context),
-            ),
+            style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
           ),
           subtitle: Text(
             backup.sizeLabel,
-            style: TextStyle(
-              fontSize: 13,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
           ),
           onTap: () => _restoreFile(backup.file),
         ),

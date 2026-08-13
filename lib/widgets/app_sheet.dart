@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'app_route.dart';
 import 'sheet_grab_handle.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// shadcn/ui 风格 Bottom Sheet wrapper（AppSheet 语义组件）。
 ///
@@ -49,7 +51,7 @@ class AppSheet extends StatelessWidget {
     required this.child,
     this.footer,
     this.trailing,
-    this.contentPadding = const EdgeInsets.fromLTRB(20, 4, 20, 16),
+    this.contentPadding = const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, SpitoutDimens.p16),
     this.showGrabHandle = true,
     this.pinnedHeader = true,
   });
@@ -62,7 +64,7 @@ class AppSheet extends StatelessWidget {
             // 删除图标按钮高度已收紧为 32px(见 cloud_service_page 的 IconButton
             // constraints),标题栏 Row 在「有/无删除图标」两种状态下都恒为 32px,
             // 顶部留白保持一致。
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
+            padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p12, SpitoutDimens.p16, 0),
             child: Row(
               // 标题栏标题与右侧操作位(如删除图标)垂直居中对齐:
               // trailing 是 IconButton(已收紧为最小 48×32,22px 图标在其中居中),
@@ -87,25 +89,18 @@ class AppSheet extends StatelessWidget {
                         Text(
                           title!,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w600,
-                            color: SpitoutTokens.textPrimary(context),
+                          style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context),
                             // 行高 24px(=16px 字号 ×1.5):标题 24px 文字框在 32px 的删除图标
                             // 按钮(IconButton 最小 48×32)内随 Row 垂直居中,标题上沿 ≈(32-24)/2=4px、
                             // 图标上沿 ≈(32-22)/2=5px,二者精确对齐;配合顶部 12px 内边距,标题不贴边。
-                            height: 1.5,
-                          ),
+                            height: 1.5),
                         ),
                       if (subtitle != null) ...[
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpitoutDimens.p4),
                         Text(
                           subtitle!,
                           textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
+                          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                         ),
                       ],
                     ],
@@ -132,7 +127,7 @@ class AppSheet extends StatelessWidget {
           Flexible(child: Padding(padding: contentPadding, child: child)),
           if (footer != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
               child: footer,
             ),
         ],
@@ -148,7 +143,7 @@ class AppSheet extends StatelessWidget {
           Padding(padding: contentPadding, child: child),
           if (footer != null)
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+              padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
               child: footer,
             ),
         ],
@@ -187,7 +182,7 @@ Future<T?> showAppSheet<T>({
     barrierColor: barrierColor ?? SpitoutTokens.overlay(context),
     elevation: elevation,
     shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      borderRadius: BorderRadius.vertical(top: Radius.circular(SpitoutDimens.radius16)),
     ),
     clipBehavior: Clip.antiAlias,
     enableDrag: true,
@@ -225,13 +220,13 @@ class AppSheetFilledButton extends StatelessWidget {
         style: FilledButton.styleFrom(
           backgroundColor: scheme.primary,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
           ),
         ),
         onPressed: onPressed,
         child: Text(
           label,
-          style: TextStyle(fontSize: 16, color: scheme.onPrimary),
+          style: SpitoutTextTokens.title(context).copyWith(color: scheme.onPrimary),
         ),
       ),
     );
@@ -290,8 +285,8 @@ Future<T?> showAppSheetTop<T>({
               // 仅底部圆角、顶部直角:上沿融进屏幕顶边(消除顶部圆角处的遮罩三角),
               // 仅弹层下方保留遮罩,视觉等同「底部弹层」的镜像。
               borderRadius: const BorderRadius.only(
-                bottomLeft: Radius.circular(16),
-                bottomRight: Radius.circular(16),
+                bottomLeft: Radius.circular(SpitoutDimens.radius16),
+                bottomRight: Radius.circular(SpitoutDimens.radius16),
               ),
               clipBehavior: Clip.antiAlias,
               child: Padding(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 「(我)」后缀的共享渲染单元,统一成员管理/成员支出/AA 记账页支出人/
 /// 交易详情等所有展示本人位置的「(我)」字号、字重、颜色与间距。
@@ -21,10 +22,7 @@ class MeSuffix extends StatelessWidget {
       children: [
         Text(
           ' (${l10n.aaMe})',
-          style: TextStyle(
-            color: SpitoutTokens.textTertiary(context),
-            fontSize: 12,
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
       ],
     );
@@ -36,10 +34,7 @@ class MeSuffix extends StatelessWidget {
 TextSpan meSuffixSpan(BuildContext context, AppLocalizations l10n) {
   return TextSpan(
     text: ' (${l10n.aaMe})',
-    style: TextStyle(
-      color: SpitoutTokens.textTertiary(context),
-      fontSize: 12,
-    ),
+    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
   );
 }
 

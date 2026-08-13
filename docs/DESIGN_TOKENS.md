@@ -262,16 +262,36 @@ final color = ref.watch(expenseColorSchemeProvider) == 'green'
 
 | Token 名称 | 值 | 用途 |
 |-----------|-----|------|
+| `SpitoutDimens.p4` | `4` | 最小间距 |
 | `SpitoutDimens.p8` | `8` | 小间距 |
 | `SpitoutDimens.p12` | `12` | 中间距 |
 | `SpitoutDimens.p16` | `16` | 大间距 |
-| `SpitoutDimens.radius12` | `12` | 小圆角 |
+| `SpitoutDimens.p20` | `20` | 特大间距 |
+| `SpitoutDimens.p32` | `32` | 区块间距 |
+| `SpitoutDimens.p40` | `40` | 大区块间距 |
+| `SpitoutDimens.radius4` | `4` | 极小圆角 |
+| `SpitoutDimens.radius8` | `8` | 小圆角 |
+| `SpitoutDimens.radius12` | `12` | 中间圆角 |
 | `SpitoutDimens.radius16` | `16` | 大圆角 |
+| `SpitoutDimens.radius20` | `20` | 特大圆角 |
+| `SpitoutDimens.radius28` | `28` | 大卡片圆角 |
+| `SpitoutDimens.radius44` | `44` | 超大圆角 |
+| `SpitoutDimens.icon12` | `12` | 小图标 |
+| `SpitoutDimens.icon16` | `16` | 常规图标 |
+| `SpitoutDimens.icon20` | `20` | 头部/功能图标 |
+| `SpitoutDimens.icon22` | `22` | 强调图标 |
+| `SpitoutDimens.icon28` | `28` | 大图标 |
+| `SpitoutDimens.icon40` | `40` | 特大图标 |
 | `SpitoutDimens.listHeaderVertical` | `6` | 列表头垂直内边距 |
 | `SpitoutDimens.listRowVertical` | `8` | 列表行垂直内边距 |
 
+> **归一规则**：圆角 6/10→`radius8`、18/19/22/24→`radius20`、28/32→`radius28`、44/48→`radius44`；
+> 间距 2/6→`p4`、10→`p8`、14→`p12`、20→`p16`、24→`p20`；
+> 图标 14→`icon12`、18→`icon16`、24→`icon22`、32→`icon28`、48→`icon40`。
+> 启动页 Logo、空态与头像大尺寸（64/88/120）为组件级尺寸，暂不入 token。
+
 > 页面头部规范由 `PrimaryHeader` 组件内置承载（不设独立令牌）：
-> 留白 `padding` 上 10、下 0、左/右 14、**首行最小高度 30**（`ConstrainedBox`，无 action 与含 action 页面行高一致）、
+> 留白 `padding` 上 8、下 0、左/右 12、**首行最小高度 30**（`ConstrainedBox`，无 action 与含 action 页面行高一致）、
 > 首行标题 `SpitoutTextTokens.strongTitle` 字重 + 字号 14（w600 / 14px）、返回键与 action 图标 20px / **热区 30x30**
 > （`HeaderIconAction`，与首行高度一致）、文字链 14px/w600/主题主色（`HeaderTextAction`）、
 > 标题下拉箭头 20px（由 `PrimaryHeader` 内部以 `IconData` 渲染，调用方只传图标、不可指定 size，与功能键统一）。
@@ -315,13 +335,13 @@ boxShadow: SpitoutTokens.toastShadow,
 **注意：** 这些方法已自动适配暗黑模式文字颜色。
 
 ```dart
-// 标题样式（列表主标题）- 15px w400
+// 标题样式（列表主标题）- 16px w400
 SpitoutTextTokens.title(context)
 
-// 强调标题（统计数字）- 15px w600
+// 强调标题（统计数字）- 16px w600
 SpitoutTextTokens.strongTitle(context)
 
-// 加粗标题（大额数字）- 18px w700
+// 加粗标题（大额数字）- 18px w800
 SpitoutTextTokens.boldTitle(context)
 
 // 正文样式 - 14px w400
@@ -329,6 +349,14 @@ SpitoutTextTokens.body(context)
 
 // 标签/说明样式 - 12px，颜色取 textSecondary
 SpitoutTextTokens.label(context)
+
+// 小字/角标 - 10px，颜色取 textSecondary
+SpitoutTextTokens.caption(context)
+
+// 大额数字 display 系列 - 22 / 26 / 32px，w800
+SpitoutTextTokens.display1(context)
+SpitoutTextTokens.display2(context)
+SpitoutTextTokens.display3(context)
 ```
 
 ---

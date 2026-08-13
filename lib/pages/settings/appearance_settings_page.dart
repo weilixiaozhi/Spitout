@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import './language_settings_page.dart';
@@ -62,7 +63,7 @@ class AppearanceSettingsPage extends ConsumerWidget {
           ),
           Expanded(
             child: ListView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(SpitoutDimens.p16),
               children: [
                 // 所有偏好项合并为一个分组，不细分
                 // 排序：支出颜色 → 应用语言 → 深色模式 → 应用上锁

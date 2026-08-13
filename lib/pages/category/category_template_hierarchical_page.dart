@@ -8,8 +8,10 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'category_template_widgets.dart';
 
@@ -96,9 +98,9 @@ class _CategoryTemplateHierarchicalPageState
       children: [
         Expanded(
           child: ListView.separated(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             itemCount: groups.length,
-            separatorBuilder: (_, _) => const SizedBox(height: 12),
+            separatorBuilder: (_, _) => const SizedBox(height: SpitoutDimens.p12),
             itemBuilder: (context, index) =>
                 _buildGroup(context, groups[index]),
           ),
@@ -129,7 +131,7 @@ class _CategoryTemplateHierarchicalPageState
         _buildParentTile(context, group, expanded),
         // 展开态：父行下方内联子分类卡片（对齐记账页 _SubcategorySelectorCard 的层级观感）
         if (expanded) ...[
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           _buildChildrenCard(context, group),
         ],
       ],
@@ -155,7 +157,7 @@ class _CategoryTemplateHierarchicalPageState
           color: highlighted
               ? SpitoutTokens.surfaceSelected(context)
               : SpitoutTokens.surface(context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: Border.all(
             color: highlighted
                 ? SpitoutTokens.primary(context)
@@ -164,36 +166,32 @@ class _CategoryTemplateHierarchicalPageState
           ),
         ),
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           // 点行主体：展开/收起子类（需求 9）
           onTap: () =>
               setState(() => _expandedKey = expanded ? null : parent.key),
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+            padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
             child: Row(
               children: [
                 Icon(
                   resolveCategoryIcon(parent.iconName),
-                  size: 24,
+                  size: SpitoutDimens.icon22,
                   color: SpitoutTokens.primary(context),
                 ),
-                const SizedBox(width: 10),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text(
                     parent.name,
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                   ),
                 ),
                 Icon(
                   expanded ? AppIcons.chevronUp : AppIcons.chevronDown,
-                  size: 18,
+                  size: SpitoutDimens.icon16,
                   color: SpitoutTokens.iconTertiary(context),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 // 常驻复选框（已添加 → 勾选置灰不可点）
                 GestureDetector(
                   // key 供 widget 测试精准定位复选框（点父行其余区域是展开/收起）
@@ -201,10 +199,10 @@ class _CategoryTemplateHierarchicalPageState
                   behavior: HitTestBehavior.opaque,
                   onTap: added ? null : () => _toggleParent(group),
                   child: Padding(
-                    padding: const EdgeInsets.all(4),
+                    padding: const EdgeInsets.all(SpitoutDimens.p4),
                     child: Icon(
                       checked ? AppIcons.checkSquare : AppIcons.square,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                       color: added
                           ? SpitoutTokens.textDisabled(context)
                           : checked
@@ -224,10 +222,10 @@ class _CategoryTemplateHierarchicalPageState
   /// 展开的子分类网格卡片
   Widget _buildChildrenCard(BuildContext context, CategoryTemplateGroup group) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(SpitoutDimens.p12),
       decoration: BoxDecoration(
         color: SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
       ),
       child: GridView.builder(
         shrinkWrap: true,

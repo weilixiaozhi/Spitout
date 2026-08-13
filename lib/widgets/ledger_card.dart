@@ -5,6 +5,8 @@ library;
 
 import 'package:flutter/material.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show CloudBackendType;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/data/models.dart';
@@ -57,12 +59,12 @@ class LedgerCard extends ConsumerWidget {
       onLongPress: onLongPress,
       child: Container(
         margin: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 4,
+          horizontal: SpitoutDimens.p12,
+          vertical: SpitoutDimens.p4,
         ),
         decoration: BoxDecoration(
           color: SpitoutTokens.surface(context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: SpitoutTokens.isDark(context)
               ? Border.all(color: SpitoutTokens.border(context), width: 1)
               : null,
@@ -77,7 +79,7 @@ class LedgerCard extends ConsumerWidget {
                 ],
         ),
         child: ClipRRect(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           child: Stack(
             children: [
               // 左侧色条：仅选中时显示
@@ -91,8 +93,8 @@ class LedgerCard extends ConsumerWidget {
                     decoration: BoxDecoration(
                       color: primaryColor,
                       borderRadius: const BorderRadius.only(
-                        topLeft: Radius.circular(12),
-                        bottomLeft: Radius.circular(12),
+                        topLeft: Radius.circular(SpitoutDimens.radius12),
+                        bottomLeft: Radius.circular(SpitoutDimens.radius12),
                       ),
                     ),
                   ),
@@ -100,7 +102,7 @@ class LedgerCard extends ConsumerWidget {
 
               // 底层：账本信息（始终显示）
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(SpitoutDimens.p16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -117,11 +119,7 @@ class LedgerCard extends ConsumerWidget {
                               children: [
                                 TextSpan(
                                   text: translateLedgerName(context, ledger.name),
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.w600,
-                                    color: SpitoutTokens.textPrimary(context),
-                                  ),
+                                  style: SpitoutTextTokens.boldTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                                 ),
                               ],
                             ),
@@ -130,23 +128,20 @@ class LedgerCard extends ConsumerWidget {
 
                         // 共享账本角标 + 成员数,图标与成员管理入口保持一致
                         if (ledger.isShared) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpitoutDimens.p4),
                           Icon(
                             AppIcons.people,
-                            size: 14,
+                            size: SpitoutDimens.icon12,
                             color: primaryColor,
                           ),
-                          const SizedBox(width: 2),
+                          const SizedBox(width: SpitoutDimens.p4),
                           Text(
                             '${ledger.memberCount}',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: primaryColor,
-                            ),
+                            style: SpitoutTextTokens.label(context).copyWith(color: primaryColor),
                           ),
                         ],
 
-                        const SizedBox(width: 8),
+                        const SizedBox(width: SpitoutDimens.p8),
 
                         // 状态图标
                         _buildStatusIcon(
@@ -158,7 +153,7 @@ class LedgerCard extends ConsumerWidget {
                       ],
                     ),
 
-                    const SizedBox(height: 12),
+                    const SizedBox(height: SpitoutDimens.p12),
 
                     // 统计数据（本地和远程都显示）
                     Column(
@@ -169,31 +164,22 @@ class LedgerCard extends ConsumerWidget {
                           children: [
                             Text(
                               '${l10n.ledgersCurrency}：',
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: SpitoutTokens.textSecondary(context),
-                              ),
+                              style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                             ),
                             currencyFlagLabel(
                               context,
                               ledger.currency,
-                              textStyle: TextStyle(
-                                fontSize: 14,
-                                color: SpitoutTokens.textSecondary(context),
-                              ),
+                              textStyle: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpitoutDimens.p4),
                         // 记账笔数
                         Text(
                           l10n.ledgersRecords('${ledger.transactionCount}'),
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                         ),
-                        const SizedBox(height: 4),
+                        const SizedBox(height: SpitoutDimens.p4),
                         // 支出：账本累计支出总额（数据即 expenseTotal；中性显示，不取负、不染色）
                         Text(
                           l10n.ledgersExpense(
@@ -201,11 +187,7 @@ class LedgerCard extends ConsumerWidget {
                             formatMoneyWithCurrency(ledger.expenseTotal,
                                 currencyCode: ledger.currency),
                           ),
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
-                            color: SpitoutTokens.textPrimary(context),
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                         ),
                       ],
                     ),
@@ -223,7 +205,7 @@ class LedgerCard extends ConsumerWidget {
                     tooltip: l10n.ledgersEdit,
                     icon: Icon(
                       AppIcons.edit,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                       color: SpitoutTokens.iconSecondary(context),
                     ),
                     visualDensity: VisualDensity.compact,
@@ -276,7 +258,7 @@ class LedgerCard extends ConsumerWidget {
       final color = isSynced
           ? SpitoutTokens.statusOnline(context)
           : SpitoutTokens.statusOffline(context);
-      return Icon(AppIcons.cloudQueue, color: color, size: 20);
+      return Icon(AppIcons.cloudQueue, color: color, size: SpitoutDimens.icon20);
     }
 
     // 纯本地账本(storage_mode='local'):默认灰色硬盘图标表达"纯本地无备份"。
@@ -289,13 +271,13 @@ class LedgerCard extends ConsumerWidget {
       return const Icon(
         AppIcons.storage,
         color: SpitoutTokens.brandLocal,
-        size: 20,
+        size: SpitoutDimens.icon20,
       );
     }
     return const Icon(
       AppIcons.localStorage,
       color: SpitoutTokens.brandLocal,
-      size: 20,
+      size: SpitoutDimens.icon20,
     );
   }
 

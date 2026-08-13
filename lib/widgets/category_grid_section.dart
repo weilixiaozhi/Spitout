@@ -7,6 +7,8 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'category_grid_item.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
@@ -105,7 +107,7 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(AppLocalizations.of(context).categoryEmpty),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             _buildEditCategoryEntry(context),
           ],
         ),
@@ -165,7 +167,7 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
 
         if (_expandedCategoryId == topCat.id && hasChildren) {
           // 子分类卡片距离父分类行：8px
-          displayItems.add(const SizedBox(height: 8));
+          displayItems.add(const SizedBox(height: SpitoutDimens.p8));
           displayItems.add(
             _SubcategorySelectorCard(
               parentCategory: topCat,
@@ -183,20 +185,20 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
 
       if (i + _kColumns < topLevelCategories.length) {
         // 父分类两行之间：12px
-        displayItems.add(const SizedBox(height: 12));
+        displayItems.add(const SizedBox(height: SpitoutDimens.p12));
       }
     }
 
     // 底部「编辑分类」入口（Edit3 图标 + 文本），入口上方留白 18px
     displayItems.add(const SizedBox(height: 18));
     displayItems.add(_buildEditCategoryEntry(context));
-    displayItems.add(const SizedBox(height: 12));
+    displayItems.add(const SizedBox(height: SpitoutDimens.p12));
 
     // 整个分类区独立滚动、隐藏滚动条
     return ScrollConfiguration(
       behavior: const _NoScrollbarBehavior(),
       child: ListView(
-        padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+        padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, SpitoutDimens.p12, SpitoutDimens.p12, SpitoutDimens.p12),
         children: displayItems,
       ),
     );
@@ -295,23 +297,19 @@ class _CategoryGridSectionState extends ConsumerState<CategoryGridSection> {
         onTap: isEditorInShared
             ? null
             : () => Navigator.of(context).pushNamed(Routes.categoryManage),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
         child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p8),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(AppIcons.edit, size: 18, color: entryColor),
-              const SizedBox(width: 6),
+              Icon(AppIcons.edit, size: SpitoutDimens.icon16, color: entryColor),
+              const SizedBox(width: SpitoutDimens.p4),
               Text(
                 isEditorInShared
                     ? l10n.txEditCategoryReadOnly
                     : l10n.txEditCategory,
-                style: TextStyle(
-                  color: entryColor,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: entryColor,),
               ),
             ],
           ),
@@ -357,13 +355,13 @@ class _SubcategorySelectorCard extends ConsumerWidget {
         color: SpitoutTokens.surfaceCategoryIconLight(
           context,
         ).withValues(alpha: isDark ? 1.0 : 0.7),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
         border: isDark
             ? Border.all(color: SpitoutTokens.border(context))
             : null,
       ),
       // 子分类卡片上下内边距（horizontal:3/vertical:10）
-      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 10),
+      padding: const EdgeInsets.symmetric(horizontal: 3, vertical: SpitoutDimens.p8),
       // 子分类卡片最大可视高度 200px，内部可滚动、隐藏滚动条。
       // 200px 可完整容纳两行子分类（图标+标题），避免标题被底部边缘裁切。
       child: ConstrainedBox(

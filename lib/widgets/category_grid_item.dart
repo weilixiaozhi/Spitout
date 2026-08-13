@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/data/models.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -81,7 +82,7 @@ class CategoryGridItem extends StatelessWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(48),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius44),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -122,7 +123,7 @@ class CategoryGridItem extends StatelessWidget {
                 ),
             ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpitoutDimens.p4),
           Text(
             CategoryUtils.getDisplayName(category.name, context),
             maxLines: 1,

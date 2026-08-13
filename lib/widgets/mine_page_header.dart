@@ -8,6 +8,7 @@ import 'package:spitout/providers/ui/avatar_providers.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/theme/typography.dart';
 import 'app_route.dart';
@@ -248,9 +249,9 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
 
     return Padding(
       // 居中布局：头像在上、昵称在下，整体左右居中。
-      // 顶部留白交由 PrimaryHeader 默认 padding（top 10 / left-right 14）统一控制，
+      // 顶部留白交由 PrimaryHeader 默认 padding（top 8 / left-right 12）统一控制，
       // 此处不叠加，保证"我的"tab 首行（头像）顶距与其余 tab 一致。
-      padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 14.0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p12),
       // SizedBox(width: double.infinity) 强制 Column 占满可用宽度，
       // 使 CrossAxisAlignment.center 能真正水平居中子项；
       // 否则 Scaffold body 给的是 loose 约束，Column 会收缩到子项宽度。
@@ -263,11 +264,11 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
             // 尺寸 88x88，圆形裁切，带边框。
             Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(44),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius44),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: _showAvatarPreview,
-                borderRadius: BorderRadius.circular(44),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius44),
                 child: Container(
                   width: 88.0,
                   height: 88.0,
@@ -299,33 +300,33 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
                                 File(effectiveAvatarPath),
                                 fit: BoxFit.cover,
                                 errorBuilder: (context, error, stackTrace) =>
-                                    const PersonAvatar(size: 88, iconSize: 40),
+                                    const PersonAvatar(size: 88, iconSize: SpitoutDimens.icon40),
                               )
                             // 未设置头像:展示虚拟用户同等 person 图标,取代品牌图标。
-                            : const PersonAvatar(size: 88, iconSize: 40)),
+                            : const PersonAvatar(size: 88, iconSize: SpitoutDimens.icon40)),
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 14.0),
+            const SizedBox(height: SpitoutDimens.p12),
             // 昵称行：居中显示，单行省略。点击直接编辑。
             // 时段图标仅在已设置昵称时出现。
             Material(
               color: Colors.transparent,
-              borderRadius: BorderRadius.circular(6),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
               clipBehavior: Clip.antiAlias,
               child: InkWell(
                 onTap: _showEditDisplayName,
-                borderRadius: BorderRadius.circular(6),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                 child: Padding(
                   padding:
-                      const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                      const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4, vertical: SpitoutDimens.p8),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       if (displayName.isNotEmpty) ...[
-                        Icon(greeting.icon, size: 20.0, color: greeting.color),
-                        const SizedBox(width: 6.0),
+                        Icon(greeting.icon, size: SpitoutDimens.icon20, color: greeting.color),
+                        const SizedBox(width: SpitoutDimens.p4),
                       ],
                       Flexible(
                         child: Text(

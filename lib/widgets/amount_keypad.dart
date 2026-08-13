@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'keypad_constants.dart';
 import 'press_key.dart';
@@ -182,7 +183,7 @@ class AmountKeypad extends StatelessWidget {
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         alignment: Alignment.center,
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
         child: showTime
             ? Column(
                 mainAxisSize: MainAxisSize.min,
@@ -195,14 +196,11 @@ class AmountKeypad extends StatelessWidget {
                       fontSize: (h * 0.18).clamp(7.0, 14.0),
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: SpitoutDimens.p4),
                   Text(
                     _fmtTime(date),
-                    style: text.labelSmall?.copyWith(
-                      color: SpitoutTokens.textSecondary(context),
-                      fontWeight: FontWeight.w500,
-                      fontSize: (h * 0.18).clamp(7.0, 14.0),
-                    ),
+                    style: text.labelSmall?.copyWith(color: SpitoutTokens.textSecondary(context),
+                      fontSize: (h * 0.18).clamp(7.0, 14.0)),
                   ),
                 ],
               )
@@ -251,7 +249,7 @@ class AmountKeypad extends StatelessWidget {
                 style: TextStyle(
                   color: iconColor,
                   fontSize: h * 0.43,
-                  fontWeight: FontWeight.w700,
+                  fontWeight: FontWeight.w800,
                 ),
               )
             : Icon(

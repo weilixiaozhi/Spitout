@@ -2,12 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 全局统一页面头部组件。
 ///
-/// 设计意图：本组件是全局头部规范的唯一载体——首行留白（上/下 10、左/右 14）、
+/// 设计意图：本组件是全局头部规范的唯一载体——首行留白（上 8、下 0、左/右 12）、
 /// 首行最小高度（30）、标题样式（[SpitoutTextTokens.strongTitle] 字重 w600 + 字号 14）、
 /// 返回按钮（图标 20px / 热区 30x30）与 action 图标规格（图标 20px / 热区 30x30）、
 /// 文字链规格（[HeaderTextAction] 14px/w600）全部内置，调用方只需传内容参数
@@ -49,9 +50,9 @@ class PrimaryHeader extends ConsumerWidget {
     this.actions,
     this.bottom,
     this.content,
-    // 全局头部统一留白：状态栏底到标题的顶部留白为 10，标题行底部留白取消为 0，
-    // 左右内缩为 14；所有页面（一级 tab 与二级页）共用此默认值，请勿在调用处覆盖。
-    this.padding = const EdgeInsets.only(top: 10, left: 14, right: 14, bottom: 0),
+    // 全局头部统一留白：状态栏底到标题的顶部留白为 8，标题行底部留白取消为 0，
+    // 左右内缩为 12；所有页面（一级 tab 与二级页）共用此默认值，请勿在调用处覆盖。
+    this.padding = const EdgeInsets.only(top: SpitoutDimens.p8, left: SpitoutDimens.p12, right: SpitoutDimens.p12, bottom: 0),
     this.titleTrailing,
     this.subtitleTrailing,
     this.titleAction,
@@ -124,16 +125,16 @@ class PrimaryHeader extends ConsumerWidget {
                           IconButton(
                             // 返回键规格全局统一：图标 20px、热区 30x30，
                             // 与 HeaderIconAction 完全一致（同为首行功能键）
-                            icon: Icon(AppIcons.back, size: 20, color: iconColor),
+                            icon: Icon(AppIcons.back, size: SpitoutDimens.icon20, color: iconColor),
                             onPressed: () => Navigator.of(context).maybePop(),
-                            padding: const EdgeInsets.all(8),
+                            padding: const EdgeInsets.all(SpitoutDimens.p8),
                             constraints: const BoxConstraints(
                                 minWidth: 30, minHeight: 30),
                             style: IconButton.styleFrom(
                               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                             ),
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: SpitoutDimens.p8),
                         ],
                         Expanded(
                           child: Column(
@@ -154,13 +155,13 @@ class PrimaryHeader extends ConsumerWidget {
                                       ),
                                     ),
                                     if (titleTrailing != null) ...[
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: SpitoutDimens.p4),
                                       // 图标尺寸收归组件：固定 20px（与 HeaderIconAction 一致），
                                       // 调用方只传 IconData，杜绝各页面各自维护导致规格漂移。
-                                      Icon(titleTrailing!, size: 20, color: iconColor),
+                                      Icon(titleTrailing!, size: SpitoutDimens.icon20, color: iconColor),
                                     ],
                                     if (titleAction != null) ...[
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: SpitoutDimens.p4),
                                       // 标题隔壁的可点击功能键：复用调用方传入的 Widget
                                       // （HeaderIconAction 自带 20px / 30×30 统一规格）。
                                       titleAction!,
@@ -170,11 +171,11 @@ class PrimaryHeader extends ConsumerWidget {
                                 if (onTitleTap == null) return titleRow;
                                 return Material(
                                   color: Colors.transparent,
-                                  borderRadius: BorderRadius.circular(8),
+                                  borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                                   clipBehavior: Clip.antiAlias,
                                   child: InkWell(
                                     onTap: onTitleTap,
-                                    borderRadius: BorderRadius.circular(8),
+                                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                                     child: titleRow,
                                   ),
                                 );
@@ -193,9 +194,9 @@ class PrimaryHeader extends ConsumerWidget {
                                       ),
                                     ),
                                     if (subtitleTrailing != null) ...[
-                                      const SizedBox(width: 6),
+                                      const SizedBox(width: SpitoutDimens.p4),
                                       // 图标尺寸收归组件：固定 20px，与标题箭头一致
-                                      Icon(subtitleTrailing!, size: 20,
+                                      Icon(subtitleTrailing!, size: SpitoutDimens.icon20,
                                           color: SpitoutTokens.iconTertiary(context)),
                                     ]
                                   ],
@@ -204,11 +205,14 @@ class PrimaryHeader extends ConsumerWidget {
                           ),
                         ),
                         if (center != null) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpitoutDimens.p4),
                           DefaultTextStyle(
                             style: Theme.of(context).textTheme.labelMedium?.copyWith(
                               color: iconColor,
-                            ) ?? TextStyle(fontSize: 12, color: iconColor),
+                            ) ??
+                                SpitoutTextTokens.label(
+                                  context,
+                                ).copyWith(color: iconColor),
                             child: center!,
                           ),
                         ],
@@ -271,7 +275,7 @@ class HeaderIconAction extends StatelessWidget {
               height: 20,
               child: CircularProgressIndicator(strokeWidth: 2),
             )
-          : Icon(icon, size: 20),
+          : Icon(icon, size: SpitoutDimens.icon20),
       tooltip: tooltip,
       onPressed: spinning ? null : onPressed,
       // 热区统一 30x30（图标 20 + 四周 0）：与首行最小高度 30 一致，
@@ -304,14 +308,14 @@ class HeaderTextAction extends StatelessWidget {
     return TextButton(
       onPressed: onPressed,
       style: TextButton.styleFrom(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
         minimumSize: Size.zero,
         tapTargetSize: MaterialTapTargetSize.shrinkWrap,
         foregroundColor: Theme.of(context).colorScheme.primary,
       ),
       child: Text(
         label,
-        style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
+        style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600),
       ),
     );
   }

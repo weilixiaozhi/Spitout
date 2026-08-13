@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart' show HapticFeedback;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/pages/transaction/category_detail_page.dart';
 
@@ -503,7 +504,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     return SingleChildScrollView(
       controller: _subTabController,
       scrollDirection: Axis.horizontal,
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Row(
         spacing: 8,
         children: [
@@ -555,7 +556,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       constraints: const BoxConstraints(maxWidth: 214),
       child: Container(
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
           boxShadow: SpitoutTokens.tabBarShadow,
         ),
         child: CapsuleSwitcher<AnalyticsPeriod>(
@@ -640,24 +641,20 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   '—',
                   style: SpitoutTextTokens.title(
                     context,
-                  ).copyWith(fontSize: 16),
+                  ),
                 )
               : Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
                       mom.up ? AppIcons.arrowUp : AppIcons.arrowDown,
-                      size: 14,
+                      size: SpitoutDimens.icon12,
                       color: mom.up ? momUpColor : momDownColor,
                     ),
-                    const SizedBox(width: 2),
+                    const SizedBox(width: SpitoutDimens.p4),
                     Text(
                       mom.value,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: mom.up ? momUpColor : momDownColor,
-                      ),
+                      style: SpitoutTextTokens.strongTitle(context).copyWith(color: mom.up ? momUpColor : momDownColor),
                     ),
                   ],
                 ),
@@ -682,12 +679,9 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: SpitoutDimens.p4),
           value,
         ],
       ),
@@ -795,14 +789,14 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 ],
                 // 顶部周期子 Tab（悬浮在内容上方）
                 bottom: Padding(
-                  padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                  padding: const EdgeInsets.fromLTRB(SpitoutDimens.p8, 0, SpitoutDimens.p8, SpitoutDimens.p8),
                   child: _buildPeriodSubTabs(),
                 ),
               ),
               // 横滑切账期提示：放在子 Tab 下方（共用 SwipeHint，样式与首页一致）
               SwipeHint(
                 icon: AppIcons.swipe,
-                padding: const EdgeInsets.fromLTRB(8, 4, 8, 0),
+                padding: const EdgeInsets.fromLTRB(SpitoutDimens.p8, SpitoutDimens.p4, SpitoutDimens.p8, 0),
                 text: AppLocalizations.of(context).analyticsSwipePeriodHint(
                   _period == AnalyticsPeriod.week
                       ? AppLocalizations.of(context).analyticsWeek
@@ -860,26 +854,26 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
   /// 加载态骨架屏：近似最终布局，避免 CircularProgressIndicator 的突兀感。
   Widget _buildSkeleton() {
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       children: [
         SkeletonBar(height: 18, width: 100),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         Row(
           children: const [
             Expanded(child: SkeletonBar(height: 40)),
-            SizedBox(width: 12),
+            SizedBox(width: SpitoutDimens.p12),
             Expanded(child: SkeletonBar(height: 40)),
-            SizedBox(width: 12),
+            SizedBox(width: SpitoutDimens.p12),
             Expanded(child: SkeletonBar(height: 40)),
           ],
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         SkeletonBar(height: 240, widthFactor: 1),
-        const SizedBox(height: 24),
+        const SizedBox(height: SpitoutDimens.p20),
         SkeletonBar(height: 18, width: 80),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         SkeletonBar(height: 250, widthFactor: 1),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         for (var i = 0; i < 4; i++) const SkeletonListTile(),
       ],
     );
@@ -890,22 +884,22 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     final l10n = AppLocalizations.of(context);
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(24),
+        padding: const EdgeInsets.all(SpitoutDimens.p20),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
               AppIcons.cloudOff,
-              size: 48,
+              size: SpitoutDimens.icon40,
               color: SpitoutTokens.textTertiary(context),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             Text(
               l10n.analyticsLoadFailed,
               style: TextStyle(color: SpitoutTokens.textSecondary(context)),
               textAlign: TextAlign.center,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextButton.icon(
               onPressed: () {
                 setState(() {
@@ -913,7 +907,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                   _dataFuture = null;
                 });
               },
-              icon: const Icon(AppIcons.refresh, size: 18),
+              icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
               label: Text(l10n.analyticsRetry),
             ),
           ],
@@ -948,15 +942,15 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
         }
       },
       child: ListView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpitoutDimens.p16),
         children: [
           // 支出趋势模块
           Text(l10n.analyticsTrend, style: SpitoutTextTokens.title(context)),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           _buildTrendGrid(sum, dailyAvg, mom, primary),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             child: SizedBox(
               // 折线图高度 280：容纳 Y 轴刻度标签 + X 轴单位 + 上下安全区留白
               height: 280,
@@ -974,15 +968,15 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
               ),
             ),
           ),
-          const SizedBox(height: 24),
+          const SizedBox(height: SpitoutDimens.p20),
           // 分类排行模块
           Text(
             l10n.analyticsCategoryLabel,
             style: SpitoutTextTokens.title(context),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           CategoryDonutChart(data: donutData, sum: sum),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           // 空数据态不展示任何列表条目，仅保留占位区域
           for (final item in catData)
             CategoryRankRow(
@@ -1051,7 +1045,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     final placeholder = SpitoutTokens.divider(context);
     return List.generate(4, (i) {
       return Padding(
-        padding: const EdgeInsets.only(bottom: 10),
+        padding: const EdgeInsets.only(bottom: SpitoutDimens.p8),
         child: Row(
           children: [
             Container(
@@ -1059,10 +1053,10 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
               height: 28,
               decoration: BoxDecoration(
                 color: placeholder,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -1072,10 +1066,10 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     height: 12,
                     decoration: BoxDecoration(
                       color: placeholder,
-                      borderRadius: BorderRadius.circular(4),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                   // 带下横线的占位进度条（对应分类占比条）
                   Container(
                     height: 6,
@@ -1087,13 +1081,13 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                 ],
               ),
             ),
-            const SizedBox(width: 10),
+            const SizedBox(width: SpitoutDimens.p8),
             Container(
               width: 48,
               height: 12,
               decoration: BoxDecoration(
                 color: placeholder,
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
               ),
             ),
           ],
@@ -1237,20 +1231,20 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     if (count <= 0) return const SizedBox.shrink();
     final l10n = AppLocalizations.of(context);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 4, 12, 0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, SpitoutDimens.p4, SpitoutDimens.p12, 0),
       child: Material(
         color: SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
           child: Row(
             children: [
               Icon(
                 AppIcons.currencyExchange,
-                size: 16,
+                size: SpitoutDimens.icon16,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               Expanded(
                 child: Text(
                   l10n.recalcForeignTxBanner,
@@ -1265,7 +1259,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     : () => _runRecalcForeignTx(count),
                 child: Text(
                   l10n.recalcForeignTxAction,
-                  style: TextStyle(fontSize: 12),
+                  style: SpitoutTextTokens.label(context),
                 ),
               ),
             ],
@@ -1281,15 +1275,12 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     if (count <= 0) return const SizedBox.shrink();
     final base = ref.watch(currentLedgerCurrencyProvider);
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, 0),
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
           AppLocalizations.of(context).statsConvertedFootnote(base),
-          style: TextStyle(
-            fontSize: 11,
-            color: SpitoutTokens.textTertiary(context),
-          ),
+          style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
         ),
       ),
     );
@@ -1407,7 +1398,7 @@ class _SubTabChipBuilderState extends State<_SubTabChipBuilder> {
         highlightColor: primary.withValues(alpha: 0.06),
         // 显式约束 ink 区域为整块 chip，避免只在 Text 上出 ink。
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+          padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8, horizontal: SpitoutDimens.p4),
           decoration: BoxDecoration(
             border: Border(
               bottom: BorderSide(
@@ -1418,11 +1409,8 @@ class _SubTabChipBuilderState extends State<_SubTabChipBuilder> {
           ),
           child: Text(
             widget.tab.label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-              color: selected ? primary : SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.body(context).copyWith(fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: selected ? primary : SpitoutTokens.textSecondary(context)),
           ),
         ),
       ),

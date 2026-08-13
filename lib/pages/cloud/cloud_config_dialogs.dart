@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/widgets.dart';
 
@@ -76,7 +77,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
       // 删除图标放在标题栏右侧 trailing,吸顶时常驻可见。
       trailing: widget.canDelete
           ? IconButton(
-              icon: const Icon(AppIcons.delete, size: 22),
+              icon: const Icon(AppIcons.delete, size: SpitoutDimens.icon22),
               tooltip: AppLocalizations.of(context).cloudClearConfig,
               // 用弹窗自身路由 context 直接 pop 删除哨兵。
               onPressed: () => Navigator.of(context).pop('__DELETE__'),
@@ -85,7 +86,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
       showGrabHandle: false,
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
-      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
       // ignore: sort_child_properties_last
       child: SingleChildScrollView(
         child: Column(
@@ -111,7 +112,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
             ),
             // API Prefix 输入框移除 —— 后端固定 /api/v1,前端用户没有配置场景;
             // 保留 apiPrefixController(默认 /api/v1)让 save 流程不破。
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: accountController,
               focusNode: accountFocus,
@@ -128,7 +129,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
               ),
               keyboardType: TextInputType.text,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: passwordController,
               focusNode: passwordFocus,
@@ -151,7 +152,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
                     obscurePassword
                         ? AppIcons.visibility
                         : AppIcons.visibilityOff,
-                    size: 20,
+                    size: SpitoutDimens.icon20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -173,7 +174,7 @@ class _SpitoutCloudConfigDialogState extends State<SpitoutCloudConfigDialog> {
               child: Text(AppLocalizations.of(context).commonCancel),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: FilledButton(
               onPressed: () {
@@ -266,7 +267,7 @@ class _SupabaseConfigDialogState extends State<SupabaseConfigDialog> {
       // 删除图标常驻于标题栏右侧 trailing。
       trailing: widget.canDelete
           ? IconButton(
-              icon: const Icon(AppIcons.delete, size: 22),
+              icon: const Icon(AppIcons.delete, size: SpitoutDimens.icon22),
               tooltip: AppLocalizations.of(context).cloudClearConfig,
               // 删除图标按钮高度固定 32px:默认 48px 最小高度会把标题栏 Row 撑到 48px,
               // 导致标题居中后下方多挤 12px 空白、且「无图标」状态 Row 仅 24px,两种状态
@@ -280,7 +281,7 @@ class _SupabaseConfigDialogState extends State<SupabaseConfigDialog> {
       showGrabHandle: false,
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
-      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
       // ignore: sort_child_properties_last
       child: SingleChildScrollView(
         child: Column(
@@ -301,7 +302,7 @@ class _SupabaseConfigDialogState extends State<SupabaseConfigDialog> {
               ),
               keyboardType: TextInputType.url,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             // anon key 为多行输入框,保持换行动作,不强制 next 链式切换。
             TextField(
               controller: keyController,
@@ -317,7 +318,7 @@ class _SupabaseConfigDialogState extends State<SupabaseConfigDialog> {
               minLines: 1,
               maxLines: 5,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: bucketController,
               focusNode: bucketFocus,
@@ -343,7 +344,7 @@ class _SupabaseConfigDialogState extends State<SupabaseConfigDialog> {
               child: Text(AppLocalizations.of(context).commonCancel),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: FilledButton(
               onPressed: () {
@@ -448,7 +449,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
       // 删除图标常驻于标题栏右侧 trailing。
       trailing: widget.canDelete
           ? IconButton(
-              icon: const Icon(AppIcons.delete, size: 22),
+              icon: const Icon(AppIcons.delete, size: SpitoutDimens.icon22),
               tooltip: AppLocalizations.of(context).cloudClearConfig,
               // 删除图标按钮高度固定 32px:默认 48px 最小高度会把标题栏 Row 撑到 48px,
               // 导致标题居中后下方多挤 12px 空白、且「无图标」状态 Row 仅 24px,两种状态
@@ -462,7 +463,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
       showGrabHandle: false,
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
-      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
       // ignore: sort_child_properties_last
       child: SingleChildScrollView(
         child: Column(
@@ -482,7 +483,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
                 errorText: _urlError,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: usernameController,
               focusNode: usernameFocus,
@@ -496,7 +497,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
                 errorText: _usernameError,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: passwordController,
               focusNode: passwordFocus,
@@ -513,7 +514,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
                     obscurePassword
                         ? AppIcons.visibility
                         : AppIcons.visibilityOff,
-                    size: 20,
+                    size: SpitoutDimens.icon20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -524,7 +525,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
               ),
               obscureText: obscurePassword,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: pathController,
               focusNode: pathFocus,
@@ -552,7 +553,7 @@ class _WebdavConfigDialogState extends State<WebdavConfigDialog> {
               child: Text(AppLocalizations.of(context).commonCancel),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: FilledButton(
               onPressed: () {
@@ -693,7 +694,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
       // 删除图标常驻于标题栏右侧 trailing。
       trailing: widget.canDelete
           ? IconButton(
-              icon: const Icon(AppIcons.delete, size: 22),
+              icon: const Icon(AppIcons.delete, size: SpitoutDimens.icon22),
               tooltip: AppLocalizations.of(context).cloudClearConfig,
               // 删除图标按钮高度固定 32px:默认 48px 最小高度会把标题栏 Row 撑到 48px,
               // 导致标题居中后下方多挤 12px 空白、且「无图标」状态 Row 仅 24px,两种状态
@@ -707,7 +708,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
       showGrabHandle: false,
       // 内容区顶部内边距为 0:叠加 header 底部 0 后,标题↔首行间距收敛到最小
       // (仅剩标题在 32px 行内居中产生的 ~4px 行内空隙)。
-      contentPadding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, 0, SpitoutDimens.p16, SpitoutDimens.p16),
       // ignore: sort_child_properties_last
       child: SingleChildScrollView(
         child: Column(
@@ -728,7 +729,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
               ),
               keyboardType: TextInputType.url,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: regionController,
               focusNode: regionFocus,
@@ -740,7 +741,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
                 hintText: AppLocalizations.of(context).cloudS3RegionHint,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: accessKeyController,
               focusNode: accessKeyFocus,
@@ -753,7 +754,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
                 errorText: _accessKeyError,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: secretKeyController,
               focusNode: secretKeyFocus,
@@ -769,7 +770,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
                     obscureSecretKey
                         ? AppIcons.visibility
                         : AppIcons.visibilityOff,
-                    size: 20,
+                    size: SpitoutDimens.icon20,
                   ),
                   onPressed: () {
                     setState(() {
@@ -780,7 +781,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
               ),
               obscureText: obscureSecretKey,
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             TextField(
               controller: bucketController,
               focusNode: bucketFocus,
@@ -793,7 +794,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
                 errorText: _bucketError,
               ),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             Row(
               children: [
                 Expanded(
@@ -809,7 +810,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 8),
+            const SizedBox(height: SpitoutDimens.p8),
             TextField(
               controller: portController,
               focusNode: portFocus,
@@ -834,7 +835,7 @@ class _S3ConfigDialogState extends State<S3ConfigDialog> {
               child: Text(AppLocalizations.of(context).commonCancel),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: FilledButton(
               onPressed: () {

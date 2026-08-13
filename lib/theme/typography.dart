@@ -7,31 +7,31 @@ class SpitoutTextTokens {
   // 标题：用于列表主标题、条目标题
   static TextStyle title(BuildContext ctx) =>
       Theme.of(ctx).textTheme.bodyLarge?.copyWith(
-            fontSize: 15,
+            fontSize: 16,
             color: SpitoutTokens.textPrimary(ctx),
           ) ??
       TextStyle(
-          fontSize: 15, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w400);
+          fontSize: 16, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w400);
 
   // 强调标题：用于统计数字等需要比普通列表标题更醒目的场景
   static TextStyle strongTitle(BuildContext ctx) =>
       Theme.of(ctx).textTheme.bodyLarge?.copyWith(
-            fontSize: 15,
+            fontSize: 16,
             color: SpitoutTokens.textPrimary(ctx),
             fontWeight: FontWeight.w600,
           ) ??
       TextStyle(
-          fontSize: 15, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w600);
+          fontSize: 16, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w600);
 
   // 加粗标题：用于极强强调（如大额数字/主标题）
   static TextStyle boldTitle(BuildContext ctx) =>
       Theme.of(ctx).textTheme.bodyLarge?.copyWith(
             fontSize: 18,
             color: SpitoutTokens.textPrimary(ctx),
-            fontWeight: FontWeight.w700,
+            fontWeight: FontWeight.w800,
           ) ??
       TextStyle(
-          fontSize: 18, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w700);
+          fontSize: 18, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w800);
 
   // 正文：用于一般性文字
   static TextStyle body(BuildContext ctx) =>
@@ -48,6 +48,42 @@ class SpitoutTextTokens {
             color: SpitoutTokens.textSecondary(ctx),
           ) ??
       TextStyle(fontSize: 12, color: SpitoutTokens.textSecondary(ctx));
+
+  // 小字/角标：用于时间戳、辅助标注（10px，颜色取 textSecondary）
+  static TextStyle caption(BuildContext ctx) =>
+      Theme.of(ctx).textTheme.bodySmall?.copyWith(
+            fontSize: 10,
+            color: SpitoutTokens.textSecondary(ctx),
+          ) ??
+      TextStyle(fontSize: 10, color: SpitoutTokens.textSecondary(ctx));
+
+  // 大额数字 display 系列：22 / 26 / 32px，w800，用于金额/统计大数
+  static TextStyle display1(BuildContext ctx) =>
+      Theme.of(ctx).textTheme.bodyLarge?.copyWith(
+            fontSize: 22,
+            color: SpitoutTokens.textPrimary(ctx),
+            fontWeight: FontWeight.w800,
+          ) ??
+      TextStyle(
+          fontSize: 22, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w800);
+
+  static TextStyle display2(BuildContext ctx) =>
+      Theme.of(ctx).textTheme.bodyLarge?.copyWith(
+            fontSize: 26,
+            color: SpitoutTokens.textPrimary(ctx),
+            fontWeight: FontWeight.w800,
+          ) ??
+      TextStyle(
+          fontSize: 26, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w800);
+
+  static TextStyle display3(BuildContext ctx) =>
+      Theme.of(ctx).textTheme.bodyLarge?.copyWith(
+            fontSize: 32,
+            color: SpitoutTokens.textPrimary(ctx),
+            fontWeight: FontWeight.w800,
+          ) ??
+      TextStyle(
+          fontSize: 32, color: SpitoutTokens.textPrimary(ctx), fontWeight: FontWeight.w800);
 }
 
 // ============================================================================

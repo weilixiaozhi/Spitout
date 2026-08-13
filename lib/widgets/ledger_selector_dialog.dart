@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 显示账本选择器
@@ -59,11 +60,11 @@ class _LedgerSelectorDialogState extends ConsumerState<LedgerSelectorDialog> {
         final ledgers = snapshot.data!;
         if (ledgers.isEmpty) {
           return SimpleDialog(
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
             title: Text(l10n.ledgerSelectTitle),
             children: [
               Padding(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(SpitoutDimens.p16),
                 child: Text(l10n.ledgersEmpty),
               ),
             ],
@@ -71,7 +72,7 @@ class _LedgerSelectorDialogState extends ConsumerState<LedgerSelectorDialog> {
         }
 
         return SimpleDialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
           title: Text(l10n.ledgerSelectTitle),
           children: ledgers.map((ledger) {
             final isSelected = ledger.id == widget.currentLedgerId;
@@ -83,7 +84,7 @@ class _LedgerSelectorDialogState extends ConsumerState<LedgerSelectorDialog> {
                     isSelected ? AppIcons.checkCircle : AppIcons.radioUnchecked,
                     color: isSelected ? primaryColor : null,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   Expanded(
                     child: Text(
                       ledger.name,

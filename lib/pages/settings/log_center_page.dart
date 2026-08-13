@@ -6,6 +6,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:share_plus/share_plus.dart';
 
 import 'package:spitout/core/logging/logger_service.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/l10n/app_localizations.dart';
@@ -118,8 +120,8 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
           // 搜索框
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 8.0,
+              horizontal: SpitoutDimens.p12,
+              vertical: SpitoutDimens.p8,
             ),
             child: TextField(
               controller: _searchController,
@@ -136,8 +138,8 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                       )
                     : null,
                 contentPadding: EdgeInsets.symmetric(
-                  horizontal: 12.0,
-                  vertical: 8.0,
+                  horizontal: SpitoutDimens.p12,
+                  vertical: SpitoutDimens.p8,
                 ),
               ),
               onChanged: (value) {
@@ -149,7 +151,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
           Padding(
             padding: EdgeInsets.symmetric(
               horizontal: 0,
-              vertical: 4.0,
+              vertical: SpitoutDimens.p4,
             ),
             child: SectionCard(
               margin: EdgeInsets.zero,
@@ -158,7 +160,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                 children: [
                   // 日志级别过滤
                   Padding(
-                    padding: EdgeInsets.only(bottom: 8.0),
+                    padding: EdgeInsets.only(bottom: SpitoutDimens.p8),
                     child: Text(
                       l10n.logCenterFilterLevel,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -187,10 +189,10 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                       );
                     }).toList(),
                   ),
-                  SizedBox(height: 12.0),
+                  SizedBox(height: SpitoutDimens.p12),
                   // 平台过滤
                   Padding(
-                    padding: EdgeInsets.only(bottom: 8.0),
+                    padding: EdgeInsets.only(bottom: SpitoutDimens.p8),
                     child: Text(
                       l10n.logCenterFilterPlatform,
                       style: Theme.of(context).textTheme.labelMedium?.copyWith(
@@ -232,8 +234,8 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
           // 日志统计
           Padding(
             padding: EdgeInsets.symmetric(
-              horizontal: 12.0,
-              vertical: 8.0,
+              horizontal: SpitoutDimens.p12,
+              vertical: SpitoutDimens.p8,
             ),
             child: Row(
               children: [
@@ -243,7 +245,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                         color: SpitoutTokens.textSecondary(context),
                       ),
                 ),
-                SizedBox(width: 16.0),
+                SizedBox(width: SpitoutDimens.p16),
                 Text(
                   '${l10n.logCenterFiltered}: ${filteredLogs.length}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -265,7 +267,7 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                           size: 64.0,
                           color: SpitoutTokens.textSecondary(context),
                         ),
-                        SizedBox(height: 16.0),
+                        SizedBox(height: SpitoutDimens.p16),
                         Text(
                           l10n.logCenterEmpty,
                           style:
@@ -278,8 +280,8 @@ class _LogCenterPageState extends ConsumerState<LogCenterPage> {
                   )
                 : ListView.builder(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 12.0,
-                      vertical: 8.0,
+                      horizontal: SpitoutDimens.p12,
+                      vertical: SpitoutDimens.p8,
                     ),
                     itemCount: filteredLogs.length,
                     itemBuilder: (context, index) {
@@ -359,12 +361,12 @@ class _LogEntryCard extends ConsumerWidget {
     };
 
     return SectionCard(
-      margin: EdgeInsets.only(bottom: 8.0),
+      margin: EdgeInsets.only(bottom: SpitoutDimens.p8),
       child: InkWell(
         onTap: () => _showLogDetail(context),
         onLongPress: () => _copyLog(context),
         child: Padding(
-          padding: EdgeInsets.all(12.0),
+          padding: EdgeInsets.all(SpitoutDimens.p12),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -374,13 +376,13 @@ class _LogEntryCard extends ConsumerWidget {
                   // 级别标签
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 6.0,
-                      vertical: 2.0,
+                      horizontal: SpitoutDimens.p4,
+                      vertical: SpitoutDimens.p4,
                     ),
                     decoration: BoxDecoration(
                       color: levelColor.withValues(alpha: 0.1),
                       borderRadius:
-                          BorderRadius.circular(4.0),
+                          BorderRadius.circular(SpitoutDimens.radius4),
                       border: Border.all(color: levelColor, width: 1),
                     ),
                     child: Text(
@@ -391,17 +393,17 @@ class _LogEntryCard extends ConsumerWidget {
                           ),
                     ),
                   ),
-                  SizedBox(width: 6.0),
+                  SizedBox(width: SpitoutDimens.p4),
                   // 平台标签
                   Container(
                     padding: EdgeInsets.symmetric(
-                      horizontal: 6.0,
-                      vertical: 2.0,
+                      horizontal: SpitoutDimens.p4,
+                      vertical: SpitoutDimens.p4,
                     ),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surfaceSecondary(context),
                       borderRadius:
-                          BorderRadius.circular(4.0),
+                          BorderRadius.circular(SpitoutDimens.radius4),
                     ),
                     child: Text(
                       log.platform.displayName,
@@ -420,16 +422,13 @@ class _LogEntryCard extends ConsumerWidget {
                   ),
                 ],
               ),
-              SizedBox(height: 8.0),
+              SizedBox(height: SpitoutDimens.p8),
               // Tag
               Text(
                 '[${log.tag}]',
-                style: Theme.of(context).textTheme.labelMedium?.copyWith(
-                      color: SpitoutTokens.textSecondary(context),
-                      fontWeight: FontWeight.w500,
-                    ),
+                style: Theme.of(context).textTheme.labelMedium?.copyWith(color: SpitoutTokens.textSecondary(context)),
               ),
-              SizedBox(height: 4.0),
+              SizedBox(height: SpitoutDimens.p4),
               // 消息内容
               Text(
                 log.message,
@@ -441,7 +440,7 @@ class _LogEntryCard extends ConsumerWidget {
               ),
               // 错误信息（如果有）
               if (log.error != null) ...[
-                SizedBox(height: 4.0),
+                SizedBox(height: SpitoutDimens.p4),
                 Text(
                   '${AppLocalizations.of(context).logCenterDetailError}: '
                   '${log.error}',
@@ -490,23 +489,20 @@ class _LogEntryCard extends ConsumerWidget {
               const Divider(),
               Text(
                 log.message,
-                style: const TextStyle(fontSize: 14),
+                style: SpitoutTextTokens.body(context),
               ),
               if (log.error != null) ...[
                 const Divider(),
                 Text(
                   '${l10n.logCenterDetailError}: ${log.error}',
-                  style: TextStyle(
-                    color: SpitoutTokens.error(context),
-                    fontSize: 12,
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.error(context)),
                 ),
               ],
               if (log.stackTrace != null) ...[
                 const Divider(),
                 Text(
                   '${l10n.logCenterDetailStackTrace}:\n${log.stackTrace}',
-                  style: const TextStyle(fontSize: 10),
+                  style: SpitoutTextTokens.caption(context),
                 ),
               ],
             ],
@@ -543,7 +539,7 @@ class _DetailRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -551,16 +547,13 @@ class _DetailRow extends StatelessWidget {
             width: 60,
             child: Text(
               '$label:',
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 12,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.bold),
             ),
           ),
           Expanded(
             child: Text(
               value,
-              style: const TextStyle(fontSize: 12),
+              style: SpitoutTextTokens.label(context),
             ),
           ),
         ],

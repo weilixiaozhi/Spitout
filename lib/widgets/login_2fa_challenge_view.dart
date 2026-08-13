@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show SpitoutCloudProvider, TwoFactorChallengeRequest;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
@@ -112,12 +114,9 @@ class _Login2FAChallengeDialogState
     final hasRecovery =
         widget.request.availableMethods.contains('recovery_code');
 
-    final hintStyle = TextStyle(
-      color: SpitoutTokens.textTertiary(context),
-      fontSize: 14,
+    final hintStyle = SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textTertiary(context),
       letterSpacing: 0,
-      fontWeight: FontWeight.normal,
-    );
+      fontWeight: FontWeight.normal);
 
     return AlertDialog(
       title: Text(l10n.twofaChallengeTitle),
@@ -129,12 +128,9 @@ class _Login2FAChallengeDialogState
           children: [
             Text(
               widget.request.account,
-              style: TextStyle(
-                color: SpitoutTokens.textSecondary(context),
-                fontSize: 12,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             if (hasRecovery)
               Row(
                 children: [
@@ -170,7 +166,7 @@ class _Login2FAChallengeDialogState
                   ),
                 ],
               ),
-            if (hasRecovery) const SizedBox(height: 12),
+            if (hasRecovery) const SizedBox(height: SpitoutDimens.p12),
             TextField(
               controller: _codeController,
               autofocus: true,
@@ -196,7 +192,7 @@ class _Login2FAChallengeDialogState
                     : l10n.twofaRecoveryInputPlaceholder,
                 hintStyle: hintStyle,
                 contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 12, vertical: 14),
+                    horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p12),
               ),
               onChanged: (_) {
                 if (_errorMessage != null) {
@@ -210,30 +206,27 @@ class _Login2FAChallengeDialogState
               },
             ),
             if (_errorMessage != null) ...[
-              const SizedBox(height: 8),
+              const SizedBox(height: SpitoutDimens.p8),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 8, vertical: 6),
+                    horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
                 decoration: BoxDecoration(
                   color: Theme.of(context).colorScheme.error.withValues(
                         alpha: 0.08,
                       ),
-                  borderRadius: BorderRadius.circular(6),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
                 ),
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Icon(AppIcons.error,
-                        size: 16,
+                        size: SpitoutDimens.icon16,
                         color: Theme.of(context).colorScheme.error),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: SpitoutDimens.p4),
                     Expanded(
                       child: Text(
                         _errorMessage!,
-                        style: TextStyle(
-                          color: Theme.of(context).colorScheme.error,
-                          fontSize: 12,
-                        ),
+                        style: SpitoutTextTokens.label(context).copyWith(color: Theme.of(context).colorScheme.error),
                       ),
                     ),
                   ],
@@ -287,7 +280,7 @@ class _MethodTab extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8, horizontal: SpitoutDimens.p12),
         decoration: BoxDecoration(
           border: Border(
             bottom: BorderSide(
@@ -301,13 +294,10 @@ class _MethodTab extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              color: selected
+            style: SpitoutTextTokens.body(context).copyWith(color: selected
                   ? Theme.of(context).colorScheme.primary
                   : SpitoutTokens.textSecondary(context),
-              fontWeight: selected ? FontWeight.w600 : FontWeight.normal,
-              fontSize: 14,
-            ),
+              fontWeight: selected ? FontWeight.w600 : FontWeight.normal),
           ),
         ),
       ),

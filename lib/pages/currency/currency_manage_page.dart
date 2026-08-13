@@ -4,6 +4,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -75,25 +77,22 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
           Expanded(
             child: ListView(
               padding: const EdgeInsets.symmetric(
-                horizontal: 12.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p12,
+                vertical: SpitoutDimens.p8,
               ),
               children: [
                 // 顶部统计:已选 N 个币种。实时跟随 visible 集合变化。
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 4.0,
-                    vertical: 4.0,
+                    horizontal: SpitoutDimens.p4,
+                    vertical: SpitoutDimens.p4,
                   ),
                   child: Text(
                     l10n.currencyManageCount(visible.length),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                 ),
-                const SizedBox(height: 4.0),
+                const SizedBox(height: SpitoutDimens.p4),
                 // 搜索框:复用 ledgersSearchCurrency 文案与各 picker 交互
                 TextField(
                   controller: _searchController,
@@ -102,7 +101,7 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
                     hintText: l10n.ledgersSearchCurrency,
                     suffixIcon: _query.isNotEmpty
                         ? IconButton(
-                            icon: const Icon(AppIcons.close, size: 20),
+                            icon: const Icon(AppIcons.close, size: SpitoutDimens.icon20),
                             onPressed: () {
                               _searchController.clear();
                               setState(() => _query = '');
@@ -112,18 +111,15 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
                   ),
                   onChanged: (v) => setState(() => _query = v),
                 ),
-                const SizedBox(height: 8.0),
+                const SizedBox(height: SpitoutDimens.p8),
                 if (filtered.isEmpty)
                   // 筛选无匹配:空状态提示
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 32.0),
+                    padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p32),
                     child: Center(
                       child: Text(
                         l10n.commonEmpty,
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: SpitoutTokens.textTertiary(context),
-                        ),
+                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                       ),
                     ),
                   )
@@ -133,7 +129,7 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
                   Container(
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surfaceElevated(context),
-                      borderRadius: BorderRadius.circular(8.0),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                     ),
                     child: Column(
                       children: [
@@ -158,20 +154,17 @@ class _CurrencyManagePageState extends ConsumerState<CurrencyManagePage> {
                       ],
                     ),
                   ),
-                const SizedBox(height: 16.0),
+                const SizedBox(height: SpitoutDimens.p16),
                 // 底部说明:隐藏的币种不影响已有交易,随时可重新启用
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 4.0),
+                  padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                   child: Text(
                     l10n.currencyManageHint,
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                      height: 1.4,
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context),
+                      height: 1.4),
                   ),
                 ),
-                const SizedBox(height: 8.0),
+                const SizedBox(height: SpitoutDimens.p8),
               ],
             ),
           ),
@@ -209,8 +202,8 @@ class _CurrencyManageRow extends ConsumerWidget {
           : () => toggleCurrencyVisibility(ref, info.code),
       child: Padding(
         padding: const EdgeInsets.symmetric(
-          horizontal: 12.0,
-          vertical: 10.0,
+          horizontal: SpitoutDimens.p12,
+          vertical: SpitoutDimens.p8,
         ),
         child: Row(
           children: [
@@ -220,44 +213,35 @@ class _CurrencyManageRow extends ConsumerWidget {
             // 固定列宽后，名称列在所有行中对齐到同一 x 位置，UI 口径全局一致。
             currencySymbolColumn(
               info.code,
-              style: TextStyle(
-                fontSize: 16,
-                color: SpitoutTokens.textSecondary(context),
-              ),
+              style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
             // 与弹窗 ListTile 的 horizontalTitleGap=16 保持一致，
             // 保证符号列到名称列的间距与各处选择列表相同。
-            const SizedBox(width: 16.0),
+            const SizedBox(width: SpitoutDimens.p16),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     '${info.name} (${info.code})',
-                    style: TextStyle(
-                      fontSize: 15,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                   ),
                   if (isBase)
                     // 主币种锁定提示:让用户明确为何该行不可取消
                     Padding(
-                      padding: const EdgeInsets.only(top: 2.0),
+                      padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Icon(
                             AppIcons.lock,
-                            size: 12,
+                            size: SpitoutDimens.icon12,
                             color: SpitoutTokens.textTertiary(context),
                           ),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           Text(
                             l10n.currencyManageBaseLocked,
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: SpitoutTokens.textTertiary(context),
-                            ),
+                            style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                           ),
                         ],
                       ),

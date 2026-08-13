@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudUser, CloudBackendType;
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/widgets/widgets.dart';
@@ -45,7 +47,7 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
     if (ledgerId == 0) {
       // 无账本时展示简化提示（原独立页面为整页 Scaffold，嵌入后收敛为行内文案）
       return Padding(
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         child: Text(
           AppLocalizations.of(context).aiOcrNoLedger,
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
@@ -182,13 +184,10 @@ class _CloudSyncSectionState extends ConsumerState<CloudSyncSection> {
             children: [
               // 提示文案
               Padding(
-                padding: const EdgeInsets.only(bottom: 12),
+                padding: const EdgeInsets.only(bottom: SpitoutDimens.p12),
                 child: Text(
                   AppLocalizations.of(context).cloudSyncHint,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ),
               // 同步操作 Section

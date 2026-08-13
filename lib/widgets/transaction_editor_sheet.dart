@@ -13,6 +13,8 @@ import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart' show AaMode;
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'toast.dart';
 import 'wheel_date_picker.dart';
@@ -531,7 +533,7 @@ class _TransactionEditorSheetState
           constraints: BoxConstraints(maxHeight: sheetMaxH),
           decoration: BoxDecoration(
             color: SpitoutTokens.surfaceSheet(context),
-            borderRadius: const BorderRadius.vertical(top: Radius.circular(16)),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(SpitoutDimens.radius16)),
           ),
           child: Padding(
             // sheet 背景已由 SafeArea 顶到状态栏下面，顶部无需再内缩；
@@ -580,7 +582,7 @@ class _TransactionEditorSheetState
                   child: Container(
                     color: SpitoutTokens.keypadBackground(context),
                     child: Padding(
-                      padding: const EdgeInsets.fromLTRB(10, 10, 10, 40),
+                      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p8, SpitoutDimens.p8, SpitoutDimens.p8, SpitoutDimens.p40),
                       child: LayoutBuilder(
                         builder: (ctx, c) {
                           // 6 行均分：备注行永远比其余 5 行矮 [KeypadLayout.noteRowDelta]px，
@@ -642,7 +644,7 @@ class _TransactionEditorSheetState
     bool aaEnabled,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 4),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p12, 0, SpitoutDimens.p12, SpitoutDimens.p4),
       child: Row(
         children: [
           // 返回按钮：关闭整个 sheet
@@ -654,15 +656,15 @@ class _TransactionEditorSheetState
             },
             behavior: HitTestBehavior.opaque,
             child: Padding(
-              padding: const EdgeInsets.all(4),
+              padding: const EdgeInsets.all(SpitoutDimens.p4),
               child: Icon(
                 AppIcons.backChevron,
-                size: 18,
+                size: SpitoutDimens.icon16,
                 color: SpitoutTokens.iconTertiary(context),
               ),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           // 标题 + 分摊方式:作为左对齐整体,分摊方式紧贴标题约 10px(「隔壁」),
           // 而非被 Expanded 推到行尾;标题超宽时省略号截断,保证 toggle 不被挤出。
           if (aaEnabled) ...[
@@ -675,14 +677,10 @@ class _TransactionEditorSheetState
                       l10n.txAddEntryTitle,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: SpitoutDimens.p8),
                   AaModeToggle(
                     modeText: _aaModeToggleText(l10n),
                     onTap: _cycleAaMode,
@@ -703,11 +701,7 @@ class _TransactionEditorSheetState
                 l10n.txAddEntryTitle,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
+                style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
               ),
             ),
             if (editingTxId != null)

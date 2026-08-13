@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'currency_flag.dart';
 import 'keypad_constants.dart';
@@ -151,7 +152,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       onTap: widget.onPickCurrency,
       child: Container(
         key: const ValueKey('amount_currency_chip'),
-        padding: const EdgeInsets.symmetric(horizontal: 4),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
         decoration: BoxDecoration(
           color: SpitoutTokens.keyDigit(context),
           borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
@@ -200,7 +201,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
         final previewSize = (h * 0.22).clamp(8.0, 12.0).toDouble();
         return Container(
           key: const ValueKey('amount_area'),
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p4),
           decoration: BoxDecoration(
             color: SpitoutTokens.keyDigit(context),
             borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
@@ -222,16 +223,13 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
                         // 累加值
                         Text(
                           _trimTrailing(widget.acc.abs().toStringAsFixed(2)),
-                          style: text.titleMedium?.copyWith(
-                            fontWeight: FontWeight.w500,
-                            color: SpitoutTokens.textSecondary(context),
+                          style: text.titleMedium?.copyWith(color: SpitoutTokens.textSecondary(context),
                             fontSize: mainSize,
-                            height: 1.0,
-                          ),
+                            height: 1.0),
                         ),
                         // 运算符
                         Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                           child: Text(
                             widget.op != null ? widget.opGlyph(widget.op!) : '',
                             style: text.titleMedium?.copyWith(
@@ -254,15 +252,12 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
                         ),
                         // 预览结果（灰色）
                         if (widget.equalsTotal != 0) ...[
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpitoutDimens.p4),
                           Text(
                             '= ${_trimTrailing(widget.equalsTotal.abs().toStringAsFixed(2))}',
-                            style: text.titleMedium?.copyWith(
-                              fontWeight: FontWeight.w500,
-                              color: SpitoutTokens.textTertiary(context),
+                            style: text.titleMedium?.copyWith(color: SpitoutTokens.textTertiary(context),
                               fontSize: mainSize,
-                              height: 1.0,
-                            ),
+                              height: 1.0),
                           ),
                         ],
                       ] else
@@ -282,7 +277,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
               ),
               // 下行：外币折算预览（外币时三态都显示，短屏也不隐藏）
               if (isForeign) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: SpitoutDimens.p4),
                 GestureDetector(
                   onTap: widget.rateMissing ? widget.onEditRate : null,
                   child: Text(
@@ -325,7 +320,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
       borderRadius: BorderRadius.circular(KeypadLayout.keyRadius),
       child: Container(
         key: const ValueKey('amount_delete_key'),
-        padding: const EdgeInsets.symmetric(horizontal: 8),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
         // 短屏行高变小（如 25px）时整组等比缩小，避免溢出
         child: FittedBox(
           fit: BoxFit.scaleDown,
@@ -338,7 +333,7 @@ class _AmountExpressionBarState extends ConsumerState<AmountExpressionBar> {
                 size: iconSize,
                 color: SpitoutTokens.textSecondary(context),
               ),
-              const SizedBox(height: 2),
+              const SizedBox(height: SpitoutDimens.p4),
               Text(
                 l10n.txDeleteLongPress,
                 style: TextStyle(

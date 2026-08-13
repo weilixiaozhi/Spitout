@@ -38,12 +38,12 @@ class MinePage extends ConsumerWidget {
               padding: EdgeInsets.zero,
               physics: const AlwaysScrollableScrollPhysics(),
               children: [
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
                 // 一级分组：功能管理
                 // 包含：分类管理 → 汇率管理 → 周期账单 → 记账提醒 → 偏好调节
                 // 数据清理已移至「云同步与备份」分组（统计 / 日历已提升为底部导航一级入口）
                 SectionCard(
-                  margin: EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
+                  margin: EdgeInsets.fromLTRB(SpitoutDimens.p12, 0, SpitoutDimens.p12, 0),
                   child: Column(
                     children: [
                       // 分类管理
@@ -58,7 +58,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         // 按路由名跳转分类管理页，由 router.dart 统一解析
                         onTap: () => Navigator.of(
@@ -78,7 +78,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -101,7 +101,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -124,7 +124,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -145,7 +145,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -158,12 +158,12 @@ class MinePage extends ConsumerWidget {
                     ],
                   ),
                 ),
-                SizedBox(height: 8.0),
+                SizedBox(height: SpitoutDimens.p8),
                 // 一级分组：云同步与备份
                 // 包含：备份与云同步配置 → 明细导入导出 → 配置导入导出 → 数据清理
                 // 云服务与同步状态统一经 CloudServiceEntryTile 进入。
                 SectionCard(
-                  margin: EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
+                  margin: EdgeInsets.fromLTRB(SpitoutDimens.p12, 0, SpitoutDimens.p12, 0),
                   child: Column(
                     children: [
                       // 备份与云同步配置 —— 统一入口：图标与文案按 9 种同步状态切换，
@@ -191,7 +191,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -214,7 +214,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -237,7 +237,7 @@ class MinePage extends ConsumerWidget {
                         trailing: Icon(
                           AppIcons.chevronRight,
                           color: SpitoutTokens.iconTertiary(context),
-                          size: 20,
+                          size: SpitoutDimens.icon20,
                         ),
                         onTap: () async {
                           await Navigator.of(context).push(
@@ -254,7 +254,7 @@ class MinePage extends ConsumerWidget {
                 // 「检查更新」入口：复用全站统一的 AppListTile，
                 // 检测到新版本时显示成功色「更新」胶囊与版本提示。
                 SectionCard(
-                  margin: EdgeInsets.fromLTRB(12.0, 0, 12.0, 0),
+                  margin: EdgeInsets.fromLTRB(SpitoutDimens.p12, 0, SpitoutDimens.p12, 0),
                   // 页面负责注入检查动作（providers 动作函数），
                   // CheckUpdateTile 保持纯 UI 职责，不直连 services 层。
                   child: CheckUpdateTile(check: () => checkAppUpdate(ref)),

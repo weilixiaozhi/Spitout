@@ -9,7 +9,9 @@ import 'package:spitout/core/router/routes.dart';
 import 'package:spitout/services/statistics/aa_member_detail_models.dart';
 import 'package:spitout/services/statistics/aa_statistics_service.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'package:spitout/widgets/me_suffix.dart';
 import 'package:spitout/widgets/widgets.dart';
@@ -104,21 +106,21 @@ class AaStatisticsPage extends ConsumerWidget {
     // 分摊总额 = 各参与人实付合计(每笔 AA 交易由支出人实付一次,恒等)。
     final totalAmount = active.fold(0.0, (sum, p) => sum + p.totalPaid);
     return ListView(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(SpitoutDimens.p16),
       children: [
         _buildOverviewCard(context, l10n, totalAmount, active.length),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsPerPerson),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         _buildPerPersonCard(context, ref, l10n, ledgerId, active),
-        const SizedBox(height: 20),
+        const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsTransferPlan),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         _buildTransferCard(context, ref, l10n, statistics.transfers),
         // 不计入分摊区块始终展示(数据为空时由卡片内部渲染空态)。
-        const SizedBox(height: 20),
+        const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsExcluded),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         _buildExcludedCard(context, ref, l10n, excluded),
       ],
     );
@@ -133,36 +135,26 @@ class AaStatisticsPage extends ConsumerWidget {
   ) {
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p16, horizontal: SpitoutDimens.p16),
       child: Column(
         children: [
           Text(
             l10n.aaStatisticsTotalAmount,
-            style: TextStyle(
-              fontSize: 13,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           AmountText(
             value: totalAmount,
             signed: false,
             showCurrency: true,
             // 汇总金额必须完整可见：金额超大时等比缩小字号而非省略。
             scaleDown: true,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w700,
-              color: SpitoutTokens.textPrimary(context),
-            ),
+            style: SpitoutTextTokens.display2(context).copyWith(color: SpitoutTokens.textPrimary(context)),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           Text(
             l10n.aaStatisticsParticipantCount(participantCount),
-            style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
         ],
       ),
@@ -222,7 +214,7 @@ class AaStatisticsPage extends ConsumerWidget {
       // 整个成员模块可点击,进入该成员账单详情页。
       onTap: () => _openMemberDetail(context, ledgerId, p),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p12),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -233,29 +225,25 @@ class AaStatisticsPage extends ConsumerWidget {
                   ledgerId: ledgerId,
                   participantId: p.participantId,
                   isSelf: p.isSelf,
-                  size: 32,
+                  size: SpitoutDimens.icon28,
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 Expanded(
                   child: Text.rich(
                     TextSpan(
                       text: p.displayName,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       children: [if (p.isSelf) meSuffixSpan(context, l10n)],
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 _buildViewDetailsPill(context, l10n),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: SpitoutDimens.p12),
             // 第二行:实付 / 应摊 / 差额(应收绿、应付红)三列居中。
             Row(
               children: [
@@ -289,7 +277,7 @@ class AaStatisticsPage extends ConsumerWidget {
   Widget _buildViewDetailsPill(BuildContext context, AppLocalizations l10n) {
     final primary = Theme.of(context).colorScheme.primary;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: 3),
       decoration: BoxDecoration(
         color: primary.withValues(alpha: 0.08),
         borderRadius: BorderRadius.circular(999),
@@ -299,14 +287,10 @@ class AaStatisticsPage extends ConsumerWidget {
         children: [
           Text(
             l10n.aaStatisticsViewDetails,
-            style: TextStyle(
-              fontSize: 11,
-              fontWeight: FontWeight.w500,
-              color: primary,
-            ),
+            style: SpitoutTextTokens.caption(context).copyWith(color: primary),
           ),
-          const SizedBox(width: 2),
-          Icon(AppIcons.chevronRight, size: 12, color: primary),
+          const SizedBox(width: SpitoutDimens.p4),
+          Icon(AppIcons.chevronRight, size: SpitoutDimens.icon12, color: primary),
         ],
       ),
     );
@@ -326,22 +310,15 @@ class AaStatisticsPage extends ConsumerWidget {
         children: [
           Text(
             label,
-            style: TextStyle(
-              fontSize: 11,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
-          const SizedBox(height: 4),
+          const SizedBox(height: SpitoutDimens.p4),
           FittedBox(
             fit: BoxFit.scaleDown,
             child: Text(
               value,
               maxLines: 1,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-                color: valueColor ?? SpitoutTokens.textPrimary(context),
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: valueColor ?? SpitoutTokens.textPrimary(context)),
             ),
           ),
         ],
@@ -383,25 +360,22 @@ class AaStatisticsPage extends ConsumerWidget {
     final amountColor = SpitoutTokens.textPrimary(context);
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p8),
       child: transfers.isEmpty
           ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 16),
+              padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p16),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Icon(
                     AppIcons.checkCircle,
-                    size: 16,
+                    size: SpitoutDimens.icon16,
                     color: SpitoutTokens.success(context),
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: SpitoutDimens.p8),
                   Text(
                     l10n.aaStatisticsNoTransfers,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                 ],
               ),
@@ -412,7 +386,7 @@ class AaStatisticsPage extends ConsumerWidget {
                   if (i > 0)
                     Divider(height: 1, color: SpitoutTokens.divider(context)),
                   Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
                     child: Row(
                       children: [
                         Expanded(
@@ -425,12 +399,9 @@ class AaStatisticsPage extends ConsumerWidget {
                                     ? Text.rich(
                                         TextSpan(
                                           text: transfers[i].fromName,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: SpitoutTokens.textPrimary(
+                                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(
                                               context,
-                                            ),
-                                          ),
+                                            )),
                                           children: [
                                             meSuffixSpan(context, l10n),
                                           ],
@@ -440,27 +411,21 @@ class AaStatisticsPage extends ConsumerWidget {
                                       )
                                     : Text(
                                         transfers[i].fromName,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: SpitoutTokens.textPrimary(
+                                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(
                                             context,
-                                          ),
-                                        ),
+                                          )),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
                               ),
                               Padding(
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 6,
+                                  horizontal: SpitoutDimens.p4,
                                 ),
                                 child: Text(
                                   l10n.aaStatisticsTransferSeparator,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    // 「付给」使用主题色(蓝色),突出转账动作。
-                                    color: primaryColor,
-                                  ),
+                                  style: SpitoutTextTokens.body(context).copyWith(// 「付给」使用主题色(蓝色),突出转账动作。
+                                    color: primaryColor),
                                 ),
                               ),
                               Flexible(
@@ -470,12 +435,9 @@ class AaStatisticsPage extends ConsumerWidget {
                                     ? Text.rich(
                                         TextSpan(
                                           text: transfers[i].toName,
-                                          style: TextStyle(
-                                            fontSize: 14,
-                                            color: SpitoutTokens.textPrimary(
+                                          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(
                                               context,
-                                            ),
-                                          ),
+                                            )),
                                           children: [
                                             meSuffixSpan(context, l10n),
                                           ],
@@ -485,12 +447,9 @@ class AaStatisticsPage extends ConsumerWidget {
                                       )
                                     : Text(
                                         transfers[i].toName,
-                                        style: TextStyle(
-                                          fontSize: 14,
-                                          color: SpitoutTokens.textPrimary(
+                                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(
                                             context,
-                                          ),
-                                        ),
+                                          )),
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
                                       ),
@@ -498,18 +457,15 @@ class AaStatisticsPage extends ConsumerWidget {
                             ],
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        const SizedBox(width: SpitoutDimens.p12),
                         AmountText(
                           value: transfers[i].amount,
                           signed: false,
                           showCurrency: true,
                           // 转账金额必须完整可见：金额超大时等比缩小字号而非省略。
                           scaleDown: true,
-                          style: TextStyle(
-                            fontSize: 14,
-                            // 中性色,与分摊详情表实付一致,不加粗。
-                            color: amountColor,
-                          ),
+                          style: SpitoutTextTokens.body(context).copyWith(// 中性色,与分摊详情表实付一致,不加粗。
+                            color: amountColor),
                         ),
                       ],
                     ),
@@ -529,17 +485,14 @@ class AaStatisticsPage extends ConsumerWidget {
   ) {
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
       child: excluded.isEmpty
           ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: 12),
+              padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
               child: Center(
                 child: Text(
                   l10n.aaStatisticsExcludedEmpty,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textTertiary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                 ),
               ),
             )
@@ -587,7 +540,7 @@ class AaStatisticsPage extends ConsumerWidget {
   Widget _buildSectionTitle(BuildContext context, String text) {
     final color = Theme.of(context).colorScheme.primary;
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
       child: Row(
         children: [
           Container(
@@ -598,11 +551,11 @@ class AaStatisticsPage extends ConsumerWidget {
               borderRadius: BorderRadius.circular(2),
             ),
           ),
-          const SizedBox(width: 8),
+          const SizedBox(width: SpitoutDimens.p8),
           Text(
             text,
             style: Theme.of(context).textTheme.titleSmall?.copyWith(
-              fontWeight: FontWeight.w700,
+              fontWeight: FontWeight.w800,
               color: color,
             ),
           ),

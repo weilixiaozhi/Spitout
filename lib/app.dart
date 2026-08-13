@@ -10,6 +10,8 @@ import 'pages/main/analytics_page.dart';
 import 'pages/main/home_page.dart';
 import 'pages/main/mine_page.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'l10n/app_localizations.dart';
 import 'widgets/widgets.dart';
 import 'services/security/app_lock_service.dart';
@@ -259,9 +261,9 @@ class SpitoutBottomBar extends StatelessWidget {
       height: barHeight + _kCenterFabOverflow + bottomPadding + 12, // 12dp 浮动间距
       child: Padding(
         padding: EdgeInsets.only(
-          left: 16,
-          right: 16,
-          bottom: bottomPadding + 12,
+          left: SpitoutDimens.p16,
+          right: SpitoutDimens.p16,
+          bottom: bottomPadding + SpitoutDimens.p12,
         ),
         // Stack：下层放贴底、收缩居中的胶囊(含两个 tab)，上层放中心记账按钮
         child: Stack(
@@ -277,10 +279,10 @@ class SpitoutBottomBar extends StatelessWidget {
           child: Center(
             child: Container(
               height: barHeight,
-              padding: const EdgeInsets.symmetric(horizontal: 12),
+              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12),
               decoration: BoxDecoration(
                 color: bgColor,
-                borderRadius: BorderRadius.circular(32),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius28),
                 boxShadow: SpitoutTokens.tabBarShadow,
               ),
               child: Row(
@@ -289,14 +291,14 @@ class SpitoutBottomBar extends StatelessWidget {
                 // 居中于缺口、四个 tab 左右对称；英文长标签(Statistics/Calendar)
                 // 也能在等分槽内完整显示，根除横向溢出与 FAB 遮挡文字的 bug。
                 children: [
-                  _buildTab(0, AppIcons.receipt, l10n.tabHome,
+                  _buildTab(context, 0, AppIcons.receipt, l10n.tabHome,
                       inactiveColor, primaryColor),
-                  _buildTab(1, AppIcons.pieChart, l10n.tabAnalytics,
+                  _buildTab(context, 1, AppIcons.pieChart, l10n.tabAnalytics,
                       inactiveColor, primaryColor),
                   const SizedBox(width: 64), // 中央 FAB 缺口(FAB 直径 56，留 4dp 余量)
-                  _buildTab(2, AppIcons.calendarMonth, l10n.tabCalendar,
+                  _buildTab(context, 2, AppIcons.calendarMonth, l10n.tabCalendar,
                       inactiveColor, primaryColor),
-                  _buildTab(3, AppIcons.person, l10n.tabMine,
+                  _buildTab(context, 3, AppIcons.person, l10n.tabMine,
                       inactiveColor, primaryColor),
                 ],
               ),
@@ -324,7 +326,7 @@ class SpitoutBottomBar extends StatelessWidget {
   /// 文字上。垂直布局下标签宽度不挤压水平空间，长英文也能在 Expanded 等分槽内
   /// 完整显示；配合等分 Row 保证 FAB 永远居中、四 tab 对称。
   /// 选中仅图标与文字变色；整块 SizedBox 经 GestureDetector 稳定命中。
-  Widget _buildTab(int index, IconData icon, String label,
+  Widget _buildTab(BuildContext context, int index, IconData icon, String label,
       Color inactiveColor, Color primaryColor) {
     final isActive = index == currentIndex;
     final color = isActive ? primaryColor : inactiveColor;
@@ -337,19 +339,16 @@ class SpitoutBottomBar extends StatelessWidget {
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: color, size: 24),
-              const SizedBox(height: 4),
+              Icon(icon, color: color, size: SpitoutDimens.icon22),
+              const SizedBox(height: SpitoutDimens.p4),
               Text(
                 label,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 softWrap: false,
                 textScaler: TextScaler.noScaling,
-                style: TextStyle(
-                  fontSize: 11,
-                  color: color,
-                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400,
-                ),
+                style: SpitoutTextTokens.caption(context).copyWith(color: color,
+                  fontWeight: isActive ? FontWeight.w600 : FontWeight.w400),
               ),
             ],
           ),
@@ -378,7 +377,7 @@ class SpitoutBottomBar extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: SpitoutShadows.fab,
         ),
-        child: Icon(AppIcons.add, color: fabIcon, size: 28),
+        child: Icon(AppIcons.add, color: fabIcon, size: SpitoutDimens.icon28),
       ),
     );
   }

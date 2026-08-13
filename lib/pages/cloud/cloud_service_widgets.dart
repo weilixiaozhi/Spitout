@@ -3,7 +3,9 @@ import 'package:spitout/cloud/spitout_cloud.dart'
     show CloudBackendType, CloudServiceConfig;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 
 import 'cloud_help_dialogs.dart';
@@ -59,7 +61,7 @@ Widget buildCloudServiceStatusHeader({
           ),
           // 本地存储没有“连接”概念，不展示未测试/成功等状态徽标与测试链，仅显示当前类型
           if (config.type != CloudBackendType.local) ...[
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             // 「测试连接」文字链紧贴状态徽标左侧
             _buildTestConnectionLink(
               context: context,
@@ -68,12 +70,12 @@ Widget buildCloudServiceStatusHeader({
               testingConnection: testingConnection,
               onTest: onTest,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: 3),
               decoration: BoxDecoration(
                 color: statusColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                 border: Border.all(color: statusColor.withValues(alpha: 0.3)),
               ),
               child: Row(
@@ -87,14 +89,10 @@ Widget buildCloudServiceStatusHeader({
                       shape: BoxShape.circle,
                     ),
                   ),
-                  const SizedBox(width: 6),
+                  const SizedBox(width: SpitoutDimens.p4),
                   Text(
                     statusText,
-                    style: TextStyle(
-                      color: statusColor,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: statusColor,),
                   ),
                 ],
               ),
@@ -102,7 +100,7 @@ Widget buildCloudServiceStatusHeader({
           ],
         ],
       ),
-      const SizedBox(height: 4),
+      const SizedBox(height: SpitoutDimens.p4),
       Text(
         config.obfuscatedUrl(),
         style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -113,7 +111,7 @@ Widget buildCloudServiceStatusHeader({
       ),
       // 上次测试时间：仅当存在历史测试记录（点过测试连接）时展示
       if (testTime != null) ...[
-        const SizedBox(height: 4),
+        const SizedBox(height: SpitoutDimens.p4),
         Text(
           l10n.cloudLastTestTime(formatCloudTestTime(testTime)),
           style: Theme.of(context).textTheme.bodySmall,
@@ -121,7 +119,7 @@ Widget buildCloudServiceStatusHeader({
       ],
       // 测试结果详情文案（成功绿 / 失败红），纯内联展示，不弹窗
       if (testMessage != null) ...[
-        const SizedBox(height: 4),
+        const SizedBox(height: SpitoutDimens.p4),
         Text(
           testMessage,
           style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -179,16 +177,16 @@ Widget buildCloudMultiDeviceWarning(BuildContext context) {
   // 纯动作卡片（点开多设备详情），无选中态，按统一原则补 Material+InkWell 涟漪
   return Material(
     color: Colors.transparent,
-    borderRadius: BorderRadius.circular(12),
+    borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
     clipBehavior: Clip.antiAlias,
     child: InkWell(
       onTap: () => showMultiDeviceDetailDialog(context),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       child: Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpitoutDimens.p16),
         decoration: BoxDecoration(
           color: SpitoutTokens.warning(context).withValues(alpha: 0.1),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: Border.all(
             color: SpitoutTokens.warning(context).withValues(alpha: 0.3),
           ),
@@ -198,37 +196,30 @@ Widget buildCloudMultiDeviceWarning(BuildContext context) {
             Icon(
               AppIcons.warning,
               color: SpitoutTokens.warning(context),
-              size: 24,
+              size: SpitoutDimens.icon22,
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l10n.cloudMultiDeviceWarningTitle,
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: SpitoutDimens.p4),
                   Text(
                     l10n.cloudMultiDeviceWarningMessage,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Icon(
               AppIcons.info,
               color: SpitoutTokens.warning(context),
-              size: 20,
+              size: SpitoutDimens.icon20,
             ),
           ],
         ),
@@ -258,11 +249,11 @@ Widget buildCloudServiceSectionHeader(
           borderRadius: BorderRadius.circular(2),
         ),
       ),
-      const SizedBox(width: 8),
+      const SizedBox(width: SpitoutDimens.p8),
       Text(
         title,
         style: Theme.of(context).textTheme.titleSmall?.copyWith(
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.w800,
           color: SpitoutTokens.textPrimary(context),
         ),
       ),
@@ -272,20 +263,20 @@ Widget buildCloudServiceSectionHeader(
   // 未传入副标题时，复用单行标题的原有布局，确保最新代码逻辑完全不受影响
   if (subtitle == null) {
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 10),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p4, bottom: SpitoutDimens.p8),
       child: titleRow,
     );
   }
 
   // 传入副标题时，在标题下方补充一行说明性文案，使用次级文字颜色降低视觉权重
   return Padding(
-    padding: const EdgeInsets.only(top: 4, bottom: 10),
+    padding: const EdgeInsets.only(top: SpitoutDimens.p4, bottom: SpitoutDimens.p8),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         titleRow,
         Padding(
-          padding: const EdgeInsets.only(top: 4),
+          padding: const EdgeInsets.only(top: SpitoutDimens.p4),
           child: Text(
             subtitle,
             style: Theme.of(context).textTheme.bodySmall?.copyWith(
@@ -324,7 +315,7 @@ Widget buildCloudServiceCard({
               : Colors.transparent,
           width: 2,
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       ),
       child: SectionCard(
         margin: EdgeInsets.zero,
@@ -340,13 +331,13 @@ Widget buildCloudServiceCard({
             // 从而所有卡片（含无按钮的本地存储卡）高度完全相同、且贴合本地卡片视觉。
             InkWell(
               onTap: isDisabled ? null : onTap,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
               child: SizedBox(
                 height: 71,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 10,
+                    horizontal: SpitoutDimens.p12,
+                    vertical: SpitoutDimens.p8,
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -357,11 +348,11 @@ Widget buildCloudServiceCard({
                         height: 36,
                         decoration: BoxDecoration(
                           color: iconColor.withValues(alpha: 0.1),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         ),
-                        child: Icon(icon, color: iconColor, size: 18),
+                        child: Icon(icon, color: iconColor, size: SpitoutDimens.icon16),
                       ),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: SpitoutDimens.p8),
 
                       // 文字信息。副标题为单行省略（兼顾固定卡片高度与长 URL 不横向溢出），
                       // 按钮行已下移到卡片底部右下角，与副标题在视觉上错开，无需额外右侧避让。
@@ -385,23 +376,20 @@ Widget buildCloudServiceCard({
                                 if (isDisabled)
                                   Container(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 8,
-                                      vertical: 2,
+                                      horizontal: SpitoutDimens.p8,
+                                      vertical: SpitoutDimens.p4,
                                     ),
                                     decoration: BoxDecoration(
                                       color: SpitoutTokens.textTertiary(
                                         context,
                                       ).withValues(alpha: 0.2),
-                                      borderRadius: BorderRadius.circular(8),
+                                      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                                     ),
                                     child: Text(
                                       '不可用',
-                                      style: TextStyle(
-                                        fontSize: 11,
-                                        color: SpitoutTokens.textTertiary(
+                                      style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(
                                           context,
-                                        ),
-                                      ),
+                                        )),
                                     ),
                                   ),
                               ],
@@ -441,7 +429,7 @@ Widget buildCloudServiceCard({
                   child: Icon(
                     AppIcons.check,
                     color: SpitoutTokens.textOnPrimary(context),
-                    size: 18,
+                    size: SpitoutDimens.icon16,
                   ),
                 ),
               ),
@@ -459,33 +447,33 @@ Widget buildCloudServiceCard({
                     if (onShowGuide != null)
                       TextButton.icon(
                         onPressed: onShowGuide,
-                        icon: const Icon(AppIcons.help, size: 16),
+                        icon: const Icon(AppIcons.help, size: SpitoutDimens.icon16),
                         label: Text(
                           AppLocalizations.of(context).commonTutorial,
-                          style: const TextStyle(fontSize: 12),
+                          style: SpitoutTextTokens.label(context),
                         ),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
+                            horizontal: SpitoutDimens.p8,
+                            vertical: SpitoutDimens.p4,
                           ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                         ),
                       ),
                     if (isConfigured && onConfigure != null) ...[
-                      if (onShowGuide != null) const SizedBox(width: 8),
+                      if (onShowGuide != null) const SizedBox(width: SpitoutDimens.p8),
                       TextButton.icon(
                         onPressed: onConfigure,
-                        icon: const Icon(AppIcons.settings, size: 16),
+                        icon: const Icon(AppIcons.settings, size: SpitoutDimens.icon16),
                         label: Text(
                           AppLocalizations.of(context).commonConfigure,
-                          style: const TextStyle(fontSize: 12),
+                          style: SpitoutTextTokens.label(context),
                         ),
                         style: TextButton.styleFrom(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 8,
+                            horizontal: SpitoutDimens.p12,
+                            vertical: SpitoutDimens.p8,
                           ),
                           minimumSize: Size.zero,
                           tapTargetSize: MaterialTapTargetSize.shrinkWrap,

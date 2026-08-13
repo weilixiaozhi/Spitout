@@ -424,21 +424,21 @@ void main() {
   // 旧布局。Padding 值用 byWidgetPredicate + ancestor 限定作用域，避免依赖
   // 私有组件类型，断言稳定且可读。
   group('首页头部布局（Figma 53:6）', () {
-    testWidgets('首页首行由 PrimaryHeader 渲染且使用全局默认留白（上/下 10、左/右 14）', (
+    testWidgets('首页首行由 PrimaryHeader 渲染且使用全局默认留白（上 8、下 0、左/右 12）', (
       tester,
     ) async {
       await tester.pumpWidget(buildApp());
       await prime(tester);
 
-      // 首行使用全局统一头部组件：留白规范（上/下 10、左/右 14）由组件默认值承载，
+      // 首行使用全局统一头部组件：留白规范（上 8、下 0、左/右 12）由组件默认值承载，
       // 页面侧不手写 SafeArea/Padding。
       final headerFinder = find.byType(PrimaryHeader);
       expect(headerFinder, findsOneWidget, reason: '首页首行应由 PrimaryHeader 渲染');
       final header = tester.widget<PrimaryHeader>(headerFinder);
       expect(
         header.padding,
-        const EdgeInsets.only(top: 10, left: 14, right: 14, bottom: 0),
-        reason: '首行留白应使用 PrimaryHeader 全局默认（上 10、下 0、左/右 14）',
+        const EdgeInsets.only(top: 8, left: 12, right: 12, bottom: 0),
+        reason: '首行留白应使用 PrimaryHeader 全局默认（上 8、下 0、左/右 12）',
       );
       expect(
         header.onTitleTap,
@@ -482,7 +482,7 @@ void main() {
       expect(dateTextFinder, findsOneWidget, reason: '日期头应仍正常渲染');
     });
 
-    testWidgets('轻扫提示行位于日期头与汇总卡之间，左缘距 14', (tester) async {
+    testWidgets('轻扫提示行位于日期头与汇总卡之间，左缘距 12', (tester) async {
       final now = DateTime.now();
       await tester.pumpWidget(
         buildApp(initialMonth: DateTime(now.year, now.month, 1)),
@@ -503,23 +503,23 @@ void main() {
         reason: '轻扫提示应位于日期头与汇总卡之间（在汇总卡上方）',
       );
 
-      // UI稿：提示行左缘距左 14，与 PrimaryHeader 日期标题左边缘对齐（见 home_page.dart
-      // 中 SwipeHint 的 padding: EdgeInsets.only(left: 14, bottom: 8)），下方留 8 接卡片。
+      // UI稿：提示行左缘距左 12，与 PrimaryHeader 日期标题左边缘对齐（见 home_page.dart
+      // 中 SwipeHint 的 padding: EdgeInsets.only(left: 12, bottom: 8)），下方留 8 接卡片。
       expect(
         find.ancestor(
           of: hintFinder,
           matching: find.byWidgetPredicate(
             (w) =>
                 w is Padding &&
-                w.padding == const EdgeInsets.only(left: 14, bottom: 8),
+                w.padding == const EdgeInsets.only(left: 12, bottom: 8),
           ),
         ),
         findsOneWidget,
-        reason: '轻扫提示行 Padding 应为 left:14, bottom:8（对齐日期标题）',
+        reason: '轻扫提示行 Padding 应为 left:12, bottom:8（对齐日期标题）',
       );
     });
 
-    testWidgets('汇总卡内边距为 all(20)，账本徽章以 tab 挂在卡片右缘', (tester) async {
+    testWidgets('汇总卡内边距为 all(16)，账本徽章以 tab 挂在卡片右缘', (tester) async {
       final now = DateTime.now();
       await tester.pumpWidget(
         buildApp(initialMonth: DateTime(now.year, now.month, 1)),
@@ -529,16 +529,16 @@ void main() {
       final l10n = AppLocalizations.of(tester.element(find.byType(HomePage)));
       final cardTitleFinder = find.text(l10n.homeMonthExpense);
 
-      // 汇总卡内容内边距四边 20（限定在标题文本的祖先链上断言）。
+      // 汇总卡内容内边距四边 16（限定在标题文本的祖先链上断言）。
       expect(
         find.ancestor(
           of: cardTitleFinder,
           matching: find.byWidgetPredicate(
-            (w) => w is Padding && w.padding == const EdgeInsets.all(20),
+            (w) => w is Padding && w.padding == const EdgeInsets.all(16),
           ),
         ),
         findsOneWidget,
-        reason: '汇总卡内边距应为 all(20)',
+        reason: '汇总卡内边距应为 all(16)',
       );
 
       // 账本徽章 tab：账本名位于右半屏（贴卡片右缘），且与标题行纵向齐平。

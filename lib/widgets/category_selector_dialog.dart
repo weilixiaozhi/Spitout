@@ -5,6 +5,8 @@ import 'package:spitout/data/models.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -182,7 +184,7 @@ class _ParentCategorySelectorSheetState
           Container(
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceSecondary(context),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
             ),
             child: TextField(
               controller: _searchController,
@@ -193,7 +195,7 @@ class _ParentCategorySelectorSheetState
                 ),
                 prefixIcon: Icon(
                   AppIcons.search,
-                  size: 18,
+                  size: SpitoutDimens.icon16,
                   color: SpitoutTokens.iconTertiary(context),
                 ),
                 suffixIcon: _searchText.isNotEmpty
@@ -201,20 +203,20 @@ class _ParentCategorySelectorSheetState
                         onPressed: () => _searchController.clear(),
                         icon: Icon(
                           AppIcons.close,
-                          size: 18,
+                          size: SpitoutDimens.icon16,
                           color: SpitoutTokens.iconTertiary(context),
                         ),
                       )
                     : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 12,
+                  vertical: SpitoutDimens.p12,
+                  horizontal: SpitoutDimens.p12,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           // ── 分类列表 ──
           Expanded(
             child: FutureBuilder<List<Category>>(
@@ -251,7 +253,7 @@ class _ParentCategorySelectorSheetState
                 }
 
                 return ListView.separated(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16),
                   itemCount: filtered.length,
                   // 行间细分割线，区分各分类内容区
                   separatorBuilder: (context, index) => Divider(
@@ -302,10 +304,10 @@ class _ParentCategoryTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
       child: Container(
-        margin: const EdgeInsets.symmetric(vertical: 2),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        margin: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p12),
         decoration: BoxDecoration(
           // 选中行：主题色 8% 背景 + 主题色边框
           color: isSelected
@@ -315,7 +317,7 @@ class _ParentCategoryTile extends StatelessWidget {
             color: isSelected ? primaryColor : Colors.transparent,
             width: 1,
           ),
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius4),
         ),
         child: Row(
           children: [
@@ -325,30 +327,26 @@ class _ParentCategoryTile extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: primaryColor.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
               ),
               child: CategoryIconWidget(
                 category: category,
-                size: 18,
+                size: SpitoutDimens.icon16,
                 color: primaryColor,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             // 分类名（无副标题"一级分类"标签，行级区分靠列表分割线）
             Expanded(
               child: Text(
                 CategoryUtils.getDisplayName(category.name, context),
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  color: isSelected
+                style: SpitoutTextTokens.title(context).copyWith(color: isSelected
                       ? primaryColor
-                      : SpitoutTokens.textPrimary(context),
-                ),
+                      : SpitoutTokens.textPrimary(context)),
               ),
             ),
             // 选中勾
-            if (isSelected) Icon(AppIcons.check, size: 18, color: primaryColor),
+            if (isSelected) Icon(AppIcons.check, size: SpitoutDimens.icon16, color: primaryColor),
           ],
         ),
       ),
@@ -623,24 +621,24 @@ class _CategorySelectorDialogState
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
       backgroundColor: SpitoutTokens.scaffoldBackground(context),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.9,
         height: MediaQuery.of(context).size.height * 0.75,
         decoration: BoxDecoration(
           color: SpitoutTokens.scaffoldBackground(context),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
         ),
         child: Column(
           children: [
             // 顶部栏
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p12),
               decoration: BoxDecoration(
                 color: SpitoutTokens.surfaceElevated(context),
                 borderRadius: const BorderRadius.vertical(
-                  top: Radius.circular(16),
+                  top: Radius.circular(SpitoutDimens.radius16),
                 ),
                 border: Border(
                   bottom: BorderSide(
@@ -656,11 +654,8 @@ class _CategorySelectorDialogState
                       Expanded(
                         child: Text(
                           widget.title ?? l10n.categoryExpense,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: SpitoutTokens.textPrimary(context),
-                          ),
+                          style: SpitoutTextTokens.boldTitle(context).copyWith(fontWeight: FontWeight.bold,
+                            color: SpitoutTokens.textPrimary(context)),
                         ),
                       ),
                       IconButton(
@@ -672,7 +667,7 @@ class _CategorySelectorDialogState
                       ),
                     ],
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: SpitoutDimens.p12),
                   // 搜索框
                   TextField(
                     controller: _searchController,
@@ -692,8 +687,8 @@ class _CategorySelectorDialogState
                             )
                           : null,
                       contentPadding: const EdgeInsets.symmetric(
-                        vertical: 12,
-                        horizontal: 16,
+                        vertical: SpitoutDimens.p12,
+                        horizontal: SpitoutDimens.p16,
                       ),
                       filled: true,
                       fillColor: SpitoutTokens.surfaceInput(context),
@@ -723,15 +718,12 @@ class _CategorySelectorDialogState
                             size: 64,
                             color: SpitoutTokens.textTertiary(context),
                           ),
-                          const SizedBox(height: 16),
+                          const SizedBox(height: SpitoutDimens.p16),
                           Text(
                             _searchText.isNotEmpty
                                 ? l10n.commonEmpty
                                 : l10n.categoryEmpty,
-                            style: TextStyle(
-                              color: SpitoutTokens.textTertiary(context),
-                              fontSize: 16,
-                            ),
+                            style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                           ),
                         ],
                       ),
@@ -739,7 +731,7 @@ class _CategorySelectorDialogState
                   }
 
                   return ListView.builder(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
+                    padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
                     itemCount: groups.length,
                     itemBuilder: (context, index) {
                       final group = groups[index];
@@ -910,10 +902,10 @@ class _CategoryTile extends StatelessWidget {
           child: Padding(
             // 子分类添加左边距，父分类正常边距
             padding: EdgeInsets.fromLTRB(
-              isChild ? 56 : 16, // 左边距：子分类56，父分类16
-              12,
-              16,
-              12,
+              isChild ? 56 : SpitoutDimens.p16, // 左边距：子分类56，父分类SpitoutDimens.p16
+              SpitoutDimens.p12,
+              SpitoutDimens.p16,
+              SpitoutDimens.p12,
             ),
             child: Row(
               children: [
@@ -925,7 +917,7 @@ class _CategoryTile extends StatelessWidget {
                     color: isSelected
                         ? primaryColor.withValues(alpha: 0.15)
                         : primaryColor.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                     // 选中状态添加边框
                     border: isSelected
                         ? Border.all(color: primaryColor, width: 1.5)
@@ -933,11 +925,11 @@ class _CategoryTile extends StatelessWidget {
                   ),
                   child: CategoryIconWidget(
                     category: category,
-                    size: 24,
+                    size: SpitoutDimens.icon22,
                     color: primaryColor,
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 // 分类名称
                 Expanded(
                   child: Text(
@@ -946,7 +938,7 @@ class _CategoryTile extends StatelessWidget {
                       fontSize: isChild ? 15 : 16,
                       fontWeight: isSelected
                           ? FontWeight.w600
-                          : (isChild ? FontWeight.normal : FontWeight.w500),
+                          : (isChild ? FontWeight.normal : FontWeight.w400),
                       color: isSelected
                           ? primaryColor
                           : SpitoutTokens.textPrimary(context),
@@ -957,37 +949,34 @@ class _CategoryTile extends StatelessWidget {
                 if (showTransactionCount && transactionCount > 0)
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
+                      horizontal: SpitoutDimens.p8,
+                      vertical: SpitoutDimens.p4,
                     ),
                     decoration: BoxDecoration(
                       color: SpitoutTokens.surface(context),
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
                     ),
                     child: Text(
                       AppLocalizations.of(
                         context,
                       ).categoryMigrationTransactionLabel(transactionCount),
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: SpitoutTokens.textSecondary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                     ),
                   ),
                 // 选中图标
                 if (isSelected)
                   Padding(
-                    padding: const EdgeInsets.only(left: 8),
+                    padding: const EdgeInsets.only(left: SpitoutDimens.p8),
                     child: Icon(
                       AppIcons.checkCircle,
                       color: primaryColor,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                     ),
                   ),
                 // 展开/收起图标（父分类总是显示）
                 if (isParent)
                   Padding(
-                    padding: EdgeInsets.only(left: isSelected ? 0 : 8),
+                    padding: EdgeInsets.only(left: isSelected ? 0 : SpitoutDimens.p8),
                     child: Icon(
                       isExpanded ? AppIcons.chevronUp : AppIcons.chevronDown,
                       color: SpitoutTokens.iconTertiary(context),

@@ -6,6 +6,8 @@ import 'dart:async';
 
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/data/models.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/core/logging/logger_service.dart';
@@ -506,12 +508,12 @@ class _HomePageState extends ConsumerState<HomePage>
                 // PrimaryHeader→提示的间距承接标题行底部留白，下方留 8 接卡片(该距离已确认刚好，保持不变)。
                 SwipeHint(
                   icon: AppIcons.swipe,
-                  padding: const EdgeInsets.only(left: 14, bottom: 8),
+                  padding: const EdgeInsets.only(left: SpitoutDimens.p12, bottom: SpitoutDimens.p8),
                   text: l10n.homeSwitchMonthHint,
                 ),
                 // 汇总卡：与下方列表共用统一水平内边距(8)，保证左右边缘对齐
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                  padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
@@ -529,11 +531,11 @@ class _HomePageState extends ConsumerState<HomePage>
                 // 分摊统计入口：当前账本开启 AA 分摊时显示，
                 // 位于汇总卡下方、交易列表上方，样式与编辑页原入口保持一致。
                 if (ledger != null && ledger.aaEnabled) ...[
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
                     child: OutlinedButton.icon(
-                      icon: const Icon(AppIcons.pieChart, size: 18),
+                      icon: const Icon(AppIcons.pieChart, size: SpitoutDimens.icon16),
                       label: Text(l10n.ledgerAaStatisticsEntry),
                       onPressed: () {
                         // 从首页进入即当前账本的分摊统计，直接传账本 id。
@@ -544,7 +546,7 @@ class _HomePageState extends ConsumerState<HomePage>
                       style: OutlinedButton.styleFrom(
                         minimumSize: const Size(double.infinity, 40.0),
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                         ),
                       ),
                     ),
@@ -568,8 +570,8 @@ class _HomePageState extends ConsumerState<HomePage>
                 ),
                 Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 20,
+                    horizontal: SpitoutDimens.p20,
+                    vertical: SpitoutDimens.p16,
                   ),
                   child: Column(
                     children: [
@@ -580,10 +582,10 @@ class _HomePageState extends ConsumerState<HomePage>
                           color: Theme.of(context).colorScheme.onSurfaceVariant,
                         ),
                       ),
-                      const SizedBox(height: 8),
+                      const SizedBox(height: SpitoutDimens.p8),
                       TextButton.icon(
                         onPressed: () => ref.invalidate(currentLedgerProvider),
-                        icon: const Icon(AppIcons.refresh, size: 18),
+                        icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
                         label: Text(l10n.analyticsRetry),
                       ),
                     ],
@@ -625,25 +627,22 @@ class _HomePageState extends ConsumerState<HomePage>
         // 使刷新常驻期间指示器不被列表透出
         color: Theme.of(context).scaffoldBackgroundColor,
         // Figma：垂直 padding 8px
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             // 刷新 icon：刷新期间自然旋转，拖拽阶段静止
             RotationTransition(
               turns: _spinCtrl,
-              child: Icon(AppIcons.refresh, size: 12, color: primary),
+              child: Icon(AppIcons.refresh, size: SpitoutDimens.icon12, color: primary),
             ),
             // Figma：icon 与文案间距 8px
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Text(
               // 刷新中显示"正在同步账本数据"；刷新完成后就地切换为结果文案（停留 1 秒）。
               _syncResultText ?? l10n.homeSyncing,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w400,
-                color: primary,
-                height: 16 / 12, // Figma lineHeight 16px / fontSize 12px
+              style: SpitoutTextTokens.label(context).copyWith(color: primary,
+                height: 16 / 12, // Figma lineHeight 16 / fontSize 12
               ),
             ),
           ],
@@ -688,7 +687,7 @@ class _HomePageState extends ConsumerState<HomePage>
     return Stack(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8),
           child: NotificationListener<ScrollNotification>(
             onNotification: (notification) {
               // ── 1. PageView 自身横向滚动（depth==0）──
@@ -885,10 +884,7 @@ class _HeaderSummary extends ConsumerWidget {
     final onPrimary = Theme.of(context).colorScheme.onPrimary;
 
     // 今日/本周行次要文字统一样式:12px、主色 75% 透明(与主金额形成层次)。
-    final dimStyle = TextStyle(
-      fontSize: 12,
-      color: onPrimary.withValues(alpha: 0.75),
-    );
+    final dimStyle = SpitoutTextTokens.label(context).copyWith(color: onPrimary.withValues(alpha: 0.75));
     // 局部辅助:渲染同色次要文字(标签 / 分隔符 / 占位 "-"),统一字号与颜色,
     // 避免重复书写同一 TextStyle。
     Text dim(String t) => Text(t, style: dimStyle);
@@ -896,7 +892,7 @@ class _HeaderSummary extends ConsumerWidget {
     return Material(
       color: Colors.transparent,
       // 圆角与 Container 一致:避免 InkWell 水波纹在角落溢出圆角外。
-      borderRadius: BorderRadius.circular(19),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTapLedger,
@@ -904,7 +900,7 @@ class _HeaderSummary extends ConsumerWidget {
           width: double.infinity,
           decoration: BoxDecoration(
             color: primary, // shadcn primary 蓝底
-            borderRadius: BorderRadius.circular(19),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
             boxShadow: [
               BoxShadow(
                 color: primary.withValues(alpha: 0.3),
@@ -918,7 +914,7 @@ class _HeaderSummary extends ConsumerWidget {
             children: [
               Padding(
                 // UI稿:卡片内边距四边 20
-                padding: const EdgeInsets.all(20),
+                padding: const EdgeInsets.all(SpitoutDimens.p16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -928,13 +924,10 @@ class _HeaderSummary extends ConsumerWidget {
                       isCurrentMonth
                           ? l10n.homeMonthExpense
                           : l10n.homeMonthExpenseOf(month.month.toString()),
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: onPrimary.withValues(alpha: 0.75),
-                      ),
+                      style: SpitoutTextTokens.body(context).copyWith(color: onPrimary.withValues(alpha: 0.75)),
                     ),
                     // UI稿:标题与主金额间距 10
-                    const SizedBox(height: 10),
+                    const SizedBox(height: SpitoutDimens.p8),
                     // 主金额:36px、Regular、带主币种符号、无 + 号。
                     // 复用全局金额组件 AmountText:字距走主题默认(0),与全站金额口径统一,
                     // 不硬编码负值导致数字相互紧贴。
@@ -946,15 +939,11 @@ class _HeaderSummary extends ConsumerWidget {
                         showCurrency: true,
                         currencyCode: currency,
                         signed: false,
-                        style: TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.w400,
-                          color: onPrimary,
-                        ),
+                        style: SpitoutTextTokens.display3(context).copyWith(color: onPrimary),
                       ),
                     ),
                     // UI稿:主金额与今日/本周间距 12
-                    const SizedBox(height: 12),
+                    const SizedBox(height: SpitoutDimens.p12),
                     // 今日/本周,常驻渲染(卡片三行结构固定,高度不随切页变化)。
                     // 当月显示真实数值;非当月没有对应"今日/本周"语义,金额以 "-" 占位。
                     // 拆成 Row(标签 + AmountText 金额 + 分隔符):复用全局金额组件,
@@ -968,9 +957,9 @@ class _HeaderSummary extends ConsumerWidget {
                         crossAxisAlignment: CrossAxisAlignment.center,
                         children: [
                           dim(l10n.homeTodayExpense),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           dim('·'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           isCurrentMonth
                               ? AmountText(
                                   value: todayCached,
@@ -980,13 +969,13 @@ class _HeaderSummary extends ConsumerWidget {
                                   style: dimStyle,
                                 )
                               : dim('-'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           dim('|'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           dim(l10n.homeWeekExpense),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           dim('·'),
-                          const SizedBox(width: 4),
+                          const SizedBox(width: SpitoutDimens.p4),
                           isCurrentMonth
                               ? AmountText(
                                   value: weekCached,
@@ -1011,7 +1000,7 @@ class _HeaderSummary extends ConsumerWidget {
                 right: 0,
                 child: Container(
                   // UI稿徽章内边距:左 7 / 上 6 / 右 8 / 下 6(上下加大以增高色块)
-                  padding: const EdgeInsets.fromLTRB(7, 6, 8, 6),
+                  padding: const EdgeInsets.fromLTRB(7, SpitoutDimens.p4, SpitoutDimens.p8, SpitoutDimens.p4),
                   decoration: BoxDecoration(
                     color: onPrimary.withValues(alpha: 0.18),
                     borderRadius: const BorderRadius.horizontal(
@@ -1068,7 +1057,7 @@ class _LedgerEntryInCard extends StatelessWidget {
             alignment: Alignment.center,
             child: Icon(AppIcons.people, size: 13, color: onPrimary),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpitoutDimens.p4),
           ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 96),
             child: Text(
@@ -1076,11 +1065,7 @@ class _LedgerEntryInCard extends StatelessWidget {
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               softWrap: false,
-              style: TextStyle(
-                fontSize: 13,
-                fontWeight: FontWeight.w500,
-                color: onPrimary,
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: onPrimary),
             ),
           ),
         ],
@@ -1096,13 +1081,9 @@ class _LedgerEntryInCard extends StatelessWidget {
       children: [
         Text(
           currencyCode.toUpperCase(),
-          style: TextStyle(
-            fontSize: 12,
-            fontWeight: FontWeight.w500,
-            color: onPrimary,
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: onPrimary),
         ),
-        const SizedBox(width: 4),
+        const SizedBox(width: SpitoutDimens.p4),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 96),
           child: Text(
@@ -1110,11 +1091,7 @@ class _LedgerEntryInCard extends StatelessWidget {
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             softWrap: false,
-            style: TextStyle(
-              fontSize: 12,
-              fontWeight: FontWeight.w500,
-              color: onPrimary,
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: onPrimary),
           ),
         ),
       ],
@@ -1300,7 +1277,7 @@ class _MonthSkeleton extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       physics: const NeverScrollableScrollPhysics(),
-      padding: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p8),
       itemCount: 8,
       itemBuilder: (_, _) => const PulseSkeleton(child: SkeletonListTile()),
     );
@@ -1319,21 +1296,21 @@ class _MonthError extends StatelessWidget {
     final theme = Theme.of(context);
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(SpitoutDimens.p20),
       children: [
         const SizedBox(height: 48),
-        Icon(AppIcons.cloudOff, size: 48, color: theme.colorScheme.outline),
-        const SizedBox(height: 12),
+        Icon(AppIcons.cloudOff, size: SpitoutDimens.icon40, color: theme.colorScheme.outline),
+        const SizedBox(height: SpitoutDimens.p12),
         Text(
           l10n.analyticsLoadFailed,
           textAlign: TextAlign.center,
           style: TextStyle(color: theme.colorScheme.onSurfaceVariant),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         Center(
           child: TextButton.icon(
             onPressed: onRetry,
-            icon: const Icon(AppIcons.refresh, size: 18),
+            icon: const Icon(AppIcons.refresh, size: SpitoutDimens.icon16),
             label: Text(l10n.analyticsRetry),
           ),
         ),

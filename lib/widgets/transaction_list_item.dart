@@ -98,17 +98,14 @@ class TransactionListItem extends ConsumerWidget {
   /// 「不计收支 / 不计预算」标记的小 pill（中性灰底，de-emphasis）
   Widget _flagChip(BuildContext context, String label) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p4),
       decoration: BoxDecoration(
         color: SpitoutTokens.divider(context),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       ),
       child: Text(
         label,
-        style: TextStyle(
-          fontSize: 11,
-          color: SpitoutTokens.textTertiary(context),
-        ),
+        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
       ),
     );
   }
@@ -133,7 +130,7 @@ class TransactionListItem extends ConsumerWidget {
       onTap: isSelectionMode ? onSelectionChanged : onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(
-            horizontal: 12, vertical: SpitoutDimens.listRowVertical),
+            horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.listRowVertical),
         child: Row(
           children: [
             // 选择模式:复选框;否则:36×36 分类图标(secondary 底 + primary 图标)
@@ -146,11 +143,11 @@ class TransactionListItem extends ConsumerWidget {
             else
               Material(
                 color: Colors.transparent,
-                borderRadius: BorderRadius.circular(18),
+                borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
                 clipBehavior: Clip.antiAlias,
                 child: InkWell(
                   onTap: onCategoryTap,
-                  borderRadius: BorderRadius.circular(18),
+                  borderRadius: BorderRadius.circular(SpitoutDimens.radius20),
                   child: Container(
                     width: 36,
                     height: 36,
@@ -161,16 +158,16 @@ class TransactionListItem extends ConsumerWidget {
                     ),
                     child: CategoryIconWidget(
                       category: category,
-                      size: 20,
+                      size: SpitoutDimens.icon20,
                     ),
                   ),
                 ),
               ),
-            const SizedBox(width: 12),
+            const SizedBox(width: SpitoutDimens.p12),
             // 左侧:第一行分类名 + 第二行(备注 · [头像] HH:mm)
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.only(right: 12),
+                padding: const EdgeInsets.only(right: SpitoutDimens.p12),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   mainAxisAlignment: MainAxisAlignment.center,
@@ -233,13 +230,10 @@ class TransactionListItem extends ConsumerWidget {
                         ?.value
                         ?.currency ?? 'CNY';
                     return Padding(
-                      padding: const EdgeInsets.only(top: 4),
+                      padding: const EdgeInsets.only(top: SpitoutDimens.p4),
                       child: Text(
                         '≈ ${getCurrencySymbol(ledgerCurrency)} ${((nativeAmount ?? amount) / 100).toStringAsFixed(2)}',
-                        style: TextStyle(
-                          fontSize: 11,
-                          color: SpitoutTokens.textTertiary(context),
-                        ),
+                        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                       ),
@@ -278,10 +272,7 @@ class TransactionListItem extends ConsumerWidget {
     if (note != null && note.isNotEmpty) {
       parts.add(Text(
         note,
-        style: TextStyle(
-          fontSize: 12,
-          color: SpitoutTokens.textSecondary(context),
-        ),
+        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ));
@@ -307,10 +298,7 @@ class TransactionListItem extends ConsumerWidget {
         // 时间文本在共享/非共享账本均展示,不受 isShared 影响。
         final timeWidget = Text(
           timeText,
-          style: TextStyle(
-            fontSize: 12,
-            color: SpitoutTokens.textSecondary(context),
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
         );
         if (isShared) {
           // 仅共享账本渲染协作头像:collaboratorMap == null 表示成员表尚未加载,
@@ -333,7 +321,7 @@ class TransactionListItem extends ConsumerWidget {
                 radius: 9,
                 membersLoading: isMembersLoading,
               ),
-              const SizedBox(width: 4),
+              const SizedBox(width: SpitoutDimens.p4),
               timeWidget,
             ],
           ));
@@ -356,13 +344,10 @@ class TransactionListItem extends ConsumerWidget {
     for (var i = 0; i < parts.length; i++) {
       if (i > 0) {
         children.add(Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
           child: Text(
             '·',
-            style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textTertiary(context),
-            ),
+            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
         ));
       }
@@ -370,7 +355,7 @@ class TransactionListItem extends ConsumerWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.only(top: 2),
+      padding: const EdgeInsets.only(top: SpitoutDimens.p4),
       child: Wrap(
         spacing: 0,
         runSpacing: 2,

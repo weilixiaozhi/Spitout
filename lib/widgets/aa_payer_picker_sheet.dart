@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/statistics/aa_edit_models.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
+import 'package:spitout/theme/typography.dart';
 import 'app_sheet.dart';
 import 'me_suffix.dart';
 import 'person_avatar.dart';
@@ -55,25 +57,22 @@ class _AaOptionRow extends StatelessWidget {
     final primary = Theme.of(context).colorScheme.primary;
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         child: Row(
           children: [
             // 参与人头像位:未设置头像时统一展示虚拟用户同等 person 图标,
             // 虚拟用户与真实成员保持一致,不用底色区分。
-            const PersonAvatar(size: 32, iconSize: 16),
-            const SizedBox(width: 12),
+            const PersonAvatar(size: SpitoutDimens.icon28, iconSize: SpitoutDimens.icon16),
+            const SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: Row(
                 children: [
                   Flexible(
                     child: Text(
                       option.name,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -83,7 +82,7 @@ class _AaOptionRow extends StatelessWidget {
                 ],
               ),
             ),
-            if (checked) Icon(AppIcons.check, size: 18, color: primary),
+            if (checked) Icon(AppIcons.check, size: SpitoutDimens.icon16, color: primary),
           ],
         ),
       ),

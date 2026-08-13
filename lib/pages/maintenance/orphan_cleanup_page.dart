@@ -6,6 +6,8 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
@@ -62,7 +64,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                 logger.error('OrphanCleanup', '扫描孤儿数据失败', err, st);
                 return Center(
                   child: Padding(
-                    padding: const EdgeInsets.all(24),
+                    padding: const EdgeInsets.all(SpitoutDimens.p20),
                     child: Text(
                       l10n.commonOperationFailed,
                       textAlign: TextAlign.center,
@@ -84,14 +86,14 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     if (report.totalCount == 0) {
       return Center(
         child: Padding(
-          padding: const EdgeInsets.all(32),
+          padding: const EdgeInsets.all(SpitoutDimens.p32),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
               Icon(AppIcons.checkCircle,
                   size: 64.0,
                   color: SpitoutTokens.textTertiary(context)),
-              SizedBox(height: 16.0),
+              SizedBox(height: SpitoutDimens.p16),
               Text(l10n.maintenanceOrphanEmpty,
                   style: TextStyle(
                       color: SpitoutTokens.textSecondary(context))),
@@ -102,12 +104,12 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     }
     return ListView(
       padding: EdgeInsets.symmetric(
-        horizontal: 12.0,
-        vertical: 8.0,
+        horizontal: SpitoutDimens.p12,
+        vertical: SpitoutDimens.p8,
       ),
       children: [
         _buildSummary(context, l10n, report),
-        SizedBox(height: 8.0),
+        SizedBox(height: SpitoutDimens.p8),
         if (report.dbOrphans.isNotEmpty)
           _buildGroup(context, l10n, l10n.maintenanceOrphanGroupDb,
               report.dbOrphans),
@@ -124,26 +126,22 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
       margin: EdgeInsets.zero,
       child: Padding(
         padding: EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 12.0,
+          horizontal: SpitoutDimens.p16,
+          vertical: SpitoutDimens.p12,
         ),
         child: Row(
           children: [
             Icon(AppIcons.warning,
                 color: SpitoutTokens.warning(context),
-                size: 22.0),
-            SizedBox(width: 12.0),
+                size: SpitoutDimens.icon22),
+            SizedBox(width: SpitoutDimens.p12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     l10n.maintenanceOrphanSummary(report.totalCount),
-                    style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.body(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
                   ),
                 ],
               ),
@@ -164,7 +162,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
 
     final allSelected = records.every((r) => _selected.contains(r.uniqueKey));
     return Padding(
-      padding: const EdgeInsets.only(bottom: 12.0),
+      padding: const EdgeInsets.only(bottom: SpitoutDimens.p12),
       child: SectionCard(
         margin: EdgeInsets.zero,
         child: Column(
@@ -173,19 +171,15 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
             // 组头:标题 + 数量 + 全选按钮
             Padding(
               padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
+                horizontal: SpitoutDimens.p16,
+                vertical: SpitoutDimens.p8,
               ),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       '$groupTitle (${records.length})',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: SpitoutTokens.textPrimary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
                     ),
                   ),
                   TextButton(
@@ -236,17 +230,14 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
       // 亚组头：已删账本 #X (N笔) + 全选
       widgets.add(
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 6.0),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p16, vertical: SpitoutDimens.p4),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   l10n.maintenanceOrphanDeletedLedgerGroup(
                       ledgerId, groupRecords.length),
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textSecondary(context)),
+                  style: SpitoutTextTokens.label(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textSecondary(context)),
                 ),
               ),
               GestureDetector(
@@ -261,15 +252,13 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                         allSelected
                             ? AppIcons.checkSquare
                             : AppIcons.square,
-                        size: 18,
+                        size: SpitoutDimens.icon16,
                         color: allSelected
                             ? primary
                             : SpitoutTokens.textTertiary(context)),
-                    const SizedBox(width: 4),
+                    const SizedBox(width: SpitoutDimens.p4),
                     Text(l10n.maintenanceOrphanSelectAll,
-                        style: TextStyle(
-                            fontSize: 11,
-                            color: SpitoutTokens.textSecondary(context))),
+                        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context))),
                   ],
                 ),
               ),
@@ -305,7 +294,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                 });
               },
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12.0, vertical: 4.0),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p4),
           child: Row(
             children: [
               Checkbox(
@@ -327,13 +316,9 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(r.title,
-                        style: TextStyle(
-                            fontSize: 14,
-                            color: SpitoutTokens.textPrimary(context))),
+                        style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context))),
                     Text(r.subtitle,
-                        style: TextStyle(
-                            fontSize: 12,
-                            color: SpitoutTokens.textSecondary(context))),
+                        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context))),
                   ],
                 ),
               ),
@@ -342,13 +327,13 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                 children: [
                   IconButton(
                     tooltip: l10n.maintenanceOrphanMoveSingle,
-                    icon: const Icon(AppIcons.driveFileMove, size: 20),
+                    icon: const Icon(AppIcons.driveFileMove, size: SpitoutDimens.icon20),
                     onPressed:
                         _cleaning ? null : () => _moveOneToLedger(r),
                   ),
                   IconButton(
                     tooltip: l10n.maintenanceOrphanDeleteOne,
-                    icon: const Icon(AppIcons.delete, size: 20),
+                    icon: const Icon(AppIcons.delete, size: SpitoutDimens.icon20),
                     onPressed: _cleaning ? null : () => _cleanOne(r),
                   ),
                 ],
@@ -374,13 +359,9 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
               });
             },
       title: Text(r.title,
-          style: TextStyle(
-              fontSize: 14,
-              color: SpitoutTokens.textPrimary(context))),
+          style: SpitoutTextTokens.body(context).copyWith(color: SpitoutTokens.textPrimary(context))),
       subtitle: Text(r.subtitle,
-          style: TextStyle(
-              fontSize: 12,
-              color: SpitoutTokens.textSecondary(context))),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context))),
       secondary: IconButton(
         tooltip: l10n.maintenanceOrphanDeleteOne,
         icon: const Icon(AppIcons.delete),
@@ -405,8 +386,8 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
     return SafeArea(
       child: Container(
         padding: const EdgeInsets.symmetric(
-          horizontal: 16.0,
-          vertical: 8.0,
+          horizontal: SpitoutDimens.p16,
+          vertical: SpitoutDimens.p8,
         ),
         decoration: BoxDecoration(
           color: SpitoutTokens.surface(context),
@@ -425,7 +406,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
               TextButton.icon(
                 onPressed:
                     _cleaning ? null : () => _moveSelectedToLedger(report),
-                icon: const Icon(AppIcons.driveFileMove, size: 18),
+                icon: const Icon(AppIcons.driveFileMove, size: SpitoutDimens.icon16),
                 label: Text(l10n.maintenanceOrphanMoveToLedger),
               ),
             TextButton(
@@ -436,7 +417,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
                   ? l10n.maintenanceOrphanSelectAll
                   : l10n.maintenanceOrphanDeselectAll),
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             ElevatedButton.icon(
               style: ElevatedButton.styleFrom(backgroundColor: primary),
               onPressed: (_cleaning || selectedCount == 0)

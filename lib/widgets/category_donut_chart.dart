@@ -5,6 +5,8 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 
 /// 分类占比环图（带四周引导标注）。
 ///
@@ -195,19 +197,12 @@ class CategoryDonutChart extends StatelessWidget {
                   children: [
                     Text(
                       l10n.analyticsCategoryLabel,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 15,
-                            fontWeight: FontWeight.w600,
-                            color: SpitoutTokens.textPrimary(context),
-                          ),
+                      style: SpitoutTextTokens.strongTitle(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: SpitoutDimens.p4),
                     Text(
                       l10n.analyticsExpenseRatio,
-                      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            fontSize: 10,
-                            color: SpitoutTokens.textSecondary(context),
-                          ),
+                      style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                     ),
                   ],
                 ),
@@ -317,26 +312,19 @@ class CategoryDonutChart extends StatelessWidget {
         item.name,
         overflow: TextOverflow.ellipsis,
         maxLines: 1,
-        style: Theme.of(context).textTheme.labelSmall?.copyWith(
-              fontSize: 11,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
       ),
     );
     final pctText = Text(
       pctStr,
-      style: Theme.of(context).textTheme.labelSmall?.copyWith(
-            fontSize: 11,
-            fontWeight: FontWeight.w600,
-            color: SpitoutTokens.textPrimary(context),
-          ),
+      style: SpitoutTextTokens.caption(context).copyWith(fontWeight: FontWeight.w600, color: SpitoutTokens.textPrimary(context)),
     );
 
     final label = Row(
       mainAxisSize: MainAxisSize.min,
       children: isLeft
-          ? [dot, const SizedBox(width: 4), nameText, const SizedBox(width: 4), pctText]
-          : [pctText, const SizedBox(width: 4), nameText, const SizedBox(width: 4), dot],
+          ? [dot, const SizedBox(width: SpitoutDimens.p4), nameText, const SizedBox(width: SpitoutDimens.p4), pctText]
+          : [pctText, const SizedBox(width: SpitoutDimens.p4), nameText, const SizedBox(width: SpitoutDimens.p4), dot],
     );
 
     return Positioned(

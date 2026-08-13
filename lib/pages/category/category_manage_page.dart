@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/data/models.dart' as db;
 import 'package:spitout/providers/core/post_processor.dart';
@@ -78,12 +80,9 @@ Future<bool?> _showDeleteConfirm(
       children: [
         Text(
           subtitle,
-          style: TextStyle(
-            fontSize: 13,
-            color: SpitoutTokens.textSecondary(context),
-          ),
+          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: SpitoutDimens.p12),
         ...rows,
       ],
     ),
@@ -92,7 +91,7 @@ Future<bool?> _showDeleteConfirm(
     context: context,
     builder: (dialogContext) => AlertDialog(
       backgroundColor: SpitoutTokens.surfaceElevated(dialogContext),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
       title: Text(
         l10n.categoryDeleteSelectedTitle,
         textAlign: TextAlign.center,
@@ -198,29 +197,26 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
     if (ledger == null || !ledger.isShared) return const SizedBox.shrink();
     final isOwner = ledger.myRole == 'owner';
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, 0),
       child: Material(
         color: SpitoutTokens.surface(context),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
           child: Row(
             children: [
               Icon(
                 AppIcons.people,
-                size: 16,
+                size: SpitoutDimens.icon16,
                 color: Theme.of(context).colorScheme.primary,
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: SpitoutDimens.p8),
               Expanded(
                 child: Text(
                   isOwner
                       ? l10n.categorySharedManageBannerOwner
                       : l10n.categorySharedManageBannerEditor,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -267,7 +263,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
   /// 位于"分类管理"标题之下、长按排序提示之上，删除模式下隐藏。
   Widget _buildTemplateEntries(BuildContext context, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p12, SpitoutDimens.p16, 0),
       child: Row(
         children: [
           Expanded(
@@ -278,7 +274,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
               page: const CategoryTemplateFlatPage(),
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: SpitoutDimens.p12),
           Expanded(
             child: _buildTemplateEntryButton(
               context,
@@ -302,14 +298,14 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
     return OutlinedButton.icon(
       onPressed: () =>
           Navigator.of(context).push(appPageRoute(builder: (_) => page)),
-      icon: Icon(icon, size: 16),
+      icon: Icon(icon, size: SpitoutDimens.icon16),
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor: SpitoutTokens.primary(context),
         side: BorderSide(color: SpitoutTokens.borderStrong(context)),
-        padding: const EdgeInsets.symmetric(vertical: 10),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        textStyle: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius8)),
+        textStyle: SpitoutTextTokens.body(context),
       ),
     );
   }
@@ -319,7 +315,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
   /// 长按排序提示行
   Widget _buildReorderHint(BuildContext context, AppLocalizations l10n) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p12, SpitoutDimens.p16, SpitoutDimens.p4),
       child: Row(
         children: [
           Icon(
@@ -327,13 +323,10 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
             size: 15,
             color: SpitoutTokens.textSecondary(context),
           ),
-          const SizedBox(width: 6),
+          const SizedBox(width: SpitoutDimens.p4),
           Text(
             l10n.categoryManageReorderHint,
-            style: TextStyle(
-              fontSize: 10,
-              color: SpitoutTokens.textSecondary(context),
-            ),
+            style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
           ),
         ],
       ),
@@ -351,16 +344,16 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
     AppLocalizations l10n,
   ) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16),
       child: Center(
         // 纯动作（进入删除模式），无选中态，按原则补涟漪反馈
         child: Material(
           color: Colors.transparent,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
           clipBehavior: Clip.antiAlias,
           child: InkWell(
             onTap: _enterDeleteMode,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -369,22 +362,18 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
                   height: 32,
                   decoration: BoxDecoration(
                     color: SpitoutTokens.error(context).withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
                   ),
                   child: Icon(
                     AppIcons.delete,
-                    size: 18,
+                    size: SpitoutDimens.icon16,
                     color: SpitoutTokens.error(context),
                   ),
                 ),
-                const SizedBox(width: 12),
+                const SizedBox(width: SpitoutDimens.p12),
                 Text(
                   l10n.categoryManageDelete,
-                  style: TextStyle(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w500,
-                    color: SpitoutTokens.error(context),
-                  ),
+                  style: SpitoutTextTokens.title(context).copyWith(color: SpitoutTokens.error(context)),
                 ),
               ],
             ),
@@ -413,7 +402,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
         : SpitoutTokens.error(context);
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 16),
+      padding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16, SpitoutDimens.p16),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -437,7 +426,7 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
               ),
             ],
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: SpitoutDimens.p8),
           _buildDeleteOptions(context, l10n),
         ],
       ),
@@ -456,21 +445,17 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
   }) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         child: Padding(
           // 对称 padding：涟漪在文字四周均匀外扩（参照 TextButton）。
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 15,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
+            style: SpitoutTextTokens.title(context).copyWith(color: color),
           ),
         ),
       ),
@@ -509,9 +494,9 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
         child: Row(
           children: [
             // 单选指示器
@@ -540,9 +525,9 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
                     )
                   : null,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
-              child: Text(label, style: TextStyle(fontSize: 11, color: color)),
+              child: Text(label, style: SpitoutTextTokens.caption(context).copyWith(color: color)),
             ),
           ],
         ),
@@ -606,24 +591,18 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
       final name = CategoryUtils.getDisplayName(item.category.name, context);
       listWidgets.add(
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
           child: Row(
             children: [
               Expanded(
                 child: Text(
                   name,
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textPrimary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                 ),
               ),
               Text(
                 l10n.categoryMigrationTransactionLabel(item.transactionCount),
-                style: TextStyle(
-                  fontSize: 12,
-                  color: SpitoutTokens.textSecondary(context),
-                ),
+                style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
               ),
             ],
           ),
@@ -642,33 +621,24 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
           );
           listWidgets.add(
             Padding(
-              padding: const EdgeInsets.only(left: 20, top: 2, bottom: 2),
+              padding: const EdgeInsets.only(left: SpitoutDimens.p16, top: SpitoutDimens.p4, bottom: SpitoutDimens.p4),
               child: Row(
                 children: [
                   Text(
                     '├─ ',
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: SpitoutTokens.textTertiary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                   ),
                   Expanded(
                     child: Text(
                       subName,
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: SpitoutTokens.textSecondary(context),
-                      ),
+                      style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                     ),
                   ),
                   Text(
                     l10n.categoryMigrationTransactionLabel(
                       sub.transactionCount,
                     ),
-                    style: TextStyle(
-                      fontSize: 11,
-                      color: SpitoutTokens.textTertiary(context),
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
                   ),
                 ],
               ),
@@ -889,13 +859,16 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(l10n.categoryClearUnusedMessage(unusedCategories.length)),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             Text(
               l10n.categoryClearUnusedListTitle,
               style: const TextStyle(fontWeight: FontWeight.bold),
             ),
-            const SizedBox(height: 8),
-            Text(toDeleteList.join('\n'), style: const TextStyle(fontSize: 13)),
+            const SizedBox(height: SpitoutDimens.p8),
+            Text(
+              toDeleteList.join('\n'),
+              style: SpitoutTextTokens.label(context),
+            ),
           ],
         ),
         actions: [
@@ -905,7 +878,9 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
           ),
           TextButton(
             onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(foregroundColor: Colors.red),
+            style: TextButton.styleFrom(
+              foregroundColor: SpitoutTokens.error(context),
+            ),
             child: Text(l10n.commonDelete),
           ),
         ],
@@ -1059,7 +1034,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
               size: 64,
               color: SpitoutTokens.textTertiary(context),
             ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             Text(
               AppLocalizations.of(context).categoryEmpty,
               style: Theme.of(context).textTheme.titleMedium?.copyWith(
@@ -1078,7 +1053,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
       return CustomScrollView(
         slivers: [
           SliverPadding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             sliver: SliverGrid(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 4,
@@ -1108,7 +1083,7 @@ class _CategoryGridViewState extends ConsumerState<_CategoryGridView> {
     return CustomScrollView(
       slivers: [
         SliverPadding(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(SpitoutDimens.p16),
           sliver: ReorderableSliverGridView(
             crossAxisCount: 4,
             crossAxisSpacing: 12,
@@ -1315,11 +1290,11 @@ class _CategoryCard extends ConsumerWidget {
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       child: Container(
         decoration: BoxDecoration(
           color: backgroundColor,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: Border.all(color: borderColor, width: isSelected ? 2 : 1),
         ),
         child: Stack(
@@ -1352,9 +1327,9 @@ class _CategoryCard extends ConsumerWidget {
                       circular: true,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: SpitoutDimens.p8),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                     child: Text(
                       CategoryUtils.getDisplayName(item.category.name, context),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
@@ -1368,7 +1343,7 @@ class _CategoryCard extends ConsumerWidget {
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                  const SizedBox(height: 2),
+                  const SizedBox(height: SpitoutDimens.p4),
                   Text(
                     AppLocalizations.of(
                       context,
@@ -1405,7 +1380,7 @@ class _CategoryCard extends ConsumerWidget {
                   ),
                   child: const Icon(
                     AppIcons.moreHorizontal,
-                    size: 14,
+                    size: SpitoutDimens.icon12,
                     color: Colors.white,
                   ),
                 ),
@@ -1440,7 +1415,7 @@ class _DeleteModeCheckbox extends StatelessWidget {
           shape: BoxShape.circle,
           border: Border.all(color: Colors.white, width: 1.5),
         ),
-        child: const Icon(Icons.check, size: 12, color: Colors.white),
+        child: const Icon(Icons.check, size: SpitoutDimens.icon12, color: Colors.white),
       );
     }
 
@@ -1564,7 +1539,7 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
 
     return AppSheet(
       title: l10n.categoryMigrateSelectTargetTitle,
-      contentPadding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      contentPadding: const EdgeInsets.fromLTRB(SpitoutDimens.p16, SpitoutDimens.p4, SpitoutDimens.p16, 0),
       footer: SizedBox(
         width: double.infinity,
         height: 48,
@@ -1576,12 +1551,12 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
             backgroundColor: SpitoutTokens.error(context),
             disabledBackgroundColor: SpitoutTokens.buttonDisabled(context),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
             ),
           ),
           child: Text(
             l10n.categoryMigrateConfirmButton,
-            style: const TextStyle(fontSize: 14),
+            style: SpitoutTextTokens.body(context),
           ),
         ),
       ),
@@ -1592,7 +1567,7 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
           Container(
             decoration: BoxDecoration(
               color: SpitoutTokens.surfaceSecondary(context),
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(SpitoutDimens.radius16),
             ),
             child: TextField(
               controller: _searchController,
@@ -1603,7 +1578,7 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
                 ),
                 prefixIcon: Icon(
                   AppIcons.search,
-                  size: 18,
+                  size: SpitoutDimens.icon16,
                   color: SpitoutTokens.iconTertiary(context),
                 ),
                 suffixIcon: _searchText.isNotEmpty
@@ -1611,20 +1586,20 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
                         onPressed: () => _searchController.clear(),
                         icon: Icon(
                           AppIcons.close,
-                          size: 18,
+                          size: SpitoutDimens.icon16,
                           color: SpitoutTokens.iconTertiary(context),
                         ),
                       )
                     : null,
                 border: InputBorder.none,
                 contentPadding: const EdgeInsets.symmetric(
-                  vertical: 12,
-                  horizontal: 12,
+                  vertical: SpitoutDimens.p12,
+                  horizontal: SpitoutDimens.p12,
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 12),
+          const SizedBox(height: SpitoutDimens.p12),
           // 分类网格（先父后子：列完一个分类的全部再列下个分类）
           Flexible(
             child: SingleChildScrollView(
@@ -1685,12 +1660,12 @@ class _MigrateCategoryChip extends StatelessWidget {
       onTap: onTap,
       child: Container(
         width: 72,
-        padding: const EdgeInsets.symmetric(vertical: 8),
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p8),
         decoration: BoxDecoration(
           color: isSelected
               ? SpitoutTokens.surfaceSelected(context)
               : SpitoutTokens.surface(context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: Border.all(
             color: isSelected
                 ? primaryColor
@@ -1714,7 +1689,7 @@ class _MigrateCategoryChip extends StatelessWidget {
                 circular: true,
               ),
             ),
-            const SizedBox(height: 6),
+            const SizedBox(height: SpitoutDimens.p4),
             Text(
               CategoryUtils.getDisplayName(item.category.name, context),
               style: TextStyle(
@@ -1728,10 +1703,7 @@ class _MigrateCategoryChip extends StatelessWidget {
             // 层级标注行（一级/二级·父名），与笔数行区分用更弱的三级文字色
             Text(
               badgeLabel,
-              style: TextStyle(
-                fontSize: 9,
-                color: SpitoutTokens.textTertiary(context),
-              ),
+              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               textAlign: TextAlign.center,
@@ -1740,10 +1712,7 @@ class _MigrateCategoryChip extends StatelessWidget {
               AppLocalizations.of(
                 context,
               ).categoryMigrationTransactionLabel(item.transactionCount),
-              style: TextStyle(
-                fontSize: 9,
-                color: SpitoutTokens.textSecondary(context),
-              ),
+              style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
             ),
           ],
         ),
@@ -1899,27 +1868,27 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
     final l10n = AppLocalizations.of(context);
 
     return Dialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(SpitoutDimens.radius16)),
       child: Container(
         width: MediaQuery.of(context).size.width * 0.85,
         constraints: const BoxConstraints(maxWidth: 400),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(SpitoutDimens.p16),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             _buildHeader(context, l10n, primaryColor),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             // 内容区域
             if (_isLoading)
               const Padding(
-                padding: EdgeInsets.all(32),
+                padding: EdgeInsets.all(SpitoutDimens.p32),
                 child: Center(child: CircularProgressIndicator()),
               )
             else if (_loadFailed)
               // 失败态:提示重试,避免弹窗永久转圈。
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 24),
+                padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p20),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -1930,7 +1899,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
                           color: SpitoutTokens.textSecondary(context),
                         ),
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: SpitoutDimens.p12),
                       FilledButton(
                         onPressed: () {
                           setState(() {
@@ -1948,7 +1917,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
             else if (_subCategories?.isEmpty ?? true)
               // 空态：全部子分类被删除后保留弹窗，便于继续添加
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 32),
+                padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p32),
                 child: Center(
                   child: Text(
                     l10n.subcategoryEmpty,
@@ -1967,7 +1936,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
                   // 正常模式下展示长按排序提示，与一级分类管理页保持一致
                   if (!_isDeleteMode)
                     Padding(
-                      padding: const EdgeInsets.only(bottom: 4),
+                      padding: const EdgeInsets.only(bottom: SpitoutDimens.p4),
                       child: Row(
                         children: [
                           Icon(
@@ -1975,13 +1944,10 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
                             size: 15,
                             color: SpitoutTokens.textSecondary(context),
                           ),
-                          const SizedBox(width: 6),
+                          const SizedBox(width: SpitoutDimens.p4),
                           Text(
                             l10n.categoryManageReorderHint,
-                            style: TextStyle(
-                              fontSize: 10,
-                              color: SpitoutTokens.textSecondary(context),
-                            ),
+                            style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                           ),
                         ],
                       ),
@@ -2038,7 +2004,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
                   ),
                 ],
               ),
-            const SizedBox(height: 16),
+            const SizedBox(height: SpitoutDimens.p16),
             // 底部：正常模式双文字链；删除模式"确认删除" + 删除策略单选项
             if (_isDeleteMode)
               _buildDeleteModeFooter(context, l10n)
@@ -2069,12 +2035,12 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
           ),
           child: CategoryIconWidget(
             category: widget.parentCategory,
-            size: 18,
+            size: SpitoutDimens.icon16,
             color: primaryColor,
             circular: true,
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: SpitoutDimens.p12),
         Expanded(
           child: Row(
             children: [
@@ -2094,7 +2060,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
               ),
               // 删除模式隐藏编辑入口，专注删除操作
               if (!_isDeleteMode) ...[
-                const SizedBox(width: 8),
+                const SizedBox(width: SpitoutDimens.p8),
                 _buildTextLink(
                   context,
                   label: l10n.subcategoryEditParent,
@@ -2108,7 +2074,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
         IconButton(
           onPressed: () => Navigator.pop(context),
           icon: const Icon(AppIcons.close),
-          iconSize: 20,
+          iconSize: SpitoutDimens.icon20,
           padding: EdgeInsets.zero,
           constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
         ),
@@ -2160,7 +2126,7 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
             onTap: isDisabled ? null : _confirmDelete,
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: SpitoutDimens.p8),
         _buildRadioOption(context, l10n.subcategoryDeleteOptionAll, 0),
         _buildRadioOption(context, l10n.subcategoryDeleteOptionMigrate, 1),
       ],
@@ -2180,21 +2146,17 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
   }) {
     return Material(
       color: Colors.transparent,
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
         child: Padding(
           // 对称 padding：涟漪在文字四周均匀外扩（参照 TextButton）。
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+          padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color: color,
-            ),
+            style: SpitoutTextTokens.body(context).copyWith(color: color),
           ),
         ),
       ),
@@ -2210,9 +2172,9 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
 
     return InkWell(
       onTap: () => setState(() => _deleteOption = value),
-      borderRadius: BorderRadius.circular(8),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
       child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p8, vertical: SpitoutDimens.p8),
         child: Row(
           children: [
             // 单选指示器
@@ -2241,9 +2203,9 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
                     )
                   : null,
             ),
-            const SizedBox(width: 8),
+            const SizedBox(width: SpitoutDimens.p8),
             Expanded(
-              child: Text(label, style: TextStyle(fontSize: 11, color: color)),
+              child: Text(label, style: SpitoutTextTokens.caption(context).copyWith(color: color)),
             ),
           ],
         ),
@@ -2286,24 +2248,18 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
       rows: [
         for (final item in selectedItems)
           Padding(
-            padding: const EdgeInsets.symmetric(vertical: 4),
+            padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     CategoryUtils.getDisplayName(item.category.name, context),
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: SpitoutTokens.textPrimary(context),
-                    ),
+                    style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textPrimary(context)),
                   ),
                 ),
                 Text(
                   l10n.categoryMigrationTransactionLabel(item.transactionCount),
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
+                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
                 ),
               ],
             ),
@@ -2446,15 +2402,17 @@ class _DialogSubCategoryCard extends StatelessWidget {
     final showSelectedBorder = isDeleteMode && isSelected;
     final borderColor = showSelectedBorder
         ? SpitoutTokens.error(context)
-        : (isDark ? SpitoutTokens.border(context) : Colors.grey[300]!);
+        : (isDark
+            ? SpitoutTokens.border(context)
+            : SpitoutTokens.borderStrong(context));
 
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
       child: Container(
         decoration: BoxDecoration(
           color: SpitoutTokens.surface(context),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
           border: Border.all(
             color: borderColor,
             width: showSelectedBorder ? 2 : 1,
@@ -2476,19 +2434,17 @@ class _DialogSubCategoryCard extends StatelessWidget {
                     ),
                     child: CategoryIconWidget(
                       category: category,
-                      size: 14,
+                      size: SpitoutDimens.icon12,
                       color: primaryColor,
                       circular: true,
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: SpitoutDimens.p4),
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
                     child: Text(
                       CategoryUtils.getDisplayName(category.name, context),
-                      style: Theme.of(
-                        context,
-                      ).textTheme.labelSmall?.copyWith(fontSize: 10),
+                      style: SpitoutTextTokens.caption(context),
                       textAlign: TextAlign.center,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
@@ -2498,10 +2454,7 @@ class _DialogSubCategoryCard extends StatelessWidget {
                     AppLocalizations.of(
                       context,
                     ).categoryMigrationTransactionLabel(transactionCount),
-                    style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                      color: Theme.of(context).colorScheme.outline,
-                      fontSize: 9,
-                    ),
+                    style: SpitoutTextTokens.caption(context).copyWith(color: Theme.of(context).colorScheme.outline),
                   ),
                 ],
               ),

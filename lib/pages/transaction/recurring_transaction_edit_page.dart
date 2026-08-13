@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/l10n/app_localizations.dart';
@@ -126,14 +127,14 @@ class _RecurringTransactionEditPageState
             child: Form(
               key: _formKey,
               child: ListView(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(SpitoutDimens.p16),
                 children: [
                   // 全局仅支出模式，交易类型恒为支出（_type 固定为 'expense'）
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Ledger selection
                   _buildLedgerSelector(l10n),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Amount
                   TextFormField(
@@ -155,27 +156,27 @@ class _RecurringTransactionEditPageState
                       return null;
                     },
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Category selection
                   _buildCategorySelector(l10n),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Frequency
                   _buildFrequencySelector(l10n),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Interval
                   if (_frequency != RecurringFrequency.daily)
                     _buildIntervalSelector(l10n),
                   if (_frequency != RecurringFrequency.daily)
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpitoutDimens.p16),
 
                   // Day of month (for monthly)
                   if (_frequency == RecurringFrequency.monthly)
                     _buildDayOfMonthSelector(l10n),
                   if (_frequency == RecurringFrequency.monthly)
-                    const SizedBox(height: 16),
+                    const SizedBox(height: SpitoutDimens.p16),
 
                   // Start date
                   _buildDateField(
@@ -183,7 +184,7 @@ class _RecurringTransactionEditPageState
                     date: _startDate,
                     onTap: () => _selectDate(context, true),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // End date
                   _buildDateField(
@@ -193,7 +194,7 @@ class _RecurringTransactionEditPageState
                     allowClear: true,
                     onClear: () => setState(() => _endDate = null),
                   ),
-                  const SizedBox(height: 16),
+                  const SizedBox(height: SpitoutDimens.p16),
 
                   // Note
                   TextFormField(
@@ -209,7 +210,7 @@ class _RecurringTransactionEditPageState
           // 底部保存按钮
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(SpitoutDimens.p16),
             child: FilledButton(
               onPressed: _isFormValid() && !_saving
                   ? _saveRecurringTransaction
@@ -229,7 +230,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: l10n.categoryTitle,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
           errorText: _getCategoryErrorText(),
@@ -250,7 +251,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: l10n.ledgerSelectTitle,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
           errorText: _getLedgerErrorText(),
@@ -355,7 +356,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionFrequency,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
         ),
@@ -365,7 +366,7 @@ class _RecurringTransactionEditPageState
             Text(frequencyLabel),
             Icon(
               AppIcons.chevronDown,
-              size: 24,
+              size: SpitoutDimens.icon22,
               color: SpitoutTokens.iconTertiary(context),
             ),
           ],
@@ -422,7 +423,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionInterval,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
         ),
@@ -432,7 +433,7 @@ class _RecurringTransactionEditPageState
             Text(intervalLabel),
             Icon(
               AppIcons.chevronDown,
-              size: 24,
+              size: SpitoutDimens.icon22,
               color: SpitoutTokens.iconTertiary(context),
             ),
           ],
@@ -462,7 +463,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: l10n.recurringTransactionDayOfMonth,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
         ),
@@ -472,7 +473,7 @@ class _RecurringTransactionEditPageState
             Text('${_dayOfMonth ?? 1}'),
             Icon(
               AppIcons.chevronDown,
-              size: 24,
+              size: SpitoutDimens.icon22,
               color: SpitoutTokens.iconTertiary(context),
             ),
           ],
@@ -494,7 +495,7 @@ class _RecurringTransactionEditPageState
         decoration: InputDecoration(
           labelText: label,
           border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(SpitoutDimens.radius12),
             borderSide: BorderSide.none,
           ),
           suffixIcon: allowClear && date != null
