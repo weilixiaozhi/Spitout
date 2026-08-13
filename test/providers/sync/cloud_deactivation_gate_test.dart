@@ -114,7 +114,7 @@ void main() {
 
     final repo = container.read(repositoryProvider);
     expect(repo, isA<LocalRepository>());
-    final local = repo as LocalRepository;
+    final local = repo;
     expect(local.changeTracker, isNull,
         reason: '失活窗口内仓库不得注入 ChangeTracker，本地写不会登记到失效通道');
     expect(local.snapshotDirtyMarker, isNull);

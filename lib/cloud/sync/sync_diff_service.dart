@@ -1,6 +1,6 @@
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
-import 'package:spitout/data/repositories/transaction_repository.dart'
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
     show TransactionUpdateBySyncIdData;
 import 'package:spitout/data/repositories/support/data_import_port.dart';
 import 'package:spitout/utils/currency/money_cents.dart';
@@ -84,7 +84,7 @@ class SyncDiffService {
   ///
   /// 返回 null 表示云端数据不含 syncId，无法计算 diff
   Future<SyncPreview?> computeDiff({
-    required BaseRepository repo,
+    required LocalRepository repo,
     required int ledgerId,
     required List<ImportTransaction> cloudTransactions,
     List<Transaction>? localTransactions,
@@ -294,7 +294,7 @@ class SyncDiffService {
   /// [selectedChanges] - 用户选中的变更列表
   /// [importData] - 原始导入数据（用于导入分类/账户/标签）
   Future<SyncApplyResult> applySyncChanges({
-    required BaseRepository repo,
+    required LocalRepository repo,
     required int ledgerId,
     required List<SyncChange> selectedChanges,
     required ImportData importData,

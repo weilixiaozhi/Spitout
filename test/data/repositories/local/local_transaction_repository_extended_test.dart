@@ -14,8 +14,6 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_transaction_repository.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
-import 'package:spitout/data/repositories/transaction_repository.dart'
-    show TransactionUpdateBySyncIdData;
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

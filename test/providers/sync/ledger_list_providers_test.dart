@@ -9,11 +9,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/ledger_list_providers.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

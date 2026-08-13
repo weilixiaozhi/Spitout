@@ -19,7 +19,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/category/category_manage_page.dart';
 import 'package:spitout/pages/category/category_template_flat_page.dart';
@@ -27,8 +27,8 @@ import 'package:spitout/pages/category/category_template_hierarchical_page.dart'
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/services/data/seed_service.dart';
 
-/// Mock 整个 BaseRepository，按需 stub 模板页用到的方法。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository，按需 stub 模板页用到的方法。
+class _MockRepo extends Mock implements LocalRepository {}
 
 typedef _CategoryWithCount = ({db.Category category, int transactionCount});
 

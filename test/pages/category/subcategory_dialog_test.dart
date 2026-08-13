@@ -17,13 +17,13 @@ import 'package:reorderable_grid_view/reorderable_grid_view.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/category/category_manage_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
-/// Mock 整个 BaseRepository，按需 stub 弹窗用到的方法。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository，按需 stub 弹窗用到的方法。
+class _MockRepo extends Mock implements LocalRepository {}
 
 typedef _CategoryWithCount = ({db.Category category, int transactionCount});
 

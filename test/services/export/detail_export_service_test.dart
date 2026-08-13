@@ -11,11 +11,11 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/export/detail_export_service.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -15,7 +15,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/data/detail_export_page.dart';
 import 'package:spitout/pages/data/detail_import_export_page.dart';
@@ -23,8 +23,8 @@ import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/app_list_tile.dart';
 
-// Mock 整个 BaseRepository，未 stub 的方法返回默认值不抛异常。
-class _MockRepo extends Mock implements BaseRepository {}
+// Mock 整个 LocalRepository，未 stub 的方法返回默认值不抛异常。
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

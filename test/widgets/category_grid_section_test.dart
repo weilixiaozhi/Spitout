@@ -20,7 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/category/category_picker_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';

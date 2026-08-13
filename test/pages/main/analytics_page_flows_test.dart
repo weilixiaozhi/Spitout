@@ -16,7 +16,7 @@ import 'package:mocktail/mocktail.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart' show Category;
 import 'package:spitout/data/models.dart' show Ledger;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/analytics_page.dart';
 import 'package:spitout/pages/transaction/category_detail_page.dart';
@@ -25,7 +25,7 @@ import 'package:spitout/utils/date/week_math.dart';
 import 'package:spitout/widgets/category_icon.dart';
 import 'package:spitout/widgets/category_rank_row.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 typedef _HierarchyRow = ({
   int? id,

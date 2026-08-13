@@ -17,8 +17,8 @@ import 'package:spitout/cloud/sync/sync_service.dart' show SyncService;
 import 'package:spitout/data/db.dart' show LedgerVirtualUser, RecordEditHistory;
 import 'package:spitout/data/models.dart'
     show Category, Ledger, Transaction;
-import 'package:spitout/data/repositories/base_repository.dart';
-import 'package:spitout/data/repositories/category_repository.dart'
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart'
     show CategoryPickerTree;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/home_page.dart';
@@ -30,7 +30,7 @@ import 'package:spitout/widgets/transaction_list_item.dart';
 
 import '../../helpers/test_isolation.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 class _MockSyncService extends Mock implements SyncService {}
 

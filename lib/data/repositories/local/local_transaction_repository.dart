@@ -7,7 +7,46 @@ import 'package:uuid/uuid.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/utils/date/month_range.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
-import 'package:spitout/data/repositories/transaction_repository.dart';
+
+/// 批量按 syncId 更新交易时的单条 update payload。
+class TransactionUpdateBySyncIdData {
+  final String syncId;
+  final String type;
+  final int amount; // 单位:分
+  final int? categoryId;
+  final DateTime happenedAt;
+  final String? note;
+  // 全字段快照契约:云端恢复/下载预览把远端交易完整落本地,
+  // 这些字段 null 表示"清空/未设置"，非 null 表示显式覆盖。
+  final String? currencyCode;
+  final int? nativeAmount; // 单位:分
+  final bool? excludeFromStats;
+  final String? paidByUserId;
+  final int? aaMode;
+  final String? aaParticipants;
+  final String? aaSplits;
+  /// 是否按"云端快照全字段覆盖"语义写入。
+  /// true 时上述扩展字段 null = 清空、非 null = 覆盖；
+  /// false 时保持旧语义（只更新 5 个基础字段）。
+  final bool overwriteSnapshot;
+
+  const TransactionUpdateBySyncIdData({
+    required this.syncId,
+    required this.type,
+    required this.amount,
+    this.categoryId,
+    required this.happenedAt,
+    this.note,
+    this.currencyCode,
+    this.nativeAmount,
+    this.excludeFromStats,
+    this.paidByUserId,
+    this.aaMode,
+    this.aaParticipants,
+    this.aaSplits,
+    this.overwriteSnapshot = false,
+  });
+}
 
 /// 统一删除交易及其编辑历史。
 ///
@@ -30,7 +69,7 @@ Future<int> deleteTransactionsWithEditHistories(
 
 /// 本地交易Repository实现
 /// 基于 Drift 数据库实现
-class LocalTransactionRepository implements TransactionRepository {
+class LocalTransactionRepository {
   final SpitoutDatabase db;
 
   LocalTransactionRepository(this.db);
@@ -63,7 +102,6 @@ class LocalTransactionRepository implements TransactionRepository {
     );
   }
 
-  @override
   Stream<List<Transaction>> watchRecentTransactions({
     required int ledgerId,
     int limit = 20,
@@ -93,7 +131,6 @@ class LocalTransactionRepository implements TransactionRepository {
     }
   }
 
-  @override
   Stream<List<Transaction>> watchTransactionsInMonth({
     required int ledgerId,
     required DateTime month,
@@ -126,7 +163,6 @@ class LocalTransactionRepository implements TransactionRepository {
     ),
   ];
 
-  @override
   Stream<List<({Transaction t, Category? category})>>
   watchTransactionsWithCategoryAll({int? ledgerId}) {
     final select = db.select(db.transactions);
@@ -141,7 +177,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return _watchTxJoinWithSharedHydration(q);
   }
 
-  @override
   Stream<List<({Transaction t, Category? category})>>
   watchExcludedAaTransactions(int ledgerId) {
     // 只取 aaMode=1(不分摊)的交易,过滤下沉到 SQL,避免客户端全量过滤。
@@ -295,7 +330,6 @@ class LocalTransactionRepository implements TransactionRepository {
     );
   }
 
-  @override
   Stream<List<({Transaction t, Category? category})>>
   watchTransactionsWithCategoryInMonth({
     required int ledgerId,
@@ -322,7 +356,6 @@ class LocalTransactionRepository implements TransactionRepository {
     });
   }
 
-  @override
   Stream<List<({Transaction t, Category? category})>>
   watchTransactionsWithCategoryInYear({
     required int ledgerId,
@@ -348,7 +381,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return _watchTxJoinWithSharedHydration(q);
   }
 
-  @override
   Stream<List<({Transaction t, Category? category})>>
   watchTransactionsForCategoryInRange({
     required int ledgerId,
@@ -383,7 +415,6 @@ class LocalTransactionRepository implements TransactionRepository {
 
   static const _uuid = Uuid();
 
-  @override
   Future<int> addTransaction({
     required int ledgerId,
     required String type,
@@ -429,7 +460,6 @@ class LocalTransactionRepository implements TransactionRepository {
         );
   }
 
-  @override
   Future<int> insertTransactionsBatch(
     List<TransactionsCompanion> items, {
     bool recordChanges = true,
@@ -452,7 +482,6 @@ class LocalTransactionRepository implements TransactionRepository {
     });
   }
 
-  @override
   // 批量插入交易(无标签/附件关联)
   Future<List<int>> insertTransactionsBatchWithRelations({
     required List<TransactionsCompanion> transactions,
@@ -489,7 +518,6 @@ class LocalTransactionRepository implements TransactionRepository {
     });
   }
 
-  @override
   Future<int> updateTransaction({
     required int id,
     required String type,
@@ -616,7 +644,6 @@ class LocalTransactionRepository implements TransactionRepository {
     }
   }
 
-  @override
   Future<void> deleteTransaction(int id) async {
     // 删除交易记录及其编辑历史，避免详情页按 recordId 反查时“复活”孤儿历史。
     await db.transaction(() async {
@@ -626,7 +653,6 @@ class LocalTransactionRepository implements TransactionRepository {
 
   // ==================== 编辑历史 ====================
 
-  @override
   Future<List<RecordEditHistory>> getEditHistories(int recordId) async {
     // 按版本号倒序:最新版本在前,详情区块从新到旧展示
     return (db.select(db.recordEditHistories)
@@ -640,7 +666,6 @@ class LocalTransactionRepository implements TransactionRepository {
         .get();
   }
 
-  @override
   Future<int> appendEditHistory({
     required int recordId,
     required int version,
@@ -664,14 +689,12 @@ class LocalTransactionRepository implements TransactionRepository {
         );
   }
 
-  @override
   Future<Transaction?> getTransactionById(int id) async {
     return await (db.select(
       db.transactions,
     )..where((t) => t.id.equals(id))).getSingleOrNull();
   }
 
-  @override
   Future<int> insertTransactionCompanion(
     TransactionsCompanion item, {
     bool recordChanges = true,
@@ -685,7 +708,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return await db.into(db.transactions).insert(effective);
   }
 
-  @override
   Future<List<({Transaction t, Category? category})>>
   transactionsWithCategoryAll({int? ledgerId}) async {
     final select = db.select(db.transactions);
@@ -708,7 +730,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return _hydrateSharedOverrides(out);
   }
 
-  @override
   Future<List<({Transaction t, Category? category})>>
   getRecentTransactionsWithCategory({
     required int ledgerId,
@@ -737,7 +758,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return _hydrateSharedOverrides(out);
   }
 
-  @override
   Future<int> countByTypeInRange({
     required int ledgerId,
     required String type,
@@ -763,7 +783,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return 0;
   }
 
-  @override
   Future<List<Transaction>> getTransactionsByLedger(int ledgerId) async {
     return await (db.select(db.transactions)
           ..where((t) => t.ledgerId.equals(ledgerId))
@@ -776,7 +795,6 @@ class LocalTransactionRepository implements TransactionRepository {
         .get();
   }
 
-  @override
   Future<List<Transaction>> getAaTransactionsByLedger(int ledgerId) async {
     // AA 分摊统计:过滤出 aaMode != 1 的交易。
     // aaMode=null/0(人均)和 aaMode=2(指定)都纳入;"不分摊"(aaMode=1)跳过。
@@ -796,7 +814,6 @@ class LocalTransactionRepository implements TransactionRepository {
         .get();
   }
 
-  @override
   Future<List<Transaction>> getTransactionsByLedgerInRange({
     required int ledgerId,
     required DateTime start,
@@ -818,7 +835,6 @@ class LocalTransactionRepository implements TransactionRepository {
         .get();
   }
 
-  @override
   Future<void> updateTransactionLedger({
     required int id,
     required int ledgerId,
@@ -830,7 +846,6 @@ class LocalTransactionRepository implements TransactionRepository {
 
   // ==================== 日历功能相关 ====================
 
-  @override
   Future<Map<String, double>> getDailyTotalsByMonth({
     required int ledgerId,
     required DateTime month,
@@ -881,7 +896,6 @@ class LocalTransactionRepository implements TransactionRepository {
     return map;
   }
 
-  @override
   // 返回单日交易及其关联分类
   Future<List<({Transaction t, Category? category})>> getTransactionsByDate({
     required int ledgerId,
@@ -993,14 +1007,12 @@ class LocalTransactionRepository implements TransactionRepository {
 
   // ==================== syncId 相关 ====================
 
-  @override
   Future<Transaction?> getTransactionBySyncId(String syncId) async {
     return await (db.select(
       db.transactions,
     )..where((t) => t.syncId.equals(syncId))).getSingleOrNull();
   }
 
-  @override
   Future<void> updateTransactionBySyncId({
     required String syncId,
     required String type,
@@ -1022,7 +1034,6 @@ class LocalTransactionRepository implements TransactionRepository {
     );
   }
 
-  @override
   Future<void> deleteTransactionBySyncId(String syncId) async {
     // 先查找交易ID，以便删除关联数据
     final tx = await getTransactionBySyncId(syncId);
@@ -1031,7 +1042,6 @@ class LocalTransactionRepository implements TransactionRepository {
     }
   }
 
-  @override
   Future<Map<String, int>> updateTransactionsBatchBySyncId(
     List<TransactionUpdateBySyncIdData> updates, {
     bool recordChanges = true,
@@ -1095,7 +1105,6 @@ class LocalTransactionRepository implements TransactionRepository {
     });
   }
 
-  @override
   Future<int> deleteTransactionsBatchBySyncIds(
     List<String> syncIds, {
     bool recordChanges = true,

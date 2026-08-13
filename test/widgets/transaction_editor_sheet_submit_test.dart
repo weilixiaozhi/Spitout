@@ -18,8 +18,8 @@ import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/cloud/sync/sync_service.dart' show SyncService;
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/category/category_picker_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
@@ -42,7 +42,7 @@ import 'package:spitout/widgets/transaction_editor_sheet.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudSyncBackend;
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 class _MockSyncService extends Mock implements SyncService {}
 

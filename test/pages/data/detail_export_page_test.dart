@@ -15,13 +15,13 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/data/detail_export_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
-// Mock 整个 BaseRepository，仅需 stub 账本列表查询。
-class _MockRepo extends Mock implements BaseRepository {}
+// Mock 整个 LocalRepository，仅需 stub 账本列表查询。
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

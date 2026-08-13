@@ -12,8 +12,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/category/category_picker_providers.dart';
 import 'package:spitout/providers/core/database_providers.dart';
@@ -23,7 +23,7 @@ import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/widgets/transaction_editor_sheet.dart';
 import 'package:spitout/widgets/transaction_editor_sheet_entry.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

@@ -3,7 +3,7 @@ import 'package:drift/drift.dart' show OrderingTerm;
 import 'package:decimal/decimal.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/support/data_import_port.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 
@@ -311,7 +311,7 @@ ImportData parseJsonToImportData(String jsonStr) {
 /// 返回 (inserted,) 元组：
 /// - inserted: 新增条数
 Future<({int inserted})> importTransactionsJson(
-  BaseRepository repo,
+  LocalRepository repo,
   int ledgerId,
   String jsonStr, {
   required DataImportPort dataImportPort,

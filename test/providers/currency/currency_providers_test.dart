@@ -21,13 +21,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
 import 'package:spitout/utils/currency/currencies.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 假汇率服务：固定返回 CNY base 汇率，可注入失败。
 class _FakeRateService implements ExchangeRateService {
@@ -81,7 +80,7 @@ void main() {
   /// 构建 ProviderContainer：注入仓库与当前账本流。
   ProviderContainer makeContainer({
     required Stream<Ledger?> ledgerStream,
-    BaseRepository? repository,
+    LocalRepository? repository,
   }) {
     return ProviderContainer(
       overrides: [

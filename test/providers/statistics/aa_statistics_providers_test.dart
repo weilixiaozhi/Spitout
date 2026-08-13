@@ -18,12 +18,11 @@ import 'package:mocktail/mocktail.dart';
 import '../../helpers/test_isolation.dart';
 import 'package:flutter_cloud_sync_spitout_cloud/testing.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/providers/providers.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

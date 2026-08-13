@@ -15,11 +15,11 @@ import 'package:yaml/yaml.dart';
 
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/services/export/config_export_service.dart';
 import 'package:spitout/services/notification/reminder_constants.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 CloudServiceStore _testStore() =>
     CloudServiceStore(credentialStorage: SharedPreferencesCredentialStorage());

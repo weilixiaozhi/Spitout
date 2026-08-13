@@ -7,7 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/system/public_export_dir_service.dart';
 import 'package:spitout/utils/category_utils.dart';
@@ -23,7 +23,7 @@ typedef DetailExportResult = ({String path, String displayPath});
 /// 返回最终保存的文件路径与展示路径,结果展示(弹窗 / Toast)由调用方决定。
 Future<DetailExportResult> exportDetailCsv({
   required BuildContext context,
-  required BaseRepository repo,
+  required LocalRepository repo,
   required int ledgerId,
   DateTimeRange? dateRange,
   required void Function(double) onProgress,

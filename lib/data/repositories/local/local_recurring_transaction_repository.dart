@@ -1,22 +1,18 @@
 import 'package:drift/drift.dart' as d;
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/recurring_transaction_repository.dart';
 
 /// 本地周期记账Repository实现
 /// 基于 Drift 数据库实现
-class LocalRecurringTransactionRepository
-    implements RecurringTransactionRepository {
+class LocalRecurringTransactionRepository {
   final SpitoutDatabase db;
 
   LocalRecurringTransactionRepository(this.db);
 
-  @override
   Future<List<RecurringTransaction>> getAllRecurringTransactions() async {
     return await (db.select(db.recurringTransactions)).get();
   }
 
-  @override
   Future<List<RecurringTransaction>> getRecurringTransactionsByLedger(
     int ledgerId,
   ) async {
@@ -25,7 +21,6 @@ class LocalRecurringTransactionRepository
     )..where((t) => t.ledgerId.equals(ledgerId))).get();
   }
 
-  @override
   Future<List<RecurringTransaction>> getEnabledRecurringTransactions(
     int ledgerId,
   ) async {
@@ -34,7 +29,6 @@ class LocalRecurringTransactionRepository
         .get();
   }
 
-  @override
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
@@ -71,7 +65,6 @@ class LocalRecurringTransactionRepository
         );
   }
 
-  @override
   Future<void> updateRecurringTransaction({
     required int id,
     required int ledgerId,
@@ -116,14 +109,12 @@ class LocalRecurringTransactionRepository
     );
   }
 
-  @override
   Future<void> deleteRecurringTransaction(int id) async {
     await (db.delete(
       db.recurringTransactions,
     )..where((t) => t.id.equals(id))).go();
   }
 
-  @override
   Future<void> toggleRecurringTransaction(int id, bool enabled) async {
     await (db.update(
       db.recurringTransactions,
@@ -135,7 +126,6 @@ class LocalRecurringTransactionRepository
     );
   }
 
-  @override
   Future<void> updateLastGeneratedDate(int id, DateTime date) async {
     await (db.update(
       db.recurringTransactions,
@@ -147,12 +137,10 @@ class LocalRecurringTransactionRepository
     );
   }
 
-  @override
   Stream<List<RecurringTransaction>> watchAllRecurringTransactions() {
     return (db.select(db.recurringTransactions)).watch();
   }
 
-  @override
   Stream<List<RecurringTransaction>> watchRecurringTransactionsByLedger(
     int ledgerId,
   ) {
@@ -161,7 +149,6 @@ class LocalRecurringTransactionRepository
     )..where((t) => t.ledgerId.equals(ledgerId))).watch();
   }
 
-  @override
   Future<void> batchInsertRecurringTransactions(
     List<RecurringTransactionsCompanion> items,
   ) async {

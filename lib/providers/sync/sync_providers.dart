@@ -636,7 +636,7 @@ Future<String?> _readLocalSelfId(
 ///     **严禁在此分支前预调 normalizeOrphanCloudLedgers**:认领靠旧 syncId 命中
 ///     server 409 走幂等重认领,syncId 一旦被清空,同账号恢复会退化成"新建一本",
 ///     云端出现重复账本。
-///   - 未登录 → [LedgerRepository.normalizeOrphanCloudLedgers] 归一化兜底。
+///   - 未登录 → [LocalRepository.normalizeOrphanCloudLedgers] 归一化兜底。
 ///
 /// 时序铁律:`cloud` / `engine` / `repository` **必须在 invalidate 之后读取**,
 /// 否则拿到的是绑定旧库(已被覆盖的文件)的陈旧实例。

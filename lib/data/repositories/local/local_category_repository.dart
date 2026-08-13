@@ -6,22 +6,20 @@ import 'package:uuid/uuid.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models/category_node.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/data/repositories/support/exceptions.dart';
 
 /// 本地分类Repository实现
 /// 基于 Drift 数据库实现
-class LocalCategoryRepository implements CategoryRepository {
+class LocalCategoryRepository {
   static const _uuid = Uuid();
   final SpitoutDatabase db;
 
   LocalCategoryRepository(this.db);
 
-  @override
   Future<T> runInTransaction<T>(Future<T> Function() action) =>
       db.transaction(action);
 
-  @override
   Future<int> createCategory({
     required String name,
     required String kind,
@@ -69,7 +67,6 @@ class LocalCategoryRepository implements CategoryRepository {
         );
   }
 
-  @override
   Future<int> createSubCategory({
     required int parentId,
     required String name,
@@ -109,7 +106,6 @@ class LocalCategoryRepository implements CategoryRepository {
         );
   }
 
-  @override
   Future<void> updateCategory(
     int id, {
     String? name,
@@ -130,7 +126,6 @@ class LocalCategoryRepository implements CategoryRepository {
     );
   }
 
-  @override
   Future<void> deleteCategory(int id) async {
     // 直接删分类必须 fail-loud:有子分类或交易时静默删分类会让交易 category_id
     // 指向已删除行,统计里变成“未分类”。调用方应先显式编排删除交易/提升子分类。
@@ -154,14 +149,12 @@ class LocalCategoryRepository implements CategoryRepository {
     await (db.delete(db.categories)..where((c) => c.id.equals(id))).go();
   }
 
-  @override
   Future<void> deleteCategoriesByIds(List<int> ids) async {
     if (ids.isEmpty) return;
     await (db.delete(db.categories)..where((c) => c.parentId.isIn(ids))).go();
     await (db.delete(db.categories)..where((c) => c.id.isIn(ids))).go();
   }
 
-  @override
   Future<int> deleteTransactionsByCategoryIds(List<int> categoryIds) async {
     if (categoryIds.isEmpty) return 0;
     // 批量删除指定分类 ID 关联的所有交易记录
@@ -172,7 +165,6 @@ class LocalCategoryRepository implements CategoryRepository {
     )..where((t) => t.categoryId.isIn(categoryIds))).go();
   }
 
-  @override
   Future<int> promoteSubCategoriesToTopLevel(int parentId) async {
     return await db.transaction(() async {
       // 获取所有需要提升的二级分类
@@ -210,7 +202,6 @@ class LocalCategoryRepository implements CategoryRepository {
     });
   }
 
-  @override
   Future<({int id, bool created})> upsertCategory({
     required String name,
     required String kind,
@@ -242,7 +233,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return (id: id, created: true);
   }
 
-  @override
   Future<Category?> getCategoryById(int categoryId) async {
     return await (db.select(
       db.categories,
@@ -253,11 +243,9 @@ class LocalCategoryRepository implements CategoryRepository {
   // (SharedLedgerPickerFilter),扩展内部已按 id 正负 / ledger 角色分派,
   // 此处只做透传——分层上属于数据层内部实现细节,不泄漏到 UI。
 
-  @override
   Future<Category?> findCategoryBySyntheticId(int id, {String? ledgerSyncId}) =>
       db.findCategoryBySyntheticId(id, ledgerSyncId: ledgerSyncId);
 
-  @override
   Future<List<Category>> filterCategoriesForLedgerPicker(
     List<Category> all, {
     int? ledgerId,
@@ -273,7 +261,6 @@ class LocalCategoryRepository implements CategoryRepository {
     );
   }
 
-  @override
   Future<Map<int, Category>> getCategoriesByIds(Iterable<int> ids) async {
     final idList = ids.toList();
     if (idList.isEmpty) return const {};
@@ -284,7 +271,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return {for (final r in rows) r.id: r};
   }
 
-  @override
   Future<List<Category>> getTopLevelCategories(String kind) async {
     return await (db.select(db.categories)
           ..where(
@@ -295,7 +281,6 @@ class LocalCategoryRepository implements CategoryRepository {
         .get();
   }
 
-  @override
   Future<List<Category>> getSubCategories(int parentId) async {
     return await (db.select(db.categories)
           ..where((c) => c.parentId.equals(parentId) & c.level.equals(2))
@@ -303,7 +288,6 @@ class LocalCategoryRepository implements CategoryRepository {
         .get();
   }
 
-  @override
   Future<CategoryPickerTree> getCategoryTree(String kind) async {
     // 一次查询取回该 kind 的全部 level 1+2 记录，按 sortOrder 排序后内存
     // 拆分一级/二级分组，避免 N+1 查询。
@@ -324,7 +308,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return CategoryPickerTree(topLevel: topLevel, children: children);
   }
 
-  @override
   Future<List<Category>> getUsableCategories(String kind) async {
     final allCategories =
         await (db.select(db.categories)
@@ -334,7 +317,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return CategoryHierarchy.getUsableCategories(allCategories);
   }
 
-  @override
   Future<bool> isCategoryNameDuplicate({
     required String name,
     required String kind,
@@ -361,7 +343,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return results.isNotEmpty;
   }
 
-  @override
   Future<bool> hasSubCategories(int categoryId) async {
     final count = await db
         .customSelect(
@@ -378,7 +359,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return false;
   }
 
-  @override
   Future<int> getSubCategoryCount(int categoryId) async {
     final result = await db
         .customSelect(
@@ -395,7 +375,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return 0;
   }
 
-  @override
   Future<int> getTransactionCountByCategory(int categoryId) async {
     final result = await db
         .customSelect(
@@ -412,7 +391,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return 0;
   }
 
-  @override
   Future<Map<int, int>> getAllCategoryTransactionCounts() async {
     final result = await db
         .customSelect(
@@ -450,7 +428,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return counts;
   }
 
-  @override
   Future<({int totalCount, double totalAmount, double averageAmount})>
   getCategorySummary(int categoryId) async {
     final result = await db
@@ -492,7 +469,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return (totalCount: count, totalAmount: total, averageAmount: average);
   }
 
-  @override
   Future<List<Transaction>> getTransactionsByCategory(int categoryId) async {
     return await (db.select(db.transactions)
           ..where((t) => t.categoryId.equals(categoryId))
@@ -505,7 +481,6 @@ class LocalCategoryRepository implements CategoryRepository {
         .get();
   }
 
-  @override
   Future<List<Transaction>> getTransactionsByCategoryWithSort(
     int categoryId, {
     String sortBy = 'time',
@@ -535,7 +510,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return await query.get();
   }
 
-  @override
   Future<int> migrateCategory({
     required int fromCategoryId,
     required int toCategoryId,
@@ -549,7 +523,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return beforeCount;
   }
 
-  @override
   Future<({int migratedTransactions, int migratedSubCategories})>
   migrateCategoryTransactions({
     required int fromCategoryId,
@@ -629,7 +602,6 @@ class LocalCategoryRepository implements CategoryRepository {
     });
   }
 
-  @override
   Future<({int transactionCount, bool canMigrate})> getCategoryMigrationInfo({
     required int fromCategoryId,
     required int toCategoryId,
@@ -650,7 +622,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return (transactionCount: transactionCount, canMigrate: canMigrate);
   }
 
-  @override
   Future<void> updateCategorySortOrders(
     List<({int id, int sortOrder})> updates,
   ) async {
@@ -662,7 +633,6 @@ class LocalCategoryRepository implements CategoryRepository {
     });
   }
 
-  @override
   Future<String> getCategoryFullName(int categoryId) async {
     final category = await (db.select(
       db.categories,
@@ -684,7 +654,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return '${parent.name} / ${category.name}';
   }
 
-  @override
   Stream<Category?> watchCategory(int categoryId, {String? ledgerSyncId}) {
     // 负 id 是 SharedLedgerCategories 的 synthetic id
     // (syntheticIdForSyncId 派生)。分类详情页传过来时,要去 shared 表反查
@@ -752,7 +721,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return ctrl.stream;
   }
 
-  @override
   Stream<List<Transaction>> watchTransactionsByCategory(
     int categoryId, {
     int? ledgerId,
@@ -964,7 +932,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return ctrl.stream;
   }
 
-  @override
   Stream<List<Category>> watchCategoryWithSubs(int categoryId) {
     // 负数 id 是 SharedLedgerCategories 的 synthetic 分类：
     // 共享分类不在主表，需走镜像表构造父+子分类树，供分类汇总页渲染。
@@ -1074,7 +1041,6 @@ class LocalCategoryRepository implements CategoryRepository {
     );
   }
 
-  @override
   Stream<List<({Category category, int transactionCount})>>
   watchCategoriesWithCount() async* {
     await for (final rows
@@ -1126,14 +1092,12 @@ class LocalCategoryRepository implements CategoryRepository {
     }
   }
 
-  @override
   Future<List<Category>> getAllCategories() async {
     return await (db.select(
       db.categories,
     )..orderBy([(c) => d.OrderingTerm(expression: c.sortOrder)])).get();
   }
 
-  @override
   Future<List<Category>> getAllCategoriesIncludingShared() async {
     final result = [...await getAllCategories()];
     // 并入 SharedLedgerCategories 的 synthetic 分类(按 synthetic id 去重，
@@ -1163,7 +1127,6 @@ class LocalCategoryRepository implements CategoryRepository {
     return result;
   }
 
-  @override
   Future<void> batchInsertCategories(
     List<CategoriesCompanion> categories,
   ) async {
@@ -1172,7 +1135,6 @@ class LocalCategoryRepository implements CategoryRepository {
     });
   }
 
-  @override
   Future<int> insertCategory(CategoriesCompanion category) async {
     return await db.into(db.categories).insert(category);
   }

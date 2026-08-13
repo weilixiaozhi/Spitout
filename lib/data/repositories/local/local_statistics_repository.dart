@@ -3,16 +3,14 @@ import 'package:drift/drift.dart' as d;
 import 'package:spitout/data/db.dart';
 import 'package:spitout/utils/date/month_range.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
-import 'package:spitout/data/repositories/statistics_repository.dart';
 
 /// 本地统计Repository实现
 /// 基于 Drift 数据库实现
-class LocalStatisticsRepository implements StatisticsRepository {
+class LocalStatisticsRepository {
   final SpitoutDatabase db;
 
   LocalStatisticsRepository(this.db);
 
-  @override
   Future<List<({int? id, String name, String? icon, double total})>> totalsByCategory({
     required int ledgerId,
     required String type,
@@ -77,7 +75,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return {for (final r in rows) r.syncId: r};
   }
 
-  @override
   Future<Map<int, Category>> getSharedSyntheticCategoriesForLedger(
       int ledgerId) async {
     final shared = await _loadSharedCategoriesForLedger(ledgerId);
@@ -101,7 +98,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     };
   }
 
-  @override
   Future<List<({int? id, String name, String? icon, int? parentId, int level, double total})>>
       totalsByCategoryWithHierarchy({
     required int ledgerId,
@@ -185,7 +181,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return list;
   }
 
-  @override
   Future<List<({DateTime day, double total})>> totalsByDay({
     required int ledgerId,
     required String type,
@@ -216,7 +211,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return result;
   }
 
-  @override
   Future<List<({DateTime month, double total})>> totalsByMonth({
     required int ledgerId,
     required String type,
@@ -246,7 +240,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return result;
   }
 
-  @override
   Future<List<({int year, double total})>> totalsByYearSeries({
     required int ledgerId,
     required String type,
@@ -275,7 +268,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return out;
   }
 
-  @override
   Future<DateTime?> earliestExpenseDate({required int ledgerId}) async {
     // 取该账本最早一笔支出（未排除统计）的 happened_at，本地时区
     final rows = await (db.select(db.transactions)
@@ -290,7 +282,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return rows.first.happenedAt.toLocal();
   }
 
-  @override
   Future<DateTime?> latestExpenseDate({required int ledgerId}) async {
     // 取该账本最晚一笔支出（未排除统计）的 happened_at，本地时区
     final rows = await (db.select(db.transactions)
@@ -305,7 +296,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return rows.first.happenedAt.toLocal();
   }
 
-  @override
   Future<bool> hasAnyExpenseTx({required int ledgerId}) async {
     final row = await db.customSelect(
       'SELECT COUNT(*) AS c FROM transactions '
@@ -323,7 +313,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return false;
   }
 
-  @override
   Future<double> totalsInRange({
     required int ledgerId,
     required DateTime start,
@@ -365,7 +354,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     }
   }
 
-  @override
   Future<double> monthlyTotals({
     required int ledgerId,
     required DateTime month,
@@ -397,7 +385,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return cents / 100;
   }
 
-  @override
   Future<double> todayExpense({
     required int ledgerId,
     required DateTime now,
@@ -408,7 +395,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return totalsInRange(ledgerId: ledgerId, start: start, end: end);
   }
 
-  @override
   Future<double> weekExpense({
     required int ledgerId,
     required DateTime now,
@@ -420,7 +406,6 @@ class LocalStatisticsRepository implements StatisticsRepository {
     return totalsInRange(ledgerId: ledgerId, start: weekStart, end: weekEnd);
   }
 
-  @override
   Future<double> yearlyTotals({
     required int ledgerId,
     required int year,

@@ -1,7 +1,7 @@
 import 'package:drift/drift.dart' as d;
 import 'package:decimal/decimal.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/models/import_models.dart';
 import 'package:spitout/data/repositories/support/data_import_port.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
@@ -83,7 +83,7 @@ class DataImportService implements DataImportPort {
   ///   回去"。
   @override
   Future<ImportResult> importData(
-    BaseRepository repo,
+    LocalRepository repo,
     int ledgerId,
     ImportData data, {
     String defaultCurrency = 'CNY',
@@ -189,7 +189,7 @@ class DataImportService implements DataImportPort {
   /// recordChanges 由调用方(repo 层)决定是否登记 change log,
   /// 本方法只管数据层写入。
   Future<void> importVirtualUsers(
-    BaseRepository repo,
+    LocalRepository repo,
     int ledgerId,
     List<ImportVirtualUser> virtualUsers,
   ) async {
@@ -233,7 +233,7 @@ class DataImportService implements DataImportPort {
   /// 或在解析侧补 parentName，否则跨父同名叶子无法正确归类。
   @override
   Future<Map<String, int>> importCategories(
-    BaseRepository repo,
+    LocalRepository repo,
     List<ImportCategory> categories,
   ) async {
     final categoryCache =
@@ -355,7 +355,7 @@ class DataImportService implements DataImportPort {
   /// public — sync_diff_service 复用。
   @override
   Future<ImportResult> importTransactions(
-    BaseRepository repo,
+    LocalRepository repo,
     int ledgerId,
     List<ImportTransaction> transactions, {
     required Map<String, int> categoryCache,

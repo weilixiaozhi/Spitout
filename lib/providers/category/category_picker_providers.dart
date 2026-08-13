@@ -23,8 +23,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:spitout/cloud/sync/sync_engine.dart';
 import 'package:spitout/core/logging/logger_service.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
-import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/data/repositories/support/shared_ledger_picker_filter.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
@@ -53,11 +52,6 @@ final categoryPickerTreeProvider =
   // 切账本即重建:共享账本 Editor 视角的分类树取决于当前账本上下文。
   final ledgerId = ref.watch(currentLedgerIdProvider);
 
-  // 非 LocalRepository 兜底(当前 repositoryProvider 恒为 LocalRepository):
-  // 无 db 直访能力,退化为单次主表查询,不含共享视角与表监听。
-  if (repo is! LocalRepository) {
-    return Stream.fromFuture(repo.getCategoryTree(kind));
-  }
   final db = repo.db;
 
   Future<CategoryPickerTree> load() async {

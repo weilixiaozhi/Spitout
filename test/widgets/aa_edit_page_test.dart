@@ -13,7 +13,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/pages/statistics/aa_edit_page.dart';
@@ -29,7 +29,7 @@ const _options = [
   AaParticipantOption(id: 'vu_1', name: '小明', isVirtual: true),
 ];
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 db.Ledger _localLedger() => db.Ledger(
   id: 1,

@@ -16,7 +16,7 @@ library;
 import 'package:drift/drift.dart' as d;
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
     show deleteTransactionsWithEditHistories;
 import 'package:spitout/core/logging/logger_service.dart';
@@ -31,7 +31,7 @@ class OrphanCleaner {
   });
 
   final SpitoutDatabase db;
-  final BaseRepository? repository;
+  final LocalRepository? repository;
 
   /// 批量清理。返回 (成功数,失败列表)。
   Future<OrphanCleanResult> clean(List<OrphanRecord> records) async {

@@ -1,16 +1,16 @@
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 
 /// 重复交易服务
 ///
 /// 注意：此服务主要用于生成待处理的周期交易记录
-/// 基础的 CRUD 操作请使用 RecurringTransactionRepository
+/// 基础的 CRUD 操作请使用 LocalRepository
 ///
 class RecurringTransactionService {
   static const _tag = 'Recurring';
 
-  final BaseRepository repository;
+  final LocalRepository repository;
 
   RecurringTransactionService(this.repository);
 
@@ -20,7 +20,7 @@ class RecurringTransactionService {
   ///
   /// 返回：生成了交易的账本ID集合（用于触发同步）
   static Future<Set<int>> generatePendingTransactionsStatic({
-    required BaseRepository repository,
+    required LocalRepository repository,
     bool verbose = false,
   }) async {
     try {

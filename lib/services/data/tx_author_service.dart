@@ -1,6 +1,5 @@
 import 'package:spitout/cloud/spitout_cloud.dart';
 
-import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 
@@ -34,7 +33,7 @@ class TxAuthorService {
   /// [localSelfId] 未登录时的设备身份(由调用方从 localSelfIdProvider 注入)。
   static Future<void> markCreated(
     CloudAuthService? auth,
-    BaseRepository repo,
+    LocalRepository repo,
     int txId, {
     required String localSelfId,
   }) =>
@@ -43,7 +42,7 @@ class TxAuthorService {
   /// 标记交易编辑人。参数语义同 [markCreated]。
   static Future<void> markEdited(
     CloudAuthService? auth,
-    BaseRepository repo,
+    LocalRepository repo,
     int txId, {
     required String localSelfId,
   }) =>
@@ -82,14 +81,12 @@ class TxAuthorService {
 
   static Future<void> _markImpl(
     CloudAuthService? auth,
-    BaseRepository repo,
+    LocalRepository repo,
     int txId, {
     required bool isCreate,
     required String localSelfId,
   }) async {
     try {
-      if (repo is! LocalRepository) return;
-
       // 身份解析:优先云 userId,未登录时用 localSelfId 兜底。
       // localSelfId 是持久化的真 UUID,三字段统一写它,不再有 'me' 占位。
       String effectiveUserId;

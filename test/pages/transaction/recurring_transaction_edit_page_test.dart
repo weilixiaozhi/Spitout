@@ -21,15 +21,15 @@ import 'package:intl/intl.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/transaction/recurring_transaction_edit_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/app_route.dart';
 
-/// Mock 整个 BaseRepository：未 stub 的方法返回默认值，不抛异常。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository：未 stub 的方法返回默认值，不抛异常。
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

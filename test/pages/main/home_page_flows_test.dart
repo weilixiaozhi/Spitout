@@ -24,7 +24,7 @@ import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/db.dart' show LedgerVirtualUser;
 import 'package:spitout/data/models.dart'
     show Category, Ledger, RecordEditHistory, Transaction;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/home_page.dart';
 import 'package:spitout/pages/main/ledgers_page.dart';
@@ -34,8 +34,8 @@ import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/app_empty.dart';
 
-/// Mock 整个 BaseRepository：未 stub 的方法返回默认值，避免触碰数据库。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository：未 stub 的方法返回默认值，避免触碰数据库。
+class _MockRepo extends Mock implements LocalRepository {}
 
 typedef _TxItem = ({Transaction t, Category? category});
 

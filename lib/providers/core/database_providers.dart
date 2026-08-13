@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/cloud/sync/backend_capability_factory.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 // 只依赖叶子 provider（云配置 + 刷新 tick），不 import sync_providers.dart
@@ -56,7 +55,7 @@ final databaseProvider = Provider<SpitoutDatabase>((ref) {
 
 // 仓储Provider — 一律 LocalRepository(本地优先 + ChangeTracker 推 Spitout Cloud)。
 // 采用「本地优先 + 推送」范式,不存在数据全存 Supabase 的 Cloud* 仓库。
-final repositoryProvider = Provider<BaseRepository>((ref) {
+final repositoryProvider = Provider<LocalRepository>((ref) {
   final db = ref.watch(databaseProvider);
 
   // P0-b 闸门：云失活流程进行中（invalidate 旧值窗口）即使 active 仍持旧

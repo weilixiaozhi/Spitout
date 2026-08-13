@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models/ledger_kind.dart';
-import 'package:spitout/data/repositories/ledger_repository.dart';
 import 'package:spitout/data/repositories/support/change_recorder.dart';
 import 'package:spitout/data/repositories/support/snapshot_dirty_marker.dart';
 import 'local_transaction_repository.dart';
@@ -74,7 +73,7 @@ String? _rewriteVirtualUserRef(
 
 /// 本地账本Repository实现
 /// 基于 Drift 数据库实现
-class LocalLedgerRepository implements LedgerRepository {
+class LocalLedgerRepository {
   final SpitoutDatabase db;
 
   /// 变更登记器的惰性获取函数。
@@ -103,22 +102,18 @@ class LocalLedgerRepository implements LedgerRepository {
        // ignore: prefer_initializing_formals
        _snapshotDirtyMarkerGetter = snapshotDirtyMarkerGetter;
 
-  @override
   Stream<List<Ledger>> watchLedgers() => db.select(db.ledgers).watch();
 
-  @override
   Future<List<Ledger>> getAllLedgers() async {
     return db.select(db.ledgers).get();
   }
 
-  @override
   Future<Ledger?> getLedgerById(int id) async {
     final query = db.select(db.ledgers)..where((l) => l.id.equals(id));
     final results = await query.get();
     return results.isEmpty ? null : results.first;
   }
 
-  @override
   Future<({int dayCount, int txCount})> getCountsForLedger({
     required int ledgerId,
   }) async {
@@ -154,7 +149,6 @@ class LocalLedgerRepository implements LedgerRepository {
     return (dayCount: parse(dayRow.data['c']), txCount: parse(txRow.data['c']));
   }
 
-  @override
   Future<({double expenseTotal, int transactionCount})> getLedgerStats({
     required int ledgerId,
     List<Transaction>? transactions,
@@ -184,7 +178,6 @@ class LocalLedgerRepository implements LedgerRepository {
     );
   }
 
-  @override
   Future<Map<int, ({double expenseTotal, int transactionCount})>>
       getAllLedgerStats() async {
     // 单条聚合 SQL 一次查回全部账本的 COUNT + SUM，避免账本列表循环内逐本
@@ -218,7 +211,6 @@ class LocalLedgerRepository implements LedgerRepository {
     };
   }
 
-  @override
   Future<int> createLedger({
     required String name,
     String currency = 'CNY',
@@ -283,7 +275,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<int> createBoundLedger({
     required String syncId,
     required String name,
@@ -310,7 +301,6 @@ class LocalLedgerRepository implements LedgerRepository {
     );
   }
 
-  @override
   Future<void> updateLedgerStorageMode({
     required int id,
     required String storageMode,
@@ -322,7 +312,6 @@ class LocalLedgerRepository implements LedgerRepository {
     );
   }
 
-  @override
   Future<void> updateLedgerSyncId({required int id, String? syncId}) async {
     // 传入 null 用于"移动到本地"彻底断联云端;非 null 用于补发/确认后写入。
     await (db.update(db.ledgers)..where((tbl) => tbl.id.equals(id))).write(
@@ -330,7 +319,6 @@ class LocalLedgerRepository implements LedgerRepository {
     );
   }
 
-  @override
   Future<void> detachFromCloud(int id) async {
     // 「转本地」断联:把翻归属(storageMode='local')与清 syncId 合并进同一事务。
     //
@@ -352,7 +340,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<void> copyLedgerData({
     required int sourceLedgerId,
     required int targetLedgerId,
@@ -457,7 +444,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<void> updateLedger({
     required int id,
     String? name,
@@ -520,14 +506,12 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Stream<Ledger?> watchLedger(int id) {
     return (db.select(
       db.ledgers,
     )..where((l) => l.id.equals(id))).watchSingleOrNull();
   }
 
-  @override
   Future<void> deleteLedger(int id) async {
     // 先删除该账本下的所有交易（连带编辑历史），再删除账本本身。
     await db.transaction(() async {
@@ -539,7 +523,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<int> getMaxLedgerId() async {
     final row = await db
         .customSelect(
@@ -554,13 +537,11 @@ class LocalLedgerRepository implements LedgerRepository {
     return 0;
   }
 
-  @override
   Future<int> getNextFreeLedgerId() async {
     final maxId = await getMaxLedgerId();
     return maxId + 1;
   }
 
-  @override
   Future<void> reassignLedgerId({
     required int fromId,
     required int toId,
@@ -613,7 +594,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<int> clearLedgerTransactions(int ledgerId) async {
     // 删除该账本下的全部交易记录，同时清理这些交易的编辑历史。
     return db.transaction(() async {
@@ -627,7 +607,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<void> clearLocalChangesForLedger(int ledgerId) async {
     // 为什么需要这个方法:deleteLedger 会向 local_changes 登记 delete 变更
     // (供正常同步推送)。但「全局删除账本」场景下远端已先行删除,这些残留
@@ -638,7 +617,6 @@ class LocalLedgerRepository implements LedgerRepository {
     )..where((c) => c.ledgerId.equals(ledgerId))).go();
   }
 
-  @override
   Future<void> purgeSharedLedger(String externalId, {int? localId}) async {
     // 1) 解析本地 id:localId 优先锁定唯一账本;syncId 匹配仅在 externalId 非空时
     //    执行(覆盖 dup 行——ledgers.sync_id 无 UNIQUE 约束,dup 行真实存在)。
@@ -683,7 +661,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<void> purgeAllCloudLedgers() async {
     // 退出登录 = 这台设备不持有云账号的数据。
     // 选择键统一走 ledger_kind.dart 的 cloudLedgerFilter(语义:storage_mode='cloud'
@@ -727,7 +704,6 @@ class LocalLedgerRepository implements LedgerRepository {
     });
   }
 
-  @override
   Future<({int personal, int shared})> normalizeOrphanCloudLedgers() async {
     // 选区与 purgeAllCloudLedgers 同源(cloudLedgerFilter),但动作相反:
     // purge 是「退出登录,云端数据不该滞留」→ 删行;

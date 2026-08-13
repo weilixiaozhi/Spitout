@@ -16,7 +16,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/models.dart' show Ledger;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
@@ -26,7 +26,7 @@ import 'package:spitout/widgets/amount_expression_bar.dart';
 import 'package:spitout/widgets/amount_input_panel.dart';
 import 'package:spitout/widgets/press_key.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 假汇率服务：fetch 立即失败，避免自动拉汇率触发真实网络。
 class _FailingRateService implements ExchangeRateService {

@@ -11,11 +11,10 @@ import 'package:mocktail/mocktail.dart';
 import '../../helpers/test_isolation.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/services/data/recurring_transaction_service.dart';
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 构造一个便于注入 now 的周期模板（lastGeneratedDate 非空，绕开 #135 今天钳制）。
 RecurringTransaction recurringRow({

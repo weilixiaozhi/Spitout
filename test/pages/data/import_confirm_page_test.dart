@@ -15,7 +15,7 @@ import '../../helpers/test_isolation.dart';
 import 'package:spitout/cloud/sync/sync_service.dart' show LocalOnlySyncService;
 import 'package:spitout/cloud/spitout_cloud.dart' show SpitoutCloudSyncBackend;
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/data/import_confirm_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
@@ -24,7 +24,7 @@ import 'package:spitout/providers/sync/cloud_client_providers.dart';
 import 'package:spitout/providers/sync/sync_providers.dart'
     show syncServiceProvider;
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 标准三行 CSV：表头 + 两笔支出，表头可被 GenericBillParser 全字段识别。
 const _csv = '日期,类型,金额,币种,分类,备注\n'

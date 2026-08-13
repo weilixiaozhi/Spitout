@@ -4,21 +4,19 @@ import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/ledger_virtual_user_repository.dart';
 
 /// AA 分摊:虚拟用户本地 Repository 实现。
 ///
-/// 基于 Drift 数据库实现 [LedgerVirtualUserRepository] 接口。
+/// 基于 Drift 数据库实现 [LocalRepository] 接口。
 /// 本实现是子仓库层,不挂 changeTracker —— sync 登记由外层
 /// [LocalRepository] 委托层负责(与其他子仓库保持一致)。
-class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
+class LocalLedgerVirtualUserRepository {
   final SpitoutDatabase db;
 
   LocalLedgerVirtualUserRepository(this.db);
 
   static const _uuid = Uuid();
 
-  @override
   Stream<List<LedgerVirtualUser>> watchByLedger(int ledgerId) {
     return (db.select(db.ledgerVirtualUsers)
           ..where((t) => t.ledgerId.equals(ledgerId))
@@ -28,7 +26,6 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
         .watch();
   }
 
-  @override
   Future<List<LedgerVirtualUser>> getByLedger(int ledgerId) async {
     return await (db.select(db.ledgerVirtualUsers)
           ..where((t) => t.ledgerId.equals(ledgerId))
@@ -38,14 +35,12 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
         .get();
   }
 
-  @override
   Future<LedgerVirtualUser?> getBySyncId(String syncId) async {
     return await (db.select(
       db.ledgerVirtualUsers,
     )..where((t) => t.syncId.equals(syncId))).getSingleOrNull();
   }
 
-  @override
   Future<int> create({
     required int ledgerId,
     required String name,
@@ -64,7 +59,6 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
         );
   }
 
-  @override
   Future<void> rename({required int id, required String name}) async {
     await (db.update(
       db.ledgerVirtualUsers,
@@ -76,7 +70,6 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
     );
   }
 
-  @override
   Future<bool> delete(int id) async {
     // 名下有账不可删。先校验引用,被引用则抛错阻止删除。
     final referenced = await isReferencedByAnyTransaction(id);
@@ -90,7 +83,6 @@ class LocalLedgerVirtualUserRepository implements LedgerVirtualUserRepository {
     return n > 0;
   }
 
-  @override
   Future<bool> isReferencedByAnyTransaction(int id) async {
     // 先查虚拟用户的 syncId(跨设备引用走 syncId 而非本地 int id)
     final user = await (db.select(

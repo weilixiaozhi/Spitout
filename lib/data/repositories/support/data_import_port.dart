@@ -1,7 +1,7 @@
 library;
 
 import 'package:spitout/data/models/import_models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 
 /// 数据导入端口（data 层抽象）。
 ///
@@ -11,7 +11,7 @@ import 'package:spitout/data/repositories/base_repository.dart';
 abstract class DataImportPort {
   /// 导入完整数据集（账本元数据 / 分类 / 虚拟用户 / 交易）。
   Future<ImportResult> importData(
-    BaseRepository repo,
+    LocalRepository repo,
     int ledgerId,
     ImportData data, {
     String defaultCurrency = 'CNY',
@@ -22,13 +22,13 @@ abstract class DataImportPort {
 
   /// 导入分类（先一级后二级），返回分类缓存供交易导入复用。
   Future<Map<String, int>> importCategories(
-    BaseRepository repo,
+    LocalRepository repo,
     List<ImportCategory> categories,
   );
 
   /// 导入交易（统一 batch 路径）。
   Future<ImportResult> importTransactions(
-    BaseRepository repo,
+    LocalRepository repo,
     int ledgerId,
     List<ImportTransaction> transactions, {
     required Map<String, int> categoryCache,

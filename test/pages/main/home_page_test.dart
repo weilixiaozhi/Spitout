@@ -23,7 +23,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/home_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
@@ -40,10 +40,10 @@ import 'package:spitout/widgets/app_empty.dart';
 import 'package:spitout/widgets/format_money.dart';
 import 'package:spitout/widgets/primary_header.dart';
 
-/// Mock 整个 BaseRepository：未 stub 的方法返回默认值（null/0/false），不抛异常。
+/// Mock 整个 LocalRepository：未 stub 的方法返回默认值（null/0/false），不抛异常。
 /// 测试仅 stub HomePage 真正调用的 transactionsWithCategoryAll，其余 provider
 /// 通过 ProviderScope.override 绕开，避免触碰 repository。
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// Mock SyncService：用于注入云端同步成功/失败，验证下拉刷新结果文案走指示器而非 toast。
 class _MockSyncService extends Mock implements SyncService {}

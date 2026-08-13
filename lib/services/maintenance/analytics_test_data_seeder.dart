@@ -1,6 +1,6 @@
 import 'dart:math';
 
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 
 /// 测试数据填充范围：按年 / 月 / 周 / 日生成支出交易（debug 包专用）。
 enum TestDataScope {
@@ -25,11 +25,11 @@ enum TestDataScope {
 /// 设计要点：
 /// - 币种按固定序列轮换（含本位币与外币），保证任何一次填充都同时出现本币和外币、覆盖多币种统计路径；
 /// - 随机分配到账本可用支出分类，保证分类排行有数据；
-/// - 直接走 BaseRepository.addTransaction，复用既有写入/变更追踪逻辑；
+/// - 直接走 LocalRepository.addTransaction，复用既有写入/变更追踪逻辑；
 /// - [paidByUserId] 由调用方传入当前操作者标识，模拟真实创建行为，
 ///   避免填充数据出现「支出人未知」或分摊统计误归因。
 class AnalyticsTestDataSeeder {
-  final BaseRepository repo;
+  final LocalRepository repo;
 
   AnalyticsTestDataSeeder(this.repo);
 

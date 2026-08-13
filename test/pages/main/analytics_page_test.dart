@@ -23,7 +23,7 @@ import 'package:mocktail/mocktail.dart';
 
 import '../../helpers/test_isolation.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/main/analytics_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
@@ -35,8 +35,8 @@ import 'package:spitout/utils/date/analytics_sub_tabs.dart';
 import 'package:spitout/widgets/amount_text.dart';
 import 'package:spitout/widgets/capsule_switcher.dart';
 
-/// Mock 整个 BaseRepository：未 stub 的方法返回默认值（null/0/false），不抛异常。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository：未 stub 的方法返回默认值（null/0/false），不抛异常。
+class _MockRepo extends Mock implements LocalRepository {}
 
 typedef _HierarchyRow = ({
   int? id,

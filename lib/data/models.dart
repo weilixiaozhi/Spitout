@@ -28,6 +28,7 @@ export 'db.dart'
 // 非表行模型（纯 Dart 数据模型与层级构建器）统一经本 barrel 出口。
 // 设计意图：UI 与云同步层统一只认 data/models.dart 一个入口。
 export 'models/ledger_display_item.dart';
+export 'models/category_picker_tree.dart';
 // 出口最小化：UI 层只用到 `isCloudLedgerOf` 这一个归属判定谓词；
 // SQL 工厂 `cloudLedgerFilter` 与 `isLocalLedgerOf` 属于同步引擎内部细节,
 // 经本 barrel 的 show 白名单强制屏蔽,即使未来新增符号也不会自动泄漏给 UI。

@@ -5,7 +5,7 @@
 ///   3. 日期分组标题的支出小计带币种符号（与主页 transaction_list 口径一致）；
 ///   4. 仅统计当前账本，交易行不渲染账本标签。
 ///
-/// 测试基建与 home_page_test 一致：mocktail 仿 BaseRepository + ProviderScope
+/// 测试基建与 home_page_test 一致：mocktail 仿 LocalRepository + ProviderScope
 /// override；数据流均为立即发射的 Stream.value，分步 pump 替代 pumpAndSettle。
 library;
 
@@ -16,14 +16,14 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/transaction/category_detail_page.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 
-/// Mock 整个 BaseRepository：仅 stub 本页用到的两个 watch 方法，
+/// Mock 整个 LocalRepository：仅 stub 本页用到的两个 watch 方法，
 /// 其余方法不会被调用（删除/编辑等回调在测试中不触发）。
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();

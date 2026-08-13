@@ -7,7 +7,7 @@ import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models/ledger_kind.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/support/data_import_port.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'sync_diff_service.dart';
@@ -20,7 +20,7 @@ import 'transactions_json.dart';
 class TransactionsSyncManager implements SyncService {
   final fcs.CloudServiceConfig config;
   final SpitoutDatabase db;
-  final BaseRepository repo;
+  final LocalRepository repo;
   final SyncDiffService _diffService;
 
   fcs.CloudSyncManager<int>? _syncManager;

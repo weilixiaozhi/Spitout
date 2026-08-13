@@ -5,7 +5,7 @@ import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:drift/drift.dart' as d;
 import 'package:uuid/uuid.dart';
 import 'package:spitout/data/db.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/services/notification/reminder_constants.dart';
 
@@ -750,7 +750,7 @@ class ConfigExportService {
   /// [repository] 数据仓库实例，用于导出周期账单等数据
   /// [options] 导出选项，控制导出哪些内容
   static Future<String> exportToYaml({
-    BaseRepository? repository,
+    LocalRepository? repository,
     ExportOptions options = ExportOptions.all,
     // 测试可注入明文存储；生产默认走安全存储（FlutterSecureCredentialStorage）。
     CloudServiceStore? store,
@@ -1317,7 +1317,7 @@ class ConfigExportService {
   /// [options] 导入选项，控制导入哪些内容
   static Future<void> importFromYaml(
     String yamlContent, {
-    BaseRepository? repository,
+    LocalRepository? repository,
     int? ledgerId,
     ExportOptions options = ExportOptions.all,
     // 测试可注入明文存储；生产默认走安全存储（FlutterSecureCredentialStorage）。
@@ -1735,7 +1735,7 @@ class ConfigExportService {
   /// 导出配置到文件
   static Future<void> exportToFile(
     String filePath, {
-    BaseRepository? repository,
+    LocalRepository? repository,
     ExportOptions options = ExportOptions.all,
   }) async {
     final yamlContent = await exportToYaml(
@@ -1750,7 +1750,7 @@ class ConfigExportService {
   /// 从文件导入配置
   static Future<void> importFromFile(
     String filePath, {
-    BaseRepository? repository,
+    LocalRepository? repository,
     int? ledgerId,
     ExportOptions options = ExportOptions.all,
   }) async {

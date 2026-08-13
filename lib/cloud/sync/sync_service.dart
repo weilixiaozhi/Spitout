@@ -2,7 +2,7 @@
 library;
 
 import 'package:spitout/core/logging/logger_service.dart';
-import 'package:spitout/data/repositories/ledger_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'sync_diff_service.dart' show SyncChange, SyncPreview, SyncApplyResult;
 
 // 状态模型定义于 data/models/sync_models.dart。
@@ -123,10 +123,10 @@ class LocalOnlySyncService implements SyncService {
   /// 可空:测试可直接无参构造且不触达删除路径;
   /// 真正走删除时解析器为空则抛错提示配置缺失。
   // 参数保持公共名:私有字段不能作为跨库命名参数调用(如 sync_providers.dart 注入处)
-  LocalOnlySyncService({LedgerRepository Function()? repoResolver})
+  LocalOnlySyncService({LocalRepository Function()? repoResolver})
       : _repoResolver = repoResolver; // ignore: prefer_initializing_formals
 
-  final LedgerRepository Function()? _repoResolver;
+  final LocalRepository Function()? _repoResolver;
 
   @override
   bool get supportsDiffPreview => false;
@@ -197,7 +197,7 @@ class LocalOnlySyncService implements SyncService {
     // 因此只需删本地行,无需清 change。
     final repo = _repoResolver?.call();
     if (repo == null) {
-      throw UnsupportedError('LocalOnlySyncService 未注入 LedgerRepository');
+      throw UnsupportedError('LocalOnlySyncService 未注入 LocalRepository');
     }
     try {
       await repo.deleteLedger(ledgerId);

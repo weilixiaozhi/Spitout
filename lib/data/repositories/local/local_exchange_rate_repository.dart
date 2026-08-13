@@ -3,20 +3,18 @@ import 'package:uuid/uuid.dart';
 
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/support/change_recorder.dart';
-import 'package:spitout/data/repositories/exchange_rate_repository.dart';
 
 /// Drift 实现。tracker 用 getter 闭包注入:LocalRepository.changeTracker 是
 /// 可变字段(构造后才赋值),直接传引用会捕获 null —— 2026-04 的 orphan-change
 /// 坑就是这类时序问题,闭包取值规避。tracker 类型为 data 层抽象
 /// [ChangeRecorder],不依赖 cloud 层具体实现。
-class LocalExchangeRateRepository implements ExchangeRateRepository {
+class LocalExchangeRateRepository {
   static const _uuid = Uuid();
   final SpitoutDatabase db;
   final ChangeRecorder? Function() trackerGetter;
 
   LocalExchangeRateRepository(this.db, {required this.trackerGetter});
 
-  @override
   Future<void> upsertAutoRates({
     required String base,
     required String rateDate,
@@ -50,7 +48,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
     // 注意:自动汇率绝不记 change,测试有红线断言。
   }
 
-  @override
   Future<List<ExchangeRate>> getLatestAutoRates(String base) async {
     final rows = await db
         .customSelect(
@@ -85,7 +82,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
         .toList();
   }
 
-  @override
   Future<DateTime?> getLastFetchedAt(String base) async {
     final row =
         await (db.select(db.exchangeRates)
@@ -96,7 +92,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
     return row?.fetchedAt;
   }
 
-  @override
   Future<List<ExchangeRateOverride>> getOverrides(String base) {
     return (db.select(db.exchangeRateOverrides)
           ..where((t) => t.baseCurrency.equals(base.toUpperCase()))
@@ -104,7 +99,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
         .get();
   }
 
-  @override
   Stream<List<ExchangeRateOverride>> watchOverrides(String base) {
     return (db.select(db.exchangeRateOverrides)
           ..where((t) => t.baseCurrency.equals(base.toUpperCase()))
@@ -112,7 +106,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
         .watch();
   }
 
-  @override
   Future<void> setOverride({
     required String base,
     required String quote,
@@ -170,7 +163,6 @@ class LocalExchangeRateRepository implements ExchangeRateRepository {
     });
   }
 
-  @override
   Future<void> removeOverride({
     required String base,
     required String quote,

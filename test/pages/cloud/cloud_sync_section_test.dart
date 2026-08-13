@@ -24,7 +24,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/sync/sync_diff_service.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/auth/login_page.dart';
 import 'package:spitout/pages/cloud/cloud_sync_section.dart';
@@ -218,7 +218,7 @@ class _FakeAutoSyncSetter extends AutoSyncSetter {
   }
 }
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 在 ProviderContainer 中挂载 CloudSyncSection。
 ///

@@ -21,7 +21,7 @@ import 'package:mocktail/mocktail.dart';
 import 'package:spitout/cloud/sync/sync_service.dart'
     show LocalOnlySyncService;
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/currency/currency_manage_page.dart';
 import 'package:spitout/pages/currency/exchange_rate_page.dart';
@@ -31,8 +31,8 @@ import 'package:spitout/providers/sync/sync_providers.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
-/// Mock 整个 BaseRepository：未 stub 的方法返回默认值，不抛异常。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository：未 stub 的方法返回默认值，不抛异常。
+class _MockRepo extends Mock implements LocalRepository {}
 
 /// 假汇率服务：固定返回 CNY base 的几个币种，不打网络。
 class _FakeRateService implements ExchangeRateService {

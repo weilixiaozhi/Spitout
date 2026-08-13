@@ -1,4 +1,4 @@
-// ExchangeRateRepository 契约:
+// LocalRepository 契约:
 //  - upsertAutoRates 同日覆盖、getLatestAutoRates 取每 quote 最新日期
 //  - setOverride 按币对 upsert(复用 syncId)并记 user-global change;
 //    removeOverride 记 delete change

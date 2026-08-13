@@ -22,7 +22,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/sync/sync_service.dart'
     show LocalOnlySyncService, SyncService;
 import 'package:spitout/data/models.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/cloud/cloud_service_page.dart';
 import 'package:spitout/pages/settings/local_backup_page.dart';
@@ -67,7 +67,7 @@ CloudServiceConfig _localActive() => CloudServiceConfig.localStorage();
 CloudServiceStore _testStore() =>
     CloudServiceStore(credentialStorage: SharedPreferencesCredentialStorage());
 
-class _MockRepo extends Mock implements BaseRepository {}
+class _MockRepo extends Mock implements LocalRepository {}
 
 class _SignInAuth extends CloudAuthService {
   final Object? error;
@@ -126,7 +126,7 @@ Future<ProviderContainer> _pumpPage(
   CloudAuthService? auth,
   SyncService? sync,
   CloudServiceStore? store,
-  BaseRepository? repo,
+  LocalRepository? repo,
   Future<void> Function(CloudServiceStore store)? seedStore,
   TargetPlatform platform = TargetPlatform.android,
   List<Override> extraOverrides = const [],

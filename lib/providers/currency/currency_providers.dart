@@ -6,7 +6,7 @@ import 'package:spitout/providers/core/simple_state_notifier.dart';
 import 'package:spitout/providers/core/shared_preferences_provider.dart';
 
 import 'package:spitout/data/db.dart' show Ledger;
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/utils/currency/rate_math.dart';
 import 'package:spitout/services/currency/exchange_rate_service.dart';
@@ -324,7 +324,7 @@ Future<bool> refreshExchangeRatesImpl({
 /// 不按 "quotes" 集合过滤——一次 API 调用已返回所有币种数据,过滤掉纯属浪费。
 Future<bool> _fetchAndStoreRatesForBase({
   required T Function<T>(ProviderListenable<T>) read,
-  required BaseRepository repo,
+  required LocalRepository repo,
   required String base,
 }) async {
   try {

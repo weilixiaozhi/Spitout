@@ -19,7 +19,7 @@ import 'package:spitout/data/models.dart'
 export 'package:spitout/data/models.dart'
     show SyncAccountResult, SyncCountPair, SyncHealthReport;
 import 'package:spitout/data/models/ledger_kind.dart';
-import 'package:spitout/data/repositories/base_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
     show deleteTransactionsWithEditHistories;
 import 'package:spitout/data/repositories/support/data_import_port.dart';
@@ -94,7 +94,7 @@ class SyncEngine implements app.SyncService {
   final SpitoutDatabase db;
   final SpitoutCloudSyncBackend provider;
   final ChangeTracker changeTracker;
-  final BaseRepository repo;
+  final LocalRepository repo;
 
   /// 全量恢复时使用的数据导入端口；由装配点注入 services 层实现。
   final DataImportPort? dataImportPort;

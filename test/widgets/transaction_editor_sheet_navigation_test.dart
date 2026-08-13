@@ -15,8 +15,8 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:mocktail/mocktail.dart';
 
 import 'package:spitout/data/db.dart' as db;
-import 'package:spitout/data/repositories/base_repository.dart';
-import 'package:spitout/data/repositories/category_repository.dart';
+import 'package:spitout/data/repositories/local/local_repository.dart';
+import 'package:spitout/data/models/category_picker_tree.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/category/category_manage_page.dart';
 import 'package:spitout/providers/category/category_picker_providers.dart';
@@ -33,8 +33,8 @@ import 'package:spitout/widgets/note_input_row.dart';
 import 'package:spitout/widgets/transaction_editor_sheet.dart';
 import 'package:spitout/widgets/transaction_editor_sheet_entry.dart';
 
-/// Mock 整个 BaseRepository，未 stub 的方法返回默认值不抛异常。
-class _MockRepo extends Mock implements BaseRepository {}
+/// Mock 整个 LocalRepository，未 stub 的方法返回默认值不抛异常。
+class _MockRepo extends Mock implements LocalRepository {}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
