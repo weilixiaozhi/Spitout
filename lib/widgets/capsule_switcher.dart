@@ -50,7 +50,10 @@ class CapsuleSwitcher<T> extends StatelessWidget {
 
     final isDark = SpitoutTokens.isDark(context);
     final bg = backgroundColor ?? SpitoutTokens.surfaceCapsule(context);
-    final selectedBg = selectedBackgroundColor ?? (isDark ? SpitoutTokens.primary(context) : Colors.black);
+    final selectedBg = selectedBackgroundColor ??
+        (isDark
+            ? SpitoutTokens.primary(context)
+            : SpitoutTokens.surfaceInverse(context));
     final selectedFg = selectedTextColor ?? Colors.white;
     final unselectedFg = unselectedTextColor ?? SpitoutTokens.textPrimary(context);
     final radius = borderRadius ?? BorderRadius.circular(20);

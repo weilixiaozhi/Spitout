@@ -193,7 +193,9 @@ class SpitoutPopupMenu extends StatelessWidget {
             fontSize: 15,
             // 自定义颜色优先，其次危险红色，最后主题主色
             color: item.color ??
-                (item.isDanger ? Colors.red : SpitoutTokens.textPrimary(context)),
+                (item.isDanger
+                    ? SpitoutTokens.error(context)
+                    : SpitoutTokens.textPrimary(context)),
             fontWeight: FontWeight.w400,
           ),
         ),

@@ -272,8 +272,10 @@ class LedgerCard extends ConsumerWidget {
     // 云端账本:恒为云形图标。仅 SpitoutCloud 真正持有云端账本,切走后已被 purge
     // 清空;webdav/s3/supabase 属"本地快照备份"范畴,云端账本形态一致用云形。
     if (ledger.isCloudLedger) {
-      // 已同步：绿色；其余（未同步 / 有备份但云状态脱钩）统一红色提醒。
-      final color = isSynced ? Colors.green : Colors.red;
+      // 已同步：在线绿；其余（未同步 / 有备份但云状态脱钩）统一离线灰。
+      final color = isSynced
+          ? SpitoutTokens.statusOnline(context)
+          : SpitoutTokens.statusOffline(context);
       return Icon(AppIcons.cloudQueue, color: color, size: 20);
     }
 
@@ -284,9 +286,17 @@ class LedgerCard extends ConsumerWidget {
         backendType == CloudBackendType.s3 ||
         backendType == CloudBackendType.supabase;
     if (isSnapshotBackup) {
-      return const Icon(AppIcons.storage, color: Colors.grey, size: 20);
+      return const Icon(
+        AppIcons.storage,
+        color: SpitoutTokens.brandLocal,
+        size: 20,
+      );
     }
-    return const Icon(AppIcons.localStorage, color: Colors.grey, size: 20);
+    return const Icon(
+      AppIcons.localStorage,
+      color: SpitoutTokens.brandLocal,
+      size: 20,
+    );
   }
 
 }

@@ -67,23 +67,15 @@ void showToastOnOverlay(
                   vertical: 12,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.85),
+                  color: SpitoutTokens.toastBackground,
                   borderRadius: BorderRadius.circular(12),
                   // 暗黑模式下添加白色阴影，提升可见度
-                  boxShadow: dark
-                      ? [
-                          BoxShadow(
-                            color: Colors.white.withValues(alpha: 0.2),
-                            blurRadius: 8,
-                            spreadRadius: 1,
-                          ),
-                        ]
-                      : null,
+                  boxShadow: dark ? SpitoutTokens.toastShadow : null,
                 ),
                 child: Text(
                   message,
                   textAlign: TextAlign.center,
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: SpitoutTokens.textOnPrimary(ctx)),
                 ),
               ),
             ),

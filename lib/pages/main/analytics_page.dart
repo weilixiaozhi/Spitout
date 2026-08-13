@@ -556,13 +556,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(20),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 12,
-              offset: const Offset(0, 3),
-            ),
-          ],
+          boxShadow: SpitoutTokens.tabBarShadow,
         ),
         child: CapsuleSwitcher<AnalyticsPeriod>(
           selectedValue: _period,
@@ -621,6 +615,13 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
     Color primary,
   ) {
     final l10n = AppLocalizations.of(context);
+    final greenScheme = ref.watch(expenseColorSchemeProvider) == 'green';
+    final momUpColor = greenScheme
+        ? SpitoutTokens.success(context)
+        : SpitoutTokens.error(context);
+    final momDownColor = greenScheme
+        ? SpitoutTokens.error(context)
+        : SpitoutTokens.success(context);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -647,7 +648,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                     Icon(
                       mom.up ? AppIcons.arrowUp : AppIcons.arrowDown,
                       size: 14,
-                      color: mom.up ? Colors.red : Colors.green,
+                      color: mom.up ? momUpColor : momDownColor,
                     ),
                     const SizedBox(width: 2),
                     Text(
@@ -655,7 +656,7 @@ class _AnalyticsPageState extends ConsumerState<AnalyticsPage> {
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
-                        color: mom.up ? Colors.red : Colors.green,
+                        color: mom.up ? momUpColor : momDownColor,
                       ),
                     ),
                   ],

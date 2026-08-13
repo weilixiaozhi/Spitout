@@ -69,14 +69,15 @@ class SpitoutTheme {
       listTileTheme: ListTileThemeData(
         dense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 12),
-        iconColor: SpitoutColors.darkScaffold,
+        iconColor: Colors.black87,
       ),
       // 对话框：白底 + 圆角 + 深灰标题/正文
       dialogTheme: base.dialogTheme.copyWith(
         backgroundColor: SpitoutColors.lightSurface,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         titleTextStyle: textTheme.titleMedium?.copyWith(
-            color: SpitoutColors.darkScaffold, fontWeight: FontWeight.w600),
+            color: SpitoutColors.lightTextPrimary,
+            fontWeight: FontWeight.w600),
         contentTextStyle: textTheme.bodyMedium
             ?.copyWith(color: SpitoutColors.lightTextSecondary),
       ),
@@ -107,15 +108,6 @@ class SpitoutTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: seedColor,
         foregroundColor: Colors.white,
-      ),
-      // 底部导航栏：选中项主色，固定类型 + 透明背景（悬浮胶囊样式）
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        selectedItemColor: seedColor,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
       ),
       // 卡片：白底 + 无阴影 + 圆角 + 无外边距
       cardTheme: base.cardTheme.copyWith(
@@ -161,7 +153,8 @@ class SpitoutTheme {
     );
   }
 
-  /// 暗色主题：基于 [ColorScheme.fromSeed] 生成，pin 主色，保持纯黑背景（OLED 友好）。
+  /// 暗色主题：基于 [ColorScheme.fromSeed] 生成，pin 主色，
+  /// 页面背景为 shadcn dark 深蓝灰 `#111827`（非纯黑）。
   /// 按钮等子主题与亮色保持一致的主色方案。
   static ThemeData darkTheme({TargetPlatform? platform}) {
     final base = ThemeData.dark();
@@ -248,15 +241,6 @@ class SpitoutTheme {
       floatingActionButtonTheme: const FloatingActionButtonThemeData(
         backgroundColor: seedColor,
         foregroundColor: Colors.white,
-      ),
-      // 底部导航栏：选中项主色，固定类型 + 透明背景（悬浮胶囊样式）
-      bottomNavigationBarTheme: BottomNavigationBarThemeData(
-        selectedItemColor: seedColor,
-        unselectedItemColor: Colors.grey,
-        showUnselectedLabels: true,
-        backgroundColor: Colors.transparent,
-        type: BottomNavigationBarType.fixed,
-        elevation: 0,
       ),
       // 暗色卡片：shadcn/ui card darkSurface + border rgba(243,244,246,0.10)
       cardTheme: CardThemeData(

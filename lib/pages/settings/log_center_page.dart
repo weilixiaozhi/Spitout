@@ -352,10 +352,10 @@ class _LogEntryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 根据日志级别选择颜色
     final levelColor = switch (log.level) {
-      LogLevel.debug => Colors.grey,
-      LogLevel.info => Colors.blue,
-      LogLevel.warning => Colors.orange,
-      LogLevel.error => Colors.red,
+      LogLevel.debug => SpitoutTokens.textTertiary(context),
+      LogLevel.info => SpitoutTokens.info(context),
+      LogLevel.warning => SpitoutTokens.warning(context),
+      LogLevel.error => SpitoutTokens.error(context),
     };
 
     return SectionCard(
@@ -446,7 +446,7 @@ class _LogEntryCard extends ConsumerWidget {
                   '${AppLocalizations.of(context).logCenterDetailError}: '
                   '${log.error}',
                   style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.red,
+                        color: SpitoutTokens.error(context),
                       ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -496,7 +496,10 @@ class _LogEntryCard extends ConsumerWidget {
                 const Divider(),
                 Text(
                   '${l10n.logCenterDetailError}: ${log.error}',
-                  style: const TextStyle(color: Colors.red, fontSize: 12),
+                  style: TextStyle(
+                    color: SpitoutTokens.error(context),
+                    fontSize: 12,
+                  ),
                 ),
               ],
               if (log.stackTrace != null) ...[

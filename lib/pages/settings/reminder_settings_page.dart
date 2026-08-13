@@ -212,7 +212,9 @@ class ReminderSettingsPage extends ConsumerWidget {
                                   ? l10n.reminderBatteryIgnored
                                   : l10n.reminderBatteryNotIgnored,
                               style: TextStyle(
-                                color: (batteryInfo['isIgnoring'] == true) ? Colors.green : Colors.orange,
+                                color: (batteryInfo['isIgnoring'] == true)
+                                    ? SpitoutTokens.success(context)
+                                    : SpitoutTokens.warning(context),
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -220,7 +222,10 @@ class ReminderSettingsPage extends ConsumerWidget {
                               const SizedBox(height: 8),
                               Text(
                                 l10n.reminderBatteryAdvice,
-                                style: const TextStyle(fontSize: 12, color: Colors.red),
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: SpitoutTokens.error(context),
+                                ),
                               ),
                             ],
                           ],
@@ -321,7 +326,10 @@ class ReminderSettingsPage extends ConsumerWidget {
                                 channelInfo['importance'] == 'low') ...[
                               Text(
                                 l10n.reminderChannelAdvice,
-                                style: const TextStyle(fontWeight: FontWeight.bold, color: Colors.orange),
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: SpitoutTokens.warning(context),
+                                ),
                               ),
                               Text(l10n.reminderChannelAdviceImportance),
                               Text(l10n.reminderChannelAdviceSound),
@@ -330,7 +338,10 @@ class ReminderSettingsPage extends ConsumerWidget {
                             ] else ...[
                               Text(
                                 l10n.reminderChannelGood,
-                                style: const TextStyle(color: Colors.green, fontWeight: FontWeight.bold),
+                                style: TextStyle(
+                                  color: SpitoutTokens.success(context),
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                             ],
                           ],

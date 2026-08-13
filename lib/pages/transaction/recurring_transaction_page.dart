@@ -8,6 +8,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/shadows.dart';
 import 'recurring_transaction_edit_page.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
@@ -170,13 +171,7 @@ class _RecurringTransactionCardState
             : null,
         boxShadow: SpitoutTokens.isDark(context)
             ? null
-            : [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.04),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
+            : SpitoutShadows.card,
       ),
       child: Material(
         color: Colors.transparent,

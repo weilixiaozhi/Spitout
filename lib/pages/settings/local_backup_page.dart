@@ -413,7 +413,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
           if (_restoring)
             Positioned.fill(
               child: ModalBarrier(
-                color: Colors.black.withValues(alpha: 0.45),
+                color: SpitoutTokens.overlay(context),
                 dismissible: false,
               ),
             ),
@@ -503,7 +503,7 @@ class _LocalBackupPageState extends ConsumerState<LocalBackupPage>
               _buildOldBackupGuideSection(
                 dialogContext,
                 icon: AppIcons.verifiedUser,
-                iconColor: Colors.green,
+                iconColor: SpitoutTokens.success(dialogContext),
                 title: l10n.localBackupOldSafeTitle,
                 body: l10n.localBackupOldSafeBody,
               ),

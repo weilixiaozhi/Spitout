@@ -538,14 +538,14 @@ class SpitoutCloudSyncSectionState
       return _buildHealthError(
         context,
         l10n.syncHealthNeedsLogin,
-        color: Colors.red,
+        color: SpitoutTokens.error(context),
       );
     }
     if (effective.error != null) {
       return _buildHealthError(
         context,
         l10n.syncHealthCheckFailed(effective.error!),
-        color: Colors.red,
+        color: SpitoutTokens.error(context),
       );
     }
 
@@ -561,10 +561,10 @@ class SpitoutCloudSyncSectionState
     final Color? statusColor;
     if (selfHealBroken) {
       statusText = l10n.cloudSyncHealFailed;
-      statusColor = Colors.red;
+      statusColor = SpitoutTokens.error(context);
     } else if (effective.hasDiff) {
       statusText = l10n.syncHealthHasDiff;
-      statusColor = Colors.orange;
+      statusColor = SpitoutTokens.statusPending(context);
     } else {
       statusText = l10n.syncHealthInSync;
       statusColor = null;
@@ -710,7 +710,7 @@ class SpitoutCloudSyncSectionState
           Text(
             value,
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: mismatch ? Colors.orange : null,
+              color: mismatch ? SpitoutTokens.warning(context) : null,
             ),
           ),
         ],
@@ -738,7 +738,7 @@ class SpitoutCloudSyncSectionState
               style: TextStyle(
                 fontSize: 13,
                 color: count > 0
-                    ? Colors.orange
+                    ? SpitoutTokens.warning(context)
                     : SpitoutTokens.textPrimary(context),
                 fontWeight: count > 0 ? FontWeight.w600 : FontWeight.w400,
               ),

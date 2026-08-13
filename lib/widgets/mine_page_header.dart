@@ -176,34 +176,34 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
       return (
         text: l10n.mineGreetingMorning,
         icon: AppIcons.twilight,
-        color: const Color(0xFFF59E0B),
+        color: SpitoutColors.greetingMorning,
       );
     }
     if (h >= 11 && h < 13) {
       return (
         text: l10n.mineGreetingNoon,
         icon: AppIcons.lightMode,
-        color: const Color(0xFFF59E0B),
+        color: SpitoutColors.greetingNoon,
       );
     }
     if (h >= 13 && h < 18) {
       return (
         text: l10n.mineGreetingAfternoon,
         icon: AppIcons.lightMode,
-        color: const Color(0xFFF97316),
+        color: SpitoutColors.greetingAfternoon,
       );
     }
     if (h >= 18 && h < 23) {
       return (
         text: l10n.mineGreetingEvening,
         icon: AppIcons.nightlight,
-        color: const Color(0xFF8B5CF6),
+        color: SpitoutColors.greetingEvening,
       );
     }
     return (
       text: l10n.mineGreetingNight,
       icon: AppIcons.nightlight,
-      color: const Color(0xFF818CF8),
+      color: SpitoutColors.greetingNight,
     );
   }
 
@@ -248,7 +248,7 @@ class _MinePageHeaderState extends ConsumerState<MinePageHeader> {
 
     return Padding(
       // 居中布局：头像在上、昵称在下，整体左右居中。
-      // 顶部留白交由 PrimaryHeader 默认 padding（all(8)）统一控制，
+      // 顶部留白交由 PrimaryHeader 默认 padding（top 10 / left-right 14）统一控制，
       // 此处不叠加，保证"我的"tab 首行（头像）顶距与其余 tab 一致。
       padding: const EdgeInsets.fromLTRB(16.0, 0, 16.0, 14.0),
       // SizedBox(width: double.infinity) 强制 Column 占满可用宽度，

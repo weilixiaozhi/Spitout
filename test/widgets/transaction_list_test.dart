@@ -303,7 +303,7 @@ void main() {
 
   testWidgets('同一天多条交易：条目之间不渲染分割线', (tester) async {
     // 需求：首页列表每条数据之间不再显示分割线。
-    // twoDays 中 2026-08-08 同日有两笔，若未去掉分割线，第一笔下方会有 SpitoutDivider.short。
+    // twoDays 中 2026-08-08 同日有两笔，若未去掉分割线，第一笔下方会有分割线。
     await pumpList(tester, transactions: twoDays());
     expect(find.byType(Divider, skipOffstage: false), findsNothing);
   });

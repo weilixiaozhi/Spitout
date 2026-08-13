@@ -130,7 +130,7 @@ class _OrphanCleanupPageState extends ConsumerState<OrphanCleanupPage> {
         child: Row(
           children: [
             Icon(AppIcons.warning,
-                color: Colors.orange,
+                color: SpitoutTokens.warning(context),
                 size: 22.0),
             SizedBox(width: 12.0),
             Expanded(

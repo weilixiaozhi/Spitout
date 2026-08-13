@@ -55,7 +55,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 _buildGuideSection(
                   context,
                   icon: AppIcons.checkCircle,
-                  iconColor: Colors.green,
+                  iconColor: SpitoutTokens.success(context),
                   title: l10n.cloudSyncGuideCorrect,
                   items: [
                     l10n.cloudSyncGuideCorrectItem1,
@@ -69,7 +69,7 @@ import 'package:spitout/theme/icons/app_icons.dart';
                 _buildGuideSection(
                   context,
                   icon: AppIcons.cancel,
-                  iconColor: Colors.red,
+                  iconColor: SpitoutTokens.error(context),
                   title: l10n.cloudSyncGuideWrong,
                   items: [
                     l10n.cloudSyncGuideWrongItem1,

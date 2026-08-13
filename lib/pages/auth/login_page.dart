@@ -8,6 +8,7 @@ import 'package:spitout/cloud/auth_error_localizer.dart'
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
+import 'package:spitout/theme/shadows.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 import 'package:spitout/widgets/widgets.dart';
 
@@ -182,13 +183,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: SpitoutTokens.isDark(context)
                           ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                          : SpitoutShadows.card,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -252,13 +247,7 @@ class _AuthPageState extends ConsumerState<AuthPage> {
                       borderRadius: BorderRadius.circular(12),
                       boxShadow: SpitoutTokens.isDark(context)
                           ? null
-                          : [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.04),
-                                blurRadius: 10,
-                                offset: const Offset(0, 4),
-                              ),
-                            ],
+                          : SpitoutShadows.card,
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,

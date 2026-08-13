@@ -893,7 +893,10 @@ class _MemberManagementSectionState
           const SizedBox(height: 12),
           Text(
             _error!,
-            style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+            style: TextStyle(
+              color: SpitoutTokens.error(context),
+              fontSize: 13,
+            ),
           ),
         ],
         const SizedBox(height: 16),
@@ -1005,7 +1008,9 @@ class _MemberManagementSectionState
             child: Text(l10n.commonCancel),
           ),
           FilledButton(
-            style: FilledButton.styleFrom(backgroundColor: Colors.redAccent),
+            style: FilledButton.styleFrom(
+              backgroundColor: SpitoutTokens.error(context),
+            ),
             onPressed: () => Navigator.pop(context, true),
             child: Text(l10n.commonRemove),
           ),

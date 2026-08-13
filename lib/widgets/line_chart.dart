@@ -80,7 +80,7 @@ class AnalyticsLineChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final primary = Theme.of(context).colorScheme.primary;
+    final expense = SpitoutTokens.chartExpense(context);
     final textPrimary = SpitoutTokens.textPrimary(context);
     final textSecondary = SpitoutTokens.textSecondary(context);
     final isEmpty = values.isEmpty;
@@ -114,7 +114,7 @@ class AnalyticsLineChart extends StatelessWidget {
           spots: [
             for (var i = 0; i < n; i++) fl.FlSpot(i.toDouble(), values[i]),
           ],
-          color: primary,
+          color: expense,
           barWidth: SpitoutChartTokens.lineWidth,
           isCurved: false,
           // 0 值点不画圆点（0 值不参与标注/强调）
@@ -122,7 +122,7 @@ class AnalyticsLineChart extends StatelessWidget {
             checkToShowDot: (spot, _) => spot.y != 0,
             getDotPainter: (spot, percent, bar, index) => fl.FlDotCirclePainter(
               radius: SpitoutChartTokens.dotRadius,
-              color: primary,
+              color: expense,
               strokeWidth: 0,
               strokeColor: Colors.transparent,
             ),

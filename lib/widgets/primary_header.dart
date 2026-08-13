@@ -114,7 +114,7 @@ class PrimaryHeader extends ConsumerWidget {
                   Padding(
                     padding: padding,
                     // 首行最小高度全局统一为 30：无 action 的页面（标题仅 ~19px）与
-                    // 含功能键的页面（热区 40）行高尽量接近，标题垂直位置稳定；
+                    // 含功能键的页面（热区 30）行高尽量接近，标题垂直位置稳定；
                     // 内容不足 30 时垂直居中，超出（如无障碍大字体）时随内容增高。
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(minHeight: 30),
@@ -122,7 +122,7 @@ class PrimaryHeader extends ConsumerWidget {
                       children: [
                         if (showBack) ...[
                           IconButton(
-                            // 返回键规格全局统一：图标 24px、热区 40x40，
+                            // 返回键规格全局统一：图标 20px、热区 30x30，
                             // 与 HeaderIconAction 完全一致（同为首行功能键）
                             icon: Icon(AppIcons.back, size: 20, color: iconColor),
                             onPressed: () => Navigator.of(context).maybePop(),

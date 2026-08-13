@@ -1303,14 +1303,14 @@ class _CategoryCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // 二级分类：使用浅色背景
     final backgroundColor = item.isSubCategory
-        ? Colors.orange[50]
+        ? SpitoutTokens.warning(context).withValues(alpha: 0.08)
         : Theme.of(context).colorScheme.surface;
 
     // 选中状态：边框高亮
     final borderColor = isSelected
         ? SpitoutTokens.error(context)
         : (item.isSubCategory
-              ? Colors.orange.withValues(alpha: 0.3)
+              ? SpitoutTokens.warning(context).withValues(alpha: 0.3)
               : Theme.of(context).colorScheme.outline.withValues(alpha: 0.3));
 
     return InkWell(
@@ -1335,7 +1335,9 @@ class _CategoryCard extends ConsumerWidget {
                     height: item.isSubCategory ? 28 : 32,
                     decoration: BoxDecoration(
                       color: item.isSubCategory
-                          ? Colors.orange.withValues(alpha: 0.2)
+                          ? SpitoutTokens.warning(
+                              context,
+                            ).withValues(alpha: 0.2)
                           : Theme.of(
                               context,
                             ).colorScheme.primary.withValues(alpha: 0.1),
@@ -1345,7 +1347,7 @@ class _CategoryCard extends ConsumerWidget {
                       category: item.category,
                       size: item.isSubCategory ? 16.0 : 18.0,
                       color: item.isSubCategory
-                          ? Colors.orange[700]!
+                          ? SpitoutTokens.warning(context)
                           : Theme.of(context).colorScheme.primary,
                       circular: true,
                     ),
@@ -1357,7 +1359,9 @@ class _CategoryCard extends ConsumerWidget {
                       CategoryUtils.getDisplayName(item.category.name, context),
                       style: Theme.of(context).textTheme.labelSmall?.copyWith(
                         fontSize: item.isSubCategory ? 10 : 12,
-                        color: item.isSubCategory ? Colors.orange[900] : null,
+                        color: item.isSubCategory
+                            ? SpitoutTokens.warning(context)
+                            : null,
                       ),
                       textAlign: TextAlign.center,
                       maxLines: 1,
@@ -1371,7 +1375,7 @@ class _CategoryCard extends ConsumerWidget {
                     ).categoryMigrationTransactionLabel(item.transactionCount),
                     style: Theme.of(context).textTheme.labelSmall?.copyWith(
                       color: item.isSubCategory
-                          ? Colors.orange[700]
+                          ? SpitoutTokens.warning(context)
                           : Theme.of(context).colorScheme.outline,
                       fontSize: item.isSubCategory ? 9 : 10,
                     ),

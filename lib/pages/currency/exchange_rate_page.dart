@@ -676,7 +676,9 @@ class _RateRow extends ConsumerWidget {
         '${l10n.rateSourceAuto} · ${l10n.rateUpdatedAt(eff!.rateDate ?? '')}',
         style: TextStyle(
           fontSize: 12,
-          color: stale ? Colors.orange : SpitoutTokens.textTertiary(context),
+          color: stale
+              ? SpitoutTokens.warning(context)
+              : SpitoutTokens.textTertiary(context),
         ),
       );
     }

@@ -188,7 +188,7 @@ class _DetailImportExportPageState
                 if (_reading)
                   Positioned.fill(
                     child: Container(
-                      color: Colors.black.withValues(alpha: 0.4),
+                      color: SpitoutTokens.overlay(context),
                       child: Center(
                         child: Container(
                           padding: const EdgeInsets.all(16),

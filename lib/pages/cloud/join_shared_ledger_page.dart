@@ -294,7 +294,10 @@ class _JoinSharedLedgerPageState extends ConsumerState<JoinSharedLedgerPage> {
               Center(
                 child: Text(
                   _error!,
-                  style: const TextStyle(color: Colors.redAccent, fontSize: 13),
+                  style: TextStyle(
+                    color: SpitoutTokens.error(context),
+                    fontSize: 13,
+                  ),
                 ),
               ),
             ],

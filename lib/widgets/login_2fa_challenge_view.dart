@@ -117,7 +117,6 @@ class _Login2FAChallengeDialogState
       fontSize: 14,
       letterSpacing: 0,
       fontWeight: FontWeight.normal,
-      fontFamily: null,
     );
 
     return AlertDialog(

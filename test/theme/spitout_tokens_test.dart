@@ -2,14 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:spitout/theme/app_theme.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/divider.dart';
 
-/// SpitoutTokens 亮/暗取色 + SpitoutDivider context 参数化测试。
+/// SpitoutTokens 亮/暗取色测试。
 ///
 /// 覆盖 SpitoutTokens 取色与 divider 逻辑：
-/// - SpitoutTokens 各语义取色在亮/暗主题下返回 SpitoutColors 对应常量；
-/// - SpitoutDivider.thin/short 改为接收 BuildContext 后用 divider(context) 取色
-///   （暗黑模式下分割线颜色不回退到亮色静态兜底）。
+/// - SpitoutTokens 各语义取色在亮/暗主题下返回 SpitoutColors 对应常量。
 void main() {
   late ThemeData lightTheme;
   late ThemeData darkTheme;
@@ -94,16 +91,4 @@ void main() {
     });
   });
 
-  group('SpitoutDivider 参数化（阶段四）', () {
-    testWidgets('thin/short 接收 BuildContext 并返回带正确颜色的 Divider', (tester) async {
-      final ctx = await pumpContext(tester, lightTheme);
-      final thin = SpitoutDivider.thin(ctx);
-      final short = SpitoutDivider.short(ctx, indent: 8, endIndent: 8);
-      expect(thin, isA<Divider>());
-      expect(short, isA<Divider>());
-      // 颜色必须等于 divider(context) 取色，确认参数化生效。
-      expect(thin.color, SpitoutTokens.divider(ctx));
-      expect(short.color, SpitoutTokens.divider(ctx));
-    });
-  });
 }

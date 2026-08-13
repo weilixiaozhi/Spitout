@@ -15,6 +15,7 @@ import 'widgets/widgets.dart';
 import 'services/security/app_lock_service.dart';
 import 'theme/colors.dart';
 import 'theme/icons/app_icons.dart';
+import 'theme/shadows.dart';
 
 // 中间记账 FAB 凸出底部胶囊顶部的高度(dp)。
 // 底部栏总高 = 胶囊高度(64) + 本值 + 安全区 + 浮动间距：把 FAB 凸出量收编进
@@ -375,13 +376,7 @@ class SpitoutBottomBar extends StatelessWidget {
         decoration: BoxDecoration(
           color: fabBg,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.15),
-              blurRadius: 8,
-              offset: const Offset(0, 2),
-            ),
-          ],
+          boxShadow: SpitoutShadows.fab,
         ),
         child: Icon(AppIcons.add, color: fabIcon, size: 28),
       ),

@@ -183,8 +183,8 @@ Future<T?> showAppSheet<T>({
     useRootNavigator: useRootNavigator,
     // shadcn card/popover 背景:亮色白、暗色 #1F2937
     backgroundColor: backgroundColor ?? SpitoutTokens.surfaceSheet(context),
-    // 半透明遮罩(40% 黑),比 Material 默认更柔和
-    barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.4),
+    // 遮罩统一走 overlay token（亮 50% / 暗 70%）
+    barrierColor: barrierColor ?? SpitoutTokens.overlay(context),
     elevation: elevation,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
@@ -265,7 +265,7 @@ Future<T?> showAppSheetTop<T>({
       // 零动画:瞬显瞬隐,无转场效果。
       transitionDuration: Duration.zero,
       reverseTransitionDuration: Duration.zero,
-      barrierColor: Colors.black.withValues(alpha: 0.4),
+      barrierColor: SpitoutTokens.overlay(context),
       // 关闭遮罩点击退出:barrierDismissible=false,点击半透明遮罩不自动 pop 退出弹窗。
       // 同时该设置会拦截系统返回键/返回手势,实现「只有取消/确定才能退出弹窗」。
       // 收起键盘/退出光标由 Flutter 默认 onTapOutside 及各处的显式

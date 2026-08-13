@@ -362,10 +362,14 @@ class _ConfigImportExportPageState
                         Container(
                           padding: EdgeInsets.all(10.0),
                           decoration: BoxDecoration(
-                            color: Colors.orange.withValues(alpha: 0.08),
+                            color: SpitoutTokens.warning(
+                              context,
+                            ).withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(8.0),
                             border: Border.all(
-                              color: Colors.orange.withValues(alpha: 0.3),
+                              color: SpitoutTokens.warning(
+                                context,
+                              ).withValues(alpha: 0.3),
                             ),
                           ),
                           child: Row(
@@ -374,7 +378,7 @@ class _ConfigImportExportPageState
                               Icon(
                                 AppIcons.warning,
                                 size: 18.0,
-                                color: Colors.orange[700],
+                                color: SpitoutTokens.warning(context),
                               ),
                               SizedBox(width: 8.0),
                               Expanded(
@@ -382,7 +386,7 @@ class _ConfigImportExportPageState
                                   l10n.configImportExportWarning,
                                   style: TextStyle(
                                     fontSize: 13.0,
-                                    color: Colors.orange[900],
+                                    color: SpitoutTokens.warning(context),
                                     height: 1.5,
                                   ),
                                 ),
@@ -433,7 +437,7 @@ class _ConfigImportExportPageState
                                   Icon(
                                     AppIcons.checkCircle,
                                     size: 16.0,
-                                    color: Colors.green,
+                                    color: SpitoutTokens.success(context),
                                   ),
                                   SizedBox(width: 8.0),
                                   Expanded(
@@ -836,22 +840,29 @@ class _ExportPreviewDialog extends StatelessWidget {
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.red.withValues(alpha: 0.08),
+                        color: SpitoutTokens.error(
+                          context,
+                        ).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: Colors.red.withValues(alpha: 0.35),
+                          color: SpitoutTokens.error(
+                            context,
+                          ).withValues(alpha: 0.35),
                         ),
                       ),
                       child: Row(
                         children: [
-                          Icon(AppIcons.warning, color: Colors.red[700]),
+                          Icon(
+                            AppIcons.warning,
+                            color: SpitoutTokens.error(context),
+                          ),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
                               l10n.configExportContainsSecretsWarning,
                               style: TextStyle(
                                 fontSize: 13,
-                                color: Colors.red[900],
+                                color: SpitoutTokens.error(context),
                                 height: 1.4,
                               ),
                             ),
@@ -992,10 +1003,14 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                   Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.orange.withValues(alpha: 0.1),
+                      color: SpitoutTokens.warning(
+                        context,
+                      ).withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: Colors.orange.withValues(alpha: 0.3),
+                        color: SpitoutTokens.warning(
+                          context,
+                        ).withValues(alpha: 0.3),
                       ),
                     ),
                     child: Row(
@@ -1003,7 +1018,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                       children: [
                         Icon(
                           AppIcons.warning,
-                          color: Colors.orange[700],
+                          color: SpitoutTokens.warning(context),
                           size: 20,
                         ),
                         const SizedBox(width: 8),
@@ -1012,7 +1027,7 @@ class _ImportPreviewDialogState extends State<_ImportPreviewDialog> {
                             l10n.configImportOverwriteWarning,
                             style: TextStyle(
                               fontSize: 13,
-                              color: Colors.orange[900],
+                              color: SpitoutTokens.warning(context),
                             ),
                           ),
                         ),

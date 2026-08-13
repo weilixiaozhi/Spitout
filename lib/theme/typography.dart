@@ -7,6 +7,7 @@ class SpitoutTextTokens {
   // 标题：用于列表主标题、条目标题
   static TextStyle title(BuildContext ctx) =>
       Theme.of(ctx).textTheme.bodyLarge?.copyWith(
+            fontSize: 15,
             color: SpitoutTokens.textPrimary(ctx),
           ) ??
       TextStyle(

@@ -24,6 +24,7 @@ import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/utils/format_utils.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 class LedgersPage extends ConsumerStatefulWidget {
@@ -398,7 +399,11 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
               ),
               title: Row(
                 children: [
-                  const Icon(AppIcons.warning, color: Colors.red, size: 28),
+                  Icon(
+                    AppIcons.warning,
+                    color: SpitoutTokens.error(dialogContext),
+                    size: 28,
+                  ),
                   const SizedBox(width: 12),
                   Text(l10n.ledgersConflictTitle),
                 ],
@@ -421,7 +426,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.blue[50],
+                        color: SpitoutTokens.info(
+                          dialogContext,
+                        ).withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
@@ -436,9 +443,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                             l10n.ledgersConflictLocalFingerprint(
                               _shortFingerprint(status.localFingerprint),
                             ),
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 12,
-                              color: Colors.black54,
+                              color: SpitoutTokens.textSecondary(dialogContext),
                             ),
                           ),
                         ],
@@ -453,7 +460,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                       Container(
                         padding: const EdgeInsets.all(12),
                         decoration: BoxDecoration(
-                          color: Colors.orange[50],
+                          color: SpitoutTokens.warning(
+                            dialogContext,
+                          ).withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Column(
@@ -474,9 +483,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                                   status.cloudExportedAt!.toLocal(),
                                 ),
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: SpitoutTokens.textSecondary(dialogContext),
                               ),
                             ),
                             const SizedBox(height: 2),
@@ -484,9 +493,9 @@ class _LedgersPageState extends ConsumerState<LedgersPage> {
                               l10n.ledgersConflictRemoteFingerprint(
                                 _shortFingerprint(status.cloudFingerprint),
                               ),
-                              style: const TextStyle(
+                              style: TextStyle(
                                 fontSize: 12,
-                                color: Colors.black54,
+                                color: SpitoutTokens.textSecondary(dialogContext),
                               ),
                             ),
                           ],

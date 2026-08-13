@@ -100,9 +100,7 @@ class TransactionListItem extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
-        color: SpitoutTokens.isDark(context)
-            ? Colors.white.withValues(alpha: 0.1)
-            : Colors.black.withValues(alpha: 0.06),
+        color: SpitoutTokens.divider(context),
         borderRadius: BorderRadius.circular(10),
       ),
       child: Text(

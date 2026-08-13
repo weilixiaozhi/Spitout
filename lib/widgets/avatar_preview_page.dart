@@ -14,6 +14,7 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 头像全屏预览页。
@@ -152,7 +153,7 @@ class _AvatarActionPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = danger ? const Color(0xFFEF4444) : Colors.white;
+    final color = danger ? SpitoutTokens.error(context) : Colors.white;
     return Material(
       color: Colors.white.withValues(alpha: 0.12),
       borderRadius: BorderRadius.circular(28),
