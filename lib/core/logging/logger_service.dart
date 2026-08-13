@@ -7,54 +7,23 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// 日志级别
 enum LogLevel {
-  debug,
-  info,
-  warning,
-  error;
+  debug('DEBUG'),
+  info('INFO'),
+  warning('WARN'),
+  error('ERROR');
 
-  String get displayName {
-    switch (this) {
-      case LogLevel.debug:
-        return 'DEBUG';
-      case LogLevel.info:
-        return 'INFO';
-      case LogLevel.warning:
-        return 'WARN';
-      case LogLevel.error:
-        return 'ERROR';
-    }
-  }
-
-  String get emoji {
-    switch (this) {
-      case LogLevel.debug:
-        return '🔍';
-      case LogLevel.info:
-        return 'ℹ️';
-      case LogLevel.warning:
-        return '⚠️';
-      case LogLevel.error:
-        return '❌';
-    }
-  }
+  final String displayName;
+  const LogLevel(this.displayName);
 }
 
 /// 日志来源平台
 enum LogPlatform {
-  flutter,
-  android,
-  ios;
+  flutter('Flutter'),
+  android('Android'),
+  ios('iOS');
 
-  String get displayName {
-    switch (this) {
-      case LogPlatform.flutter:
-        return 'Flutter';
-      case LogPlatform.android:
-        return 'Android';
-      case LogPlatform.ios:
-        return 'iOS';
-    }
-  }
+  final String displayName;
+  const LogPlatform(this.displayName);
 }
 
 /// 日志条目

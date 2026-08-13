@@ -32,7 +32,6 @@ void main() {
       expect(LogLevel.info.displayName, 'INFO');
       expect(LogLevel.warning.displayName, 'WARN');
       expect(LogLevel.error.displayName, 'ERROR');
-      expect(LogLevel.error.emoji, isNotEmpty);
     });
 
     test('LogPlatform displayName', () {
