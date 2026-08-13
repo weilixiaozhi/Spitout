@@ -1,10 +1,12 @@
-/// 云存储路径工具。
+import 'package:path/path.dart' as p;
+
+/// 云存储路径工具：统一 POSIX 语义（云端对象 key 与宿主平台无关）。
+///
+/// 折叠斜杠、解析 . / .. 等复杂规则委托 package:path 的 posix context，
+/// 本类只保留两条业务约定：对象 key 一律为无前导斜杠的相对路径，
+/// 并对用户输入做路径穿越校验。
 class PathHelper {
-  /// 规范化云存储路径。
-  ///
-  /// - 移除开头斜杠
-  /// - 合并重复斜杠
-  /// - 移除结尾斜杠
+  /// 规范化云存储路径：折叠重复斜杠、解析 . 与 ..、去除首尾斜杠。
   ///
   /// 示例：
   /// ```dart
@@ -13,129 +15,52 @@ class PathHelper {
   /// ```
   static String normalize(String path) {
     if (path.isEmpty) return path;
-
-    // 移除开头斜杠
-    path = path.replaceFirst(RegExp(r'^/+'), '');
-
-    // 移除结尾斜杠
-    path = path.replaceFirst(RegExp(r'/+$'), '');
-
-    // 合并多个连续斜杠为单个
-    path = path.replaceAll(RegExp(r'/+'), '/');
-
-    return path;
+    // posix.normalize 会保留前导斜杠；云对象 key 约定为相对路径，显式去除。
+    return p.posix.normalize(path).replaceFirst(RegExp(r'^/+'), '');
   }
 
-  /// 拼接多个路径段。
-  ///
-  /// 自动规范化结果。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.join('users', '123', 'data.json') // 'users/123/data.json'
-  /// PathHelper.join('users/', '/123/', '/data.json') // 'users/123/data.json'
-  /// ```
+  /// 拼接多个路径段并规范化结果。
   static String join(List<String> segments) {
     if (segments.isEmpty) return '';
     return normalize(segments.join('/'));
   }
 
-  /// 获取文件路径的目录部分。
-  ///
-  /// 返回父目录路径；无父目录时返回空字符串。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.dirname('users/123/data.json') // 'users/123'
-  /// PathHelper.dirname('data.json') // ''
-  /// ```
+  /// 返回父目录；无父目录时返回空字符串。
   static String dirname(String path) {
-    path = normalize(path);
-    if (path.isEmpty) return '';
-
-    final lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex == -1) return '';
-
-    return path.substring(0, lastSlashIndex);
+    final normalized = normalize(path);
+    if (normalized.isEmpty || !normalized.contains('/')) return '';
+    return p.posix.dirname(normalized);
   }
 
-  /// 获取文件路径的文件名部分。
-  ///
   /// 返回路径的最后一个段。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.basename('users/123/data.json') // 'data.json'
-  /// PathHelper.basename('data.json') // 'data.json'
-  /// ```
   static String basename(String path) {
-    path = normalize(path);
-    if (path.isEmpty) return '';
-
-    final lastSlashIndex = path.lastIndexOf('/');
-    if (lastSlashIndex == -1) return path;
-
-    return path.substring(lastSlashIndex + 1);
+    return p.posix.basename(normalize(path));
   }
 
-  /// 获取文件扩展名。
-  ///
-  /// 返回包含点号的扩展名；无扩展名时返回空字符串。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.extension('data.json') // '.json'
-  /// PathHelper.extension('archive.tar.gz') // '.gz'
-  /// PathHelper.extension('noextension') // ''
-  /// ```
+  /// 返回带点号的扩展名；无扩展名时返回空字符串。
   static String extension(String path) {
-    final filename = basename(path);
-    final lastDotIndex = filename.lastIndexOf('.');
-
-    if (lastDotIndex == -1 || lastDotIndex == 0) return '';
-    return filename.substring(lastDotIndex);
+    return p.posix.extension(basename(path));
   }
 
-  /// 构建用户专属路径。
-  ///
-  /// 便捷方法：在用户目录下创建路径。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.userPath('user123', ['ledgers', '456.json'])
-  /// // 'users/user123/ledgers/456.json'
-  /// ```
+  /// 在用户目录下构建路径。
   static String userPath(String userId, List<String> segments) {
     return join(['users', userId, ...segments]);
   }
 
-  /// 判断路径是否为绝对路径（以 / 开头）。
-  static bool isAbsolute(String path) {
-    return path.startsWith('/');
-  }
+  /// 是否为以 / 开头的绝对路径。
+  static bool isAbsolute(String path) => p.posix.isAbsolute(path);
 
-  /// 为路径添加开头斜杠，使其成为绝对路径。
-  static String makeAbsolute(String path) {
-    if (isAbsolute(path)) return path;
-    return '/$path';
-  }
+  /// 补前导斜杠成为绝对路径。
+  static String makeAbsolute(String path) =>
+      isAbsolute(path) ? path : '/$path';
 
-  /// 移除开头斜杠，使路径成为相对路径。
-  static String makeRelative(String path) {
-    return normalize(path);
-  }
+  /// 移除前导斜杠成为相对路径。
+  static String makeRelative(String path) => normalize(path);
 
   /// 校验业务层传入的相对路径是否安全。
   ///
   /// 拒绝绝对路径以及包含 `..` / `.` 段（或反斜杠分隔）的路径，
   /// 防止拼接用户前缀后逃逸到其他目录（路径穿越）。
-  ///
-  /// 示例：
-  /// ```dart
-  /// PathHelper.isSafeRelativePath('ledgers/123.json') // true
-  /// PathHelper.isSafeRelativePath('/ledgers/123.json') // false
-  /// PathHelper.isSafeRelativePath('../secret.json') // false
-  /// ```
   static bool isSafeRelativePath(String path) {
     if (path.isEmpty) return false;
     if (path.startsWith('/') || path.startsWith('\\')) return false;
