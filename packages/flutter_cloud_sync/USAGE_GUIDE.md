@@ -522,4 +522,3 @@ await provider.storage.upload(
 
 - Explore [API Documentation](https://pub.dev/documentation/flutter_cloud_sync/latest/)
 - Read [Architecture Guide](../.docs/cloud/architecture.md)
-- Check [Example Code](example/)

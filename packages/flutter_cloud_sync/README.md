@@ -228,10 +228,6 @@ See [API documentation](https://pub.dev/documentation/flutter_cloud_sync/latest/
 - `CloudSerializationException` - Serialization / deserialization failed
 - `CloudAuthException` - Authentication failed
 
-## Example
-
-See the [example](example/) directory for a complete working example.
-
 ## Contributing
 
 Contributions are welcome! Please read our [contributing guide](CONTRIBUTING.md).

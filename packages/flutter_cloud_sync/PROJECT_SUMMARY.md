@@ -29,7 +29,6 @@
 - README.md - 包概览
 - USAGE_GUIDE.md - 完整使用指南
 - CHANGELOG.md - 版本历史
-- example/ - 工作示例
 
 ### 2. Supabase Provider (flutter_cloud_sync_supabase)
 
@@ -214,7 +213,6 @@ enum SyncState {
 | 核心包 README | packages/flutter_cloud_sync/README.md | ✅ |
 | 使用指南 | packages/flutter_cloud_sync/USAGE_GUIDE.md | ✅ |
 | API 文档 | packages/flutter_cloud_sync/lib/*.dart | ✅ |
-| 示例应用 | packages/flutter_cloud_sync/example/ | ✅ |
 | Supabase README | packages/flutter_cloud_sync_supabase/README.md | ✅ |
 | WebDAV README | packages/flutter_cloud_sync_webdav/README.md | ✅ |
 | 集成指南 | packages/flutter_cloud_sync/INTEGRATION_GUIDE.md | ✅ |
@@ -294,13 +292,7 @@ final ledgerSyncStatusProvider = FutureProvider.family<SyncStatus, int>(
    - 阅读 USAGE_GUIDE 了解高级特性
    - 参考 INTEGRATION_GUIDE 了解如何集成到消费方应用
 
-2. **运行示例**
-   ```bash
-   cd packages/flutter_cloud_sync/example
-   dart run lib/main.dart
-   ```
-
-3. **添加依赖**
+2. **添加依赖**
    ```yaml
    dependencies:
      flutter_cloud_sync:
@@ -343,7 +335,7 @@ final ledgerSyncStatusProvider = FutureProvider.family<SyncStatus, int>(
 
 1. 更新 pubspec.yaml (移除 `publish_to: none`)
 2. 添加 LICENSE 文件
-3. 完善 example/ 应用
+3. 按需补充示例应用
 4. 添加 pub points 优化
 5. 运行 `flutter pub publish --dry-run`
 6. 发布 `flutter pub publish`
