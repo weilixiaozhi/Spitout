@@ -1,11 +1,11 @@
 import 'dart:ui' as ui;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/notification/reminder_constants.dart';
 import 'package:spitout/services/notification/notification_factory.dart';
 import 'package:spitout/providers/ui/language_provider.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 
 /// 记账提醒设置
 class ReminderSettings {
@@ -91,7 +91,7 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
   Future<void> _loadSettings() async {
     try {
       if (_userTouched) return;
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPreferencesProvider.future);
       final isEnabled = prefs.getBool(_keyEnabled) ?? false;
       final hour = prefs.getInt(_keyHour) ?? 21;
       final minute = prefs.getInt(_keyMinute) ?? 0;
@@ -112,7 +112,7 @@ class ReminderSettingsNotifier extends Notifier<ReminderSettings> {
   /// 保存设置
   Future<void> _saveSettings() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPreferencesProvider.future);
       await prefs.setBool(_keyEnabled, state.isEnabled);
       await prefs.setInt(_keyHour, state.hour);
       await prefs.setInt(_keyMinute, state.minute);

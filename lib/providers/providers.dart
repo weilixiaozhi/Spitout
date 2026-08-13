@@ -14,6 +14,9 @@ export 'package:spitout/providers/ui/user_display_name_resolver.dart';
 // 数据库相关
 export 'package:spitout/providers/core/database_providers.dart';
 
+// SharedPreferences 统一出口
+export 'package:spitout/providers/core/shared_preferences_provider.dart';
+
 // 首次初始化种子服务门面
 export 'package:spitout/providers/core/seed_providers.dart';
 

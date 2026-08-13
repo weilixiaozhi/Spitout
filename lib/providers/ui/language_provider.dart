@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/l10n/app_localizations.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 
 // 语言设置提供者
 final languageProvider = NotifierProvider<LanguageNotifier, Locale?>(
@@ -21,7 +21,7 @@ class LanguageNotifier extends Notifier<Locale?> {
   // 加载保存的语言设置
   Future<void> _loadLanguage() async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPreferencesProvider.future);
       final languageCode = prefs.getString(_languageKey);
       final countryCode = prefs.getString('${_languageKey}_country');
       if (languageCode != null) {
@@ -35,7 +35,7 @@ class LanguageNotifier extends Notifier<Locale?> {
   // 设置语言
   Future<void> setLanguage(Locale? locale) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPreferencesProvider.future);
       if (locale == null) {
         // 跟随系统语言
         await prefs.remove(_languageKey);

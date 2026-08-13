@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
-import 'package:shared_preferences/shared_preferences.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 
 import 'package:spitout/data/db.dart' show Ledger;
 import 'package:spitout/data/repositories/base_repository.dart';
@@ -64,7 +64,7 @@ const _kVisibleCurrenciesFallbackKey = 'visibleCurrencies._none';
 /// - 同一账本的字段更新(如改本位币)不触发重载——仅 id 变化才切集合;
 ///   新本位币由公共函数 applyLedgerCurrencyChange 负责补入集合。
 final visibleCurrenciesInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
 
   // 加载目标账本的可见集合:无 key 时用「13 常用 ∪ 账本本位币」初始化并落盘。
   Future<void> loadFor(int? ledgerId, String? ledgerCurrency) async {
@@ -128,7 +128,7 @@ Future<void> toggleCurrencyVisibility(WidgetRef ref, String code) async {
   ref.read(visibleCurrenciesProvider.notifier).set(next);
 
   try {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPreferencesProvider.future);
     final ledgerId = ref.read(currentLedgerProvider).value?.id;
     await prefs.setString(
         ledgerId == null
@@ -156,7 +156,7 @@ Future<void> ensureCurrencyVisibleForCurrentLedger(
   final next = {...cur, codeUp};
   ref.read(visibleCurrenciesProvider.notifier).set(next);
   try {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPreferencesProvider.future);
     final ledgerId = ref.read(currentLedgerProvider).value?.id;
     await prefs.setString(
         ledgerId == null

@@ -4,9 +4,9 @@ import 'dart:io';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/cloud/spitout_cloud.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 import 'package:spitout/cloud/sync/sync_service.dart';
 import 'package:spitout/cloud/sync/sync_coordinator.dart';
 import 'package:spitout/cloud/sync/sync_engine.dart';
@@ -76,7 +76,7 @@ final lastSyncStatusProvider =
 
 // 自动同步开关：值与设置
 final autoSyncValueProvider = FutureProvider.autoDispose<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   return prefs.getBool('auto_sync') ?? false;
@@ -86,7 +86,7 @@ class AutoSyncSetter {
   AutoSyncSetter(this._ref);
   final Ref _ref;
   Future<void> set(bool v) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ref.read(sharedPreferencesProvider.future);
     await prefs.setBool('auto_sync', v);
     // 使缓存失效，触发读取最新值
     _ref.invalidate(autoSyncValueProvider);
@@ -551,7 +551,7 @@ void _applyAppearanceFromServer(Ref ref, Map<String, dynamic> appearance) {
 /// 与 autoSync 同机制（SharedPreferences + invalidate 刷新），key 见
 /// [LocalBackupService.prefsKeyAutoBackup]。
 final autoBackupValueProvider = FutureProvider.autoDispose<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final link = ref.keepAlive();
   ref.onDispose(() => link.close());
   return prefs.getBool(LocalBackupService.prefsKeyAutoBackup) ?? true;
@@ -562,7 +562,7 @@ class AutoBackupSetter {
   AutoBackupSetter(this._ref);
   final Ref _ref;
   Future<void> set(bool v) async {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await _ref.read(sharedPreferencesProvider.future);
     await prefs.setBool(LocalBackupService.prefsKeyAutoBackup, v);
     _ref.invalidate(autoBackupValueProvider);
   }
@@ -590,7 +590,7 @@ Future<void> autoBackupOnLaunch(
   T Function<T>(ProviderListenable<T> listenable) read,
 ) async {
   try {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await read(sharedPreferencesProvider.future);
     final enabled =
         prefs.getBool(LocalBackupService.prefsKeyAutoBackup) ?? true;
     if (!enabled) return;

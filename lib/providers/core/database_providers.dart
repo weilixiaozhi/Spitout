@@ -1,7 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/base_repository.dart';
@@ -11,6 +10,7 @@ import 'package:spitout/core/logging/logger_service.dart';
 // 本体 —— 后者反向依赖本文件，直接互 import 会成环。
 import 'package:spitout/providers/sync/sync_state_providers.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 // 叶子模块：仅账本列表刷新 tick，供自愈兜底监听使用，不反向依赖本文件（不成环）。
 import 'package:spitout/providers/core/refresh_ticks.dart';
 
@@ -148,7 +148,7 @@ Future<void> selectFirstLedger(T Function<T>(ProviderListenable<T>) read) async 
     }
     // 直接写回 prefs 而不依赖 currentLedgerPersistProvider 的 listen 回调：
     // 引导阶段该 provider 可能尚未被激活，显式写回才能保证下次启动稳定恢复。
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await read(sharedPreferencesProvider.future);
     await prefs.setInt('current_ledger_id', first);
   } catch (_) {
     // 选中失败不阻断引导/启动流程：最坏进入首页后可在账本页手动选择。
@@ -177,7 +177,7 @@ final currentLedgerPersistProvider = FutureProvider<void>((ref) async {
   // 账本切换 / 失效都能被捕获。
   ref.listen<int>(currentLedgerIdProvider, (prev, next) async {
     try {
-      final prefs = await SharedPreferences.getInstance();
+      final prefs = await ref.read(sharedPreferencesProvider.future);
       await prefs.setInt('current_ledger_id', next);
     } catch (_) {}
   });
@@ -249,7 +249,7 @@ final currentLedgerPersistProvider = FutureProvider<void>((ref) async {
 
   // 启动解析：恢复持久化账本，失效 / 缺失则回退本地第一个账本。
   try {
-    final prefs = await SharedPreferences.getInstance();
+    final prefs = await ref.read(sharedPreferencesProvider.future);
     final repo = ref.read(repositoryProvider);
     final saved = prefs.getInt('current_ledger_id');
 

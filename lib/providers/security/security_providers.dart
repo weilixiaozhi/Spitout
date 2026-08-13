@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 import 'package:spitout/services/security/app_lock_service.dart';
 
 /// AppLockService 的 provider 门面：页面只依赖 providers 层，便于测试替换。
@@ -56,7 +56,7 @@ final appLockTimeoutProvider = NotifierProvider<SimpleStateNotifier<int>, int>(
 
 // 初始化安全相关 Provider（在 splash 阶段调用）
 final securityInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
 
   // 读取应用锁状态
   // key 统一引用 AppLockService 常量，避免字符串散落导致改名后静默失联。

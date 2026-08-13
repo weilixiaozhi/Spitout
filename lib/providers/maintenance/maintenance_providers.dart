@@ -9,7 +9,6 @@
 library;
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/services/maintenance/orphan_cleaner.dart';
 import 'package:spitout/services/maintenance/orphan_record.dart';
@@ -21,6 +20,7 @@ import 'package:spitout/services/maintenance/analytics_test_data_seeder.dart';
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/core/local_self_id_providers.dart';
 import 'package:spitout/providers/core/read_provider_future.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
 
 // UI 侧通过 providers 门面使用测试数据填充，不直接触碰服务层。
@@ -63,7 +63,7 @@ final sharedLedgerCategoryRepairProvider = Provider<SharedLedgerCategoryRepair>(
 /// 启动期一次性历史脏数据修复。成功后写标志位，失败不写以便下次启动重试。
 final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
   const key = 'shared_ledger_category_repair_v1_done';
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   if (prefs.getBool(key) ?? false) return;
   final repair = ref.read(sharedLedgerCategoryRepairProvider);
   try {
@@ -94,7 +94,7 @@ final sharedLedgerCategoryRepairRunProvider = FutureProvider<void>((ref) async {
 /// 保证「本地账本不受云端影响」；云端账本的修复在登录时执行。
 final localIdentityRepairRunProvider = FutureProvider<void>((ref) async {
   const key = 'local_identity_repair_v1_done';
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   if (prefs.getBool(key) ?? false) return;
   final db = ref.watch(databaseProvider);
   final localSelfId = await readProviderFutureFromRef(

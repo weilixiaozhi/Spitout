@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 
 import 'package:spitout/providers/core/database_providers.dart';
 import 'package:spitout/providers/maintenance/maintenance_providers.dart';
@@ -213,7 +213,7 @@ final shouldShowWelcomeProvider =
 
 // 初始化检查是否需要显示欢迎页面
 final welcomeCheckProvider = FutureProvider<bool>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final welcomeShown = prefs.getBool('welcome_shown') ?? false;
   if (!welcomeShown) {
     logger.info('WelcomeCheck', '👋 首次启动，需要展示欢迎页面');

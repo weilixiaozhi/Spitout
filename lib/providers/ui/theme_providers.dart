@@ -2,8 +2,8 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:shared_preferences/shared_preferences.dart';
 import 'package:spitout/providers/core/simple_state_notifier.dart';
+import 'package:spitout/providers/core/shared_preferences_provider.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 // 只依赖叶子模块拿云客户端实例。
 import 'package:spitout/providers/sync/cloud_client_providers.dart';
@@ -16,7 +16,7 @@ final themeModeProvider =
 
 // 主题模式持久化初始化
 final themeModeInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final saved = prefs.getString('themeMode');
   if (saved != null) {
     switch (saved) {
@@ -83,7 +83,7 @@ final expenseColorSchemeProvider =
 // 支出颜色方案持久化初始化：启动从 prefs 读取，用户修改时写回并同步到 Spitout Cloud。
 // 复用 appearance JSON 管道（见 _pushAppearanceToCloud），不新增后端字段。
 final expenseColorSchemeInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final saved = prefs.getString('expenseColorScheme');
   if (saved != null) {
     ref.read(expenseColorSchemeProvider.notifier).set(saved);
@@ -106,7 +106,7 @@ final displayNameProvider =
 // 显示名持久化初始化:启动加载 prefs + 监听变化写回本地,并在 cloud 模式下推送。
 // 写法与 themeMode 等外观项一致(自己管理 prefs 读写与 cloud 推送)。
 final displayNameInitProvider = FutureProvider<void>((ref) async {
-  final prefs = await SharedPreferences.getInstance();
+  final prefs = await ref.read(sharedPreferencesProvider.future);
   final saved = prefs.getString('displayName');
   if (saved != null) {
     ref.read(displayNameProvider.notifier).set(saved);
