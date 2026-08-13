@@ -1094,7 +1094,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 100));
 
     // 返回键关闭编辑器（路由模式可 pop）。
-    await tester.tap(find.byIcon(AppIcons.backChevron));
+    await tester.tap(find.byIcon(AppIcons.chevronLeft));
     await tester.pump();
     for (var i = 0; i < 20; i++) {
       await tester.pump(const Duration(milliseconds: 100));

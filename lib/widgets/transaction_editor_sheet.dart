@@ -658,7 +658,7 @@ class _TransactionEditorSheetState
             child: Padding(
               padding: const EdgeInsets.all(SpitoutDimens.p4),
               child: Icon(
-                AppIcons.backChevron,
+                AppIcons.chevronLeft,
                 size: SpitoutDimens.icon16,
                 color: SpitoutTokens.iconTertiary(context),
               ),

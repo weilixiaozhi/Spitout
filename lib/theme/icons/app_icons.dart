@@ -8,7 +8,6 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 abstract final class AppIcons {
   // ── 导航与通用操作 ──────────────────────────────────────────────
   static const back = LucideIcons.arrowLeft;
-  static const backChevron = LucideIcons.chevronLeft;
   static const chevronLeft = LucideIcons.chevronLeft;
   static const chevronRight = LucideIcons.chevronRight;
   static const chevronDown = LucideIcons.chevronDown;
@@ -34,7 +33,6 @@ abstract final class AppIcons {
   static const sort = LucideIcons.arrowUpDown;
   static const settings = LucideIcons.settings;
   static const settingsSuggest = LucideIcons.settings2;
-  static const tune = LucideIcons.slidersHorizontal;
   static const cancel = LucideIcons.xCircle;
 
   // ── 状态/反馈 ───────────────────────────────────────────────────
@@ -66,7 +64,6 @@ abstract final class AppIcons {
   static const cloudDownload = LucideIcons.downloadCloud;
   static const cloudUpload = LucideIcons.uploadCloud;
   static const storage = LucideIcons.database;
-  static const wifiFind = LucideIcons.wifi;
   static const backupRestore = LucideIcons.archiveRestore;
   // 云同步状态（0.257.0 无 cloudSync/cloudCheck，以 cloudCog/cloud 近似）
   static const cloudSync = LucideIcons.cloudCog;
@@ -83,7 +80,6 @@ abstract final class AppIcons {
   // 昵称/名片编辑入口
   static const nickname = LucideIcons.badge;
   static const book = LucideIcons.bookOpen;
-  static const ledgerBook = LucideIcons.library;
   static const category = LucideIcons.shapes;
   static const receipt = LucideIcons.receipt;
   static const money = LucideIcons.banknote;
@@ -113,11 +109,9 @@ abstract final class AppIcons {
   static const article = LucideIcons.newspaper;
   static const checklist = LucideIcons.listChecks;
   static const driveFileMove = LucideIcons.folderSync;
-  static const findInPage = LucideIcons.fileSearch;
   static const inbox = LucideIcons.inbox;
   // 配置导入导出等场景的"预览"区块标识
   static const preview = LucideIcons.eye;
-  static const photoLibrary = LucideIcons.image;
   static const camera = LucideIcons.camera;
   static const qrCode = LucideIcons.qrCode;
   static const link = LucideIcons.link;
