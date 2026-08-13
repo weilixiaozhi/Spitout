@@ -16,9 +16,119 @@ import 'category_edit_page.dart';
 import 'category_template_flat_page.dart';
 import 'category_template_hierarchical_page.dart';
 
+/// 删除模式共享状态机：一级分类管理页与子分类弹窗共用。
+///
+/// 仅收敛两处完全相同的状态字段与三个切换动作；两者的删除/迁移语义不同
+/// （管理页 0/1/2 三策略含子分类提升，子分类弹窗仅 0/1），
+/// 确认弹窗与执行逻辑保留在各 State 内。
+mixin _CategoryDeleteModeState<T extends StatefulWidget> on State<T> {
+  /// 是否处于删除模式
+  bool _isDeleteMode = false;
+
+  /// 删除模式下选中的分类 ID 集合
+  final Set<int> _selectedCategoryIds = {};
+
+  /// 删除策略（管理页 0=含二级/1=迁移/2=提升子分类；子分类弹窗 0/1）
+  int _deleteOption = 0;
+
+  /// 进入删除模式
+  void _enterDeleteMode() {
+    setState(() {
+      _isDeleteMode = true;
+      _selectedCategoryIds.clear();
+      _deleteOption = 0;
+    });
+  }
+
+  /// 退出删除模式
+  void _exitDeleteMode() {
+    setState(() {
+      _isDeleteMode = false;
+      _selectedCategoryIds.clear();
+    });
+  }
+
+  /// 切换分类选中状态
+  void _toggleSelect(int categoryId) {
+    setState(() {
+      if (_selectedCategoryIds.contains(categoryId)) {
+        _selectedCategoryIds.remove(categoryId);
+      } else {
+        _selectedCategoryIds.add(categoryId);
+      }
+    });
+  }
+}
+
+/// 删除确认弹窗骨架：一级分类与子分类共用同一 AlertDialog 结构，
+/// 差异只在副标题、行内容与是否常显滚动条，由调用方传入。
+///
+/// 内容超出 0.6 倍屏高时弹窗内部可滚动；注意不能用懒加载 ListView——
+/// AlertDialog 内部用 IntrinsicWidth 布局，懒加载视口不支持 intrinsic 测量会抛异常。
+Future<bool?> _showDeleteConfirm(
+  BuildContext context, {
+  required String subtitle,
+  required List<Widget> rows,
+  bool showScrollbar = false,
+}) {
+  final l10n = AppLocalizations.of(context);
+  final scrollView = SingleChildScrollView(
+    child: Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          subtitle,
+          style: TextStyle(
+            fontSize: 13,
+            color: SpitoutTokens.textSecondary(context),
+          ),
+        ),
+        const SizedBox(height: 12),
+        ...rows,
+      ],
+    ),
+  );
+  return showDialog<bool>(
+    context: context,
+    builder: (dialogContext) => AlertDialog(
+      backgroundColor: SpitoutTokens.surfaceElevated(dialogContext),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      title: Text(
+        l10n.categoryDeleteSelectedTitle,
+        textAlign: TextAlign.center,
+        style: TextStyle(
+          fontWeight: FontWeight.w600,
+          color: SpitoutTokens.textPrimary(dialogContext),
+        ),
+      ),
+      content: ConstrainedBox(
+        constraints: BoxConstraints(
+          maxHeight: MediaQuery.of(dialogContext).size.height * 0.6,
+        ),
+        child: showScrollbar
+            ? Scrollbar(thumbVisibility: true, child: scrollView)
+            : scrollView,
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, false),
+          child: Text(l10n.commonCancel),
+        ),
+        TextButton(
+          onPressed: () => Navigator.pop(dialogContext, true),
+          style: TextButton.styleFrom(
+            foregroundColor: SpitoutTokens.error(dialogContext),
+          ),
+          child: Text(l10n.commonDelete),
+        ),
+      ],
+    ),
+  );
+}
+
 /// 分类管理页面
 ///
-/// 全局仅支出模式：无 Tab 栏，直接展示支出分类网格。
 /// 支持长按拖拽排序、添加分类、复选删除模式（三种删除策略）。
 class CategoryManagePage extends ConsumerStatefulWidget {
   const CategoryManagePage({super.key});
@@ -27,16 +137,8 @@ class CategoryManagePage extends ConsumerStatefulWidget {
   ConsumerState<CategoryManagePage> createState() => _CategoryManagePageState();
 }
 
-class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
-  /// 是否处于删除模式
-  bool _isDeleteMode = false;
-
-  /// 删除模式下选中的分类 ID 集合
-  final Set<int> _selectedCategoryIds = {};
-
-  /// 删除策略：0=含二级删除, 1=迁移到其他分类, 2=不含二级(提升子分类)
-  int _deleteOption = 0;
-
+class _CategoryManagePageState extends ConsumerState<CategoryManagePage>
+    with _CategoryDeleteModeState {
   @override
   Widget build(BuildContext context) {
     final categoriesWithCountAsync = ref.watch(categoriesWithCountProvider);
@@ -449,36 +551,6 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
     );
   }
 
-  // ==================== 删除模式状态管理 ====================
-
-  /// 进入删除模式
-  void _enterDeleteMode() {
-    setState(() {
-      _isDeleteMode = true;
-      _selectedCategoryIds.clear();
-      _deleteOption = 0;
-    });
-  }
-
-  /// 退出删除模式
-  void _exitDeleteMode() {
-    setState(() {
-      _isDeleteMode = false;
-      _selectedCategoryIds.clear();
-    });
-  }
-
-  /// 切换分类选中状态
-  void _toggleSelect(int categoryId) {
-    setState(() {
-      if (_selectedCategoryIds.contains(categoryId)) {
-        _selectedCategoryIds.remove(categoryId);
-      } else {
-        _selectedCategoryIds.add(categoryId);
-      }
-    });
-  }
-
   // ==================== 确认删除入口 ====================
 
   /// 点击"确认删除"按钮
@@ -611,63 +683,11 @@ class _CategoryManagePageState extends ConsumerState<CategoryManagePage> {
         ? l10n.categoryDeleteSelectedSubtitleWithSub(selectedCount)
         : l10n.categoryDeleteSelectedSubtitleWithoutSub(selectedCount);
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: SpitoutTokens.surfaceElevated(context),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          l10n.categoryDeleteSelectedTitle,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: SpitoutTokens.textPrimary(context),
-          ),
-        ),
-        content: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(context).size.height * 0.6,
-          ),
-          // 全部待删分类一次性渲染在滚动视图中：内容超出 0.6 倍屏高时弹窗
-          // 内部可滑动，保证多选父分类时所有父/子分类都能完整展示；
-          // 滚动条常显，让"内容可滑动"可感知，避免用户误判列表被截断。
-          // 注意：不能用懒加载的 ListView(shrinkWrap)——AlertDialog 内部用
-          // IntrinsicWidth 布局，懒加载视口不支持 intrinsic 测量会抛异常。
-          child: Scrollbar(
-            thumbVisibility: true,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    subtitle,
-                    style: TextStyle(
-                      fontSize: 13,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
-                  ),
-                  const SizedBox(height: 12),
-                  ...listWidgets,
-                ],
-              ),
-            ),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            style: TextButton.styleFrom(
-              foregroundColor: SpitoutTokens.error(context),
-            ),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
+    final confirm = await _showDeleteConfirm(
+      context,
+      subtitle: subtitle,
+      rows: listWidgets,
+      showScrollbar: true,
     );
 
     if (confirm != true || !mounted) return;
@@ -1778,22 +1798,13 @@ class _SubcategoryDialog extends ConsumerStatefulWidget {
   ConsumerState<_SubcategoryDialog> createState() => _SubcategoryDialogState();
 }
 
-class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
+class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog>
+    with _CategoryDeleteModeState {
   List<({db.Category category, int transactionCount})>? _subCategories;
   bool _isLoading = true;
 
   /// 加载失败标志:失败时展示重试入口,避免弹窗永久转圈。
   bool _loadFailed = false;
-
-  /// 是否处于删除模式
-  bool _isDeleteMode = false;
-
-  /// 删除模式下选中的子分类 ID 集合
-  final Set<int> _selectedCategoryIds = {};
-
-  /// 删除策略：0=删除分类和分类下的所有数据, 1=迁移数据到其他分类后删除
-  /// （二级分类无子级，不适用管理页的"提升子分类"策略，仅两个选项）
-  int _deleteOption = 0;
 
   @override
   void initState() {
@@ -2258,36 +2269,6 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
     );
   }
 
-  // ==================== 删除模式状态管理 ====================
-
-  /// 进入删除模式
-  void _enterDeleteMode() {
-    setState(() {
-      _isDeleteMode = true;
-      _selectedCategoryIds.clear();
-      _deleteOption = 0;
-    });
-  }
-
-  /// 退出删除模式
-  void _exitDeleteMode() {
-    setState(() {
-      _isDeleteMode = false;
-      _selectedCategoryIds.clear();
-    });
-  }
-
-  /// 切换子分类选中状态
-  void _toggleSelect(int categoryId) {
-    setState(() {
-      if (_selectedCategoryIds.contains(categoryId)) {
-        _selectedCategoryIds.remove(categoryId);
-      } else {
-        _selectedCategoryIds.add(categoryId);
-      }
-    });
-  }
-
   // ==================== 确认删除入口 ====================
 
   /// 点击"确认删除"按钮
@@ -2317,83 +2298,35 @@ class _SubcategoryDialogState extends ConsumerState<_SubcategoryDialog> {
         .where((item) => _selectedCategoryIds.contains(item.category.id))
         .toList();
 
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: SpitoutTokens.surfaceElevated(dialogContext),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: Text(
-          l10n.categoryDeleteSelectedTitle,
-          textAlign: TextAlign.center,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: SpitoutTokens.textPrimary(dialogContext),
-          ),
-        ),
-        content: ConstrainedBox(
-          constraints: BoxConstraints(
-            maxHeight: MediaQuery.of(dialogContext).size.height * 0.6,
-          ),
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final confirm = await _showDeleteConfirm(
+      context,
+      subtitle: l10n.subcategoryDeleteSelectedSubtitle(selectedCount),
+      rows: [
+        for (final item in selectedItems)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4),
+            child: Row(
               children: [
-                Text(
-                  l10n.subcategoryDeleteSelectedSubtitle(selectedCount),
-                  style: TextStyle(
-                    fontSize: 13,
-                    color: SpitoutTokens.textSecondary(dialogContext),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                for (final item in selectedItems)
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 4),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            CategoryUtils.getDisplayName(
-                              item.category.name,
-                              dialogContext,
-                            ),
-                            style: TextStyle(
-                              fontSize: 13,
-                              color: SpitoutTokens.textPrimary(dialogContext),
-                            ),
-                          ),
-                        ),
-                        Text(
-                          l10n.categoryMigrationTransactionLabel(
-                            item.transactionCount,
-                          ),
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: SpitoutTokens.textSecondary(dialogContext),
-                          ),
-                        ),
-                      ],
+                Expanded(
+                  child: Text(
+                    CategoryUtils.getDisplayName(item.category.name, context),
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: SpitoutTokens.textPrimary(context),
                     ),
                   ),
+                ),
+                Text(
+                  l10n.categoryMigrationTransactionLabel(item.transactionCount),
+                  style: TextStyle(
+                    fontSize: 12,
+                    color: SpitoutTokens.textSecondary(context),
+                  ),
+                ),
               ],
             ),
           ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, false),
-            child: Text(l10n.commonCancel),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(dialogContext, true),
-            style: TextButton.styleFrom(
-              foregroundColor: SpitoutTokens.error(dialogContext),
-            ),
-            child: Text(l10n.commonDelete),
-          ),
-        ],
-      ),
+      ],
     );
 
     if (confirm != true || !mounted) return;
