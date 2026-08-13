@@ -1,13 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'app_route.dart';
+import 'app_sheet.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
-import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
 
 /// 分类过滤器回调类型
@@ -78,16 +77,9 @@ Future<Category?> showParentCategorySelector(
   List<int>? excludeIds,
   CategoryFilterCallback? categoryFilter,
 }) {
-  return showModalBottomSheet<Category>(
+  return showAppSheet<Category>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: SpitoutTokens.surfaceSheet(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
-    sheetAnimationStyle: kSheetAnimationStyle,
-    builder: (context) => _ParentCategorySelectorSheet(
+    child: _ParentCategorySelectorSheet(
       initialSelection: initialSelection,
       excludeIds: excludeIds,
       categoryFilter: categoryFilter,
@@ -176,66 +168,48 @@ class _ParentCategorySelectorSheetState
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final primaryColor = Theme.of(context).colorScheme.primary;
-    // BottomSheet 高度约为屏幕 60%，留足空间给列表滚动
-    final screenHeight = MediaQuery.of(context).size.height;
 
-    return Container(
-      height: screenHeight * 0.65,
-      padding: const EdgeInsets.fromLTRB(0, 0, 0, 0),
+    return AppSheet(
+      title: l10n.categorySelectParentTitle,
+      footer: AppSheetFilledButton(
+        label: l10n.commonConfirm,
+        onPressed: () => Navigator.pop(context, _tempSelected),
+      ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          const SheetGrabHandle(),
-          // ── 标题栏 ──
-          Padding(
-            padding: const EdgeInsets.fromLTRB(24, 0, 24, 0),
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                l10n.categorySelectParentTitle,
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                  color: SpitoutTokens.textPrimary(context),
-                ),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
           // ── 搜索框 ──
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 24),
-            child: Container(
-              decoration: BoxDecoration(
-                color: SpitoutTokens.surfaceSecondary(context),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: TextField(
-                controller: _searchController,
-                decoration: InputDecoration(
-                  hintText: l10n.categorySearchCategory,
-                  hintStyle: TextStyle(
-                    color: SpitoutTokens.textSecondary(context),
-                  ),
-                  prefixIcon: Icon(
-                    AppIcons.search,
-                    size: 18,
-                    color: SpitoutTokens.iconTertiary(context),
-                  ),
-                  suffixIcon: _searchText.isNotEmpty
-                      ? IconButton(
-                          onPressed: () => _searchController.clear(),
-                          icon: Icon(
-                            AppIcons.close,
-                            size: 18,
-                            color: SpitoutTokens.iconTertiary(context),
-                          ),
-                        )
-                      : null,
-                  border: InputBorder.none,
-                  contentPadding: const EdgeInsets.symmetric(
-                    vertical: 12,
-                    horizontal: 12,
-                  ),
+          Container(
+            decoration: BoxDecoration(
+              color: SpitoutTokens.surfaceSecondary(context),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: TextField(
+              controller: _searchController,
+              decoration: InputDecoration(
+                hintText: l10n.categorySearchCategory,
+                hintStyle: TextStyle(
+                  color: SpitoutTokens.textSecondary(context),
+                ),
+                prefixIcon: Icon(
+                  AppIcons.search,
+                  size: 18,
+                  color: SpitoutTokens.iconTertiary(context),
+                ),
+                suffixIcon: _searchText.isNotEmpty
+                    ? IconButton(
+                        onPressed: () => _searchController.clear(),
+                        icon: Icon(
+                          AppIcons.close,
+                          size: 18,
+                          color: SpitoutTokens.iconTertiary(context),
+                        ),
+                      )
+                    : null,
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  vertical: 12,
+                  horizontal: 12,
                 ),
               ),
             ),
@@ -302,45 +276,6 @@ class _ParentCategorySelectorSheetState
                   },
                 );
               },
-            ),
-          ),
-          // ── 底部操作按钮 ──
-          Container(
-            decoration: BoxDecoration(
-              border: Border(
-                top: BorderSide(
-                  color: SpitoutTokens.divider(context),
-                  width: 0.5,
-                ),
-              ),
-            ),
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: Text(
-                    l10n.commonCancel,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: SpitoutTokens.textSecondary(context),
-                    ),
-                  ),
-                ),
-                TextButton(
-                  onPressed: () => Navigator.pop(context, _tempSelected),
-                  child: Text(
-                    l10n.commonConfirm,
-                    style: TextStyle(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w600,
-                      color: primaryColor,
-                    ),
-                  ),
-                ),
-              ],
             ),
           ),
         ],

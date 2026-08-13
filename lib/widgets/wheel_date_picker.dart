@@ -1,9 +1,8 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'app_route.dart';
+import 'app_sheet.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/colors.dart';
-import 'sheet_grab_handle.dart';
 import 'package:spitout/utils/date/week_math.dart'
     show mondayOf, mondayOfWeek, weekNumber, weeksInYear;
 
@@ -144,16 +143,13 @@ Future<DateTime?> showWheelDatePicker(
       resolvedConfirm = confirmLabel ?? l10n.commonDone;
   }
 
-  return showModalBottomSheet<DateTime>(
+  return showAppSheet<DateTime>(
     context: context,
     // 内层用 surfaceSheet 圆角容器承载内容,外层透明以便记账页子 Drawer 场景透传透明遮罩。
     backgroundColor: Colors.transparent,
-    isScrollControlled: true,
     useRootNavigator: useRootNavigator,
     barrierColor: barrierColor,
-    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
-    sheetAnimationStyle: kSheetAnimationStyle,
-    builder: (_) => WheelDatePicker(
+    child: WheelDatePicker(
       initial: initial,
       mode: mode,
       minDate: minDate,
@@ -569,66 +565,15 @@ class _WheelDatePickerState extends State<WheelDatePicker> {
       ),
       child: SafeArea(
         top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            // 头部与汇率选择 sheet 同源：统一拖拽条 + 居中标题
-            const SheetGrabHandle(),
-            if (widget.title.isNotEmpty || widget.subtitle != null)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      widget.title,
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                        color: _textPrimary(context),
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (widget.subtitle != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        widget.subtitle!,
-                        style: TextStyle(
-                          fontSize: 13,
-                          color: SpitoutTokens.textSecondary(context),
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ],
-                  ],
-                ),
-              ),
-            const SizedBox(height: 12),
-            body,
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 0, 20, 16),
-              child: SizedBox(
-                width: double.infinity,
-                height: 48,
-                child: FilledButton(
-                  style: FilledButton.styleFrom(
-                    backgroundColor: primary,
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10)),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(_buildResult()),
-                  child: Text(
-                    widget.confirmLabel,
-                    style: TextStyle(
-                      fontSize: 16,
-                      color: Theme.of(context).colorScheme.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ],
+        child: AppSheet(
+          title: widget.title.isEmpty ? null : widget.title,
+          subtitle: widget.subtitle,
+          contentPadding: const EdgeInsets.only(top: 12),
+          footer: AppSheetFilledButton(
+            label: widget.confirmLabel,
+            onPressed: () => Navigator.of(context).pop(_buildResult()),
+          ),
+          child: body,
         ),
       ),
     );

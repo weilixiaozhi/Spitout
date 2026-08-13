@@ -11,7 +11,6 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
-import 'package:spitout/widgets/sheet_grab_handle.dart';
 import 'category_edit_page.dart';
 import 'category_template_flat_page.dart';
 import 'category_template_hierarchical_page.dart';
@@ -1471,18 +1470,9 @@ Future<int?> showMigrateTargetSheet(
   required List<({db.Category category, int transactionCount})>
   availableCategories,
 }) {
-  return showModalBottomSheet<int>(
+  return showAppSheet<int>(
     context: context,
-    isScrollControlled: true,
-    backgroundColor: SpitoutTokens.surfaceSheet(context),
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-    ),
-    // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
-    sheetAnimationStyle: kSheetAnimationStyle,
-    builder: (sheetContext) {
-      return _MigrateTargetSheet(availableCategories: availableCategories);
-    },
+    child: _MigrateTargetSheet(availableCategories: availableCategories),
   );
 }
 
@@ -1568,25 +1558,32 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
     final l10n = AppLocalizations.of(context);
     final filtered = _filteredList();
 
-    return Container(
-      constraints: BoxConstraints(
-        maxHeight: MediaQuery.of(context).size.height * 0.8,
+    return AppSheet(
+      title: l10n.categoryMigrateSelectTargetTitle,
+      contentPadding: const EdgeInsets.fromLTRB(16, 4, 16, 0),
+      footer: SizedBox(
+        width: double.infinity,
+        height: 48,
+        child: FilledButton(
+          onPressed: _selectedTargetId == null
+              ? null
+              : () => Navigator.pop(context, _selectedTargetId),
+          style: FilledButton.styleFrom(
+            backgroundColor: SpitoutTokens.error(context),
+            disabledBackgroundColor: SpitoutTokens.buttonDisabled(context),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+          ),
+          child: Text(
+            l10n.categoryMigrateConfirmButton,
+            style: const TextStyle(fontSize: 14),
+          ),
+        ),
       ),
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 32),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const SheetGrabHandle(),
-          // 标题
-          Text(
-            l10n.categoryMigrateSelectTargetTitle,
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: SpitoutTokens.textPrimary(context),
-            ),
-          ),
-          const SizedBox(height: 12),
           // 搜索框（样式对齐所属分类选择弹窗：圆角浅底 + 搜索图标 + 清除按钮）
           Container(
             decoration: BoxDecoration(
@@ -1647,25 +1644,6 @@ class _MigrateTargetSheetState extends State<_MigrateTargetSheet> {
                     }),
                   );
                 }).toList(),
-              ),
-            ),
-          ),
-          const SizedBox(height: 16),
-          // 确定按钮
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton(
-              onPressed: _selectedTargetId == null
-                  ? null
-                  : () => Navigator.pop(context, _selectedTargetId),
-              style: FilledButton.styleFrom(
-                backgroundColor: SpitoutTokens.error(context),
-                disabledBackgroundColor: SpitoutTokens.buttonDisabled(context),
-                padding: const EdgeInsets.symmetric(vertical: 14),
-              ),
-              child: Text(
-                l10n.categoryMigrateConfirmButton,
-                style: const TextStyle(fontSize: 14),
               ),
             ),
           ),

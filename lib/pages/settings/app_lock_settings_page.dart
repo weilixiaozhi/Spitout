@@ -10,7 +10,6 @@ import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/pages/auth/pin_setup_page.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
-import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 class AppLockSettingsPage extends ConsumerStatefulWidget {
   const AppLockSettingsPage({super.key});
@@ -129,61 +128,43 @@ class _AppLockSettingsPageState extends ConsumerState<AppLockSettingsPage> {
       (900, l10n.appLockTimeout15Min),
     ];
 
-    showModalBottomSheet(
+    showAppSheet<void>(
       context: context,
-      backgroundColor: SpitoutTokens.surfaceElevated(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+      child: AppSheet(
+        title: l10n.appLockTimeout,
+        contentPadding: EdgeInsets.zero,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ...options.map((opt) {
+              final isSelected = opt.$1 == currentTimeout;
+              return ListTile(
+                title: Text(opt.$2),
+                trailing: isSelected
+                    ? Icon(AppIcons.check, color: primaryColor)
+                    : null,
+                onTap: () async {
+                  // 先持久化成功再更新内存状态;失败不关闭底部弹层并提示。
+                  try {
+                    await AppLockService.setTimeoutSeconds(opt.$1);
+                  } catch (e, st) {
+                    logger.error('AppLock', '保存自动上锁超时失败', e, st);
+                    if (mounted) {
+                      showToast(context, l10n.commonOperationFailed);
+                    }
+                    return;
+                  }
+                  ref.read(appLockTimeoutProvider.notifier).set(opt.$1);
+                  if (mounted) {
+                    Navigator.pop(context);
+                  }
+                },
+              );
+            }),
+            const SizedBox(height: 8),
+          ],
+        ),
       ),
-      // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
-      sheetAnimationStyle: kSheetAnimationStyle,
-      builder: (ctx) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const SheetGrabHandle(),
-              Padding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 0),
-                child: Text(
-                  l10n.appLockTimeout,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                    color: SpitoutTokens.textPrimary(ctx),
-                  ),
-                ),
-              ),
-              ...options.map((opt) {
-                final isSelected = opt.$1 == currentTimeout;
-                return ListTile(
-                  title: Text(opt.$2),
-                  trailing: isSelected
-                      ? Icon(AppIcons.check, color: primaryColor)
-                      : null,
-                  onTap: () async {
-                    // 先持久化成功再更新内存状态;失败不关闭底部弹层并提示。
-                    try {
-                      await AppLockService.setTimeoutSeconds(opt.$1);
-                    } catch (e, st) {
-                      logger.error('AppLock', '保存自动上锁超时失败', e, st);
-                      if (ctx.mounted) {
-                        showToast(ctx, l10n.commonOperationFailed);
-                      }
-                      return;
-                    }
-                    ref.read(appLockTimeoutProvider.notifier).set(opt.$1);
-                    if (ctx.mounted) {
-                      Navigator.pop(ctx);
-                    }
-                  },
-                );
-              }),
-              const SizedBox(height: 8),
-            ],
-          ),
-        );
-      },
     );
   }
 

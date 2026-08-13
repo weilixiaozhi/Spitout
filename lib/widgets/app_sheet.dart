@@ -78,7 +78,7 @@ class AppSheet extends StatelessWidget {
                   child: ConstrainedBox(
                     constraints: const BoxConstraints(minHeight: 32),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,
                       // 标题在 32px 列内垂直居中,视觉上与 32px 删除图标按钮对齐。
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -86,6 +86,7 @@ class AppSheet extends StatelessWidget {
                       if (title != null)
                         Text(
                           title!,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
@@ -100,6 +101,7 @@ class AppSheet extends StatelessWidget {
                         const SizedBox(height: 4),
                         Text(
                           subtitle!,
+                          textAlign: TextAlign.center,
                           style: TextStyle(
                             fontSize: 13,
                             color: SpitoutTokens.textSecondary(context),
@@ -168,16 +170,22 @@ Future<T?> showAppSheet<T>({
   bool isScrollControlled = true,
   bool useSafeArea = true,
   double heightFactor = 0.85,
+  bool useRootNavigator = false,
+  Color? barrierColor,
+  Color? backgroundColor,
+  double? elevation,
 }) {
   final mediaQuery = MediaQuery.of(context);
   return showModalBottomSheet<T>(
     context: context,
     isScrollControlled: isScrollControlled,
     useSafeArea: useSafeArea,
+    useRootNavigator: useRootNavigator,
     // shadcn card/popover 背景:亮色白、暗色 #1F2937
-    backgroundColor: SpitoutTokens.surfaceSheet(context),
+    backgroundColor: backgroundColor ?? SpitoutTokens.surfaceSheet(context),
     // 半透明遮罩(40% 黑),比 Material 默认更柔和
-    barrierColor: Colors.black.withValues(alpha: 0.4),
+    barrierColor: barrierColor ?? Colors.black.withValues(alpha: 0.4),
+    elevation: elevation,
     shape: const RoundedRectangleBorder(
       borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
     ),
@@ -192,6 +200,42 @@ Future<T?> showAppSheet<T>({
     ),
     builder: (context) => child,
   );
+}
+
+/// 底部主按钮统一组件:主色填充、全宽 48 高、10 圆角。
+///
+/// 所有选择类底部弹层的确认按钮共用,避免各弹层各自写一套按钮样式。
+class AppSheetFilledButton extends StatelessWidget {
+  final String label;
+  final VoidCallback onPressed;
+
+  const AppSheetFilledButton({
+    super.key,
+    required this.label,
+    required this.onPressed,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final scheme = Theme.of(context).colorScheme;
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: FilledButton(
+        style: FilledButton.styleFrom(
+          backgroundColor: scheme.primary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(10),
+          ),
+        ),
+        onPressed: onPressed,
+        child: Text(
+          label,
+          style: TextStyle(fontSize: 16, color: scheme.onPrimary),
+        ),
+      ),
+    );
+  }
 }
 
 /// 顶部贴边弹层(无入场/退场动画,且高度随键盘瞬缩)。

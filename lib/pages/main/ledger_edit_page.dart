@@ -21,7 +21,6 @@ import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/widgets/overlay_keyboard_guard.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
-import 'package:spitout/widgets/sheet_grab_handle.dart';
 
 /// 账本编辑二级页面
 ///
@@ -1353,78 +1352,51 @@ class _LedgerEditPageState extends ConsumerState<LedgerEditPage> {
     BuildContext context, {
     required int initial,
   }) {
-    return showModalBottomSheet<int>(
+    final primary = Theme.of(context).colorScheme.primary;
+    final l10n = AppLocalizations.of(context);
+    return showAppSheet<int>(
       context: context,
-      backgroundColor: SpitoutTokens.surfaceElevated(context),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
-      ),
-      // 全局统一上滑动画：线性曲线（无加速减速），时长与页面切换一致。
-      sheetAnimationStyle: kSheetAnimationStyle,
-      builder: (ctx) {
-        final primary = Theme.of(ctx).colorScheme.primary;
-        final l10n = AppLocalizations.of(ctx);
-        return SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SheetGrabHandle(),
-                Text(
-                  l10n.ledgersMonthStartDay,
-                  style: Theme.of(ctx).textTheme.titleMedium,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  l10n.ledgersMonthStartDayHint,
-                  style: Theme.of(ctx).textTheme.bodySmall?.copyWith(
-                    color: SpitoutTokens.textTertiary(ctx),
+      child: AppSheet(
+        title: l10n.ledgersMonthStartDay,
+        subtitle: l10n.ledgersMonthStartDayHint,
+        contentPadding: const EdgeInsets.only(top: 12),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: List.generate(28, (index) {
+            final day = index + 1;
+            final isSelected = initial == day;
+            return InkWell(
+              onTap: () => Navigator.pop(context, day),
+              borderRadius: BorderRadius.circular(8),
+              child: Container(
+                width: 40,
+                height: 40,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(8),
+                  color: isSelected
+                      ? primary.withValues(alpha: 0.12)
+                      : Colors.transparent,
+                  border: Border.all(
+                    color: isSelected
+                        ? primary
+                        : SpitoutTokens.divider(context),
                   ),
                 ),
-                const SizedBox(height: 12),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: List.generate(28, (index) {
-                    final day = index + 1;
-                    final isSelected = initial == day;
-                    return InkWell(
-                      onTap: () => Navigator.pop(ctx, day),
-                      borderRadius: BorderRadius.circular(8),
-                      child: Container(
-                        width: 40,
-                        height: 40,
-                        alignment: Alignment.center,
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(8),
-                          color: isSelected
-                              ? primary.withValues(alpha: 0.12)
-                              : Colors.transparent,
-                          border: Border.all(
-                            color: isSelected
-                                ? primary
-                                : SpitoutTokens.divider(ctx),
-                          ),
-                        ),
-                        child: Text(
-                          '$day',
-                          style: TextStyle(
-                            color: isSelected
-                                ? primary
-                                : SpitoutTokens.textPrimary(ctx),
-                          ),
-                        ),
-                      ),
-                    );
-                  }),
+                child: Text(
+                  '$day',
+                  style: TextStyle(
+                    color: isSelected
+                        ? primary
+                        : SpitoutTokens.textPrimary(context),
+                  ),
                 ),
-              ],
-            ),
-          ),
-        );
-      },
+              ),
+            );
+          }),
+        ),
+      ),
     );
   }
 }
