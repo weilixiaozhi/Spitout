@@ -88,7 +88,7 @@ void main() {
     expect(await FilePickerHelper.pickYamlFile(), isNull);
   });
 
-  test('扩展名不匹配且 validateExtension=true 抛 FileExtensionException', () async {
+  test('扩展名不匹配抛 FileExtensionException', () async {
     fake.customResult = resultWith('/tmp/evil.exe');
     expect(
       FilePickerHelper.pickFileWithExtensions(allowedExtensions: ['yml']),
@@ -96,21 +96,7 @@ void main() {
     );
   });
 
-  test('validateExtension=false 时扩展名不匹配仍返回', () async {
-    fake.customResult = resultWith('/tmp/evil.exe');
-    final result = await FilePickerHelper.pickFileWithExtensions(
-      allowedExtensions: ['yml'],
-      validateExtension: false,
-    );
-    expect(result, isNotNull);
-  });
-
-  test('pickArchiveFile / pickSqliteFile 使用对应扩展名', () async {
-    fake.customResult = resultWith('/tmp/a.tar.gz');
-    await FilePickerHelper.pickArchiveFile();
-    expect(fake.customCalls.single, ['gz', 'tar']);
-
-    fake.customCalls.clear();
+  test('pickSqliteFile 使用 sqlite 扩展名', () async {
     fake.customResult = resultWith('/tmp/db.sqlite');
     await FilePickerHelper.pickSqliteFile();
     expect(fake.customCalls.single, ['sqlite']);

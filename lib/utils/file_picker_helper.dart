@@ -12,16 +12,14 @@ class FilePickerHelper {
   /// 选择指定扩展名的文件
   ///
   /// [allowedExtensions] - 允许的文件扩展名列表（不含点号），如 ['yml', 'yaml']
-  /// [validateExtension] - 是否在选择后验证扩展名（默认 true）
   ///
   /// 部分 Android 设备不支持扩展名过滤，会抛出 PlatformException。
   /// 此方法会自动 fallback 到选择任意文件，然后手动验证扩展名。
   ///
   /// 如果用户取消选择，返回 null。
-  /// 如果选择的文件扩展名不匹配且 [validateExtension] 为 true，抛出 [FileExtensionException]。
+  /// 如果选择的文件扩展名不匹配，抛出 [FileExtensionException]。
   static Future<FilePickerResult?> pickFileWithExtensions({
     required List<String> allowedExtensions,
-    bool validateExtension = true,
   }) async {
     FilePickerResult? result;
 
@@ -43,20 +41,18 @@ class FilePickerHelper {
     }
 
     // 验证扩展名
-    if (validateExtension) {
-      final filePath = result.files.first.path;
-      if (filePath != null) {
-        final fileName = filePath.toLowerCase();
-        final hasValidExtension = allowedExtensions.any(
-          (ext) => fileName.endsWith('.${ext.toLowerCase()}'),
-        );
+    final filePath = result.files.first.path;
+    if (filePath != null) {
+      final fileName = filePath.toLowerCase();
+      final hasValidExtension = allowedExtensions.any(
+        (ext) => fileName.endsWith('.${ext.toLowerCase()}'),
+      );
 
-        if (!hasValidExtension) {
-          throw FileExtensionException(
-            expectedExtensions: allowedExtensions,
-            actualPath: filePath,
-          );
-        }
+      if (!hasValidExtension) {
+        throw FileExtensionException(
+          expectedExtensions: allowedExtensions,
+          actualPath: filePath,
+        );
       }
     }
 
@@ -67,15 +63,6 @@ class FilePickerHelper {
   static Future<FilePickerResult?> pickYamlFile() async {
     return pickFileWithExtensions(
       allowedExtensions: ['yml', 'yaml'],
-      validateExtension: true,
-    );
-  }
-
-  /// 选择压缩归档文件 (.gz, .tar, .tar.gz)
-  static Future<FilePickerResult?> pickArchiveFile() async {
-    return pickFileWithExtensions(
-      allowedExtensions: ['gz', 'tar'],
-      validateExtension: true,
     );
   }
 
@@ -83,7 +70,6 @@ class FilePickerHelper {
   static Future<FilePickerResult?> pickSqliteFile() async {
     return pickFileWithExtensions(
       allowedExtensions: ['sqlite'],
-      validateExtension: true,
     );
   }
 }
