@@ -38,8 +38,6 @@ export 'wheel_picker.dart';
 export 'wheel_date_picker.dart';
 export 'wheel_time_picker.dart';
 
-// ===== 通用下拉 / 选择 =====
-
 // ===== 分类相关 =====
 export 'category_icon.dart';
 export 'category_selector_dialog.dart';
@@ -81,5 +79,3 @@ export 'aa_payer_picker_sheet.dart';
 
 // ===== 账号 / 登录 / 安全 =====
 export 'mine_page_header.dart';
-
-// ===== 更新 =====

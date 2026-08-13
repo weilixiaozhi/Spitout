@@ -1091,10 +1091,6 @@ class _MemberTile extends ConsumerWidget {
   }
 }
 
-extension _FirstOrNull<E> on Iterable<E> {
-  E? get firstOrNull => isEmpty ? null : first;
-}
-
 /// 加载骨架占位条 — 用于 [_buildLoadingMemberCard] 中成员行的标题占位。
 /// 简单的灰色圆角条,不引入 shimmer 依赖,避免过度设计。
 class _SkeletonBar extends StatelessWidget {

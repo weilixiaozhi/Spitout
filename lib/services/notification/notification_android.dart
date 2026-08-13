@@ -73,26 +73,14 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     final scheduledDate = util.calculateNextReminderTime(hour, minute);
     final tzScheduledDate = util.convertToTZDateTime(scheduledDate);
 
-    const androidDetails = AndroidNotificationDetails(
-      'accounting_reminder',
-      '记账提醒',
-      channelDescription: '每日记账提醒',
-      importance: Importance.max,
-      priority: Priority.max,
-      ticker: '记账提醒',
-      icon: '@mipmap/ic_launcher',
-      enableVibration: true,
-      playSound: true,
-      enableLights: true,
+    final androidDetails = _androidDetails(
       fullScreenIntent: true,
       category: AndroidNotificationCategory.reminder,
       visibility: NotificationVisibility.public,
       autoCancel: false,
-      ongoing: false,
-      showWhen: true,
     );
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     try {
       // 先取消旧的 7 天备用通知（id+1..id+7），避免改时间/重复后
@@ -148,23 +136,13 @@ class AndroidNotificationUtil implements util.NotificationUtil {
 
     final tzScheduledDate = util.convertToTZDateTime(scheduledDate);
 
-    const androidDetails = AndroidNotificationDetails(
-      'accounting_reminder',
-      '记账提醒',
-      channelDescription: '每日记账提醒',
-      importance: Importance.max,
-      priority: Priority.max,
-      ticker: '记账提醒',
-      icon: '@mipmap/ic_launcher',
-      enableVibration: true,
-      playSound: true,
-      enableLights: true,
+    final androidDetails = _androidDetails(
       fullScreenIntent: true,
       category: AndroidNotificationCategory.reminder,
       visibility: NotificationVisibility.public,
     );
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     await _plugin.zonedSchedule(
       id: id,
@@ -231,20 +209,9 @@ class AndroidNotificationUtil implements util.NotificationUtil {
   }) async {
     if (!_initialized) await initialize();
 
-    const androidDetails = AndroidNotificationDetails(
-      'accounting_reminder',
-      '记账提醒',
-      channelDescription: '每日记账提醒',
-      importance: Importance.max,
-      priority: Priority.max,
-      ticker: '记账提醒',
-      icon: '@mipmap/ic_launcher',
-      enableVibration: true,
-      playSound: true,
-      enableLights: true,
-    );
+    final androidDetails = _androidDetails();
 
-    const notificationDetails = NotificationDetails(android: androidDetails);
+    final notificationDetails = NotificationDetails(android: androidDetails);
 
     // show 使用命名参数
     await _plugin.show(
@@ -275,6 +242,36 @@ class AndroidNotificationUtil implements util.NotificationUtil {
     return enabled ?? false;
   }
 
+  /// 通知详情统一出口：主提醒 / 单次 / 即时 / 备用提醒共用同一基础配置，
+  /// 仅差异字段（渠道信息、fullScreenIntent、类别、可见性、autoCancel）在此定制，
+  /// 默认值与插件构造参数默认值保持一致，避免各处配置漂移。
+  AndroidNotificationDetails _androidDetails({
+    String channelId = 'accounting_reminder',
+    String channelName = '记账提醒',
+    String channelDescription = '每日记账提醒',
+    bool fullScreenIntent = false,
+    AndroidNotificationCategory? category,
+    NotificationVisibility? visibility,
+    bool autoCancel = true,
+  }) {
+    return AndroidNotificationDetails(
+      channelId,
+      channelName,
+      channelDescription: channelDescription,
+      importance: Importance.max,
+      priority: Priority.max,
+      ticker: '记账提醒',
+      icon: '@mipmap/ic_launcher',
+      enableVibration: true,
+      playSound: true,
+      enableLights: true,
+      fullScreenIntent: fullScreenIntent,
+      category: category,
+      visibility: visibility,
+      autoCancel: autoCancel,
+    );
+  }
+
   /// 调度7天备用提醒（防止系统清理定时任务）
   Future<void> _scheduleBackupReminders(
     int id,
@@ -303,22 +300,15 @@ class AndroidNotificationUtil implements util.NotificationUtil {
           '[Android] 📅 设置备用提醒 $i/7 (ID: $backupId): $backupDate',
         );
 
-        const androidDetails = AndroidNotificationDetails(
-          'accounting_reminder_backup',
-          '记账提醒备用',
+        final androidDetails = _androidDetails(
+          channelId: 'accounting_reminder_backup',
+          channelName: '记账提醒备用',
           channelDescription: '记账提醒备用通道',
-          importance: Importance.max,
-          priority: Priority.max,
-          ticker: '记账提醒',
-          icon: '@mipmap/ic_launcher',
-          enableVibration: true,
-          playSound: true,
-          enableLights: true,
           category: AndroidNotificationCategory.reminder,
           visibility: NotificationVisibility.public,
         );
 
-        const notificationDetails = NotificationDetails(
+        final notificationDetails = NotificationDetails(
           android: androidDetails,
         );
 

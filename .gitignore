@@ -78,7 +78,7 @@ tmp
 # 本地运行时产物（勿入库）：
 # - 根目录 data/ 含服务端运行时文件（.jwt_secret、头像附件等）
 # - spitout.db 为本地 SQLite 数据库
-data/
+/data/
 spitout.db
 
 # ---------- 9. 测试覆盖率 ----------
