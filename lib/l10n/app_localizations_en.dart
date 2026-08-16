@@ -3884,7 +3884,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsPerPerson => 'Split details';
 
   @override
-  String get aaStatisticsPaid => 'Paid';
+  String get aaStatisticsPaid => 'Split paid';
+
+  @override
+  String get aaStatisticsPaidAll => 'Total paid';
 
   @override
   String get aaStatisticsShare => 'Share';
@@ -3908,7 +3911,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsNoTransfers => 'All settled up';
 
   @override
-  String get aaStatisticsExcluded => 'Excluded from split';
+  String get aaStatisticsExcluded => 'No split';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3916,19 +3919,13 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => 'No transactions excluded from split';
+  String get aaStatisticsExcludedEmpty => 'No no-split transactions';
 
   @override
   String get aaStatisticsViewDetails => 'View details';
 
   @override
   String get aaStatisticsBillSummary => 'Bill summary';
-
-  @override
-  String get aaStatisticsTotalCount => 'Total bills';
-
-  @override
-  String get aaStatisticsTotal => 'Total amount';
 
   @override
   String get aaStatisticsNetReceiveAmount => 'To receive';

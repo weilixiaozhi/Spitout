@@ -3727,7 +3727,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsPerPerson => '分摊详情';
 
   @override
-  String get aaStatisticsPaid => '实付';
+  String get aaStatisticsPaid => '分摊实付';
+
+  @override
+  String get aaStatisticsPaidAll => '总付';
 
   @override
   String get aaStatisticsShare => '应摊';
@@ -3751,7 +3754,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsNoTransfers => '已结清，无需转账';
 
   @override
-  String get aaStatisticsExcluded => '不计入分摊';
+  String get aaStatisticsExcluded => '不分摊';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3759,19 +3762,13 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => '暂无不计入分摊的交易';
+  String get aaStatisticsExcludedEmpty => '暂无不分摊的交易';
 
   @override
   String get aaStatisticsViewDetails => '查看详情';
 
   @override
   String get aaStatisticsBillSummary => '账单汇总';
-
-  @override
-  String get aaStatisticsTotalCount => '总笔数';
-
-  @override
-  String get aaStatisticsTotal => '总金额';
 
   @override
   String get aaStatisticsNetReceiveAmount => '应收金额';
@@ -7613,7 +7610,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaStatisticsPerPerson => '分攤詳情';
 
   @override
-  String get aaStatisticsPaid => '實付';
+  String get aaStatisticsPaid => '分攤實付';
+
+  @override
+  String get aaStatisticsPaidAll => '總付';
 
   @override
   String get aaStatisticsShare => '應攤';
@@ -7637,7 +7637,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaStatisticsNoTransfers => '已結清，無需轉帳';
 
   @override
-  String get aaStatisticsExcluded => '不計入詳單';
+  String get aaStatisticsExcluded => '不分攤';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -7645,19 +7645,13 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => '暫無不計入詳單的交易';
+  String get aaStatisticsExcludedEmpty => '暫無不分攤的交易';
 
   @override
   String get aaStatisticsViewDetails => '查看詳情';
 
   @override
   String get aaStatisticsBillSummary => '帳單匯總';
-
-  @override
-  String get aaStatisticsTotalCount => '總筆數';
-
-  @override
-  String get aaStatisticsTotal => '總金額';
 
   @override
   String get aaStatisticsNetReceiveAmount => '應收金額';

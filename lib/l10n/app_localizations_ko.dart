@@ -3773,7 +3773,10 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsPerPerson => '분담 상세';
 
   @override
-  String get aaStatisticsPaid => '지출';
+  String get aaStatisticsPaid => '분담 지출';
+
+  @override
+  String get aaStatisticsPaidAll => '총 지출';
 
   @override
   String get aaStatisticsShare => '분담';
@@ -3797,7 +3800,7 @@ class AppLocalizationsKo extends AppLocalizations {
   String get aaStatisticsNoTransfers => '정산 완료, 송금이 필요 없습니다';
 
   @override
-  String get aaStatisticsExcluded => '분담 미포함';
+  String get aaStatisticsExcluded => '미분담';
 
   @override
   String aaStatisticsParticipantCount(int count) {
@@ -3805,19 +3808,13 @@ class AppLocalizationsKo extends AppLocalizations {
   }
 
   @override
-  String get aaStatisticsExcludedEmpty => '분담 제외 거래가 없습니다';
+  String get aaStatisticsExcludedEmpty => '미분담 거래가 없습니다';
 
   @override
   String get aaStatisticsViewDetails => '상세 보기';
 
   @override
   String get aaStatisticsBillSummary => '청구서 요약';
-
-  @override
-  String get aaStatisticsTotalCount => '총 건수';
-
-  @override
-  String get aaStatisticsTotal => '총 금액';
 
   @override
   String get aaStatisticsNetReceiveAmount => '받을 금액';

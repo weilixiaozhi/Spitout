@@ -2,7 +2,7 @@
 ///
 /// 需求锚点（设计稿）：
 /// - 头部：成员名 + 账本名；
-/// - 汇总卡：账单汇总（总笔数 / 总金额）+ 应收（应付）金额；
+/// - 汇总卡：账单汇总（总付 / 分摊实付 / 应摊）+ 应收（应付）金额；
 /// - 分摊方式：人均分摊 / 指定金额 / 不分摊 笔数三卡；
 /// - 账单列表：分类名、备注、时间·付款人、账单总额、分摊明细；
 /// - 无账单时展示空态。
@@ -150,9 +150,13 @@ void main() {
     // 头部：成员名 + 账本名。
     expect(find.text('张三'), findsWidgets);
     expect(find.text('测试账本'), findsOneWidget);
-    // 汇总卡：标题 + 总笔数标签 + 应收金额（净额 > 0）。
+    // 汇总卡：标题 + 总付/分摊实付/应摊 + 应收金额（净额 > 0）。
     expect(find.text('账单汇总'), findsOneWidget);
-    expect(find.text('总笔数'), findsOneWidget);
+    expect(find.text('总付'), findsOneWidget);
+    expect(find.text('分摊实付'), findsOneWidget);
+    expect(find.text('应摊'), findsOneWidget);
+    // 总付 = 全部账单（含不分摊）183 元；分摊实付 = AA 实付 168 元。
+    expect(find.text('¥ 183'), findsOneWidget);
     expect(find.text('应收金额'), findsOneWidget);
     // 分摊方式：人均分摊 / 指定金额 / 不分摊 各一笔；
     // 文案同时出现在「分摊方式卡」与账单行「分摊方式徽标」上。
@@ -165,7 +169,8 @@ void main() {
     // 账单行：备注、账单总额（红色总额；应摊金额只出现在分摊明细中）。
     expect(find.text('昱阳米粉 晚餐'), findsOneWidget);
     expect(find.text('个人物品'), findsOneWidget);
-    expect(find.text('¥ 168'), findsOneWidget);
+    // 168 同时出现在账单行与汇总卡「分摊实付」列。
+    expect(find.text('¥ 168'), findsNWidgets(2));
     expect(find.text('¥ 8'), findsOneWidget);
     expect(find.text('¥ 7'), findsOneWidget);
     expect(find.text('共 ¥ 168'), findsNothing);

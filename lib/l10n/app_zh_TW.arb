@@ -1623,7 +1623,8 @@
     "aaStatisticsTotalAmount": "分攤總額",
     "aaStatisticsTxCount": "{count} 筆分攤交易",
     "aaStatisticsPerPerson": "分攤詳情",
-    "aaStatisticsPaid": "實付",
+    "aaStatisticsPaid": "分攤實付",
+    "aaStatisticsPaidAll": "總付",
     "aaStatisticsShare": "應攤",
     "aaStatisticsNet": "差額",
     "aaStatisticsNetReceive": "應收",
@@ -1631,7 +1632,7 @@
     "aaStatisticsTransferPlan": "轉帳方案",
     "aaStatisticsTransferSeparator": "付給",
     "aaStatisticsNoTransfers": "已結清，無需轉帳",
-    "aaStatisticsExcluded": "不計入詳單",
+    "aaStatisticsExcluded": "不分攤",
     "aaStatisticsParticipantCount": "分攤人數 {count} 人",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1640,11 +1641,9 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "暫無不計入詳單的交易",
+    "aaStatisticsExcludedEmpty": "暫無不分攤的交易",
     "aaStatisticsViewDetails": "查看詳情",
     "aaStatisticsBillSummary": "帳單匯總",
-    "aaStatisticsTotalCount": "總筆數",
-    "aaStatisticsTotal": "總金額",
     "aaStatisticsNetReceiveAmount": "應收金額",
     "aaStatisticsNetPayAmount": "應付金額",
     "aaStatisticsSettled": "已結清",

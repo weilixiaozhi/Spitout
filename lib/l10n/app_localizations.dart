@@ -6967,8 +6967,14 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsPaid.
   ///
   /// In en, this message translates to:
-  /// **'Paid'**
+  /// **'Split paid'**
   String get aaStatisticsPaid;
+
+  /// No description provided for @aaStatisticsPaidAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Total paid'**
+  String get aaStatisticsPaidAll;
 
   /// No description provided for @aaStatisticsShare.
   ///
@@ -7015,7 +7021,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsExcluded.
   ///
   /// In en, this message translates to:
-  /// **'Excluded from split'**
+  /// **'No split'**
   String get aaStatisticsExcluded;
 
   /// No description provided for @aaStatisticsParticipantCount.
@@ -7027,7 +7033,7 @@ abstract class AppLocalizations {
   /// No description provided for @aaStatisticsExcludedEmpty.
   ///
   /// In en, this message translates to:
-  /// **'No transactions excluded from split'**
+  /// **'No no-split transactions'**
   String get aaStatisticsExcludedEmpty;
 
   /// No description provided for @aaStatisticsViewDetails.
@@ -7041,18 +7047,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Bill summary'**
   String get aaStatisticsBillSummary;
-
-  /// No description provided for @aaStatisticsTotalCount.
-  ///
-  /// In en, this message translates to:
-  /// **'Total bills'**
-  String get aaStatisticsTotalCount;
-
-  /// No description provided for @aaStatisticsTotal.
-  ///
-  /// In en, this message translates to:
-  /// **'Total amount'**
-  String get aaStatisticsTotal;
 
   /// No description provided for @aaStatisticsNetReceiveAmount.
   ///

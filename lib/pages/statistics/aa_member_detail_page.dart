@@ -19,7 +19,7 @@ import 'package:spitout/widgets/widgets.dart';
 ///
 /// 内容结构（自上而下）：
 /// 1. 头部：返回 + 成员头像 + 成员名 / 账本名；
-/// 2. 汇总卡：账单汇总 - 总笔数 / 总金额，底部展示该成员应收（应付）金额；
+/// 2. 汇总卡：账单汇总 - 总付 / 分摊实付 / 应摊，底部展示该成员应收（应付）金额；
 /// 3. 分摊方式：人均分摊 / 指定金额 / 不分摊 笔数三卡；
 /// 4. 账单列表：按日期分组的账单卡片，每笔含分类 / 分摊方式徽标 / 备注 /
 ///    时间·付款人 / 账单总额；AA 账单展开分摊明细，
@@ -207,7 +207,7 @@ class AaMemberDetailPage extends ConsumerWidget {
     );
   }
 
-  /// 汇总卡：账单汇总 - 总笔数 / 总金额，
+  /// 汇总卡：账单汇总 - 总付 / 分摊实付 / 应摊，
   /// 底部展示该成员应收 / 应付金额（与分摊详情表净额口径一致）。
   Widget _buildSummaryCard(
     BuildContext context,
@@ -251,24 +251,38 @@ class AaMemberDetailPage extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: SpitoutDimens.p16),
-          // 总笔数 / 总金额：两个指标共用同一套标签在上、数值在下的居中样式，
-          // 与分摊详情表的成员指标视觉一致，不为不同字段区分字号和颜色。
+          // 总付 / 分摊实付 / 应摊：三个指标共用同一套标签在上、数值在下的
+          // 居中样式，与分摊详情表的成员指标视觉一致；总付含不分摊支出，
+          // 分摊实付/应摊口径与分摊详情表一致。
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Expanded(
                 child: _buildSummaryMetric(
                   context,
-                  l10n.aaStatisticsTotalCount,
-                  '${data.bills.length}',
+                  l10n.aaStatisticsPaidAll,
+                  formatMoneyWithCurrency(
+                    totalAmount,
+                    currencyCode: currencyCode,
+                  ),
                 ),
               ),
               Expanded(
                 child: _buildSummaryMetric(
                   context,
-                  l10n.aaStatisticsTotal,
+                  l10n.aaStatisticsPaid,
                   formatMoneyWithCurrency(
-                    totalAmount,
+                    data.member.totalPaid,
+                    currencyCode: currencyCode,
+                  ),
+                ),
+              ),
+              Expanded(
+                child: _buildSummaryMetric(
+                  context,
+                  l10n.aaStatisticsShare,
+                  formatMoneyWithCurrency(
+                    data.member.totalShouldPay,
                     currencyCode: currencyCode,
                   ),
                 ),

@@ -22,7 +22,7 @@ import 'package:spitout/widgets/widgets.dart';
 /// 1. 汇总卡:分摊总额 + 分摊交易笔数;
 /// 2. 分摊详情表:实付 / 应摊 / 差额(应收应付着色);
 /// 3. 转账方案:贪心结算结果,已结清时展示零转账提示;
-/// 4. 不计入分摊:aaMode=1(不分摊)的交易。
+/// 4. 不分摊:aaMode=1 的交易。
 ///
 /// 数据源为 [aaStatisticsProvider]。账本 id 由进入入口经 [ledgerId] 传入
 /// ("从哪里进入就是哪个账本"),缺省(如新建态)时按无账本渲染,各模块自带
@@ -40,7 +40,7 @@ class AaStatisticsPage extends ConsumerWidget {
     // 新建态无账本 id → 哨兵 0：getLedgerById(0) 返回空，汇总/清单均为空。
     final ledgerId = this.ledgerId ?? 0;
     final statisticsAsync = ref.watch(aaStatisticsProvider(ledgerId));
-    final excludedAsync = ref.watch(_aaExcludedTxProvider(ledgerId));
+    final excludedAsync = ref.watch(_aaNoSplitTxProvider(ledgerId));
 
     return Scaffold(
       body: Column(
@@ -64,6 +64,9 @@ class AaStatisticsPage extends ConsumerWidget {
                   ),
                 );
               },
+              // 依赖数据变更信号触发的后台重算必须保留旧数据继续展示，
+              // 否则云同步/其它设备写入本地库时整页反复转圈。
+              skipLoadingOnReload: true,
               data: (statistics) => _buildBody(
                 context,
                 ref,
@@ -87,13 +90,28 @@ class AaStatisticsPage extends ConsumerWidget {
     AaLedgerStatistics statistics,
     List<({Transaction t, Category? category})> excluded,
   ) {
+    // 总付口径：直接复用成员支出统计（账本编辑页「成员支出」同源，含不分摊），
+    // 按参与人 id 建映射，保证分摊详情表与账本管理的成员汇总金额一致。
+    final memberStats =
+        ref.watch(memberExpenseStatsProvider(ledgerId)).value ??
+        const <MemberExpenseStatItem>[];
+    final totalPaidAllOf = <String, double>{
+      for (final s in memberStats) s.participantId: s.expenseTotal,
+    };
+    // 首页同款协作头像成员表：共享账本与首页同源 ledgerMembersProvider
+    // （同一套磁盘缓存）；本地账本为空映射 → 不渲染头像。
+    final avatarCtx =
+        ref.watch(aaParticipantAvatarContextProvider(ledgerId)).value;
+    final memberMap = avatarCtx?.members ?? const {};
+    final isShared = memberMap.isNotEmpty;
+
     // 只展示有实际分摊活动的参与人(全零成员无信息量)。
     final active = statistics.participants
         .where((p) => p.totalPaid > 0 || p.totalShouldPay > 0)
         .toList();
     // 仅有「不分摊」支出的参与人没有 AA 统计值，但成员账单详情页本质是
     // 「首页支出列表按成员筛选」，必须能从分摊详情表进入查看自己的全部支出，
-    // 故把这类参与人补充进列表（AA 三列按其真实统计值 0 展示）。
+    // 故把这类参与人补充进列表（总付展示成员支出，其余列按其真实统计值 0 展示）。
     final activeIds = active.map((p) => p.participantId).toSet();
     for (final p in statistics.participants) {
       if (activeIds.contains(p.participantId)) continue;
@@ -112,16 +130,30 @@ class AaStatisticsPage extends ConsumerWidget {
         const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsPerPerson),
         const SizedBox(height: SpitoutDimens.p8),
-        _buildPerPersonCard(context, ref, l10n, ledgerId, active),
+        _buildPerPersonCard(
+          context,
+          ref,
+          l10n,
+          ledgerId,
+          active,
+          totalPaidAllOf,
+        ),
         const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsTransferPlan),
         const SizedBox(height: SpitoutDimens.p8),
         _buildTransferCard(context, ref, l10n, statistics.transfers),
-        // 不计入分摊区块始终展示(数据为空时由卡片内部渲染空态)。
+        // 不分摊区块始终展示(数据为空时由卡片内部渲染空态)。
         const SizedBox(height: SpitoutDimens.p16),
         _buildSectionTitle(context, l10n.aaStatisticsExcluded),
         const SizedBox(height: SpitoutDimens.p8),
-        _buildExcludedCard(context, ref, l10n, excluded),
+        _buildExcludedCard(
+          context,
+          ref,
+          l10n,
+          excluded,
+          memberMap,
+          isShared,
+        ),
       ],
     );
   }
@@ -162,13 +194,14 @@ class AaStatisticsPage extends ConsumerWidget {
   }
 
   /// 分摊详情表:每位成员一个可点击模块(头像 + 名称 + 「查看详情」徽章 +
-  /// 实付 / 应摊 / 差额三列),点击模块进入该成员账单详情页。
+  /// 总付 / 分摊实付 / 应摊 / 差额四列),点击模块进入该成员账单详情页。
   Widget _buildPerPersonCard(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     int ledgerId,
     List<AaParticipantSummary> active,
+    Map<String, double> totalPaidAllOf,
   ) {
     return SectionCard(
       margin: EdgeInsets.zero,
@@ -178,22 +211,31 @@ class AaStatisticsPage extends ConsumerWidget {
           for (var i = 0; i < active.length; i++) ...[
             if (i > 0)
               Divider(height: 1, color: SpitoutTokens.divider(context)),
-            _buildPerPersonRow(context, ref, l10n, ledgerId, active[i]),
+            _buildPerPersonRow(
+              context,
+              ref,
+              l10n,
+              ledgerId,
+              active[i],
+              totalPaidAllOf,
+            ),
           ],
         ],
       ),
     );
   }
 
-  /// 分摊详情行:头像 + 名称 + 实付 / 应摊 / 差额三列,点击进入成员账单详情。
+  /// 分摊详情行:头像 + 名称 + 总付 / 分摊实付 / 应摊 / 差额四列,
+  /// 点击进入成员账单详情。
   Widget _buildPerPersonRow(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     int ledgerId,
     AaParticipantSummary p,
+    Map<String, double> totalPaidAllOf,
   ) {
-    // 实付/应摊/差额统一带账本币种符号,与汇总卡口径一致。
+    // 总付/分摊实付/应摊/差额统一带账本币种符号,与汇总卡口径一致。
     final currencyCode = ref.watch(currentLedgerCurrencyProvider);
     final net = p.net;
     final netColor = net.abs() < 0.005
@@ -244,9 +286,17 @@ class AaStatisticsPage extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: SpitoutDimens.p12),
-            // 第二行:实付 / 应摊 / 差额(应收绿、应付红)三列居中。
+            // 第二行:总付 / 分摊实付 / 应摊 / 差额(应收绿、应付红)四列居中。
             Row(
               children: [
+                _buildMemberMetric(
+                  context,
+                  l10n.aaStatisticsPaidAll,
+                  formatMoneyWithCurrency(
+                    totalPaidAllOf[p.participantId] ?? 0,
+                    currencyCode: currencyCode,
+                  ),
+                ),
                 _buildMemberMetric(
                   context,
                   l10n.aaStatisticsPaid,
@@ -477,44 +527,87 @@ class AaStatisticsPage extends ConsumerWidget {
     );
   }
 
-  /// 不计入分摊卡:aaMode=1(不分摊)的交易,完全照搬首页列表项布局
+  /// 不分摊卡:aaMode=1 的交易,完全照搬首页列表布局(日期表头 + 列表项)
   Widget _buildExcludedCard(
     BuildContext context,
     WidgetRef ref,
     AppLocalizations l10n,
     List<({Transaction t, Category? category})> excluded,
+    Map<String, SpitoutCloudLedgerMember> memberMap,
+    bool isShared,
   ) {
+    if (excluded.isEmpty) {
+      return SectionCard(
+        margin: EdgeInsets.zero,
+        padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
+          child: Center(
+            child: Text(
+              l10n.aaStatisticsExcludedEmpty,
+              style: SpitoutTextTokens.label(context).copyWith(
+                color: SpitoutTokens.textTertiary(context),
+              ),
+            ),
+          ),
+        ),
+      );
+    }
+
+    // 与首页 TransactionList 同口径按天分组（倒序），组内保持时间倒序。
+    final groups = <String, List<({Transaction t, Category? category})>>{};
+    for (final it in excluded) {
+      final dt = it.t.happenedAt.toLocal();
+      final key = '${dt.year}-${dt.month.toString().padLeft(2, '0')}-'
+          '${dt.day.toString().padLeft(2, '0')}';
+      (groups[key] ??= []).add(it);
+    }
+    final sortedKeys = groups.keys.toList()..sort((a, b) => b.compareTo(a));
+    final currencyCode = ref.watch(currentLedgerCurrencyProvider);
+
     return SectionCard(
       margin: EdgeInsets.zero,
-      padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p4),
-      child: excluded.isEmpty
-          ? Padding(
-              padding: const EdgeInsets.symmetric(vertical: SpitoutDimens.p12),
-              child: Center(
-                child: Text(
-                  l10n.aaStatisticsExcludedEmpty,
-                  style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
-                ),
-              ),
-            )
-          : Column(
-              children: [
-                for (var i = 0; i < excluded.length; i++) ...[
-                  if (i > 0)
-                    Divider(height: 1, color: SpitoutTokens.divider(context)),
-                  _buildExcludedRow(context, ref, excluded[i]),
-                ],
-              ],
-            ),
+      padding: EdgeInsets.zero,
+      child: Column(
+        children: [
+          for (final key in sortedKeys) ...[
+            _buildDayHeader(context, key, groups[key]!, currencyCode),
+            for (final it in groups[key]!)
+              _buildExcludedRow(context, it, memberMap, isShared),
+          ],
+        ],
+      ),
     );
   }
 
-  /// 单条不计入分摊行:复用 [TransactionListItem],布局与首页列表完全一致
-  /// (icon + 分类名 + 时间/备注 + 金额)。
+  /// 日期分组表头:与首页一致,展示日期与当日支出合计。
+  Widget _buildDayHeader(
+    BuildContext context,
+    String dateKey,
+    List<({Transaction t, Category? category})> items,
+    String currencyCode,
+  ) {
+    // 与首页一致:仅统计支出交易,按折本位币累加当日合计。
+    var dayExpense = 0;
+    for (final it in items) {
+      if (it.t.type == 'expense') {
+        dayExpense += it.t.nativeAmount ?? it.t.amount;
+      }
+    }
+    return DaySectionHeader(
+      dateText: dateKey,
+      expense: dayExpense / 100,
+      currencyCode: currencyCode,
+    );
+  }
+
+  /// 单条不分摊行:复用 [TransactionListItem],传参与首页列表完全一致
+  /// (icon + 分类名 + 备注 + 协作头像 + 时间 + 金额 + 不计收支标签)。
   Widget _buildExcludedRow(
     BuildContext context,
-    WidgetRef ref,
     ({Transaction t, Category? category}) it,
+    Map<String, SpitoutCloudLedgerMember> memberMap,
+    bool isShared,
   ) {
     final categoryName = CategoryUtils.getDisplayName(
       it.category?.name,
@@ -531,9 +624,12 @@ class AaStatisticsPage extends ConsumerWidget {
       isExpense: it.t.type == 'expense',
       happenedAt: it.t.happenedAt,
       lastEditedAt: it.t.lastEditedAt,
-      // 不计入分摊区块无需展示协作头像/选择模式/不计收支标签,
-      // 保持与首页列表一致的简洁双行布局。
-      isShared: false,
+      // 与首页完全一致:共享账本渲染协作头像(同源缓存)、展示不计收支标签。
+      collaboratorMap: memberMap,
+      creatorUserId: it.t.createdByUserId,
+      editorUserId: it.t.lastEditedByUserId,
+      isShared: isShared,
+      excludeFromStats: it.t.excludeFromStats,
     );
   }
 
@@ -566,12 +662,12 @@ class AaStatisticsPage extends ConsumerWidget {
   }
 }
 
-/// 不计入分摊的交易(aaMode=1)查询。
+/// 不分摊的交易(aaMode=1)查询。
 ///
-/// 统计页「不计入分摊」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
+/// 统计页「不分摊」区块数据源;[aaStatisticsProvider] 只返回汇总结果,
 /// 详单行需要交易本体 + 分类(用于 icon / 分类名展示,与首页列表完全一致),
 /// 故在此单独查询带 category 的交易列表。
-final _aaExcludedTxProvider = StreamProvider.autoDispose
+final _aaNoSplitTxProvider = StreamProvider.autoDispose
     .family<List<({Transaction t, Category? category})>, int>((ref, ledgerId) {
       // 依赖统计 provider:交易变化重算汇总时,清单同步刷新。
       ref.watch(aaStatisticsProvider(ledgerId));

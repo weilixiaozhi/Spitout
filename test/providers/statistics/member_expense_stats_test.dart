@@ -100,6 +100,30 @@ void main() {
     expect(u2.txCount, 1);
   });
 
+  test('多币种成员支出按折本位币 nativeAmount 汇总，不再累加原币金额', () async {
+    // u1: 美元原币 5000 分（nativeAmount=7000 分）+ 人民币 1000 分
+    // 期望按本位币合计 80 元，而不是原币 60 元。
+    await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: 1,
+            type: 'expense',
+            amount: 5000,
+            currencyCode: Value('USD'),
+            nativeAmount: Value(7000),
+            happenedAt: Value(DateTime(2026, 8, 3, 12, 0)),
+            paidByUserId: Value('u1'),
+          ),
+        );
+    await seedExpense(amountCents: 1000, paidByUserId: 'u1');
+
+    final stats = await container.read(memberExpenseStatsProvider(1).future);
+
+    final u1 = stats.firstWhere((s) => s.participantId == 'u1');
+    expect(u1.expenseTotal, 80.0,
+        reason: '跨币种必须按折本位币求和，不得把美元原币当人民币直接累加');
+    expect(u1.txCount, 2);
+  });
+
   test('本地账本：localSelfId 与云 userId 都解析为本人昵称，不再裸 id', () async {
     final c = buildContainer(
       cloudUser: const CloudUser(id: 'cloud-1', account: 'me@example.com'),

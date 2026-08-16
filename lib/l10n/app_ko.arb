@@ -1332,7 +1332,8 @@
     "aaStatisticsTotalAmount": "분담 총액",
     "aaStatisticsTxCount": "분담 거래 {count}건",
     "aaStatisticsPerPerson": "분담 상세",
-    "aaStatisticsPaid": "지출",
+    "aaStatisticsPaid": "분담 지출",
+    "aaStatisticsPaidAll": "총 지출",
     "aaStatisticsShare": "분담",
     "aaStatisticsNet": "차액",
     "aaStatisticsNetReceive": "받을 금액",
@@ -1340,7 +1341,7 @@
     "aaStatisticsTransferPlan": "송금 계획",
     "aaStatisticsTransferSeparator": "→",
     "aaStatisticsNoTransfers": "정산 완료, 송금이 필요 없습니다",
-    "aaStatisticsExcluded": "분담 미포함",
+    "aaStatisticsExcluded": "미분담",
     "aaStatisticsParticipantCount": "분담 인원 {count}명",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1349,11 +1350,9 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "분담 제외 거래가 없습니다",
+    "aaStatisticsExcludedEmpty": "미분담 거래가 없습니다",
     "aaStatisticsViewDetails": "상세 보기",
     "aaStatisticsBillSummary": "청구서 요약",
-    "aaStatisticsTotalCount": "총 건수",
-    "aaStatisticsTotal": "총 금액",
     "aaStatisticsNetReceiveAmount": "받을 금액",
     "aaStatisticsNetPayAmount": "보낼 금액",
     "aaStatisticsSettled": "정산 완료",

@@ -1827,7 +1827,8 @@
         }
     },
     "aaStatisticsPerPerson": "Split details",
-    "aaStatisticsPaid": "Paid",
+    "aaStatisticsPaid": "Split paid",
+    "aaStatisticsPaidAll": "Total paid",
     "aaStatisticsShare": "Share",
     "aaStatisticsNet": "Balance",
     "aaStatisticsNetReceive": "to receive",
@@ -1835,7 +1836,7 @@
     "aaStatisticsTransferPlan": "Settlement plan",
     "aaStatisticsTransferSeparator": "pays",
     "aaStatisticsNoTransfers": "All settled up",
-    "aaStatisticsExcluded": "Excluded from split",
+    "aaStatisticsExcluded": "No split",
     "aaStatisticsParticipantCount": "{count} participants",
     "@aaStatisticsParticipantCount": {
         "placeholders": {
@@ -1844,11 +1845,9 @@
             }
         }
     },
-    "aaStatisticsExcludedEmpty": "No transactions excluded from split",
+    "aaStatisticsExcludedEmpty": "No no-split transactions",
     "aaStatisticsViewDetails": "View details",
     "aaStatisticsBillSummary": "Bill summary",
-    "aaStatisticsTotalCount": "Total bills",
-    "aaStatisticsTotal": "Total amount",
     "aaStatisticsNetReceiveAmount": "To receive",
     "aaStatisticsNetPayAmount": "To pay",
     "aaStatisticsSettled": "Settled",

@@ -3,7 +3,9 @@
 // 统一后缀（含前导空格），非本人保持纯名不拼接。
 library;
 
-import 'package:drift/drift.dart' show Value;
+import 'dart:async';
+
+import 'package:drift/drift.dart' show TableUpdate, Value;
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -13,6 +15,7 @@ import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/router.dart';
+import 'package:spitout/pages/statistics/aa_member_detail_page.dart';
 import 'package:spitout/pages/statistics/aa_statistics_page.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/services/statistics/aa_member_detail_models.dart';
@@ -47,6 +50,9 @@ void main() {
           // 空库返回空列表，页面各模块仍走固定统计数据的覆盖值。
           databaseProvider.overrideWithValue(db),
           repositoryProvider.overrideWithValue(repo),
+          // 避免 memberExpenseStatsProvider 首次生成 localSelfId 触发日志定时器，
+          // 造成测试结束时 pending timer 报错。
+          localSelfIdProvider.overrideWith((ref) async => 'local-self'),
           // 无当前账本：货币兜底默认值，避免真实 ledger 读取。
           currentLedgerProvider.overrideWith((ref) => Stream.value(null)),
           // 成员账单详情页数据：固定返回一笔账单，验证点击进入详情。
@@ -227,8 +233,15 @@ void main() {
     // 账单主行：分类名 + 备注 + 分摊明细区。
     expect(find.text('昱阳米粉 晚餐'), findsOneWidget);
     expect(find.text('分摊明细'), findsOneWidget);
-    // 汇总卡与账单行各展示一次总额；应摊金额只出现在分摊明细中。
-    expect(find.text('¥ 168'), findsNWidgets(2));
+    // 成员详情页内：汇总卡「总付」「分摊实付」与账单行各展示一次 168
+    // （该测试数据无不分摊支出，总付=分摊实付=账单金额）。
+    expect(
+      find.descendant(
+        of: find.byType(AaMemberDetailPage),
+        matching: find.text('¥ 168'),
+      ),
+      findsNWidgets(3),
+    );
     expect(find.text('共 ¥ 168'), findsNothing);
     expect(find.text('- ¥ 56'), findsNothing);
     // 分摊明细中的本人追加「(我)」后缀。
@@ -286,4 +299,198 @@ void main() {
 
     await unmountPage(tester);
   });
+
+  testWidgets('不分摊区块标题与空态文案', (tester) async {
+    final stats = AaLedgerStatistics(
+      participants: [
+        AaParticipantSummary(
+          participantId: 'u1',
+          displayName: '张三',
+          totalPaid: 100,
+          totalShouldPay: 50,
+          isSelf: true,
+        ),
+      ],
+      transfers: const [],
+    );
+
+    await pumpPage(tester, stats);
+
+    expect(find.text('不分摊'), findsOneWidget);
+    expect(find.text('不计入分摊'), findsNothing);
+    expect(find.text('暂无不分摊的交易'), findsOneWidget);
+
+    await unmountPage(tester);
+  });
+
+  testWidgets('不计入分摊列表按日期分组展示，行参数与首页一致', (tester) async {
+    await repo.createLedger(
+      name: '测试账本',
+      storageMode: 'local',
+      ownerUserId: 'u1',
+      aaEnabled: true,
+    );
+    await db.into(db.transactions).insert(
+      TransactionsCompanion.insert(
+        ledgerId: 1,
+        type: 'expense',
+        amount: 700,
+        note: Value('个人物品'),
+        happenedAt: Value(DateTime(2026, 8, 1, 8, 0)),
+        paidByUserId: Value('u2'),
+        aaMode: Value(1),
+      ),
+    );
+    final stats = AaLedgerStatistics(
+      participants: [
+        AaParticipantSummary(
+          participantId: 'u1',
+          displayName: '张三',
+          totalPaid: 100,
+          totalShouldPay: 50,
+          isSelf: true,
+        ),
+        AaParticipantSummary(
+          participantId: 'u2',
+          displayName: '李四',
+          totalPaid: 0,
+          totalShouldPay: 0,
+          isSelf: false,
+        ),
+      ],
+      transfers: const [],
+    );
+
+    await pumpPage(tester, stats);
+
+    // 首页同款：日期分组表头 + 备注 + 金额。
+    expect(find.text('2026-08-01'), findsOneWidget);
+    expect(find.text('个人物品'), findsOneWidget);
+    expect(find.text('¥ 7'), findsWidgets);
+
+    await unmountPage(tester);
+  });
+
+  testWidgets('分摊详情四列：总付等于成员支出汇总金额', (tester) async {
+    await repo.createLedger(
+      name: '测试账本',
+      storageMode: 'local',
+      ownerUserId: 'u1',
+      aaEnabled: true,
+    );
+    // 成员支出统计（总付来源）：u1 实付 300 分 = 3 元（含不分摊口径）。
+    await repo.addTransaction(
+      ledgerId: 1,
+      type: 'expense',
+      amount: 300,
+      happenedAt: DateTime(2026, 8, 1, 9, 0),
+      paidByUserId: 'u1',
+    );
+    final stats = AaLedgerStatistics(
+      participants: [
+        AaParticipantSummary(
+          participantId: 'u1',
+          displayName: '张三',
+          totalPaid: 100,
+          totalShouldPay: 50,
+          isSelf: true,
+        ),
+      ],
+      transfers: const [],
+    );
+
+    await pumpPage(tester, stats);
+
+    expect(find.text('总付'), findsOneWidget);
+    expect(find.text('分摊实付'), findsOneWidget);
+    expect(find.text('应摊'), findsOneWidget);
+    expect(find.text('应收'), findsOneWidget);
+    // 总付来自成员支出汇总（300 分 = 3 元），与分摊统计互不影响。
+    expect(find.text('¥ 3'), findsOneWidget);
+    expect(find.text('¥ 100'), findsOneWidget);
+    expect(find.text('¥ 50'), findsOneWidget);
+
+    await unmountPage(tester);
+  });
+
+  testWidgets('数据变更触发重算时不出现整页 loading', (tester) async {
+    await repo.createLedger(
+      name: '测试账本',
+      storageMode: 'local',
+      ownerUserId: 'u1',
+      aaEnabled: true,
+    );
+    await repo.addTransaction(
+      ledgerId: 1,
+      type: 'expense',
+      amount: 1234,
+      happenedAt: DateTime(2026, 8, 1, 9, 0),
+      paidByUserId: 'u1',
+    );
+    // 第二次 AA 查询挂起，制造一个确定性的「重算进行中」窗口，
+    // 避免查询太快导致断言时重算已结束、无法暴露整页 loading。
+    final deferred = _DeferredAaRepo(db);
+    final dataSignal = StreamController<Set<TableUpdate>>.broadcast();
+
+    await tester.pumpWidget(
+      ProviderScope(
+        overrides: [
+          databaseProvider.overrideWithValue(db),
+          repositoryProvider.overrideWithValue(deferred),
+          localSelfIdProvider.overrideWith((ref) async => 'local-self'),
+          dataChangeSignalProvider.overrideWith((ref) => dataSignal.stream),
+          currentLedgerProvider.overrideWith((ref) => Stream.value(null)),
+          aaParticipantAvatarContextProvider.overrideWith(
+            (ref, ledgerId) async => const AaParticipantAvatarContext(),
+          ),
+        ],
+        child: MaterialApp(
+          locale: const Locale('zh'),
+          localizationsDelegates: AppLocalizations.localizationsDelegates,
+          supportedLocales: AppLocalizations.supportedLocales,
+          home: const AaStatisticsPage(ledgerId: 1),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('应摊'), findsWidgets);
+    expect(deferred.aaQueryCount, 1);
+
+    // 模拟任意业务表写入（云同步落库 / 本地记账）触发的数据变更信号。
+    deferred.gate = Completer<List<Transaction>>();
+    dataSignal.add(const <TableUpdate>{});
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 50));
+
+    // 重算挂起期间必须保留旧数据继续展示，不得整页转圈。
+    expect(find.byType(CircularProgressIndicator), findsNothing);
+    expect(find.text('应摊'), findsWidgets);
+
+    // 放行重算，页面应恢复到新数据。
+    deferred.gate!.complete(await repo.getAaTransactionsByLedger(1));
+    await tester.pumpAndSettle();
+    expect(find.text('应摊'), findsWidgets);
+
+    await dataSignal.close();
+    await unmountPage(tester);
+  });
+}
+
+/// 包装真实仓库：第二次 AA 交易查询挂起，供测试稳定观察重算中的页面状态。
+class _DeferredAaRepo extends LocalRepository {
+  _DeferredAaRepo(super.db);
+
+  /// 非空时后续 AA 查询等待此 Completer 放行。
+  Completer<List<Transaction>>? gate;
+
+  /// AA 交易查询调用次数。
+  int aaQueryCount = 0;
+
+  @override
+  Future<List<Transaction>> getAaTransactionsByLedger(int ledgerId) {
+    aaQueryCount++;
+    final g = gate;
+    if (g != null) return g.future;
+    return super.getAaTransactionsByLedger(ledgerId);
+  }
 }

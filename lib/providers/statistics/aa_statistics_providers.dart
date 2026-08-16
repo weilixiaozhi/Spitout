@@ -305,6 +305,8 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       final expenseTx = allTx.where((t) => t.type == 'expense').toList();
 
       // 按 paidByUserId 聚合:金额合计 + 笔数。paidByUserId 为空跳过(无法归属)。
+      // 金额统一按「折本位币」(nativeAmount) 累加,与 AA 分摊统计口径一致,
+      // 多币种账本下不把原币金额直接相加;历史未折算数据回退原金额。
       // amountMap 累加的是数据库"整数分"，输出时统一 /100 转"元"——与
       // AaStatisticsService / 账本卡片的口径一致，避免 UI 直接展示放大 100 倍。
       final amountMap = <String, double>{};
@@ -312,7 +314,7 @@ final memberExpenseStatsProvider = FutureProvider.autoDispose
       for (final t in expenseTx) {
         final pid = t.paidByUserId;
         if (pid == null || pid.isEmpty) continue;
-        amountMap[pid] = (amountMap[pid] ?? 0) + t.amount;
+        amountMap[pid] = (amountMap[pid] ?? 0) + (t.nativeAmount ?? t.amount);
         countMap[pid] = (countMap[pid] ?? 0) + 1;
       }
 
