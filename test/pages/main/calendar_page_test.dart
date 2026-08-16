@@ -205,4 +205,36 @@ void main() {
 
     await disposeTree(tester);
   });
+
+  testWidgets('日历格子金额与折线图同口径：无币种符号、无负号、两位小数去尾零', (tester) async {
+    await pumpCalendar(tester);
+
+    final l10n = AppLocalizations.of(
+      tester.element(find.byType(CalendarPage)),
+    );
+    final addTxFinder = find.text(l10n.calendarAddTransaction);
+    await pumpUntilFound(tester, addTxFinder);
+
+    // 选一个不受其他用例写入影响的日期（其他用例都写「今天」）：
+    // 今天若为 1 号则写 2 号，否则写 1 号，保证格子金额只来自本用例。
+    final now = DateTime.now();
+    final targetDay = now.day == 1 ? 2 : 1;
+    // amount 单位是「分」：240000 分 = 2400 元，聚合层已换算为元后再展示。
+    await repo.addTransaction(
+      ledgerId: 1,
+      type: 'expense',
+      amount: 240000,
+      happenedAt: DateTime(now.year, now.month, targetDay, 12),
+      note: '日历格子金额口径验证',
+    );
+
+    // 新口径：2.4k（无 ¥ 前缀、无负号、去掉末尾 0），与 formatChartValueLabel 一致。
+    await pumpUntilFound(tester, find.text('2.4k'));
+    expect(find.text('-¥2.4k'), findsNothing,
+        reason: '日历格子不得再展示币种符号和负号');
+    expect(find.text('2.4k'), findsOneWidget,
+        reason: '2400 元按 k 缩写且去尾零为 2.4k');
+
+    await disposeTree(tester);
+  });
 }

@@ -5,17 +5,22 @@ import 'package:flutter/material.dart';
 
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/chart_tokens.dart';
+import 'format_money.dart';
 
-/// 数值标注格式化（单位=元）：>=10000 用 w，>=1000 用 k，否则取整。
+/// 数值标注格式化（单位=元）：>=10000 用 w，>=1000 用 k，否则原样。
 ///
-/// 单独抽出并 `@visibleForTesting` 暴露，是为了用单测锁定「元」展示口径：
-/// 上层若误传数据库整数分，12.5 会被显示成 1250（放大 100 倍）而无法从
-/// 图表本身察觉，契约由测试兜底。
-@visibleForTesting
+/// 折线图与日历格子共用，避免两处 k/w 缩写各自实现导致口径分裂；
+/// 单测锁定「元」展示口径：上层若误传数据库整数分，12.5 会被显示成
+/// 1250（放大 100 倍）而无法从图表本身察觉，契约由测试兜底。
+/// 数字部分与首页金额同口径：最多两位小数、
+/// 去掉末尾多余的 0（12.5 显示 12.5，12.51 显示 12.51），统一委托
+/// [formatMoneyCompact] 保证，避免 k/w 缩写与首页口径分裂。
 String formatChartValueLabel(double v) {
-  if (v >= 10000) return '${(v / 10000).toStringAsFixed(1)}w';
-  if (v >= 1000) return '${(v / 1000).toStringAsFixed(1)}k';
-  return v.toStringAsFixed(0);
+  if (v >= 10000) {
+    return '${formatMoneyCompact(v / 10000, maxDecimals: 2)}w';
+  }
+  if (v >= 1000) return '${formatMoneyCompact(v / 1000, maxDecimals: 2)}k';
+  return formatMoneyCompact(v, maxDecimals: 2);
 }
 
 /// 统计页支出趋势折线图（fl_chart 实现）。
@@ -32,7 +37,7 @@ String formatChartValueLabel(double v) {
 class AnalyticsLineChart extends StatelessWidget {
   /// 折线数值序列（空列表 = 空数据态）。
   ///
-  /// 单位契约：**元（展示口径）**。数值标注按元取整 / k / w 缩写直接展示，
+  /// 单位契约：**元（展示口径）**。数值标注按元展示（最多两位小数、去尾零）/ k / w 缩写直接展示，
   /// 不在此处做分→元换算；上层调用方必须传元，禁止传数据库整数分，
   /// 否则标注会放大 100 倍（如 12.50 显示为 1250）。
   final List<double> values;

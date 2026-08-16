@@ -8,7 +8,6 @@ import 'package:spitout/theme/typography.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/core/logging/logger_service.dart';
-import 'package:spitout/utils/currency/currencies.dart';
 import 'package:spitout/providers/providers.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/data/models.dart' show Category, Transaction;
@@ -94,19 +93,11 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
     final ledgerId = ref.watch(currentLedgerIdProvider);
-    final ledgerAsync = ref.watch(currentLedgerProvider);
     final primaryColor = Theme.of(context).colorScheme.primary;
     // 仅未选中今天时显示「回到今天」：选中今天时隐藏；切到其他月会清空选中，
     // 此时必须保留按钮，否则没有快捷返回今天的入口。
     final showBackToToday =
         _selectedDay == null || !isSameDay(_selectedDay, DateTime.now());
-    // 账本本位币代码：优先取当前账本 currency，未设置时回退 CNY。
-    final ledgerCurrencyCode = ledgerAsync.maybeWhen(
-      data: (ledger) => ledger?.currency ?? 'CNY',
-      orElse: () => 'CNY',
-    );
-    // 从 ISO 4217 映射取真实符号（如 ¥ / $ / JP¥），杜绝硬编码。
-    final currencySymbol = getCurrencySymbol(ledgerCurrencyCode);
 
     // 获取当月统计数据
     final dailyTotalsAsync = ref.watch(
@@ -152,7 +143,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
                           context,
                           dailyTotals,
                           primaryColor,
-                          currencySymbol,
                           earliestMonthAsync.value ?? DateTime(2020, 1, 1),
                         ),
                     loading: () => _buildCalendarSkeleton(context),
@@ -189,7 +179,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     BuildContext context,
     Map<String, double> dailyTotals,
     Color primaryColor,
-    String currencySymbol,
     DateTime firstDay,
   ) {
     final locale = Localizations.localeOf(context);
@@ -281,22 +270,22 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
         // 自定义默认日期单元格
         defaultBuilder: (context, day, focusedDay) {
           return _buildDateCell(
-              context, day, dailyTotals, primaryColor, false, false, false, currencySymbol);
+              context, day, dailyTotals, primaryColor, false, false, false);
         },
         // 自定义今天日期单元格
         todayBuilder: (context, day, focusedDay) {
           return _buildDateCell(
-              context, day, dailyTotals, primaryColor, true, false, false, currencySymbol);
+              context, day, dailyTotals, primaryColor, true, false, false);
         },
         // 自定义选中日期单元格
         selectedBuilder: (context, day, focusedDay) {
           return _buildDateCell(
-              context, day, dailyTotals, primaryColor, false, true, false, currencySymbol);
+              context, day, dailyTotals, primaryColor, false, true, false);
         },
         // 自定义非当前月日期
         outsideBuilder: (context, day, focusedDay) {
           return _buildDateCell(
-              context, day, dailyTotals, primaryColor, false, false, true, currencySymbol);
+              context, day, dailyTotals, primaryColor, false, false, true);
         },
       ),
     );
@@ -313,7 +302,6 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
     bool isToday,
     bool isSelected,
     bool isOutside,
-    String currencySymbol,
   ) {
     final dateKey = _formatDate(day);
     final expense = dailyTotals[dateKey] ?? 0.0;
@@ -367,15 +355,12 @@ class _CalendarPageState extends ConsumerState<CalendarPage> {
           // 支出（在圆形外面）
           if (!isOutside && hasTransaction) ...[
             const SizedBox(height: SpitoutDimens.p4),
-            // 支出：保留 1.2k/1.2w 缩写以适配日历格子窄空间，
-            // 同时加账本本位币货币符号前缀（如 -¥1.2w）。
+            // 支出：与折线图共用 formatChartValueLabel（1.2k/1.2w 缩写、
+            // 无币种符号、无负号、最多两位小数去尾零），避免两处口径分裂；
+            // 收支属性由红/绿配色表达，负号会与配色语义重复。
             if (expense > 0)
               Text(
-                expense >= 10000
-                    ? '-$currencySymbol${(expense / 10000).toStringAsFixed(1)}w'
-                    : expense >= 1000
-                        ? '-$currencySymbol${(expense / 1000).toStringAsFixed(1)}k'
-                        : '-$currencySymbol${expense.toInt()}',
+                formatChartValueLabel(expense),
                 style: SpitoutTextTokens.caption(context).copyWith(fontWeight: FontWeight.w600, color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),height: 1.1),
                 maxLines: 1,
                 overflow: TextOverflow.clip,
