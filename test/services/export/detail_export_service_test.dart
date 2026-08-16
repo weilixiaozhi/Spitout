@@ -89,7 +89,7 @@ void main() {
         aaEnabled: false,
       ),
     );
-    when(() => repo.getTopLevelCategories(any()))
+    when(() => repo.getAllCategoriesIncludingShared())
         .thenAnswer((_) async => <Category>[]);
 
     final outputDir = Directory.systemTemp.createTempSync('spitout_export_test');

@@ -755,6 +755,16 @@ class LocalCategoryRepository {
     return query.watch();
   }
 
+  /// 共享交易的分类引用在 categorySyncIdOverride（categoryId 恒为 null）。
+  ///
+  /// 回填 synthetic categoryId 后再交给调用方：分类汇总页按 tx.categoryId
+  /// 分组并查分类 map，若保持 null 会把每笔子分类交易都回退渲染成父分类。
+  Transaction _hydrateSyntheticCategoryId(Transaction t) {
+    final override = t.categorySyncIdOverride;
+    if (override == null || override.isEmpty) return t;
+    return t.copyWith(categoryId: d.Value(syntheticIdForSyncId(override)));
+  }
+
   Stream<List<Transaction>> _watchTxByCategorySyntheticId(
     int syntheticId,
     int? ledgerId,
@@ -791,7 +801,9 @@ class LocalCategoryRepository {
       if (ledgerId != null) {
         q.where((t) => t.ledgerId.equals(ledgerId));
       }
-      final list = await q.get();
+      final list = (await q.get())
+          .map(_hydrateSyntheticCategoryId)
+          .toList();
       if (!ctrl.isClosed) ctrl.add(list);
     }
 
@@ -910,7 +922,9 @@ class LocalCategoryRepository {
       if (ledgerId != null) {
         q.where((t) => t.ledgerId.equals(ledgerId));
       }
-      final list = await q.get();
+      final list = (await q.get())
+          .map(_hydrateSyntheticCategoryId)
+          .toList();
       if (!ctrl.isClosed) ctrl.add(list);
     }
 

@@ -101,17 +101,14 @@ void main() {
     BuildContext ctx, {
     required List<({Transaction t, Category? category})> rows,
     DateTimeRange? dateRange,
-    List<Category> topCategories = const [],
-    List<Category> subCategories = const [],
+    List<Category> allCategories = const [],
   }) async {
     when(
       () => repo.transactionsWithCategoryAll(ledgerId: any(named: 'ledgerId')),
     ).thenAnswer((_) async => rows);
     when(() => repo.getLedgerById(any())).thenAnswer((_) async => null);
-    when(() => repo.getTopLevelCategories(any()))
-        .thenAnswer((_) async => topCategories);
-    when(() => repo.getSubCategories(any()))
-        .thenAnswer((_) async => subCategories);
+    when(() => repo.getAllCategoriesIncludingShared())
+        .thenAnswer((_) async => allCategories);
 
     final outputDir = Directory.systemTemp.createTempSync('spitout_detail_ext');
     addTearDown(() {
@@ -165,12 +162,29 @@ void main() {
       rows: [
         (t: _tx(1, categoryId: 2), category: child),
       ],
-      topCategories: [parent],
-      subCategories: [child],
+      allCategories: [parent, child],
     );
     final dataColumns = content.split('\n')[1].split(',');
     expect(dataColumns[1], '餐饮');
     expect(dataColumns[2], '外卖');
+  });
+
+  testWidgets('共享账本二级分类导出：分类列=父名、二级列=子分类名', (tester) async {
+    final ctx = await pumpContext(tester);
+    final parent = _cat(-1000, '交通');
+    final child = _cat(-1001, '打车', parentId: -1000, level: 2);
+
+    final content = await exportCsv(
+      tester,
+      ctx,
+      rows: [
+        (t: _tx(1, categoryId: -1001), category: child),
+      ],
+      allCategories: [parent, child],
+    );
+    final dataColumns = content.split('\n')[1].split(',');
+    expect(dataColumns[1], '交通');
+    expect(dataColumns[2], '打车');
   });
 
   testWidgets('无分类交易导出空分类列；有备注时原样保留', (tester) async {

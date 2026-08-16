@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:path/path.dart' as p;
 import 'package:path_provider/path_provider.dart';
 
-import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/services/system/public_export_dir_service.dart';
@@ -88,16 +87,13 @@ Future<DetailExportResult> exportDetailCsv({
               : 'CNY')
           .toUpperCase();
 
-  // 缓存所有分类信息(包括父分类),用于回填分类名
-  final expenseCategories = await repo.getTopLevelCategories('expense');
-  final allCategories = <int, Category>{};
-  for (final cat in expenseCategories) {
-    allCategories[cat.id] = cat;
-    final subCategories = await repo.getSubCategories(cat.id);
-    for (final subCat in subCategories) {
-      allCategories[subCat.id] = subCat;
-    }
-  }
+  // 缓存全部分类信息（主表 + 共享账本镜像），用于回填分类名与父分类名。
+  // 共享账本 Editor 的交易只持有 Owner 分类 syncId，主表查不到这些分类；
+  // 这里用一次性全量接口拿全，二级分类的「分类 / 二级分类」两列才能正确拆分。
+  final allCategories = {
+    for (final cat in await repo.getAllCategoriesIncludingShared())
+      cat.id: cat,
+  };
 
   // 异步加载分类数据后,检查 context 是否仍然有效
   if (!context.mounted) return (path: '', displayPath: '');

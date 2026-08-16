@@ -25,6 +25,110 @@ void main() {
 
   tearDown(() async => db.close());
 
+  /// 写入共享账本的一级分类「交通」和二级分类「打车」镜像行。
+  Future<void> seedSharedParentAndChild(
+    String ledgerSyncId,
+  ) async {
+    await db
+        .into(db.sharedLedgerCategories)
+        .insert(
+          SharedLedgerCategoriesCompanion.insert(
+            ledgerSyncId: ledgerSyncId,
+            syncId: 'c1',
+            name: '交通',
+            kind: 'expense',
+            updatedAt: DateTime.now(),
+          ),
+        );
+    await db
+        .into(db.sharedLedgerCategories)
+        .insert(
+          SharedLedgerCategoriesCompanion.insert(
+            ledgerSyncId: ledgerSyncId,
+            syncId: 'c2',
+            name: '打车',
+            kind: 'expense',
+            level: const Value(2),
+            parentSyncId: const Value('c1'),
+            updatedAt: DateTime.now(),
+          ),
+        );
+  }
+
+  /// 插入一笔共享账本 Editor 视角的交易：categoryId 为空，真实分类引用在
+  /// categorySyncIdOverride 中。返回账本 id 与交易 id。
+  Future<(int, int)> seedSharedTransaction(
+    String ledgerSyncId,
+  ) async {
+    final ledgerId = await db
+        .into(db.ledgers)
+        .insert(
+          LedgersCompanion.insert(
+            name: 'Shared',
+            syncId: Value(ledgerSyncId),
+            storageMode: const Value('cloud'),
+            isShared: const Value(true),
+            myRole: const Value('editor'),
+          ),
+        );
+    final txId = await db
+        .into(db.transactions)
+        .insert(
+          TransactionsCompanion.insert(
+            ledgerId: ledgerId,
+            type: 'expense',
+            amount: 2000,
+            categorySyncIdOverride: const Value('c2'),
+          ),
+        );
+    return (ledgerId, txId);
+  }
+
+  test(
+    '共享交易按父分类汇总时，categoryId 回填子分类 synthetic id，详情页不会退回父分类',
+    () async {
+      await seedSharedParentAndChild('LS-TX');
+      final (ledgerId, _) = await seedSharedTransaction('LS-TX');
+
+      final txs = await repo
+          .watchTransactionsByCategory(
+            syntheticIdForSyncId('c1'),
+            ledgerId: ledgerId,
+            includeSubCategories: true,
+          )
+          .first;
+
+      expect(txs, hasLength(1));
+      expect(
+        txs.first.categoryId,
+        syntheticIdForSyncId('c2'),
+        reason: '共享交易的分类引用在 categorySyncIdOverride，'
+            '返回流必须回填为子分类 synthetic id，详情页才能按实际子分类渲染',
+      );
+    },
+  );
+
+  test(
+    'transactionsWithCategoryAll 的共享二级分类保留 parentId，导出才能拆出二级分类',
+    () async {
+      await seedSharedParentAndChild('LS-EXP');
+      final (ledgerId, _) = await seedSharedTransaction('LS-EXP');
+
+      final rows = await repo.transactionsWithCategoryAll(ledgerId: ledgerId);
+
+      expect(rows, hasLength(1));
+      final cat = rows.first.category;
+      expect(cat, isNotNull);
+      expect(cat!.level, 2);
+      expect(
+        cat.parentId,
+        syntheticIdForSyncId('c1'),
+        reason: '合成 Category 必须由 parentSyncId 派生 parentId，'
+            '导出服务靠 level==2 且 parentId!=null 判断二级分类',
+      );
+    },
+  );
+
   test('负数 synthetic id → 返回共享一级 + 全部二级分类', () async {
     await db
         .into(db.ledgers)

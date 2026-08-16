@@ -318,13 +318,18 @@ class LocalTransactionRepository {
   /// 目标 syncId,详情页 0 笔交易。hash 派生的 id 与 picker / watchCategory
   /// 路径保持一致。
   Category _syntheticCategoryFromShared(SharedLedgerCategory s) {
+    final parentSyncId = s.parentSyncId;
     return Category(
       id: syntheticIdForSyncId(s.syncId),
       name: s.name,
       kind: s.kind,
       icon: s.icon,
       sortOrder: s.sortOrder,
-      parentId: null,
+      // 二级分类的父子链必须保留：详情页拼「父 / 子」全名、导出拆
+      // 「分类 / 二级分类」两列都依赖 parentId，不能像主表 join 那样丢成 null。
+      parentId: (parentSyncId != null && parentSyncId.isNotEmpty)
+          ? syntheticIdForSyncId(parentSyncId)
+          : null,
       level: s.level,
       syncId: s.syncId,
     );
@@ -988,16 +993,7 @@ class LocalTransactionRepository {
               ? null
               : ctx.sharedByLedgerAndSync['$ledgerSyncId|$cov'];
           if (s != null) {
-            category = Category(
-              id: syntheticIdForSyncId(s.syncId),
-              name: s.name,
-              kind: s.kind,
-              icon: s.icon,
-              sortOrder: s.sortOrder,
-              parentId: null,
-              level: s.level,
-              syncId: s.syncId,
-            );
+            category = _syntheticCategoryFromShared(s);
           }
         }
       }
