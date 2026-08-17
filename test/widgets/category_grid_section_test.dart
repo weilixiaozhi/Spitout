@@ -128,6 +128,19 @@ void main() {
     expect(find.text('测试早餐'), findsOneWidget);
   });
 
+  testWidgets('父/子分类名称统一 12px label', (tester) async {
+    await tester.pumpWidget(
+      buildHarness(injected: tree, onCategorySelected: (_) {}),
+    );
+    await tester.pump();
+    await tester.pump();
+
+    for (final name in ['测试餐饮', '测试早餐']) {
+      final style = tester.widget<Text>(find.text(name)).style;
+      expect(style?.fontSize, 12, reason: '$name 字号应为 12px label');
+    }
+  });
+
   testWidgets('点击无子分类的一级分类：上报选中并收起子分类卡片', (tester) async {
     final selected = <Category>[];
     await tester.pumpWidget(

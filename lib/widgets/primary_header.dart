@@ -65,9 +65,10 @@ class PrimaryHeader extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // 标题规格全局统一：字重用 strongTitle 的 w600，字号收敛为 14px
-    // （头部主标题比正文更克制，且不大于下方内容）。
-    final titleStyle = SpitoutTextTokens.strongTitle(context).copyWith(fontSize: 14);
+    // 标题规格全局统一：字号走 body token（14px），字重 w600，
+    // 头部主标题比下方列表内容更克制。
+    final titleStyle = SpitoutTextTokens.body(context)
+        .copyWith(fontWeight: FontWeight.w600);
     final subStyle = SpitoutTextTokens.label(context);
 
     // 内容区统一内边距：直接复用 padding（默认 all(8)，全局统一留白，

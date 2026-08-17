@@ -72,13 +72,13 @@ class DaySectionHeader extends StatelessWidget {
             children: [
               Row(children: [
                 Text(dateText,
-                    style: SpitoutTextTokens.label(
+                    style: SpitoutTextTokens.caption(
                       context,
                     ).copyWith(color: grey)),
                 if (week.isNotEmpty) ...[
                   const SizedBox(width: SpitoutDimens.p8),
                   Text(week,
-                      style: SpitoutTextTokens.label(
+                      style: SpitoutTextTokens.caption(
                         context,
                       ).copyWith(color: grey)),
                 ]

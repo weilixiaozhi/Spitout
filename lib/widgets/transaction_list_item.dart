@@ -180,7 +180,8 @@ class TransactionListItem extends ConsumerWidget {
                           child: Text(
                             // 第一行固定展示「分类名优先」，无分类时回退 title。
                             categoryName ?? title,
-                            style: SpitoutTextTokens.title(context),
+                            style: SpitoutTextTokens.label(context)
+                                .copyWith(color: SpitoutTokens.textPrimary(context)),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                           ),
@@ -211,7 +212,7 @@ class TransactionListItem extends ConsumerWidget {
                       signed: true,
                       showCurrency: true,
                       currencyCode: currencyCode,
-                      style: SpitoutTextTokens.title(context).copyWith(
+                      style: SpitoutTextTokens.label(context).copyWith(
                         color: ref.watch(expenseColorSchemeProvider) == 'green' ? SpitoutTokens.success(context) : SpitoutTokens.error(context),
                       )),
                   // 副行:外币交易时显示折算到账本本位币的结果(≈ 本位币金额)。
@@ -272,7 +273,7 @@ class TransactionListItem extends ConsumerWidget {
     if (note != null && note.isNotEmpty) {
       parts.add(Text(
         note,
-        style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
+        style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
       ));
@@ -298,7 +299,7 @@ class TransactionListItem extends ConsumerWidget {
         // 时间文本在共享/非共享账本均展示,不受 isShared 影响。
         final timeWidget = Text(
           timeText,
-          style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textSecondary(context)),
+          style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textSecondary(context)),
         );
         if (isShared) {
           // 仅共享账本渲染协作头像:collaboratorMap == null 表示成员表尚未加载,
@@ -347,7 +348,7 @@ class TransactionListItem extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p4),
           child: Text(
             '·',
-            style: SpitoutTextTokens.label(context).copyWith(color: SpitoutTokens.textTertiary(context)),
+            style: SpitoutTextTokens.caption(context).copyWith(color: SpitoutTokens.textTertiary(context)),
           ),
         ));
       }

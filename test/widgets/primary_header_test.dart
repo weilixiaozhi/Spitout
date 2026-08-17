@@ -26,6 +26,14 @@ void main() {
   }
 
   group('PrimaryHeader 内置规范', () {
+    testWidgets('标题字号 14px w600，走文本 token', (tester) async {
+      await tester.pumpWidget(buildHost(const PrimaryHeader(title: '标题')));
+
+      final style = tester.widget<Text>(find.text('标题')).style;
+      expect(style?.fontSize, 14, reason: '头部标题应为 14px');
+      expect(style?.fontWeight, FontWeight.w600, reason: '头部标题应为 w600');
+    });
+
     testWidgets('默认留白为上 8、下 0、左/右 12，调用方不传 padding 即全局统一', (tester) async {
       await tester.pumpWidget(buildHost(const PrimaryHeader(title: '标题')));
 

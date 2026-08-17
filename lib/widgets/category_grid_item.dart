@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/dimens.dart';
+import 'package:spitout/theme/typography.dart';
 import 'package:spitout/utils/category_utils.dart';
 import 'category_icon.dart';
 import 'package:spitout/theme/icons/app_icons.dart';
@@ -61,7 +62,6 @@ class CategoryGridItem extends StatelessWidget {
   Widget build(BuildContext context) {
     // 父分类 40×40，子分类 36×36（视觉上拉开层级）
     final iconSize = isSubCategory ? 36.0 : 40.0;
-    final fontSize = isSubCategory ? 11.0 : 12.0;
     final primaryColor = Theme.of(context).colorScheme.primary;
 
     // 选中态：主色实心填充 + 白色前景
@@ -129,11 +129,10 @@ class CategoryGridItem extends StatelessWidget {
             CategoryUtils.getDisplayName(category.name, context),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                  fontSize: fontSize,
-                  fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
-                  color: labelColor,
-                ),
+            style: SpitoutTextTokens.label(context).copyWith(
+              fontWeight: selected ? FontWeight.w600 : FontWeight.w400,
+              color: labelColor,
+            ),
           ),
         ],
       ),

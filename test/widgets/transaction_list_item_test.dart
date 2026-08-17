@@ -13,6 +13,7 @@ import 'package:spitout/data/models.dart' show Ledger;
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart'
     show currentLedgerProvider, spitoutCloudProviderInstance;
+import 'package:spitout/widgets/amount_text.dart';
 import 'package:spitout/widgets/collaborator_avatar.dart';
 import 'package:spitout/widgets/person_avatar.dart';
 import 'package:spitout/widgets/transaction_list_item.dart';
@@ -182,5 +183,30 @@ void main() {
 
     expect(find.text('21:05'), findsOneWidget);
     expect(find.text('08:30'), findsNothing);
+  });
+
+  testWidgets('分类名与金额为 12px label，备注/时间为 10px caption', (tester) async {
+    await _pump(
+      tester,
+      TransactionListItem(
+        icon: Icons.circle,
+        title: '早餐备注',
+        categoryName: '早餐',
+        amount: 1234,
+        isExpense: true,
+        happenedAt: DateTime(2026, 1, 1, 8, 30),
+        isShared: false,
+      ),
+    );
+
+    final categoryStyle = tester.widget<Text>(find.text('早餐')).style;
+    expect(categoryStyle?.fontSize, 12, reason: '分类名应为 12px label');
+    final amountStyle =
+        tester.widget<AmountText>(find.byType(AmountText)).style;
+    expect(amountStyle?.fontSize, 12, reason: '金额应为 12px label');
+    final noteStyle = tester.widget<Text>(find.text('早餐备注')).style;
+    expect(noteStyle?.fontSize, 10, reason: '备注应为 10px caption');
+    final timeStyle = tester.widget<Text>(find.text('08:30')).style;
+    expect(timeStyle?.fontSize, 10, reason: '时间应为 10px caption');
   });
 }

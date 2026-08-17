@@ -641,9 +641,7 @@ class _HomePageState extends ConsumerState<HomePage>
             Text(
               // 刷新中显示"正在同步账本数据"；刷新完成后就地切换为结果文案（停留 1 秒）。
               _syncResultText ?? l10n.homeSyncing,
-              style: SpitoutTextTokens.label(context).copyWith(color: primary,
-                height: 16 / 12, // Figma lineHeight 16 / fontSize 12
-              ),
+              style: SpitoutTextTokens.label(context).copyWith(color: primary),
             ),
           ],
         ),
