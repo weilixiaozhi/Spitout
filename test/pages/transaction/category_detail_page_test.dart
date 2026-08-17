@@ -1,7 +1,7 @@
 /// 分类汇总页（CategoryDetailPage）组件测试。
 ///
 ///   1. 汇总卡片「总金额 / 平均金额」带当前账本本位币符号（CNY → ¥）；
-///   2. 分类分组标题的支出小计带币种符号；
+///   2. 父分类与子分类交易在同一平铺列表中，不再拆分分类组小计；
 ///   3. 日期分组标题的支出小计带币种符号（与主页 transaction_list 口径一致）；
 ///   4. 仅统计当前账本，交易行不渲染账本标签。
 ///
@@ -147,36 +147,53 @@ void main() {
     expect(find.text('¥ 15'), findsOneWidget, reason: '汇总卡平均金额应带币种符号');
   });
 
-  testWidgets('分类分组标题与日期分组标题：支出小计均带币种符号', (tester) async {
+  testWidgets('日期分组标题：支出小计带币种符号，无分类分组小计', (tester) async {
     await tester.pumpWidget(buildApp());
     await prime(tester);
 
-    // 一级分类组：组标题「支出 ¥ 10」+ 组内日期标题「支出 ¥ 10」。
+    // 父、子交易同一天：只保留一个日期标题，小计为 10 + 20 = 30。
+    expect(
+      find.text('支出 ¥ 30'),
+      findsOneWidget,
+      reason: '同一平铺列表只按日期分组，日期小计应汇总父分类与子分类交易',
+    );
+    // 不再出现按分类拆分的组标题金额。
     expect(
       find.text('支出 ¥ 10'),
-      findsNWidgets(2),
-      reason: '一级分类组标题与日期标题的支出小计都应带币种符号',
+      findsNothing,
+      reason: '不应再渲染一级分类分组小计',
     );
-    // 二级分类组：组标题「支出 ¥ 20」+ 组内日期标题「支出 ¥ 20」。
     expect(
       find.text('支出 ¥ 20'),
-      findsNWidgets(2),
-      reason: '二级分类组标题与日期标题的支出小计都应带币种符号',
+      findsNothing,
+      reason: '不应再渲染二级分类分组小计',
     );
   });
 
-  testWidgets('仅统计当前账本：交易行不渲染账本标签，二级分类显示全名', (tester) async {
+  testWidgets('仅统计当前账本：父子分类同列表，交易行显示各自分类名', (tester) async {
     await tester.pumpWidget(buildApp());
     await prime(tester);
 
     // 跨账本模式已下线：页面任何位置都不应出现账本名标签。
     expect(find.text('测试账本'), findsNothing, reason: '仅统计当前账本，交易行不应渲染账本标签');
 
-    // 二级分类组标题与交易行均显示「父 / 子」全名。
+    // 不再渲染「父 / 子」分类组标题。
     expect(
       find.text('餐饮 / 外卖'),
+      findsNothing,
+      reason: '平铺列表不渲染分类分组标题',
+    );
+    // 子分类交易行显示自身分类名「外卖」。
+    expect(
+      find.text('外卖'),
+      findsOneWidget,
+      reason: '子分类交易行应显示正确的子分类内容',
+    );
+    // 一级分类交易行显示「餐饮」；页头汇总卡标题还有一处「餐饮」。
+    expect(
+      find.text('餐饮'),
       findsNWidgets(2),
-      reason: '二级分类应在组标题与交易行显示「父 / 子」全名',
+      reason: '一级分类交易行显示自身分类名，页头标题另有同名文本',
     );
 
     // 交易行金额带原币种符号（支出为负号 + 符号后带空格）。

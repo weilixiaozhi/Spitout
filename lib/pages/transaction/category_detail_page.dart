@@ -7,7 +7,6 @@ import 'package:spitout/data/models.dart' as db;
 import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/widgets/widgets.dart';
 import 'package:spitout/theme/colors.dart';
-import 'package:spitout/theme/typography.dart';
 import 'package:intl/intl.dart';
 import 'package:spitout/providers/core/post_processor.dart';
 import 'package:spitout/l10n/app_localizations.dart';
@@ -19,13 +18,6 @@ enum SortType { timeAsc, timeDesc, amountAsc, amountDesc }
 // ============================================================
 // 分类汇总列表的展示项模型（用于 ListView.builder 统一渲染）
 // ============================================================
-
-/// 分类分组标题行：展示该分类的 icon / 名称 / 支出小计
-class _CategoryHeaderItem {
-  final db.Category category;
-  final double expense;
-  _CategoryHeaderItem(this.category, this.expense);
-}
 
 /// 日期分组标题行：展示日期 + 当日支出小计
 class _DateHeaderItem {
@@ -423,88 +415,39 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       );
     }
 
-    // 第一步：按 categoryId 分组
-    final Map<int?, List<db.Transaction>> byCategory = {};
-    for (final tx in transactions) {
-      byCategory.putIfAbsent(tx.categoryId, () => []).add(tx);
-    }
-
-    // 第二步：排序分类组：一级分类（自身）排第一，二级分类按 sortOrder 排列
-    final categoryIds = byCategory.keys.toList();
-    categoryIds.sort((a, b) {
-      // 一级分类（widget.categoryId）始终排在最前面
-      if (a == widget.categoryId) return -1;
-      if (b == widget.categoryId) return 1;
-      // 二级分类按 sortOrder 排序
-      final catA = a != null ? categoryMap[a] : null;
-      final catB = b != null ? categoryMap[b] : null;
-      final soA = catA?.sortOrder ?? 0;
-      final soB = catB?.sortOrder ?? 0;
-      return soA.compareTo(soB);
-    });
-
     final isAmountSort = currentSortType == SortType.amountDesc ||
         currentSortType == SortType.amountAsc;
 
-    // 第三步：构建展示项列表（CategoryHeader → DateHeader → Transaction）
-    final items = <Object>[]; // [_CategoryHeaderItem | _DateHeaderItem | _TransactionDisplayItem]
+    // 父分类与各子分类的交易平铺在同一个列表里，仅按日期分组；
+    // 每行按交易自身 categoryId 渲染真实分类名与 icon，不再拆分分类组小计。
+    final dateOrder = <String>[];
+    final dateGroups = <String, List<db.Transaction>>{};
+    for (final tx in transactions) {
+      final dk = DateFormat('yyyy-MM-dd').format(tx.happenedAt.toLocal());
+      if (!dateGroups.containsKey(dk)) {
+        dateGroups[dk] = [];
+        dateOrder.add(dk);
+      }
+      dateGroups[dk]!.add(tx);
+    }
+    // 时间排序按日期键排；金额排序保持 provider 已排好的金额顺序，只切日期标题。
+    if (!isAmountSort) {
+      dateOrder.sort(currentSortType == SortType.timeDesc
+          ? (a, b) => b.compareTo(a)
+          : (a, b) => a.compareTo(b));
+    }
 
-    for (final catId in categoryIds) {
-      final catTxns = byCategory[catId]!;
-      // 确定该组所属的分类对象（按第一笔交易的 categoryId 查，回退到一级分类）
-      final cat = _getCategoryForTransaction(catTxns.first, categoryMap);
-      if (cat == null) continue;
-
-      // 分类小计（仅支出）
-      final catExpense = catTxns
+    final items = <Object>[]; // [_DateHeaderItem | _TransactionDisplayItem]
+    for (final dk in dateOrder) {
+      final dayTxns = dateGroups[dk]!;
+      final dayExpense = dayTxns
           .where((t) => t.type == 'expense')
           .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-      items.add(_CategoryHeaderItem(cat, catExpense / 100));
-
-      if (isAmountSort) {
-        // 金额排序：分类内保持金额顺序，但仍需展示日期标题
-        final dateOrder = <String>[];
-        final dateGroups = <String, List<db.Transaction>>{};
-        for (final tx in catTxns) {
-          final dk = DateFormat('yyyy-MM-dd').format(tx.happenedAt.toLocal());
-          if (!dateGroups.containsKey(dk)) {
-            dateGroups[dk] = [];
-            dateOrder.add(dk);
-          }
-          dateGroups[dk]!.add(tx);
-        }
-        for (final dk in dateOrder) {
-          final dayTxns = dateGroups[dk]!;
-          final dayExpense = dayTxns
-              .where((t) => t.type == 'expense')
-              .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-          items.add(_DateHeaderItem(dk, dayExpense / 100));
-          for (final tx in dayTxns) {
-            items.add(_TransactionDisplayItem(tx, cat));
-          }
-        }
-      } else {
-        // 时间排序：分类内按日期分组
-        final dateGroups = <String, List<db.Transaction>>{};
-        for (final tx in catTxns) {
-          final dk = DateFormat('yyyy-MM-dd').format(tx.happenedAt.toLocal());
-          dateGroups.putIfAbsent(dk, () => []).add(tx);
-        }
-        final dateKeys = dateGroups.keys.toList();
-        dateKeys.sort(currentSortType == SortType.timeDesc
-            ? (a, b) => b.compareTo(a)
-            : (a, b) => a.compareTo(b));
-
-        for (final dk in dateKeys) {
-          final dayTxns = dateGroups[dk]!;
-          final dayExpense = dayTxns
-              .where((t) => t.type == 'expense')
-              .fold<int>(0, (sum, t) => sum + (t.nativeAmount ?? t.amount));
-          items.add(_DateHeaderItem(dk, dayExpense / 100));
-          for (final tx in dayTxns) {
-            items.add(_TransactionDisplayItem(tx, cat));
-          }
-        }
+      items.add(_DateHeaderItem(dk, dayExpense / 100));
+      for (final tx in dayTxns) {
+        final cat = _getCategoryForTransaction(tx, categoryMap);
+        if (cat == null) continue;
+        items.add(_TransactionDisplayItem(tx, cat));
       }
     }
 
@@ -513,9 +456,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
       itemCount: items.length,
       itemBuilder: (context, index) {
         final item = items[index];
-        if (item is _CategoryHeaderItem) {
-          return _buildCategorySectionHeader(item.category, item.expense, categoryMap);
-        } else if (item is _DateHeaderItem) {
+        if (item is _DateHeaderItem) {
           return DaySectionHeader(
             dateText: item.dateKey,
             expense: item.expense,
@@ -529,10 +470,8 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             icon: getCategoryIconData(category: cat),
             category: cat,
             title: transaction.note ?? '',
-            // 二级分类显示「父 / 子」全名，区分跨父同名叶子（如「购物>鞋子」
-            // vs「服装>鞋子」）；一级分类仍只显示自身名。
-            categoryName:
-                _formatCategoryLabel(cat, categoryMap, context),
+            // 平铺列表每行显示该交易自身的分类名（子分类显示「打车」而非父分类）。
+            categoryName: CategoryUtils.getDisplayName(cat.name, context),
             amount: transaction.amount,
             currencyCode: transaction.currencyCode,
             nativeAmount: transaction.nativeAmount,
@@ -590,81 +529,6 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
     return categoryMap[widget.categoryId];
   }
 
-  /// 渲染分类显示名。一级分类返回自身翻译名；二级分类返回「父 / 子」全名。
-  ///
-  /// 设计意图：默认分类里允许跨父级同名（如「购物>鞋子」「服装>鞋子」），
-  /// 单独显示叶子名会让用户无法区分两笔交易分属哪个父级。这里对二级分类
-  /// 拼上父名，跟 [LocalCategoryRepository.getCategoryFullName] 的口径一致，
-  /// 消除交易列表 / 分类组标题里的同名歧义。
-  String _formatCategoryLabel(
-    db.Category category,
-    Map<int, db.Category> categoryMap,
-    BuildContext context,
-  ) {
-    final selfName = CategoryUtils.getDisplayName(category.name, context);
-    if (category.level == 1 || category.parentId == null) {
-      return selfName;
-    }
-    // 二级分类：在 categoryMap 里查父行拼「父 / 子」。
-    // watchCategoryWithSubs 返回的结果包含一级 + 它的所有二级，故父行必在 map 中。
-    final parent = categoryMap[category.parentId];
-    if (parent == null) {
-      return selfName;
-    }
-    final parentName = CategoryUtils.getDisplayName(parent.name, context);
-    return '$parentName / $selfName';
-  }
-
-  /// 分类分组标题栏：展示分类 icon / 名称 / 该分类下交易支出小计
-  ///
-  /// 二级分类显示「父 / 子」全名，让用户在跨父同名场景下能区分两个「鞋子」
-  /// 组分别属于哪个父级。
-  Widget _buildCategorySectionHeader(
-    db.Category category,
-    double expense,
-    Map<int, db.Category> categoryMap,
-  ) {
-    final l10n = AppLocalizations.of(context);
-    final grey = SpitoutTokens.textSecondary(context);
-    final icon = getCategoryIconData(category: category);
-
-    // 分类小计金额带当前账本本位币符号（小计基于 nativeAmount，已折本位币），
-    // 符号+金额统一走唯一来源 formatMoneyWithCurrency；支出为 0 时不展示金额。
-    final currencyCode = ref.watch(currentLedgerCurrencyProvider);
-    String fmt(double v) =>
-        v == 0 ? '' : formatMoneyWithCurrency(v, currencyCode: currencyCode);
-
-    return Container(
-      margin: const EdgeInsets.only(top: SpitoutDimens.p16, bottom: SpitoutDimens.p4),
-      padding: const EdgeInsets.symmetric(horizontal: SpitoutDimens.p12, vertical: SpitoutDimens.p8),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.08),
-        borderRadius: BorderRadius.circular(SpitoutDimens.radius8),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Row(children: [
-            Icon(icon, size: SpitoutDimens.icon16, color: Theme.of(context).colorScheme.primary),
-            const SizedBox(width: SpitoutDimens.p8),
-            Text(
-              _formatCategoryLabel(category, categoryMap, context),
-              style: Theme.of(context).textTheme.labelLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-            ),
-          ]),
-          if (fmt(expense).isNotEmpty)
-            Text(
-              '${l10n.homeExpense} ${fmt(expense)}',
-              style: SpitoutTextTokens.label(
-                context,
-              ).copyWith(color: grey),
-            ),
-        ],
-      ),
-    );
-  }
 }
 
 class _SummaryItem extends ConsumerWidget {
