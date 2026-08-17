@@ -758,7 +758,7 @@ class LocalCategoryRepository {
   /// 共享交易的分类引用在 categorySyncIdOverride（categoryId 恒为 null）。
   ///
   /// 回填 synthetic categoryId 后再交给调用方：分类汇总页按 tx.categoryId
-  /// 分组并查分类 map，若保持 null 会把每笔子分类交易都回退渲染成父分类。
+  /// 查分类 map 渲染每笔交易的真实分类名。
   Transaction _hydrateSyntheticCategoryId(Transaction t) {
     final override = t.categorySyncIdOverride;
     if (override == null || override.isEmpty) return t;

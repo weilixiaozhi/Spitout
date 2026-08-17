@@ -325,8 +325,7 @@ class LocalTransactionRepository {
       kind: s.kind,
       icon: s.icon,
       sortOrder: s.sortOrder,
-      // 二级分类的父子链必须保留：详情页拼「父 / 子」全名、导出拆
-      // 「分类 / 二级分类」两列都依赖 parentId，不能像主表 join 那样丢成 null。
+      // 二级分类由 parentSyncId 派生 parentId，供导出拆「分类 / 二级分类」两列。
       parentId: (parentSyncId != null && parentSyncId.isNotEmpty)
           ? syntheticIdForSyncId(parentSyncId)
           : null,

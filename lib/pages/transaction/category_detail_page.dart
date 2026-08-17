@@ -419,7 +419,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
         currentSortType == SortType.amountAsc;
 
     // 父分类与各子分类的交易平铺在同一个列表里，仅按日期分组；
-    // 每行按交易自身 categoryId 渲染真实分类名与 icon，不再拆分分类组小计。
+    // 每行按交易自身 categoryId 渲染真实分类名与 icon。
     final dateOrder = <String>[];
     final dateGroups = <String, List<db.Transaction>>{};
     for (final tx in transactions) {
@@ -470,7 +470,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
             icon: getCategoryIconData(category: cat),
             category: cat,
             title: transaction.note ?? '',
-            // 平铺列表每行显示该交易自身的分类名（子分类显示「打车」而非父分类）。
+            // 平铺列表每行显示该交易自身的分类名。
             categoryName: CategoryUtils.getDisplayName(cat.name, context),
             amount: transaction.amount,
             currencyCode: transaction.currencyCode,
@@ -516,7 +516,7 @@ class _CategoryDetailPageState extends ConsumerState<CategoryDetailPage> {
   /// 根据交易的 [tx.categoryId] 查找其实际所属的分类对象。
   ///
   /// 设计意图：分类汇总页同时展示一级 + 二级分类的交易，每笔交易应使用
-  /// 其真实分类的 icon 与名称，而非统一回退到一级分类。查不到时回退到一级。
+  /// 其真实分类的 icon 与名称；查不到时回退到当前一级分类。
   db.Category? _getCategoryForTransaction(
     db.Transaction tx,
     Map<int, db.Category> categoryMap,
@@ -590,7 +590,7 @@ class _SummaryItem extends ConsumerWidget {
 /// 监听分类及其所有子分类，构建 categoryId → Category 映射。
 ///
 /// 用于 CategoryDetailPage 内每笔交易按 [transaction.categoryId] 查找
-/// 其实际所属分类，展示正确的 icon 与名称（而非统一用一级分类）。
+/// 其实际所属分类，展示正确的 icon 与名称。
 final _categorySubsMapProvider =
     StreamProvider.family<Map<int, db.Category>, int>((ref, categoryId) {
   final repo = ref.watch(repositoryProvider);
