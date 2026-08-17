@@ -451,10 +451,10 @@ class SpitoutTokens {
 
   // ========== 图表/统计色 Token (Chart Colors) ==========
 
-  /// 支出颜色
-  /// - 亮色模式：errorLight
-  /// - 暗黑模式：errorDark
-  static Color chartExpense(BuildContext context) => error(context);
+  /// 支出趋势线颜色（折线/数据点共用）
+  /// - 跟随主题主色，亮暗模式均取 `colorScheme.primary`
+  /// - 不用 error 语义色：趋势线是「统计展示」，与金额的支出语义色区分开
+  static Color chartExpense(BuildContext context) => primary(context);
 
   // ========== 遮罩层 Token (Overlay) ==========
 

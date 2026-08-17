@@ -84,6 +84,9 @@ void main() {
       expect(SpitoutTokens.statusOffline(ctx), isA<Color>());
       expect(SpitoutTokens.statusPending(ctx), isA<Color>());
       expect(SpitoutTokens.chartExpense(ctx), isA<Color>());
+      // 趋势折线颜色口径：跟随主题主色（与 4b55bb5 之前的视觉一致），
+      // 不使用 error 语义色，避免「支出趋势线」与「支出金额」混淆。
+      expect(SpitoutTokens.chartExpense(ctx), SpitoutTokens.primary(ctx));
       expect(SpitoutTokens.overlay(ctx), isA<Color>());
       expect(SpitoutTokens.tabBarBackground(ctx), isA<Color>());
       expect(SpitoutTokens.tabBarShadow, isNotEmpty);

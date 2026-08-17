@@ -181,9 +181,10 @@ final color = SpitoutTokens.success(context);
 
 | Token 名称 | 用途 | 说明 |
 |-----------|------|------|
-| `chartExpense` | 支出颜色 | 委托 `error(context)`（亮 `#D94A5B` / 暗 `#F87171`） |
+| `chartExpense` | 支出趋势线颜色 | 委托 `primary(context)`（主题主色，亮暗跟随主题） |
 
 > 统计页支出趋势折线图（`AnalyticsLineChart`）的数据线与数据点使用 `chartExpense`。
+> 折线是统计展示，不使用 error 语义色，避免与金额的支出语义色混淆。
 
 **方案感知的支出颜色**（非 Token，需订阅 `expenseColorSchemeProvider`）：
 
