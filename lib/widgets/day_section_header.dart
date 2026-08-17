@@ -85,7 +85,7 @@ class DaySectionHeader extends StatelessWidget {
               ]),
               if (fmt(expense).isNotEmpty)
                 Text('${l10n.homeExpense} ${fmt(expense)}',
-                    style: SpitoutTextTokens.label(
+                    style: SpitoutTextTokens.caption(
                       context,
                     ).copyWith(color: grey)),
             ],

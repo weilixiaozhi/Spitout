@@ -1,7 +1,6 @@
 /// 日期分组头组件字体规范测试。
 ///
-/// 锁定日期/星期走 caption(10px)、日支出汇总金额走 label(12px)，
-/// 与交易列表条目的字体层级保持一致。
+/// 锁定日期/星期/日支出汇总金额均走 caption(10px)。
 library;
 
 import 'package:flutter/material.dart';
@@ -12,7 +11,7 @@ import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/widgets/day_section_header.dart';
 
 void main() {
-  testWidgets('日期/星期 10px caption，日汇总金额 12px label', (tester) async {
+  testWidgets('日期/星期/日汇总金额均 10px caption', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
         localizationsDelegates: const [
@@ -35,6 +34,6 @@ void main() {
     expect(weekStyle?.fontSize, 10, reason: '星期应为 10px caption');
     final amountStyle =
         tester.widget<Text>(find.textContaining('123.45')).style;
-    expect(amountStyle?.fontSize, 12, reason: '日汇总金额应为 12px label');
+    expect(amountStyle?.fontSize, 10, reason: '日汇总金额应为 10px caption');
   });
 }
