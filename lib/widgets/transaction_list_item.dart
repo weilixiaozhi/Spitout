@@ -7,9 +7,11 @@ import 'package:spitout/theme/dimens.dart';
 import 'package:spitout/theme/typography.dart';
 import 'category_icon.dart';
 import 'package:spitout/utils/currency/currencies.dart';
-import 'package:spitout/providers/core/database_providers.dart';
-import 'package:spitout/providers/ui/theme_providers.dart' show expenseColorSchemeProvider;
-import 'package:spitout/providers/providers.dart' show SpitoutCloudLedgerMember;
+import 'package:spitout/providers/providers.dart'
+    show
+        SpitoutCloudLedgerMember,
+        currentLedgerProvider,
+        expenseColorSchemeProvider;
 import 'collaborator_avatar.dart';
 import 'amount_text.dart';
 

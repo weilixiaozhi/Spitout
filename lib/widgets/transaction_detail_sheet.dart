@@ -7,15 +7,13 @@ import 'package:spitout/providers/providers.dart'
     show
         SpitoutCloudLedgerMember,
         UserDisplayNameResolver,
+        cloudCurrentUserProvider,
         currentLedgerProvider,
+        displayNameProvider,
         expenseColorSchemeProvider,
         ledgerVirtualUsersProvider,
         localSelfIdProvider,
         recordEditHistoryProvider;
-import 'package:spitout/providers/sync/cloud_client_providers.dart'
-    show cloudCurrentUserProvider;
-import 'package:spitout/providers/ui/theme_providers.dart'
-    show displayNameProvider;
 import 'package:spitout/services/statistics/aa_statistics_service.dart' show AaMode;
 import 'package:spitout/theme/colors.dart';
 import 'package:spitout/theme/dimens.dart';
