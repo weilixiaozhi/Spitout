@@ -15,10 +15,10 @@ import 'toast.dart';
 /// 1. 同值(忽略大小写)跳过;
 /// 2. 账本交易数 > 0 → 弹拦截确认弹窗,文案明确「重算覆盖 + 往返不可还原」后果;
 ///    0 笔跳过弹窗;取消则整体中止;
-/// 3. updateLedger 改币种 → 4. force 拉汇率(带账本涉及外币 ∪ 新币种) →
-/// 5. 全量重算 nativeAmount → 6. 新本位币补入当前账本可见集合 →
-/// 7. 刷新信号(先于同步发,UI 不等 push) → 8. PostProcessor.sync →
-/// 9. Toast 完成提示。
+/// 3. force 预拉新本位币汇率 → 4. 同一事务内改币种并全量重算 nativeAmount →
+/// 5. 新本位币补入当前账本可见集合 →
+/// 6. 刷新信号(先于同步发,UI 不等 push) → 7. PostProcessor.sync →
+/// 8. Toast 完成提示。
 ///
 /// 折算快照语义(破坏性说明):切本位币是唯一覆盖历史快照的操作——
 /// 旧快照按旧本位币折算,口径变更后必须全量重算;往返切换(切走再切回)
@@ -84,31 +84,43 @@ Future<bool> applyLedgerCurrencyChange(
     if (confirmed != true) return false;
   }
 
-  // 3. 改账本本位币
-  await repo.updateLedger(id: ledgerId, currency: next);
-
-  // 4. 先强制拉一次「以新本位币为 base」的汇率:改币种瞬间本地通常还没有
-  // 这一组(汇率按本位币基准存),不拉的话重算会因缺汇率整体退化。
+  // 3. 先强制拉一次「以新本位币为 base」的汇率。网络 I/O 必须发生在
+  // 原子换币事务之前，否则进程在 updateLedger 后中断会留下新币种配旧快照。
   // extraQuotes 带上账本实际涉及的全部外币 ∪ {新币种}。拉取失败也继续——
   // 缺汇率的笔退化 =amount,由补折算横幅兜底,绝不保留旧口径错值。
   try {
     final foreign = await repo.getLedgerForeignCurrencies(ledgerId);
-    await refreshExchangeRatesFromUi(ref,
-        force: true, extraQuotes: {...foreign, next});
+    await refreshExchangeRatesFromUi(
+      ref,
+      force: true,
+      // 历史交易可能没有 currencyCode，其 amount 仍属于换币前的本位币；
+      // 主动拉取旧本位币汇率，才能在重算时恢复其真实记账币种口径。
+      extraQuotes: {...foreign, ledger.currency, next},
+      // 新币种尚未写入 ledgers，必须显式加入 base 集合才能提前落下该组汇率。
+      extraBases: {next},
+    );
   } catch (e, st) {
-    logger.warning('ledger_currency_change', '切本位币后拉取汇率失败(继续重算): $e', st);
+    logger.warning('ledger_currency_change', '切本位币前拉取汇率失败(继续重算): $e', st);
   }
 
-  // 5. 全量重算 nativeAmount(逐笔记 change,触发后续同步推送)
-  final recalcCount = await repo.recalcNativeAmountsForLedger(ledgerId, next);
+  // 4. 元数据更新、逐笔快照重算及其 local_changes 必须同事务提交。
+  // 任一步失败都会整体回滚，杜绝“新本位币 + 旧 nativeAmount”的静默错账。
+  final recalcCount = await repo.runInTransaction(() async {
+    await repo.updateLedger(id: ledgerId, currency: next);
+    return repo.recalcNativeAmountsForLedger(
+      ledgerId,
+      next,
+      previousBase: ledger.currency,
+    );
+  });
 
-  // 6. 新本位币补入当前账本可见集合(仅当切的是当前账本;
+  // 5. 新本位币补入当前账本可见集合(仅当切的是当前账本;
   // 非当前账本的集合在其首次访问时按「13 常用 ∪ 本位币」初始化,天然含新币种)
   if (ref.read(currentLedgerIdProvider) == ledgerId) {
     await ensureCurrencyVisibleForCurrentLedger(ref, next);
   }
 
-  // 7. 刷新信号必须在 sync 之前发:重算产生大量 change,push 可能耗时数十秒
+  // 6. 刷新信号必须在 sync 之前发:重算产生大量 change,push 可能耗时数十秒
   // 甚至失败;本地数据此刻已就绪,立即刷新,UI 不等 push。
   ref.read(ledgerListRefreshProvider.notifier).tick();
   // currentLedgerProvider 已是 StreamProvider(Drift watch 自动推送),
@@ -116,14 +128,14 @@ Future<bool> applyLedgerCurrencyChange(
   ref.invalidate(currentLedgerProvider);
   ref.invalidate(monthlyTotalsProvider);
 
-  // 8. 触发同步把账本元数据 + 重算 change 推到云端;失败仅告警,本地已生效
+  // 7. 触发同步把账本元数据 + 重算 change 推到云端;失败仅告警,本地已生效
   try {
     await PostProcessor.sync(ref, ledgerId: ledgerId);
   } catch (e) {
     logger.warning('ledger_currency_change', '切本位币后同步失败(本地已生效,下次同步重试): $e');
   }
 
-  // 9. Toast 完成提示
+  // 8. Toast 完成提示
   if (!context.mounted) return true;
   final l10n = AppLocalizations.of(context);
   if (recalcCount > 0) {

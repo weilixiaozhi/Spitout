@@ -210,6 +210,11 @@ class RecurringTransactions extends Table {
   TextColumn get type => text()(); // 全局仅支出模式，type 固定为 expense
   /// 周期模板金额,单位=最小货币单位(分),与 [Transactions.amount] 同口径。
   IntColumn get amount => integer()();
+  /// 模板金额的原记账币种。
+  ///
+  /// 币种跟随金额而不是账本归属持久化，确保模板跨账本或账本更换本位币后，
+  /// 后续生成的交易仍按创建模板时的币种交给统一交易写入链路折算。
+  TextColumn get currencyCode => text().nullable()();
   IntColumn get categoryId => integer().nullable()();
   TextColumn get note => text().nullable()();
 
@@ -425,7 +430,7 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   /// 用这个。
   SpitoutDatabase.forTesting(super.executor);
 
-  /// 当前 schema 结构对应的数据库版本号 = 4。
+  /// 当前 schema 结构对应的数据库版本号 = 6。
   ///
   /// drift 不允许以 0 为起始版本（已知 bug，会破坏迁移），故基线从 1 起步；
   /// 任何 schema 版本升级都从这里递增版本号。
@@ -446,8 +451,9 @@ class SpitoutDatabase extends _$SpitoutDatabase {
   ///     LedgerVirtualUsers 的 sync_id 与 SyncState(device_id,provider_type)
   ///     加唯一索引;高频查询列加二级索引;关键不变量加 CHECK 约束。
   /// v5: 账号语义统一 ——— ledger_members.email 改名为 account（数据不变）。
+  /// v6: 周期模板记录原记账币种，避免账本币种变化后金额单位漂移。
   @override
-  int get schemaVersion => 5;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -778,6 +784,25 @@ class SpitoutDatabase extends _$SpitoutDatabase {
               'ALTER TABLE ledger_members RENAME COLUMN email TO account;',
             );
             logger.info('DBMigration', 'v5 迁移完成');
+          }
+
+          if (from < 6) {
+            // v6:周期模板保存原记账币种。先加可空列再按模板原所属账本回填，
+            // 避免把存量金额误解释成升级后的当前账本币种。
+            logger.info('DBMigration', '开始迁移到 v6: 周期模板原记账币种');
+            await addColumnIfMissing(
+              'recurring_transactions',
+              'currency_code',
+              'ALTER TABLE recurring_transactions ADD COLUMN currency_code TEXT NULL;',
+            );
+            await customStatement(
+              'UPDATE recurring_transactions '
+              'SET currency_code = ('
+              'SELECT UPPER(currency) FROM ledgers '
+              'WHERE ledgers.id = recurring_transactions.ledger_id'
+              ') WHERE currency_code IS NULL;',
+            );
+            logger.info('DBMigration', 'v6 迁移完成');
           }
         },
 

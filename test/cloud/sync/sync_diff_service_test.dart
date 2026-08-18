@@ -1,5 +1,6 @@
 import 'package:decimal/decimal.dart';
 import 'package:drift/drift.dart' show Value;
+import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 import 'package:spitout/utils/currency/money_cents.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -378,6 +379,69 @@ void main() {
       expect(result.deletedCount, 0);
     });
 
+    test('源与目标账本币种不一致 → 新增和修改均不落库', () async {
+      final ledgerId = await createLedger(); // 本地 CNY 账本
+      await insertLocalTx(
+        ledgerId,
+        amount: Decimal.parse('100'),
+        note: '旧备注',
+        currencyCode: 'CNY',
+        nativeAmount: 10000,
+      );
+      final changes = [
+        SyncChange(
+          type: SyncChangeType.added,
+          cloudTransaction: ImportTransaction(
+            type: 'expense',
+            amount: Decimal.parse('10'),
+            happenedAt: _t(2024, 1, 2),
+            syncId: 'tx-new',
+            currencyCode: 'USD',
+            nativeAmount: Decimal.parse('10'),
+          ),
+        ),
+        SyncChange(
+          type: SyncChangeType.modified,
+          cloudTransaction: ImportTransaction(
+            type: 'expense',
+            amount: Decimal.parse('99'),
+            happenedAt: _t(2024, 1, 1, 12, 0, 0),
+            note: '新备注',
+            syncId: 'tx-1',
+            currencyCode: 'USD',
+            nativeAmount: Decimal.parse('99'),
+          ),
+        ),
+      ];
+
+      await expectLater(
+        service.applySyncChanges(
+          repo: repo,
+          ledgerId: ledgerId,
+          selectedChanges: changes,
+          importData: const ImportData(
+            currency: 'usd',
+            categories: [ImportCategory(name: '不应导入', kind: 'expense')],
+          ),
+        ),
+        throwsA(
+          isA<fcs.CloudSyncException>()
+              .having((e) => e.message, 'message', contains('USD'))
+              .having((e) => e.message, 'message', contains('CNY')),
+        ),
+      );
+
+      final local = await repo.getTransactionsByLedger(ledgerId);
+      expect(local, hasLength(1));
+      expect(local.single.amount, 10000);
+      expect(local.single.note, '旧备注');
+      expect(local.single.nativeAmount, 10000);
+      expect(
+        (await repo.getAllCategories()).where((c) => c.name == '不应导入'),
+        isEmpty,
+      );
+    });
+
     test('批量 added → 全部落库，计数正确', () async {
       final ledgerId = await createLedger();
       final changes = [
@@ -475,7 +539,7 @@ void main() {
         repo: repo,
         ledgerId: ledgerId,
         selectedChanges: changes,
-        importData: const ImportData(),
+        importData: const ImportData(currency: 'CNY'),
       );
       expect(result.modifiedCount, 1);
 
@@ -488,7 +552,7 @@ void main() {
       expect(local.aaSplits, '{"u1":"50.00","u2":"50.00"}');
     });
 
-    test('deleted（有 syncId）→ 批量删除', () async {
+    test('deleted（有 syncId）→ 异币种快照也可安全删除', () async {
       final ledgerId = await createLedger();
       final tx = await insertLocalTx(ledgerId, syncId: 'tx-del');
       final changes = [
@@ -501,7 +565,7 @@ void main() {
         repo: repo,
         ledgerId: ledgerId,
         selectedChanges: changes,
-        importData: const ImportData(),
+        importData: const ImportData(currency: 'USD'),
       );
       expect(result.deletedCount, 1);
       expect((await repo.getTransactionsByLedger(ledgerId)), isEmpty);

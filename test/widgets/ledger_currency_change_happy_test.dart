@@ -14,13 +14,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
 
+import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/l10n/app_localizations.dart';
 import 'package:spitout/providers/providers.dart';
+import 'package:spitout/services/currency/exchange_rate_service.dart';
 import 'package:spitout/widgets/ledger_currency_change.dart';
 
 import '../helpers/test_isolation.dart';
+
+/// 固定汇率源，避免换币流程测试依赖公网。
+class _FakeRateService implements ExchangeRateService {
+  @override
+  Future<RateFetchResult> fetch(String base) async => RateFetchResult(
+        rateDate: '2026-08-18',
+        source: 'test',
+        ratesBaseToQuote: base == 'USD'
+            ? const {'CNY': '7.142857'}
+            : const {'USD': '0.14'},
+      );
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) =>
+      super.noSuchMethod(invocation);
+}
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -58,6 +76,7 @@ void main() {
         home: ProviderScope(
           overrides: [
             repositoryProvider.overrideWith((ref) => repo),
+            exchangeRateServiceProvider.overrideWithValue(_FakeRateService()),
             activeCloudConfigProvider.overrideWith(
               (ref) async => const CloudServiceConfig(
                 type: CloudBackendType.local,
@@ -146,6 +165,57 @@ void main() {
     final ledger = await repo.getLedgerById(ledgerId);
     expect(ledger?.currency, 'USD', reason: '小写输入归一化为大写');
     expect(find.textContaining('已切换'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 3));
+  });
+
+  testWidgets('重算失败时币种、快照与同步变更全部回滚', (tester) async {
+    final h = await pumpHarness(tester);
+    final ledgerId = await db.into(db.ledgers).insert(
+          LedgersCompanion.insert(
+            name: '云账本',
+            currency: const d.Value('CNY'),
+            syncId: const d.Value('ledger-sync'),
+            storageMode: const d.Value('cloud'),
+          ),
+        );
+    await db.into(db.transactions).insert(
+          TransactionsCompanion.insert(
+            ledgerId: ledgerId,
+            type: 'expense',
+            amount: 100,
+            currencyCode: const d.Value('CNY'),
+            nativeAmount: const d.Value(100),
+            syncId: const d.Value('tx-sync'),
+          ),
+        );
+    repo.changeTracker = ChangeTracker(db);
+    // 在币种元数据写入之后强制让金额重算失败，验证外层事务能撤销前序写入。
+    await db.customStatement('''
+      CREATE TRIGGER fail_native_recalc
+      BEFORE UPDATE OF native_amount ON transactions
+      BEGIN
+        SELECT RAISE(ABORT, 'forced recalc failure');
+      END;
+    ''');
+
+    final future = applyLedgerCurrencyChange(
+      h.context,
+      h.ref,
+      ledgerId: ledgerId,
+      newCurrency: 'USD',
+    );
+    await tester.pumpAndSettle();
+    expect(find.text('确定'), findsOneWidget);
+    final failure = expectLater(future, throwsA(anything));
+    await tester.tap(find.text('确定'));
+    await tester.pumpAndSettle();
+    await failure;
+
+    expect((await repo.getLedgerById(ledgerId))?.currency, 'CNY');
+    final tx = await repo.getTransactionById(1);
+    expect(tx?.currencyCode, 'CNY');
+    expect(tx?.nativeAmount, 100);
+    expect(await db.select(db.localChanges).get(), isEmpty);
     await tester.pump(const Duration(seconds: 3));
   });
 }

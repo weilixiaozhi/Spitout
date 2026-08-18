@@ -53,6 +53,7 @@ Ledger _ledger(int id, String name, {String currency = 'CNY'}) => Ledger(
 RecurringTransaction _recurring(
   int id, {
   required int ledgerId,
+  String currencyCode = 'CNY',
   int? categoryId,
   String? note,
   int? dayOfMonth,
@@ -63,6 +64,7 @@ RecurringTransaction _recurring(
       ledgerId: ledgerId,
       type: 'expense',
       amount: 12345,
+      currencyCode: currencyCode,
       categoryId: categoryId,
       note: note,
       frequency: 'monthly',
@@ -209,12 +211,14 @@ void main() {
       expect(item.ledgerName, '账本');
       expect(item.categoryName, '住房');
       expect(item.amount, 123.45);
+      expect(item.currencyCode, 'CNY');
       expect(item.dayOfMonth, 15);
       expect(item.endDate, isNotNull);
 
       final restored = RecurringTransactionItem.fromMap(item.toMap());
       expect(restored.ledgerName, '账本');
       expect(restored.amount, 123.45);
+      expect(restored.currencyCode, 'CNY');
       expect(restored.enabled, isTrue);
 
       // 未知账本名兜底
@@ -479,7 +483,7 @@ ledgers:
     - name: "新账本"
       currency: "USD"
     - name: "重复账本"
-      currency: "CNY"
+      currency: "USD"
 categories:
   items:
     - name: "新一级"
@@ -502,7 +506,7 @@ categories:
       level: 2
 recurring_transactions:
   items:
-    - ledger_name: "新账本"
+    - ledger_name: "重复账本"
       type: "expense"
       amount: 12.34
       category_name: "新一级"
@@ -566,6 +570,7 @@ recurring_transactions:
           ledgerId: any(named: 'ledgerId'),
           type: any(named: 'type'),
           amount: any(named: 'amount'),
+          currencyCode: any(named: 'currencyCode'),
           categoryId: any(named: 'categoryId'),
           note: any(named: 'note'),
           frequency: any(named: 'frequency'),
@@ -639,6 +644,7 @@ recurring_transactions:
           ledgerId: any(named: 'ledgerId'),
           type: any(named: 'type'),
           amount: any(named: 'amount'),
+          currencyCode: 'USD',
           categoryId: any(named: 'categoryId'),
           note: any(named: 'note'),
           frequency: any(named: 'frequency'),
@@ -684,6 +690,7 @@ recurring_transactions:
           ledgerId: any(named: 'ledgerId'),
           type: any(named: 'type'),
           amount: any(named: 'amount'),
+          currencyCode: any(named: 'currencyCode'),
           categoryId: any(named: 'categoryId'),
           note: any(named: 'note'),
           frequency: any(named: 'frequency'),

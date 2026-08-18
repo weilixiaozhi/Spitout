@@ -375,7 +375,10 @@ void main() {
       await addExpense(ledgerId, categoryId: catId, amount: 1000);
       await addExpense(ledgerId, categoryId: catId, amount: 2000);
 
-      final summary = await repo.getCategorySummary(catId);
+      final summary = await repo.getCategorySummary(
+        catId,
+        ledgerId: ledgerId,
+      );
       expect(summary.totalCount, 2);
       expect(summary.totalAmount, 30.0);
       expect(summary.averageAmount, 15.0);
@@ -385,12 +388,14 @@ void main() {
 
       final byAmount = await repo.getTransactionsByCategoryWithSort(
         catId,
+        ledgerId: ledgerId,
         sortBy: 'amount',
       );
       expect(byAmount.first.amount, 2000);
 
       final byTime = await repo.getTransactionsByCategoryWithSort(
         catId,
+        ledgerId: ledgerId,
         sortBy: 'time',
         ascending: true,
       );

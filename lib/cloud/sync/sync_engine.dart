@@ -1392,33 +1392,47 @@ class SyncEngine implements app.SyncService {
       for (final r in remote) {
         final syncId = r.ledgerId;
         if (syncId.isEmpty) continue;
+        final remoteCurrency = r.currency.trim().toUpperCase();
         // 内存匹配 bySyncId;列表保留 dup 语义:有则保第一行,GC 其余 dup 行。
         final existingList = bySyncId[syncId] ?? const <Ledger>[];
         if (existingList.isNotEmpty) {
           final existing = existingList.first;
-          // update meta（name / currency / 共享账本字段 server 可能改过）
-          await (db.update(
-            db.ledgers,
-          )..where((l) => l.id.equals(existing.id))).write(
-            LedgersCompanion(
-              name: d.Value(r.ledgerName),
-              // 有 syncId 且 server 认它 = 云端账本。storage_mode 缺省为 'local'
-              // 的数据在这里被就地修正,避免被本地闸门永久挡住同步。
-              storageMode: const d.Value('cloud'),
-              currency: d.Value(r.currency),
-              myRole: d.Value(r.role),
-              isShared: d.Value(r.isShared),
-              memberCount: d.Value(r.memberCount),
-              monthStartDay: r.monthStartDay != null
-                  ? d.Value(r.monthStartDay!.clamp(1, 28))
-                  : const d.Value.absent(),
-              // aaEnabled:仅当 server 显式返回该字段(hasAaEnabled)时覆盖本地值;
-              // 老 server 不返回 → absent,保留本地已开启的 AA 开关,避免静默关闭。
-              aaEnabled: r.hasAaEnabled
-                  ? d.Value(r.aaEnabled)
-                  : const d.Value.absent(),
-            ),
-          );
+          final currencyChanged =
+              remoteCurrency != existing.currency.trim().toUpperCase();
+          await db.transaction(() async {
+            // 元数据与金额快照必须原子切换，否则清单对账先改币种后，后续
+            // ledger change 会误判为同币种并永久跳过重算。
+            await (db.update(
+              db.ledgers,
+            )..where((l) => l.id.equals(existing.id))).write(
+              LedgersCompanion(
+                name: d.Value(r.ledgerName),
+                // 有 syncId 且 server 认它 = 云端账本。storage_mode 缺省为 'local'
+                // 的数据在这里被就地修正,避免被本地闸门永久挡住同步。
+                storageMode: const d.Value('cloud'),
+                currency: d.Value(remoteCurrency),
+                myRole: d.Value(r.role),
+                isShared: d.Value(r.isShared),
+                memberCount: d.Value(r.memberCount),
+                monthStartDay: r.monthStartDay != null
+                    ? d.Value(r.monthStartDay!.clamp(1, 28))
+                    : const d.Value.absent(),
+                // aaEnabled:仅当 server 显式返回该字段(hasAaEnabled)时覆盖本地值;
+                // 老 server 不返回 → absent,保留本地已开启的 AA 开关,避免静默关闭。
+                aaEnabled: r.hasAaEnabled
+                    ? d.Value(r.aaEnabled)
+                    : const d.Value.absent(),
+              ),
+            );
+            if (currencyChanged) {
+              await repo.recalcNativeAmountsForLedger(
+                existing.id,
+                remoteCurrency,
+                previousBase: existing.currency,
+                recordChanges: false,
+              );
+            }
+          });
           // 删 dup 行(及其关联 tx/local_changes,虽然 dup 行还没有这些)
           if (existingList.length > 1) {
             final dupIds = existingList.skip(1).map((l) => l.id).toList();
@@ -1442,26 +1456,38 @@ class SyncEngine implements app.SyncService {
         // (共享/个人)须与远端一致,避免纯本地私密账本被同名云端账本静默收编(L1)。
         final byName = nameFallbackMap.remove('${r.ledgerName}|${r.isShared}');
         if (byName != null) {
-          await (db.update(
-            db.ledgers,
-          )..where((l) => l.id.equals(byName.id))).write(
-            LedgersCompanion(
-              syncId: d.Value(syncId),
-              storageMode: const d.Value('cloud'),
-              currency: d.Value(r.currency),
-              myRole: d.Value(r.role),
-              isShared: d.Value(r.isShared),
-              memberCount: d.Value(r.memberCount),
-              monthStartDay: r.monthStartDay != null
-                  ? d.Value(r.monthStartDay!.clamp(1, 28))
-                  : const d.Value.absent(),
-              // 同 update 路径:hasAaEnabled=false 时 absent 保留本地值,
-              // 防止老 server 把本地已开启的 AA 分摊静默关闭。
-              aaEnabled: r.hasAaEnabled
-                  ? d.Value(r.aaEnabled)
-                  : const d.Value.absent(),
-            ),
-          );
+          final currencyChanged =
+              remoteCurrency != byName.currency.trim().toUpperCase();
+          await db.transaction(() async {
+            await (db.update(
+              db.ledgers,
+            )..where((l) => l.id.equals(byName.id))).write(
+              LedgersCompanion(
+                syncId: d.Value(syncId),
+                storageMode: const d.Value('cloud'),
+                currency: d.Value(remoteCurrency),
+                myRole: d.Value(r.role),
+                isShared: d.Value(r.isShared),
+                memberCount: d.Value(r.memberCount),
+                monthStartDay: r.monthStartDay != null
+                    ? d.Value(r.monthStartDay!.clamp(1, 28))
+                    : const d.Value.absent(),
+                // 同 update 路径:hasAaEnabled=false 时 absent 保留本地值,
+                // 防止老 server 把本地已开启的 AA 分摊静默关闭。
+                aaEnabled: r.hasAaEnabled
+                    ? d.Value(r.aaEnabled)
+                    : const d.Value.absent(),
+              ),
+            );
+            if (currencyChanged) {
+              await repo.recalcNativeAmountsForLedger(
+                byName.id,
+                remoteCurrency,
+                previousBase: byName.currency,
+                recordChanges: false,
+              );
+            }
+          });
           upserted++;
           continue;
         }
@@ -1478,7 +1504,7 @@ class SyncEngine implements app.SyncService {
             .insert(
               LedgersCompanion.insert(
                 name: displayName,
-                currency: d.Value(r.currency),
+                currency: d.Value(remoteCurrency),
                 syncId: d.Value(syncId),
                 // 从 server 拉下来的账本天然属于云端,必须显式标记 —— 否则会落到
                 // storage_mode 的默认值 'local',被三路闸门当成纯本地账本挡住,

@@ -7,7 +7,7 @@
 //   4. 编辑弹窗：预填、非法输入拦截、保存调 setOverride、手动行可恢复自动、取消不落库；
 //   5. 行内「恢复自动」直接 removeOverride；
 //   6. 刷新成功/失败 toast；无账本时点主币种 toast 引导先建账本；
-//   7. 有账本时点主币种 → 弹选择 sheet → 选中后走统一切换流程（updateLedger + toast）；
+//   7. 有账本时点主币种 → 弹选择 sheet → 原子更新币种/快照并提示完成；
 //   8. 币种管理入口跳转 CurrencyManagePage。
 
 import 'dart:async';
@@ -408,6 +408,8 @@ void main() {
   });
 
   testWidgets('有账本时切换主币种：弹 sheet 选中 USD 走统一切换流程', (tester) async {
+    // 本用例只验证页面编排；汇率网络失败应由换币流程容忍，不影响原子落库。
+    rateService.shouldThrow = true;
     when(() => repo.getLedgerById(1)).thenAnswer((_) async => testLedger);
     when(
       () => repo.getLedgerStats(ledgerId: any(named: 'ledgerId')),
@@ -420,10 +422,16 @@ void main() {
     ).thenAnswer((_) async {});
     when(() => repo.getLedgerForeignCurrencies(any()))
         .thenAnswer((_) async => <String>{});
+    when(() => repo.runInTransaction<int>(any())).thenAnswer((invocation) {
+      final action = invocation.positionalArguments.first
+          as Future<int> Function();
+      return action();
+    });
     when(
       () => repo.recalcNativeAmountsForLedger(
         any(),
         any(),
+        previousBase: any(named: 'previousBase'),
         recordChanges: any(named: 'recordChanges'),
       ),
     ).thenAnswer((_) async => 0);

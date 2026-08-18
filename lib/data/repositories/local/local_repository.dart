@@ -47,6 +47,7 @@ class LocalRepository {
   late final LocalExchangeRateRepository _exchangeRateRepo;
   late final LocalLedgerVirtualUserRepository _virtualUserRepo;
 
+  /// 在同一 Drift 事务内执行一组必须原子提交的仓储操作。
   Future<T> runInTransaction<T>(Future<T> Function() action) =>
       db.transaction(action);
 
@@ -718,6 +719,7 @@ class LocalRepository {
     int ledgerId,
     String base, {
     required bool onlyUnconverted,
+    String? previousBase,
     bool recordChanges = true,
   }) =>
       // 单事务包裹:逐笔 UPDATE + change INSERT 不各自 commit/fsync
@@ -727,35 +729,55 @@ class LocalRepository {
           ledgerId,
           base,
           onlyUnconverted: onlyUnconverted,
+          previousBase: previousBase,
           recordChanges: recordChanges,
         ),
       );
 
+  /// 在同一事务内逐笔重算交易的账本币金额。
+  ///
+  /// [previousBase] 仅用于账本换币：历史交易缺少记账币种时，其金额实际按
+  /// 换币前的账本币种记录。先补回该币种再折算，避免把旧金额误认为新本位币。
   Future<int> _recalcNativeAmountsInner(
     int ledgerId,
     String base, {
     required bool onlyUnconverted,
+    required String? previousBase,
     required bool recordChanges,
   }) async {
     final baseUp = base.toUpperCase();
+    final previousBaseUp = previousBase?.trim().toUpperCase();
     final rates = await _effectiveRatesFor(baseUp);
     final txs = await (db.select(
       db.transactions,
     )..where((t) => t.ledgerId.equals(ledgerId))).get();
-    // 币种只读 t.currency_code
+    // 正常交易始终保留记账时币种；只有历史空值行可由换币前本位币恢复。
     var n = 0;
     for (final t in txs) {
-      final cc = (t.currencyCode ?? baseUp).toUpperCase();
+      final shouldBackfillCurrency =
+          !onlyUnconverted &&
+          previousBaseUp != null &&
+          (t.currencyCode == null || t.currencyCode!.trim().isEmpty);
+      final cc =
+          (shouldBackfillCurrency ? previousBaseUp : t.currencyCode ?? baseUp)
+              .toUpperCase();
       if (cc == baseUp) {
         // 本位币交易:全量重算时对齐 native=amount(改本位币后旧快照失效);
         // 补折算模式跳过(非外币)。
-        if (onlyUnconverted || t.nativeAmount == t.amount) continue;
-        // 币种为空的旧行不写快照(currency/native 成对约束:两者皆空);
-        // 显式币种行才写 amount 快照。
-        final nativeValue = t.currencyCode == null ? null : t.amount;
-        if (t.nativeAmount == nativeValue) continue;
-        await (db.update(db.transactions)..where((x) => x.id.equals(t.id)))
-            .write(TransactionsCompanion(nativeAmount: d.Value(nativeValue)));
+        if (onlyUnconverted ||
+            (!shouldBackfillCurrency && t.nativeAmount == t.amount)) {
+          continue;
+        }
+        await (db.update(
+          db.transactions,
+        )..where((x) => x.id.equals(t.id))).write(
+          TransactionsCompanion(
+            currencyCode: shouldBackfillCurrency
+                ? d.Value(cc)
+                : const d.Value.absent(),
+            nativeAmount: d.Value(t.amount),
+          ),
+        );
       } else {
         if (onlyUnconverted &&
             t.nativeAmount != null &&
@@ -783,10 +805,10 @@ class LocalRepository {
           db.transactions,
         )..where((x) => x.id.equals(t.id))).write(
           TransactionsCompanion(
+            currencyCode: shouldBackfillCurrency
+                ? d.Value(cc)
+                : const d.Value.absent(),
             nativeAmount: d.Value(na),
-            // 不修改 currencyCode:交易原币种是用户记账时选择的,
-            // 不随账本主币种变更而改变。少数 currencyCode 为空的交易留待
-            // _resolveTxCurrency 在下次写入时补齐。
           ),
         );
       }
@@ -810,17 +832,21 @@ class LocalRepository {
     return n;
   }
 
+  /// 账本本位币由 [previousBase] 切换为 [newBase] 后重算所有交易快照。
+  ///
+  /// 历史空币种交易会先恢复为 [previousBase]，保证原金额不会被新本位币误读。
   Future<int> recalcNativeAmountsForLedger(
     int ledgerId,
     String newBase, {
+    required String previousBase,
     bool recordChanges = true,
-  }) =>
-      _recalcNativeAmounts(
-        ledgerId,
-        newBase,
-        onlyUnconverted: false,
-        recordChanges: recordChanges,
-      );
+  }) => _recalcNativeAmounts(
+    ledgerId,
+    newBase,
+    onlyUnconverted: false,
+    previousBase: previousBase,
+    recordChanges: recordChanges,
+  );
 
   Future<int> recomputeForeignTxForLedger(int ledgerId) async {
     final ledger = await getLedgerById(ledgerId);
@@ -1517,19 +1543,23 @@ class LocalRepository {
   Future<Map<int, int>> getAllCategoryTransactionCounts() =>
       _categoryRepo.getAllCategoryTransactionCounts();
 
+  /// 汇总指定账本内某分类的交易数量与账本币金额。
   Future<({int totalCount, double totalAmount, double averageAmount})>
-  getCategorySummary(int categoryId) =>
-      _categoryRepo.getCategorySummary(categoryId);
+  getCategorySummary(int categoryId, {required int ledgerId}) =>
+      _categoryRepo.getCategorySummary(categoryId, ledgerId: ledgerId);
 
   Future<List<Transaction>> getTransactionsByCategory(int categoryId) =>
       _categoryRepo.getTransactionsByCategory(categoryId);
 
+  /// 查询指定账本内某分类的交易，并按时间或账本币金额排序。
   Future<List<Transaction>> getTransactionsByCategoryWithSort(
     int categoryId, {
+    required int ledgerId,
     String sortBy = 'time',
     bool ascending = false,
   }) => _categoryRepo.getTransactionsByCategoryWithSort(
     categoryId,
+    ledgerId: ledgerId,
     sortBy: sortBy,
     ascending: ascending,
   );
@@ -1853,6 +1883,10 @@ class LocalRepository {
   Future<List<RecurringTransaction>> getAllRecurringTransactions() =>
       _recurringTransactionRepo.getAllRecurringTransactions();
 
+  /// 按周期模板生成交易，并在同一事务内推进最后生成日期。
+  ///
+  /// 模板原币种透传给统一 [addTransaction]，由交易写入链路按目标账本本位币
+  /// 计算 nativeAmount，避免周期模块维护第二套汇率逻辑。
   Future<int> generateRecurringTransaction({
     required RecurringTransaction recurring,
     required DateTime happenedAt,
@@ -1866,6 +1900,7 @@ class LocalRepository {
         ledgerId: recurring.ledgerId,
         type: recurring.type,
         amount: recurring.amount,
+        currencyCode: recurring.currencyCode,
         categoryId: recurring.categoryId,
         happenedAt: happenedAt,
         note: recurring.note,
@@ -1883,10 +1918,12 @@ class LocalRepository {
     int ledgerId,
   ) => _recurringTransactionRepo.getEnabledRecurringTransactions(ledgerId);
 
+  /// 新建周期模板，币种省略时由子仓固化当前账本本位币。
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
     required int amount,
+    String? currencyCode,
     int? categoryId,
     String? note,
     required String frequency,
@@ -1901,6 +1938,7 @@ class LocalRepository {
     ledgerId: ledgerId,
     type: type,
     amount: amount,
+    currencyCode: currencyCode,
     categoryId: categoryId,
     note: note,
     frequency: frequency,
@@ -1913,11 +1951,13 @@ class LocalRepository {
     enabled: enabled,
   );
 
+  /// 更新周期模板；不传 [currencyCode] 时保留模板原币种。
   Future<void> updateRecurringTransaction({
     required int id,
     required int ledgerId,
     required String type,
     required int amount,
+    String? currencyCode,
     int? categoryId,
     String? note,
     required String frequency,
@@ -1934,6 +1974,7 @@ class LocalRepository {
     ledgerId: ledgerId,
     type: type,
     amount: amount,
+    currencyCode: currencyCode,
     categoryId: categoryId,
     note: note,
     frequency: frequency,

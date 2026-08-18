@@ -503,6 +503,7 @@ class RecurringTransactionItem {
   final String ledgerName; // 账本名称（用于导出/导入匹配）
   final String type; // 全局仅支出模式，固定为 'expense'
   final double amount;
+  final String? currencyCode; // 模板金额原币种；可空仅用于兼容旧版配置
   final String? categoryName; // 分类名称（用于导出/导入匹配）
   final String? note;
   final String frequency; // daily / weekly / monthly / yearly
@@ -518,6 +519,7 @@ class RecurringTransactionItem {
     required this.ledgerName,
     required this.type,
     required this.amount,
+    this.currencyCode,
     this.categoryName,
     this.note,
     required this.frequency,
@@ -540,6 +542,7 @@ class RecurringTransactionItem {
       'start_date': startDate,
       'enabled': enabled,
     };
+    if (currencyCode != null) map['currency_code'] = currencyCode;
     if (categoryName != null) map['category_name'] = categoryName;
     if (note != null && note!.isNotEmpty) map['note'] = note;
     if (dayOfMonth != null) map['day_of_month'] = dayOfMonth;
@@ -554,6 +557,7 @@ class RecurringTransactionItem {
       ledgerName: map['ledger_name'] as String,
       type: map['type'] as String,
       amount: (map['amount'] as num).toDouble(),
+      currencyCode: (map['currency_code'] as String?)?.trim().toUpperCase(),
       categoryName: map['category_name'] as String?,
       note: map['note'] as String?,
       frequency: map['frequency'] as String,
@@ -578,6 +582,7 @@ class RecurringTransactionItem {
       type: rt.type,
       // 数据库为整数分,配置文件沿用"元"口径。
       amount: rt.amount / 100,
+      currencyCode: rt.currencyCode,
       categoryName: rt.categoryId != null
           ? categoryIdToName[rt.categoryId]
           : null,
@@ -1666,6 +1671,13 @@ class ConfigExportService {
         // 构建名称到ID的映射
         final ledgers = await repository.getAllLedgers();
         final ledgerNameToId = {for (var l in ledgers) l.name: l.id};
+        final targetLedgerCurrency = {
+          for (var l in ledgers) l.name: l.currency,
+        };
+        final exportedLedgerCurrency = {
+          for (final l in config.ledgers?.items ?? const <LedgerItem>[])
+            l.name: l.currency,
+        };
 
         final categories = await repository.getAllCategories();
         // 按 (name, kind) 映射,跨 kind 同名各自命中
@@ -1706,6 +1718,12 @@ class ConfigExportService {
             type: item.type,
             // 配置文件为"元",落库前转整数分。
             amount: (item.amount * 100).round(),
+            // 新版配置直接携带模板原币种；旧版配置从其账本配置推断。
+            // 若旧文件没有账本段，才退回目标账本本位币，保持向后兼容。
+            currencyCode:
+                item.currencyCode ??
+                exportedLedgerCurrency[item.ledgerName] ??
+                targetLedgerCurrency[item.ledgerName],
             categoryId: categoryId,
             note: item.note,
             frequency: item.frequency,

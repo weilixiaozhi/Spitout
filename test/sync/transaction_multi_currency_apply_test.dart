@@ -192,7 +192,7 @@ void main() {
     expect(tx.nativeAmount, 17280);
   });
 
-  test('insert 旧 payload(无两键)→ nativeAmount=amount(迁移回填同口径)', () async {
+  test('insert 旧 payload(无两键)→ 按当前账本币种补齐快照', () async {
     final lid = await seedLedger();
     provider.pushFakeChange(
       entityType: 'transaction',
@@ -207,9 +207,7 @@ void main() {
     );
     await engine.pull('');
     final tx = await txBySyncId('tx-mc-4');
-    expect(tx.currencyCode, isNull);
-    // currency/native 成对约束:旧 payload 无币种键 → 两者皆空,
-    // 统计按 amount 兜底(不引入错币种快照)。
-    expect(tx.nativeAmount, isNull);
+    expect(tx.currencyCode, 'CNY');
+    expect(tx.nativeAmount, 500);
   });
 }

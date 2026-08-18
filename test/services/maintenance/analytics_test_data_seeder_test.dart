@@ -3,7 +3,7 @@
 // 覆盖点：
 //   - year / month / week / day 四种 scope 各自生成的插入条数与时间范围
 //   - 无可支出分类时自动建一个兜底分类
-//   - 外币交易带 currencyCode / nativeAmount，本币交易两者为空
+//   - 外币交易只传 currencyCode，由真实仓储负责生成 nativeAmount
 //   - paidByUserId 原样透传
 // repository 用 mocktail 替身，避免依赖真实数据库。
 library;
@@ -46,7 +46,6 @@ void main() {
         note: any(named: 'note'),
         paidByUserId: any(named: 'paidByUserId'),
         currencyCode: any(named: 'currencyCode'),
-        nativeAmount: any(named: 'nativeAmount'),
       ),
     ).thenAnswer((_) async => 1);
   });
@@ -74,7 +73,6 @@ void main() {
         note: any(named: 'note'),
         paidByUserId: any(named: 'paidByUserId'),
         currencyCode: any(named: 'currencyCode'),
-        nativeAmount: any(named: 'nativeAmount'),
       ),
     ).called(expectedCount);
   }
@@ -124,7 +122,6 @@ void main() {
         note: '测试填充',
         paidByUserId: any(named: 'paidByUserId'),
         currencyCode: any(named: 'currencyCode'),
-        nativeAmount: any(named: 'nativeAmount'),
       ),
     ).called(12);
   });
@@ -141,7 +138,6 @@ void main() {
         note: any(named: 'note'),
         paidByUserId: any(named: 'paidByUserId'),
         currencyCode: any(named: 'currencyCode'),
-        nativeAmount: any(named: 'nativeAmount'),
       ),
     ).thenAnswer((invocation) async {
       calls.add(invocation.namedArguments);
@@ -164,5 +160,10 @@ void main() {
     );
     expect(anyForeign, isTrue);
     expect(anyLocal, isTrue);
+    expect(
+      calls.every((c) => c[const Symbol('nativeAmount')] == null),
+      isTrue,
+      reason: '填充器不应绕过仓储的统一汇率换算',
+    );
   });
 }

@@ -32,10 +32,12 @@ class _MockRepo extends Mock implements LocalRepository {}
 class _FakeRateService implements ExchangeRateService {
   bool shouldThrow = false;
   int fetchCount = 0;
+  final fetchedBases = <String>[];
 
   @override
   Future<RateFetchResult> fetch(String base) async {
     fetchCount++;
+    fetchedBases.add(base);
     if (shouldThrow) throw Exception('network down');
     return const RateFetchResult(
       rateDate: '2026-07-12',
@@ -351,6 +353,27 @@ void main() {
       );
       expect(ok, isTrue);
       expect(fake.fetchCount, 0, reason: '无账本无折算需求，跳过拉取');
+    });
+
+    test('换币前 extraBases 可预拉尚未写入账本的新本位币', () async {
+      final fake = _FakeRateService();
+      final container = ProviderContainer(
+        overrides: [
+          repositoryProvider.overrideWithValue(repo),
+          exchangeRateServiceProvider.overrideWithValue(fake),
+        ],
+      );
+      addTearDown(container.dispose);
+
+      final ok = await refreshExchangeRatesImpl(
+        read: <T>(p) => container.read(p),
+        force: true,
+        extraBases: {' usd '},
+      );
+
+      expect(ok, isTrue);
+      expect(fake.fetchedBases, ['USD']);
+      expect(await repo.getLatestAutoRates('USD'), isNotEmpty);
     });
 
     test('24h 节流跳过；force 强制拉取', () async {

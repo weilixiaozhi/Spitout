@@ -1,3 +1,4 @@
+import 'package:flutter_cloud_sync/flutter_cloud_sync.dart' as fcs;
 import 'package:spitout/data/models.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
 import 'package:spitout/data/repositories/local/local_transaction_repository.dart'
@@ -301,6 +302,38 @@ class SyncDiffService {
   }) async {
     if (selectedChanges.isEmpty) {
       return const SyncApplyResult();
+    }
+
+    final sourceCurrency = importData.currency?.trim().toUpperCase();
+    final appliesCloudAmounts = selectedChanges.any(
+      (change) => change.type != SyncChangeType.deleted,
+    );
+    final hasSourceNativeAmount = selectedChanges.any(
+      (change) => change.cloudTransaction?.nativeAmount != null,
+    );
+    if (appliesCloudAmounts &&
+        (sourceCurrency == null || sourceCurrency.isEmpty) &&
+        hasSourceNativeAmount) {
+      throw fcs.CloudSyncException(
+        '云端账本缺少币种信息，无法安全应用折算金额，请使用全量恢复',
+      );
+    }
+    if (appliesCloudAmounts &&
+        sourceCurrency != null &&
+        sourceCurrency.isNotEmpty) {
+      final ledger = await repo.getLedgerById(ledgerId);
+      if (ledger == null) {
+        throw fcs.CloudSyncException('账本不存在: $ledgerId');
+      }
+      final targetCurrency = ledger.currency.trim().toUpperCase();
+      if (sourceCurrency != targetCurrency) {
+        // 选择性应用会直接信任源端 nativeAmount，两个账本本位币
+        // 不同时无法安全合并；必须在导入分类等任何写入之前整体拒绝。
+        throw fcs.CloudSyncException(
+          '云端账本币种 $sourceCurrency 与当前账本币种 '
+          '$targetCurrency 不一致，无法选择性应用，请使用全量恢复',
+        );
+      }
     }
 
     // 分类:复用 DataImportService(同一份 batch 优化只在一处维护)

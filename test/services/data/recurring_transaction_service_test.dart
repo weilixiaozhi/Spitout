@@ -69,6 +69,77 @@ void main() {
     await db.close();
   });
 
+  test('账本换币或模板跨币种账本后，生成交易仍按模板原币种折算', () async {
+    await repo.upsertAutoRates(
+      base: 'USD',
+      rateDate: '2026-08-18',
+      rates: const {'CNY': '0.14'},
+      source: 'test',
+      fetchedAt: DateTime.utc(2026, 8, 18),
+    );
+
+    // 场景一：账本本位币从 CNY 改成 USD，模板金额仍是创建时的 CNY。
+    final switchedId = await repo.addRecurringTransaction(
+      ledgerId: ledgerId,
+      type: 'expense',
+      amount: 10000,
+      frequency: 'monthly',
+      interval: 1,
+      startDate: DateTime(2026, 8, 1),
+    );
+    await repo.updateLedger(id: ledgerId, currency: 'USD');
+    final switched = (await repo.getAllRecurringTransactions()).singleWhere(
+      (r) => r.id == switchedId,
+    );
+    final switchedTxId = await repo.generateRecurringTransaction(
+      recurring: switched,
+      happenedAt: DateTime(2026, 8, 18),
+    );
+    final switchedTx = await repo.getTransactionById(switchedTxId);
+    expect(switched.currencyCode, 'CNY');
+    expect(switchedTx?.currencyCode, 'CNY');
+    expect(switchedTx?.nativeAmount, 1400);
+
+    // 场景二：把 CNY 模板移到 USD 账本，未显式改币种时必须保留 CNY。
+    final sourceLedgerId = await repo.createLedger(
+      name: 'source-cny',
+      currency: 'CNY',
+    );
+    final targetLedgerId = await repo.createLedger(
+      name: 'target-usd',
+      currency: 'USD',
+    );
+    final movedId = await repo.addRecurringTransaction(
+      ledgerId: sourceLedgerId,
+      type: 'expense',
+      amount: 20000,
+      frequency: 'monthly',
+      interval: 1,
+      startDate: DateTime(2026, 8, 1),
+    );
+    await repo.updateRecurringTransaction(
+      id: movedId,
+      ledgerId: targetLedgerId,
+      type: 'expense',
+      amount: 20000,
+      frequency: 'monthly',
+      interval: 1,
+      startDate: DateTime(2026, 8, 1),
+    );
+    final moved = (await repo.getAllRecurringTransactions()).singleWhere(
+      (r) => r.id == movedId,
+    );
+    final movedTxId = await repo.generateRecurringTransaction(
+      recurring: moved,
+      happenedAt: DateTime(2026, 8, 18),
+    );
+    final movedTx = await repo.getTransactionById(movedTxId);
+    expect(moved.currencyCode, 'CNY');
+    expect(movedTx?.ledgerId, targetLedgerId);
+    expect(movedTx?.currencyCode, 'CNY');
+    expect(movedTx?.nativeAmount, 2800);
+  });
+
   group('calculateNextDate 频率与边界', () {
     final service = RecurringTransactionService(_MockRepo());
 

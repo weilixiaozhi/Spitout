@@ -72,7 +72,7 @@ void main() {
         );
   }
 
-  test('写入 → 关闭 → 重开：数据完整 + schema 版本为 5', () async {
+  test('写入 → 关闭 → 重开：数据完整 + schema 版本为 6', () async {
     db = await openDb('app.db');
     await seedData(db);
     // 显式关闭模拟进程退出
@@ -91,13 +91,13 @@ void main() {
     expect(txs.first.syncId, 'tx-file-1');
 
     // 生成代码期望的 schema 版本
-    expect(db.schemaVersion, 5);
+    expect(db.schemaVersion, 6);
     // 磁盘上的 user_version 与生成代码一致（迁移链路的落盘证据）
     final version = await db.customSelect(
       'PRAGMA user_version',
       readsFrom: {db.ledgers},
     ).getSingle();
-    expect(version.data.values.first, 5);
+    expect(version.data.values.first, 6);
   });
 
   test('validateDatabaseSchema：磁盘 schema 与生成代码一致', () async {

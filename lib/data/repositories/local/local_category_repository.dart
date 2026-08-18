@@ -428,8 +428,12 @@ class LocalCategoryRepository {
     return counts;
   }
 
+  /// 汇总指定账本内某分类的交易数量与账本币金额。
+  ///
+  /// 分类可跨账本复用，而 nativeAmount 的单位是各自账本本位币，因此必须用
+  /// [ledgerId] 限定范围，避免直接相加不同币种的金额快照。
   Future<({int totalCount, double totalAmount, double averageAmount})>
-  getCategorySummary(int categoryId) async {
+  getCategorySummary(int categoryId, {required int ledgerId}) async {
     final result = await db
         .customSelect(
           '''
@@ -438,9 +442,12 @@ class LocalCategoryRepository {
         SUM(CASE WHEN exclude_from_stats = 0 THEN COALESCE(native_amount, amount) ELSE 0 END) as total,
         AVG(CASE WHEN exclude_from_stats = 0 THEN COALESCE(native_amount, amount) END) as average
       FROM transactions
-      WHERE category_id = ?1
+      WHERE category_id = ?1 AND ledger_id = ?2
       ''',
-          variables: [d.Variable.withInt(categoryId)],
+          variables: [
+            d.Variable.withInt(categoryId),
+            d.Variable.withInt(ledgerId),
+          ],
           readsFrom: {db.transactions},
         )
         .getSingle();
@@ -481,13 +488,20 @@ class LocalCategoryRepository {
         .get();
   }
 
+  /// 查询指定账本内某分类的交易，并按时间或账本币金额排序。
+  ///
+  /// 金额排序使用 nativeAmount；限定 [ledgerId] 后所有比较值才具有相同单位。
   Future<List<Transaction>> getTransactionsByCategoryWithSort(
     int categoryId, {
+    required int ledgerId,
     String sortBy = 'time',
     bool ascending = false,
   }) async {
     final query = db.select(db.transactions)
-      ..where((t) => t.categoryId.equals(categoryId));
+      ..where(
+        (t) =>
+            t.categoryId.equals(categoryId) & t.ledgerId.equals(ledgerId),
+      );
 
     if (sortBy == 'amount') {
       query.orderBy([

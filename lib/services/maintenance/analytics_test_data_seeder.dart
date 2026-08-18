@@ -165,9 +165,9 @@ class AnalyticsTestDataSeeder {
         note: '测试填充',
         // 支出人:传入操作者标识,模拟真实创建,避免分摊统计误归因
         paidByUserId: paidByUserId,
-        // 外币：带上币种与原始金额，命中统计多币种聚合路径
+        // 只传记账币种，让仓储使用真实有效汇率生成账本币快照；显式传入
+        // nativeAmount 会绕过统一换算，使调试图表把外币错误地按 1:1 汇总。
         currencyCode: isForeign ? p.currency : null,
-        nativeAmount: isForeign ? p.amount : null,
       );
       inserted++;
     }
@@ -177,7 +177,7 @@ class AnalyticsTestDataSeeder {
   /// 生成一条随机金额 / 随机币种的计划项
   _Plan _gen(DateTime when, String base) {
     final currency = _currencies[_currencyIndex++ % _currencies.length];
-    // 金额量级相近即可,统计聚合按 amount 求和;直接生成整数分。
+    // 金额量级相近即可；落库后统计统一按账本币快照聚合。
     final amount = (10 + _rand.nextInt(990)) * 100 + _rand.nextInt(100);
     return _Plan(when: when, amount: amount, currency: currency);
   }

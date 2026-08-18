@@ -10,6 +10,7 @@ import 'package:drift/native.dart';
 import 'package:decimal/decimal.dart';
 import '../helpers/test_isolation.dart';
 
+import 'package:spitout/cloud/sync/change_tracker.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/data/models.dart';
 import 'package:spitout/data/repositories/local/local_repository.dart';
@@ -116,5 +117,41 @@ void main() {
     expect(txs[0].currencyCode, 'USD');
     expect(txs[0].nativeAmount, 1200, reason: '不落 NULL,按 1:1 待补折算');
     expect(await repo.countUnconvertedForeignTx(1), 1);
+  });
+
+  test('导入换本位币重算失败时元数据、快照与同步变更全部回滚', () async {
+    await db.customStatement('''
+      INSERT INTO ledgers (id, name, currency, sync_id, storage_mode)
+      VALUES (1, 'L', 'CNY', 'ledger-sync', 'cloud')
+    ''');
+    await db.customStatement('''
+      INSERT INTO transactions
+        (ledger_id, type, amount, currency_code, native_amount, sync_id)
+      VALUES (1, 'expense', 100, 'CNY', 200, 'tx-sync')
+    ''');
+    repo.changeTracker = ChangeTracker(db);
+    // native 快照与原金额刻意不同，确保换币重算会执行 UPDATE 并命中触发器。
+    await db.customStatement('''
+      CREATE TRIGGER fail_import_native_recalc
+      BEFORE UPDATE OF native_amount ON transactions
+      BEGIN
+        SELECT RAISE(ABORT, 'forced import recalc failure');
+      END;
+    ''');
+
+    await expectLater(
+      service.importData(
+        repo,
+        1,
+        const ImportData(currency: ' usd '),
+      ),
+      throwsA(anything),
+    );
+
+    expect((await repo.getLedgerById(1))?.currency, 'CNY');
+    final tx = await repo.getTransactionById(1);
+    expect(tx?.currencyCode, 'CNY');
+    expect(tx?.nativeAmount, 200);
+    expect(await db.select(db.localChanges).get(), isEmpty);
   });
 }

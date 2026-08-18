@@ -1,19 +1,18 @@
-// v1 → v5 迁移「端到端升级」测试。
+// v1 → 当前版本迁移「端到端升级」测试。
 //
 // 锚点：drift_schemas/drift_schema_v1.json（v1 官方 schema 快照）与各版本
-// 迁移语义。现有测试已覆盖 v2→v5（aa_migration_upgrade_test）与 v3→v5
-// （v4_precision_migration_test），唯独缺少从 v1 起步的路径——onUpgrade
-// 中 `from < 2` 的 v2 块（AA 列 + 虚拟用户表 + 支出人回填）始终没有真实
-// 执行过。
+// 迁移语义。本文件补充从 v1 起步的路径，覆盖 `from < 2` 的 AA 列、
+// 虚拟用户表与支出人回填。
 //
 // 本文件用 sqlite3 按 v1 快照构造真实 v1 结构（amount/native_amount 为
 // TEXT、无 AA 字段、无外键/CHECK/索引、ledger_members 为 email 列），
-// 写入 v1 存量数据后交由当前 SpitoutDatabase 触发 onUpgrade(1→5)，验证
+// 写入 v1 存量数据后交由当前 SpitoutDatabase 触发完整升级，验证
 // 完整升级链：
 //   1. v2：补 AA 列 + 建 ledger_virtual_users + 按创建人回填支出人；
 //   2. v3：空字符串支出人回退到编辑人/空串；
 //   3. v4：金额 TEXT→INTEGER(分)、孤儿数据清理、CHECK/外键/索引落地；
-//   4. v5：ledger_members.email → account 列名统一。
+//   4. v5：ledger_members.email → account 列名统一；
+//   5. v6：周期模板回填原记账币种。
 library;
 
 import 'dart:io';
@@ -301,7 +300,7 @@ void main() {
     }
   }
 
-  /// 用当前 SpitoutDatabase 打开旧库，触发真实 onUpgrade(1→5)。
+  /// 用当前 SpitoutDatabase 打开旧库，触发真实完整升级。
   Future<SpitoutDatabase> openMigrated() async {
     final db = SpitoutDatabase.forTesting(NativeDatabase(dbFile));
     openedDbs.add(db);
@@ -319,13 +318,13 @@ void main() {
     return (await db.customSelect(sql).get()).map((r) => r.data).toList();
   }
 
-  test('v1 库升级到 v5：版本号与 v2 结构落地', () async {
+  test('v1 库升级到当前版本：版本号与 v2 结构落地', () async {
     buildV1OldDb();
     await openMigrated();
 
     final version =
         (await rowBySql('PRAGMA user_version'))['user_version'];
-    expect(version, 5);
+    expect(version, 6);
 
     // v2：ledgers.aa_enabled + transactions AA 列 + ledger_virtual_users 表
     final aaCols =
@@ -357,9 +356,11 @@ void main() {
     expect(t2['amount'], 500);
     expect(t2['native_amount'], isNull); // 本位币脏快照被清空
 
-    final recurring =
-        await rowBySql('SELECT amount FROM recurring_transactions WHERE id = 1');
+    final recurring = await rowBySql(
+      'SELECT amount, currency_code FROM recurring_transactions WHERE id = 1',
+    );
     expect(recurring['amount'], 3000);
+    expect(recurring['currency_code'], 'CNY');
   });
 
   test('v2/v3 支出人回填：创建人 → 编辑人 → 空串', () async {

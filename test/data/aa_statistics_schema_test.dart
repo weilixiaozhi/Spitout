@@ -1,7 +1,7 @@
-// AA 分摊功能 schema v1→v5 迁移端到端测试。
+// AA 分摊功能数据库迁移端到端测试。
 //
 // 本测试验证:
-//   1. schemaVersion 为 5(v2/v3/v4/v5 迁移已生效)
+//   1. schemaVersion 为当前版本
 //   2. Transactions 表新增 4 字段(paid_by_user_id/aa_mode/aa_participants/
 //      aa_splits)就位且均 nullable
 //   3. Ledgers 表新增 aa_enabled 字段就位,默认 false
@@ -41,8 +41,8 @@ void main() {
     return rows.map((r) => r.read<String>('name')).toSet();
   }
 
-  test('schemaVersion 为 5(v2/v3/v4/v5 迁移已生效)', () {
-    expect(db.schemaVersion, 5);
+  test('schemaVersion 为当前版本', () {
+    expect(db.schemaVersion, 6);
   });
 
   test('Transactions 表新增 4 个 AA 字段就位且均 nullable', () async {

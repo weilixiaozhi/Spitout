@@ -1,6 +1,6 @@
 // 数据库 schema 契约测试。
 //
-// 锚点：drift_schemas/drift_schema_v5.json（drift 官方工具生成的 schema 快照）
+// 锚点：当前 drift 官方工具生成的 schema 快照
 // 与同步/导出/迁移层共同依赖的列名约定。锁定的内容：
 //   1. 每张表的**运行时 schema**（生成的 $columns）暴露的列名必须与 schema
 //      快照一致——同步 payload、CSV/YAML 导出、存量迁移都依赖这些列名，
@@ -36,7 +36,7 @@ void main() {
     await db.close();
   });
 
-  group('运行时 schema 列名与 v5 快照一致', () {
+  group('运行时 schema 列名与当前快照一致', () {
     // 无自增 id 的表 drift 会附加 rowid 伪列，断言时剔除。
     List<String> columnNames(d.TableInfo table) =>
         table.$columns.map((c) => c.name).where((n) => n != 'rowid').toList();
@@ -102,7 +102,8 @@ void main() {
       expect(
         columnNames(db.recurringTransactions),
         [
-          'id', 'ledger_id', 'type', 'amount', 'category_id', 'note',
+          'id', 'ledger_id', 'type', 'amount', 'currency_code',
+          'category_id', 'note',
           'frequency', 'interval', 'day_of_month', 'day_of_week',
           'month_of_year', 'start_date', 'end_date', 'last_generated_date',
           'enabled', 'created_at', 'updated_at',

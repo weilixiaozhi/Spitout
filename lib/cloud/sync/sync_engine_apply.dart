@@ -271,13 +271,19 @@ extension SyncEngineApplyExt on SyncEngine {
       logger.debug('SyncEngine', 'pull: 更新交易 $syncId');
     } else {
       // 插入
-      // currency/native 成对约束:有币种才写快照(缺键按 1:1 补 amount);
-      // 只有快照没有币种的旧 payload 退化为均不写(统计按 amount 兜底,
-      // 不引入错币种金额)。
-      final effectiveCurrency = payloadCurrency;
-      final effectiveNative = effectiveCurrency != null
-          ? (hasNativeKey ? payloadNative : amount)
-          : null;
+      // 旧 payload 缺少多币种字段时，原金额按接收时的账本本位币解释。
+      // 立即补齐成对快照，避免以后切换本位币时丢失原记账币种。
+      final ledger = await repo.getLedgerById(ledgerIdInt);
+      final fallbackCurrency =
+          ((ledger?.currency.isNotEmpty ?? false) ? ledger!.currency : 'CNY')
+              .trim()
+              .toUpperCase();
+      final hasExplicitCurrency = payloadCurrency?.trim().isNotEmpty ?? false;
+      final effectiveCurrency = hasExplicitCurrency
+          ? payloadCurrency!.trim().toUpperCase()
+          : fallbackCurrency;
+      final effectiveNative =
+          hasExplicitCurrency ? payloadNative ?? amount : amount;
       final id = await db.into(db.transactions).insert(
             TransactionsCompanion.insert(
               ledgerId: ledgerIdInt,
@@ -291,8 +297,6 @@ extension SyncEngineApplyExt on SyncEngine {
               lastEditedByUserId: d.Value(lastEditedByUserId),
               categorySyncIdOverride: d.Value(categorySyncIdOverride),
               excludeFromStats: d.Value(excludeStats ?? false),
-              // 缺键的旧 payload:nativeAmount = amount(隐含汇率 1);currencyCode
-              // 留 NULL(检测端 LEFT JOIN 账户币种兜底)。
               currencyCode: d.Value(effectiveCurrency),
               nativeAmount: d.Value(effectiveNative),
               // AA 字段:缺键落 null(列默认值),有键显式写入。
@@ -554,7 +558,7 @@ extension SyncEngineApplyExt on SyncEngine {
           ..where((l) => l.syncId.equals(syncId)))
         .get();
     final name = payload['ledgerName'] as String?;
-    final currency = payload['currency'] as String?;
+    final currency = (payload['currency'] as String?)?.trim().toUpperCase();
     // bool 不是 num,as num? 天然挡掉;越界 clamp。key 缺失 → null →
     // update 路径 Value.absent 不动原值(老 server payload 兼容)。
     final monthStartDay =
@@ -633,12 +637,14 @@ extension SyncEngineApplyExt on SyncEngine {
 
     // 云同步拉取到币种变更时全量重算 nativeAmount，
     // 否则多设备场景下其他设备拉到的交易 nativeAmount 仍是旧币种口径。
-    if (currency != null) {
+    if (currency != null &&
+        currency != ledger.currency.trim().toUpperCase()) {
       // pull 路径是“把远端状态落到本地”，重算产生的 update 不应再登记
       // local_changes 反向推回 server（避免跨设备 churn）。
       await repo.recalcNativeAmountsForLedger(
         ledger.id,
         currency,
+        previousBase: ledger.currency,
         recordChanges: false,
       );
     }

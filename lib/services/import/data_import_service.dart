@@ -126,35 +126,52 @@ class DataImportService implements DataImportPort {
       // 币种变更前先记下旧币种,用于变更后重算 nativeAmount。
       // 导入数据中可能携带不同于当前账本的 currency 字段(如从另一个币种
       // 的备份恢复),不重算会导致副行换算显示错误的旧口径金额。
-      final String? oldCurrency = data.currency != null
+      final normalizedCurrency = data.currency?.trim().toUpperCase();
+      final nextCurrency = normalizedCurrency?.isNotEmpty == true
+          ? normalizedCurrency
+          : null;
+      final String? oldCurrency = nextCurrency != null
           ? (await repo.getLedgerById(ledgerId))?.currency
           : null;
       var ledgerUpdateFailed = false;
+      var metadataUpdated = false;
+      // 元数据换币与历史快照重算必须原子提交；否则重算异常会留下新本位币
+      // 配旧 nativeAmount，且旧快照通常不等于 amount，补折算检测也无法捞回。
       try {
-        await repo.updateLedger(
-          id: ledgerId,
-          name: data.ledgerName,
-          currency: data.currency,
-          aaEnabled: data.aaEnabled,
-        );
+        await repo.runInTransaction(() async {
+          await repo.updateLedger(
+            id: ledgerId,
+            name: data.ledgerName,
+            currency: nextCurrency,
+            aaEnabled: data.aaEnabled,
+          );
+          metadataUpdated = true;
+          if (nextCurrency != null &&
+              oldCurrency != null &&
+              nextCurrency != oldCurrency.trim().toUpperCase()) {
+            await repo.recalcNativeAmountsForLedger(
+              ledgerId,
+              nextCurrency,
+              previousBase: oldCurrency,
+            );
+          }
+        });
       } catch (e, st) {
-        // 账本元数据更新失败不能静默吞掉：记日志并计入失败数，
-        // 否则用户看到“导入成功”但账本名/币种实际未生效。
-        ledgerUpdateFailed = true;
-        logger.error(
-          'ImportData',
-          '更新账本元数据失败 ledgerId=$ledgerId',
-          e,
-          st,
-        );
-      }
-      // 更新成功且币种确实变更(忽略大小写差异)后才全量重算 nativeAmount；
-      // 更新失败时按旧币种继续，避免用未生效的新币种重算。
-      if (!ledgerUpdateFailed &&
-          data.currency != null &&
-          oldCurrency != null &&
-          data.currency!.toUpperCase() != oldCurrency.toUpperCase()) {
-        await repo.recalcNativeAmountsForLedger(ledgerId, data.currency!);
+        if (!metadataUpdated) {
+          // 保持既有导入契约：单纯元数据更新失败记入 failed 后继续导入明细。
+          // 异常先离开外层事务触发完整回滚，再在这里降级，不能在事务内吞错。
+          ledgerUpdateFailed = true;
+          logger.error(
+            'ImportData',
+            '更新账本元数据失败 ledgerId=$ledgerId',
+            e,
+            st,
+          );
+        } else {
+          // 重算失败必须继续上抛；外层事务已撤销元数据与同步变更，调用方可
+          // 明确告知恢复失败，不能在旧本位币账本中继续导入新口径快照。
+          rethrow;
+        }
       }
       if (ledgerUpdateFailed) failedCount++;
     }

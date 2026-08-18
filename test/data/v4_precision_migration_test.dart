@@ -11,7 +11,7 @@ import '../helpers/test_isolation.dart';
 
 /// v3 → v4 迁移「端到端升级」测试。
 ///
-/// v4 是本轮审计修复的核心 schema 版本(当前 head 为 v5,新增列名统一迁移):
+/// 财务精度与完整性迁移的核心验证点：
 ///   1. 金额列 REAL → INTEGER(分),存量金额按 100 倍取整迁移;
 ///   2. currencyCode/nativeAmount 成对约束(同时空或同时非空)归一化;
 ///   3. syncId 唯一索引前先对非空重复值去重(本地未同步的 NULL 行不受影响);
@@ -21,7 +21,7 @@ import '../helpers/test_isolation.dart';
 ///
 /// 与 aa_migration_upgrade_test 不同,这里用 sqlite3 直接构造「真实 v3 结构」
 /// (amount/native_amount 为 REAL、无外键/CHECK/新索引),再交给当前
-/// SpitoutDatabase 触发真实的 onUpgrade(3→5),验证数据转换与约束落地。
+/// SpitoutDatabase 触发真实完整升级，验证数据转换与约束落地。
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
   setUp(() => resetGlobalTestState());
@@ -266,7 +266,7 @@ void main() {
     // 升级后版本号推进到 4。
     final versionRow =
         await db.customSelect('PRAGMA user_version').getSingle();
-    expect(versionRow.read<int>('user_version'), 5);
+    expect(versionRow.read<int>('user_version'), 6);
 
     // 1) REAL 金额 → INTEGER 分(0.1+0.2 尾差被规整为 30 分)。
     final txs = await query(db, 'SELECT id, amount, native_amount, '
@@ -388,7 +388,7 @@ void main() {
     final db1 = await openCurrent();
     await db1.close();
 
-    // 手动把版本降回 3,再次触发 onUpgrade(3→5)。
+    // 手动把版本降回 3，再次触发完整升级。
     final revert = SpitoutDatabase.forTesting(NativeDatabase(dbFile));
     openedDbs.add(revert);
     await revert.customStatement('PRAGMA user_version = 3;');

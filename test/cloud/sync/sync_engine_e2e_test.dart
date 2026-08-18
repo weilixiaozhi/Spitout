@@ -1105,6 +1105,53 @@ void main() {
       expect(ledgers.single.aaEnabled, isTrue);
     });
 
+    test('pull 同币种元数据变更不重算历史 nativeAmount', () async {
+      final ledgerId = await db
+          .into(db.ledgers)
+          .insert(
+            LedgersCompanion.insert(
+              name: 'L',
+              syncId: const Value('L1'),
+              storageMode: const Value('cloud'),
+              currency: const Value('CNY'),
+            ),
+          );
+      await repo.insertTransactionsBatch([
+        TransactionsCompanion.insert(
+          ledgerId: ledgerId,
+          type: 'expense',
+          amount: 10000,
+          currencyCode: const Value('USD'),
+          nativeAmount: const Value(9999),
+          syncId: const Value('tx-same-currency'),
+        ),
+      ]);
+
+      provider.pushFakeChange(
+        entityType: 'ledger',
+        entitySyncId: 'L1',
+        ledgerId: '',
+        payload: {
+          'ledgerName': 'Renamed',
+          'currency': ' cny ',
+          'monthStartDay': 15,
+          'aaEnabled': true,
+        },
+      );
+
+      await engine.pull('');
+
+      final ledger = await db.select(db.ledgers).getSingle();
+      expect(ledger.name, 'Renamed');
+      expect(ledger.currency, 'CNY');
+      expect(ledger.monthStartDay, 15);
+      expect(ledger.aaEnabled, isTrue);
+      final tx = await (db.select(
+        db.transactions,
+      )..where((t) => t.syncId.equals('tx-same-currency'))).getSingle();
+      expect(tx.nativeAmount, 9999, reason: '账本币种未变化时，元数据同步不得按最新汇率改写历史快照');
+    });
+
     test('pull 账本币种变更重算 nativeAmount 但不登记 local_changes', () async {
       final ledgerId = await db
           .into(db.ledgers)
@@ -2106,6 +2153,87 @@ void main() {
   });
 
   group('syncLedgersFromServer byName 收编 — 防跨用户数据泄露(L1)', () {
+    test('远端清单先下发真实币种变更时同步重算历史金额', () async {
+      final ledgerId = await db
+          .into(db.ledgers)
+          .insert(
+            LedgersCompanion.insert(
+              name: '换币账本',
+              currency: const Value('CNY'),
+              syncId: const Value('currency-ledger'),
+              storageMode: const Value('cloud'),
+            ),
+          );
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: ledgerId,
+              type: 'expense',
+              amount: 10000,
+              currencyCode: const Value('CNY'),
+              nativeAmount: const Value(10000),
+              syncId: const Value('currency-tx'),
+            ),
+          );
+      final byNameLedgerId = await db
+          .into(db.ledgers)
+          .insert(
+            LedgersCompanion.insert(
+              name: '待收编换币账本',
+              currency: const Value('CNY'),
+              storageMode: const Value('cloud'),
+            ),
+          );
+      await db.into(db.transactions).insert(
+            TransactionsCompanion.insert(
+              ledgerId: byNameLedgerId,
+              type: 'expense',
+              amount: 20000,
+              currencyCode: const Value('CNY'),
+              nativeAmount: const Value(20000),
+              syncId: const Value('by-name-currency-tx'),
+            ),
+          );
+      await repo.upsertAutoRates(
+        base: 'USD',
+        rateDate: '2026-08-18',
+        rates: const {'CNY': '0.14'},
+        source: 'test',
+        fetchedAt: DateTime.utc(2026, 8, 18),
+      );
+      provider.pushFakeLedger(
+        ledgerId: 'currency-ledger',
+        ledgerName: '换币账本',
+        currency: 'USD',
+      );
+      provider.pushFakeLedger(
+        ledgerId: 'by-name-currency-ledger',
+        ledgerName: '待收编换币账本',
+        currency: 'USD',
+      );
+
+      await engine.syncLedgersFromServer();
+
+      final ledger = await (db.select(
+        db.ledgers,
+      )..where((l) => l.id.equals(ledgerId))).getSingle();
+      final tx = await (db.select(
+        db.transactions,
+      )..where((t) => t.syncId.equals('currency-tx'))).getSingle();
+      final byNameLedger = await (db.select(
+        db.ledgers,
+      )..where((l) => l.id.equals(byNameLedgerId))).getSingle();
+      final byNameTx = await (db.select(
+        db.transactions,
+      )..where((t) => t.syncId.equals('by-name-currency-tx'))).getSingle();
+      expect(ledger.currency, 'USD');
+      expect(tx.currencyCode, 'CNY');
+      expect(tx.nativeAmount, 1400);
+      expect(byNameLedger.syncId, 'by-name-currency-ledger');
+      expect(byNameLedger.currency, 'USD');
+      expect(byNameTx.currencyCode, 'CNY');
+      expect(byNameTx.nativeAmount, 2800);
+    });
+
     test('个人默认账本不因同名共享账本被误收编', () async {
       // 构造:B 的本地个人默认账本(未同步 / 个人账本),与 A 的共享默认账本同名。
       // 这正是 byName 收编的设计盲点:修复前只按 name + syncId.isNull 匹配,

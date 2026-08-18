@@ -29,10 +29,15 @@ class LocalRecurringTransactionRepository {
         .get();
   }
 
+  /// 新建周期模板，并固化金额的原记账币种。
+  ///
+  /// 未指定 [currencyCode] 时取创建时的账本本位币，确保账本以后换币时模板金额
+  /// 仍保持原单位；显式币种供配置导入等跨账本恢复场景使用。
   Future<int> addRecurringTransaction({
     required int ledgerId,
     required String type,
     required int amount,
+    String? currencyCode,
     int? categoryId,
     String? note,
     required String frequency,
@@ -44,6 +49,18 @@ class LocalRecurringTransactionRepository {
     DateTime? endDate,
     bool enabled = true,
   }) async {
+    final ledger = await (db.select(
+      db.ledgers,
+    )..where((l) => l.id.equals(ledgerId))).getSingleOrNull();
+    if (ledger == null) {
+      throw StateError('账本不存在: $ledgerId');
+    }
+    // 新建模板默认沿用当时的账本本位币；显式传入则用于配置导入等
+    // 跨账本场景，之后即使模板归属或账本本位币变化也不改金额单位。
+    final normalizedCurrencyCode = currencyCode?.trim().toUpperCase();
+    final resolvedCurrencyCode = normalizedCurrencyCode?.isNotEmpty == true
+        ? normalizedCurrencyCode!
+        : ledger.currency.trim().toUpperCase();
     return await db
         .into(db.recurringTransactions)
         .insert(
@@ -51,6 +68,7 @@ class LocalRecurringTransactionRepository {
             ledgerId: ledgerId,
             type: type,
             amount: amount,
+            currencyCode: d.Value(resolvedCurrencyCode),
             categoryId: d.Value(categoryId),
             note: d.Value(note),
             frequency: frequency,
@@ -65,11 +83,16 @@ class LocalRecurringTransactionRepository {
         );
   }
 
+  /// 更新周期模板，未指定 [currencyCode] 时保留已固化的原记账币种。
+  ///
+  /// 归属账本与金额币种是两个独立维度，因此模板跨账本只更新 [ledgerId]，
+  /// 不会把相同金额数值静默解释为目标账本币种。
   Future<void> updateRecurringTransaction({
     required int id,
     required int ledgerId,
     required String type,
     required int amount,
+    String? currencyCode,
     int? categoryId,
     String? note,
     required String frequency,
@@ -82,6 +105,7 @@ class LocalRecurringTransactionRepository {
     bool? enabled,
     bool clearLastGeneratedDate = false,
   }) async {
+    final normalizedCurrencyCode = currencyCode?.trim().toUpperCase();
     await (db.update(
       db.recurringTransactions,
     )..where((t) => t.id.equals(id))).write(
@@ -89,6 +113,11 @@ class LocalRecurringTransactionRepository {
         ledgerId: d.Value(ledgerId),
         type: d.Value(type),
         amount: d.Value(amount),
+        // 未显式传币种时保留模板原币种；编辑页面跨账本只改变归属，
+        // 否则相同数值会被静默改成目标账本的金额单位。
+        currencyCode: normalizedCurrencyCode?.isNotEmpty != true
+            ? const d.Value.absent()
+            : d.Value(normalizedCurrencyCode),
         categoryId: d.Value(categoryId),
         note: d.Value(note),
         frequency: d.Value(frequency),

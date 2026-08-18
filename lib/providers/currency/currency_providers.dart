@@ -248,12 +248,20 @@ final ledgerForeignTxCountProvider = FutureProvider<int>((ref) async {
 
 
 /// UI 层入口:ConsumerState 里的 `WidgetRef` 转发到 [refreshExchangeRatesImpl]。
-Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
-        {bool force = false, Set<String>? extraQuotes}) =>
+///
+/// [extraBases] 用于账本换币前预取新本位币汇率。此时数据库仍保留旧币种，
+/// 若只枚举现有账本会漏掉即将启用的 base，导致原子换币事务只能按 1:1 退化。
+Future<bool> refreshExchangeRatesFromUi(
+  WidgetRef ref, {
+  bool force = false,
+  Set<String>? extraQuotes,
+  Set<String>? extraBases,
+}) =>
     refreshExchangeRatesImpl(
       read: ref.read,
       force: force,
       extraQuotes: extraQuotes,
+      extraBases: extraBases,
     );
 
 /// 真正的实现:只依赖 read 能力,与 Ref / WidgetRef 解耦。
@@ -266,10 +274,12 @@ Future<bool> refreshExchangeRatesFromUi(WidgetRef ref,
 /// 都需要以它为 base 的汇率组;无账本时无折算需求,直接跳过拉取。
 /// [extraQuotes]:额外要拉的币种(记账页手选币种)——手选币种不在
 /// 已落库的 quote 集合里,不带上它拉回来的组里永远没有它。
+/// [extraBases]:尚未写入账本表、但本次操作即将启用的本位币集合。
 Future<bool> refreshExchangeRatesImpl({
   required T Function<T>(ProviderListenable<T>) read,
   required bool force,
   Set<String>? extraQuotes,
+  Set<String>? extraBases,
 }) async {
   try {
     final repo = read(repositoryProvider);
@@ -284,6 +294,12 @@ Future<bool> refreshExchangeRatesImpl({
     } catch (e) {
       logger.warning('currency_providers', '读取账本本位币集合失败(跳过拉取): $e');
     }
+    // 换币流程必须在落库前拉新 base，避免网络 I/O 夹在元数据更新与快照重算之间。
+    bases.addAll(
+      (extraBases ?? const <String>{})
+          .map((c) => c.trim().toUpperCase())
+          .where((c) => c.isNotEmpty),
+    );
     if (bases.isEmpty) {
       logger.info('currency_providers', '无账本本位币,跳过汇率拉取');
       return true;

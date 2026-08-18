@@ -256,7 +256,11 @@ void main() {
         currencyCode: 'CNY', nativeAmount: 10000,
       );
 
-      final n = await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      final n = await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
       expect(n, 2);
       expect((await repo.getTransactionById(usdTx))!.nativeAmount, 1200); // 对齐原币
       expect((await repo.getTransactionById(cnyTx))!.nativeAmount,

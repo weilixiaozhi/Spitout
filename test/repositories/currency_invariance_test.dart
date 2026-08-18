@@ -3,7 +3,7 @@
 /// 核心验证点(对应 bug 修复):
 ///   1. 账本主币种变更后,recalcNativeAmountsForLedger 只重算 nativeAmount,
 ///      绝不修改交易的 currencyCode(交易原币种是用户记账时选的,不随主币种变更)
-///   2. currencyCode 为 null 的历史数据:重算后仍为 null(不填充新主币种)
+///   2. currencyCode 为 null 的历史数据:先恢复旧本位币，再按新本位币折算
 ///   3. 显式 currencyCode='CNY' 的交易:主币种改为 USD 后仍为 'CNY'
 ///   4. nativeAmount 按新主币种重算(有汇率)或退化=amount(无汇率)
 library;
@@ -103,7 +103,11 @@ void main() {
 
       // 修改账本主币种为 USD 并全量重算
       await repo.updateLedger(id: lid, currency: 'USD');
-      await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
 
       final tx = await repo.getTransactionById(txId);
       // 核心断言:currencyCode 不变,仍是 CNY
@@ -112,7 +116,7 @@ void main() {
       expect(tx.nativeAmount, 1400, reason: 'nativeAmount 应按新主币种重算');
     });
 
-    test('currencyCode=null 的历史数据:主币种变更后仍为 null', () async {
+    test('currencyCode=null 的历史数据:按旧本位币恢复并折算', () async {
       final lid = await seedLedger(currency: 'CNY');
 
       await seedRates(base: 'USD', rates: {'CNY': '0.14'});
@@ -128,21 +132,23 @@ void main() {
 
       // 修改账本主币种为 USD 并全量重算
       await repo.updateLedger(id: lid, currency: 'USD');
-      await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
 
       final tx = await repo.getTransactionById(txId);
-      // 核心断言:currencyCode 仍为 null(不被填充为新主币种 USD)
+      // 历史空币种金额属于换币前的 CNY；重算必须先恢复原币种，再折算为 USD。
       expect(
         tx!.currencyCode,
-        isNull,
-        reason: '历史 NULL currencyCode 不应被填充为新主币种',
+        'CNY',
+        reason: '历史空币种交易应恢复为换币前的账本币种',
       );
-      // currency/native 成对约束:币种为空的旧行保持两者皆空,
-      // 统计按 amount 兜底,不写入错币种快照。
       expect(
         tx.nativeAmount,
-        isNull,
-        reason: 'null currencyCode 行保持 nativeAmount=null(成对约束)',
+        700,
+        reason: '50 CNY 应按 0.14 汇率折算为 7 USD',
       );
     });
 
@@ -181,7 +187,11 @@ void main() {
 
       // 修改账本主币种为 USD 并全量重算
       await repo.updateLedger(id: lid, currency: 'USD');
-      await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
 
       // 全部 currencyCode 不变
       expect((await repo.getTransactionById(cnyTx))!.currencyCode, 'CNY');
@@ -218,7 +228,11 @@ void main() {
 
       // 修改账本主币种为 USD 并全量重算(无 CNY→USD 汇率)
       await repo.updateLedger(id: lid, currency: 'USD');
-      await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
 
       final tx = await repo.getTransactionById(txId);
       expect(tx!.currencyCode, 'CNY', reason: '无汇率时 currencyCode 也不变');
@@ -255,7 +269,11 @@ void main() {
       );
 
       final before = (await db.select(db.localChanges).get()).length;
-      final n = await repo.recalcNativeAmountsForLedger(lid, 'USD');
+      final n = await repo.recalcNativeAmountsForLedger(
+        lid,
+        'USD',
+        previousBase: 'CNY',
+      );
       final after = (await db.select(db.localChanges).get()).length;
 
       expect(n, 2);

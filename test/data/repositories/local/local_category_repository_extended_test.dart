@@ -32,10 +32,19 @@ void main() {
     await db.close();
   });
 
-  Future<int> createExpenseLedger() async {
+  /// 创建可指定本位币的支出账本，供跨账本隔离场景复用。
+  Future<int> createExpenseLedger({
+    String name = '账本',
+    String currency = 'CNY',
+  }) async {
     final id = await db
         .into(db.ledgers)
-        .insert(LedgersCompanion.insert(name: '账本'));
+        .insert(
+          LedgersCompanion.insert(
+            name: name,
+            currency: d.Value(currency),
+          ),
+        );
     return id;
   }
 
@@ -197,10 +206,64 @@ void main() {
       );
       await insertTx(ledgerId: ledgerId, amount: 300, categoryId: catId);
 
-      final summary = await repo.getCategorySummary(catId);
+      final summary = await repo.getCategorySummary(
+        catId,
+        ledgerId: ledgerId,
+      );
       expect(summary.totalCount, 3); // 笔数含排除项
       expect(summary.totalAmount, 75.0); // 72 + 3，排除 5
       expect(summary.averageAmount, 37.5);
+    });
+
+    test('分类汇总与排序按账本隔离不同本位币', () async {
+      final cnyLedgerId = await createExpenseLedger(
+        name: '人民币账本',
+        currency: 'CNY',
+      );
+      final usdLedgerId = await createExpenseLedger(
+        name: '美元账本',
+        currency: 'USD',
+      );
+      final catId = await repo.createCategory(name: '共用分类', kind: 'expense');
+
+      await insertTx(
+        ledgerId: cnyLedgerId,
+        amount: 10000,
+        categoryId: catId,
+        currencyCode: 'CNY',
+        nativeAmount: 10000,
+      );
+      await insertTx(
+        ledgerId: cnyLedgerId,
+        amount: 5000,
+        categoryId: catId,
+        currencyCode: 'CNY',
+        nativeAmount: 5000,
+      );
+      await insertTx(
+        ledgerId: usdLedgerId,
+        amount: 2500,
+        categoryId: catId,
+        currencyCode: 'USD',
+        nativeAmount: 2500,
+      );
+
+      final summary = await repo.getCategorySummary(
+        catId,
+        ledgerId: cnyLedgerId,
+      );
+      expect(summary.totalCount, 2);
+      expect(summary.totalAmount, 150.0);
+      expect(summary.averageAmount, 75.0);
+
+      final sorted = await repo.getTransactionsByCategoryWithSort(
+        catId,
+        ledgerId: cnyLedgerId,
+        sortBy: 'amount',
+      );
+      expect(sorted, hasLength(2));
+      expect(sorted.every((tx) => tx.ledgerId == cnyLedgerId), isTrue);
+      expect(sorted.map((tx) => tx.nativeAmount), [10000, 5000]);
     });
   });
 
@@ -220,6 +283,7 @@ void main() {
       // amount 排序按折算值（USD 快照 700 < 2000）
       final byAmount = await repo.getTransactionsByCategoryWithSort(
         catId,
+        ledgerId: ledgerId,
         sortBy: 'amount',
       );
       expect(byAmount.first.amount, 2000);
@@ -227,12 +291,16 @@ void main() {
 
       final byAmountAsc = await repo.getTransactionsByCategoryWithSort(
         catId,
+        ledgerId: ledgerId,
         sortBy: 'amount',
         ascending: true,
       );
       expect(byAmountAsc.first.amount, 1000);
 
-      final byTime = await repo.getTransactionsByCategoryWithSort(catId);
+      final byTime = await repo.getTransactionsByCategoryWithSort(
+        catId,
+        ledgerId: ledgerId,
+      );
       expect(byTime, hasLength(2));
     });
   });

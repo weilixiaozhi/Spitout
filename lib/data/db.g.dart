@@ -1287,6 +1287,17 @@ class $RecurringTransactionsTable extends RecurringTransactions
     type: DriftSqlType.int,
     requiredDuringInsert: true,
   );
+  static const VerificationMeta _currencyCodeMeta = const VerificationMeta(
+    'currencyCode',
+  );
+  @override
+  late final GeneratedColumn<String> currencyCode = GeneratedColumn<String>(
+    'currency_code',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  );
   static const VerificationMeta _categoryIdMeta = const VerificationMeta(
     'categoryId',
   );
@@ -1442,6 +1453,7 @@ class $RecurringTransactionsTable extends RecurringTransactions
     ledgerId,
     type,
     amount,
+    currencyCode,
     categoryId,
     note,
     frequency,
@@ -1494,6 +1506,15 @@ class $RecurringTransactionsTable extends RecurringTransactions
       );
     } else if (isInserting) {
       context.missing(_amountMeta);
+    }
+    if (data.containsKey('currency_code')) {
+      context.handle(
+        _currencyCodeMeta,
+        currencyCode.isAcceptableOrUnknown(
+          data['currency_code']!,
+          _currencyCodeMeta,
+        ),
+      );
     }
     if (data.containsKey('category_id')) {
       context.handle(
@@ -1611,6 +1632,10 @@ class $RecurringTransactionsTable extends RecurringTransactions
         DriftSqlType.int,
         data['${effectivePrefix}amount'],
       )!,
+      currencyCode: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}currency_code'],
+      ),
       categoryId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}category_id'],
@@ -1680,6 +1705,12 @@ class RecurringTransaction extends DataClass
 
   /// 周期模板金额,单位=最小货币单位(分),与 [Transactions.amount] 同口径。
   final int amount;
+
+  /// 模板金额的原记账币种。
+  ///
+  /// 币种跟随金额而不是账本归属持久化，确保模板跨账本或账本更换本位币后，
+  /// 后续生成的交易仍按创建模板时的币种交给统一交易写入链路折算。
+  final String? currencyCode;
   final int? categoryId;
   final String? note;
   final String frequency;
@@ -1698,6 +1729,7 @@ class RecurringTransaction extends DataClass
     required this.ledgerId,
     required this.type,
     required this.amount,
+    this.currencyCode,
     this.categoryId,
     this.note,
     required this.frequency,
@@ -1719,6 +1751,9 @@ class RecurringTransaction extends DataClass
     map['ledger_id'] = Variable<int>(ledgerId);
     map['type'] = Variable<String>(type);
     map['amount'] = Variable<int>(amount);
+    if (!nullToAbsent || currencyCode != null) {
+      map['currency_code'] = Variable<String>(currencyCode);
+    }
     if (!nullToAbsent || categoryId != null) {
       map['category_id'] = Variable<int>(categoryId);
     }
@@ -1755,6 +1790,9 @@ class RecurringTransaction extends DataClass
       ledgerId: Value(ledgerId),
       type: Value(type),
       amount: Value(amount),
+      currencyCode: currencyCode == null && nullToAbsent
+          ? const Value.absent()
+          : Value(currencyCode),
       categoryId: categoryId == null && nullToAbsent
           ? const Value.absent()
           : Value(categoryId),
@@ -1793,6 +1831,7 @@ class RecurringTransaction extends DataClass
       ledgerId: serializer.fromJson<int>(json['ledgerId']),
       type: serializer.fromJson<String>(json['type']),
       amount: serializer.fromJson<int>(json['amount']),
+      currencyCode: serializer.fromJson<String?>(json['currencyCode']),
       categoryId: serializer.fromJson<int?>(json['categoryId']),
       note: serializer.fromJson<String?>(json['note']),
       frequency: serializer.fromJson<String>(json['frequency']),
@@ -1818,6 +1857,7 @@ class RecurringTransaction extends DataClass
       'ledgerId': serializer.toJson<int>(ledgerId),
       'type': serializer.toJson<String>(type),
       'amount': serializer.toJson<int>(amount),
+      'currencyCode': serializer.toJson<String?>(currencyCode),
       'categoryId': serializer.toJson<int?>(categoryId),
       'note': serializer.toJson<String?>(note),
       'frequency': serializer.toJson<String>(frequency),
@@ -1839,6 +1879,7 @@ class RecurringTransaction extends DataClass
     int? ledgerId,
     String? type,
     int? amount,
+    Value<String?> currencyCode = const Value.absent(),
     Value<int?> categoryId = const Value.absent(),
     Value<String?> note = const Value.absent(),
     String? frequency,
@@ -1857,6 +1898,7 @@ class RecurringTransaction extends DataClass
     ledgerId: ledgerId ?? this.ledgerId,
     type: type ?? this.type,
     amount: amount ?? this.amount,
+    currencyCode: currencyCode.present ? currencyCode.value : this.currencyCode,
     categoryId: categoryId.present ? categoryId.value : this.categoryId,
     note: note.present ? note.value : this.note,
     frequency: frequency ?? this.frequency,
@@ -1879,6 +1921,9 @@ class RecurringTransaction extends DataClass
       ledgerId: data.ledgerId.present ? data.ledgerId.value : this.ledgerId,
       type: data.type.present ? data.type.value : this.type,
       amount: data.amount.present ? data.amount.value : this.amount,
+      currencyCode: data.currencyCode.present
+          ? data.currencyCode.value
+          : this.currencyCode,
       categoryId: data.categoryId.present
           ? data.categoryId.value
           : this.categoryId,
@@ -1910,6 +1955,7 @@ class RecurringTransaction extends DataClass
           ..write('ledgerId: $ledgerId, ')
           ..write('type: $type, ')
           ..write('amount: $amount, ')
+          ..write('currencyCode: $currencyCode, ')
           ..write('categoryId: $categoryId, ')
           ..write('note: $note, ')
           ..write('frequency: $frequency, ')
@@ -1933,6 +1979,7 @@ class RecurringTransaction extends DataClass
     ledgerId,
     type,
     amount,
+    currencyCode,
     categoryId,
     note,
     frequency,
@@ -1955,6 +2002,7 @@ class RecurringTransaction extends DataClass
           other.ledgerId == this.ledgerId &&
           other.type == this.type &&
           other.amount == this.amount &&
+          other.currencyCode == this.currencyCode &&
           other.categoryId == this.categoryId &&
           other.note == this.note &&
           other.frequency == this.frequency &&
@@ -1976,6 +2024,7 @@ class RecurringTransactionsCompanion
   final Value<int> ledgerId;
   final Value<String> type;
   final Value<int> amount;
+  final Value<String?> currencyCode;
   final Value<int?> categoryId;
   final Value<String?> note;
   final Value<String> frequency;
@@ -1994,6 +2043,7 @@ class RecurringTransactionsCompanion
     this.ledgerId = const Value.absent(),
     this.type = const Value.absent(),
     this.amount = const Value.absent(),
+    this.currencyCode = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.note = const Value.absent(),
     this.frequency = const Value.absent(),
@@ -2013,6 +2063,7 @@ class RecurringTransactionsCompanion
     required int ledgerId,
     required String type,
     required int amount,
+    this.currencyCode = const Value.absent(),
     this.categoryId = const Value.absent(),
     this.note = const Value.absent(),
     required String frequency,
@@ -2036,6 +2087,7 @@ class RecurringTransactionsCompanion
     Expression<int>? ledgerId,
     Expression<String>? type,
     Expression<int>? amount,
+    Expression<String>? currencyCode,
     Expression<int>? categoryId,
     Expression<String>? note,
     Expression<String>? frequency,
@@ -2055,6 +2107,7 @@ class RecurringTransactionsCompanion
       if (ledgerId != null) 'ledger_id': ledgerId,
       if (type != null) 'type': type,
       if (amount != null) 'amount': amount,
+      if (currencyCode != null) 'currency_code': currencyCode,
       if (categoryId != null) 'category_id': categoryId,
       if (note != null) 'note': note,
       if (frequency != null) 'frequency': frequency,
@@ -2076,6 +2129,7 @@ class RecurringTransactionsCompanion
     Value<int>? ledgerId,
     Value<String>? type,
     Value<int>? amount,
+    Value<String?>? currencyCode,
     Value<int?>? categoryId,
     Value<String?>? note,
     Value<String>? frequency,
@@ -2095,6 +2149,7 @@ class RecurringTransactionsCompanion
       ledgerId: ledgerId ?? this.ledgerId,
       type: type ?? this.type,
       amount: amount ?? this.amount,
+      currencyCode: currencyCode ?? this.currencyCode,
       categoryId: categoryId ?? this.categoryId,
       note: note ?? this.note,
       frequency: frequency ?? this.frequency,
@@ -2125,6 +2180,9 @@ class RecurringTransactionsCompanion
     }
     if (amount.present) {
       map['amount'] = Variable<int>(amount.value);
+    }
+    if (currencyCode.present) {
+      map['currency_code'] = Variable<String>(currencyCode.value);
     }
     if (categoryId.present) {
       map['category_id'] = Variable<int>(categoryId.value);
@@ -2175,6 +2233,7 @@ class RecurringTransactionsCompanion
           ..write('ledgerId: $ledgerId, ')
           ..write('type: $type, ')
           ..write('amount: $amount, ')
+          ..write('currencyCode: $currencyCode, ')
           ..write('categoryId: $categoryId, ')
           ..write('note: $note, ')
           ..write('frequency: $frequency, ')
@@ -9372,6 +9431,7 @@ typedef $$RecurringTransactionsTableCreateCompanionBuilder =
       required int ledgerId,
       required String type,
       required int amount,
+      Value<String?> currencyCode,
       Value<int?> categoryId,
       Value<String?> note,
       required String frequency,
@@ -9392,6 +9452,7 @@ typedef $$RecurringTransactionsTableUpdateCompanionBuilder =
       Value<int> ledgerId,
       Value<String> type,
       Value<int> amount,
+      Value<String?> currencyCode,
       Value<int?> categoryId,
       Value<String?> note,
       Value<String> frequency,
@@ -9477,6 +9538,11 @@ class $$RecurringTransactionsTableFilterComposer
 
   ColumnFilters<int> get amount => $composableBuilder(
     column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -9618,6 +9684,11 @@ class $$RecurringTransactionsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get categoryId => $composableBuilder(
     column: $table.categoryId,
     builder: (column) => ColumnOrderings(column),
@@ -9724,6 +9795,11 @@ class $$RecurringTransactionsTableAnnotationComposer
 
   GeneratedColumn<int> get amount =>
       $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get currencyCode => $composableBuilder(
+    column: $table.currencyCode,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<int> get categoryId => $composableBuilder(
     column: $table.categoryId,
@@ -9864,6 +9940,7 @@ class $$RecurringTransactionsTableTableManager
                 Value<int> ledgerId = const Value.absent(),
                 Value<String> type = const Value.absent(),
                 Value<int> amount = const Value.absent(),
+                Value<String?> currencyCode = const Value.absent(),
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 Value<String> frequency = const Value.absent(),
@@ -9882,6 +9959,7 @@ class $$RecurringTransactionsTableTableManager
                 ledgerId: ledgerId,
                 type: type,
                 amount: amount,
+                currencyCode: currencyCode,
                 categoryId: categoryId,
                 note: note,
                 frequency: frequency,
@@ -9902,6 +9980,7 @@ class $$RecurringTransactionsTableTableManager
                 required int ledgerId,
                 required String type,
                 required int amount,
+                Value<String?> currencyCode = const Value.absent(),
                 Value<int?> categoryId = const Value.absent(),
                 Value<String?> note = const Value.absent(),
                 required String frequency,
@@ -9920,6 +9999,7 @@ class $$RecurringTransactionsTableTableManager
                 ledgerId: ledgerId,
                 type: type,
                 amount: amount,
+                currencyCode: currencyCode,
                 categoryId: categoryId,
                 note: note,
                 frequency: frequency,
