@@ -1,7 +1,7 @@
 name: spitout
 description: "Spitout - 个人记账应用"
 publish_to: 'none'
-version: 1.2.18+2
+version: 1.3.0+3
 
 environment:
   sdk: ^3.12.0
