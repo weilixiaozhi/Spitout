@@ -11,7 +11,8 @@ scripts/
 │   ├── generate_android_keystore.sh    # macOS / Linux (Bash)
 │   └── README.md
 ├── i18n/               # 国际化翻译管理工具
-│   ├── check_status.dart
+│   ├── align_arb.dart      # ARB 对齐（键序/元数据/缩进）
+│   ├── check_status.dart   # 检查与清理
 │   └── README.md
 ├── launcher_icons/     # 启动图标生成工具
 │   ├── rasterize_svg.dart
@@ -32,6 +33,7 @@ scripts/
 
 ### 📝 i18n — 国际化翻译管理
 
+- **align_arb.dart** — 对齐三个 ARB 文件：键顺序、`@` 元数据、`@@locale`、4 空格缩进
 - **check_status.dart** — 综合检查与清理：翻译完整性、多余 keys、未使用 keys
 
 详见 [i18n/README.md](i18n/README.md)。
@@ -53,6 +55,9 @@ bash scripts/android_keystore/generate_android_keystore.sh
 
 # i18n 检查与清理
 dart scripts/i18n/check_status.dart
+
+# i18n 对齐（新增/删除翻译键后运行）
+dart scripts/i18n/align_arb.dart
 
 # 图标栅格化（先改 SVG，再执行）
 flutter test scripts/launcher_icons/rasterize_svg.dart
