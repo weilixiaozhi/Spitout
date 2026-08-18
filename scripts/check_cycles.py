@@ -20,9 +20,9 @@ PKG_PREFIX = "package:spitout/"
 EXCLUDE_REL_PREFIX = "l10n/"
 IGNORE_SUFFIXES = (".g.dart", ".freezed.dart")
 
-import_re = re.compile(r"^\s*(?:import|export)\s+'([^']+)'")
-part_re = re.compile(r"^\s*part\s+'([^']+)'")
-part_of_re = re.compile(r"^\s*part of\s+'([^']+)'")
+import_re = re.compile(r"^\s*(?:import|export)\s+'([^']+)'", re.MULTILINE)
+part_re = re.compile(r"^\s*part\s+'([^']+)'", re.MULTILINE)
+part_of_re = re.compile(r"^\s*part of\s+'([^']+)'", re.MULTILINE)
 
 
 def rel(path: Path) -> str:

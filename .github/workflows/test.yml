@@ -67,7 +67,9 @@ jobs:
           echo "✅ Provider 叶子白名单门禁通过"
 
       - name: 静态依赖环检测（业务代码无环）
-        run: python3 scripts/check_cycles.py
+        run: |
+          python3 scripts/check_cycles_test.py
+          python3 scripts/check_cycles.py
 
       - name: 运行测试（随机顺序，持续暴露顺序依赖）
         run: flutter test --test-randomize-ordering-seed=random
