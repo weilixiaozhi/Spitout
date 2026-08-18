@@ -1,3 +1,5 @@
+/// 由 flutter gen-l10n 自动生成，请勿手改。同一语言代码的区域变体（zh 与 zh_TW）合并于同一文件。
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -246,9 +248,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get analyticsYear => 'Year';
-
-  @override
-  String get analyticsAll => 'All';
 
   @override
   String get analyticsWeek => 'Week';
@@ -593,16 +592,6 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String importTransactionFailed(Object error) {
-    return 'Import failed, all changes have been rolled back: $error';
-  }
-
-  @override
-  String importFileOpenError(String error) {
-    return 'Unable to open file picker: $error';
-  }
-
-  @override
   String get mineTitle => 'Mine';
 
   @override
@@ -612,7 +601,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get languageTitle => 'Language Settings';
 
   @override
-  String get languageChinese => '中文';
+  String get languageChinese => '简体中文';
 
   @override
   String get languageEnglish => 'English';
@@ -776,12 +765,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get mineLoginSubtitle => 'Only needed for sync';
-
-  @override
-  String get cloudReloginTitle => 'Re-login';
-
-  @override
-  String get cloudReloginSuccess => 'Re-logged in';
 
   @override
   String get mineLoggedInAccount => 'Logged in';
@@ -3144,10 +3127,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Failed to remove member. Please try again later.';
 
   @override
-  String get sharedMembersSyncPending =>
-      'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.';
-
-  @override
   String get sharedMembersSaveFirst => 'Please save the ledger first';
 
   @override
@@ -3870,15 +3849,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaStatisticsTitle => 'AA Statistics';
 
   @override
-  String get aaStatisticsOverview => 'Overview';
-
-  @override
   String get aaStatisticsTotalAmount => 'Total shared';
-
-  @override
-  String aaStatisticsTxCount(int count) {
-    return '$count shared transactions';
-  }
 
   @override
   String get aaStatisticsPerPerson => 'Split details';
@@ -3979,27 +3950,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaParticipantsAll => 'All members';
 
   @override
-  String aaParticipantsAllCount(int count) {
-    return 'All members ($count)';
-  }
-
-  @override
   String get aaParticipantsUnit => '';
 
   @override
-  String get aaVirtualUserTitle => 'Virtual members';
-
-  @override
-  String get aaVirtualUserAdd => 'Add virtual member';
-
-  @override
   String get aaVirtualUserNameHint => 'Enter a nickname';
-
-  @override
-  String get aaVirtualUserRename => 'Rename';
-
-  @override
-  String get aaVirtualUserEmpty => 'No virtual members yet';
 
   @override
   String aaVirtualUserDeleteConfirm(String name) {
@@ -4025,13 +3979,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get aaMe => 'Me';
 
   @override
-  String get ledgerAaEnabledHint => 'Split expenses with members when enabled';
-
-  @override
   String get ledgerAaStatisticsEntry => 'AA Statistics';
-
-  @override
-  String get ledgerAaVirtualUsersEntry => 'Manage virtual members';
 
   @override
   String get aaSwitchOnLabel => 'Turn on AA Split';

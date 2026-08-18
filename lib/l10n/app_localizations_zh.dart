@@ -1,3 +1,5 @@
+/// 由 flutter gen-l10n 自动生成，请勿手改。同一语言代码的区域变体（zh 与 zh_TW）合并于同一文件。
+
 // ignore: unused_import
 import 'package:intl/intl.dart' as intl;
 import 'app_localizations.dart';
@@ -9,7 +11,7 @@ class AppLocalizationsZh extends AppLocalizations {
   AppLocalizationsZh([String locale = 'zh']) : super(locale);
 
   @override
-  String get appTitle => 'Spitout';
+  String get appTitle => '芝麻记';
 
   @override
   String get tabHome => '明细';
@@ -241,9 +243,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get analyticsYear => '年';
-
-  @override
-  String get analyticsAll => '全部';
 
   @override
   String get analyticsWeek => '周';
@@ -581,16 +580,6 @@ class AppLocalizationsZh extends AppLocalizations {
   }
 
   @override
-  String importTransactionFailed(Object error) {
-    return '导入失败，已回滚所有更改：$error';
-  }
-
-  @override
-  String importFileOpenError(String error) {
-    return '无法打开文件选择器：$error';
-  }
-
-  @override
   String get mineTitle => '我的';
 
   @override
@@ -600,7 +589,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get languageTitle => '语言设置';
 
   @override
-  String get languageChinese => '中文';
+  String get languageChinese => '简体中文';
 
   @override
   String get languageEnglish => 'English';
@@ -762,12 +751,6 @@ class AppLocalizationsZh extends AppLocalizations {
 
   @override
   String get mineLoginSubtitle => '仅在同步时需要';
-
-  @override
-  String get cloudReloginTitle => '重新登录';
-
-  @override
-  String get cloudReloginSuccess => '已重新登录';
 
   @override
   String get mineLoggedInAccount => '已登录';
@@ -3008,9 +2991,6 @@ class AppLocalizationsZh extends AppLocalizations {
   String get sharedMembersRemoveFailed => '移除成员失败，请稍后重试';
 
   @override
-  String get sharedMembersSyncPending => '首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员';
-
-  @override
   String get sharedMembersSaveFirst => '请先保存账本';
 
   @override
@@ -3713,15 +3693,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaStatisticsTitle => '分摊统计';
 
   @override
-  String get aaStatisticsOverview => '汇总';
-
-  @override
   String get aaStatisticsTotalAmount => '分摊总额';
-
-  @override
-  String aaStatisticsTxCount(int count) {
-    return '$count 笔分摊交易';
-  }
 
   @override
   String get aaStatisticsPerPerson => '分摊详情';
@@ -3822,27 +3794,10 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaParticipantsAll => '全部成员';
 
   @override
-  String aaParticipantsAllCount(int count) {
-    return '全部成员（$count人）';
-  }
-
-  @override
   String get aaParticipantsUnit => '人';
 
   @override
-  String get aaVirtualUserTitle => '虚拟用户';
-
-  @override
-  String get aaVirtualUserAdd => '新建虚拟用户';
-
-  @override
   String get aaVirtualUserNameHint => '输入昵称';
-
-  @override
-  String get aaVirtualUserRename => '重命名';
-
-  @override
-  String get aaVirtualUserEmpty => '暂无虚拟用户';
 
   @override
   String aaVirtualUserDeleteConfirm(String name) {
@@ -3867,13 +3822,7 @@ class AppLocalizationsZh extends AppLocalizations {
   String get aaMe => '我';
 
   @override
-  String get ledgerAaEnabledHint => '开启后记账时可选择分摊方式';
-
-  @override
   String get ledgerAaStatisticsEntry => '分摊统计';
-
-  @override
-  String get ledgerAaVirtualUsersEntry => '管理虚拟用户';
 
   @override
   String get aaSwitchOnLabel => '开启AA分摊';
@@ -3893,7 +3842,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   AppLocalizationsZhTw() : super('zh_TW');
 
   @override
-  String get appTitle => 'Spitout';
+  String get appTitle => '芝麻記';
 
   @override
   String get tabHome => '明細';
@@ -4125,9 +4074,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get analyticsYear => '年';
-
-  @override
-  String get analyticsAll => '全部';
 
   @override
   String get analyticsWeek => '週';
@@ -4465,16 +4411,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   }
 
   @override
-  String importTransactionFailed(Object error) {
-    return '匯入失敗，已回滾所有更改：$error';
-  }
-
-  @override
-  String importFileOpenError(String error) {
-    return '無法開啟檔案選擇器：$error';
-  }
-
-  @override
   String get mineTitle => '我的';
 
   @override
@@ -4484,7 +4420,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get languageTitle => '語言設定';
 
   @override
-  String get languageChinese => '中文';
+  String get languageChinese => '简体中文';
 
   @override
   String get languageEnglish => 'English';
@@ -4646,12 +4582,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
 
   @override
   String get mineLoginSubtitle => '僅在同步時需要';
-
-  @override
-  String get cloudReloginTitle => '重新登入';
-
-  @override
-  String get cloudReloginSuccess => '已重新登入';
 
   @override
   String get mineLoggedInAccount => '已登入';
@@ -6891,9 +6821,6 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get sharedMembersRemoveFailed => '移除成員失敗，請稍後再試';
 
   @override
-  String get sharedMembersSyncPending => '首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員';
-
-  @override
   String get sharedMembersSaveFirst => '請先保存帳本';
 
   @override
@@ -7596,15 +7523,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaStatisticsTitle => '分攤統計';
 
   @override
-  String get aaStatisticsOverview => '總覽';
-
-  @override
   String get aaStatisticsTotalAmount => '分攤總額';
-
-  @override
-  String aaStatisticsTxCount(int count) {
-    return '$count 筆分攤交易';
-  }
 
   @override
   String get aaStatisticsPerPerson => '分攤詳情';
@@ -7705,27 +7624,10 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaParticipantsAll => '全部成員';
 
   @override
-  String aaParticipantsAllCount(int count) {
-    return '全部成員（$count人）';
-  }
-
-  @override
   String get aaParticipantsUnit => '人';
 
   @override
-  String get aaVirtualUserTitle => '虛擬用戶';
-
-  @override
-  String get aaVirtualUserAdd => '新增虛擬用戶';
-
-  @override
   String get aaVirtualUserNameHint => '輸入暱稱';
-
-  @override
-  String get aaVirtualUserRename => '重新命名';
-
-  @override
-  String get aaVirtualUserEmpty => '暫無虛擬用戶';
 
   @override
   String aaVirtualUserDeleteConfirm(String name) {
@@ -7750,13 +7652,7 @@ class AppLocalizationsZhTw extends AppLocalizationsZh {
   String get aaMe => '我';
 
   @override
-  String get ledgerAaEnabledHint => '開啟後記帳時可選擇分攤方式';
-
-  @override
   String get ledgerAaStatisticsEntry => '分攤統計';
-
-  @override
-  String get ledgerAaVirtualUsersEntry => '管理虛擬用戶';
 
   @override
   String get aaSwitchOnLabel => '開啟AA分攤';

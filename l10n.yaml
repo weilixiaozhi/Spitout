@@ -3,3 +3,4 @@ template-arb-file: app_en.arb
 output-localization-file: app_localizations.dart
 nullable-getter: false
 preferred-supported-locales: ["en"]
+header: "/// 由 flutter gen-l10n 自动生成，请勿手改。同一语言代码的区域变体（zh 与 zh_TW）合并于同一文件。"

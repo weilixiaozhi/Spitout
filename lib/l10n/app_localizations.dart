@@ -1,3 +1,4 @@
+/// 由 flutter gen-l10n 自动生成，请勿手改。同一语言代码的区域变体（zh 与 zh_TW）合并于同一文件。
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
@@ -6,7 +7,6 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:intl/intl.dart' as intl;
 
 import 'app_localizations_en.dart';
-import 'app_localizations_ko.dart';
 import 'app_localizations_zh.dart';
 
 // ignore_for_file: type=lint
@@ -96,7 +96,6 @@ abstract class AppLocalizations {
   /// A list of this localizations delegate's supported locales.
   static const List<Locale> supportedLocales = <Locale>[
     Locale('en'),
-    Locale('ko'),
     Locale('zh'),
     Locale('zh', 'TW'),
   ];
@@ -544,12 +543,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Year'**
   String get analyticsYear;
-
-  /// No description provided for @analyticsAll.
-  ///
-  /// In en, this message translates to:
-  /// **'All'**
-  String get analyticsAll;
 
   /// No description provided for @analyticsWeek.
   ///
@@ -1138,18 +1131,6 @@ abstract class AppLocalizations {
   /// **'Skipped {count} non-transaction records (debts, etc.)'**
   String importSkippedNonTransactionTypes(Object count);
 
-  /// No description provided for @importTransactionFailed.
-  ///
-  /// In en, this message translates to:
-  /// **'Import failed, all changes have been rolled back: {error}'**
-  String importTransactionFailed(Object error);
-
-  /// No description provided for @importFileOpenError.
-  ///
-  /// In en, this message translates to:
-  /// **'Unable to open file picker: {error}'**
-  String importFileOpenError(String error);
-
   /// No description provided for @mineTitle.
   ///
   /// In en, this message translates to:
@@ -1171,7 +1152,7 @@ abstract class AppLocalizations {
   /// No description provided for @languageChinese.
   ///
   /// In en, this message translates to:
-  /// **'中文'**
+  /// **'简体中文'**
   String get languageChinese;
 
   /// No description provided for @languageEnglish.
@@ -1455,18 +1436,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Only needed for sync'**
   String get mineLoginSubtitle;
-
-  /// No description provided for @cloudReloginTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Re-login'**
-  String get cloudReloginTitle;
-
-  /// No description provided for @cloudReloginSuccess.
-  ///
-  /// In en, this message translates to:
-  /// **'Re-logged in'**
-  String get cloudReloginSuccess;
 
   /// No description provided for @mineLoggedInAccount.
   ///
@@ -5638,12 +5607,6 @@ abstract class AppLocalizations {
   /// **'Failed to remove member. Please try again later.'**
   String get sharedMembersRemoveFailed;
 
-  /// No description provided for @sharedMembersSyncPending.
-  ///
-  /// In en, this message translates to:
-  /// **'For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.'**
-  String get sharedMembersSyncPending;
-
   /// No description provided for @sharedMembersSaveFirst.
   ///
   /// In en, this message translates to:
@@ -6940,23 +6903,11 @@ abstract class AppLocalizations {
   /// **'AA Statistics'**
   String get aaStatisticsTitle;
 
-  /// No description provided for @aaStatisticsOverview.
-  ///
-  /// In en, this message translates to:
-  /// **'Overview'**
-  String get aaStatisticsOverview;
-
   /// No description provided for @aaStatisticsTotalAmount.
   ///
   /// In en, this message translates to:
   /// **'Total shared'**
   String get aaStatisticsTotalAmount;
-
-  /// No description provided for @aaStatisticsTxCount.
-  ///
-  /// In en, this message translates to:
-  /// **'{count} shared transactions'**
-  String aaStatisticsTxCount(int count);
 
   /// No description provided for @aaStatisticsPerPerson.
   ///
@@ -7150,47 +7101,17 @@ abstract class AppLocalizations {
   /// **'All members'**
   String get aaParticipantsAll;
 
-  /// No description provided for @aaParticipantsAllCount.
-  ///
-  /// In en, this message translates to:
-  /// **'All members ({count})'**
-  String aaParticipantsAllCount(int count);
-
   /// No description provided for @aaParticipantsUnit.
   ///
   /// In en, this message translates to:
   /// **''**
   String get aaParticipantsUnit;
 
-  /// No description provided for @aaVirtualUserTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Virtual members'**
-  String get aaVirtualUserTitle;
-
-  /// No description provided for @aaVirtualUserAdd.
-  ///
-  /// In en, this message translates to:
-  /// **'Add virtual member'**
-  String get aaVirtualUserAdd;
-
   /// No description provided for @aaVirtualUserNameHint.
   ///
   /// In en, this message translates to:
   /// **'Enter a nickname'**
   String get aaVirtualUserNameHint;
-
-  /// No description provided for @aaVirtualUserRename.
-  ///
-  /// In en, this message translates to:
-  /// **'Rename'**
-  String get aaVirtualUserRename;
-
-  /// No description provided for @aaVirtualUserEmpty.
-  ///
-  /// In en, this message translates to:
-  /// **'No virtual members yet'**
-  String get aaVirtualUserEmpty;
 
   /// No description provided for @aaVirtualUserDeleteConfirm.
   ///
@@ -7228,23 +7149,11 @@ abstract class AppLocalizations {
   /// **'Me'**
   String get aaMe;
 
-  /// No description provided for @ledgerAaEnabledHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Split expenses with members when enabled'**
-  String get ledgerAaEnabledHint;
-
   /// No description provided for @ledgerAaStatisticsEntry.
   ///
   /// In en, this message translates to:
   /// **'AA Statistics'**
   String get ledgerAaStatisticsEntry;
-
-  /// No description provided for @ledgerAaVirtualUsersEntry.
-  ///
-  /// In en, this message translates to:
-  /// **'Manage virtual members'**
-  String get ledgerAaVirtualUsersEntry;
 
   /// No description provided for @aaSwitchOnLabel.
   ///
@@ -7282,7 +7191,7 @@ class _AppLocalizationsDelegate
 
   @override
   bool isSupported(Locale locale) =>
-      <String>['en', 'ko', 'zh'].contains(locale.languageCode);
+      <String>['en', 'zh'].contains(locale.languageCode);
 
   @override
   bool shouldReload(_AppLocalizationsDelegate old) => false;
@@ -7305,8 +7214,6 @@ AppLocalizations lookupAppLocalizations(Locale locale) {
   switch (locale.languageCode) {
     case 'en':
       return AppLocalizationsEn();
-    case 'ko':
-      return AppLocalizationsKo();
     case 'zh':
       return AppLocalizationsZh();
   }

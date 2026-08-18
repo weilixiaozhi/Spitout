@@ -71,8 +71,6 @@ class LanguageNotifier extends Notifier<Locale?> {
         return l10n.languageChinese;
       case 'en':
         return l10n.languageEnglish;
-      case 'ko':
-        return '한국어';
       default:
         return locale.languageCode;
     }

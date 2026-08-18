@@ -70,16 +70,6 @@ class LanguageSettingsPage extends ConsumerWidget {
                   },
                 ),
                 const SizedBox(height: SpitoutDimens.p8),
-
-                // 한국어
-                _LanguageOption(
-                  title: '한국어',
-                  locale: const Locale('ko'),
-                  currentLanguage: currentLanguage,
-                  onTap: () {
-                    ref.read(languageProvider.notifier).setLanguage(const Locale('ko'));
-                  },
-                ),
               ],
             ),
           ),

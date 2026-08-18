@@ -82,7 +82,7 @@ void main() async {
 /// 检查翻译完整性
 Future<void> checkTranslationCompleteness() async {
   final l10nDir = Directory('lib/l10n');
-  final languages = ['zh', 'en', 'zh_TW', 'ko'];
+  final languages = ['zh', 'en', 'zh_TW'];
 
   print('📊 第一步：检查翻译文件完整性');
   print('');
@@ -128,7 +128,6 @@ Future<void> checkTranslationCompleteness() async {
     'zh': '简体中文',
     'en': 'English',
     'zh_TW': '繁體中文',
-    'ko': '한국어',
   };
 
 for (final lang in languages) {
@@ -266,7 +265,7 @@ Future<Map<String, Set<String>>> checkExtraKeys() async {
   print('');
 
   // 支持的语言列表（排除基准语言 en），所有相对模板多出的键均视为多余
-  final languages = ['zh', 'zh_TW', 'ko'];
+  final languages = ['zh', 'zh_TW'];
 
   // 收集每个语言的多余键
   final Map<String, Set<String>> extraKeysMap = {};
@@ -304,7 +303,6 @@ Future<Map<String, Set<String>>> checkExtraKeys() async {
     'zh': '简体中文',
     'en': 'English',
     'zh_TW': '繁體中文',
-    'ko': '한국어',
   };
 
   for (final entry in extraKeysMap.entries) {
@@ -355,7 +353,7 @@ Future<void> cleanExtraKeys(Map<String, Set<String>> extraKeysMap) async {
     }
 
     // 写回文件
-    final encoder = JsonEncoder.withIndent('  ');
+    final encoder = JsonEncoder.withIndent('    ');
     final formatted = encoder.convert(data);
     await file.writeAsString('$formatted\n');
 
@@ -511,7 +509,7 @@ Future<void> cleanUnusedKeys(List<String> unusedKeys) async {
     }
 
     // 写回文件（格式化 JSON）
-    final encoder = JsonEncoder.withIndent('  ');
+    final encoder = JsonEncoder.withIndent('    ');
     final formatted = encoder.convert(data);
     await file.writeAsString('$formatted\n');
 

@@ -112,7 +112,6 @@
     "homeSwitchMonthHint": "Swipe the list left/right to switch months",
     "analyticsMonth": "Month",
     "analyticsYear": "Year",
-    "analyticsAll": "All",
     "analyticsWeek": "Week",
     "analyticsSwipePeriodHint": "Swipe left/right on the list to switch {period}",
     "@analyticsSwipePeriodHint": {
@@ -146,6 +145,13 @@
     "ledgersNew": "New Ledger",
     "ledgersClear": "Clear Ledger",
     "ledgersClearMessage": "Are you sure to clear all transactions in ledger \"{name}\"? This action cannot be undone.\\nThe ledger will be kept, only transaction data will be deleted.",
+    "@ledgersClearMessage": {
+        "placeholders": {
+            "name": {
+                "type": "Object"
+            }
+        }
+    },
     "ledgerDefaultName": "Default Ledger",
     "ledgersEdit": "Edit Ledger",
     "ledgersDelete": "Delete Ledger",
@@ -185,13 +191,6 @@
     "@ledgersExpense": {
         "placeholders": {
             "expense": {
-                "type": "String"
-            }
-        }
-    },
-    "@ledgersBalance": {
-        "placeholders": {
-            "balance": {
                 "type": "String"
             }
         }
@@ -293,19 +292,10 @@
     "importCancelled": "Import Cancelled",
     "importCompleted": "Import Completed{cancelled}, success {ok}, failed {fail}",
     "importSkippedNonTransactionTypes": "Skipped {count} non-transaction records (debts, etc.)",
-    "importTransactionFailed": "Import failed, all changes have been rolled back: {error}",
-    "importFileOpenError": "Unable to open file picker: {error}",
-    "@importFileOpenError": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
     "mineTitle": "Mine",
     "mineLanguageSettings": "App Language",
     "languageTitle": "Language Settings",
-    "languageChinese": "中文",
+    "languageChinese": "简体中文",
     "languageEnglish": "English",
     "languageSystemDefault": "Follow System",
     "mineSlogan": "No nickname set",
@@ -363,8 +353,6 @@
     "mineDownloadResult": "Imported: {inserted} records",
     "mineLoginTitle": "Login",
     "mineLoginSubtitle": "Only needed for sync",
-    "cloudReloginTitle": "Re-login",
-    "cloudReloginSuccess": "Re-logged in",
     "mineLoggedInAccount": "Logged in",
     "mineLogoutSubtitle": "Tap to logout",
     "mineLogoutConfirmTitle": "Logout",
@@ -397,9 +385,23 @@
     "categoryClearUnused": "Clear Unused Categories",
     "categoryClearUnusedTitle": "Clear Unused Categories",
     "categoryClearUnusedMessage": "Are you sure you want to delete {count} unused categories? This action cannot be undone.",
+    "@categoryClearUnusedMessage": {
+        "placeholders": {
+            "count": {
+                "type": "Object"
+            }
+        }
+    },
     "categoryClearUnusedListTitle": "Categories to be deleted:",
     "categoryClearUnusedEmpty": "No unused categories",
     "categoryClearUnusedSuccess": "Deleted {count} categories",
+    "@categoryClearUnusedSuccess": {
+        "placeholders": {
+            "count": {
+                "type": "Object"
+            }
+        }
+    },
     "categoryClearUnusedFailed": "Clear failed",
     "categoryDeleteError": "Delete failed",
     "categorySubCategoryCreated": "Subcategory added: {name}",
@@ -554,7 +556,21 @@
     "categoryDeleteOptionPromote": "Delete categories and data (excl. subcategories, subcategories become top-level)",
     "categoryDeleteSelectedTitle": "Delete Selected Categories",
     "categoryDeleteSelectedSubtitleWithSub": "Are you sure you want to delete {count} selected categories and clear their data? (including subcategories and data) This action cannot be undone.",
+    "@categoryDeleteSelectedSubtitleWithSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryDeleteSelectedSubtitleWithoutSub": "Are you sure you want to delete {count} selected categories and clear their data? (excluding subcategories and data) This action cannot be undone.",
+    "@categoryDeleteSelectedSubtitleWithoutSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryMigrateSelectTargetTitle": "Select Target Category",
     "categoryMigrateConfirmButton": "Confirm (Migrate data and delete categories)",
     "categoryMigrateChildLabel": "Sub · {parent}",
@@ -579,20 +595,6 @@
         }
     },
     "subcategoryEmpty": "No subcategories yet",
-    "@categoryDeleteSelectedSubtitleWithSub": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "@categoryDeleteSelectedSubtitleWithoutSub": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "cloudSupabaseUrlLabel": "Supabase URL",
     "cloudSupabaseUrlHint": "https://xxx.supabase.co",
     "cloudAnonKeyLabel": "Anon Key",
@@ -646,8 +648,6 @@
     "exportCsvHeaderTime": "Time",
     "exportSuccessTitle": "Export Successful",
     "exportSuccessMessageAndroid": "Saved to:\n{path}",
-    "exportFailedTitle": "Export Failed",
-    "exportTypeExpense": "Expense",
     "@exportSuccessMessageAndroid": {
         "placeholders": {
             "path": {
@@ -655,6 +655,8 @@
             }
         }
     },
+    "exportFailedTitle": "Export Failed",
+    "exportTypeExpense": "Expense",
     "exportSuccessMessageIos": "Exported to app documents:\n{path}",
     "@exportSuccessMessageIos": {
         "placeholders": {
@@ -1015,10 +1017,6 @@
     "configImportOverwriteWarning": "Importing will overwrite existing configurations. It is recommended to back up your current config first.",
     "configImportExportIncludesTitle": "Included Configurations",
     "configExportSavedTo": "Saved to: {path}",
-    "configExportViewContent": "View Content",
-    "configExportCopyContent": "Copy Content",
-    "configExportContentCopied": "Copied to clipboard",
-    "configExportReadFileFailed": "Failed to read file",
     "@configExportSavedTo": {
         "placeholders": {
             "path": {
@@ -1026,6 +1024,10 @@
             }
         }
     },
+    "configExportViewContent": "View Content",
+    "configExportCopyContent": "Copy Content",
+    "configExportContentCopied": "Copied to clipboard",
+    "configExportReadFileFailed": "Failed to read file",
     "configIncludeLedgers": "Ledgers",
     "configIncludeSupabase": "Supabase cloud service config",
     "configIncludeWebdav": "WebDAV cloud service config",
@@ -1112,7 +1114,6 @@
         }
     },
     "welcomeImportNoFile": "No file selected",
-
     "calendarTitle": "Calendar",
     "calendarToday": "Back to Today",
     "calendarNoTransactions": "No transactions",
@@ -1194,7 +1195,6 @@
     "cloudSyncGuideLimitItem1": "Not real-time: requires manually tapping upload and download",
     "cloudSyncGuideLimitItem2": "No conflict merging: does not auto-merge edits from both sides — last upload wins",
     "cloudSyncGuideLimitItem3": "Cloud service delay: uploaded files may take seconds to minutes before other devices can read them, depending on your cloud provider",
-
     "appLockTitle": "Lock App",
     "appLockDesc": "PIN & biometric to protect privacy",
     "appLockEnable": "Enable App Lock",
@@ -1266,15 +1266,21 @@
     "@syncHealthValue": {
         "description": "Per-item sync counts in the sync-status detail panel, local vs remote",
         "placeholders": {
-            "local": { "type": "int" },
-            "remote": { "type": "int" }
+            "local": {
+                "type": "int"
+            },
+            "remote": {
+                "type": "int"
+            }
         }
     },
     "syncHealthValueRemoteMissing": "Local {local} · Remote —",
     "@syncHealthValueRemoteMissing": {
         "description": "Per-item sync count when the remote count cannot be fetched",
         "placeholders": {
-            "local": { "type": "int" }
+            "local": {
+                "type": "int"
+            }
         }
     },
     "twofaChallengeTitle": "Two-factor authentication",
@@ -1440,13 +1446,11 @@
     },
     "sharedMembersRemoved": "Member removed",
     "sharedMembersRemoveFailed": "Failed to remove member. Please try again later.",
-    "sharedMembersSyncPending": "For a newly created ledger, select it on the ledger management page first, then re-enter this page to invite members.",
     "sharedMembersSaveFirst": "Please save the ledger first",
     "sharedMembersInviteSyncFailed": "Cloud sync not finished yet. Please try again later.",
     "sharedMembersLoadingHint": "Cloud ledger is not ready, syncing…",
     "sharedMembersLoadFailed": "Failed to load members",
     "sharedMembersRetry": "Retry",
-
     "sharedTxCreatedBy": "Created by {name}",
     "@sharedTxCreatedBy": {
         "placeholders": {
@@ -1816,16 +1820,7 @@
     "mineUpdateNow": "Update",
     "ledgerMetaReadOnlyToast": "Collaborators cannot modify ledger settings.",
     "aaStatisticsTitle": "AA Statistics",
-    "aaStatisticsOverview": "Overview",
     "aaStatisticsTotalAmount": "Total shared",
-    "aaStatisticsTxCount": "{count} shared transactions",
-    "@aaStatisticsTxCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "aaStatisticsPerPerson": "Split details",
     "aaStatisticsPaid": "Split paid",
     "aaStatisticsPaidAll": "Total paid",
@@ -1865,20 +1860,8 @@
     "aaModeCustom": "Custom split",
     "aaModeNoSplit": "No split",
     "aaParticipantsAll": "All members",
-    "aaParticipantsAllCount": "All members ({count})",
-    "@aaParticipantsAllCount": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
     "aaParticipantsUnit": "",
-    "aaVirtualUserTitle": "Virtual members",
-    "aaVirtualUserAdd": "Add virtual member",
     "aaVirtualUserNameHint": "Enter a nickname",
-    "aaVirtualUserRename": "Rename",
-    "aaVirtualUserEmpty": "No virtual members yet",
     "aaVirtualUserDeleteConfirm": "Delete \"{name}\"?",
     "@aaVirtualUserDeleteConfirm": {
         "placeholders": {
@@ -1899,10 +1882,7 @@
     "aaAddVirtualUser": "Add virtual user",
     "aaUnknownUser": "Unknown",
     "aaMe": "Me",
-
-    "ledgerAaEnabledHint": "Split expenses with members when enabled",
     "ledgerAaStatisticsEntry": "AA Statistics",
-    "ledgerAaVirtualUsersEntry": "Manage virtual members",
     "aaSwitchOnLabel": "Turn on AA Split",
     "aaSwitchOffLabel": "Turn off AA Split",
     "aaNoParticipants": "Add participants first",

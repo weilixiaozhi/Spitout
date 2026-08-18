@@ -149,12 +149,11 @@ void main() {
     testWidgets('渲染全部语言项；选择中文/跟随系统并持久化', (tester) async {
       await pumpPage(tester, const LanguageSettingsPage());
 
-      expect(find.text('中文'), findsOneWidget);
+      expect(find.text('简体中文'), findsOneWidget);
       expect(find.text('English'), findsOneWidget);
-      expect(find.text('한국어'), findsOneWidget);
 
       // 选择简体中文 → provider 状态 + prefs 落盘
-      await tester.tap(find.text('中文'));
+      await tester.tap(find.text('简体中文'));
       await tester.pumpAndSettle();
       expect(container.read(languageProvider), const Locale('zh'));
       final prefs = await SharedPreferences.getInstance();

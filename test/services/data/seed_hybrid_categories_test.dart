@@ -29,7 +29,6 @@ void main() {
     Locale('zh'),
     Locale('zh', 'TW'),
     Locale('en'),
-    Locale('ko'),
   ];
   // seed 解析失败会 `return key`（snake_case），正常分类名不会是全小写下划线串。
   final fallbackPattern = RegExp(r'^[a-z][a-z_]*$');

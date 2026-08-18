@@ -1,6 +1,9 @@
 {
     "@@locale": "zh",
-    "appTitle": "Spitout",
+    "appTitle": "芝麻记",
+    "@appTitle": {
+        "description": "The application title"
+    },
     "tabHome": "明细",
     "tabAnalytics": "统计",
     "tabCalendar": "日历",
@@ -44,6 +47,10 @@
     "commonSearch": "搜索",
     "commonNoteHint": "备注…",
     "commonSettings": "设置",
+    "commonCurrent": "当前",
+    "commonTutorial": "教程",
+    "commonConfigure": "配置",
+    "commonPressAgainToExit": "再按一次退出应用",
     "commonWeekdayMonday": "星期一",
     "commonWeekdayTuesday": "星期二",
     "commonWeekdayWednesday": "星期三",
@@ -51,16 +58,33 @@
     "commonWeekdayFriday": "星期五",
     "commonWeekdaySaturday": "星期六",
     "commonWeekdaySunday": "星期日",
-    "commonCurrent": "当前",
-    "commonTutorial": "教程",
-    "commonConfigure": "配置",
-    "commonPressAgainToExit": "再按一次退出应用",
     "homeExpense": "支出",
     "homeNoRecords": "还没有记账",
     "homeSelectDate": "选择日期",
     "homeYear": "{year}年",
+    "@homeYear": {
+        "placeholders": {
+            "year": {
+                "type": "int"
+            }
+        }
+    },
     "homeMonth": "{month}月",
+    "@homeMonth": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
     "homeMonthExpenseOf": "{month}月支出",
+    "@homeMonthExpenseOf": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
     "homeNoRecordsSubtext": "点击底部加号，马上记一笔",
     "homeBaseCurrencyNeedLedger": "请先创建账本",
     "homeBaseCurrencySwitched": "已切换主币种为 {code}",
@@ -76,16 +100,22 @@
     "homePullLocalSuccess": "已刷新本地账本数据与配置",
     "homePullCloudFailedButLocalOk": "云端同步失败，已刷新本地数据（汇率/配置）",
     "homePullCloudHealed": "已自动修复并同步 {count} 条云端数据",
+    "@homePullCloudHealed": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "homePullCloudGap": "云端有历史数据未能自动恢复，请到云同步页执行「从云端恢复」",
     "homeSyncing": "正在同步账本数据",
     "homeSwitchMonthHint": "左右滑动列表切换月份",
     "analyticsMonth": "月",
     "analyticsYear": "年",
-    "analyticsAll": "全部",
     "analyticsWeek": "周",
     "analyticsSwipePeriodHint": "左右滑动列表切换{period}",
     "@analyticsSwipePeriodHint": {
-        "description": "统计页左右滑动列表切换 周/月/年 的提示文案，period 由代码动态传入。",
+        "description": "Hint shown on the analytics page to swipe the list left/right to switch the period (week/month/year).",
         "placeholders": {
             "period": {}
         }
@@ -115,6 +145,13 @@
     "ledgersNew": "新建账本",
     "ledgersClear": "清空账本",
     "ledgersClearMessage": "确定要清空账本\"{name}\"的所有账单吗？此操作不可恢复。\\n账本本身会保留，仅删除账单数据。",
+    "@ledgersClearMessage": {
+        "placeholders": {
+            "name": {
+                "type": "Object"
+            }
+        }
+    },
     "ledgerDefaultName": "默认账本",
     "ledgersEdit": "编辑账本",
     "ledgersDelete": "删除账本",
@@ -123,13 +160,6 @@
     "ledgersDeleted": "已删除",
     "ledgersDeleteFailed": "删除失败",
     "ledgersClearTitle": "清空账本",
-    "@ledgersClearMessage": {
-        "placeholders": {
-            "name": {
-                "type": "Object"
-            }
-        }
-    },
     "ledgersClearSuccess": "账本已清空",
     "ledgersCreateSuccess": "账本创建成功",
     "ledgerNameLabel": "账本名称",
@@ -140,21 +170,132 @@
     "ledgersMonthStartDayHint": "统计与预算按该日作为每月周期起点（1-28）",
     "ledgersMonthStartDayNatural": "1日（自然月）",
     "ledgersMonthStartDayValue": "每月{day}日",
+    "@ledgersMonthStartDayValue": {
+        "placeholders": {
+            "day": {
+                "type": "int"
+            }
+        }
+    },
     "ledgersSearchCurrency": "搜索：中文或代码",
     "ledgersCreate": "创建",
     "ledgersRecords": "笔数：{count}",
+    "@ledgersRecords": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
     "ledgersExpense": "支出：{expense}",
+    "@ledgersExpense": {
+        "placeholders": {
+            "expense": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersEmpty": "暂无账本",
+    "ledgersSectionLocal": "本地账本",
+    "ledgersSectionCloud": "Spitout Cloud 账本",
+    "ledgersSectionLocalEmpty": "暂无本地账本，本地账本只保存在这台设备上",
+    "ledgersSectionCloudEmpty": "暂无云端账本，云端账本会在各设备间同步",
+    "ledgersSectionCloudSignInHint": "登录 Spitout Cloud 后即可使用云端账本",
+    "ledgersStorageLocation": "存储位置",
+    "ledgersStorageLocalHint": "只保存在这台设备上，不会上传到云端",
+    "ledgersStorageCloudHint": "数据会上传到 Spitout Cloud，并在各设备间同步",
+    "ledgersActionMoveToCloud": "移动到 Spitout Cloud",
+    "ledgersActionMoveToLocal": "移动到本地",
+    "ledgersActionCopyToLocal": "复制到本地",
+    "ledgersMoveToCloudMessage": "账本\"{name}\"的数据将上传到 Spitout Cloud，并在各设备间同步。",
+    "@ledgersMoveToCloudMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToLocalMessage": "账本\"{name}\"将从 Spitout Cloud 删除，仅保留在这台设备上，其他设备将不再能看到它。",
+    "@ledgersMoveToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersCopyToLocalMessage": "将账本\"{name}\"复制一份到本地，云端原账本保持不变。",
+    "@ledgersCopyToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToCloudSuccess": "已移动到 Spitout Cloud",
+    "ledgersMoveToLocalSuccess": "已移动到本地",
+    "ledgersCopyToLocalSuccess": "已复制到本地",
+    "ledgersSwitched": "已切换到账本\"{name}\"",
+    "@ledgersSwitched": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "categoryTitle": "分类管理",
     "categoryExpense": "支出",
     "categoryEmpty": "暂无分类",
     "categoryLoadFailed": "加载失败: {error}",
+    "@categoryLoadFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
     "importReading": "读取文件中…",
     "importPreparing": "准备中…",
-    "importFileOpenError": "无法打开文件选择器：{error}",
+    "importColumnNumber": "第 {number} 列",
+    "importConfirmMapping": "确认映射",
+    "importCategoryMapping": "分类映射",
+    "importNoDataParsed": "未解析到任何数据，请返回上一页检查 CSV 内容或分隔符。",
+    "importNoLedger": "请先创建账本再导入",
+    "importInvalidRowsSkipped": "无法解析的 {count} 行已跳过（金额或日期无效）",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "importFieldDate": "日期",
+    "importFieldType": "类型",
+    "importFieldAmount": "金额",
+    "importFieldCategory": "分类",
+    "importFieldNote": "备注",
+    "importPreview": "预览：",
+    "importPreviewLimit": "仅预览前 {shown} 行，共 {total} 行",
+    "importCategoryNotSelected": "未选择\"分类\"列，请点击\"上一步\"返回并设置\"分类\"的列，再继续。",
+    "importCategoryMappingDescription": "请将左侧\"源分类名\"映射到系统内已有分类（或保持原名自动创建/合并）",
+    "importKeepOriginalName": "保持原名（自动创建/合并）",
+    "importProgress": "导入中… 成功 {ok}，失败 {fail}",
+    "importCancelImport": "取消导入",
+    "importCompleteTitle": "导入完成",
+    "importSelectCategoryFirst": "请先选择\"分类\"列再继续",
+    "importNextStep": "下一步",
+    "importPreviousStep": "上一步",
+    "importStartImport": "开始导入",
+    "importAutoDetect": "自动",
+    "importInProgress": "正在导入…",
+    "importProgressDetail": "已完成：{done}/{total}，成功 {ok}，失败 {fail}",
+    "importBackgroundImport": "后台导入",
+    "importCancelled": "（已取消）",
+    "importCompleted": "导入完成{cancelled}：成功 {ok} 条，失败 {fail} 条",
+    "importSkippedNonTransactionTypes": "跳过 {count} 条非支出记录（债务等）",
     "mineTitle": "我的",
     "mineLanguageSettings": "应用语言",
     "languageTitle": "语言设置",
-    "languageChinese": "中文",
+    "languageChinese": "简体中文",
     "languageEnglish": "English",
     "languageSystemDefault": "跟随系统",
     "mineSlogan": "未设置昵称",
@@ -167,6 +308,16 @@
     "mineGreetingEvening": "晚上好",
     "mineGreetingNight": "夜深了",
     "mineGreetingNamed": "{greeting}，{name}",
+    "@mineGreetingNamed": {
+        "placeholders": {
+            "greeting": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "mineAvatarDelete": "删除头像",
     "mineAvatarUploadNew": "上传新头像",
     "mineCloudService": "备份与云同步配置",
@@ -202,8 +353,6 @@
     "mineDownloadResult": "导入：{inserted} 条",
     "mineLoginTitle": "登录",
     "mineLoginSubtitle": "仅在同步时需要",
-    "cloudReloginTitle": "重新登录",
-    "cloudReloginSuccess": "已重新登录",
     "mineLoggedInAccount": "已登录",
     "mineLogoutSubtitle": "点击可退出登录",
     "mineLogoutConfirmTitle": "退出登录",
@@ -348,6 +497,13 @@
     "categoryDetailNoTransactionsSubtext": "该分类下还没有任何交易记录",
     "categoryDetailDeleteFailed": "删除失败",
     "categoryMigrationTransactionLabel": "{count}笔",
+    "@categoryMigrationTransactionLabel": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryTemplateEntryFlat": "一级模板",
     "categoryTemplateEntryHierarchical": "二级模板",
     "categoryTemplateFlatTitle": "一级分类模板",
@@ -400,55 +556,45 @@
     "categoryDeleteOptionPromote": "删除分类和分类下的所有数据（不含二级分类，二级分类将变为一级分类）",
     "categoryDeleteSelectedTitle": "删除选中的分类",
     "categoryDeleteSelectedSubtitleWithSub": "确定要删除 {count} 个选中分类并且清空分类下的数据吗？（包含二级分类和数据）此操作无法撤销。",
-    "categoryDeleteSelectedSubtitleWithoutSub": "确定要删除 {count} 个选中分类并且清空分类下的数据吗？（不含二级分类和数据）此操作无法撤销。",
-    "categoryMigrateSelectTargetTitle": "选择数据迁移到的分类",
-    "categoryMigrateConfirmButton": "确定（迁移分类数据并删除分类）",
-    "categoryMigrateChildLabel": "二级 · {parent}",
-    "subcategoryEditParent": "编辑父分类",
-    "subcategoryAdd": "添加子分类",
-    "subcategoryDelete": "删除子分类",
-    "subcategoryDeleteOptionAll": "删除分类和分类下的所有数据",
-    "subcategoryDeleteOptionMigrate": "删除分类并迁移分类下的所有数据到其他分类",
-    "subcategoryDeleteSelectedSubtitle": "确定要删除 {count} 个选中分类并且清空分类下的数据吗？此操作无法撤销。",
-    "subcategoryEmpty": "暂无子分类",
-    "importColumnNumber": "第 {number} 列",
-    "importConfirmMapping": "确认映射",
-    "importCategoryMapping": "分类映射",
-    "importNoDataParsed": "未解析到任何数据，请返回上一页检查 CSV 内容或分隔符。",
-    "importNoLedger": "请先创建账本再导入",
-    "importInvalidRowsSkipped": "无法解析的 {count} 行已跳过（金额或日期无效）",
-    "@importInvalidRowsSkipped": {
+    "@categoryDeleteSelectedSubtitleWithSub": {
         "placeholders": {
             "count": {
                 "type": "int"
             }
         }
     },
-    "importFieldDate": "日期",
-    "importFieldType": "类型",
-    "importFieldAmount": "金额",
-    "importFieldCategory": "分类",
-    "importFieldNote": "备注",
-    "importPreview": "预览：",
-    "importPreviewLimit": "仅预览前 {shown} 行，共 {total} 行",
-    "importCategoryNotSelected": "未选择\"分类\"列，请点击\"上一步\"返回并设置\"分类\"的列，再继续。",
-    "importCategoryMappingDescription": "请将左侧\"源分类名\"映射到系统内已有分类（或保持原名自动创建/合并）",
-    "importKeepOriginalName": "保持原名（自动创建/合并）",
-    "importProgress": "导入中… 成功 {ok}，失败 {fail}",
-    "importCancelImport": "取消导入",
-    "importCompleteTitle": "导入完成",
-    "importSelectCategoryFirst": "请先选择\"分类\"列再继续",
-    "importNextStep": "下一步",
-    "importPreviousStep": "上一步",
-    "importStartImport": "开始导入",
-    "importAutoDetect": "自动",
-    "importInProgress": "正在导入…",
-    "importProgressDetail": "已完成：{done}/{total}，成功 {ok}，失败 {fail}",
-    "importBackgroundImport": "后台导入",
-    "importCancelled": "（已取消）",
-    "importCompleted": "导入完成{cancelled}：成功 {ok} 条，失败 {fail} 条",
-    "importSkippedNonTransactionTypes": "跳过 {count} 条非支出记录（债务等）",
-    "importTransactionFailed": "导入失败，已回滚所有更改：{error}",
+    "categoryDeleteSelectedSubtitleWithoutSub": "确定要删除 {count} 个选中分类并且清空分类下的数据吗？（不含二级分类和数据）此操作无法撤销。",
+    "@categoryDeleteSelectedSubtitleWithoutSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "categoryMigrateSelectTargetTitle": "选择数据迁移到的分类",
+    "categoryMigrateConfirmButton": "确定（迁移分类数据并删除分类）",
+    "categoryMigrateChildLabel": "二级 · {parent}",
+    "@categoryMigrateChildLabel": {
+        "placeholders": {
+            "parent": {
+                "type": "Object"
+            }
+        }
+    },
+    "subcategoryEditParent": "编辑父分类",
+    "subcategoryAdd": "添加子分类",
+    "subcategoryDelete": "删除子分类",
+    "subcategoryDeleteOptionAll": "删除分类和分类下的所有数据",
+    "subcategoryDeleteOptionMigrate": "删除分类并迁移分类下的所有数据到其他分类",
+    "subcategoryDeleteSelectedSubtitle": "确定要删除 {count} 个选中分类并且清空分类下的数据吗？此操作无法撤销。",
+    "@subcategoryDeleteSelectedSubtitle": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "subcategoryEmpty": "暂无子分类",
     "cloudSupabaseUrlLabel": "Supabase URL",
     "cloudSupabaseUrlHint": "https://xxx.supabase.co",
     "cloudAnonKeyLabel": "Anon Key",
@@ -485,63 +631,6 @@
     "cloudClearConfigConfirmMessage": "确定要清除该云端服务的配置吗？\n云端已备份的数据不会被删除，你可以随时重新配置并恢复。",
     "cloudClearConfigDone": "配置已清除",
     "cloudPurgeFailed": "云端账本清理失败，请稍后重试",
-    "cloudLocalStorageTitle": "本地存储",
-    "cloudLocalStorageSubtitle": "数据仅保存在本地设备",
-    "localBackupPageTitle": "本地存储",
-    "localBackupAutoTitle": "自动本地备份",
-    "localBackupAutoSubtitle": "每天首次打开应用时自动备份数据库快照",
-    "storagePermissionTitle": "需要存储权限",
-    "storagePermissionMessage": "Android 11 及以上版本需授予「所有文件访问」权限，才能将文件保存到公共 Download 目录（文件管理器可见、卸载应用不丢失）。\n\n选择「仍要继续」将保存到应用私有目录，文件管理器不可见，且卸载应用后会被删除。",
-    "storagePermissionGrant": "去授权",
-    "storagePermissionContinue": "仍要继续",
-    "exportStorageUnavailable": "外部存储不可用，请检查设备存储状态",
-    "localBackupNowTooltip": "立即备份",
-    "localBackupSuccess": "备份成功",
-    "localBackupFailed": "备份失败，请检查存储空间与权限",
-    "localBackupListHint": "选择一个数据进行恢复：",
-    "localBackupImportFromFile": "导入文件恢复",
-    "localBackupImportInvalidFile": "请选择 .sqlite 格式的备份文件",
-    "localBackupListEmpty": "暂无备份",
-    "localBackupRestoreTitle": "恢复备份",
-    "localBackupRestoreMessage": "恢复将覆盖当前全部数据且不可逆，是否继续？",
-    "localBackupRestoreSuccess": "恢复成功",
-    "localBackupRestoreFailed": "恢复失败",
-    "localBackupEmergencyFailed": "无法为当前数据创建安全副本，已取消恢复",
-    "localBackupIntegrityFailed": "备份文件已损坏，无法恢复",
-    "localBackupVersionTooNew": "该备份由更新版本的应用创建，请升级应用后再恢复",
-    "localBackupRestoring": "正在恢复…",
-    "localBackupOldLink": "看不到旧版本备份？",
-    "localBackupOldDialogTitle": "找回旧版本备份",
-    "localBackupOldReasonTitle": "为什么看不到？",
-    "localBackupOldReasonBody": "App 升级或重装后，Android 系统会把旧备份隐藏起来。文件其实还在 Download/Spitout/backups 目录里，只是暂时读不到。",
-    "localBackupOldHowTitle": "怎么找回？",
-    "localBackupOldHowBody": "点击「去开启」，跳到系统设置打开「所有文件访问」，返回后本页会自动刷新，旧备份会重新出现。",
-    "localBackupOldHowBodyGranted": "「所有文件访问」已开启，旧备份应该已经重新显示；如果仍然看不到，请使用「导入文件恢复」手动选择文件。",
-    "localBackupOldSafeTitle": "安全说明",
-    "localBackupOldSafeBody": "该权限只用于读取你自己的备份文件，可随时在系统设置中关闭；不想开启时，也可以使用「导入文件恢复」手动选择文件。",
-    "localBackupOldGrant": "去开启",
-    "localBackupOldGranted": "已开启",
-    "localBackupOldLater": "暂不",
-    "localBackupOldGrantFailed": "无法打开系统设置，请手动开启「所有文件访问」",
-    "cloudCustomSupabaseTitle": "自定义 Supabase",
-    "cloudCustomWebdavTitle": "自定义 WebDAV",
-    "cloudSwitchConfirmTitle": "切换云服务",
-    "cloudSwitchConfirmMessage": "切换云服务将登出当前账号,确认切换?",
-    "cloudSwitchFailedTitle": "切换失败",
-    "cloudSwitchFailedConfigMissing": "请先配置该云服务",
-    "cloudConfigInvalidMessage": "请填写完整信息",
-    "cloudSaveFailed": "保存失败",
-    "cloudSwitchedTo": "已切换到{type}",
-    "@cloudSwitchedTo": {
-        "placeholders": {
-            "type": {
-                "type": "String"
-            }
-        }
-    },
-    "cloudConfigureSupabaseTitle": "配置 Supabase",
-    "cloudConfigureWebdavTitle": "配置 WebDAV",
-    "cloudConfigureS3Title": "配置 S3",
     "authLogin": "登录",
     "authAccount": "账号",
     "authPassword": "密码",
@@ -551,13 +640,6 @@
     "authErrorRateLimit": "操作过于频繁，请稍后再试。",
     "authErrorNetworkIssue": "网络异常，请检查网络后重试。",
     "authErrorLoginFailed": "登录失败，请稍后再试。",
-    "@importFileOpenError": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
     "exportCsvHeaderType": "类型",
     "exportCsvHeaderCategory": "分类",
     "exportCsvHeaderSubCategory": "二级分类",
@@ -566,8 +648,6 @@
     "exportCsvHeaderTime": "时间",
     "exportSuccessTitle": "导出成功",
     "exportSuccessMessageAndroid": "已保存到：\n{path}",
-    "exportFailedTitle": "导出失败",
-    "exportTypeExpense": "支出",
     "@exportSuccessMessageAndroid": {
         "placeholders": {
             "path": {
@@ -575,6 +655,8 @@
             }
         }
     },
+    "exportFailedTitle": "导出失败",
+    "exportTypeExpense": "支出",
     "exportSuccessMessageIos": "已导出到应用文档目录：\n{path}",
     "@exportSuccessMessageIos": {
         "placeholders": {
@@ -699,7 +781,47 @@
             }
         }
     },
+    "cloudLocalStorageTitle": "本地存储",
+    "cloudLocalStorageSubtitle": "数据仅保存在本地设备",
+    "localBackupPageTitle": "本地存储",
+    "localBackupAutoTitle": "自动本地备份",
+    "localBackupAutoSubtitle": "每天首次打开应用时自动备份数据库快照",
+    "storagePermissionTitle": "需要存储权限",
+    "storagePermissionMessage": "Android 11 及以上版本需授予「所有文件访问」权限，才能将文件保存到公共 Download 目录（文件管理器可见、卸载应用不丢失）。\n\n选择「仍要继续」将保存到应用私有目录，文件管理器不可见，且卸载应用后会被删除。",
+    "storagePermissionGrant": "去授权",
+    "storagePermissionContinue": "仍要继续",
+    "exportStorageUnavailable": "外部存储不可用，请检查设备存储状态",
+    "localBackupNowTooltip": "立即备份",
+    "localBackupSuccess": "备份成功",
+    "localBackupFailed": "备份失败，请检查存储空间与权限",
+    "localBackupListHint": "选择一个数据进行恢复：",
+    "localBackupImportFromFile": "导入文件恢复",
+    "localBackupImportInvalidFile": "请选择 .sqlite 格式的备份文件",
+    "localBackupListEmpty": "暂无备份",
+    "localBackupRestoreTitle": "恢复备份",
+    "localBackupRestoreMessage": "恢复将覆盖当前全部数据且不可逆，是否继续？",
+    "localBackupRestoreSuccess": "恢复成功",
+    "localBackupRestoreFailed": "恢复失败",
+    "localBackupEmergencyFailed": "无法为当前数据创建安全副本，已取消恢复",
+    "localBackupIntegrityFailed": "备份文件已损坏，无法恢复",
+    "localBackupVersionTooNew": "该备份由更新版本的应用创建，请升级应用后再恢复",
+    "localBackupRestoring": "正在恢复…",
+    "localBackupOldLink": "看不到旧版本备份？",
+    "localBackupOldDialogTitle": "找回旧版本备份",
+    "localBackupOldReasonTitle": "为什么看不到？",
+    "localBackupOldReasonBody": "App 升级或重装后，Android 系统会把旧备份隐藏起来。文件其实还在 Download/Spitout/backups 目录里，只是暂时读不到。",
+    "localBackupOldHowTitle": "怎么找回？",
+    "localBackupOldHowBody": "点击「去开启」，跳到系统设置打开「所有文件访问」，返回后本页会自动刷新，旧备份会重新出现。",
+    "localBackupOldHowBodyGranted": "「所有文件访问」已开启，旧备份应该已经重新显示；如果仍然看不到，请使用「导入文件恢复」手动选择文件。",
+    "localBackupOldSafeTitle": "安全说明",
+    "localBackupOldSafeBody": "该权限只用于读取你自己的备份文件，可随时在系统设置中关闭；不想开启时，也可以使用「导入文件恢复」手动选择文件。",
+    "localBackupOldGrant": "去开启",
+    "localBackupOldGranted": "已开启",
+    "localBackupOldLater": "暂不",
+    "localBackupOldGrantFailed": "无法打开系统设置，请手动开启「所有文件访问」",
+    "cloudCustomSupabaseTitle": "自定义 Supabase",
     "cloudCustomSupabaseSubtitle": "点击配置自建Supabase服务",
+    "cloudCustomWebdavTitle": "自定义 WebDAV",
     "cloudCustomWebdavSubtitle": "点击配置坚果云/Nextcloud等",
     "cloudCustomS3Title": "S3 协议存储",
     "cloudCustomS3Subtitle": "AWS S3 / Cloudflare R2 / MinIO",
@@ -805,6 +927,23 @@
     },
     "cloudTestSuccessMessage": "连接正常,配置有效",
     "cloudTestFailedMessage": "连接失败",
+    "cloudSwitchConfirmTitle": "切换云服务",
+    "cloudSwitchConfirmMessage": "切换云服务将登出当前账号,确认切换?",
+    "cloudSwitchFailedTitle": "切换失败",
+    "cloudSwitchFailedConfigMissing": "请先配置该云服务",
+    "cloudConfigInvalidMessage": "请填写完整信息",
+    "cloudSaveFailed": "保存失败",
+    "cloudSwitchedTo": "已切换到{type}",
+    "@cloudSwitchedTo": {
+        "placeholders": {
+            "type": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudConfigureSupabaseTitle": "配置 Supabase",
+    "cloudConfigureWebdavTitle": "配置 WebDAV",
+    "cloudConfigureS3Title": "配置 S3",
     "cloudSupabaseAnonKeyHintLong": "粘贴完整的 anon key",
     "cloudWebdavRemotePathLabel": "远程路径",
     "cloudWebdavRemotePathHelperText": "数据存储的远程目录路径",
@@ -878,10 +1017,6 @@
     "configImportOverwriteWarning": "导入将覆盖现有配置，建议先备份当前配置。",
     "configImportExportIncludesTitle": "包含的配置项",
     "configExportSavedTo": "已保存至: {path}",
-    "configExportViewContent": "查看内容",
-    "configExportCopyContent": "复制内容",
-    "configExportContentCopied": "已复制到剪贴板",
-    "configExportReadFileFailed": "读取文件失败",
     "@configExportSavedTo": {
         "placeholders": {
             "path": {
@@ -889,6 +1024,10 @@
             }
         }
     },
+    "configExportViewContent": "查看内容",
+    "configExportCopyContent": "复制内容",
+    "configExportContentCopied": "已复制到剪贴板",
+    "configExportReadFileFailed": "读取文件失败",
     "configIncludeLedgers": "账本",
     "configIncludeSupabase": "Supabase 云服务配置",
     "configIncludeWebdav": "WebDAV 云服务配置",
@@ -907,53 +1046,6 @@
     "configExportContainsSecretsWarning": "此文件包含密码/密钥，请勿分享或提交到版本库！",
     "configImportSelectTitle": "选择导入内容",
     "configImportPreviewTitle": "导入预览",
-    "ledgersEmpty": "暂无账本",
-    "ledgersSectionLocal": "本地账本",
-    "ledgersSectionCloud": "Spitout Cloud 账本",
-    "ledgersSectionLocalEmpty": "暂无本地账本，本地账本只保存在这台设备上",
-    "ledgersSectionCloudEmpty": "暂无云端账本，云端账本会在各设备间同步",
-    "ledgersSectionCloudSignInHint": "登录 Spitout Cloud 后即可使用云端账本",
-    "ledgersStorageLocation": "存储位置",
-    "ledgersStorageLocalHint": "只保存在这台设备上，不会上传到云端",
-    "ledgersStorageCloudHint": "数据会上传到 Spitout Cloud，并在各设备间同步",
-    "ledgersActionMoveToCloud": "移动到 Spitout Cloud",
-    "ledgersActionMoveToLocal": "移动到本地",
-    "ledgersActionCopyToLocal": "复制到本地",
-    "ledgersMoveToCloudMessage": "账本\"{name}\"的数据将上传到 Spitout Cloud，并在各设备间同步。",
-    "@ledgersMoveToCloudMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersMoveToLocalMessage": "账本\"{name}\"将从 Spitout Cloud 删除，仅保留在这台设备上，其他设备将不再能看到它。",
-    "@ledgersMoveToLocalMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersCopyToLocalMessage": "将账本\"{name}\"复制一份到本地，云端原账本保持不变。",
-    "@ledgersCopyToLocalMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersMoveToCloudSuccess": "已移动到 Spitout Cloud",
-    "ledgersMoveToLocalSuccess": "已移动到本地",
-    "ledgersCopyToLocalSuccess": "已复制到本地",
-    "ledgersSwitched": "已切换到账本\"{name}\"",
-    "@ledgersSwitched": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
     "ledgersConflictTitle": "同步冲突",
     "ledgersConflictMessage": "本地和云端账本数据不一致，请选择操作：",
     "ledgersConflictLocalInfo": "本地：{count} 笔账单",
@@ -1022,7 +1114,6 @@
         }
     },
     "welcomeImportNoFile": "未选择文件",
-
     "calendarTitle": "日历",
     "calendarToday": "回到今天",
     "calendarNoTransactions": "当天无交易",
@@ -1104,7 +1195,6 @@
     "cloudSyncGuideLimitItem1": "非实时同步：需要手动点击上传和下载",
     "cloudSyncGuideLimitItem2": "无冲突合并：不会自动合并两端的修改，以最后上传的为准",
     "cloudSyncGuideLimitItem3": "文件服务延迟：上传后云端文件可能需要几秒到几分钟才能被其他设备读取，取决于你使用的云服务",
-
     "appLockTitle": "应用上锁",
     "appLockDesc": "PIN码与生物识别保护隐私",
     "appLockEnable": "启用应用锁",
@@ -1155,14 +1245,17 @@
     },
     "syncHealthRecovering": "登录状态恢复中…",
     "@syncHealthRecovering": {
-        "description": "登录态静默恢复(撞冷却期)时展示,冷却结束后自动重试"
+        "description": "Shown while cloud sign-in is silently recovering after a session loss; auto-retries after cooldown"
     },
     "syncHealthNeedsLogin": "未登录或登录已失效，请重新登录云同步",
     "@syncHealthNeedsLogin": {
-        "description": "无恢复凭证或静默恢复彻底失败时,提示用户手动重新登录云同步"
+        "description": "Shown when silent recovery failed and the user must manually sign in to cloud sync"
     },
     "syncHealthHasDiff": "检测到差异，已自动同步",
     "cloudSyncHealFailed": "自动恢复失败，请从云端恢复",
+    "@cloudSyncHealFailed": {
+        "description": "Shown when the self-heal circuit breaker is open and the missing cloud data could not be restored automatically"
+    },
     "syncHealthInSync": "本地与云端一致",
     "syncHealthGroupCurrentLedger": "当前账本",
     "syncHealthGroupAll": "全部账本",
@@ -1171,17 +1264,23 @@
     "syncHealthRowUnpushed": "未推送变更",
     "syncHealthValue": "本地 {local} · 云端 {remote}",
     "@syncHealthValue": {
-        "description": "同步状态详情里的逐项计数,本地与云端数量",
+        "description": "Per-item sync counts in the sync-status detail panel, local vs remote",
         "placeholders": {
-            "local": { "type": "int" },
-            "remote": { "type": "int" }
+            "local": {
+                "type": "int"
+            },
+            "remote": {
+                "type": "int"
+            }
         }
     },
     "syncHealthValueRemoteMissing": "本地 {local} · 云端 —",
     "@syncHealthValueRemoteMissing": {
-        "description": "同步状态详情里云端数据拉不到时的占位计数",
+        "description": "Per-item sync count when the remote count cannot be fetched",
         "placeholders": {
-            "local": { "type": "int" }
+            "local": {
+                "type": "int"
+            }
         }
     },
     "twofaChallengeTitle": "二次验证",
@@ -1347,7 +1446,6 @@
     },
     "sharedMembersRemoved": "已移除成员",
     "sharedMembersRemoveFailed": "移除成员失败，请稍后重试",
-    "sharedMembersSyncPending": "首次创建账本需要先在账本管理页面选中本账本，重新进入页面才可邀请成员",
     "sharedMembersSaveFirst": "请先保存账本",
     "sharedMembersInviteSyncFailed": "云端同步尚未完成，请稍后重试",
     "sharedMembersLoadingHint": "云端账本尚未就绪，正在同步…",
@@ -1476,9 +1574,29 @@
     "rateSourceAuto": "自动",
     "rateSourceManual": "手动",
     "rateUpdatedAt": "{date} 更新",
+    "@rateUpdatedAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
     "rateNotFetched": "未获取",
     "rateEditTitle": "编辑汇率",
     "rateInverseHint": "反向参考:1 {base} ≈ {rate} {quote}",
+    "@rateInverseHint": {
+        "placeholders": {
+            "base": {
+                "type": "String"
+            },
+            "rate": {
+                "type": "String"
+            },
+            "quote": {
+                "type": "String"
+            }
+        }
+    },
     "rateResetToAuto": "恢复自动",
     "rateRefreshSuccess": "汇率已更新",
     "rateRefreshFailed": "获取失败,可手动设置汇率",
@@ -1641,6 +1759,11 @@
     "detailExportDateInvalid": "开始日期不能晚于结束日期",
     "detailExportAction": "导出",
     "exchangeRateCurrentLedger": "当前账本：{name}",
+    "@exchangeRateCurrentLedger": {
+        "placeholders": {
+            "name": {}
+        }
+    },
     "exchangeRateInfoTitle": "关于主币种",
     "exchangeRateInfoMessage": "主币种是当前账本的本位币：账本内的外币交易会按汇率折算成主币种，在统计页和资产总览中统一汇总比较。每个账本各有自己的主币种，你可以随时切换；切换后将按最新汇率重算本账本全部交易的折算值。\n\n汇率默认从公开数据源每日自动拉取，也支持你点击下方列表中的「编辑」为任意币种手动设置汇率——手动汇率会覆盖自动数据并立即生效。",
     "rateEditLabel": "编辑",
@@ -1697,9 +1820,7 @@
     "mineUpdateNow": "更新",
     "ledgerMetaReadOnlyToast": "协作者无权修改账本信息",
     "aaStatisticsTitle": "分摊统计",
-    "aaStatisticsOverview": "汇总",
     "aaStatisticsTotalAmount": "分摊总额",
-    "aaStatisticsTxCount": "{count} 笔分摊交易",
     "aaStatisticsPerPerson": "分摊详情",
     "aaStatisticsPaid": "分摊实付",
     "aaStatisticsPaidAll": "总付",
@@ -1739,21 +1860,16 @@
     "aaModeCustom": "指定分摊",
     "aaModeNoSplit": "不分摊",
     "aaParticipantsAll": "全部成员",
-    "aaParticipantsAllCount": "全部成员（{count}人）",
-    "@aaParticipantsAllCount": {
+    "aaParticipantsUnit": "人",
+    "aaVirtualUserNameHint": "输入昵称",
+    "aaVirtualUserDeleteConfirm": "确定删除虚拟用户「{name}」吗？",
+    "@aaVirtualUserDeleteConfirm": {
         "placeholders": {
-            "count": {
-                "type": "int"
+            "name": {
+                "type": "String"
             }
         }
     },
-    "aaParticipantsUnit": "人",
-    "aaVirtualUserTitle": "虚拟用户",
-    "aaVirtualUserAdd": "新建虚拟用户",
-    "aaVirtualUserNameHint": "输入昵称",
-    "aaVirtualUserRename": "重命名",
-    "aaVirtualUserEmpty": "暂无虚拟用户",
-    "aaVirtualUserDeleteConfirm": "确定删除虚拟用户「{name}」吗？",
     "aaVirtualUserInUse": "该虚拟用户名下有账，不可删除",
     "aaVirtualUserDefaultName": "虚拟用户{index}",
     "@aaVirtualUserDefaultName": {
@@ -1766,10 +1882,7 @@
     "aaAddVirtualUser": "添加虚拟用户",
     "aaUnknownUser": "未知",
     "aaMe": "我",
-
-    "ledgerAaEnabledHint": "开启后记账时可选择分摊方式",
     "ledgerAaStatisticsEntry": "分摊统计",
-    "ledgerAaVirtualUsersEntry": "管理虚拟用户",
     "aaSwitchOnLabel": "开启AA分摊",
     "aaSwitchOffLabel": "关闭AA分摊",
     "aaNoParticipants": "请先添加参与人",

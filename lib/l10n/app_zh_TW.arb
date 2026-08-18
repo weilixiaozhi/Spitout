@@ -1,13 +1,121 @@
 {
-    "aiOcrNoLedger": "未找到帳本",
-    "analyticsAll": "全部",
+    "@@locale": "zh_TW",
+    "appTitle": "芝麻記",
+    "@appTitle": {
+        "description": "The application title"
+    },
+    "tabHome": "明細",
+    "tabAnalytics": "統計",
+    "tabCalendar": "日曆",
+    "tabMine": "我的",
+    "commonCancel": "取消",
+    "commonConfirm": "確定",
+    "commonSave": "儲存",
+    "commonDelete": "刪除",
+    "commonAdd": "新增",
+    "commonOk": "確定",
+    "commonDone": "完成",
+    "homeSelectBillMonth": "選擇帳單月份",
+    "homePickerHint": "上下滑動數字以選擇時間",
+    "homeBackToCurrentMonth": "回到當月",
+    "homeTodayExpense": "今日",
+    "homeWeekExpense": "本週",
+    "homeMonthExpense": "本月支出",
+    "homeDetailCategory": "分類",
+    "homeDetailDate": "記帳日期",
+    "homeDetailAmount": "記帳金額",
+    "homeDetailCurrency": "貨幣",
+    "homeDetailNativeAmount": "折合主貨幣",
+    "homeDetailMembers": "協作成員",
+    "homeDetailCreator": "建立者",
+    "homeDetailLastEditor": "最後編輯",
+    "homeDetailEditHistory": "編輯記錄",
+    "homeDetailEditHistoryHint": "僅供查看",
+    "homeDetailEditButton": "編輯記帳",
+    "homeDetailNoHistory": "暫無編輯歷史",
+    "homeDeleteDetailTitle": "刪除這條明細?",
+    "homeDeleteDetailMessage": "將刪除\"{name}\"記錄,此操作無法復原。",
+    "commonEmpty": "暫無資料",
+    "commonError": "錯誤",
+    "commonFailed": "失敗",
+    "commonOperationFailed": "操作失敗，請稍後重試",
+    "commonRetry": "重試",
+    "commonBack": "返回",
+    "commonNext": "下一步",
+    "commonFinish": "完成",
+    "commonOther": "其他",
+    "commonSearch": "搜尋",
+    "commonNoteHint": "備註…",
+    "commonSettings": "設定",
+    "commonCurrent": "當前",
+    "commonTutorial": "教學",
+    "commonConfigure": "配置",
+    "commonPressAgainToExit": "再按一次退出應用程式",
+    "commonWeekdayMonday": "星期一",
+    "commonWeekdayTuesday": "星期二",
+    "commonWeekdayWednesday": "星期三",
+    "commonWeekdayThursday": "星期四",
+    "commonWeekdayFriday": "星期五",
+    "commonWeekdaySaturday": "星期六",
+    "commonWeekdaySunday": "星期日",
+    "homeExpense": "支出",
+    "homeNoRecords": "還沒有記帳",
+    "homeSelectDate": "選擇日期",
+    "homeYear": "{year}年",
+    "@homeYear": {
+        "placeholders": {
+            "year": {
+                "type": "int"
+            }
+        }
+    },
+    "homeMonth": "{month}月",
+    "@homeMonth": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
+    "homeMonthExpenseOf": "{month}月支出",
+    "@homeMonthExpenseOf": {
+        "placeholders": {
+            "month": {
+                "type": "String"
+            }
+        }
+    },
+    "homeNoRecordsSubtext": "點擊底部加號，馬上記一筆",
+    "homeBaseCurrencyNeedLedger": "請先建立帳本",
+    "homeBaseCurrencySwitched": "已切換主幣種為 {code}",
+    "@homeBaseCurrencySwitched": {
+        "placeholders": {
+            "code": {
+                "type": "String"
+            }
+        }
+    },
+    "homePullCloudSuccess": "已同步雲端帳本資料",
+    "homePullCloudFailed": "刷新失敗，請稍後重試",
+    "homePullLocalSuccess": "已刷新本地帳本資料與設定",
+    "homePullCloudFailedButLocalOk": "雲端同步失敗，已刷新本地資料（匯率/設定）",
+    "homePullCloudHealed": "已自動修復並同步 {count} 條雲端資料",
+    "@homePullCloudHealed": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "homePullCloudGap": "雲端有歷史資料未能自動恢復，請到雲端同步頁執行「從雲端恢復」",
+    "homeSyncing": "正在同步帳本資料",
+    "homeSwitchMonthHint": "左右滑動列表切換月份",
     "analyticsMonth": "月",
-
     "analyticsYear": "年",
     "analyticsWeek": "週",
     "analyticsSwipePeriodHint": "左右滑動列表切換{period}",
     "@analyticsSwipePeriodHint": {
-        "description": "統計頁左右滑動列表切換 週/月/年 的提示文案，period 由程式碼動態傳入。",
+        "description": "Hint shown on the analytics page to swipe the list left/right to switch the period (week/month/year).",
         "placeholders": {
             "period": {}
         }
@@ -33,82 +141,369 @@
         }
     },
     "analyticsSelectWeek": "選擇週",
-    "appTitle": "Spitout",
-    "appearanceSettings": "偏好調節",
-    "appearanceSettingsDesc": "主題、字體、語言、應用鎖等",
-    "appearanceSettingsPageSubtitle": "外觀、顯示、安全等應用偏好",
-    "appearanceSettingsPageTitle": "偏好調節",
-    "appearanceThemeMode": "深色模式",
-    "appearanceThemeModeDark": "暗黑模式",
-    "appearanceThemeModeLight": "亮色模式",
-    "appearanceThemeModeSystem": "跟隨系統",
-    "authAccount": "帳號",
-    "authErrorAccountNotConfirmed": "帳號未驗證，請先完成驗證再登入。",
-    "authErrorInvalidCredentials": "帳號或密碼不正確。",
-    "authErrorLoginFailed": "登入失敗，請稍後再試。",
-    "authErrorNetworkIssue": "網路異常，請檢查網路後重試。",
-    "authErrorRateLimit": "操作過於頻繁，請稍後再試。",
-    "authInvalidAccount": "請輸入帳號",
-    "authLogin": "登入",
-    "authPassword": "密碼",
-    "authRememberAccount": "記住帳號密碼",
-    "authRememberAccountHint": "下次登入時自動填入",
-    "categoryCannotDelete": "無法刪除",
-    "categoryClearUnused": "清空未使用分類",
-    "categoryClearUnusedEmpty": "沒有未使用的分類",
-    "categoryClearUnusedFailed": "清空失敗",
-    "categoryClearUnusedMessage": "確定要刪除 {count} 個未使用的分類嗎？此操作無法撤銷。",
-    "categoryClearUnusedListTitle": "將被刪除的分類：",
-    "categoryClearUnusedSuccess": "已刪除 {count} 個分類",
-    "categoryClearUnusedTitle": "清空未使用分類",
-    "categoryCreated": "分類\"{name}\"已建立",
-    "categoryDefaultTitle": "預設分類",
-    "categoryDeleteError": "刪除失敗",
-    "categoryDetailAverageAmount": "平均金額",
-    "categoryDetailDeleteFailed": "刪除失敗",
-    "categoryDetailLoadFailed": "載入失敗",
-    "categoryDetailNoTransactions": "暫無交易記錄",
-    "categoryDetailNoTransactionsSubtext": "該分類下還沒有任何交易記錄",
-    "categoryDetailSortAmountAsc": "金額↑",
-    "categoryDetailSortAmountDesc": "金額↓",
-    "categoryDetailSortTimeAsc": "時間↑",
-    "categoryDetailSortTimeDesc": "時間↓",
-    "categoryDetailSortTitle": "排序",
-    "categoryDetailSummaryTitle": "分類匯總",
-    "categoryDetailTooltip": "分類匯總",
-    "categoryDetailTotalAmount": "總金額",
-    "categoryDetailTotalCount": "總筆數",
-    "categoryEditTitle": "編輯分類",
-    "categoryEmpty": "暫無分類",
+    "ledgersTitle": "帳本管理",
+    "ledgersNew": "新建帳本",
+    "ledgersClear": "清空當前帳本",
+    "ledgersClearMessage": "將刪除該帳本下所有交易記錄，且不可復原。",
+    "@ledgersClearMessage": {
+        "placeholders": {
+            "name": {
+                "type": "Object"
+            }
+        }
+    },
+    "ledgerDefaultName": "預設帳本",
+    "ledgersEdit": "編輯帳本",
+    "ledgersDelete": "刪除帳本",
+    "ledgersDeleteConfirm": "刪除帳本",
+    "ledgersDeleteMessage": "確定要刪除該帳本及其全部記錄嗎？此操作不可復原。\\n若雲端存在備份，也會一併刪除。",
+    "ledgersDeleted": "已刪除",
+    "ledgersDeleteFailed": "刪除失敗",
+    "ledgersClearTitle": "清空帳本",
+    "ledgersClearSuccess": "帳本已清空",
+    "ledgersCreateSuccess": "帳本建立成功",
+    "ledgerNameLabel": "帳本名稱",
+    "ledgerNameHint": "請輸入帳本名稱",
+    "ledgersDefaultLedgerName": "預設帳本",
+    "ledgersCurrency": "幣種",
+    "ledgersMonthStartDay": "每月起始日",
+    "ledgersMonthStartDayHint": "統計與預算按該日作為每月週期起點（1-28）",
+    "ledgersMonthStartDayNatural": "1日（自然月）",
+    "ledgersMonthStartDayValue": "每月{day}日",
+    "@ledgersMonthStartDayValue": {
+        "placeholders": {
+            "day": {
+                "type": "int"
+            }
+        }
+    },
+    "ledgersSearchCurrency": "搜尋：中文或代碼",
+    "ledgersCreate": "建立",
+    "ledgersRecords": "筆數：{count}",
+    "@ledgersRecords": {
+        "placeholders": {
+            "count": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersExpense": "支出：{expense}",
+    "@ledgersExpense": {
+        "placeholders": {
+            "expense": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersEmpty": "暫無帳本",
+    "ledgersSectionLocal": "本機帳本",
+    "ledgersSectionCloud": "Spitout Cloud 帳本",
+    "ledgersSectionLocalEmpty": "暫無本機帳本，本機帳本只保存在這台裝置上",
+    "ledgersSectionCloudEmpty": "暫無雲端帳本，雲端帳本會在各裝置間同步",
+    "ledgersSectionCloudSignInHint": "登入 Spitout Cloud 後即可使用雲端帳本",
+    "ledgersStorageLocation": "儲存位置",
+    "ledgersStorageLocalHint": "只保存在這台裝置上，不會上傳到雲端",
+    "ledgersStorageCloudHint": "資料會上傳到 Spitout Cloud，並在各裝置間同步",
+    "ledgersActionMoveToCloud": "移動到 Spitout Cloud",
+    "ledgersActionMoveToLocal": "移動到本機",
+    "ledgersActionCopyToLocal": "複製到本機",
+    "ledgersMoveToCloudMessage": "帳本\"{name}\"的資料將上傳到 Spitout Cloud，並在各裝置間同步。",
+    "@ledgersMoveToCloudMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToLocalMessage": "帳本\"{name}\"將從 Spitout Cloud 刪除，僅保留在這台裝置上，其他裝置將不再看得到它。",
+    "@ledgersMoveToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersCopyToLocalMessage": "將帳本\"{name}\"複製一份到本機，雲端原帳本保持不變。",
+    "@ledgersCopyToLocalMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersMoveToCloudSuccess": "已移動到 Spitout Cloud",
+    "ledgersMoveToLocalSuccess": "已移動到本機",
+    "ledgersCopyToLocalSuccess": "已複製到本機",
+    "ledgersSwitched": "已切換到帳本「{name}」",
+    "@ledgersSwitched": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "categoryTitle": "分類管理",
     "categoryExpense": "支出分類",
-    "categoryExpenseBeauty": "美容-護膚品-化妝品-剪髮-美甲",
-    "categoryExpenseTransfer": "轉帳-生活費-家庭-父母-戀人-借錢",
-    "categoryExpenseBeverage": "飲料-奶茶-咖啡-果汁-汽水-礦泉水",
-    "categoryExpenseCar": "汽車-汽車保養-汽車維修-汽車保險-洗車-違章罰款",
-    "categoryExpenseClothing": "服裝-上衣-褲子-裙子-鞋子-服飾配件",
-    "categoryExpenseCooking": "做飯食材-蔬菜-肉類-水產-調料-糧油",
-    "categoryExpenseDailyGoods": "日用品-洗護用品-紙品-清潔用品-廚房用品",
-    "categoryExpenseDining": "餐飲-早餐-午餐-晚餐-美團外賣-餓了麼外賣-京東外賣-餐廳-美食",
-    "categoryExpenseEducation": "教育-學費-培訓費-書籍-文具-辦公用品-學習",
-    "categoryExpenseEntertainment": "娛樂-電影-KTV-遊樂場-酒吧-其他娛樂",
-    "categoryExpenseFruit": "水果-蘋果-香蕉-橙子-葡萄-西瓜-其他水果",
-    "categoryExpenseGame": "遊戲-遊戲儲值-遊戲裝備-遊戲會員",
-    "categoryExpenseHealthProducts": "保健品-維生素-保健食品-營養品",
-    "categoryExpenseHome": "居家-傢俱-家電-裝飾品-床上用品",
-    "categoryExpenseHousing": "住房-水電煤-物業費-房租-房貸-裝修-寬頻",
-    "categoryExpenseInvestLoss": "投資虧損-股票虧損-基金虧損-其他投資虧損",
-    "categoryExpenseList": "餐飲-交通-購物-娛樂-居家-家庭-通訊-水電-住房-醫療-教育-寵物-運動-數碼-旅行-煙酒-母嬰-美容-維修-社交-學習-汽車-打車-地鐵-外賣-物業-停車-捐贈-送禮-納稅-飲料-服裝-零食-發紅包-水果-遊戲-書籍-愛人-裝修-日用品-彩票-股票-社保-快遞-工作-轉帳-其他",
-    "categoryExpensePastry": "糕點-蛋糕-麵包-甜點-曲奇",
-    "categoryExpensePets": "寵物-寵物食品-寵物用品-寵物醫療-寵物美容",
-    "categoryExpenseShopping": "購物-超市-日用百貨-服裝-鞋子-包包",
-    "categoryExpenseSnacks": "零食-餅乾-薯片-糖果-巧克力-堅果",
-    "categoryExpenseSports": "運動-健身房-運動裝備-運動課程-戶外活動",
-    "categoryExpenseSubscription": "訂閱服務-視頻會員-音樂會員-雲端儲存-其他訂閱",
-    "categoryExpenseTransport": "交通-交通卡充值-打車-停車費-加油",
+    "categoryEmpty": "暫無分類",
+    "categoryLoadFailed": "載入失敗: {error}",
+    "@categoryLoadFailed": {
+        "placeholders": {
+            "error": {
+                "type": "String"
+            }
+        }
+    },
+    "importReading": "讀取檔案中…",
+    "importPreparing": "準備中…",
+    "importColumnNumber": "第{number}列",
+    "importConfirmMapping": "確認對應",
+    "importCategoryMapping": "分類對應",
+    "importNoDataParsed": "未解析到任何資料，請返回上一頁檢查 CSV 內容或分隔符。",
+    "importNoLedger": "請先建立帳本再匯入",
+    "importInvalidRowsSkipped": "無法解析的 {count} 行已跳過（金額或日期無效）",
+    "@importInvalidRowsSkipped": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
+    "importFieldDate": "日期",
+    "importFieldType": "類型",
+    "importFieldAmount": "金額",
+    "importFieldCategory": "分類",
+    "importFieldNote": "備註",
+    "importPreview": "資料預覽",
+    "importPreviewLimit": "僅預覽前 {shown} 行，共 {total} 行",
+    "importCategoryNotSelected": "未選擇\"分類\"列，請點擊\"上一步\"返回並設定\"分類\"的列，再繼續。",
+    "importCategoryMappingDescription": "請將左側\"源分類名\"對應到系統內已有分類（或保持原名自動建立/合併）",
+    "importKeepOriginalName": "保持原名（自動建立/合併）",
+    "importProgress": "匯入中… 成功 {ok}，失敗 {fail}",
+    "importCancelImport": "取消匯入",
+    "importCompleteTitle": "匯入完成",
+    "importSelectCategoryFirst": "請先選擇\"分類\"列再繼續",
+    "importNextStep": "下一步",
+    "importPreviousStep": "上一步",
+    "importStartImport": "開始匯入",
+    "importAutoDetect": "自動檢測",
+    "importInProgress": "正在匯入…",
+    "importProgressDetail": "已完成：{done}/{total}，成功 {ok}，失敗 {fail}",
+    "importBackgroundImport": "背景匯入",
+    "importCancelled": "（已取消）",
+    "importCompleted": "匯入完成{cancelled}：成功 {ok} 條，失敗 {fail} 條",
+    "importSkippedNonTransactionTypes": "跳過 {count} 條非支出記錄（債務等）",
+    "mineTitle": "我的",
+    "mineLanguageSettings": "應用語言",
+    "languageTitle": "語言設定",
+    "languageChinese": "简体中文",
+    "languageEnglish": "English",
+    "languageSystemDefault": "跟隨系統",
+    "mineSlogan": "未設置暱稱",
+    "mineDisplayNameEditTitle": "設定暱稱",
+    "mineDisplayNameHint": "輸入暱稱",
+    "mineDisplayNameSaved": "暱稱已更新",
+    "mineGreetingMorning": "早安",
+    "mineGreetingNoon": "中午好",
+    "mineGreetingAfternoon": "午安",
+    "mineGreetingEvening": "晚安",
+    "mineGreetingNight": "夜深了",
+    "mineGreetingNamed": "{greeting}，{name}",
+    "@mineGreetingNamed": {
+        "placeholders": {
+            "greeting": {
+                "type": "String"
+            },
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "mineAvatarDelete": "刪除頭像",
+    "mineAvatarUploadNew": "上傳新頭像",
+    "mineCloudService": "雲服務",
+    "mineCloudServiceLoading": "載入中…",
+    "mineSyncTitle": "同步",
+    "mineSyncNotLoggedIn": "未登入",
+    "mineSyncNotConfigured": "未設定雲端",
+    "mineSyncLocalOnly": "本地帳本，僅存本機",
+    "mineSyncNoRemote": "雲端暫無資料",
+    "mineSyncInSync": "已同步 (本地{count}條)",
+    "mineSyncLocalNewer": "本機有更新 (本機{count}條, 建議上傳)",
+    "mineSyncCloudNewer": "雲端有更新 (建議下載同步)",
+    "mineSyncDifferent": "本機與雲端有差異，建議下載對比",
+    "mineSyncError": "狀態取得失敗",
+    "mineSyncDetailTitle": "同步狀態詳情",
+    "mineSyncLocalRecords": "本地記錄數: {count}",
+    "mineSyncCloudRecords": "雲端記錄數: {count}",
+    "mineSyncCloudLatest": "雲端最新記帳時間: {time}",
+    "mineSyncLocalFingerprint": "本地指紋: {fingerprint}",
+    "mineSyncCloudFingerprint": "雲端指紋: {fingerprint}",
+    "mineSyncMessage": "說明: {message}",
+    "mineUploadTitle": "上傳",
+    "mineUploadNeedLogin": "需登入",
+    "mineUploadNeedCloudService": "僅限雲端服務模式可用",
+    "mineUploadInProgress": "正在上傳中…",
+    "mineUploadRefreshing": "重新整理中…",
+    "mineUploadSynced": "已同步",
+    "mineUploadSuccess": "已上傳",
+    "mineUploadSuccessMessage": "當前帳本已同步到雲端",
+    "mineDownloadTitle": "下載同步",
+    "mineDownloadNeedCloudService": "僅限雲端服務模式可用",
+    "mineDownloadComplete": "同步完成",
+    "mineDownloadResult": "匯入：{inserted} 條",
+    "mineLoginTitle": "登入",
+    "mineLoginSubtitle": "僅在同步時需要",
+    "mineLoggedInAccount": "已登入",
+    "mineLogoutSubtitle": "點擊可退出登入",
+    "mineLogoutConfirmTitle": "退出登入",
+    "mineLogoutConfirmMessage": "確定要退出當前帳號登入嗎？\n退出後將無法使用雲同步功能。",
+    "mineLogoutButton": "退出",
+    "mineAutoSyncTitle": "自動同步帳本",
+    "mineAutoSyncSubtitle": "記帳後自動上傳到雲端",
+    "mineAutoSyncNeedLogin": "需登入後可開啟",
+    "mineCategoryManagement": "分類管理",
+    "mineCategoryManagementSubtitle": "編輯自訂分類",
+    "mineRecurringTransactions": "週期帳單",
+    "mineRecurringTransactionsSubtitle": "管理週期性帳單",
+    "mineReminderSettings": "記帳提醒",
+    "mineReminderSettingsSubtitle": "設定每日記帳提醒",
+    "categoryEditTitle": "編輯分類",
+    "categoryNewTitle": "新建分類",
+    "categoryDetailTooltip": "分類匯總",
+    "categoryDefaultTitle": "預設分類",
+    "categoryNameLabel": "分類名稱",
+    "categoryNameHint": "請輸入分類名稱",
+    "categoryNameRequired": "請輸入分類名稱",
+    "categoryNameTooLong": "分類名稱不能超過4個字",
+    "categoryNameDuplicate": "分類名稱已存在",
     "categoryIconLabel": "分類圖示",
     "categoryCurrentIcon": "當前圖示",
-    "categoryLoadFailed": "載入失敗: {error}",
+    "categorySaveError": "儲存失敗",
+    "categoryUpdated": "分類\"{name}\"已更新",
+    "categoryCreated": "分類\"{name}\"已建立",
+    "categoryCannotDelete": "無法刪除",
+    "categoryClearUnused": "清空未使用分類",
+    "categoryClearUnusedTitle": "清空未使用分類",
+    "categoryClearUnusedMessage": "確定要刪除 {count} 個未使用的分類嗎？此操作無法撤銷。",
+    "@categoryClearUnusedMessage": {
+        "placeholders": {
+            "count": {
+                "type": "Object"
+            }
+        }
+    },
+    "categoryClearUnusedListTitle": "將被刪除的分類：",
+    "categoryClearUnusedEmpty": "沒有未使用的分類",
+    "categoryClearUnusedSuccess": "已刪除 {count} 個分類",
+    "@categoryClearUnusedSuccess": {
+        "placeholders": {
+            "count": {
+                "type": "Object"
+            }
+        }
+    },
+    "categoryClearUnusedFailed": "清空失敗",
+    "categoryDeleteError": "刪除失敗",
+    "categorySubCategoryCreated": "已新增二級分類：{name}",
+    "categoryParentCategoryTitle": "所屬分類",
+    "categorySelectParentTitle": "選擇所屬分類",
+    "categoryHasSubCategories": "此分類包含二級分類，無法修改",
+    "categorySearchCategory": "搜尋分類",
+    "categoryTopLevelLabel": "一級分類",
+    "categorySecondLevelLabel": "二級分類",
+    "categoryExpenseList": "餐飲-交通-購物-娛樂-居家-家庭-通訊-水電-住房-醫療-教育-寵物-運動-數碼-旅行-煙酒-母嬰-美容-維修-社交-學習-汽車-打車-地鐵-外賣-物業-停車-捐贈-送禮-納稅-飲料-服裝-零食-發紅包-水果-遊戲-書籍-愛人-裝修-日用品-彩票-股票-社保-快遞-工作-轉帳-其他",
+    "categoryExpenseDining": "餐飲-早餐-午餐-晚餐-美團外賣-餓了麼外賣-京東外賣-餐廳-美食",
+    "categoryExpenseSnacks": "零食-餅乾-薯片-糖果-巧克力-堅果",
+    "categoryExpenseFruit": "水果-蘋果-香蕉-橙子-葡萄-西瓜-其他水果",
+    "categoryExpenseBeverage": "飲料-奶茶-咖啡-果汁-汽水-礦泉水",
+    "categoryExpensePastry": "糕點-蛋糕-麵包-甜點-曲奇",
+    "categoryExpenseCooking": "做飯食材-蔬菜-肉類-水產-調料-糧油",
+    "categoryExpenseShopping": "購物-超市-日用百貨-服裝-鞋子-包包",
+    "categoryExpensePets": "寵物-寵物食品-寵物用品-寵物醫療-寵物美容",
+    "categoryExpenseTransport": "交通-交通卡充值-打車-停車費-加油",
+    "categoryExpenseCar": "汽車-汽車保養-汽車維修-汽車保險-洗車-違章罰款",
+    "categoryExpenseClothing": "服裝-上衣-褲子-裙子-鞋子-服飾配件",
+    "categoryExpenseDailyGoods": "日用品-洗護用品-紙品-清潔用品-廚房用品",
+    "categoryExpenseEducation": "教育-學費-培訓費-書籍-文具-辦公用品-學習",
+    "categoryExpenseInvestLoss": "投資虧損-股票虧損-基金虧損-其他投資虧損",
+    "categoryExpenseEntertainment": "娛樂-電影-KTV-遊樂場-酒吧-其他娛樂",
+    "categoryExpenseGame": "遊戲-遊戲儲值-遊戲裝備-遊戲會員",
+    "categoryExpenseHealthProducts": "保健品-維生素-保健食品-營養品",
+    "categoryExpenseSubscription": "訂閱服務-視頻會員-音樂會員-雲端儲存-其他訂閱",
+    "categoryExpenseSports": "運動-健身房-運動裝備-運動課程-戶外活動",
+    "categoryExpenseHousing": "住房-水電煤-物業費-房租-房貸-裝修-寬頻",
+    "categoryExpenseHome": "居家-傢俱-家電-裝飾品-床上用品",
+    "categoryExpenseBeauty": "美容-護膚品-化妝品-剪髮-美甲",
+    "categoryExpenseTransfer": "轉帳-生活費-家庭-父母-戀人-借錢",
+    "appearanceThemeMode": "深色模式",
+    "appearanceThemeModeSystem": "跟隨系統",
+    "appearanceThemeModeLight": "亮色模式",
+    "appearanceThemeModeDark": "暗黑模式",
+    "appearanceExpenseColorScheme": "支出顏色",
+    "appearanceExpenseColorRed": "紅色表示支出",
+    "appearanceExpenseColorGreen": "綠色表示支出",
+    "appearanceExpenseColorApplied": "已更換",
+    "reminderTitle": "記帳提醒",
+    "reminderBody": "別忘了記錄今天的收支哦 💰",
+    "reminderSubtitle": "設定每日記帳提醒時間",
+    "reminderDailyTitle": "每日記帳提醒",
+    "reminderDailySubtitle": "開啟後將在指定時間提醒您記帳",
+    "reminderTimeTitle": "提醒時間",
+    "commonSelectTime": "選擇時間",
+    "reminderTestNotification": "發送測試通知",
+    "reminderTestSent": "測試通知已發送",
+    "reminderTestTitle": "測試通知",
+    "reminderTestBody": "這是一條測試通知，點擊檢視效果",
+    "reminderCheckBattery": "檢查電池最佳化狀態",
+    "reminderBatteryStatus": "電池最佳化狀態",
+    "reminderManufacturer": "裝置製造商: {value}",
+    "reminderModel": "裝置型號: {value}",
+    "reminderAndroidVersion": "Android版本: {value}",
+    "reminderBatteryIgnored": "電池最佳化狀態: 已忽略 ✅",
+    "reminderBatteryNotIgnored": "電池最佳化狀態: 未忽略 ⚠️",
+    "reminderBatteryAdvice": "建議關閉電池最佳化以確保通知正常工作",
+    "reminderCheckChannel": "檢查通知頻道設定",
+    "reminderChannelStatus": "通知頻道狀態",
+    "reminderChannelEnabled": "頻道啟用: 是 ✅",
+    "reminderChannelDisabled": "頻道啟用: 否 ❌",
+    "reminderChannelImportance": "重要性: {value}",
+    "reminderChannelSoundOn": "聲音: 開啟 🔊",
+    "reminderChannelSoundOff": "聲音: 關閉 🔇",
+    "reminderChannelVibrationOn": "震動: 開啟 📳",
+    "reminderChannelVibrationOff": "震動: 關閉",
+    "reminderChannelDndBypass": "勿擾模式: 可繞過",
+    "reminderChannelDndNoBypass": "勿擾模式: 不可繞過",
+    "reminderChannelAdvice": "⚠️ 建議設定：",
+    "reminderChannelAdviceImportance": "• 重要性：緊急或高",
+    "reminderChannelAdviceSound": "• 開啟聲音和震動",
+    "reminderChannelAdviceBanner": "• 允許橫幅通知",
+    "reminderChannelAdviceXiaomi": "• 小米手機需單獨設定每個頻道",
+    "reminderChannelGood": "✅ 通知頻道設定良好",
+    "reminderOpenAppSettings": "開啟應用程式設定",
+    "reminderAppSettingsMessage": "請在設定中允許通知、關閉電池最佳化",
+    "reminderDescription": "提示：開啟記帳提醒後，系統會在每天指定時間發送通知提醒您記錄支出。",
+    "reminderAndroidInstructions": "如果通知無法正常工作，請檢查：\n• 已允許應用程式發送通知\n• 關閉應用程式的電池最佳化/省電模式\n• 允許應用程式在背景執行和自啟動\n• Android 12+需要精確鬧鐘權限\n\n📱 小米手機特殊設定：\n• 設定 > 應用程式管理 > Spitout > 通知管理\n• 點擊\"記帳提醒\"頻道\n• 設定重要性為\"緊急\"或\"高\"\n• 開啟\"橫幅通知\"、\"聲音\"、\"震動\"\n• 安全中心 > 應用程式管理 > 權限 > 自啟動\n\n🔒 鎖定背景方法：\n• 最近任務中找到Spitout\n• 向下拉動應用程式卡片顯示鎖定圖示\n• 點擊鎖定圖示防止被清理",
+    "categoryDetailLoadFailed": "載入失敗",
+    "categoryDetailSummaryTitle": "分類匯總",
+    "categoryDetailTotalCount": "總筆數",
+    "categoryDetailTotalAmount": "總金額",
+    "categoryDetailAverageAmount": "平均金額",
+    "categoryDetailSortTitle": "排序",
+    "categoryDetailSortTimeDesc": "時間↓",
+    "categoryDetailSortTimeAsc": "時間↑",
+    "categoryDetailSortAmountDesc": "金額↓",
+    "categoryDetailSortAmountAsc": "金額↑",
+    "categoryDetailNoTransactions": "暫無交易記錄",
+    "categoryDetailNoTransactionsSubtext": "該分類下還沒有任何交易記錄",
+    "categoryDetailDeleteFailed": "刪除失敗",
     "categoryMigrationTransactionLabel": "{count}筆",
+    "@categoryMigrationTransactionLabel": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryTemplateEntryFlat": "一級模板",
     "categoryTemplateEntryHierarchical": "二級模板",
     "categoryTemplateFlatTitle": "一級分類模板",
@@ -161,35 +556,72 @@
     "categoryDeleteOptionPromote": "刪除分類和分類下的所有資料（不含二級分類，二級分類將變為一級分類）",
     "categoryDeleteSelectedTitle": "刪除選中的分類",
     "categoryDeleteSelectedSubtitleWithSub": "確定要刪除 {count} 個選中分類並且清空分類下的資料嗎？（包含二級分類和資料）此操作無法撤銷。",
+    "@categoryDeleteSelectedSubtitleWithSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryDeleteSelectedSubtitleWithoutSub": "確定要刪除 {count} 個選中分類並且清空分類下的資料嗎？（不含二級分類和資料）此操作無法撤銷。",
+    "@categoryDeleteSelectedSubtitleWithoutSub": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "categoryMigrateSelectTargetTitle": "選擇資料遷移到的分類",
     "categoryMigrateConfirmButton": "確定（遷移分類資料並刪除分類）",
     "categoryMigrateChildLabel": "二級 · {parent}",
+    "@categoryMigrateChildLabel": {
+        "placeholders": {
+            "parent": {
+                "type": "Object"
+            }
+        }
+    },
     "subcategoryEditParent": "編輯父分類",
     "subcategoryAdd": "新增子分類",
     "subcategoryDelete": "刪除子分類",
     "subcategoryDeleteOptionAll": "刪除分類和分類下的所有資料",
     "subcategoryDeleteOptionMigrate": "刪除分類並將分類下的所有資料遷移到其他分類",
     "subcategoryDeleteSelectedSubtitle": "確定要刪除 {count} 個選中分類並且清空分類下的資料嗎？此操作無法撤銷。",
+    "@subcategoryDeleteSelectedSubtitle": {
+        "placeholders": {
+            "count": {
+                "type": "int"
+            }
+        }
+    },
     "subcategoryEmpty": "暫無子分類",
-    "categoryNameDuplicate": "分類名稱已存在",
-    "categoryNameHint": "請輸入分類名稱",
-    "categoryNameLabel": "分類名稱",
-    "categoryNameRequired": "請輸入分類名稱",
-    "categoryNameTooLong": "分類名稱不能超過4個字",
-    "categoryNewTitle": "新建分類",
-    "categoryParentCategoryTitle": "所屬分類",
-    "categorySaveError": "儲存失敗",
-    "categorySelectParentTitle": "選擇所屬分類",
-    "categorySubCategoryCreated": "已新增二級分類：{name}",
-    "categoryHasSubCategories": "此分類包含二級分類，無法修改",
-    "categorySearchCategory": "搜尋分類",
-    "categoryTopLevelLabel": "一級分類",
-    "categorySecondLevelLabel": "二級分類",
-    "categoryTitle": "分類管理",
-    "categoryUpdated": "分類\"{name}\"已更新",
+    "cloudSupabaseUrlLabel": "Supabase URL",
+    "cloudSupabaseUrlHint": "https://xxx.supabase.co",
     "cloudAnonKeyLabel": "Anon Key",
-    "cloudConfigInvalidMessage": "請填寫完整資訊",
+    "cloudMultiDeviceWarningTitle": "多裝置使用提醒",
+    "cloudMultiDeviceWarningMessage": "換裝置前記得先上傳，到新裝置後先下載再記帳。不要同時在兩台裝置上記同一個帳本。點擊查看詳情 →",
+    "cloudWebdavUrlLabel": "WebDAV 伺服器地址",
+    "cloudWebdavUrlHint": "https://dav.jianguoyun.com/dav/",
+    "cloudWebdavUsernameLabel": "使用者名稱",
+    "cloudWebdavPasswordLabel": "密碼",
+    "cloudWebdavPathHint": "/Spitout",
+    "cloudS3EndpointLabel": "端點地址",
+    "cloudS3EndpointHint": "s3.amazonaws.com 或自訂端點",
+    "cloudS3RegionLabel": "區域",
+    "cloudS3RegionHint": "us-east-1（留空自動）",
+    "cloudS3AccessKeyLabel": "Access Key",
+    "cloudS3AccessKeyHint": "您的 Access Key ID",
+    "cloudS3SecretKeyLabel": "Secret Key",
+    "cloudS3SecretKeyHint": "您的 Secret Access Key",
+    "cloudS3BucketLabel": "儲存桶名稱",
+    "cloudS3BucketHint": "spitout-data",
+    "cloudS3UseSSLLabel": "使用 HTTPS",
+    "cloudS3PortLabel": "連接埠（選填）",
+    "cloudS3PortHint": "留空使用預設連接埠",
+    "cloudSupabaseBucketLabel": "Storage Bucket 名稱",
+    "cloudSupabaseBucketHint": "留空使用預設值 spitout-backups",
+    "authRememberAccount": "記住帳號密碼",
+    "authRememberAccountHint": "下次登入時自動填入",
     "cloudFirstSaveSwitchTitle": "設定已儲存",
     "cloudFirstSaveSwitchMessage": "是否立即切換到該雲端服務作為目前同步設定？",
     "cloudSaveOnlyNoSwitch": "暫不切換",
@@ -199,61 +631,158 @@
     "cloudClearConfigConfirmMessage": "確定要清除該雲端服務的設定嗎？\n雲端已備份的資料不會被刪除，你可以隨時重新設定並恢復。",
     "cloudClearConfigDone": "設定已清除",
     "cloudPurgeFailed": "雲端帳本清理失敗，請稍後重試",
-    "cloudConfigureS3Title": "設定 S3",
-    "cloudConfigureSupabaseTitle": "設定 Supabase",
-    "cloudConfigureWebdavTitle": "設定 WebDAV",
-    "cloudCustomS3Subtitle": "AWS S3 / Cloudflare R2 / MinIO",
-    "cloudCustomS3Title": "S3 協議儲存",
-    "cloudSpitoutCloudTitle": "Spitout Cloud",
-    "cloudSpitoutCloudSubtitle": "自建雲服務 · 增量同步 · 多裝置協同",
-    "cloudConfigureSpitoutCloudTitle": "設定 Spitout Cloud",
-    "cloudSpitoutCloudUrlLabel": "伺服器地址",
-    "cloudSpitoutCloudUrlHint": "https://your-server.com",
-    "cloudSpitoutCloudAccountLabel": "帳號",
-    "cloudSpitoutCloudAccountHint": "帳號名稱",
-    "cloudSpitoutCloudPasswordLabel": "密碼",
-    "cloudSpitoutCloudPasswordHint": "輸入密碼",
-    "cloudSpitoutCloudPasswordNotSavedHint": "密碼僅用於本次登入，不會儲存到本機",
-    "cloudSpitoutCloudLoginSuccess": "登入成功",
-    "cloudSpitoutCloudLoginFailed": "登入失敗",
-    "cloudTabOffline": "離線模式",
-    "cloudTabBackup": "備份同步",
-    "cloudTabBackupSubtitle": "點擊卡片切換備份方式，首次需要配置資訊",
-    "cloudTabCloudSync": "雲端協同",
-    "cloudCustomSupabaseSubtitle": "點擊設定自建Supabase服務",
-    "cloudCustomSupabaseTitle": "自訂 Supabase",
-    "cloudCustomWebdavSubtitle": "點擊設定堅果雲/Nextcloud等",
-    "cloudCustomWebdavTitle": "自訂 WebDAV",
-    "cloudErrorAccessDenied": "存取被拒絕: 請檢查權限",
-    "cloudErrorAuthFailed": "認證失敗: API Key 無效",
-    "cloudErrorAuthFailedCredentials": "認證失敗: 使用者名稱或密碼錯誤",
-    "cloudErrorNetwork": "網路錯誤: {message}",
-    "@cloudErrorNetwork": {
-        "placeholders": {
-            "message": {
-                "type": "String"
-            }
-        }
-    },
-    "cloudErrorPathNotFound": "伺服器路徑不存在: {path}",
-    "@cloudErrorPathNotFound": {
+    "authLogin": "登入",
+    "authAccount": "帳號",
+    "authPassword": "密碼",
+    "authInvalidAccount": "請輸入帳號",
+    "authErrorInvalidCredentials": "帳號或密碼不正確。",
+    "authErrorAccountNotConfirmed": "帳號未驗證，請先完成驗證再登入。",
+    "authErrorRateLimit": "操作過於頻繁，請稍後再試。",
+    "authErrorNetworkIssue": "網路異常，請檢查網路後重試。",
+    "authErrorLoginFailed": "登入失敗，請稍後再試。",
+    "exportCsvHeaderType": "類型",
+    "exportCsvHeaderCategory": "分類",
+    "exportCsvHeaderSubCategory": "二級分類",
+    "exportCsvHeaderAmount": "金額",
+    "exportCsvHeaderNote": "備註",
+    "exportCsvHeaderTime": "時間",
+    "exportSuccessTitle": "匯出成功",
+    "exportSuccessMessageAndroid": "已儲存到：\n{path}",
+    "@exportSuccessMessageAndroid": {
         "placeholders": {
             "path": {
                 "type": "String"
             }
         }
     },
-    "cloudErrorServerStatus": "伺服器返回狀態碼 {code}",
-    "@cloudErrorServerStatus": {
+    "exportFailedTitle": "匯出失敗",
+    "exportTypeExpense": "支出",
+    "exportSuccessMessageIos": "已匯出到應用程式文件目錄：\n{path}",
+    "@exportSuccessMessageIos": {
         "placeholders": {
-            "code": {
+            "path": {
                 "type": "String"
             }
         }
     },
-    "cloudErrorWebdavNotSupported": "伺服器不支援 WebDAV 通訊協定",
-    "cloudLocalStorageSubtitle": "資料僅儲存在本機裝置",
+    "currencyCNY": "人民幣",
+    "currencyUSD": "美元",
+    "currencyEUR": "歐元",
+    "currencyJPY": "日元",
+    "currencyHKD": "港幣",
+    "currencyTWD": "新台幣",
+    "currencyGBP": "英鎊",
+    "currencyAUD": "澳元",
+    "currencyCAD": "加元",
+    "currencyKRW": "韓元",
+    "currencySGD": "新加坡元",
+    "currencyMYR": "馬來西亞令吉",
+    "currencyTHB": "泰銖",
+    "currencyIDR": "印尼盾",
+    "currencyPHP": "菲律賓披索",
+    "currencyVND": "越南盾",
+    "currencyINR": "印度盧比",
+    "currencyRUB": "俄羅斯盧布",
+    "currencyBYN": "白俄羅斯盧布",
+    "currencyNZD": "紐西蘭元",
+    "currencyCHF": "瑞士法郎",
+    "currencySEK": "瑞典克朗",
+    "currencyNOK": "挪威克朗",
+    "currencyDKK": "丹麥克朗",
+    "currencyBRL": "巴西雷亞爾",
+    "currencyMXN": "墨西哥披索",
+    "currencyTRY": "土耳其里拉",
+    "currencyZAR": "南非蘭特",
+    "currencyAED": "阿聯酋迪拉姆",
+    "currencySAR": "沙烏地里亞爾",
+    "currencyPLN": "波蘭茲羅提",
+    "currencyCZK": "捷克克朗",
+    "currencyHUF": "匈牙利福林",
+    "currencyARS": "阿根廷披索",
+    "currencyCLP": "智利披索",
+    "currencyCOP": "哥倫比亞披索",
+    "currencyPEN": "秘魯索爾",
+    "currencyEGP": "埃及鎊",
+    "currencyNGN": "奈及利亞奈拉",
+    "currencyKZT": "哈薩克坦吉",
+    "currencyUAH": "烏克蘭格里夫納",
+    "currencyILS": "以色列新謝克爾",
+    "currencyPKR": "巴基斯坦盧比",
+    "currencyBDT": "孟加拉塔卡",
+    "currencyLKR": "斯里蘭卡盧比",
+    "currencyMMK": "緬甸元",
+    "webdavConfiguredTitle": "WebDAV 雲服務已設定",
+    "webdavConfiguredMessage": "WebDAV 雲服務使用設定時提供的憑證，無需額外登入。",
+    "recurringTransactionTitle": "週期帳單",
+    "recurringTransactionAdd": "新增週期帳單",
+    "recurringTransactionEdit": "編輯週期帳單",
+    "recurringTransactionFrequency": "週期頻率",
+    "recurringTransactionDaily": "每天",
+    "recurringTransactionWeekly": "每週",
+    "recurringTransactionMonthly": "每月",
+    "recurringTransactionYearly": "每年",
+    "recurringTransactionInterval": "間隔",
+    "recurringTransactionDayOfMonth": "每月第幾天",
+    "recurringTransactionStartDate": "開始日期",
+    "recurringTransactionEndDate": "結束日期",
+    "recurringTransactionNoEndDate": "永久週期",
+    "recurringTransactionDeleteConfirm": "確定要刪除這個週期帳單嗎？",
+    "recurringTransactionEmpty": "暫無週期帳單",
+    "recurringTransactionEmptyHint": "點擊右上角 + 按鈕新增",
+    "recurringTransactionAmountInvalid": "金額需大於 0",
+    "recurringTransactionEndBeforeStart": "結束日期不能早於開始日期",
+    "recurringTransactionEveryNDays": "每 {n} 天",
+    "@recurringTransactionEveryNDays": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNWeeks": "每 {n} 週",
+    "@recurringTransactionEveryNWeeks": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNMonths": "每 {n} 個月",
+    "@recurringTransactionEveryNMonths": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionEveryNYears": "每 {n} 年",
+    "@recurringTransactionEveryNYears": {
+        "placeholders": {
+            "n": {
+                "type": "int"
+            }
+        }
+    },
+    "recurringTransactionUsageTitle": "使用說明",
+    "recurringTransactionUsageContent": "週期記帳會在每次冷啟動進入 App 時自動掃描並產生帳單。設定日期後，系統會在該日期之後的冷啟動時建立對應帳單。例如：設定 11 月 27 日，則會在 11 月 27 日之後的首次啟動時自動記帳。",
+    "ledgerSelectTitle": "選擇帳本",
+    "ledgerSelect": "選擇帳本",
+    "syncNotConfiguredMessage": "未設定雲端",
+    "syncNotLoggedInMessage": "未登入",
+    "syncCloudBackupCorruptedMessage": "雲端備份內容無法解析，可能是早期版本編碼問題造成的損壞。請點擊\\\"上傳當前帳本到雲端\\\"覆蓋修復。",
+    "syncNoCloudBackupMessage": "雲端暫無備份",
+    "syncAccessDeniedMessage": "403 拒絕存取（檢查 storage RLS 策略與路徑）",
+    "cloudTestConnection": "測試連線",
+    "cloudLastTestTime": "上次測試時間：{time}",
+    "@cloudLastTestTime": {
+        "placeholders": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
     "cloudLocalStorageTitle": "本機儲存",
+    "cloudLocalStorageSubtitle": "資料僅儲存在本機裝置",
     "localBackupPageTitle": "本機儲存",
     "localBackupAutoTitle": "自動本機備份",
     "localBackupAutoSubtitle": "每天首次開啟應用程式時自動備份資料庫快照",
@@ -290,17 +819,67 @@
     "localBackupOldGranted": "已開啟",
     "localBackupOldLater": "暫不",
     "localBackupOldGrantFailed": "無法開啟系統設定，請手動開啟「所有檔案存取」",
-    "cloudS3AccessKeyHint": "您的 Access Key ID",
-    "cloudS3AccessKeyLabel": "Access Key",
-    "cloudS3BucketHint": "spitout-data",
-    "cloudS3BucketLabel": "儲存桶名稱",
-    "cloudS3EndpointHint": "s3.amazonaws.com 或自訂端點",
-    "cloudS3EndpointLabel": "端點地址",
+    "cloudCustomSupabaseTitle": "自訂 Supabase",
+    "cloudCustomSupabaseSubtitle": "點擊設定自建Supabase服務",
+    "cloudCustomWebdavTitle": "自訂 WebDAV",
+    "cloudCustomWebdavSubtitle": "點擊設定堅果雲/Nextcloud等",
+    "cloudCustomS3Title": "S3 協議儲存",
+    "cloudCustomS3Subtitle": "AWS S3 / Cloudflare R2 / MinIO",
+    "cloudSpitoutCloudTitle": "Spitout Cloud",
+    "cloudSpitoutCloudSubtitle": "自建雲服務 · 增量同步 · 多裝置協同",
+    "cloudConfigureSpitoutCloudTitle": "設定 Spitout Cloud",
+    "cloudSpitoutCloudUrlLabel": "伺服器地址",
+    "cloudSpitoutCloudUrlHint": "https://your-server.com",
+    "cloudSpitoutCloudAccountLabel": "帳號",
+    "cloudSpitoutCloudAccountHint": "帳號名稱",
+    "cloudSpitoutCloudPasswordLabel": "密碼",
+    "cloudSpitoutCloudPasswordHint": "輸入密碼",
+    "cloudSpitoutCloudPasswordNotSavedHint": "密碼僅用於本次登入，不會儲存到本機",
+    "cloudSpitoutCloudLoginSuccess": "登入成功",
+    "cloudSpitoutCloudLoginFailed": "登入失敗",
+    "cloudTabOffline": "離線模式",
+    "cloudTabBackup": "備份同步",
+    "cloudTabBackupSubtitle": "點擊卡片切換備份方式，首次需要配置資訊",
+    "cloudTabCloudSync": "雲端協同",
+    "cloudSupabaseHelpTitle": "Supabase 設定說明",
+    "cloudSupabaseHelpIntro": "什麼是 Supabase",
+    "cloudSupabaseHelpIntro1": "Supabase 是一個開源的後端即服務平台",
+    "cloudSupabaseHelpIntro2": "提供免費方案，足夠個人使用",
+    "cloudSupabaseHelpIntro3": "資料完全由您掌控",
+    "cloudSupabaseHelpSteps": "設定步驟",
+    "cloudSupabaseHelpStep1": "1. 前往 supabase.com 註冊帳號",
+    "cloudSupabaseHelpStep2": "2. 建立新專案（選擇免費方案）",
+    "cloudSupabaseHelpStep3": "3. 進入專案設定 > API",
+    "cloudSupabaseHelpStep4": "4. 複製 Project URL 和 anon key",
+    "cloudSupabaseHelpStep5": "5. 貼到應用程式的設定中",
+    "cloudSupabaseHelpFaq": "常見問題",
+    "cloudSupabaseHelpFaq1": "免費方案有 500MB 儲存空間",
+    "cloudSupabaseHelpFaq2": "資料加密儲存，安全可靠",
+    "cloudSupabaseHelpFaq3": "支援多裝置同步",
+    "cloudSupabaseHelpNote": "設定完成後需要註冊/登入帳號才能使用同步功能",
+    "cloudWebdavHelpTitle": "WebDAV 設定說明",
+    "cloudWebdavHelpIntro": "什麼是 WebDAV",
+    "cloudWebdavHelpIntro1": "WebDAV 是一種網路檔案通訊協定",
+    "cloudWebdavHelpIntro2": "支援多種雲端硬碟和 NAS 裝置",
+    "cloudWebdavHelpIntro3": "資料儲存在您自己的伺服器上",
+    "cloudWebdavHelpProviders": "支援的服務商",
+    "cloudWebdavHelpProvider1": "• 堅果雲（推薦國內用戶）",
+    "cloudWebdavHelpProvider2": "• Nextcloud / ownCloud",
+    "cloudWebdavHelpProvider3": "• 群暉 / 威聯通 NAS",
+    "cloudWebdavHelpProvider4": "• 其他支援 WebDAV 的服務",
+    "cloudWebdavHelpSteps": "設定步驟（以堅果雲為例）",
+    "cloudWebdavHelpStep1": "1. 登入堅果雲網頁版",
+    "cloudWebdavHelpStep2": "2. 點擊右上角帳戶名 > 帳戶資訊",
+    "cloudWebdavHelpStep3": "3. 選擇「安全選項」標籤",
+    "cloudWebdavHelpStep4": "4. 新增應用程式密碼（用於第三方應用程式）",
+    "cloudWebdavHelpStep5": "5. 複製伺服器地址、帳號、應用程式密碼",
+    "cloudWebdavHelpNote": "建議使用應用程式專用密碼，而非帳號密碼",
+    "cloudS3HelpTitle": "S3 儲存設定說明",
     "cloudS3HelpIntro": "什麼是 S3",
     "cloudS3HelpIntro1": "S3 是一種標準的物件儲存通訊協定",
     "cloudS3HelpIntro2": "支援多家雲端服務商",
     "cloudS3HelpIntro3": "資料儲存在您選擇的雲端服務中",
-    "cloudS3HelpNote": "推薦使用 Cloudflare R2，提供 10GB 免費儲存且無流量費",
+    "cloudS3HelpProviders": "支援的服務商",
     "cloudS3HelpProvider1": "• AWS S3（Amazon Web Services）",
     "cloudS3HelpProvider2": "• Cloudflare R2（免費 10GB/月）",
     "cloudS3HelpProvider3": "• Backblaze B2（免費 10GB）",
@@ -308,71 +887,52 @@
     "cloudS3HelpProvider5": "• 阿里雲 OSS",
     "cloudS3HelpProvider6": "• 騰訊雲 COS",
     "cloudS3HelpProvider7": "• 七牛雲 Kodo",
-    "cloudS3HelpProviders": "支援的服務商",
+    "cloudS3HelpSteps": "設定步驟（以 Cloudflare R2 為例）",
     "cloudS3HelpStep1": "1. 登入 Cloudflare 控制台",
     "cloudS3HelpStep2": "2. 進入 R2 > 建立儲存桶",
     "cloudS3HelpStep3": "3. 進入 R2 > 管理 R2 API 令牌",
     "cloudS3HelpStep4": "4. 建立 API 令牌並複製憑據",
     "cloudS3HelpStep5": "5. 貼上端點、存取金鑰、私密金鑰和儲存桶名稱",
-    "cloudS3HelpSteps": "設定步驟（以 Cloudflare R2 為例）",
-    "cloudS3HelpTitle": "S3 儲存設定說明",
-    "cloudS3PortHint": "留空使用預設連接埠",
-    "cloudS3PortLabel": "連接埠（選填）",
-    "cloudS3RegionHint": "us-east-1（留空自動）",
-    "cloudS3RegionLabel": "區域",
-    "cloudS3SecretKeyHint": "您的 Secret Access Key",
-    "cloudS3SecretKeyLabel": "Secret Key",
-    "cloudS3UseSSLLabel": "使用 HTTPS",
-    "cloudSaveFailed": "儲存失敗",
-    "cloudMultiDeviceWarningTitle": "多裝置使用提醒",
-    "cloudMultiDeviceWarningMessage": "換裝置前記得先上傳，到新裝置後先下載再記帳。不要同時在兩台裝置上記同一個帳本。點擊查看詳情 →",
-    "cloudSyncGuideTitle": "雲端同步使用指南",
-    "cloudSyncGuideGotIt": "我知道了",
-    "cloudSyncGuideHowItWorks": "運作原理",
-    "cloudSyncGuideHowItem1": "上傳：將當前帳本的全部資料打包上傳至雲端，覆蓋雲端舊資料",
-    "cloudSyncGuideHowItem2": "下載：從雲端拉取資料，與本機逐條比對差異，您可以選擇要同步哪些變更",
-    "cloudSyncGuideHowItem3": "雲端始終只儲存最後一次上傳的完整快照，不保留歷史版本",
-    "cloudSyncGuideCorrect": "正確的使用方式",
-    "cloudSyncGuideCorrectItem1": "同一時間只在一台裝置上記帳，完成後上傳",
-    "cloudSyncGuideCorrectItem2": "切換裝置前，先在新裝置上下載同步",
-    "cloudSyncGuideCorrectItem3": "下載時仔細查看預覽，確認每條變更再套用",
-    "cloudSyncGuideCorrectItem4": "養成「編輯→上傳→切換裝置→下載→編輯」的習慣",
-    "cloudSyncGuideWrong": "應避免的用法",
-    "cloudSyncGuideWrongItem1": "兩台裝置同時編輯同一帳本，後上傳的會覆蓋先上傳的改動",
-    "cloudSyncGuideWrongItem2": "上傳後立刻在另一台裝置下載，檔案服務可能有數秒到數分鐘的同步延遲，請稍候再試",
-    "cloudSyncGuideWrongItem3": "長時間不同步後一次性下載大量變更，容易遺漏需要處理的差異",
-    "cloudSyncGuideLimitations": "已知限制",
-    "cloudSyncGuideLimitItem1": "非即時同步：需手動點擊上傳和下載",
-    "cloudSyncGuideLimitItem2": "無衝突合併：不會自動合併兩端的修改，以最後上傳的為準",
-    "cloudSyncGuideLimitItem3": "檔案服務延遲：上傳後雲端檔案可能需要數秒到數分鐘才能被其他裝置讀取，取決於您使用的雲端服務",
-    "cloudStatusFailed": "連線失敗",
-    "cloudStatusNormal": "連線正常",
+    "cloudS3HelpNote": "推薦使用 Cloudflare R2，提供 10GB 免費儲存且無流量費",
     "cloudStatusNotTested": "未測試",
-    "cloudSupabaseAnonKeyHintLong": "貼上完整的 anon key",
-    "cloudSupabaseBucketHint": "留空使用預設值 spitout-backups",
-    "cloudSupabaseBucketLabel": "Storage Bucket 名稱",
-    "cloudSupabaseHelpFaq": "常見問題",
-    "cloudSupabaseHelpFaq1": "免費方案有 500MB 儲存空間",
-    "cloudSupabaseHelpFaq2": "資料加密儲存，安全可靠",
-    "cloudSupabaseHelpFaq3": "支援多裝置同步",
-    "cloudSupabaseHelpIntro": "什麼是 Supabase",
-    "cloudSupabaseHelpIntro1": "Supabase 是一個開源的後端即服務平台",
-    "cloudSupabaseHelpIntro2": "提供免費方案，足夠個人使用",
-    "cloudSupabaseHelpIntro3": "資料完全由您掌控",
-    "cloudSupabaseHelpNote": "設定完成後需要註冊/登入帳號才能使用同步功能",
-    "cloudSupabaseHelpStep1": "1. 前往 supabase.com 註冊帳號",
-    "cloudSupabaseHelpStep2": "2. 建立新專案（選擇免費方案）",
-    "cloudSupabaseHelpStep3": "3. 進入專案設定 > API",
-    "cloudSupabaseHelpStep4": "4. 複製 Project URL 和 anon key",
-    "cloudSupabaseHelpStep5": "5. 貼到應用程式的設定中",
-    "cloudSupabaseHelpSteps": "設定步驟",
-    "cloudSupabaseHelpTitle": "Supabase 設定說明",
-    "cloudSupabaseUrlHint": "https://xxx.supabase.co",
-    "cloudSupabaseUrlLabel": "Supabase URL",
-    "cloudSwitchConfirmMessage": "切換雲端服務將登出目前帳號。確認切換？",
+    "cloudStatusNormal": "連線正常",
+    "cloudStatusFailed": "連線失敗",
+    "cloudErrorAuthFailed": "認證失敗: API Key 無效",
+    "cloudErrorServerStatus": "伺服器返回狀態碼 {code}",
+    "@cloudErrorServerStatus": {
+        "placeholders": {
+            "code": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudErrorWebdavNotSupported": "伺服器不支援 WebDAV 通訊協定",
+    "cloudErrorAuthFailedCredentials": "認證失敗: 使用者名稱或密碼錯誤",
+    "cloudErrorAccessDenied": "存取被拒絕: 請檢查權限",
+    "cloudErrorPathNotFound": "伺服器路徑不存在: {path}",
+    "@cloudErrorPathNotFound": {
+        "placeholders": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudErrorNetwork": "網路錯誤: {message}",
+    "@cloudErrorNetwork": {
+        "placeholders": {
+            "message": {
+                "type": "String"
+            }
+        }
+    },
+    "cloudTestSuccessMessage": "連線正常，設定有效",
+    "cloudTestFailedMessage": "連線失敗",
     "cloudSwitchConfirmTitle": "切換雲端服務",
-    "cloudSwitchFailedConfigMissing": "請先設定此雲端服務",
+    "cloudSwitchConfirmMessage": "切換雲端服務將登出目前帳號。確認切換？",
     "cloudSwitchFailedTitle": "切換失敗",
+    "cloudSwitchFailedConfigMissing": "請先設定此雲端服務",
+    "cloudConfigInvalidMessage": "請填寫完整資訊",
+    "cloudSaveFailed": "儲存失敗",
     "cloudSwitchedTo": "已切換至 {type}",
     "@cloudSwitchedTo": {
         "placeholders": {
@@ -381,7 +941,15 @@
             }
         }
     },
-    "cloudSyncHint": "下載時可自動對比差異並逐條預覽。非即時同步，請避免多裝置同時編輯同一帳本。同步範圍為帳本資料（含關聯的帳戶、分類）。",
+    "cloudConfigureSupabaseTitle": "設定 Supabase",
+    "cloudConfigureWebdavTitle": "設定 WebDAV",
+    "cloudConfigureS3Title": "設定 S3",
+    "cloudSupabaseAnonKeyHintLong": "貼上完整的 anon key",
+    "cloudWebdavRemotePathLabel": "遠端路徑",
+    "cloudWebdavRemotePathHelperText": "資料儲存的遠端目錄路徑",
+    "welcomeSelectCurrencyTitle": "選擇記帳貨幣",
+    "welcomeCurrencyDescription": "選擇您常用的貨幣，之後可以隨時在設定中更改",
+    "aiOcrNoLedger": "未找到帳本",
     "cloudTutorialTitle": "使用教程",
     "cloudTutorialIntro": "Spitout Cloud 是可自建的雲同步服務端,支援多裝置即時協同。流程很簡單:",
     "cloudTutorialStep1Title": "第一步:部署或選擇伺服器",
@@ -400,358 +968,24 @@
     "cloudTutorialFeature3": "👥 多用戶獨立:一個伺服器可多人註冊,各自資料完全隔離",
     "cloudTutorialFeature4": "🤝 共享帳本:邀請家人 / 團隊一起記同一本,即時秒級同步",
     "cloudTutorialGotIt": "我知道了",
-    "cloudTestConnection": "測試連線",
-    "cloudLastTestTime": "上次測試時間：{time}",
-    "@cloudLastTestTime": {
-        "placeholders": {
-            "time": {
-                "type": "String"
-            }
-        }
-    },
-    "cloudTestFailedMessage": "連線失敗",
-    "cloudTestSuccessMessage": "連線正常，設定有效",
-    "cloudWebdavHelpIntro": "什麼是 WebDAV",
-    "cloudWebdavHelpIntro1": "WebDAV 是一種網路檔案通訊協定",
-    "cloudWebdavHelpIntro2": "支援多種雲端硬碟和 NAS 裝置",
-    "cloudWebdavHelpIntro3": "資料儲存在您自己的伺服器上",
-    "cloudWebdavHelpNote": "建議使用應用程式專用密碼，而非帳號密碼",
-    "cloudWebdavHelpProvider1": "• 堅果雲（推薦國內用戶）",
-    "cloudWebdavHelpProvider2": "• Nextcloud / ownCloud",
-    "cloudWebdavHelpProvider3": "• 群暉 / 威聯通 NAS",
-    "cloudWebdavHelpProvider4": "• 其他支援 WebDAV 的服務",
-    "cloudWebdavHelpProviders": "支援的服務商",
-    "cloudWebdavHelpStep1": "1. 登入堅果雲網頁版",
-    "cloudWebdavHelpStep2": "2. 點擊右上角帳戶名 > 帳戶資訊",
-    "cloudWebdavHelpStep3": "3. 選擇「安全選項」標籤",
-    "cloudWebdavHelpStep4": "4. 新增應用程式密碼（用於第三方應用程式）",
-    "cloudWebdavHelpStep5": "5. 複製伺服器地址、帳號、應用程式密碼",
-    "cloudWebdavHelpSteps": "設定步驟（以堅果雲為例）",
-    "cloudWebdavHelpTitle": "WebDAV 設定說明",
-    "cloudWebdavPasswordLabel": "密碼",
-    "cloudWebdavPathHint": "/Spitout",
-    "cloudWebdavRemotePathHelperText": "資料儲存的遠端目錄路徑",
-    "cloudWebdavRemotePathLabel": "遠端路徑",
-    "cloudWebdavUrlHint": "https://dav.jianguoyun.com/dav/",
-    "cloudWebdavUrlLabel": "WebDAV 伺服器地址",
-    "cloudWebdavUsernameLabel": "使用者名稱",
-    "commonAdd": "新增",
-    "commonBack": "返回",
-    "commonCancel": "取消",
-    "commonOther": "其他",
-    "commonConfigure": "配置",
-    "commonConfirm": "確定",
-    "commonCurrent": "當前",
-    "commonDelete": "刪除",
-    "commonEmpty": "暫無資料",
-    "commonError": "錯誤",
-    "commonFailed": "失敗",
-    "commonOperationFailed": "操作失敗，請稍後重試",
-    "commonRetry": "重試",
-    "commonFinish": "完成",
-    "commonNext": "下一步",
-    "commonNoteHint": "備註…",
-    "commonOk": "確定",
-    "commonDone": "完成",
-    "homeSelectBillMonth": "選擇帳單月份",
-    "homePickerHint": "上下滑動數字以選擇時間",
-    "homeBackToCurrentMonth": "回到當月",
-    "homeSwitchMonthHint": "左右滑動列表切換月份",
-    "homeTodayExpense": "今日",
-    "homeWeekExpense": "本週",
-    "homeMonthExpense": "本月支出",
-    "homeDetailCategory": "分類",
-    "homeDetailDate": "記帳日期",
-    "homeDetailAmount": "記帳金額",
-    "homeDetailCurrency": "貨幣",
-    "homeDetailNativeAmount": "折合主貨幣",
-    "homeDetailMembers": "協作成員",
-    "homeDetailCreator": "建立者",
-    "homeDetailLastEditor": "最後編輯",
-    "homeDetailEditHistory": "編輯記錄",
-    "homeDetailEditHistoryHint": "僅供查看",
-    "homeDetailEditButton": "編輯記帳",
-    "homeDetailNoHistory": "暫無編輯歷史",
-    "homeDeleteDetailTitle": "刪除這條明細?",
-    "homeDeleteDetailMessage": "將刪除\"{name}\"記錄,此操作無法復原。",
-    "commonPressAgainToExit": "再按一次退出應用程式",
-    "commonSave": "儲存",
-    "commonSearch": "搜尋",
-    "commonSelectTime": "選擇時間",
-    "commonSettings": "設定",
-    "commonTutorial": "教學",
-    "commonWeekdayFriday": "星期五",
-    "commonWeekdayMonday": "星期一",
-    "commonWeekdaySaturday": "星期六",
-    "commonWeekdaySunday": "星期日",
-    "commonWeekdayThursday": "星期四",
-    "commonWeekdayTuesday": "星期二",
-    "commonWeekdayWednesday": "星期三",
-    "configExportConfirmTitle": "確認匯出",
-    "configExportContainsSecretsWarning": "此檔案包含密碼/金鑰，請勿分享或提交到版本庫！",
-    "configExportContentCopied": "已複製到剪貼簿",
-    "configExportCopyContent": "複製內容",
-    "configExportFailed": "配置匯出失敗",
-    "configExportPreviewTitle": "匯出預覽",
-    "configExportReadFileFailed": "讀取檔案失敗",
-    "configExportSavedTo": "已儲存至: {path}",
-    "@configExportSavedTo": {
-        "placeholders": {
-            "path": {
-                "type": "String"
-            }
-        }
-    },
-    "configExportSelectTitle": "選擇匯出內容",
-    "configExportShareSubject": "Spitout 配置檔案",
-    "configExportSubtitle": "將目前配置匯出為YAML檔案",
-    "configExportSuccess": "配置匯出成功",
-    "configExportTitle": "匯出配置",
-    "configExportViewContent": "檢視內容",
-    "configImportConfirmTitle": "確認匯入",
-    "configImportExportIncludesTitle": "包含的配置項",
-    "configImportExportInfoMessage": "備份和恢復應用配置，用於跨裝置遷移或恢復設定。匯出為 YAML 格式，可檢視和編輯。\n\n僅包含應用配置，不包含交易記錄（交易資料請使用明細匯入匯出功能）。",
-    "configImportExportWarning": "配置檔案包含雲端服務金鑰、密碼等敏感資訊，請妥善保管。匯入會覆蓋同名配置，建議先匯出備份。",
-    "configImportExportInfoTitle": "功能說明",
-    "configImportExportSubtitle": "備份和恢復應用配置",
-    "configImportExportTitle": "配置匯入匯出",
-    "configImportFailed": "配置匯入失敗",
-    "configImportNoFilePath": "未選擇檔案",
-    "configImportOverwriteWarning": "匯入將覆蓋現有配置，建議先備份目前配置。",
-    "configImportPreviewTitle": "匯入預覽",
-    "configImportRestartMessage": "配置已匯入，部分配置需要重新啟動應用程式後生效。",
-    "configImportRestartTitle": "需要重新啟動",
-    "configImportSelectTitle": "選擇匯入內容",
-    "configImportSubtitle": "從YAML檔案恢復配置",
-    "configImportSuccess": "配置匯入成功",
-    "configImportTitle": "匯入配置",
-    "configIncludeAppSettings": "應用程式設定（提醒、語言、外觀、字體、同步等）",
-    "configIncludeCategories": "分類",
-    "configIncludeLedgers": "帳本",
-    "configIncludeOtherSettings": "其他設定",
-    "configIncludeOtherSettingsSubtitle": "包含雲端服務配置和應用程式設定",
-    "configIncludeCredentials": "包含密碼/金鑰",
-    "configIncludeCredentialsSubtitle": "密碼和金鑰將以明文寫入檔案",
-    "configIncludeRecurringTransactions": "週期帳單",
-    "configIncludeS3": "S3 雲端服務配置",
-    "configIncludeSpitoutCloud": "Spitout Cloud 雲端服務配置",
-    "configIncludeSupabase": "Supabase 雲端服務配置",
-    "configIncludeWebdav": "WebDAV 雲端服務配置",
-    "currencyAUD": "澳元",
-    "currencyBRL": "巴西雷亞爾",
-    "currencyBYN": "白俄羅斯盧布",
-    "currencyCAD": "加元",
-    "currencyCHF": "瑞士法郎",
-    "currencyCNY": "人民幣",
-    "currencyDKK": "丹麥克朗",
-    "currencyEUR": "歐元",
-    "currencyGBP": "英鎊",
-    "currencyHKD": "港幣",
-    "currencyIDR": "印尼盾",
-    "currencyINR": "印度盧比",
-    "currencyJPY": "日元",
-    "currencyKRW": "韓元",
-    "currencyMXN": "墨西哥披索",
-    "currencyTRY": "土耳其里拉",
-    "currencyZAR": "南非蘭特",
-    "currencyAED": "阿聯酋迪拉姆",
-    "currencySAR": "沙烏地里亞爾",
-    "currencyPLN": "波蘭茲羅提",
-    "currencyCZK": "捷克克朗",
-    "currencyHUF": "匈牙利福林",
-    "currencyARS": "阿根廷披索",
-    "currencyCLP": "智利披索",
-    "currencyCOP": "哥倫比亞披索",
-    "currencyPEN": "秘魯索爾",
-    "currencyEGP": "埃及鎊",
-    "currencyNGN": "奈及利亞奈拉",
-    "currencyKZT": "哈薩克坦吉",
-    "currencyUAH": "烏克蘭格里夫納",
-    "currencyILS": "以色列新謝克爾",
-    "currencyPKR": "巴基斯坦盧比",
-    "currencyBDT": "孟加拉塔卡",
-    "currencyLKR": "斯里蘭卡盧比",
-    "currencyMMK": "緬甸元",
-    "currencyMYR": "馬來西亞令吉",
-    "currencyNOK": "挪威克朗",
-    "currencyNZD": "紐西蘭元",
-    "currencyPHP": "菲律賓披索",
-    "currencyRUB": "俄羅斯盧布",
-    "currencySEK": "瑞典克朗",
-    "currencySGD": "新加坡元",
-    "currencyTHB": "泰銖",
-    "currencyTWD": "新台幣",
-    "currencyUSD": "美元",
-    "currencyVND": "越南盾",
-    "exportCsvHeaderAmount": "金額",
-    "exportCsvHeaderCategory": "分類",
-    "exportCsvHeaderNote": "備註",
-    "exportCsvHeaderSubCategory": "二級分類",
-    "exportCsvHeaderTime": "時間",
-    "exportCsvHeaderType": "類型",
-    "exportFailedTitle": "匯出失敗",
-    "exportSuccessMessageAndroid": "已儲存到：\n{path}",
-    "@exportSuccessMessageAndroid": {
-        "placeholders": {
-            "path": {
-                "type": "String"
-            }
-        }
-    },
-    "exportSuccessMessageIos": "已匯出到應用程式文件目錄：\n{path}",
-    "exportSuccessTitle": "匯出成功",
-    "exportTypeExpense": "支出",
-    "homeExpense": "支出",
-    "homeMonth": "{month}月",
-    "homeMonthExpenseOf": "{month}月支出",
-    "homeNoRecords": "還沒有記帳",
-    "homeNoRecordsSubtext": "點擊底部加號，馬上記一筆",
-    "homeBaseCurrencyNeedLedger": "請先建立帳本",
-    "homeSelectDate": "選擇日期",
-    "homeYear": "{year}年",
-    "importAutoDetect": "自動檢測",
-    "importBackgroundImport": "背景匯入",
-    "importCancelImport": "取消匯入",
-    "importCancelled": "（已取消）",
-    "importCategoryMapping": "分類對應",
-    "importCategoryMappingDescription": "請將左側\"源分類名\"對應到系統內已有分類（或保持原名自動建立/合併）",
-    "importCategoryNotSelected": "未選擇\"分類\"列，請點擊\"上一步\"返回並設定\"分類\"的列，再繼續。",
-    "importColumnNumber": "第{number}列",
-    "importCompleteTitle": "匯入完成",
-    "importCompleted": "匯入完成{cancelled}：成功 {ok} 條，失敗 {fail} 條",
-    "importConfirmMapping": "確認對應",
-    "importFieldAmount": "金額",
-    "importFieldCategory": "分類",
-    "importFieldDate": "日期",
-    "importFieldNote": "備註",
-    "importFieldType": "類型",
-    "importFileOpenError": "無法開啟檔案選擇器：{error}",
-    "@importFileOpenError": {
-        "placeholders": {
-            "error": {
-                "type": "String"
-            }
-        }
-    },
-    "importInProgress": "正在匯入…",
-    "importKeepOriginalName": "保持原名（自動建立/合併）",
-    "importNextStep": "下一步",
-    "importNoDataParsed": "未解析到任何資料，請返回上一頁檢查 CSV 內容或分隔符。",
-    "importNoLedger": "請先建立帳本再匯入",
-    "importInvalidRowsSkipped": "無法解析的 {count} 行已跳過（金額或日期無效）",
-    "@importInvalidRowsSkipped": {
-        "placeholders": {
-            "count": {
-                "type": "int"
-            }
-        }
-    },
-    "importPreparing": "準備中…",
-    "importPreview": "資料預覽",
-    "importPreviewLimit": "僅預覽前 {shown} 行，共 {total} 行",
-    "importPreviousStep": "上一步",
-    "importProgress": "匯入中… 成功 {ok}，失敗 {fail}",
-    "importProgressDetail": "已完成：{done}/{total}，成功 {ok}，失敗 {fail}",
-    "importReading": "讀取檔案中…",
-    "importSelectCategoryFirst": "請先選擇\"分類\"列再繼續",
-    "importSkippedNonTransactionTypes": "跳過 {count} 條非支出記錄（債務等）",
-    "importStartImport": "開始匯入",
-    "importTransactionFailed": "匯入失敗，已回滾所有更改：{error}",
-    "languageChinese": "中文",
-    "languageEnglish": "English",
-    "languageSystemDefault": "跟隨系統",
-    "languageTitle": "語言設定",
-    "ledgerDefaultName": "預設帳本",
-    "ledgerSelect": "選擇帳本",
-    "ledgerSelectTitle": "選擇帳本",
-    "ledgersExpense": "支出：{expense}",
-    "homePullCloudSuccess": "已同步雲端帳本資料",
-    "homePullCloudFailed": "刷新失敗，請稍後重試",
-    "homePullLocalSuccess": "已刷新本地帳本資料與設定",
-    "homePullCloudFailedButLocalOk": "雲端同步失敗，已刷新本地資料（匯率/設定）",
-    "homePullCloudHealed": "已自動修復並同步 {count} 條雲端資料",
-    "homePullCloudGap": "雲端有歷史資料未能自動恢復，請到雲端同步頁執行「從雲端恢復」",
-    "homeSyncing": "正在同步帳本資料",
-    "ledgersClear": "清空當前帳本",
-    "ledgersClearMessage": "將刪除該帳本下所有交易記錄，且不可復原。",
-    "ledgersClearSuccess": "帳本已清空",
-    "ledgersCreateSuccess": "帳本建立成功",
-    "ledgersClearTitle": "清空帳本",
-    "ledgersConflictDownload": "下載到本地",
-    "ledgersConflictDownloadSuccess": "下載成功，已合併 {inserted} 筆帳單",
-    "ledgersConflictDownloading": "正在下載...",
-    "ledgersConflictLocalFingerprint": "本地指紋：{fp}",
-    "ledgersConflictLocalInfo": "本地：{count} 筆帳單",
-    "ledgersConflictMessage": "本地和雲端帳本資料不一致，請選擇操作：",
-    "ledgersConflictRemoteFingerprint": "雲端指紋：{fp}",
-    "ledgersConflictRemoteInfo": "雲端：{count} 筆帳單",
-    "ledgersConflictRemoteUpdated": "雲端更新：{time}",
-    "ledgersConflictTitle": "同步衝突",
-    "ledgersConflictUpload": "上傳到雲端",
-    "ledgersConflictUploadSuccess": "上傳成功",
-    "ledgersConflictUploading": "正在上傳...",
-    "ledgersCreate": "建立",
-    "ledgersCurrency": "幣種",
-    "ledgersMonthStartDay": "每月起始日",
-    "ledgersMonthStartDayHint": "統計與預算按該日作為每月週期起點（1-28）",
-    "ledgersMonthStartDayNatural": "1日（自然月）",
-    "ledgersMonthStartDayValue": "每月{day}日",
-    "ledgersDefaultLedgerName": "預設帳本",
-    "ledgersDelete": "刪除帳本",
-    "ledgersDeleteConfirm": "刪除帳本",
-    "ledgersDeleteFailed": "刪除失敗",
-    "ledgersDeleteMessage": "確定要刪除該帳本及其全部記錄嗎？此操作不可復原。\\n若雲端存在備份，也會一併刪除。",
-    "ledgersDeleted": "已刪除",
-    "ledgersEdit": "編輯帳本",
-    "ledgersEmpty": "暫無帳本",
-    "ledgersSectionLocal": "本機帳本",
-    "ledgersSectionCloud": "Spitout Cloud 帳本",
-    "ledgersSectionLocalEmpty": "暫無本機帳本，本機帳本只保存在這台裝置上",
-    "ledgersSectionCloudEmpty": "暫無雲端帳本，雲端帳本會在各裝置間同步",
-    "ledgersSectionCloudSignInHint": "登入 Spitout Cloud 後即可使用雲端帳本",
-    "ledgersStorageLocation": "儲存位置",
-    "ledgersStorageLocalHint": "只保存在這台裝置上，不會上傳到雲端",
-    "ledgersStorageCloudHint": "資料會上傳到 Spitout Cloud，並在各裝置間同步",
-    "ledgersActionMoveToCloud": "移動到 Spitout Cloud",
-    "ledgersActionMoveToLocal": "移動到本機",
-    "ledgersActionCopyToLocal": "複製到本機",
-    "ledgersMoveToCloudMessage": "帳本\"{name}\"的資料將上傳到 Spitout Cloud，並在各裝置間同步。",
-    "@ledgersMoveToCloudMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersMoveToLocalMessage": "帳本\"{name}\"將從 Spitout Cloud 刪除，僅保留在這台裝置上，其他裝置將不再看得到它。",
-    "@ledgersMoveToLocalMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersCopyToLocalMessage": "將帳本\"{name}\"複製一份到本機，雲端原帳本保持不變。",
-    "@ledgersCopyToLocalMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersMoveToCloudSuccess": "已移動到 Spitout Cloud",
-    "ledgersMoveToLocalSuccess": "已移動到本機",
-    "ledgersCopyToLocalSuccess": "已複製到本機",
-    "ledgerNameLabel": "帳本名稱",
-    "ledgerNameHint": "請輸入帳本名稱",
-    "ledgersNew": "新建帳本",
-    "ledgersRecords": "筆數：{count}",
-    "ledgersSearchCurrency": "搜尋：中文或代碼",
-    "ledgersSwitched": "已切換到帳本「{name}」",
-    "ledgersTitle": "帳本管理",
+    "cloudSyncHint": "下載時可自動對比差異並逐條預覽。非即時同步，請避免多裝置同時編輯同一帳本。同步範圍為帳本資料（含關聯的帳戶、分類）。",
+    "appearanceSettings": "偏好調節",
+    "appearanceSettingsDesc": "主題、字體、語言、應用鎖等",
+    "appearanceSettingsPageTitle": "偏好調節",
+    "appearanceSettingsPageSubtitle": "外觀、顯示、安全等應用偏好",
+    "logCenterTitle": "日誌中心",
+    "logCenterSubtitle": "查看應用程式執行日誌",
+    "logCenterSearchHint": "搜尋日誌內容或標籤...",
+    "logCenterFilterLevel": "日誌級別",
+    "logCenterFilterPlatform": "平台",
+    "logCenterTotal": "全部",
+    "logCenterFiltered": "已過濾",
+    "logCenterEmpty": "暫無日誌",
+    "logCenterExport": "匯出",
     "logCenterClear": "清空",
-    "logCenterClearConfirmMessage": "確定要清空所有日誌嗎？此操作無法復原。",
+    "logCenterExportFailed": "匯出失敗",
     "logCenterClearConfirmTitle": "清空日誌",
+    "logCenterClearConfirmMessage": "確定要清空所有日誌嗎？此操作無法復原。",
     "logCenterCleared": "日誌已清空",
     "logCenterCopied": "已複製到剪貼簿",
     "logCenterDetailTime": "時間",
@@ -762,183 +996,111 @@
     "logCenterCopy": "複製",
     "logCenterClose": "關閉",
     "logCenterExportSubject": "Spitout 日誌匯出",
-    "logCenterEmpty": "暫無日誌",
-    "logCenterExport": "匯出",
-    "logCenterExportFailed": "匯出失敗",
-    "logCenterFilterLevel": "日誌級別",
-    "logCenterFilterPlatform": "平台",
-    "logCenterFiltered": "已過濾",
-    "logCenterSearchHint": "搜尋日誌內容或標籤...",
-    "logCenterSubtitle": "查看應用程式執行日誌",
-    "logCenterTitle": "日誌中心",
-    "logCenterTotal": "全部",
-    "mineAutoSyncNeedLogin": "需登入後可開啟",
-    "mineAutoSyncSubtitle": "記帳後自動上傳到雲端",
-    "mineAutoSyncTitle": "自動同步帳本",
-    "mineAvatarDelete": "刪除頭像",
-    "mineAvatarUploadNew": "上傳新頭像",
-    "mineCategoryManagement": "分類管理",
-    "mineCategoryManagementSubtitle": "編輯自訂分類",
-    "mineCloudService": "雲服務",
-    "mineCloudServiceLoading": "載入中…",
-    "mineDownloadComplete": "同步完成",
-    "mineDownloadNeedCloudService": "僅限雲端服務模式可用",
-    "mineDownloadResult": "匯入：{inserted} 條",
-    "mineDownloadTitle": "下載同步",
-    "mineLanguageSettings": "應用語言",
-    "cloudReloginTitle": "重新登入",
-    "cloudReloginSuccess": "已重新登入",
-    "mineLoggedInAccount": "已登入",
-    "mineLoginSubtitle": "僅在同步時需要",
-    "mineLoginTitle": "登入",
-    "mineLogoutButton": "退出",
-    "mineLogoutConfirmMessage": "確定要退出當前帳號登入嗎？\n退出後將無法使用雲同步功能。",
-    "mineLogoutConfirmTitle": "退出登入",
-    "mineLogoutSubtitle": "點擊可退出登入",
-    "mineRecurringTransactions": "週期帳單",
-    "mineRecurringTransactionsSubtitle": "管理週期性帳單",
-    "mineReminderSettings": "記帳提醒",
-    "mineReminderSettingsSubtitle": "設定每日記帳提醒",
-    "mineSlogan": "未設置暱稱",
-    "mineDisplayNameEditTitle": "設定暱稱",
-    "mineDisplayNameHint": "輸入暱稱",
-    "mineDisplayNameSaved": "暱稱已更新",
-    "mineGreetingMorning": "早安",
-    "mineGreetingNoon": "中午好",
-    "mineGreetingAfternoon": "午安",
-    "mineGreetingEvening": "晚安",
-    "mineGreetingNight": "夜深了",
-    "mineGreetingNamed": "{greeting}，{name}",
-    "mineSyncCloudFingerprint": "雲端指紋: {fingerprint}",
-    "mineSyncCloudLatest": "雲端最新記帳時間: {time}",
-    "mineSyncCloudNewer": "雲端有更新 (建議下載同步)",
-    "mineSyncCloudRecords": "雲端記錄數: {count}",
-    "mineSyncDetailTitle": "同步狀態詳情",
-    "mineSyncDifferent": "本機與雲端有差異，建議下載對比",
-    "mineSyncError": "狀態取得失敗",
-    "mineSyncInSync": "已同步 (本地{count}條)",
-    "mineSyncLocalFingerprint": "本地指紋: {fingerprint}",
-    "mineSyncLocalNewer": "本機有更新 (本機{count}條, 建議上傳)",
-    "mineSyncLocalRecords": "本地記錄數: {count}",
-    "mineSyncMessage": "說明: {message}",
-    "mineSyncNoRemote": "雲端暫無資料",
-    "mineSyncNotConfigured": "未設定雲端",
-    "mineSyncLocalOnly": "本地帳本，僅存本機",
-    "mineSyncNotLoggedIn": "未登入",
-    "mineSyncTitle": "同步",
-    "mineTitle": "我的",
-    "mineUploadInProgress": "正在上傳中…",
-    "mineUploadNeedCloudService": "僅限雲端服務模式可用",
-    "mineUploadNeedLogin": "需登入",
-    "mineUploadRefreshing": "重新整理中…",
-    "mineUploadSuccess": "已上傳",
-    "mineUploadSuccessMessage": "當前帳本已同步到雲端",
-    "mineUploadSynced": "已同步",
-    "mineUploadTitle": "上傳",
-    "recurringTransactionAdd": "新增週期帳單",
-    "recurringTransactionDaily": "每天",
-    "recurringTransactionDayOfMonth": "每月第幾天",
-    "recurringTransactionDeleteConfirm": "確定要刪除這個週期帳單嗎？",
-    "recurringTransactionEdit": "編輯週期帳單",
-    "recurringTransactionEmpty": "暫無週期帳單",
-    "recurringTransactionEmptyHint": "點擊右上角 + 按鈕新增",
-    "recurringTransactionAmountInvalid": "金額需大於 0",
-    "recurringTransactionEndBeforeStart": "結束日期不能早於開始日期",
-    "recurringTransactionEndDate": "結束日期",
-    "recurringTransactionEveryNDays": "每 {n} 天",
-    "@recurringTransactionEveryNDays": {
+    "configImportExportTitle": "配置匯入匯出",
+    "configImportExportSubtitle": "備份和恢復應用配置",
+    "configImportExportInfoTitle": "功能說明",
+    "configImportExportInfoMessage": "備份和恢復應用配置，用於跨裝置遷移或恢復設定。匯出為 YAML 格式，可檢視和編輯。\n\n僅包含應用配置，不包含交易記錄（交易資料請使用明細匯入匯出功能）。",
+    "configImportExportWarning": "配置檔案包含雲端服務金鑰、密碼等敏感資訊，請妥善保管。匯入會覆蓋同名配置，建議先匯出備份。",
+    "configExportTitle": "匯出配置",
+    "configExportSubtitle": "將目前配置匯出為YAML檔案",
+    "configExportShareSubject": "Spitout 配置檔案",
+    "configExportSuccess": "配置匯出成功",
+    "configExportFailed": "配置匯出失敗",
+    "configImportTitle": "匯入配置",
+    "configImportSubtitle": "從YAML檔案恢復配置",
+    "configImportNoFilePath": "未選擇檔案",
+    "configImportConfirmTitle": "確認匯入",
+    "configImportSuccess": "配置匯入成功",
+    "configImportFailed": "配置匯入失敗",
+    "configImportRestartTitle": "需要重新啟動",
+    "configImportRestartMessage": "配置已匯入，部分配置需要重新啟動應用程式後生效。",
+    "configImportOverwriteWarning": "匯入將覆蓋現有配置，建議先備份目前配置。",
+    "configImportExportIncludesTitle": "包含的配置項",
+    "configExportSavedTo": "已儲存至: {path}",
+    "@configExportSavedTo": {
         "placeholders": {
-            "n": {
+            "path": {
+                "type": "String"
+            }
+        }
+    },
+    "configExportViewContent": "檢視內容",
+    "configExportCopyContent": "複製內容",
+    "configExportContentCopied": "已複製到剪貼簿",
+    "configExportReadFileFailed": "讀取檔案失敗",
+    "configIncludeLedgers": "帳本",
+    "configIncludeSupabase": "Supabase 雲端服務配置",
+    "configIncludeWebdav": "WebDAV 雲端服務配置",
+    "configIncludeS3": "S3 雲端服務配置",
+    "configIncludeSpitoutCloud": "Spitout Cloud 雲端服務配置",
+    "configIncludeAppSettings": "應用程式設定（提醒、語言、外觀、字體、同步等）",
+    "configIncludeRecurringTransactions": "週期帳單",
+    "configIncludeCategories": "分類",
+    "configIncludeOtherSettings": "其他設定",
+    "configIncludeOtherSettingsSubtitle": "包含雲端服務配置和應用程式設定",
+    "configIncludeCredentials": "包含密碼/金鑰",
+    "configIncludeCredentialsSubtitle": "密碼和金鑰將以明文寫入檔案",
+    "configExportSelectTitle": "選擇匯出內容",
+    "configExportPreviewTitle": "匯出預覽",
+    "configExportConfirmTitle": "確認匯出",
+    "configExportContainsSecretsWarning": "此檔案包含密碼/金鑰，請勿分享或提交到版本庫！",
+    "configImportSelectTitle": "選擇匯入內容",
+    "configImportPreviewTitle": "匯入預覽",
+    "ledgersConflictTitle": "同步衝突",
+    "ledgersConflictMessage": "本地和雲端帳本資料不一致，請選擇操作：",
+    "ledgersConflictLocalInfo": "本地：{count} 筆帳單",
+    "@ledgersConflictLocalInfo": {
+        "placeholders": {
+            "count": {
                 "type": "int"
             }
         }
     },
-    "recurringTransactionEveryNMonths": "每 {n} 個月",
-    "@recurringTransactionEveryNMonths": {
+    "ledgersConflictRemoteInfo": "雲端：{count} 筆帳單",
+    "@ledgersConflictRemoteInfo": {
         "placeholders": {
-            "n": {
+            "count": {
                 "type": "int"
             }
         }
     },
-    "recurringTransactionEveryNWeeks": "每 {n} 週",
-    "@recurringTransactionEveryNWeeks": {
+    "ledgersConflictRemoteUpdated": "雲端更新：{time}",
+    "@ledgersConflictRemoteUpdated": {
         "placeholders": {
-            "n": {
+            "time": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictLocalFingerprint": "本地指紋：{fp}",
+    "@ledgersConflictLocalFingerprint": {
+        "placeholders": {
+            "fp": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictRemoteFingerprint": "雲端指紋：{fp}",
+    "@ledgersConflictRemoteFingerprint": {
+        "placeholders": {
+            "fp": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersConflictUpload": "上傳到雲端",
+    "ledgersConflictDownload": "下載到本地",
+    "ledgersConflictUploading": "正在上傳...",
+    "ledgersConflictDownloading": "正在下載...",
+    "ledgersConflictUploadSuccess": "上傳成功",
+    "ledgersConflictDownloadSuccess": "下載成功，已合併 {inserted} 筆帳單",
+    "@ledgersConflictDownloadSuccess": {
+        "placeholders": {
+            "inserted": {
                 "type": "int"
             }
         }
     },
-    "recurringTransactionEveryNYears": "每 {n} 年",
-    "@recurringTransactionEveryNYears": {
-        "placeholders": {
-            "n": {
-                "type": "int"
-            }
-        }
-    },
-    "recurringTransactionFrequency": "週期頻率",
-    "recurringTransactionInterval": "間隔",
-    "recurringTransactionMonthly": "每月",
-    "recurringTransactionNoEndDate": "永久週期",
-    "recurringTransactionStartDate": "開始日期",
-    "recurringTransactionTitle": "週期帳單",
-    "recurringTransactionUsageContent": "週期記帳會在每次冷啟動進入 App 時自動掃描並產生帳單。設定日期後，系統會在該日期之後的冷啟動時建立對應帳單。例如：設定 11 月 27 日，則會在 11 月 27 日之後的首次啟動時自動記帳。",
-    "recurringTransactionUsageTitle": "使用說明",
-    "recurringTransactionWeekly": "每週",
-    "recurringTransactionYearly": "每年",
-    "reminderAndroidInstructions": "如果通知無法正常工作，請檢查：\n• 已允許應用程式發送通知\n• 關閉應用程式的電池最佳化/省電模式\n• 允許應用程式在背景執行和自啟動\n• Android 12+需要精確鬧鐘權限\n\n📱 小米手機特殊設定：\n• 設定 > 應用程式管理 > Spitout > 通知管理\n• 點擊\"記帳提醒\"頻道\n• 設定重要性為\"緊急\"或\"高\"\n• 開啟\"橫幅通知\"、\"聲音\"、\"震動\"\n• 安全中心 > 應用程式管理 > 權限 > 自啟動\n\n🔒 鎖定背景方法：\n• 最近任務中找到Spitout\n• 向下拉動應用程式卡片顯示鎖定圖示\n• 點擊鎖定圖示防止被清理",
-    "reminderAndroidVersion": "Android版本: {value}",
-    "reminderAppSettingsMessage": "請在設定中允許通知、關閉電池最佳化",
-    "reminderBatteryAdvice": "建議關閉電池最佳化以確保通知正常工作",
-    "reminderBatteryIgnored": "電池最佳化狀態: 已忽略 ✅",
-    "reminderBatteryNotIgnored": "電池最佳化狀態: 未忽略 ⚠️",
-    "reminderBatteryStatus": "電池最佳化狀態",
-    "reminderChannelAdvice": "⚠️ 建議設定：",
-    "reminderChannelAdviceBanner": "• 允許橫幅通知",
-    "reminderChannelAdviceImportance": "• 重要性：緊急或高",
-    "reminderChannelAdviceSound": "• 開啟聲音和震動",
-    "reminderChannelAdviceXiaomi": "• 小米手機需單獨設定每個頻道",
-    "reminderChannelDisabled": "頻道啟用: 否 ❌",
-    "reminderChannelDndBypass": "勿擾模式: 可繞過",
-    "reminderChannelDndNoBypass": "勿擾模式: 不可繞過",
-    "reminderChannelEnabled": "頻道啟用: 是 ✅",
-    "reminderChannelGood": "✅ 通知頻道設定良好",
-    "reminderChannelImportance": "重要性: {value}",
-    "reminderChannelSoundOff": "聲音: 關閉 🔇",
-    "reminderChannelSoundOn": "聲音: 開啟 🔊",
-    "reminderChannelStatus": "通知頻道狀態",
-    "reminderChannelVibrationOff": "震動: 關閉",
-    "reminderChannelVibrationOn": "震動: 開啟 📳",
-    "reminderCheckBattery": "檢查電池最佳化狀態",
-    "reminderCheckChannel": "檢查通知頻道設定",
-    "reminderDailySubtitle": "開啟後將在指定時間提醒您記帳",
-    "reminderDailyTitle": "每日記帳提醒",
-    "reminderDescription": "提示：開啟記帳提醒後，系統會在每天指定時間發送通知提醒您記錄支出。",
-    "reminderManufacturer": "裝置製造商: {value}",
-    "reminderModel": "裝置型號: {value}",
-    "reminderOpenAppSettings": "開啟應用程式設定",
-    "reminderSubtitle": "設定每日記帳提醒時間",
-    "reminderTestBody": "這是一條測試通知，點擊檢視效果",
-    "reminderTestNotification": "發送測試通知",
-    "reminderTestSent": "測試通知已發送",
-    "reminderTestTitle": "測試通知",
-    "reminderTimeTitle": "提醒時間",
-    "reminderTitle": "記帳提醒",
-    "reminderBody": "別忘了記錄今天的收支哦 💰",
-    "syncAccessDeniedMessage": "403 拒絕存取（檢查 storage RLS 策略與路徑）",
-    "syncCloudBackupCorruptedMessage": "雲端備份內容無法解析，可能是早期版本編碼問題造成的損壞。請點擊\\\"上傳當前帳本到雲端\\\"覆蓋修復。",
-    "syncNoCloudBackupMessage": "雲端暫無備份",
-    "syncNotConfiguredMessage": "未設定雲端",
-    "syncNotLoggedInMessage": "未登入",
-    "tabHome": "明細",
-    "tabAnalytics": "統計",
-    "tabCalendar": "日曆",
-    "tabMine": "我的",
-    "webdavConfiguredMessage": "WebDAV 雲服務使用設定時提供的憑證，無需額外登入。",
-    "webdavConfiguredTitle": "WebDAV 雲服務已設定",
-    "welcomeSelectCurrencyTitle": "選擇記帳貨幣",
-    "welcomeCurrencyDescription": "選擇您常用的貨幣，之後可以隨時在設定中更改",
     "welcomeExistingUserTitle": "老用戶？",
     "welcomeExistingUserButton": "匯入配置",
     "welcomeImportingConfig": "正在匯入配置...",
@@ -951,6 +1113,7 @@
             }
         }
     },
+    "welcomeImportNoFile": "未選擇檔案",
     "calendarTitle": "日曆",
     "calendarToday": "回到今天",
     "calendarNoTransactions": "當天無交易",
@@ -1013,6 +1176,25 @@
             }
         }
     },
+    "cloudSyncGuideTitle": "雲端同步使用指南",
+    "cloudSyncGuideGotIt": "我知道了",
+    "cloudSyncGuideHowItWorks": "運作原理",
+    "cloudSyncGuideHowItem1": "上傳：將當前帳本的全部資料打包上傳至雲端，覆蓋雲端舊資料",
+    "cloudSyncGuideHowItem2": "下載：從雲端拉取資料，與本機逐條比對差異，您可以選擇要同步哪些變更",
+    "cloudSyncGuideHowItem3": "雲端始終只儲存最後一次上傳的完整快照，不保留歷史版本",
+    "cloudSyncGuideCorrect": "正確的使用方式",
+    "cloudSyncGuideCorrectItem1": "同一時間只在一台裝置上記帳，完成後上傳",
+    "cloudSyncGuideCorrectItem2": "切換裝置前，先在新裝置上下載同步",
+    "cloudSyncGuideCorrectItem3": "下載時仔細查看預覽，確認每條變更再套用",
+    "cloudSyncGuideCorrectItem4": "養成「編輯→上傳→切換裝置→下載→編輯」的習慣",
+    "cloudSyncGuideWrong": "應避免的用法",
+    "cloudSyncGuideWrongItem1": "兩台裝置同時編輯同一帳本，後上傳的會覆蓋先上傳的改動",
+    "cloudSyncGuideWrongItem2": "上傳後立刻在另一台裝置下載，檔案服務可能有數秒到數分鐘的同步延遲，請稍候再試",
+    "cloudSyncGuideWrongItem3": "長時間不同步後一次性下載大量變更，容易遺漏需要處理的差異",
+    "cloudSyncGuideLimitations": "已知限制",
+    "cloudSyncGuideLimitItem1": "非即時同步：需手動點擊上傳和下載",
+    "cloudSyncGuideLimitItem2": "無衝突合併：不會自動合併兩端的修改，以最後上傳的為準",
+    "cloudSyncGuideLimitItem3": "檔案服務延遲：上傳後雲端檔案可能需要數秒到數分鐘才能被其他裝置讀取，取決於您使用的雲端服務",
     "appLockTitle": "應用上鎖",
     "appLockDesc": "PIN碼與生物辨識保護隱私",
     "appLockEnable": "啟用應用鎖",
@@ -1063,14 +1245,17 @@
     },
     "syncHealthRecovering": "登入狀態恢復中…",
     "@syncHealthRecovering": {
-        "description": "登入狀態靜默恢復(撞冷卻期)時顯示,冷卻結束後自動重試"
+        "description": "Shown while cloud sign-in is silently recovering after a session loss; auto-retries after cooldown"
     },
     "syncHealthNeedsLogin": "未登入或登入已失效，請重新登入雲同步",
     "@syncHealthNeedsLogin": {
-        "description": "無恢復憑證或靜默恢復徹底失敗時,提示使用者手動重新登入雲同步"
+        "description": "Shown when silent recovery failed and the user must manually sign in to cloud sync"
     },
     "syncHealthHasDiff": "偵測到差異，已自動同步",
     "cloudSyncHealFailed": "自動恢復失敗，請從雲端恢復",
+    "@cloudSyncHealFailed": {
+        "description": "Shown when the self-heal circuit breaker is open and the missing cloud data could not be restored automatically"
+    },
     "syncHealthInSync": "本地與雲端一致",
     "syncHealthGroupCurrentLedger": "目前帳本",
     "syncHealthGroupAll": "全部帳本",
@@ -1079,17 +1264,23 @@
     "syncHealthRowUnpushed": "未推送變更",
     "syncHealthValue": "本機 {local} · 雲端 {remote}",
     "@syncHealthValue": {
-        "description": "同步狀態詳情裡的逐項計數,本機與雲端數量",
+        "description": "Per-item sync counts in the sync-status detail panel, local vs remote",
         "placeholders": {
-            "local": { "type": "int" },
-            "remote": { "type": "int" }
+            "local": {
+                "type": "int"
+            },
+            "remote": {
+                "type": "int"
+            }
         }
     },
     "syncHealthValueRemoteMissing": "本機 {local} · 雲端 —",
     "@syncHealthValueRemoteMissing": {
-        "description": "同步狀態詳情裡雲端資料拉不到時的佔位計數",
+        "description": "Per-item sync count when the remote count cannot be fetched",
         "placeholders": {
-            "local": { "type": "int" }
+            "local": {
+                "type": "int"
+            }
         }
     },
     "twofaChallengeTitle": "二次驗證",
@@ -1221,6 +1412,28 @@
     },
     "sharedMembersPageTitle": "成員管理",
     "sharedMembersInviteCta": "邀請新成員",
+    "ledgersLeaveAndDelete": "退出並刪除",
+    "ledgersLeaveAndDeleteConfirm": "退出並刪除帳本",
+    "ledgersLeaveAndDeleteMessage": "確定要退出並刪除共享帳本「{name}」嗎？\n退出後雲端將移除你的成員身分，本地資料全部清空，且無法再存取其中的交易。",
+    "@ledgersLeaveAndDeleteMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersLeaveAndDeleteSuccess": "已退出並刪除帳本",
+    "ledgersDeleteShared": "刪除共享帳本",
+    "ledgersDeleteSharedConfirm": "刪除共享帳本",
+    "ledgersDeleteSharedMessage": "確定要刪除共享帳本「{name}」嗎？\n此操作會一併移除所有協作者並清空他們的本地資料，不可恢復。",
+    "@ledgersDeleteSharedMessage": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
+    "ledgersDeleteSharedSuccess": "已刪除共享帳本",
     "sharedMembersRemoveTitle": "移除成員",
     "sharedMembersRemoveCta": "移除該成員",
     "sharedMembersRemoveConfirm": "確定移除 {name}?ta 將立即失去對該帳本的訪問。",
@@ -1233,7 +1446,6 @@
     },
     "sharedMembersRemoved": "已移除成員",
     "sharedMembersRemoveFailed": "移除成員失敗，請稍後再試",
-    "sharedMembersSyncPending": "首次建立帳本需要先在帳本管理頁面選中本帳本，重新進入頁面才可邀請成員",
     "sharedMembersSaveFirst": "請先保存帳本",
     "sharedMembersInviteSyncFailed": "雲端同步尚未完成，請稍後再試",
     "sharedMembersLoadingHint": "雲端帳本尚未就緒，正在同步…",
@@ -1362,9 +1574,29 @@
     "rateSourceAuto": "自動",
     "rateSourceManual": "手動",
     "rateUpdatedAt": "{date} 更新",
+    "@rateUpdatedAt": {
+        "placeholders": {
+            "date": {
+                "type": "String"
+            }
+        }
+    },
     "rateNotFetched": "未取得",
     "rateEditTitle": "編輯匯率",
     "rateInverseHint": "反向參考:1 {base} ≈ {rate} {quote}",
+    "@rateInverseHint": {
+        "placeholders": {
+            "base": {
+                "type": "String"
+            },
+            "rate": {
+                "type": "String"
+            },
+            "quote": {
+                "type": "String"
+            }
+        }
+    },
     "rateResetToAuto": "恢復自動",
     "rateRefreshSuccess": "匯率已更新",
     "rateRefreshFailed": "取得失敗,可手動設定匯率",
@@ -1527,6 +1759,11 @@
     "detailExportDateInvalid": "開始日期不能晚於結束日期",
     "detailExportAction": "匯出",
     "exchangeRateCurrentLedger": "目前帳本：{name}",
+    "@exchangeRateCurrentLedger": {
+        "placeholders": {
+            "name": {}
+        }
+    },
     "exchangeRateInfoTitle": "關於主幣種",
     "exchangeRateInfoMessage": "主幣種是目前帳本的本位幣：帳本內的外幣交易會按匯率折算成主幣種，在統計頁和資產總覽中統一彙總比較。每個帳本各有自己的主幣種，可隨時切換；切換後將按最新匯率重算本帳本全部交易的折算值。\n\n匯率預設從公開資料來源每日自動拉取，也支援你點擊下方列表中的「編輯」為任意幣種手動設定匯率——手動匯率會覆蓋自動資料並立即生效。",
     "rateEditLabel": "編輯",
@@ -1581,47 +1818,9 @@
     "updateCantAutoCheck": "無法取得版本資訊，可前往 GitHub 查看最新版本",
     "updateGoToGithub": "前往 GitHub 查看",
     "mineUpdateNow": "更新",
-    "ledgerMetaReadOnlyToast": "協作者無權修改帳本資訊"
-,
-    "appearanceExpenseColorApplied": "已更換",
-    "appearanceExpenseColorGreen": "綠色表示支出",
-    "appearanceExpenseColorRed": "紅色表示支出",
-    "appearanceExpenseColorScheme": "支出顏色",
-    "homeBaseCurrencySwitched": "已切換主幣種為 {code}",
-    "@homeBaseCurrencySwitched": {
-        "placeholders": {
-            "code": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersDeleteShared": "刪除共享帳本",
-    "ledgersDeleteSharedConfirm": "刪除共享帳本",
-    "ledgersDeleteSharedMessage": "確定要刪除共享帳本「{name}」嗎？\n此操作會一併移除所有協作者並清空他們的本地資料，不可恢復。",
-    "@ledgersDeleteSharedMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersDeleteSharedSuccess": "已刪除共享帳本",
-    "ledgersLeaveAndDelete": "退出並刪除",
-    "ledgersLeaveAndDeleteConfirm": "退出並刪除帳本",
-    "ledgersLeaveAndDeleteMessage": "確定要退出並刪除共享帳本「{name}」嗎？\n退出後雲端將移除你的成員身分，本地資料全部清空，且無法再存取其中的交易。",
-    "@ledgersLeaveAndDeleteMessage": {
-        "placeholders": {
-            "name": {
-                "type": "String"
-            }
-        }
-    },
-    "ledgersLeaveAndDeleteSuccess": "已退出並刪除帳本",
-    "welcomeImportNoFile": "未選擇檔案",
+    "ledgerMetaReadOnlyToast": "協作者無權修改帳本資訊",
     "aaStatisticsTitle": "分攤統計",
-    "aaStatisticsOverview": "總覽",
     "aaStatisticsTotalAmount": "分攤總額",
-    "aaStatisticsTxCount": "{count} 筆分攤交易",
     "aaStatisticsPerPerson": "分攤詳情",
     "aaStatisticsPaid": "分攤實付",
     "aaStatisticsPaidAll": "總付",
@@ -1661,14 +1860,16 @@
     "aaModeCustom": "指定分攤",
     "aaModeNoSplit": "不分攤",
     "aaParticipantsAll": "全部成員",
-    "aaParticipantsAllCount": "全部成員（{count}人）",
     "aaParticipantsUnit": "人",
-    "aaVirtualUserTitle": "虛擬用戶",
-    "aaVirtualUserAdd": "新增虛擬用戶",
     "aaVirtualUserNameHint": "輸入暱稱",
-    "aaVirtualUserRename": "重新命名",
-    "aaVirtualUserEmpty": "暫無虛擬用戶",
     "aaVirtualUserDeleteConfirm": "確定刪除虛擬用戶「{name}」嗎？",
+    "@aaVirtualUserDeleteConfirm": {
+        "placeholders": {
+            "name": {
+                "type": "String"
+            }
+        }
+    },
     "aaVirtualUserInUse": "該虛擬用戶名下有帳，不可刪除",
     "aaVirtualUserDefaultName": "虛擬用戶{index}",
     "@aaVirtualUserDefaultName": {
@@ -1681,10 +1882,7 @@
     "aaAddVirtualUser": "新增虛擬用戶",
     "aaUnknownUser": "未知",
     "aaMe": "我",
-
-    "ledgerAaEnabledHint": "開啟後記帳時可選擇分攤方式",
     "ledgerAaStatisticsEntry": "分攤統計",
-    "ledgerAaVirtualUsersEntry": "管理虛擬用戶",
     "aaSwitchOnLabel": "開啟AA分攤",
     "aaSwitchOffLabel": "關閉AA分攤",
     "aaNoParticipants": "請先新增參與人",
