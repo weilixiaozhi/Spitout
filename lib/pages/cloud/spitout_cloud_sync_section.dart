@@ -67,13 +67,14 @@ class SpitoutCloudSyncSectionState
   @override
   void initState() {
     super.initState();
-    // 区块一挂载就拉一次 sync health,让"同步状态"面板开屏即有内容。
+    // 区块挂载时只读取同步健康状态，不主动拉取远端数据，避免打开页面本身
+    // 产生网络同步副作用。
     // server 版本号由 [spitoutCloudServerVersionProvider] 自动获取(它依赖
     // syncStatusRefreshProvider,每次同步完成自动重新拉一次),不存本地
     // setState 缓存——server 升级后用户在 app 内任何同步操作完都会刷新。
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       if (!mounted) return;
-      unawaited(refresh());
+      unawaited(refresh(syncIfNeeded: false));
     });
   }
 
@@ -143,7 +144,7 @@ class SpitoutCloudSyncSectionState
     );
   }
 
-  /// 下拉刷新入口:对账 → 健康检查 → 有差异自动 syncAccount。
+  /// 账户同步状态刷新入口:对账 → 健康检查 → 允许时修复差异。
   ///
   /// 走账户级入口而非单本 sync():用户选中本地账本时 currentLedgerId 指向
   /// local,单本 sync() 会被 storage_mode 闸门挡掉,云端账本永远同步不了。
@@ -151,7 +152,9 @@ class SpitoutCloudSyncSectionState
   ///
   /// 整个流程异步跑得久(10k 数据可能几分钟),用户随时可能切走 →
   /// widget dispose,ref 失效。所有访问 ref 的地方都先看 mounted。
-  Future<void> refresh() async {
+  /// 用户显式刷新保留自动修复能力，页面挂载则只做健康检查，避免把浏览页面
+  /// 变成同步触发器。认证恢复后的延迟重试必须沿用同一选择。
+  Future<void> refresh({bool syncIfNeeded = true}) async {
     if (!mounted) return;
     // 无云能力(LocalOnly / 快照型后端)直接早退,连 loading 都不起 —— 等价于
     // 原 `engine is! SyncEngine → return`,类型判断由门面 hasSyncEngine 收口。
@@ -202,7 +205,7 @@ class SpitoutCloudSyncSectionState
         final wait = report.recoveryRemaining ?? const Duration(seconds: 30);
         unawaited(
           Future.delayed(wait, () {
-            if (mounted) refresh();
+            if (mounted) refresh(syncIfNeeded: syncIfNeeded);
           }),
         );
         return;
@@ -232,7 +235,7 @@ class SpitoutCloudSyncSectionState
         }
       }
 
-      if (report.hasDiff && mounted) {
+      if (syncIfNeeded && report.hasDiff && mounted) {
         setState(() => _autoSyncing = true);
         try {
           // DEEP:账户级同步原语 —— 内部枚举全部云端账本并逐个 fullPush/

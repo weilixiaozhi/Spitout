@@ -21,6 +21,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_riverpod/misc.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:flutter_cloud_sync/flutter_cloud_sync.dart';
+import 'package:flutter_cloud_sync_spitout_cloud/flutter_cloud_sync_spitout_cloud.dart'
+    show SpitoutCloudLedgerStats;
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:spitout/cloud/sync/change_tracker.dart';
@@ -104,6 +106,7 @@ Future<void> _pumpSection(
   required CloudServiceConfig active,
   CloudAuthService? auth,
   SyncService? sync,
+  GlobalKey<SpitoutCloudSyncSectionState>? sectionKey,
   List<Override> extraOverrides = const [],
   int currentLedgerId = 1,
 }) async {
@@ -132,8 +135,10 @@ Future<void> _pumpSection(
         locale: const Locale('zh'),
         localizationsDelegates: AppLocalizations.localizationsDelegates,
         supportedLocales: AppLocalizations.supportedLocales,
-        home: const Scaffold(
-          body: SingleChildScrollView(child: SpitoutCloudSyncSection()),
+        home: Scaffold(
+          body: SingleChildScrollView(
+            child: SpitoutCloudSyncSection(key: sectionKey),
+          ),
         ),
       ),
     ),
@@ -321,6 +326,50 @@ void main() {
           currency: const Value('CNY'),
         ),
       );
+
+  testWidgets('挂载仅检查健康；用户显式刷新才同步差异', (tester) async {
+    final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
+    addTearDown(db.close);
+    final tracker = ChangeTracker(db);
+    final repo = LocalRepository(db, changeTracker: tracker);
+    final provider = FakeSpitoutCloudProvider();
+    provider.pushFakeLedgerSnapshot(ledgerId: 'ledger-a');
+    provider.ledgerStatsOverrides['ledger-a'] = const SpitoutCloudLedgerStats(
+      transactionCount: 1,
+      transactionTotal: 1,
+      categoryCount: 0,
+      categoryTotal: 0,
+    );
+    final ledgerA = await insertCloudLedger(
+      db,
+      name: 'My Ledger',
+      syncId: 'ledger-a',
+    );
+    final fixture = healthFixture(
+      db: db,
+      provider: provider,
+      tracker: tracker,
+      repo: repo,
+      currentLedgerId: ledgerA,
+    );
+    final sectionKey = GlobalKey<SpitoutCloudSyncSectionState>();
+
+    await _pumpSection(
+      tester,
+      active: _spitoutActive(),
+      sync: fixture.engine,
+      sectionKey: sectionKey,
+      currentLedgerId: fixture.currentLedgerId,
+      extraOverrides: fixture.overrides,
+    );
+
+    expect(provider.pullCalls, isEmpty, reason: '页面挂载只能读取健康状态，不得自动执行账户同步');
+
+    await sectionKey.currentState!.refresh();
+
+    expect(provider.pullCalls, isNotEmpty, reason: '用户显式下拉刷新仍可修复检测到的远端差异');
+    await tester.pump(const Duration(seconds: 3));
+  });
 
   testWidgets('选中云账本 → 渲染该账本的「当前账本」组', (tester) async {
     final db = SpitoutDatabase.forTesting(NativeDatabase.memory());
