@@ -5,6 +5,7 @@ import 'package:drift/drift.dart' as d;
 import 'package:spitout/core/identity/local_user_identity.dart';
 import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/data/db.dart';
+import 'package:spitout/data/models/ledger_kind.dart';
 
 /// 本地身份按账本归属收敛服务。
 ///
@@ -42,20 +43,26 @@ class LocalIdentityMigrationService {
     ).get();
     for (final row in rows) {
       final ledgerId = row.read<int>('id');
-      final storageMode = row.read<String?>('storage_mode') ?? 'local';
+      final storageMode = row.read<String?>('storage_mode');
       final isShared = row.read<bool>('is_shared');
-      if (storageMode == 'cloud' || isShared) {
+      if (isCloudLedgerOf(storageMode, isShared: isShared)) {
         await migrateLedgerToCloudUserId(
           db: db,
           ledgerId: ledgerId,
           cloudUserId: cloudUserId,
           localSelfId: localSelfId,
         );
-      } else {
+      } else if (isLocalLedgerOf(storageMode, isShared: isShared)) {
         await repairLocalLedgerToLocalSelfId(
           db: db,
           ledgerId: ledgerId,
           localSelfId: localSelfId,
+        );
+      } else {
+        logger.warning(
+          'LocalIdentityMigration',
+          '跳过未知归属账本身份修复: ledgerId=$ledgerId '
+              'storageMode=${storageMode ?? '<null>'} isShared=$isShared',
         );
       }
     }
@@ -68,16 +75,26 @@ class LocalIdentityMigrationService {
   }) async {
     if (localSelfId.isEmpty) return;
     final rows = await db.customSelect(
-      "SELECT id FROM ledgers WHERE is_shared = 0 "
-      "AND (storage_mode IS NULL OR storage_mode = 'local')",
+      'SELECT id, storage_mode, is_shared FROM ledgers',
       readsFrom: {db.ledgers},
     ).get();
     for (final row in rows) {
-      await repairLocalLedgerToLocalSelfId(
-        db: db,
-        ledgerId: row.read<int>('id'),
-        localSelfId: localSelfId,
-      );
+      final ledgerId = row.read<int>('id');
+      final storageMode = row.read<String?>('storage_mode');
+      final isShared = row.read<bool>('is_shared');
+      if (isLocalLedgerOf(storageMode, isShared: isShared)) {
+        await repairLocalLedgerToLocalSelfId(
+          db: db,
+          ledgerId: ledgerId,
+          localSelfId: localSelfId,
+        );
+      } else if (!isCloudLedgerOf(storageMode, isShared: isShared)) {
+        logger.warning(
+          'LocalIdentityMigration',
+          '跳过未知归属账本身份修复: ledgerId=$ledgerId '
+              'storageMode=${storageMode ?? '<null>'} isShared=$isShared',
+        );
+      }
     }
   }
 

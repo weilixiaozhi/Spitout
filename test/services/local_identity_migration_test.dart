@@ -10,8 +10,11 @@ import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter_test/flutter_test.dart';
 
+import 'package:spitout/core/logging/logger_service.dart';
 import 'package:spitout/data/db.dart';
 import 'package:spitout/services/data/local_identity_migration_service.dart';
+
+import '../helpers/test_isolation.dart';
 
 void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
@@ -19,10 +22,15 @@ void main() {
   late SpitoutDatabase db;
 
   setUp(() async {
+    resetGlobalTestState();
+    await logger.clear();
     db = SpitoutDatabase.forTesting(NativeDatabase.memory());
   });
 
-  tearDown(() => db.close());
+  tearDown(() async {
+    await db.close();
+    await logger.clear();
+  });
 
   Future<int> createLedger({
     String? ownerUserId,
@@ -99,6 +107,22 @@ void main() {
             summary: 's',
           ),
         );
+  }
+
+  /// 断言未知账本被保守跳过时留下足够定位数据的告警。
+  void expectUnknownLedgerWarning(int ledgerId) {
+    final warnings = logger.logs
+        .where((entry) =>
+            entry.level == LogLevel.warning &&
+            entry.tag == 'LocalIdentityMigration')
+        .map((entry) => entry.message);
+    expect(
+      warnings,
+      contains(
+        '跳过未知归属账本身份修复: ledgerId=$ledgerId '
+        'storageMode=future isShared=false',
+      ),
+    );
   }
 
   group('repairAuthorIdsByStorageMode', () {
@@ -198,6 +222,27 @@ void main() {
           .getSingle();
       expect(ledger.ownerUserId, cloudUserId);
     });
+
+    test('未知归属账本：保守跳过并记录诊断', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      final ledgerId = await createLedger(
+        ownerUserId: cloudUserId,
+        storageMode: 'future',
+      );
+
+      await LocalIdentityMigrationService.repairAuthorIdsByStorageMode(
+        db: db,
+        localSelfId: localSelfId,
+        cloudUserId: cloudUserId,
+      );
+
+      final ledger = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(ledgerId)))
+          .getSingle();
+      expect(ledger.ownerUserId, cloudUserId, reason: '未知归属不得破坏性改写为本地身份');
+      expectUnknownLedgerWarning(ledgerId);
+    });
   });
 
   group('repairLocalLedgersToLocalSelfId', () {
@@ -240,6 +285,26 @@ void main() {
           .getSingle();
       expect(cloud.paidByUserId, localSelfId,
           reason: '云端账本由登录后修复处理，启动期本地修复不得改动');
+    });
+
+    test('未知归属账本：启动修复保持原样并记录诊断', () async {
+      const localSelfId = 'local-uuid';
+      const cloudUserId = 'cloud-user';
+      final ledgerId = await createLedger(
+        ownerUserId: cloudUserId,
+        storageMode: 'future',
+      );
+
+      await LocalIdentityMigrationService.repairLocalLedgersToLocalSelfId(
+        db: db,
+        localSelfId: localSelfId,
+      );
+
+      final ledger = await (db.select(db.ledgers)
+            ..where((l) => l.id.equals(ledgerId)))
+          .getSingle();
+      expect(ledger.ownerUserId, cloudUserId);
+      expectUnknownLedgerWarning(ledgerId);
     });
   });
 
