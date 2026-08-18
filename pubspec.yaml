@@ -12,21 +12,27 @@ dependencies:
   flutter_localizations:
     sdk: flutter
   flutter_riverpod: ^3.4.2
+
   # drift 与 drift_dev 必须配套固定：当前 Flutter SDK(3.44.6)的 flutter_test
   # 把 meta 锁在 1.18.0，而 drift_dev ≥2.34.1 需要 analyzer ^13(→meta ^1.18.3)，
   # 无法解析。保持 2.34.0 配套组合，schema 工具与代码生成均可用；
   # 若后续升级 Flutter SDK，再把 drift 与 drift_dev 一起升到 2.34.3/2.34.5。
   drift: 2.34.0
+
   # sqlite3 原为 drift 传递依赖：本地备份的完整性校验需以只读模式直接调其
   # PRAGMA API（drift 裸 executor 的 ensureOpen 依赖内部接口不可用），提升为
   # 显式直接依赖；版本仍由 pubspec.lock 固定，未引入任何新版本。
   sqlite3: ^3.5.1
+
   # 无 Dart API，仅用于打包原生 SQLite 二进制供 Drift FFI 加载，零 import 属正常，勿删。
   sqlite3_flutter_libs: ^0.6.0+eol
+
   path_provider: ^2.1.4
   path: ^1.9.0
+
   # 版本由 flutter_localizations 约束解析（SDK 当前锁 0.20.2），无需手动锁死。
   intl: ^0.20.0
+
   decimal: ^3.0.0
   fl_chart: ^1.2.0
   shared_preferences: ^2.3.2
@@ -36,22 +42,28 @@ dependencies:
   crypto: ^3.0.5
   uuid: ^4.5.1
   flutter_svg: ^2.0.10+1
+
   # Lucide 图标库（ISC 许可免署名）：全站 UI 图标与分类图标的统一来源，
   # 单色描边字形，用法与 Material Icons 一致（Icon(LucideIcons.x, color:)）。
   # lucide_icons 上游已停止维护（LucideIconData extends IconData 与 Flutter 3.44+
   # 的 final class IconData 冲突），改用活跃维护的 lucide_icons_flutter
   # （lucide 1.24 图标集，与 shadcn/ui 同源，API 完全一致）。
   lucide_icons_flutter: ^3.1.15
+
   # file_picker 11.x 仍锁 win32 ^5.9，与 package_info_plus 10.x 要求的 win32 ^6 冲突，
   # 故停在 9.x（10 系列需待 file_picker 12 稳定后再同步放宽）。
   package_info_plus: ^9.0.0
+
   http: ^1.2.2
+
   # share_plus 13 系列均要求 win32 ^6，与 file_picker 11.x（win32 ^5.9）冲突，暂保持 12.x
   share_plus: ^12.0.1
   url_launcher: ^6.3.0
+
   # 12.0.3 对应 permission_handler_android 13.0.1（compileSdk=35），
   # 允许 compileSdk 回退到 36，避免 CI 依赖仍在 Canary 渠道的 platforms;android-37。
   permission_handler: ^12.0.3
+  
   flutter_local_notifications: ^22.2.0
   timezone: ^0.11.1
   flutter_list_view: ^1.1.29
@@ -84,12 +96,14 @@ dev_dependencies:
     sdk: flutter
   flutter_lints: ^6.0.0
   flutter_launcher_icons: ^0.14.4
+
   # 与 drift 2.34.0 配套；勿单独升级到 ≥2.34.1（见上方 drift 注释）。
   build_runner: ^2.15.1
   drift_dev: 2.34.0
 
   # Testing framework enhancements
   mocktail: ^1.0.4
+
   # 测试 connectivity_plus 断网/重连场景所需的平台接口桩（仅测试用）。
   connectivity_plus_platform_interface: ^2.1.0
 
