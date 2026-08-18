@@ -104,10 +104,8 @@ class SpitoutCloudSyncSectionState
 
   /// 切账本后只重拉面板数据,不跑完整 [refresh]。
   ///
-  /// 刻意不触发同步:切账本事件已由 SyncCoordinator 的 ledger_switched →
-  /// triggerAutoSync 覆盖,这里再跑一遍 refresh 会造成双重同步。
-  /// 同理也不 bump syncStatusRefreshProvider —— 本方法只负责让「当前账本」
-  /// 组跟上新选中的账本。
+  /// 刻意不触发同步:切账本只改变本地选择,不会产生 `local_changes`；
+  /// 本方法只负责让「当前账本」组跟上新选中的账本。
   Future<void> _reloadPanelOnly() async {
     if (!mounted) return;
     // 无云能力(LocalOnly / 快照型后端)直接早退,连 loading 都不起 —— 等价于

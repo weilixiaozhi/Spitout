@@ -168,6 +168,33 @@ void main() {
     });
   });
 
+  group('同步触发边界', () {
+    test('local_changes 为空时切换账本不触发自动同步', () async {
+      final firstLedgerId = await seedCloudLedger('ledger-1');
+      final secondLedgerId = await seedCloudLedger('ledger-2');
+      final container = buildContainer(backend: provider);
+      await materialize(container);
+
+      // 先选中一本账本再构建装配体，确保后续变化是真正的账本切换，
+      // 不是应用启动时从「未选中」恢复当前账本。
+      container.read(currentLedgerIdProvider.notifier).set(firstLedgerId);
+      container.read(syncServiceProvider);
+      await waitFor(() => provider.pullCalls.isNotEmpty);
+      await Future<void>.delayed(const Duration(milliseconds: 300));
+      final baseline = provider.pullCalls.length;
+      expect(await changeTracker.getUnpushedChanges(), isEmpty);
+
+      container.read(currentLedgerIdProvider.notifier).set(secondLedgerId);
+      await Future<void>.delayed(const Duration(milliseconds: 2300));
+
+      expect(
+        provider.pullCalls.length,
+        baseline,
+        reason: '无 local_changes 时切账本只能刷新本地视图，不得触发网络同步',
+      );
+    });
+  });
+
   group('断网/重连', () {
     test('离线事件不触发同步；恢复后防抖触发自动同步', () async {
       await seedCloudLedger('ledger-1');
